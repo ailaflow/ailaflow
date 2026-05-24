@@ -1,0 +1,10 @@
+{
+  "name": "@aila/workspace",
+  "license": "./LICENSE",
+  "scripts": {
+    "build": "pnpm run -r build",
+    "prettier": "pnpm run -r prettier",
+    "prettier:fix": "pnpm run -r prettier:fix",
+    "test:single": "pnpm run -r test:single"
+  }
+}

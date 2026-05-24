@@ -1,0 +1,23 @@
+{
+  "name": "@aila/model",
+  "private": true,
+  "version": "1.0.0",
+  "license": "../LICENSE",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "start": "pnpm build:watch",
+    "build": "rm -rf lib && tsc",
+    "build:watch": "rm -rf lib && tsc --watch",
+    "prettier": "prettier --check ./src",
+    "prettier:fix": "prettier --write ./src",
+    "test": "tsx --test --watch",
+    "test:single": "tsx --test"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "prettier": "^3.8.3",
+    "tsx": "^4.22.3",
+    "typescript": "^6.0.3"
+  }
+}

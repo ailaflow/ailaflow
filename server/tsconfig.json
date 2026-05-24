@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "declarationDir": "./dist",
+    "noImplicitAny": true,
+    "target": "ES2017",
+    "module": "commonjs",
+    "sourceMap": false,
+    "strict": true,
+    "allowJs": false,
+    "declaration": true,
+    "esModuleInterop": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "lib": ["ES2021", "DOM"]
+  }
+}
