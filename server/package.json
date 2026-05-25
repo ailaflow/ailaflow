@@ -4,7 +4,7 @@
   "private": true,
   "type": "commonjs",
   "scripts": {
-    "start": "tsx watch src/main.ts",
+    "start": "tsx watch --env-file=.env src/main.ts",
     "build": "tsc -p tsconfig.json",
     "start:prod": "node dist/main.js",
     "prettier": "prettier --check ./*.json ./*.js ./src",
@@ -14,7 +14,8 @@
   },
   "dependencies": {
     "@aila/model": "workspace:*",
-    "express": "^5.2.1"
+    "express": "^5.2.1",
+    "openai": "^6.39.0"
   },
   "devDependencies": {
     "@types/express": "^5.0.6",
