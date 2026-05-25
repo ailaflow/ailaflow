@@ -48,10 +48,9 @@ export class Docker {
     return new URL(`http://${mapping}`);
   }
 
-  public async tryRemove(containerIdOrName: string) {
-    try {
-      await this.execDocker(['rm', '-f', containerIdOrName]);
-    } catch {}
+  public async tryRemove(containerIdOrName: string): Promise<boolean> {
+    const { stderr } = await this.execDocker(['rm', '-f', containerIdOrName]);
+    return !stderr.includes('No such container');
   }
 
   private execDocker(args: string[]) {

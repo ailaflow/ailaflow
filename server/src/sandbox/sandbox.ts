@@ -1,3 +1,4 @@
+import { InstanceIdValidator } from '@aila/model';
 import { ExecCommandRequest, ExecCommandUpdate, BridgeClient, ListenRpcUpdate, SendRpcResponseRequest } from './bridge-client';
 import { Docker } from './docker';
 import { Logger } from '../core/logger';
@@ -28,6 +29,8 @@ export class Sandbox {
     instanceId: string,
     handler: SandboxHandler
   ): Promise<Sandbox> {
+    InstanceIdValidator.assert(instanceId);
+
     const logger = new Logger(`Sandbox:${instanceId}`);
 
     const instanceFolderPath = path.join(rootFolderPath, instanceId);
@@ -89,14 +92,14 @@ export class Sandbox {
         },
         onClose: error => {
           if (error) {
-            this.tryStop(error);
+            this.triggerTryStop(error);
           }
         }
       });
     } catch (e) {
       const error = e instanceof Error ? e : new Error(String(e));
       this.logger.error(`RPC listener failed: ${error.message}`);
-      this.tryStop(error);
+      this.triggerTryStop(error);
     }
   }
 
@@ -106,7 +109,7 @@ export class Sandbox {
       if (elapsed > 5_000) {
         const error = new Error(`No ping received from sandbox bridge server for ${elapsed}ms`);
         this.logger.error(error.message);
-        this.tryStop(error);
+        this.triggerTryStop(error);
       }
     }, 500);
   }
@@ -175,7 +178,11 @@ export class Sandbox {
     return { code, stdout, stderr };
   }
 
-  public tryStop(error?: Error): boolean {
+  private triggerTryStop(error?: Error) {
+    void this.tryStop(error);
+  }
+
+  public async tryStop(error?: Error): Promise<boolean> {
     if (!this.isRunning) {
       return false;
     }
@@ -186,7 +193,7 @@ export class Sandbox {
       clearInterval(this.healthCheckIv);
     }
 
-    void this.docker.tryRemove(this.containerId);
+    await this.docker.tryRemove(this.containerId);
 
     try {
       this.handler.onSandboxClose(this.instanceId, error);

@@ -22,10 +22,8 @@ export class SandboxManager {
     return sandbox;
   }
 
-  public tryStop(error?: Error) {
-    for (const sandbox of this.sandboxes.values()) {
-      sandbox.tryStop(error);
-    }
+  public async stop(error?: Error) {
+    await Promise.allSettled([...this.sandboxes.values()].map(sandbox => sandbox.tryStop(error)));
     this.sandboxes.clear();
   }
 }

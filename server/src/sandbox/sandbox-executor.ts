@@ -29,10 +29,7 @@ export class SandboxExecutor {
 
   public constructor(private readonly sandbox: Sandbox) {}
 
-  public async execute<T extends object = object>(
-    abortSignal: AbortSignal,
-    request: SandboxExecutorRequest
-  ): Promise<SandboxExecutorResult<T>> {
+  public async execute(abortSignal: AbortSignal, request: SandboxExecutorRequest): Promise<SandboxExecutorResult<string>> {
     const start = Date.now();
     const install = !this.isInstalled.has(request.folderPath);
     if (install) {
@@ -70,14 +67,27 @@ export class SandboxExecutor {
     }
 
     const output = result.stdout.substring(startPos + TOKEN_PRE.length, endPos);
+    return {
+      install,
+      totalTime,
+      output: output
+    };
+  }
+
+  public async executeJSON<T extends object = object>(
+    abortSignal: AbortSignal,
+    request: SandboxExecutorRequest
+  ): Promise<SandboxExecutorResult<T>> {
+    const r0 = await this.execute(abortSignal, request);
+    const r1 = r0 as unknown as SandboxExecutorResult<T>;
+    if (!r0.output) {
+      return r1;
+    }
     try {
-      return {
-        install,
-        totalTime,
-        output: JSON.parse(output) as T
-      };
+      r1.output = JSON.parse(r0.output) as T;
+      return r1;
     } catch (e) {
-      throw new SandboxExecutorError('Failed to parse script output as JSON');
+      throw new SandboxExecutorError(`Failed to parse script output as JSON, output: ${r0.output.substring(0, 32)}`);
     }
   }
 }

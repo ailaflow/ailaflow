@@ -14,7 +14,7 @@ export class Server {
     const sandboxManager = new SandboxManager(sandboxPaths);
     const sandboxExecutorManager = new SandboxExecutorManager(sandboxManager);
 
-    const instanceId = 'instance-1';
+    const instanceId = 'instance_1';
 
     const scriptExecutor = await sandboxExecutorManager.get(abortSignal, instanceId);
 
@@ -22,14 +22,14 @@ export class Server {
 
     for (let i = 0; i < 5; i++) {
       const bashAbortSignal = AbortSignal.timeout(10_000);
-      const res = await scriptExecutor.execute(bashAbortSignal, {
+      const json = await scriptExecutor.executeJSON(bashAbortSignal, {
         folderPath: 'test',
         scriptName: 'test.mjs',
         input: {
           testsInput: 'test'
         }
       });
-      console.log('Execution result:', res);
+      console.log('Execution result:', json);
     }
 
     app.listen(PORT, () => {
@@ -42,6 +42,6 @@ export class Server {
   public constructor(private readonly sandboxManager: SandboxManager) {}
 
   public close() {
-    this.sandboxManager.tryStop();
+    this.sandboxManager.stop();
   }
 }
