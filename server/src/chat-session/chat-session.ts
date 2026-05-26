@@ -3,12 +3,14 @@ import { MessageFactory } from './messages/message-factory';
 import { SessionStack } from './session-stack';
 
 export class ChatSession {
+  public totalTokens?: number;
+
   private readonly stopAbortController = new AbortController();
   private isWorking = false;
   private isStopped = false;
 
-  public readonly stack = new SessionStack();
-  public readonly queue: Message[] = [];
+  private readonly stack = new SessionStack();
+  private readonly queue: Message[] = [];
 
   public constructor(private readonly messageFactory: MessageFactory) {}
 
@@ -47,15 +49,17 @@ export class ChatSession {
       this.stack.push(nextMessage);
     }
     this.isWorking = true;
-    void this.completeNext(nextMessage);
+    void this.next(nextMessage);
   }
 
-  private async completeNext(message: Message) {
-    console.log('Completing message of type', MessageType[message.type]);
+  private async next(message: Message) {
     try {
       const result = await message.complete(this.stopAbortController.signal, this.stack);
-      this.stack.complete(message, result.completedMessage);
+      if (result.totalTokens) {
+        this.totalTokens = result.totalTokens;
+      }
 
+      this.stack.complete(message, result.completedMessage);
       if (result.toolCalls) {
         this.queue.push(this.messageFactory.createTool(result.toolCalls));
       }
