@@ -1,7 +1,7 @@
 import path from 'path';
 import fs from 'fs';
 
-export class SandboxPaths {
+export class ServerPaths {
   private readonly rootPath: string;
 
   public constructor() {
@@ -13,7 +13,11 @@ export class SandboxPaths {
     throw new Error('Cannot locate the project root');
   }
 
-  public getRootFolderPath(): string {
+  public getSandboxFolderPath(): string {
     return path.join(this.rootPath, 'sandbox');
+  }
+
+  public getDataFolderPath(): string {
+    return path.join(this.rootPath, 'data');
   }
 }

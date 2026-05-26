@@ -14,7 +14,9 @@
     "test": "tsx --test --watch",
     "test:single": "tsx --test"
   },
-  "dependencies": {},
+  "dependencies": {
+    "zod": "^4.4.3"
+  },
   "devDependencies": {
     "prettier": "^3.8.3",
     "tsx": "^4.22.3",

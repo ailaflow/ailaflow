@@ -1,5 +1,5 @@
 import { Logger } from './core/logger';
-import { SandboxPaths } from './sandbox/sandbox-paths';
+import { ServerPaths } from './core/server-paths';
 import express from 'express';
 import { SandboxManager } from './managers/sandbox-manager';
 import { SandboxExecutorManager } from './managers/sandbox-executor-manager';
@@ -8,6 +8,11 @@ import { MessageFactory } from './chat-session/messages/message-factory';
 import { ToolSet } from './chat-session/tools/tool-set';
 import { CurrentTimeTool } from './chat-session/tools/current-time-tool';
 import { OpenaiLlmClient } from './llm-client/openai-llm-client';
+import { LoginEndpoint } from './api/auth/login-endpoint';
+import { Router } from './api/router';
+import { UserRepository } from './repositories/user-repository/user-repository';
+import { SqliteUserRepository } from './repositories/user-repository/sqlite-user-repository';
+import { PasswordHasher } from './repositories/user-repository/password-hasher';
 
 const PORT = process.env.PORT || 3000;
 
@@ -15,8 +20,18 @@ const logger = new Logger('Server');
 
 export class Server {
   public static async create(abortSignal: AbortSignal): Promise<Server> {
-    const sandboxPaths = new SandboxPaths();
-    const sandboxManager = new SandboxManager(sandboxPaths);
+    const app = express();
+
+    const serverPaths = new ServerPaths();
+    const userRepository: UserRepository = new SqliteUserRepository(serverPaths);
+
+    const passwordHasher = new PasswordHasher();
+
+    const loginEndpoint = new LoginEndpoint(userRepository, passwordHasher);
+    const endpoints = [loginEndpoint];
+    const router = new Router(app, endpoints);
+
+    const sandboxManager = new SandboxManager(serverPaths);
     const sandboxExecutorManager = new SandboxExecutorManager(sandboxManager);
 
     const instanceId = 'instance_1';
@@ -42,14 +57,13 @@ export class Server {
 
     const session = new ChatSession(messageFactory);
     session.pushSystemMessage('You are a helpful assistant.');
-    session.queueUserMessage('What is current time?');
+    //session.queueUserMessage('What is current time?');
     //session.queueUserMessage('Where is poland?');
 
-    const app = express();
+    router.setup();
     app.listen(PORT, () => {
       logger.log(`Server is running on port ${PORT}`);
     });
-
     return new Server(sandboxManager);
   }
 

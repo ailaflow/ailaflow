@@ -1,10 +1,10 @@
-import { SandboxPaths } from '../sandbox/sandbox-paths';
+import { ServerPaths } from '../core/server-paths';
 import { Sandbox, SandboxHandler } from '../sandbox/sandbox';
 
 export class SandboxManager {
   private readonly sandboxes = new Map<string, Sandbox>();
 
-  public constructor(private readonly pathsProvider: SandboxPaths) {}
+  public constructor(private readonly pathsProvider: ServerPaths) {}
 
   public async get(abortSignal: AbortSignal, instanceId: string): Promise<Sandbox> {
     let sandbox = this.sandboxes.get(instanceId);
@@ -16,7 +16,7 @@ export class SandboxManager {
         }
       };
 
-      sandbox = await Sandbox.create(abortSignal, this.pathsProvider.getRootFolderPath(), instanceId, handler);
+      sandbox = await Sandbox.create(abortSignal, this.pathsProvider.getSandboxFolderPath(), instanceId, handler);
       this.sandboxes.set(instanceId, sandbox);
     }
     return sandbox;
