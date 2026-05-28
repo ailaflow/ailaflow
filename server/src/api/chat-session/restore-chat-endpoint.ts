@@ -37,10 +37,15 @@ export class RestoreSessionEndpoint implements Endpoint {
     chatSession.onMessageCompleted.subscribe(onMessageCompletedOrFailed);
     chatSession.onMessageFailed.subscribe(onMessageCompletedOrFailed);
 
+    const pingIv = setInterval(() => {
+      res.write('\n');
+    }, 2_000);
+
     res.on('close', () => {
       chatSession.onMessageCompleted.unsubscribe(onMessageCompletedOrFailed);
       chatSession.onMessageFailed.unsubscribe(onMessageCompletedOrFailed);
 
+      clearInterval(pingIv);
       res.end();
     });
   }

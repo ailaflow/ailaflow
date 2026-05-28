@@ -5,6 +5,14 @@ export default defineConfig({
     jsx: 'automatic',
     jsxImportSource: 'react'
   },
+  optimizeDeps: {
+    include: ['@aila/model']
+  },
+  build: {
+    commonjsOptions: {
+      include: [/node_modules/, /model[\\/]dist/]
+    }
+  },
   server: {
     proxy: {
       '/api': {
