@@ -2,6 +2,7 @@ import { useAuthContextState } from '../../auth/auth-context';
 import { SubmitEvent, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApiClient } from '../../auth/api-client-context';
+import { LoginResponse } from '@aila/model';
 
 export function Login() {
   const authContext = useAuthContextState();
@@ -14,18 +15,21 @@ export function Login() {
   const onSubmit = async (e: SubmitEvent) => {
     e.preventDefault();
 
-    const result = await apiClient.auth.login({
-      userName,
-      password
-    });
-    if (!result.token) {
-      setError('Invalid user or password');
+    let response: LoginResponse;
+    try {
+      const abortSignal = AbortSignal.timeout(10000);
+      response = await apiClient.auth.login(abortSignal, {
+        userName,
+        password
+      });
+    } catch (e) {
+      setError((e as Error).message ?? String(e));
       return;
     }
 
     authContext.setSession({
-      user: userName,
-      token: result.token
+      userName,
+      token: response.token
     });
     navigate('/');
   };
@@ -41,7 +45,7 @@ export function Login() {
         <br />
         <label>
           Password
-          <input name="password" type="text" value={password} onChange={e => setPassword(e.target.value)} />
+          <input name="password" type="password" value={password} onChange={e => setPassword(e.target.value)} />
         </label>
         {error && <p style={{ color: 'red' }}>{error}</p>}
         <br />

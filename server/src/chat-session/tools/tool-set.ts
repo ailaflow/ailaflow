@@ -1,4 +1,4 @@
-import { ToolDescriptor } from '../../llm-client/types/tool-descriptor';
+import { ToolDescriptor } from '@aila/model';
 import { Tool } from './tool';
 
 export class ToolSet {

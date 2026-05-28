@@ -38,12 +38,21 @@ export class SqliteUserRepository implements UserRepository {
     return row ? new User(row.name, row.passwordHash, row.isAdmin === 1) : null;
   }
 
-  public async insertUser(user: User): Promise<void> {
+  public async insert(user: User): Promise<void> {
     const statement = this.db.prepare(`
       INSERT INTO users (name, passwordHash, isAdmin)
       VALUES (?, ?, ?)
     `);
     statement.run(user.name, user.passwordHash, user.isAdmin ? 1 : 0);
+  }
+
+  public async count(): Promise<number> {
+    const statement = this.db.prepare(`
+      SELECT COUNT(*) as count
+      FROM users
+    `);
+    const row = statement.get() as { count: number };
+    return row.count;
   }
 
   public dispose() {

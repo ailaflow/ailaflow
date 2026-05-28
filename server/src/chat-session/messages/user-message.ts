@@ -1,10 +1,13 @@
-import { CompletedMessage } from '../../llm-client/types/completed-message';
-import { CompleteResult, Message, MessageType } from './message';
+import { CompletedMessage, MessageType } from '@aila/model';
+import { CompleteResult, Message } from './message';
 
 export class UserMessage implements Message {
   public readonly type = MessageType.USER;
 
-  public constructor(public readonly text: string) {}
+  public constructor(
+    public readonly id: number,
+    public readonly text: string
+  ) {}
 
   public async complete(): Promise<CompleteResult> {
     const completedMessage: CompletedMessage = {

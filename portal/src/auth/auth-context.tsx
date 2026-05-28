@@ -4,7 +4,7 @@ import { useApiClient } from './api-client-context';
 const authContext = createContext<AuthContextState | null>(null);
 
 export interface AuthSession {
-  user: string;
+  userName: string;
   token: string;
 }
 
@@ -46,10 +46,12 @@ export function AuthContext(props: AuthContextProps) {
   const [session, reactSetSession] = useState<AuthSession | null>(() =>
     props.initialSession === undefined ? tryReadStorage() : props.initialSession
   );
+  apiClient.setAuthToken(session?.token ?? null);
 
   useEffect(() => {
     function handler() {
       setSession(null);
+      apiClient.setAuthToken(null);
     }
 
     apiClient.setOnUnauthorizedListener(handler);
@@ -60,23 +62,24 @@ export function AuthContext(props: AuthContextProps) {
     if (!session) {
       return;
     }
-    const currentToken = session.token;
     const iv = setInterval(async () => {
       try {
-        const response = await apiClient.auth.refreshToken({
-          token: currentToken
+        const abortSignal = AbortSignal.timeout(2_000);
+        const response = await apiClient.auth.refreshToken(abortSignal, {
+          token: session.token
         });
         session.token = response.token;
         updateStorage(session);
       } catch (e) {
         console.error(e);
       }
-    }, 15_000);
+    }, 5_000);
 
     return () => clearInterval(iv);
   }, [session, apiClient]);
 
   function setSession(session: AuthSession | null) {
+    apiClient.setAuthToken(session?.token ?? null);
     reactSetSession(session);
     updateStorage(session);
   }

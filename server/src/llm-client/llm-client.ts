@@ -1,5 +1,4 @@
-import { CompletedMessage } from './types/completed-message';
-import { ToolDescriptor } from './types/tool-descriptor';
+import { CompletedMessage, ToolDescriptor } from '@aila/model';
 
 export interface CompleteResult {
   completedMessage: CompletedMessage;

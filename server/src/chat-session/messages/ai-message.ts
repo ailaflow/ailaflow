@@ -1,13 +1,14 @@
-import { CompleteResult, Message, MessageType } from './message';
+import { CompleteResult, Message } from './message';
 import { ToolSet } from '../tools/tool-set';
 import { SessionStack } from '../session-stack';
 import { LlmClient } from '../../llm-client/llm-client';
-import { ToolCall } from '../../llm-client/types/tool-call';
+import { MessageType, ToolCall } from '@aila/model';
 
 export class AiMessage implements Message {
   public readonly type = MessageType.AI;
 
   public constructor(
+    public readonly id: number,
     private readonly llmClient: LlmClient,
     private readonly toolSet: ToolSet
   ) {}

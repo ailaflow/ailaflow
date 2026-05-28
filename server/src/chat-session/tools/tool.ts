@@ -1,5 +1,4 @@
-import { ToolDescriptor } from '../../llm-client/types/tool-descriptor';
-import { ToolCall } from '../../llm-client/types/tool-call';
+import { ToolCall, ToolDescriptor } from '@aila/model';
 
 export interface Tool {
   descriptor: ToolDescriptor;

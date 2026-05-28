@@ -1,10 +1,3 @@
-export interface HttpClientRequest {
-  method: string;
-  path: string;
-  body?: object;
-  authToken?: string;
-}
-
 export class HttpClientError extends Error {
   public static is(obj: unknown): obj is HttpClientError {
     return (obj as Error).name === 'HttpClientError';
@@ -20,30 +13,37 @@ export class HttpClientError extends Error {
   }
 }
 
-export class HttpClient {
-  public onUnauthorizedListener: (() => void) | null = null;
+export interface HttpClientSseListener<U> {
+  onMessage(data: U): void;
+  onClose(error?: Error): void;
+}
 
-  public constructor(private readonly baseUrl: string) {}
+export class HttpClient {
+  private onUnauthorizedListener: (() => void) | null = null;
+  private authToken: string | null = null;
 
   public setOnUnauthorizedListener(listener: (() => void) | null) {
     this.onUnauthorizedListener = listener;
   }
 
-  public async json<T>(request: HttpClientRequest): Promise<T> {
+  public setAuthToken(token: string | null) {
+    this.authToken = token;
+  }
+
+  private async fetch(abortSignal: AbortSignal, method: string, path: string, body?: object): Promise<Response> {
     const headers: Record<string, string> = {};
-    if (request.body) {
+    if (body) {
       headers['Content-Type'] = 'application/json';
     }
-    if (request.authToken) {
-      headers['Authorization'] = `Bearer ${request.authToken}`;
+    if (this.authToken) {
+      headers['Authorization'] = `Bearer ${this.authToken}`;
     }
 
-    const url = new URL(request.path, this.baseUrl);
-    const response = await fetch(url, {
+    const response = await fetch(path, {
       headers,
-      keepalive: true,
-      method: request.method,
-      body: request.body ? JSON.stringify(request.body) : undefined
+      method,
+      body: body ? JSON.stringify(body) : undefined,
+      signal: abortSignal
     });
 
     const status = response.status;
@@ -72,9 +72,55 @@ export class HttpClient {
       if (status === 500) {
         throw new HttpClientError('Internal server error', status, data);
       }
-      throw new HttpClientError('Unknown error', status, data);
+    }
+    return response;
+  }
+
+  public async json<T>(abortSignal: AbortSignal, method: string, path: string, body?: object): Promise<T> {
+    const response = await this.fetch(abortSignal, method, path, body);
+    return await response.json();
+  }
+
+  public async sse<U>(
+    abortSignal: AbortSignal,
+    listener: HttpClientSseListener<U>,
+    method: string,
+    path: string,
+    body?: object
+  ): Promise<void> {
+    const response = await this.fetch(abortSignal, method, path, body);
+    const reader = response.body?.getReader();
+    if (!reader) {
+      throw new HttpClientError('Response body is null', response.status, null);
     }
 
-    return await response.json();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    try {
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) {
+          break;
+        }
+        buffer += decoder.decode(value, { stream: true });
+        for (;;) {
+          const pos = buffer.indexOf('\n');
+          if (pos === -1) {
+            break;
+          }
+          const line = buffer.slice(0, pos).trimEnd();
+          buffer = buffer.slice(pos + 1);
+          if (line.length > 0 && line.startsWith('data: ')) {
+            listener.onMessage(JSON.parse(line.slice(6)) as U);
+          }
+        }
+      }
+      listener.onClose();
+    } catch (e) {
+      listener.onClose(e as Error);
+      try {
+        await reader.cancel();
+      } catch {}
+    }
   }
 }

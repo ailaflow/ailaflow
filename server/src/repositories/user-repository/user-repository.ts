@@ -19,5 +19,6 @@ export class User {
 
 export interface UserRepository extends Repository {
   tryGetUser(userName: string): Promise<User | null>;
-  insertUser(user: User): Promise<void>;
+  insert(user: User): Promise<void>;
+  count(): Promise<number>;
 }

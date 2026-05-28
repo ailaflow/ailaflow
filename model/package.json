@@ -7,15 +7,16 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "start": "pnpm build:watch",
-    "build": "rm -rf lib && tsc",
-    "build:watch": "rm -rf lib && tsc --watch",
+    "build": "rm -rf dist && tsc",
+    "build:watch": "rm -rf dist && tsc --watch",
     "prettier": "prettier --check ./src",
     "prettier:fix": "prettier --write ./src",
     "test": "tsx --test --watch",
     "test:single": "tsx --test"
   },
   "dependencies": {
-    "zod": "^4.4.3"
+    "zod": "^4.4.3",
+    "openai": "^6.39.0"
   },
   "devDependencies": {
     "prettier": "^3.8.3",

@@ -1,6 +1,6 @@
+import { ToolCall } from '@aila/model';
 import { LlmClient } from '../../llm-client/llm-client';
 import { ToolSet } from '../tools/tool-set';
-import { ToolCall } from '../../llm-client/types/tool-call';
 import { AiMessage } from './ai-message';
 import { SystemMessage } from './system-message';
 import { ToolMessage } from './tool-message';
@@ -12,19 +12,19 @@ export class MessageFactory {
     private readonly toolSet: ToolSet
   ) {}
 
-  public createSystem(content: string): SystemMessage {
-    return new SystemMessage(content);
+  public createSystem(id: number, content: string): SystemMessage {
+    return new SystemMessage(id, content);
   }
 
-  public createUser(content: string): UserMessage {
-    return new UserMessage(content);
+  public createUser(id: number, content: string): UserMessage {
+    return new UserMessage(id, content);
   }
 
-  public createAi(): AiMessage {
-    return new AiMessage(this.llmClient, this.toolSet);
+  public createAi(id: number): AiMessage {
+    return new AiMessage(id, this.llmClient, this.toolSet);
   }
 
-  public createTool(calls: ToolCall[]): ToolMessage {
-    return new ToolMessage(calls, this.toolSet);
+  public createTool(id: number, calls: ToolCall[]): ToolMessage {
+    return new ToolMessage(id, calls, this.toolSet);
   }
 }

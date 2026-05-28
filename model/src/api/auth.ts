@@ -3,12 +3,11 @@ import z from 'zod';
 // login
 
 export const loginRequest = z.object({
-  userName: z.string().min(1),
-  password: z.string().min(1)
+  userName: z.string(),
+  password: z.string()
 });
 export const loginResponse = z.object({
-  success: z.boolean(),
-  token: z.string().optional()
+  token: z.string()
 });
 export type LoginRequest = z.infer<typeof loginRequest>;
 export type LoginResponse = z.infer<typeof loginResponse>;
@@ -19,7 +18,7 @@ export const refreshTokenRequest = z.object({
   token: z.string().min(1)
 });
 export const refreshTokenResponse = z.object({
-  token: z.string()
+  token: z.string().min(1)
 });
 
 export type RefreshTokenRequest = z.infer<typeof refreshTokenRequest>;

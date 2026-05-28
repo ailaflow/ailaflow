@@ -1,10 +1,10 @@
+import { CompletedMessage } from '@aila/model';
 import { Message } from './messages/message';
-import { CompletedMessage } from '../llm-client/types/completed-message';
 
 export interface SessionStackItem {
   message: Message;
   completedMessage?: CompletedMessage;
-  failed?: string;
+  failReason?: string;
 }
 
 export class SessionStack {
@@ -42,12 +42,12 @@ export class SessionStack {
     }
   }
 
-  public fail(message: Message, error: string) {
+  public fail(message: Message, reason: string) {
     const item = this.map.get(message);
     if (!item) {
       throw new Error('Cannot find message');
     }
-    item.failed = error;
+    item.failReason = reason;
   }
 
   public tryGetLast(): SessionStackItem | null {
@@ -59,7 +59,7 @@ export class SessionStack {
     for (let i = 0; i < this.stack.length - 1; i++) {
       const item = this.stack[i];
       if (!item.completedMessage) {
-        if (item.failed) {
+        if (item.failReason) {
           continue;
         }
         throw new Error(`Message ${i} is not completed`);
@@ -67,5 +67,9 @@ export class SessionStack {
       result.push(item.completedMessage);
     }
     return result;
+  }
+
+  public all(): ReadonlyArray<SessionStackItem> {
+    return this.stack;
   }
 }

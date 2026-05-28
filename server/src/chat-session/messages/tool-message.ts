@@ -1,12 +1,12 @@
+import { MessageType, ToolCall, ToolResponse } from '@aila/model';
 import { ToolSet } from '../tools/tool-set';
-import { ToolCall } from '../../llm-client/types/tool-call';
-import { ToolResponse } from '../../llm-client/types/tool-response';
-import { CompleteResult, Message, MessageType } from './message';
+import { CompleteResult, Message } from './message';
 
 export class ToolMessage implements Message {
   public readonly type = MessageType.TOOL;
 
   public constructor(
+    public readonly id: number,
     private readonly calls: ToolCall[],
     private readonly toolSet: ToolSet
   ) {}

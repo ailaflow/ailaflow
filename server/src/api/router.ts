@@ -1,29 +1,42 @@
 import { Express, Request, Response } from 'express';
 import { Endpoint } from './endpoint';
 import { Logger } from '../core/logger';
+import { AuthMiddleware } from './auth/auth-middleware';
+import { EndpointError } from './endpoint-error';
 
 export class Router {
   private readonly logger = new Logger(Router.name);
 
   public constructor(
     private readonly app: Express,
-    private readonly endpoints: Endpoint[]
+    private readonly endpoints: Endpoint[],
+    private readonly authMiddleware: AuthMiddleware
   ) {}
 
   public setup() {
     for (const endpoint of this.endpoints) {
-      this.app[endpoint.method](endpoint.path, async (req: Request, res: Response) => {
+      let handler = async (req: Request, res: Response) => {
         try {
-          const jsonOrEmpty = await endpoint.handle(req, res);
-          if (jsonOrEmpty) {
-            res.json(jsonOrEmpty).end();
+          const jsonOrVoid = await endpoint.handle(req, res);
+          if (jsonOrVoid) {
+            res.json(jsonOrVoid).end();
           }
         } catch (e) {
+          if (e instanceof EndpointError) {
+            res.status(e.status).json({ error: e.message });
+            return;
+          }
+
           const error = e instanceof Error ? e : new Error(String(e));
           this.logger.error(`Error occurred while handling ${endpoint.path}: ${error}`);
           res.status(500).json({ error: 'Internal Server Error' });
         }
-      });
+      };
+      if (endpoint.auth) {
+        handler = this.authMiddleware.wrap(handler);
+      }
+      this.app[endpoint.method](endpoint.path, handler);
+      this.logger.log(`Registered endpoint: ${endpoint.method.toUpperCase()} ${endpoint.path}`);
     }
   }
 }
