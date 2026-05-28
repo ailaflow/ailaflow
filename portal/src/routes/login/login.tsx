@@ -1,12 +1,10 @@
-import { useAuthContextState } from '../../auth/auth-context';
+import { useAuthState } from '../../auth/auth-context';
 import { SubmitEvent, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useApiClient } from '../../auth/api-client-context';
 import { LoginResponse } from '@aila/model';
 
 export function Login() {
-  const authContext = useAuthContextState();
-  const apiClient = useApiClient();
+  const { apiClient, setSession } = useAuthState();
   const navigate = useNavigate();
   const [userName, setUserName] = useState('');
   const [password, setPassword] = useState('');
@@ -27,9 +25,10 @@ export function Login() {
       return;
     }
 
-    authContext.setSession({
+    setSession({
       userName,
-      token: response.token
+      authToken: response.authToken,
+      isAdmin: response.isAdmin
     });
     navigate('/');
   };

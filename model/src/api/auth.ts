@@ -7,7 +7,8 @@ export const loginRequest = z.object({
   password: z.string()
 });
 export const loginResponse = z.object({
-  token: z.string()
+  authToken: z.string(),
+  isAdmin: z.boolean()
 });
 export type LoginRequest = z.infer<typeof loginRequest>;
 export type LoginResponse = z.infer<typeof loginResponse>;
@@ -15,10 +16,10 @@ export type LoginResponse = z.infer<typeof loginResponse>;
 // refreshToken
 
 export const refreshTokenRequest = z.object({
-  token: z.string().min(1)
+  authToken: z.string().min(1)
 });
 export const refreshTokenResponse = z.object({
-  token: z.string().min(1)
+  authToken: z.string().min(1)
 });
 
 export type RefreshTokenRequest = z.infer<typeof refreshTokenRequest>;

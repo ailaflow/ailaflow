@@ -13,19 +13,25 @@ import {
 } from '@aila/model';
 
 export class ApiClient {
-  private readonly client = new HttpClient();
+  private readonly client: HttpClient;
+  public readonly install: InstallApiClient;
+  public readonly auth: AuthApiClient;
+  public readonly chat: ChatApiClient;
+
+  public constructor(authToken: string | null) {
+    this.client = new HttpClient(authToken);
+    this.install = new InstallApiClient(this.client);
+    this.auth = new AuthApiClient(this.client);
+    this.chat = new ChatApiClient(this.client);
+  }
 
   public setOnUnauthorizedListener(listener: (() => void) | null) {
     this.client.setOnUnauthorizedListener(listener);
   }
 
-  public setAuthToken(token: string | null) {
-    this.client.setAuthToken(token);
+  public updateAuthToken(authToken: string) {
+    this.client.updateAuthToken(authToken);
   }
-
-  public readonly install = new InstallApiClient(this.client);
-  public readonly auth = new AuthApiClient(this.client);
-  public readonly chat = new ChatApiClient(this.client);
 }
 
 export class InstallApiClient {
@@ -53,8 +59,8 @@ export class ChatApiClient {
 
   public async restoreChat(
     abortSignal: AbortSignal,
-    request: RestoreChatRequest,
-    listener: HttpClientSseListener<ChatUpdate>
+    listener: HttpClientSseListener<ChatUpdate>,
+    request: RestoreChatRequest
   ): Promise<void> {
     return this.client.sse(abortSignal, listener, 'POST', '/api/chat', request);
   }

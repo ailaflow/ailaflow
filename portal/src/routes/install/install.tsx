@@ -1,7 +1,7 @@
 import { SubmitEvent, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useApiClient } from '../../auth/api-client-context';
 import { InstallResponse } from '@aila/model';
+import { useApiClient } from '../../auth/auth-context';
 
 export function Install() {
   const apiClient = useApiClient();

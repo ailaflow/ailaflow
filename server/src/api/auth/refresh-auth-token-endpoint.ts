@@ -13,7 +13,7 @@ export class RefreshAuthTokenEndpoint implements Endpoint {
   public async handle(req: Request): Promise<RefreshTokenResponse> {
     const request = refreshTokenRequest.parse(req.body);
 
-    const authToken = await this.authTokenRepository.tryGetByToken(request.token);
+    const authToken = await this.authTokenRepository.tryGetByToken(request.authToken);
     if (!authToken || authToken.isExpired()) {
       throw new EndpointError('Invalid or expired token', 401);
     }
@@ -23,7 +23,7 @@ export class RefreshAuthTokenEndpoint implements Endpoint {
     setTimeout(this.deleteOldToken, 30_000);
 
     return {
-      token: newAuthToken.token
+      authToken: newAuthToken.token
     };
   }
 

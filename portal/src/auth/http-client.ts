@@ -20,14 +20,15 @@ export interface HttpClientSseListener<U> {
 
 export class HttpClient {
   private onUnauthorizedListener: (() => void) | null = null;
-  private authToken: string | null = null;
+
+  public constructor(private authToken: string | null) {}
 
   public setOnUnauthorizedListener(listener: (() => void) | null) {
     this.onUnauthorizedListener = listener;
   }
 
-  public setAuthToken(token: string | null) {
-    this.authToken = token;
+  public updateAuthToken(authToken: string) {
+    this.authToken = authToken;
   }
 
   private async fetch(abortSignal: AbortSignal, method: string, path: string, body?: object): Promise<Response> {

@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from 'react';
-import { useApiClient } from '../../auth/api-client-context';
+import { useEffect, useState } from 'react';
 import { ChatMessageUpdate } from '@aila/model';
+import { useApiClient } from '../../auth/auth-context';
 
 export function Chat(props: { chatName: string }) {
   const apiClient = useApiClient();
@@ -26,9 +26,6 @@ export function Chat(props: { chatName: string }) {
       .restoreChat(
         abortControl.signal,
         {
-          chatName: props.chatName
-        },
-        {
           onMessage(update) {
             if (update.messages) {
               u.push(...update.messages);
@@ -48,6 +45,9 @@ export function Chat(props: { chatName: string }) {
               console.error(error);
             }
           }
+        },
+        {
+          chatName: props.chatName
         }
       )
       .catch(console.error);

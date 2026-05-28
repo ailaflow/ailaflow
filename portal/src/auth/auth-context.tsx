@@ -1,21 +1,21 @@
 import { createContext, useContext, useEffect, useState } from 'react';
-import { useApiClient } from './api-client-context';
+import { ApiClient } from './api-client';
 
-const authContext = createContext<AuthContextState | null>(null);
+const authContext = createContext<AuthState | null>(null);
 
 export interface AuthSession {
   userName: string;
-  token: string;
+  authToken: string;
+  isAdmin: boolean;
 }
 
-interface AuthContextState {
+interface AuthState {
+  apiClient: ApiClient;
   session: AuthSession | null;
   setSession(session: AuthSession | null): void;
 }
 
-const localStorageKey = '__auth';
-
-export function useAuthContextState(): AuthContextState {
+export function useAuthState(): AuthState {
   const context = useContext(authContext);
   if (!context) {
     throw new Error('Cannot find auth context');
@@ -24,16 +24,21 @@ export function useAuthContextState(): AuthContextState {
 }
 
 export function useIsAuthenticated(): boolean {
-  const context = useAuthContextState();
+  const context = useAuthState();
   return context.session !== null;
 }
 
 export function useSession(): AuthSession {
-  const state = useAuthContextState();
+  const state = useAuthState();
   if (!state.session) {
     throw new Error('Not authenticated');
   }
   return state.session;
+}
+
+export function useApiClient(): ApiClient {
+  const state = useAuthState();
+  return state.apiClient;
 }
 
 export interface AuthContextProps {
@@ -42,19 +47,17 @@ export interface AuthContextProps {
 }
 
 export function AuthContext(props: AuthContextProps) {
-  const apiClient = useApiClient();
-  const [session, reactSetSession] = useState<AuthSession | null>(() =>
-    props.initialSession === undefined ? tryReadStorage() : props.initialSession
-  );
-  apiClient.setAuthToken(session?.token ?? null);
+  const [{ apiClient, session }, setState] = useState(() => {
+    const session = props.initialSession === undefined ? tryReadStorage() : props.initialSession;
+    const apiClient = new ApiClient(session?.authToken ?? null);
+    return {
+      apiClient,
+      session
+    };
+  });
 
   useEffect(() => {
-    function handler() {
-      setSession(null);
-      apiClient.setAuthToken(null);
-    }
-
-    apiClient.setOnUnauthorizedListener(handler);
+    apiClient.setOnUnauthorizedListener(() => setSession(null));
     return () => apiClient.setOnUnauthorizedListener(null);
   }, [apiClient]);
 
@@ -64,28 +67,33 @@ export function AuthContext(props: AuthContextProps) {
     }
     const iv = setInterval(async () => {
       try {
-        const abortSignal = AbortSignal.timeout(2_000);
+        const abortSignal = AbortSignal.timeout(3_000);
         const response = await apiClient.auth.refreshToken(abortSignal, {
-          token: session.token
+          authToken: session.authToken
         });
-        session.token = response.token;
-        updateStorage(session);
+        session.authToken = response.authToken;
+        apiClient.updateAuthToken(response.authToken);
+        saveToStorage(session);
       } catch (e) {
         console.error(e);
       }
-    }, 5_000);
+    }, 10_000);
 
     return () => clearInterval(iv);
   }, [session, apiClient]);
 
   function setSession(session: AuthSession | null) {
-    apiClient.setAuthToken(session?.token ?? null);
-    reactSetSession(session);
-    updateStorage(session);
+    setState({
+      apiClient: new ApiClient(session?.authToken ?? null),
+      session
+    });
+    saveToStorage(session);
   }
 
-  return <authContext.Provider value={{ session, setSession }}>{props.children}</authContext.Provider>;
+  return <authContext.Provider value={{ apiClient, session, setSession }}>{props.children}</authContext.Provider>;
 }
+
+const localStorageKey = '__auth';
 
 function tryReadStorage(): AuthSession | null {
   const value = window.localStorage[localStorageKey];
@@ -96,7 +104,7 @@ function tryReadStorage(): AuthSession | null {
   }
 }
 
-function updateStorage(session: AuthSession | null) {
+function saveToStorage(session: AuthSession | null) {
   if (session) {
     window.localStorage[localStorageKey] = JSON.stringify(session);
   } else {
