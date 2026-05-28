@@ -22,6 +22,7 @@ import { InstallEndpoint } from './api/install/install-endpoint';
 import { RestoreSessionEndpoint } from './api/chat-session/restore-chat-endpoint';
 import { ChatSessionProvider } from './chat-session/chat-session-provider';
 import { SendChatMessageEndpoint } from './api/chat-session/send-chat-message-endpoint';
+import { SandboxScriptTool } from './chat-session/tools/sandbox-script-tool';
 
 const PORT = process.env.PORT || 3000;
 
@@ -37,11 +38,15 @@ export class Server {
     const authTokenRepository: AuthTokenRepository = new SqliteAuthTokenRepository(serverPaths);
     const repositories: Repository[] = [userRepository, authTokenRepository];
 
+    const sandboxManager = new SandboxManager(serverPaths);
+    const sandboxExecutorManager = new SandboxExecutorManager(sandboxManager);
+
     const passwordHasher = new PasswordHasher();
 
     const llmClient = new OpenaiLlmClient();
     const toolSet = new ToolSet();
     toolSet.addTool(new CurrentTimeTool());
+    toolSet.addTool(new SandboxScriptTool(sandboxExecutorManager));
     const messageFactory = new MessageFactory(llmClient, toolSet);
 
     const chatSessionFactory = new ChatSessionFactory(messageFactory);
@@ -56,28 +61,6 @@ export class Server {
     ];
     const authMiddleware = new AuthMiddleware(authTokenRepository);
     const router = new Router(app, endpoints, authMiddleware);
-
-    const sandboxManager = new SandboxManager(serverPaths);
-    const sandboxExecutorManager = new SandboxExecutorManager(sandboxManager);
-
-    const instanceId = 'instance_1';
-
-    /*const scriptExecutor = await sandboxExecutorManager.get(abortSignal, instanceId);
-
-    for (let i = 0; i < 5; i++) {
-      const bashAbortSignal = AbortSignal.timeout(10_000);
-      const json = await scriptExecutor.executeJSON(bashAbortSignal, {
-        folderPath: 'test',
-        scriptName: 'test.mjs',
-        input: {
-          testsInput: 'test'
-        }
-      });
-      console.log('Execution result:', json);
-    }*/
-
-    //session.queueUserMessage('What is current time?');
-    //session.queueUserMessage('Where is poland?');
 
     router.setup();
     app.listen(PORT, () => {

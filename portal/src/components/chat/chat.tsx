@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ChatMessageUpdate } from '@aila/model';
+import { ChatMessageUpdate, strMessageType } from '@aila/model';
 import { useApiClient } from '../../auth/auth-context';
 
 export function Chat(props: { chatName: string }) {
@@ -61,6 +61,9 @@ export function Chat(props: { chatName: string }) {
       <hr />
       {updates.map((message, index) => (
         <div key={`d_${index}`} style={{ border: '1px solid silver' }}>
+          <div>
+            {message.id} {strMessageType(message.type)}
+          </div>
           <div>{message.failReason && <div>Fail: {message.failReason}</div>}</div>
           <div>
             {toMessages(message).map((m, i) => (

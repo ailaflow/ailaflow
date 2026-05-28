@@ -6,7 +6,7 @@ export class SandboxExecutorManager {
 
   public constructor(private readonly sandboxManager: SandboxManager) {}
 
-  public async get(abortSignal: AbortSignal, instanceId: string) {
+  public async get(abortSignal: AbortSignal, instanceId: string): Promise<SandboxExecutor> {
     let executor = this.executors.get(instanceId);
     if (!executor) {
       const sandbox = await this.sandboxManager.get(abortSignal, instanceId);

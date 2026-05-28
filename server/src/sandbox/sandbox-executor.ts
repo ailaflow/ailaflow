@@ -1,12 +1,9 @@
 import { Sandbox } from './sandbox';
 
-export interface SandboxExecutorRequest {
+export interface SandboxExecutorRequest<T> {
   folderPath: string;
   scriptName: string;
-  /**
-   * JSON serializable object that will be passed to the script via stdin.
-   */
-  input: object;
+  input: T;
 }
 
 const TOKEN_PRE = '>'.repeat(20);
@@ -29,7 +26,7 @@ export class SandboxExecutor {
 
   public constructor(private readonly sandbox: Sandbox) {}
 
-  public async execute(abortSignal: AbortSignal, request: SandboxExecutorRequest): Promise<SandboxExecutorResult<string>> {
+  public async execute(abortSignal: AbortSignal, request: SandboxExecutorRequest<string>): Promise<SandboxExecutorResult<string>> {
     const start = Date.now();
     const install = !this.isInstalled.has(request.folderPath);
     if (install) {
@@ -45,7 +42,7 @@ export class SandboxExecutor {
       folderPath: request.folderPath,
       command: 'node',
       args: [request.scriptName],
-      stdin: JSON.stringify(request.input)
+      stdin: request.input
     });
 
     if (result.code !== 0) {
@@ -70,15 +67,19 @@ export class SandboxExecutor {
     return {
       install,
       totalTime,
-      output: output
+      output
     };
   }
 
-  public async executeJSON<T extends object = object>(
+  public async executeJSON<R extends object = object, T extends object = object>(
     abortSignal: AbortSignal,
-    request: SandboxExecutorRequest
+    request: SandboxExecutorRequest<R>
   ): Promise<SandboxExecutorResult<T>> {
-    const r0 = await this.execute(abortSignal, request);
+    const r0 = await this.execute(abortSignal, {
+      folderPath: request.folderPath,
+      scriptName: request.scriptName,
+      input: JSON.stringify(request.input)
+    });
     const r1 = r0 as unknown as SandboxExecutorResult<T>;
     if (!r0.output) {
       return r1;
