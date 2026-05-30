@@ -3,6 +3,8 @@ import { Login } from './login/login';
 import { AuthGate } from './auth-gate';
 import { Dashboard } from './dashboard/dashboard';
 import { Install } from './install/install';
+import { AdminProcesses } from './admin-processes/admin-processes';
+import { AdminProcessEditor } from './admin-process-editor/admin-process-editor';
 
 const router = createBrowserRouter([
   {
@@ -16,6 +18,18 @@ const router = createBrowserRouter([
   {
     path: '/install',
     element: <Install />
+  },
+  {
+    path: '/admin/processes',
+    element: <AuthGate route={<AdminProcesses />} />
+  },
+  {
+    path: '/admin/processes/:processId',
+    element: <AuthGate route={<AdminProcessEditor />} />
+  },
+  {
+    path: '/admin/create-processes',
+    element: <AuthGate route={<AdminProcessEditor />} />
   }
 ]);
 

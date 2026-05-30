@@ -1,16 +1,16 @@
 import { defineConfig } from 'vite';
+import { fileURLToPath } from 'url';
+import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
+  plugins: [tailwindcss()],
   esbuild: {
     jsx: 'automatic',
     jsxImportSource: 'react'
   },
-  optimizeDeps: {
-    include: ['@aila/model']
-  },
-  build: {
-    commonjsOptions: {
-      include: [/node_modules/, /model[\\/]dist/]
+  resolve: {
+    alias: {
+      '@aila/model': fileURLToPath(new URL('../model/src/index.ts', import.meta.url))
     }
   },
   server: {

@@ -1,3 +1,11 @@
-body {
-  background: grey;
+@import 'tailwindcss';
+@import 'sequential-workflow-designer/css/designer.css';
+@import 'sequential-workflow-designer/css/designer-soft.css';
+
+.sqd-designer-react {
+  width: 100%;
+  height: 100%;
+}
+.sqd-layout-desktop .sqd-smart-editor {
+  width: 400px;
 }

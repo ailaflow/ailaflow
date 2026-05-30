@@ -1,8 +1,167 @@
-export function PortalLayout(props: { children: React.ReactNode | React.ReactNode[] }) {
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { useAuthState } from '../../auth/auth-context';
+
+type LinkMenuItem = {
+  icon: string;
+  label: string;
+  action: 'link';
+  href: string;
+};
+
+type MenuCommand = 'logout';
+
+type CommandMenuItem = {
+  icon: string;
+  label: string;
+  action: 'command';
+  command: MenuCommand;
+};
+
+type MenuItem = LinkMenuItem | CommandMenuItem;
+
+const userLinks: MenuItem[] = [
+  { icon: 'T', label: 'My tasks', action: 'link', href: '#' },
+  { icon: 'N', label: 'My notifications', action: 'link', href: '#' },
+  { icon: 'P', label: 'My processes', action: 'link', href: '#' },
+  { icon: 'V', label: 'My views', action: 'link', href: '#' },
+  { icon: 'X', label: 'Log out', action: 'command', command: 'logout' }
+];
+
+const adminLinks: MenuItem[] = [
+  { icon: '/', label: 'Processes', action: 'link', href: '/admin/processes' },
+  { icon: '#', label: 'Tables', action: 'link', href: '#' },
+  { icon: '#', label: 'Users', action: 'link', href: '#' },
+  { icon: '*', label: 'Views', action: 'link', href: '#' },
+  { icon: '*', label: 'Logs', action: 'link', href: '#' },
+  { icon: '*', label: 'Configuration', action: 'link', href: '#' },
+  { icon: '*', label: 'Docker', action: 'link', href: '#' }
+];
+
+function SidebarMenuItem(props: { item: MenuItem; onCommand(command: MenuCommand): void; onSelect?: () => void }) {
+  const itemClassName =
+    'flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors hover:bg-slate-100 cursor-pointer';
+  const { item } = props;
+  const content = (
+    <>
+      <span className="inline-flex h-4 w-4 items-center justify-center rounded border border-slate-300 text-[10px] font-semibold text-slate-600">
+        {item.icon}
+      </span>
+      <span className="truncate">{item.label}</span>
+    </>
+  );
+
+  if (item.action === 'link') {
+    return (
+      <Link to={item.href} className={itemClassName} onClick={props.onSelect}>
+        {content}
+      </Link>
+    );
+  }
+
   return (
-    <div>
-      <div>MENU</div>
-      <div>{props.children}</div>
+    <button
+      type="button"
+      onClick={() => {
+        props.onCommand(item.command);
+        props.onSelect?.();
+      }}
+      className={itemClassName}
+    >
+      {content}
+    </button>
+  );
+}
+
+export interface PortalLayoutProps {
+  children: React.ReactNode | React.ReactNode[];
+}
+
+export function PortalLayout(props: PortalLayoutProps) {
+  const { setSession } = useAuthState();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  function logout() {
+    setSession(null);
+  }
+
+  function runCommand(command: MenuCommand) {
+    if (command === 'logout') {
+      logout();
+    }
+  }
+
+  function closeSidebar() {
+    setIsSidebarOpen(false);
+  }
+
+  return (
+    <div className="h-screen w-screen overflow-hidden bg-white text-slate-900">
+      <div className="flex h-full w-full min-h-0">
+        {isSidebarOpen && (
+          <button
+            type="button"
+            aria-label="Close navigation menu"
+            className="fixed inset-0 z-30 bg-slate-900/20 md:hidden"
+            onClick={closeSidebar}
+          />
+        )}
+
+        <aside
+          className={`fixed inset-y-0 left-0 z-40 w-[170px] shrink-0 border-r border-slate-200 bg-white px-2 py-5 transition-transform duration-200 md:static md:z-auto md:w-[150px] ${
+            isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
+          }`}
+        >
+          <div className="flex h-full flex-col">
+            <div className="border-b border-slate-200 pb-3">
+              <Link
+                to="/"
+                onClick={closeSidebar}
+                className="block text-center text-4xl font-semibold tracking-tight transition-colors hover:text-slate-700"
+              >
+                Aila
+              </Link>
+            </div>
+
+            <div className="mt-4 px-2 text-xs font-medium text-slate-500">@b4rtaz</div>
+
+            <div className="text-sm">
+              <nav className="mt-4 flex flex-col gap-1.5">
+                {userLinks.map(item => (
+                  <SidebarMenuItem key={item.label} item={item} onCommand={runCommand} onSelect={closeSidebar} />
+                ))}
+              </nav>
+
+              <div className="mt-5 border-t border-slate-200 pt-4">
+                <div className="mb-2.5 px-2 text-xs font-semibold tracking-wide text-slate-500">Admin</div>
+                <nav className="flex flex-col gap-1.5">
+                  {adminLinks.map(item => (
+                    <SidebarMenuItem key={item.label} item={item} onCommand={runCommand} onSelect={closeSidebar} />
+                  ))}
+                </nav>
+              </div>
+            </div>
+          </div>
+        </aside>
+
+        <main className="min-h-0 min-w-0 flex-1 overflow-hidden bg-white">
+          <div className="flex h-full min-h-0 flex-col">
+            <div className="flex h-12 shrink-0 items-center justify-between border-b border-slate-200 px-4 md:hidden">
+              <div className="text-sm font-semibold tracking-tight">Aila</div>
+              <button
+                type="button"
+                aria-label="Open navigation menu"
+                className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-slate-300 text-slate-700 hover:bg-slate-100"
+                onClick={() => setIsSidebarOpen(true)}
+              >
+                <span className="text-base leading-none">≡</span>
+              </button>
+            </div>
+
+            <div className="min-h-0 flex-1">{props.children}</div>
+          </div>
+        </main>
+      </div>
     </div>
   );
 }

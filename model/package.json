@@ -16,7 +16,8 @@
   },
   "dependencies": {
     "zod": "^4.4.3",
-    "openai": "^6.39.0"
+    "openai": "^6.39.0",
+    "sequential-workflow-model": "^0.2.0"
   },
   "devDependencies": {
     "prettier": "^3.8.3",
