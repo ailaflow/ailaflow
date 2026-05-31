@@ -9,3 +9,10 @@
 .sqd-layout-desktop .sqd-smart-editor {
   width: 400px;
 }
+.sqd-editor,
+.sqd-editor-react {
+  height: 100%;
+}
+.sqd-editor-react {
+  overflow: auto;
+}

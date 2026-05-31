@@ -3,7 +3,7 @@ import { ServerPaths } from './core/server-paths';
 import express from 'express';
 import { SandboxManager } from './managers/sandbox-manager';
 import { SandboxExecutorManager } from './managers/sandbox-executor-manager';
-import { ChatSession, ChatSessionFactory } from './chat-session/chat-session';
+import { ChatSessionFactory } from './chat-session/chat-session';
 import { MessageFactory } from './chat-session/messages/message-factory';
 import { ToolSet } from './chat-session/tools/tool-set';
 import { CurrentTimeTool } from './chat-session/tools/current-time-tool';
@@ -16,13 +16,20 @@ import { PasswordHasher } from './repositories/user-repository/password-hasher';
 import { SqliteAuthTokenRepository } from './repositories/auth-token-repository/sqlite-auth-token-repository';
 import { AuthTokenRepository } from './repositories/auth-token-repository/auth-token-repository';
 import { RefreshAuthTokenEndpoint } from './api/auth/refresh-auth-token-endpoint';
-import { Repository } from './repositories/repository';
 import { AuthMiddleware } from './api/auth/auth-middleware';
 import { InstallEndpoint } from './api/install/install-endpoint';
 import { RestoreSessionEndpoint } from './api/chat-session/restore-chat-endpoint';
 import { ChatSessionProvider } from './chat-session/chat-session-provider';
 import { SendChatMessageEndpoint } from './api/chat-session/send-chat-message-endpoint';
 import { SandboxScriptTool } from './chat-session/tools/sandbox-script-tool';
+import { GetProcessesEndpoint } from './api/process/get-processes-endpoint';
+import { UpdateProcessEndpoint } from './api/process/update-process-endpoint';
+import { ProcessRepository } from './repositories/process-repository/process-repository';
+import { SqliteDatabases } from './core/sqlite-databases';
+import { SqliteProcessRepository } from './repositories/process-repository/sqlite-process-repository';
+import { ProcessListQuerier } from './queriers/process-list/process-list-querier';
+import { SqliteProcessListQuerier } from './queriers/process-list/sqlite-process-list-querier';
+import { GetProcessEndpoint } from './api/process/get-process-endpoint';
 
 const PORT = process.env.PORT || 3000;
 
@@ -34,9 +41,19 @@ export class Server {
     app.use(express.json());
 
     const serverPaths = new ServerPaths();
-    const userRepository: UserRepository = new SqliteUserRepository(serverPaths);
-    const authTokenRepository: AuthTokenRepository = new SqliteAuthTokenRepository(serverPaths);
-    const repositories: Repository[] = [userRepository, authTokenRepository];
+    let userRepository: UserRepository;
+    let authTokenRepository: AuthTokenRepository;
+    let processRepository: ProcessRepository;
+    let processListQuerier: ProcessListQuerier;
+
+    const sqliteDatabases = new SqliteDatabases(serverPaths);
+
+    userRepository = new SqliteUserRepository(sqliteDatabases);
+    authTokenRepository = new SqliteAuthTokenRepository(sqliteDatabases);
+    processRepository = new SqliteProcessRepository(sqliteDatabases);
+    processListQuerier = new SqliteProcessListQuerier(sqliteDatabases);
+
+    await Promise.all([userRepository.setup(abortSignal), authTokenRepository.setup(abortSignal), processRepository.setup(abortSignal)]);
 
     const sandboxManager = new SandboxManager(serverPaths);
     const sandboxExecutorManager = new SandboxExecutorManager(sandboxManager);
@@ -57,7 +74,10 @@ export class Server {
       new LoginEndpoint(userRepository, authTokenRepository, passwordHasher),
       new RefreshAuthTokenEndpoint(authTokenRepository),
       new RestoreSessionEndpoint(chatSessionProvider),
-      new SendChatMessageEndpoint(chatSessionProvider)
+      new SendChatMessageEndpoint(chatSessionProvider),
+      new GetProcessesEndpoint(processListQuerier),
+      new GetProcessEndpoint(processRepository),
+      new UpdateProcessEndpoint(processRepository)
     ];
     const authMiddleware = new AuthMiddleware(authTokenRepository);
     const router = new Router(app, endpoints, authMiddleware);
@@ -66,18 +86,16 @@ export class Server {
     app.listen(PORT, () => {
       logger.log(`Server is running on port ${PORT}`);
     });
-    return new Server(sandboxManager, repositories);
+    return new Server(sandboxManager, sqliteDatabases);
   }
 
   public constructor(
     private readonly sandboxManager: SandboxManager,
-    private readonly repositories: Repository[]
+    private readonly sqliteDatabases: SqliteDatabases
   ) {}
 
-  public close() {
+  public async close() {
     this.sandboxManager.stop();
-    for (const repository of this.repositories) {
-      repository.dispose();
-    }
+    this.sqliteDatabases.dispose();
   }
 }

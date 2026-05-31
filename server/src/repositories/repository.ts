@@ -1,3 +1,3 @@
 export interface Repository {
-  dispose(): void;
+  setup(abortSignal: AbortSignal): Promise<void>;
 }

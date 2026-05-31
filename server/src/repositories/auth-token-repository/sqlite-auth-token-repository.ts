@@ -1,17 +1,15 @@
 import { DatabaseSync } from 'node:sqlite';
-import path from 'path';
-import { ServerPaths } from '../../core/server-paths';
 import { AuthToken, AuthTokenRepository } from './auth-token-repository';
+import { SqliteDatabases } from '../../core/sqlite-databases';
 
 export class SqliteAuthTokenRepository implements AuthTokenRepository {
   private readonly db: DatabaseSync;
 
-  public constructor(serverPaths: ServerPaths) {
-    const dataFolderPath = serverPaths.getDataFolderPath();
-    const dbPath = path.join(dataFolderPath, 'auth-tokens.db');
-    this.db = new DatabaseSync(dbPath, {
-      open: true
-    });
+  public constructor(dbs: SqliteDatabases) {
+    this.db = dbs.authTokenDb;
+  }
+
+  public async setup() {
     this.db.exec(`
       CREATE TABLE IF NOT EXISTS authTokens (
         token TEXT PRIMARY KEY,

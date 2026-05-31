@@ -3,8 +3,8 @@ import { Login } from './login/login';
 import { AuthGate } from './auth-gate';
 import { Dashboard } from './dashboard/dashboard';
 import { Install } from './install/install';
-import { AdminProcesses } from './admin-processes/admin-processes';
-import { AdminProcessEditor } from './admin-process-editor/admin-process-editor';
+import { ProcessList } from './process-list/process-list';
+import { ProcessEditor } from './process-editor/process-editor';
 
 const router = createBrowserRouter([
   {
@@ -21,15 +21,15 @@ const router = createBrowserRouter([
   },
   {
     path: '/admin/processes',
-    element: <AuthGate route={<AdminProcesses />} />
+    element: <AuthGate route={<ProcessList />} />
   },
   {
     path: '/admin/processes/:processId',
-    element: <AuthGate route={<AdminProcessEditor />} />
+    element: <AuthGate route={<ProcessEditor />} />
   },
   {
-    path: '/admin/create-processes',
-    element: <AuthGate route={<AdminProcessEditor />} />
+    path: '/admin/create-process',
+    element: <AuthGate route={<ProcessEditor />} />
   }
 ]);
 

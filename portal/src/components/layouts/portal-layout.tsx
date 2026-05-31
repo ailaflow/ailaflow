@@ -35,7 +35,7 @@ const adminLinks: MenuItem[] = [
   { icon: '*', label: 'Views', action: 'link', href: '#' },
   { icon: '*', label: 'Logs', action: 'link', href: '#' },
   { icon: '*', label: 'Configuration', action: 'link', href: '#' },
-  { icon: '*', label: 'Docker', action: 'link', href: '#' }
+  { icon: '*', label: 'Containers', action: 'link', href: '#' }
 ];
 
 function SidebarMenuItem(props: { item: MenuItem; onCommand(command: MenuCommand): void; onSelect?: () => void }) {

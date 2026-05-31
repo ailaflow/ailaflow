@@ -1,9 +1,9 @@
 import { ProcessDefinition, ProcessDefinitionValidator, VariableDefinition } from '@aila/model';
 import { useRootEditor } from 'sequential-workflow-designer-react';
-import { AdminProcessEditorState } from './admin-process-editor-context';
+import { ProcessEditorState } from '../process-editor-context';
 
 export interface RootEditorProps {
-  editorState: AdminProcessEditorState;
+  editorState: ProcessEditorState;
 }
 
 export function RootEditor(props: RootEditorProps) {

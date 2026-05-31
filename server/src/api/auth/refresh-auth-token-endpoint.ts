@@ -3,8 +3,11 @@ import { Endpoint } from '../endpoint';
 import { refreshTokenRequest, RefreshTokenResponse } from '@aila/model';
 import { AuthToken, AuthTokenRepository } from '../../repositories/auth-token-repository/auth-token-repository';
 import { EndpointError } from '../endpoint-error';
+import { Logger } from '../../core/logger';
 
 export class RefreshAuthTokenEndpoint implements Endpoint {
+  private readonly logger = new Logger(RefreshAuthTokenEndpoint.name);
+
   public readonly method = 'post';
   public readonly path = '/api/auth/token/refresh';
 
@@ -20,18 +23,18 @@ export class RefreshAuthTokenEndpoint implements Endpoint {
 
     const newAuthToken = await AuthToken.create(authToken.userName);
     await this.authTokenRepository.insert(newAuthToken);
-    setTimeout(this.deleteOldToken, 30_000);
+    setTimeout(() => this.deleteOldTokenOnBackground(request.authToken), 30_000);
 
     return {
       authToken: newAuthToken.token
     };
   }
 
-  private readonly deleteOldToken = async (token: string) => {
+  private async deleteOldTokenOnBackground(token: string) {
     try {
       await this.authTokenRepository.delete(token);
-    } catch {
-      // Ignore
+    } catch (e) {
+      this.logger.error(`Failed to delete old auth token: ${e}`);
     }
-  };
+  }
 }

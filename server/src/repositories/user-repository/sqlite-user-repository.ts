@@ -1,17 +1,15 @@
 import { DatabaseSync } from 'node:sqlite';
-import { ServerPaths } from '../../core/server-paths';
-import path from 'path';
 import { User, UserRepository } from './user-repository';
+import { SqliteDatabases } from '../../core/sqlite-databases';
 
 export class SqliteUserRepository implements UserRepository {
   private readonly db: DatabaseSync;
 
-  public constructor(serverPaths: ServerPaths) {
-    const dataFolderPath = serverPaths.getDataFolderPath();
-    const dbPath = path.join(dataFolderPath, 'users.db');
-    this.db = new DatabaseSync(dbPath, {
-      open: true
-    });
+  public constructor(dbs: SqliteDatabases) {
+    this.db = dbs.userDb;
+  }
+
+  public async setup() {
     this.db.exec(`
       CREATE TABLE IF NOT EXISTS users (
         name TEXT PRIMARY KEY,
@@ -53,9 +51,5 @@ export class SqliteUserRepository implements UserRepository {
     `);
     const row = statement.get() as { count: number };
     return row.count;
-  }
-
-  public dispose() {
-    this.db.close();
   }
 }

@@ -1,6 +1,8 @@
 import { HttpClient, HttpClientSseListener } from './http-client';
 import {
   ChatUpdate,
+  GetProcessesResponse,
+  GetProcessResponse,
   InstallRequest,
   InstallResponse,
   LoginRequest,
@@ -9,7 +11,9 @@ import {
   RefreshTokenResponse,
   RestoreChatRequest,
   SendChatMessageRequest,
-  SendChatMessageResponse
+  SendChatMessageResponse,
+  UpdateProcessRequest,
+  UpdateProcessResponse
 } from '@aila/model';
 
 export class ApiClient {
@@ -17,12 +21,14 @@ export class ApiClient {
   public readonly install: InstallApiClient;
   public readonly auth: AuthApiClient;
   public readonly chat: ChatApiClient;
+  public readonly process: ProcessApiClient;
 
   public constructor(authToken: string | null) {
     this.client = new HttpClient(authToken);
     this.install = new InstallApiClient(this.client);
     this.auth = new AuthApiClient(this.client);
     this.chat = new ChatApiClient(this.client);
+    this.process = new ProcessApiClient(this.client);
   }
 
   public setOnUnauthorizedListener(listener: (() => void) | null) {
@@ -67,5 +73,21 @@ export class ChatApiClient {
 
   public async sendChatMessage(abortSignal: AbortSignal, request: SendChatMessageRequest): Promise<SendChatMessageResponse> {
     return this.client.json(abortSignal, 'POST', '/api/chat/message', request);
+  }
+}
+
+export class ProcessApiClient {
+  public constructor(private readonly client: HttpClient) {}
+
+  public async updateProcess(abortSignal: AbortSignal, request: UpdateProcessRequest): Promise<UpdateProcessResponse> {
+    return this.client.json(abortSignal, 'POST', '/api/process', request);
+  }
+
+  public async getProcesses(abortSignal: AbortSignal): Promise<GetProcessesResponse> {
+    return this.client.json(abortSignal, 'GET', '/api/processes');
+  }
+
+  public async getProcess(abortSignal: AbortSignal, id: string): Promise<GetProcessResponse> {
+    return this.client.json(abortSignal, 'GET', '/api/processes/' + id);
   }
 }
