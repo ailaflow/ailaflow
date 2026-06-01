@@ -8,7 +8,7 @@ export interface AuthenticatedRequest extends Request {
 export class AuthMiddleware {
   public constructor(private readonly authTokenRepository: AuthTokenRepository) {}
 
-  public wrap(handler: (req: Request, res: Response) => Promise<void>) {
+  public wrap(admin: boolean, handler: (req: Request, res: Response) => Promise<void>) {
     return async (req: Request, res: Response) => {
       const authHeader = req.headers['authorization'];
       if (!authHeader) {
@@ -25,6 +25,11 @@ export class AuthMiddleware {
       const authToken = await this.authTokenRepository.tryGetByToken(token);
       if (!authToken || authToken.isExpired()) {
         res.status(401).json({ error: 'Auth token is invalid or expired' });
+        return;
+      }
+
+      if (admin && !authToken.isAdmin) {
+        res.status(403).json({ error: 'Admin privileges are required' });
         return;
       }
 

@@ -1,5 +1,5 @@
 import { AdminPortalLayout } from '../../components/layouts/admin-portal-layout';
-import { Router } from './router';
+import { ProcessEditorContent } from './process-editor-content';
 import { ProcessEditorContext } from './process-editor-context';
 import { useParams } from 'react-router-dom';
 import { useApiClient } from '../../auth/auth-context';
@@ -27,7 +27,7 @@ export function ProcessEditor() {
   return (
     <AdminPortalLayout disableScroll={true}>
       <ProcessEditorContext process={process}>
-        <Router />
+        <ProcessEditorContent />
       </ProcessEditorContext>
     </AdminPortalLayout>
   );

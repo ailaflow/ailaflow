@@ -1,4 +1,4 @@
-import { Definition, Step } from 'sequential-workflow-model';
+import { Definition } from 'sequential-workflow-model';
 
 export interface JsonSchema {
   type: string;
@@ -11,13 +11,6 @@ export interface VariableDefinition {
   input: boolean;
   output: boolean;
   schema: JsonSchema;
-}
-
-export interface ScriptStep extends Step {
-  type: 'script';
-  properties: {
-    script: string;
-  };
 }
 
 export interface ProcessDefinition extends Definition {

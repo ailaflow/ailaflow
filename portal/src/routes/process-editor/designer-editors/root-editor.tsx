@@ -1,6 +1,7 @@
 import { ProcessDefinition, ProcessDefinitionValidator, VariableDefinition } from '@aila/model';
 import { useRootEditor } from 'sequential-workflow-designer-react';
 import { ProcessEditorState } from '../process-editor-context';
+import { DesignerEditor, DesignerEditorProperty } from '../../../components/process-editor/designer-editors/designer-editor';
 
 export interface RootEditorProps {
   editorState: ProcessEditorState;
@@ -43,19 +44,8 @@ export function RootEditor(props: RootEditorProps) {
   }
 
   return (
-    <div className="space-y-3 border-t border-slate-200 bg-white p-4">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="text-sm font-semibold text-slate-800">Variables</div>
-        <button
-          type="button"
-          onClick={addVariable}
-          className="inline-flex h-8 items-center rounded-md border border-slate-300 bg-white px-2.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
-        >
-          Add variable
-        </button>
-      </div>
-
-      <div className="space-y-2">
+    <DesignerEditor>
+      <DesignerEditorProperty label="Variables" buttons={[{ command: 'add-variable', label: 'Add' }]} onButtonClick={addVariable}>
         {variables.length === 0 && (
           <div className="rounded-md border border-slate-200 px-3 py-2 text-sm text-slate-500">No variables yet.</div>
         )}
@@ -147,7 +137,7 @@ export function RootEditor(props: RootEditorProps) {
             </div>
           );
         })}
-      </div>
-    </div>
+      </DesignerEditorProperty>
+    </DesignerEditor>
   );
 }

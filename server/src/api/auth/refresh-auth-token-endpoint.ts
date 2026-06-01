@@ -21,7 +21,7 @@ export class RefreshAuthTokenEndpoint implements Endpoint {
       throw new EndpointError('Invalid or expired token', 401);
     }
 
-    const newAuthToken = await AuthToken.create(authToken.userName);
+    const newAuthToken = await AuthToken.refresh(authToken);
     await this.authTokenRepository.insert(newAuthToken);
     setTimeout(() => this.deleteOldTokenOnBackground(request.authToken), 30_000);
 

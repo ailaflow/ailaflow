@@ -1,39 +1,23 @@
 import { useState } from 'react';
-import { ProcessEditorMode, useProcessEditor } from './process-editor-context';
-import { SchemaSubEditor } from './schema-sub-editor';
-import { DesignerSubEditor } from './designer-sub-editor';
-import { useApiClient } from '../../auth/auth-context';
 
-export function Router() {
-  const state = useProcessEditor();
-  const apiClient = useApiClient();
+export interface ProcessEditorProps {
+  name: string;
+  isNameValid: boolean;
+  isNameReadOnly: boolean;
+  onNameChange: (name: string) => void;
+  description: string;
+  onDescriptionChange: (description: string) => void;
+  areDetailsVisible: boolean;
+  canSave: boolean;
+  onSave: () => void;
+  children: React.ReactNode;
+}
+
+export function ProcessEditor(props: ProcessEditorProps) {
   const [isDetailsExpanded, setIsDetailsExpanded] = useState(false);
-  const isDesigner = state.mode === ProcessEditorMode.DESIGNER;
   const nameInputLabelClassName = `flex h-9 w-full max-w-md overflow-hidden rounded-md border bg-transparent transition-colors focus-within:bg-white ${
-    state.isNameValid ? 'border-transparent focus-within:border-slate-300' : 'border-red-300 bg-red-50/30 focus-within:border-red-400'
+    props.isNameValid ? 'border-transparent focus-within:border-slate-300' : 'border-red-300 bg-red-50/30 focus-within:border-red-400'
   }`;
-  const canSave = state.definition.isValid && state.isDirty;
-
-  async function save() {
-    if (!canSave) {
-      return;
-    }
-
-    try {
-      const timeout = AbortSignal.timeout(5000);
-      const response = await apiClient.process.updateProcess(timeout, {
-        id: state.id,
-        description: state.description,
-        name: state.name,
-        userList: '',
-        definition: state.definition.value
-      });
-
-      state.setId(response.id, false);
-    } catch (e) {
-      alert(`Failed to save process: ${(e as Error).message ?? e}`);
-    }
-  }
 
   return (
     <div className="flex h-full min-h-0 w-full flex-col overflow-hidden bg-white">
@@ -46,21 +30,21 @@ export function Router() {
               </span>
               <input
                 type="text"
-                value={state.name}
-                readOnly={state.mode !== ProcessEditorMode.DESIGNER}
-                onChange={e => state.setName(e.target.value)}
-                aria-invalid={!state.isNameValid}
+                value={props.name}
+                readOnly={props.isNameReadOnly}
+                onChange={e => props.onNameChange(e.target.value)}
+                aria-invalid={!props.isNameValid}
                 className="h-full min-w-0 flex-1 px-2 text-lg font-semibold tracking-tight text-slate-900 outline-none placeholder:text-slate-400"
               />
             </label>
 
-            {isDesigner && isDetailsExpanded && (
+            {props.areDetailsVisible && isDetailsExpanded && (
               <div id="admin-process-editor-details" className="pt-1">
                 <label className="flex h-8 w-full max-w-md overflow-hidden rounded-md border border-transparent bg-transparent transition-colors focus-within:border-slate-300 focus-within:bg-white">
                   <input
                     type="text"
-                    value={state.description}
-                    onChange={e => state.setDescription(e.target.value)}
+                    value={props.description}
+                    onChange={e => props.onDescriptionChange(e.target.value)}
                     className="h-full min-w-0 flex-1 px-2 text-sm text-slate-600 outline-none placeholder:text-slate-400"
                     placeholder="Description"
                   />
@@ -69,12 +53,12 @@ export function Router() {
             )}
           </div>
 
-          {isDesigner && (
+          {props.areDetailsVisible && (
             <div className="flex shrink-0 items-center gap-2">
               <button
                 type="button"
-                disabled={!canSave}
-                onClick={save}
+                disabled={!props.canSave}
+                onClick={props.onSave}
                 className="inline-flex h-9 shrink-0 items-center rounded-md border cursor-pointer border-slate-900 bg-slate-900 px-3 text-sm font-medium text-white transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:border-slate-300 disabled:bg-slate-300 disabled:hover:bg-slate-300"
               >
                 Save
@@ -94,10 +78,7 @@ export function Router() {
         </div>
       </div>
 
-      <div className="min-h-0 flex-1 overflow-hidden">
-        {isDesigner && <DesignerSubEditor />}
-        {state.mode === ProcessEditorMode.SCHEMA_EDITOR && <SchemaSubEditor />}
-      </div>
+      <div className="min-h-0 flex-1 overflow-hidden">{props.children}</div>
     </div>
   );
 }

@@ -6,6 +6,7 @@ export class GetProcessesEndpoint implements Endpoint {
   public readonly method = 'get';
   public readonly path = '/api/processes';
   public readonly auth = true;
+  public readonly admin = true;
 
   public constructor(private readonly querier: ProcessListQuerier) {}
 

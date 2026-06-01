@@ -4,6 +4,7 @@ export interface Endpoint {
   method: 'get' | 'post';
   path: string;
   auth?: true;
+  admin?: true;
 
   handle(req: Request, res: Response): Promise<object | void>;
 }

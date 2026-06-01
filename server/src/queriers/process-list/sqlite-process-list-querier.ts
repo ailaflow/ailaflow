@@ -12,7 +12,7 @@ export class SqliteProcessListQuerier implements ProcessListQuerier {
 
   public async query(): Promise<ProcessLiteDto[]> {
     const statement = this.db.prepare(`
-      SELECT id, name, description, userList
+      SELECT id, name, description, userList, nInputs, nOutputs
       FROM processes
     `);
     return statement.all() as ProcessLiteDto[];

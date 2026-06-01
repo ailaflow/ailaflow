@@ -8,6 +8,7 @@ export class UpdateProcessEndpoint implements Endpoint {
   public readonly method = 'post';
   public readonly path = '/api/process';
   public readonly auth = true;
+  public readonly admin = true;
 
   public constructor(private readonly processRepository: ProcessRepository) {}
 

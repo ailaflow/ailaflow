@@ -32,9 +32,12 @@ export class Router {
           res.status(500).json({ error: 'Internal Server Error' });
         }
       };
+
       if (endpoint.auth) {
-        handler = this.authMiddleware.wrap(handler);
+        const admin = endpoint.admin ?? false;
+        handler = this.authMiddleware.wrap(admin, handler);
       }
+
       this.app[endpoint.method](endpoint.path, handler);
       this.logger.log(`Registered endpoint: ${endpoint.method.toUpperCase()} ${endpoint.path}`);
     }

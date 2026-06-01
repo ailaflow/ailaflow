@@ -24,7 +24,7 @@ export class LoginEndpoint implements Endpoint {
       throw new EndpointError('Invalid username or password', 401);
     }
 
-    const authToken = await AuthToken.create(user.name);
+    const authToken = await AuthToken.create(user.name, user.isAdmin);
     await this.authTokenRepository.insert(authToken);
 
     return { authToken: authToken.token, isAdmin: user.isAdmin };

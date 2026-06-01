@@ -31,7 +31,7 @@ import { ProcessListQuerier } from './queriers/process-list/process-list-querier
 import { SqliteProcessListQuerier } from './queriers/process-list/sqlite-process-list-querier';
 import { GetProcessEndpoint } from './api/process/get-process-endpoint';
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 2048;
 
 const logger = new Logger('Server');
 

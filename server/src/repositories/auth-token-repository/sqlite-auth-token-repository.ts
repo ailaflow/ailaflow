@@ -14,6 +14,7 @@ export class SqliteAuthTokenRepository implements AuthTokenRepository {
       CREATE TABLE IF NOT EXISTS authTokens (
         token TEXT PRIMARY KEY,
         userName TEXT NOT NULL,
+        isAdmin INTEGER NOT NULL,
         expiresAt INTEGER NOT NULL
       )
     `);
@@ -21,15 +22,15 @@ export class SqliteAuthTokenRepository implements AuthTokenRepository {
 
   public async insert(authToken: AuthToken): Promise<void> {
     const statement = this.db.prepare(`
-      INSERT INTO authTokens (token, userName, expiresAt)
-      VALUES (?, ?, ?)
+      INSERT INTO authTokens (token, userName, isAdmin, expiresAt)
+      VALUES (?, ?, ?, ?)
     `);
-    statement.run(authToken.token, authToken.userName, authToken.expiresAt);
+    statement.run(authToken.token, authToken.userName, authToken.isAdmin ? 1 : 0, authToken.expiresAt);
   }
 
   public async tryGetByToken(token: string): Promise<AuthToken | null> {
     const statement = this.db.prepare(`
-      SELECT token, userName, expiresAt
+      SELECT token, userName, isAdmin, expiresAt
       FROM authTokens
       WHERE token = ?
       LIMIT 1
@@ -38,10 +39,11 @@ export class SqliteAuthTokenRepository implements AuthTokenRepository {
       | {
           token: string;
           userName: string;
+          isAdmin: number;
           expiresAt: number;
         }
       | undefined;
-    return row ? new AuthToken(row.token, row.userName, row.expiresAt) : null;
+    return row ? new AuthToken(row.token, row.userName, row.expiresAt, row.isAdmin === 1) : null;
   }
 
   public async delete(token: string): Promise<void> {

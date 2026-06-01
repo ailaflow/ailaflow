@@ -7,7 +7,9 @@ const processLiteDto = z.object({
   id: z.string(),
   name: z.string(),
   description: z.string(),
-  userList: z.string()
+  userList: z.string(),
+  nInputs: z.number(),
+  nOutputs: z.number()
 });
 
 export const getProcessesResponse = z.object({
