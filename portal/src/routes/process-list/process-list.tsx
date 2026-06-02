@@ -59,7 +59,7 @@ export function ProcessList() {
                   <th scope="col" className="w-[16%] px-3 py-2.5 font-semibold text-slate-600">
                     User list
                   </th>
-                  <th scope="col" className="w-[10%] px-3 py-2.5 text-right font-semibold text-slate-600">
+                  <th scope="col" className="w-[18%] px-3 py-2.5 text-right font-semibold text-slate-600">
                     Action
                   </th>
                 </tr>
@@ -82,14 +82,23 @@ export function ProcessList() {
                       </td>
                       <td className="truncate px-3 py-3 text-slate-600">{process.description}</td>
                       <td className="truncate px-3 py-3 text-slate-600">{process.userList}</td>
-                      <td className="px-3 py-3 text-right">
-                        <Link
-                          type="button"
-                          className="inline-flex h-8 items-center justify-center rounded-md border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 hover:text-slate-900"
-                          to={`/admin/processes/${process.id}`}
-                        >
-                          Edit
-                        </Link>
+                      <td className="px-3 py-3">
+                        <div className="flex flex-nowrap justify-end gap-2">
+                          <Link
+                            type="button"
+                            className="inline-flex h-8 shrink-0 items-center justify-center rounded-md border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 hover:text-slate-900"
+                            to={`/admin/processes/${process.id}`}
+                          >
+                            Edit
+                          </Link>
+                          <Link
+                            type="button"
+                            className="inline-flex h-8 shrink-0 items-center justify-center rounded-md border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 hover:text-slate-900"
+                            to={`/admin/processes/${process.id}/test`}
+                          >
+                            Test
+                          </Link>
+                        </div>
                       </td>
                     </tr>
                   ))

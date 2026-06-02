@@ -43,8 +43,27 @@ export function RootEditor(props: RootEditorProps) {
     props.editorState.switchToSchemaEditor(`variables.${index}.schema`);
   }
 
+  function editStartFrom() {
+    props.editorState.switchToFormEditor('properties.startForm');
+  }
+
   return (
     <DesignerEditor>
+      <DesignerEditorProperty label="Start Form">
+        <div className="rounded-md border border-slate-200 bg-slate-50 px-2.5 py-2">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="text-xs text-slate-500">Form is not defined</div>
+            <button
+              type="button"
+              className="inline-flex h-8 items-center justify-center rounded-md border border-slate-300 bg-white px-2.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
+              onClick={editStartFrom}
+            >
+              Edit
+            </button>
+          </div>
+        </div>
+      </DesignerEditorProperty>
+
       <DesignerEditorProperty label="Variables" buttons={[{ command: 'add-variable', label: 'Add' }]} onButtonClick={addVariable}>
         {variables.length === 0 && (
           <div className="rounded-md border border-slate-200 px-3 py-2 text-sm text-slate-500">No variables yet.</div>

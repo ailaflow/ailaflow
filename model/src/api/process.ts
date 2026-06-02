@@ -57,3 +57,15 @@ export const updateProcessResponse = z.object({
 
 export type UpdateProcessRequest = z.infer<typeof updateProcessRequest>;
 export type UpdateProcessResponse = z.infer<typeof updateProcessResponse>;
+
+// testProcess
+
+export const testProcessRequest = z.object({
+  input: z.record(z.string(), z.any())
+});
+
+export type TestProcessRequest = z.infer<typeof testProcessRequest>;
+
+export interface TestProcessUpdate {
+  type: string;
+}

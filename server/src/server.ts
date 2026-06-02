@@ -30,6 +30,7 @@ import { SqliteProcessRepository } from './repositories/process-repository/sqlit
 import { ProcessListQuerier } from './queriers/process-list/process-list-querier';
 import { SqliteProcessListQuerier } from './queriers/process-list/sqlite-process-list-querier';
 import { GetProcessEndpoint } from './api/process/get-process-endpoint';
+import { TestProcessEndpoint } from './api/process/test-process-endpoint';
 
 const PORT = process.env.PORT || 2048;
 
@@ -77,7 +78,8 @@ export class Server {
       new SendChatMessageEndpoint(chatSessionProvider),
       new GetProcessesEndpoint(processListQuerier),
       new GetProcessEndpoint(processRepository),
-      new UpdateProcessEndpoint(processRepository)
+      new UpdateProcessEndpoint(processRepository),
+      new TestProcessEndpoint()
     ];
     const authMiddleware = new AuthMiddleware(authTokenRepository);
     const router = new Router(app, endpoints, authMiddleware);

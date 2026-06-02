@@ -5,6 +5,7 @@ import { Dashboard } from './dashboard/dashboard';
 import { Install } from './install/install';
 import { ProcessList } from './process-list/process-list';
 import { ProcessEditor } from './process-editor/process-editor';
+import { ProcessTester } from './process-tester/process-tester';
 
 const router = createBrowserRouter([
   {
@@ -30,6 +31,10 @@ const router = createBrowserRouter([
   {
     path: '/admin/create-process',
     element: <AuthGate route={<ProcessEditor />} />
+  },
+  {
+    path: '/admin/processes/:processId/test',
+    element: <AuthGate route={<ProcessTester />} />
   }
 ]);
 

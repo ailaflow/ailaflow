@@ -12,6 +12,8 @@ import {
   RestoreChatRequest,
   SendChatMessageRequest,
   SendChatMessageResponse,
+  TestProcessRequest,
+  TestProcessUpdate,
   UpdateProcessRequest,
   UpdateProcessResponse
 } from '@aila/model';
@@ -88,6 +90,15 @@ export class ProcessApiClient {
   }
 
   public async getProcess(abortSignal: AbortSignal, id: string): Promise<GetProcessResponse> {
-    return this.client.json(abortSignal, 'GET', '/api/processes/' + id);
+    return this.client.json(abortSignal, 'GET', `/api/processes/${id}`);
+  }
+
+  public async testProcess(
+    abortSignal: AbortSignal,
+    listener: HttpClientSseListener<TestProcessUpdate>,
+    id: string,
+    request: TestProcessRequest
+  ) {
+    return this.client.sse(abortSignal, listener, 'POST', `/api/processes/${id}/test`, request);
   }
 }

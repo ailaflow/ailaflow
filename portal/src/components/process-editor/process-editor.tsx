@@ -4,12 +4,14 @@ export interface ProcessEditorProps {
   name: string;
   isNameValid: boolean;
   isNameReadOnly: boolean;
-  onNameChange: (name: string) => void;
-  description: string;
-  onDescriptionChange: (description: string) => void;
-  areDetailsVisible: boolean;
-  canSave: boolean;
-  onSave: () => void;
+  onNameChange?: (name: string) => void;
+  areDetailsVisible?: boolean;
+  details?: React.ReactNode;
+  canSave?: boolean;
+  onSave?: () => void;
+  canSwitch: boolean;
+  onSwitch?: () => void;
+  switchLabel: string;
   children: React.ReactNode;
 }
 
@@ -32,29 +34,17 @@ export function ProcessEditor(props: ProcessEditorProps) {
                 type="text"
                 value={props.name}
                 readOnly={props.isNameReadOnly}
-                onChange={e => props.onNameChange(e.target.value)}
+                onChange={e => props.onNameChange && props.onNameChange(e.target.value)}
                 aria-invalid={!props.isNameValid}
                 className="h-full min-w-0 flex-1 px-2 text-lg font-semibold tracking-tight text-slate-900 outline-none placeholder:text-slate-400"
               />
             </label>
 
-            {props.areDetailsVisible && isDetailsExpanded && (
-              <div id="admin-process-editor-details" className="pt-1">
-                <label className="flex h-8 w-full max-w-md overflow-hidden rounded-md border border-transparent bg-transparent transition-colors focus-within:border-slate-300 focus-within:bg-white">
-                  <input
-                    type="text"
-                    value={props.description}
-                    onChange={e => props.onDescriptionChange(e.target.value)}
-                    className="h-full min-w-0 flex-1 px-2 text-sm text-slate-600 outline-none placeholder:text-slate-400"
-                    placeholder="Description"
-                  />
-                </label>
-              </div>
-            )}
+            {props.areDetailsVisible && isDetailsExpanded && props.details}
           </div>
 
-          {props.areDetailsVisible && (
-            <div className="flex shrink-0 items-center gap-2">
+          <div className="flex shrink-0 items-center gap-2">
+            {props.onSave && (
               <button
                 type="button"
                 disabled={!props.canSave}
@@ -63,18 +53,40 @@ export function ProcessEditor(props: ProcessEditorProps) {
               >
                 Save
               </button>
+            )}
 
+            {props.details && (
               <button
                 type="button"
+                aria-label={isDetailsExpanded ? 'Hide details' : 'Show details'}
                 aria-expanded={isDetailsExpanded}
                 aria-controls="admin-process-editor-details"
                 onClick={() => setIsDetailsExpanded(isExpanded => !isExpanded)}
-                className="inline-flex h-9 shrink-0 items-center rounded-md border border-slate-200 bg-white px-3 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-800"
+                className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-800"
               >
-                {isDetailsExpanded ? 'Hide details' : 'Show details'}
+                <svg aria-hidden="true" className="h-4 w-4" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path
+                    d={isDetailsExpanded ? 'M5 12.5L10 7.5L15 12.5' : 'M5 7.5L10 12.5L15 7.5'}
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
               </button>
-            </div>
-          )}
+            )}
+            {(props.onSave || props.details) && <span className="text-gray-300">|</span>}
+            {props.onSwitch && (
+              <button
+                type="button"
+                onClick={props.onSwitch}
+                disabled={!props.canSwitch}
+                className="inline-flex h-9 shrink-0 items-center rounded-md border cursor-pointer border-slate-900 bg-slate-900 px-3 text-sm font-medium text-white transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:border-slate-300 disabled:bg-slate-300 disabled:hover:bg-slate-300"
+              >
+                {props.switchLabel}
+              </button>
+            )}
+          </div>
         </div>
       </div>
 

@@ -6,7 +6,8 @@ import { wrapDefinition, WrappedDefinition } from 'sequential-workflow-designer-
 
 export enum ProcessEditorMode {
   DESIGNER,
-  SCHEMA_EDITOR
+  SCHEMA_EDITOR,
+  FORM_EDITOR
 }
 
 export interface EditorDataState {
@@ -27,6 +28,7 @@ export interface ProcessEditorState extends EditorDataState {
   setDefinition(definition: WrappedDefinition): void;
   switchToDesigner(): void;
   switchToSchemaEditor(path: string): void;
+  switchToFormEditor(path: string): void;
 }
 
 export function useProcessEditor(): ProcessEditorState {
@@ -115,9 +117,16 @@ export function ProcessEditorContext(props: { children: React.ReactNode; process
     });
   }
 
+  function switchToFormEditor(path: string) {
+    dispatch({
+      mode: ProcessEditorMode.FORM_EDITOR,
+      path
+    });
+  }
+
   return (
     <processEditorContext.Provider
-      value={{ ...state, setId, setName, setDescription, setDefinition, switchToDesigner, switchToSchemaEditor }}
+      value={{ ...state, setId, setName, setDescription, setDefinition, switchToDesigner, switchToSchemaEditor, switchToFormEditor }}
     >
       {props.children}
     </processEditorContext.Provider>
