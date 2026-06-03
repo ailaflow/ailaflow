@@ -7,7 +7,8 @@ import { wrapDefinition, WrappedDefinition } from 'sequential-workflow-designer-
 export enum ProcessEditorMode {
   DESIGNER,
   SCHEMA_EDITOR,
-  FORM_EDITOR
+  FORM_EDITOR,
+  SCRIPT_EDITOR
 }
 
 export interface EditorDataState {
@@ -17,6 +18,7 @@ export interface EditorDataState {
   isNameValid: boolean;
   description: string;
   definition: WrappedDefinition<ProcessDefinition>;
+  selectedStepId: string | null;
   path?: string;
   isDirty: boolean;
 }
@@ -26,9 +28,11 @@ export interface ProcessEditorState extends EditorDataState {
   setName(name: string): void;
   setDescription(description: string): void;
   setDefinition(definition: WrappedDefinition): void;
+  setSelectedStepId(stepId: string | null): void;
   switchToDesigner(): void;
   switchToSchemaEditor(path: string): void;
   switchToFormEditor(path: string): void;
+  switchToScriptEditor(path: string): void;
 }
 
 export function useProcessEditor(): ProcessEditorState {
@@ -59,6 +63,7 @@ function createState(process?: ProcessDto): EditorDataState {
     name,
     isNameValid: !ProcessValidator.validateName(name),
     description: process?.description ?? '',
+    selectedStepId: null,
     definition,
     isDirty: process ? false : true
   };
@@ -104,6 +109,12 @@ export function ProcessEditorContext(props: { children: React.ReactNode; process
     dispatch(delta);
   }
 
+  function setSelectedStepId(stepId: string | null) {
+    dispatch({
+      selectedStepId: stepId
+    });
+  }
+
   function switchToDesigner() {
     dispatch({
       mode: ProcessEditorMode.DESIGNER
@@ -124,9 +135,27 @@ export function ProcessEditorContext(props: { children: React.ReactNode; process
     });
   }
 
+  function switchToScriptEditor(path: string) {
+    dispatch({
+      mode: ProcessEditorMode.SCRIPT_EDITOR,
+      path
+    });
+  }
+
   return (
     <processEditorContext.Provider
-      value={{ ...state, setId, setName, setDescription, setDefinition, switchToDesigner, switchToSchemaEditor, switchToFormEditor }}
+      value={{
+        ...state,
+        setId,
+        setName,
+        setDescription,
+        setDefinition,
+        setSelectedStepId,
+        switchToDesigner,
+        switchToSchemaEditor,
+        switchToFormEditor,
+        switchToScriptEditor
+      }}
     >
       {props.children}
     </processEditorContext.Provider>

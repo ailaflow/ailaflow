@@ -15,11 +15,11 @@ export class Ev<T> {
     }
   }
 
-  public emit(value: T) {
+  public readonly emit = (value: T) => {
     if (this.listeners.length > 0) {
       this.listeners.forEach(listener => listener(value));
     }
-  }
+  };
 }
 
 export type EvListener<T> = (value: T) => void;

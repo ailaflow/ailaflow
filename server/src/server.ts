@@ -79,7 +79,7 @@ export class Server {
       new GetProcessesEndpoint(processListQuerier),
       new GetProcessEndpoint(processRepository),
       new UpdateProcessEndpoint(processRepository),
-      new TestProcessEndpoint()
+      new TestProcessEndpoint(processRepository)
     ];
     const authMiddleware = new AuthMiddleware(authTokenRepository);
     const router = new Router(app, endpoints, authMiddleware);

@@ -67,5 +67,8 @@ export const testProcessRequest = z.object({
 export type TestProcessRequest = z.infer<typeof testProcessRequest>;
 
 export interface TestProcessUpdate {
-  type: string;
+  log?: {
+    level: string;
+    message: string;
+  };
 }

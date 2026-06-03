@@ -2,7 +2,7 @@ import { SequentialWorkflowDesigner } from 'sequential-workflow-designer-react';
 import { useProcessEditor } from '../process-editor-context';
 import { RootEditor } from '../designer-editors/root-editor';
 import { StepEditor } from '../designer-editors/step-editor';
-import { ProcessDefinitionValidator } from '@aila/model';
+import { ProcessDefinitionValidator, ProcessStepValidator } from '@aila/model';
 import { toolboxConfiguration } from '../designer-configuration';
 
 export function DesignerSubEditor() {
@@ -14,11 +14,14 @@ export function DesignerSubEditor() {
       definition={state.definition}
       controlBar={true}
       onDefinitionChange={state.setDefinition}
+      selectedStepId={state.selectedStepId}
+      onSelectedStepIdChanged={state.setSelectedStepId}
       rootEditor={<RootEditor editorState={state} />}
-      stepEditor={<StepEditor />}
+      stepEditor={<StepEditor editorState={state} />}
       stepsConfiguration={{}}
       validatorConfiguration={{
-        root: ProcessDefinitionValidator.validateRoot
+        root: ProcessDefinitionValidator.validateRoot,
+        step: ProcessStepValidator.validateStep
       }}
       toolboxConfiguration={toolboxConfiguration}
     />

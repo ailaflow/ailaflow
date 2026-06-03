@@ -15,7 +15,8 @@
   "dependencies": {
     "@aila/model": "workspace:*",
     "express": "^5.2.1",
-    "openai": "^6.39.0"
+    "openai": "^6.39.0",
+    "sequential-workflow-machine": "^0.7.1"
   },
   "devDependencies": {
     "@types/express": "^5.0.6",

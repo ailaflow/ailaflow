@@ -5,6 +5,7 @@ import { useApiClient } from '../../auth/auth-context';
 import { ProcessEditor } from '../../components/process-editor/process-editor';
 import { useNavigate } from 'react-router-dom';
 import { FormSubEditor } from './sub-editors/form-sub-editor';
+import { ScriptSubEditor } from './sub-editors/script-sub-editor';
 
 export function ProcessEditorContent() {
   const state = useProcessEditor();
@@ -57,6 +58,7 @@ export function ProcessEditorContent() {
       {isDesigner && <DesignerSubEditor />}
       {state.mode === ProcessEditorMode.SCHEMA_EDITOR && <SchemaSubEditor />}
       {state.mode === ProcessEditorMode.FORM_EDITOR && <FormSubEditor />}
+      {state.mode === ProcessEditorMode.SCRIPT_EDITOR && <ScriptSubEditor />}
     </ProcessEditor>
   );
 }

@@ -1,7 +1,9 @@
 import { ProcessDefinition, ProcessDefinitionValidator, VariableDefinition } from '@aila/model';
 import { useRootEditor } from 'sequential-workflow-designer-react';
 import { ProcessEditorState } from '../process-editor-context';
-import { DesignerEditor, DesignerEditorProperty } from '../../../components/process-editor/designer-editors/designer-editor';
+import { DesignerEditor } from '../../../components/process-editor/designer-editors/designer-editor';
+import { SubValuePreview } from '../../../components/process-editor/designer-editors/sub-value-preview';
+import { EditorProperty } from '../../../components/process-editor/designer-editors/editor-property';
 
 export interface RootEditorProps {
   editorState: ProcessEditorState;
@@ -9,7 +11,7 @@ export interface RootEditorProps {
 
 export function RootEditor(props: RootEditorProps) {
   const { properties, setProperty } = useRootEditor<ProcessDefinition>();
-  const validationErrors = ProcessDefinitionValidator.validateRootProperties(properties);
+  const validationErrors = ProcessDefinitionValidator.validate(properties);
   const variables = properties.variables || [];
 
   function setVariables(nextVariables: VariableDefinition[]) {
@@ -49,22 +51,11 @@ export function RootEditor(props: RootEditorProps) {
 
   return (
     <DesignerEditor>
-      <DesignerEditorProperty label="Start Form">
-        <div className="rounded-md border border-slate-200 bg-slate-50 px-2.5 py-2">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <div className="text-xs text-slate-500">Form is not defined</div>
-            <button
-              type="button"
-              className="inline-flex h-8 items-center justify-center rounded-md border border-slate-300 bg-white px-2.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
-              onClick={editStartFrom}
-            >
-              Edit
-            </button>
-          </div>
-        </div>
-      </DesignerEditorProperty>
+      <EditorProperty label="Start Form">
+        <SubValuePreview onEdit={editStartFrom}>Form is not defined</SubValuePreview>
+      </EditorProperty>
 
-      <DesignerEditorProperty label="Variables" buttons={[{ command: 'add-variable', label: 'Add' }]} onButtonClick={addVariable}>
+      <EditorProperty label="Variables" buttons={[{ command: 'add-variable', label: 'Add' }]} onButtonClick={addVariable}>
         {variables.length === 0 && (
           <div className="rounded-md border border-slate-200 px-3 py-2 text-sm text-slate-500">No variables yet.</div>
         )}
@@ -139,24 +130,13 @@ export function RootEditor(props: RootEditorProps) {
                 </label>
               </div>
 
-              <div className="rounded-md border border-slate-200 bg-slate-50 px-2.5 py-2">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div className="text-xs text-slate-500">
-                    Schema: <span className="font-medium text-slate-700">{variable.schema.type}</span>
-                  </div>
-                  <button
-                    type="button"
-                    className="inline-flex h-8 items-center justify-center rounded-md border border-slate-300 bg-white px-2.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
-                    onClick={() => editVariableSchema(index)}
-                  >
-                    Edit
-                  </button>
-                </div>
-              </div>
+              <SubValuePreview onEdit={() => editVariableSchema(index)}>
+                Schema: <span className="font-medium text-slate-700">{variable.schema.type}</span>
+              </SubValuePreview>
             </div>
           );
         })}
-      </DesignerEditorProperty>
+      </EditorProperty>
     </DesignerEditor>
   );
 }

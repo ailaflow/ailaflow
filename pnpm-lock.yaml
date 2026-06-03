@@ -81,6 +81,9 @@ importers:
       openai:
         specifier: ^6.39.0
         version: 6.39.0(zod@4.4.3)
+      sequential-workflow-machine:
+        specifier: ^0.7.1
+        version: 0.7.1(sequential-workflow-model@0.2.0)(xstate@4.38.3)
     devDependencies:
       '@types/express':
         specifier: ^5.0.6
@@ -1094,6 +1097,12 @@ packages:
     peerDependencies:
       sequential-workflow-model: ^0.2.0
 
+  sequential-workflow-machine@0.7.1:
+    resolution: {integrity: sha512-WGpZc19bT9o0seFm6DJLq2EaYazSl3BAtjc0J70U1rsyd8kUWFgv4Ze9Pk+nWVPYkh6MLpsvwepIo+X0J9WO0Q==}
+    peerDependencies:
+      sequential-workflow-model: ^0.2.0
+      xstate: ^4.38.3
+
   sequential-workflow-model@0.2.0:
     resolution: {integrity: sha512-oK+He1N/0Ogg4Z/7KbAzhBRTJEqpPewQAIV7G9WvxhLcpTHvrR9rTMykDwWDVdroNFiLQYa00nYvjqrCIzYfqg==}
 
@@ -1213,6 +1222,9 @@ packages:
 
   wrappy@1.0.2:
     resolution: {integrity: sha512-l4Sp/DRseor9wL6EvV2+TuQn63dMkPjZ/sp9XkghTEbV9KlPS1xUsZ3u7/IQO4wxtcFB4bgpQPRcR3QCvezPcQ==}
+
+  xstate@4.38.3:
+    resolution: {integrity: sha512-SH7nAaaPQx57dx6qvfcIgqKRXIh4L0A1iYEqim4s1u7c9VoCgzZc+63FY90AKU4ZzOC2cfJzTnpO4zK7fCUzzw==}
 
   zod@4.4.3:
     resolution: {integrity: sha512-ytENFjIJFl2UwYglde2jchW2Hwm4GJFLDiSXWdTrJQBIN9Fcyp7n4DhxJEiWNAJMV1/BqWfW/kkg71UDcHJyTQ==}
@@ -2042,6 +2054,11 @@ snapshots:
     dependencies:
       sequential-workflow-model: 0.2.0
 
+  sequential-workflow-machine@0.7.1(sequential-workflow-model@0.2.0)(xstate@4.38.3):
+    dependencies:
+      sequential-workflow-model: 0.2.0
+      xstate: 4.38.3
+
   sequential-workflow-model@0.2.0: {}
 
   serve-static@2.2.1:
@@ -2136,5 +2153,7 @@ snapshots:
       tsx: 4.22.3
 
   wrappy@1.0.2: {}
+
+  xstate@4.38.3: {}
 
   zod@4.4.3: {}
