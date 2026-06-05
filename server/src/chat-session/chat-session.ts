@@ -4,14 +4,6 @@ import { Message } from './messages/message';
 import { MessageFactory } from './messages/message-factory';
 import { SessionStack } from './session-stack';
 
-export class ChatSessionFactory {
-  public constructor(private readonly messageFactory: MessageFactory) {}
-
-  public create(): ChatSession {
-    return new ChatSession(this.messageFactory);
-  }
-}
-
 export interface MessageUpdate {
   id: number;
   type: MessageType;
@@ -33,7 +25,11 @@ export class ChatSession {
   private readonly stack = new SessionStack();
   private readonly queue: Message[] = [];
 
-  public constructor(private readonly messageFactory: MessageFactory) {}
+  public constructor(
+    public readonly id: string,
+    public readonly hash: string,
+    private readonly messageFactory: MessageFactory
+  ) {}
 
   public pushSystemMessage(text: string) {
     this.queue.push(this.messageFactory.createSystem(this.nextId(), text));

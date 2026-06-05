@@ -6,7 +6,13 @@ export function Dashboard() {
     <PortalLayout>
       <div>
         <h1>Dashboard</h1>
-        <Chat chatName="default" />
+        <Chat
+          request={{
+            user: {
+              channelName: 'user_channel'
+            }
+          }}
+        />
       </div>
     </PortalLayout>
   );

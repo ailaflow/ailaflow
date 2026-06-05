@@ -3,10 +3,6 @@ import { ServerPaths } from './core/server-paths';
 import express from 'express';
 import { SandboxManager } from './managers/sandbox-manager';
 import { SandboxExecutorManager } from './managers/sandbox-executor-manager';
-import { ChatSessionFactory } from './chat-session/chat-session';
-import { MessageFactory } from './chat-session/messages/message-factory';
-import { ToolSet } from './chat-session/tools/tool-set';
-import { CurrentTimeTool } from './chat-session/tools/current-time-tool';
 import { OpenaiLlmClient } from './llm-client/openai-llm-client';
 import { LoginEndpoint } from './api/auth/login-endpoint';
 import { Router } from './api/router';
@@ -19,9 +15,7 @@ import { RefreshAuthTokenEndpoint } from './api/auth/refresh-auth-token-endpoint
 import { AuthMiddleware } from './api/auth/auth-middleware';
 import { InstallEndpoint } from './api/install/install-endpoint';
 import { RestoreSessionEndpoint } from './api/chat-session/restore-chat-endpoint';
-import { ChatSessionProvider } from './chat-session/chat-session-provider';
 import { SendChatMessageEndpoint } from './api/chat-session/send-chat-message-endpoint';
-import { SandboxScriptTool } from './chat-session/tools/sandbox-script-tool';
 import { GetProcessesEndpoint } from './api/process/get-processes-endpoint';
 import { UpdateProcessEndpoint } from './api/process/update-process-endpoint';
 import { ProcessRepository } from './repositories/process-repository/process-repository';
@@ -31,6 +25,14 @@ import { ProcessListQuerier } from './queriers/process-list/process-list-querier
 import { SqliteProcessListQuerier } from './queriers/process-list/sqlite-process-list-querier';
 import { GetProcessEndpoint } from './api/process/get-process-endpoint';
 import { TestProcessEndpoint } from './api/process/test-process-endpoint';
+import { SendFrontedToolResultEndpoint } from './api/chat-session/send-frontend-tool-result-endpoint';
+import { FrontendToolBus } from './chat-session/tools/frontend-tool-bus';
+import { ChatSessionFactory } from './chat-session/chat-session-factory';
+import { UserChatSessionStore } from './chat-session/stores/user-chat-session-store';
+import { UserToolSetProvider } from './chat-session/stores/user-tool-set-provider';
+import { AdminChatSessionStore } from './chat-session/stores/admin-chat-session-store';
+import { FrontendToolFactory } from './chat-session/tools/frontend-tool-factory';
+import { ChatSessionStore } from './chat-session/stores/chat-session-store';
 
 const PORT = process.env.PORT || 2048;
 
@@ -62,20 +64,23 @@ export class Server {
     const passwordHasher = new PasswordHasher();
 
     const llmClient = new OpenaiLlmClient();
-    const toolSet = new ToolSet();
-    toolSet.addTool(new CurrentTimeTool());
-    toolSet.addTool(new SandboxScriptTool(sandboxExecutorManager));
-    const messageFactory = new MessageFactory(llmClient, toolSet);
+    const chatSessionFactory = new ChatSessionFactory();
+    const userToolSetProvider = new UserToolSetProvider(sandboxExecutorManager);
 
-    const chatSessionFactory = new ChatSessionFactory(messageFactory);
-    const chatSessionProvider = new ChatSessionProvider(chatSessionFactory);
+    const frontendToolBus = new FrontendToolBus();
+    const frontendToolFactory = new FrontendToolFactory(frontendToolBus);
+
+    const chatSessionStore = new ChatSessionStore();
+    const userChatSessionStore = new UserChatSessionStore(chatSessionStore, chatSessionFactory, llmClient, userToolSetProvider);
+    const adminChatSessionStore = new AdminChatSessionStore(chatSessionStore, chatSessionFactory, frontendToolFactory, llmClient);
 
     const endpoints = [
       new InstallEndpoint(userRepository, passwordHasher),
       new LoginEndpoint(userRepository, authTokenRepository, passwordHasher),
       new RefreshAuthTokenEndpoint(authTokenRepository),
-      new RestoreSessionEndpoint(chatSessionProvider),
-      new SendChatMessageEndpoint(chatSessionProvider),
+      new RestoreSessionEndpoint(userChatSessionStore, adminChatSessionStore),
+      new SendChatMessageEndpoint(chatSessionStore),
+      new SendFrontedToolResultEndpoint(frontendToolBus),
       new GetProcessesEndpoint(processListQuerier),
       new GetProcessEndpoint(processRepository),
       new UpdateProcessEndpoint(processRepository),

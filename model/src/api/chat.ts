@@ -1,29 +1,44 @@
+import z from 'zod';
+import { CompletedMessage, MessageType, ToolDescriptor } from '../chat-session';
+
 // restoreChat
 
-import z from 'zod';
-import { CompletedMessage, MessageType } from '../chat-session';
-
 export const restoreChatRequest = z.object({
-  chatName: z.string().min(1)
+  admin: z
+    .object({
+      hash: z.string(),
+      frontendToolDescriptors: z.array(z.custom<ToolDescriptor>())
+    })
+    .optional(),
+  user: z
+    .object({
+      channelName: z.string()
+    })
+    .optional()
 });
 export type RestoreChatRequest = z.infer<typeof restoreChatRequest>;
 
-export interface ChatMessageUpdate {
+export interface MessageChatUpdate {
   id: number;
   type: MessageType;
   failReason?: string;
   completedMessage?: CompletedMessage | CompletedMessage[];
 }
 
+export interface HelloChatUpdate {
+  chatSessionId: string;
+}
+
 export interface ChatUpdate {
-  messages?: ChatMessageUpdate[];
-  currentMessage?: ChatMessageUpdate;
+  hello?: HelloChatUpdate;
+  messages?: MessageChatUpdate[];
+  currentMessage?: MessageChatUpdate;
 }
 
 // sendChatSessionMessage
 
 export const sendChatMessageRequest = z.object({
-  chatName: z.string().min(1),
+  chatSessionId: z.string().min(1),
   message: z.string().min(1)
 });
 export const sendChatMessageResponse = z.object({
@@ -32,3 +47,12 @@ export const sendChatMessageResponse = z.object({
 
 export type SendChatMessageRequest = z.infer<typeof sendChatMessageRequest>;
 export type SendChatMessageResponse = z.infer<typeof sendChatMessageResponse>;
+
+// sendFrontendToolResult
+
+export const sendFrontendToolResultRequest = z.object({
+  callId: z.string().min(1),
+  result: z.string()
+});
+
+export type SendFrontendToolResultRequest = z.infer<typeof sendFrontendToolResultRequest>;

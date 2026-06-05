@@ -12,6 +12,7 @@ import {
   RestoreChatRequest,
   SendChatMessageRequest,
   SendChatMessageResponse,
+  SendFrontendToolResultRequest,
   TestProcessRequest,
   TestProcessUpdate,
   UpdateProcessRequest,
@@ -75,6 +76,10 @@ export class ChatApiClient {
 
   public async sendChatMessage(abortSignal: AbortSignal, request: SendChatMessageRequest): Promise<SendChatMessageResponse> {
     return this.client.json(abortSignal, 'POST', '/api/chat/message', request);
+  }
+
+  public async sendFrontendToolResult(abortSignal: AbortSignal, request: SendFrontendToolResultRequest): Promise<void> {
+    return this.client.json(abortSignal, 'POST', '/api/chat/front-end-tool', request);
   }
 }
 
