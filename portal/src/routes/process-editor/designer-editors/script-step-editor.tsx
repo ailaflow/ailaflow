@@ -4,12 +4,13 @@ import { SubValuePreviewView } from '../../../views/process-editor/designer-edit
 import { StepEditorProps } from './step-editor';
 import { EditorPropertyView } from '../../../views/process-editor/designer-editors/editor-property-view';
 import { StringEditorPropertyView } from '../../../views/process-editor/designer-editors/string-editor-property-view';
-import { ProcessStepValidator, ScriptStep } from '@aila/model';
+import { SelectEditorPropertyView } from '../../../views/process-editor/designer-editors/select-editor-property-view';
+import { ScriptStep } from '@aila/model';
 import { DefinitionPath } from '../../../core/definition-path';
 
 export function ScriptStepEditor(props: StepEditorProps) {
-  const { id, name, step, setName } = useStepEditor<ScriptStep>();
-  const errors = ProcessStepValidator.validate(step);
+  const { id, name, step, setName, properties, setProperty } = useStepEditor<ScriptStep>();
+  const errors = props.editorState.stepValidator.validate(step);
 
   function editScript() {
     const path = DefinitionPath.createStepPath(id, 'properties.script');
@@ -26,6 +27,17 @@ export function ScriptStepEditor(props: StepEditorProps) {
           {step.properties.script.contents.length === 0 && <>No script files</>}
         </SubValuePreviewView>
       </EditorPropertyView>
+
+      <SelectEditorPropertyView
+        label="Container"
+        value={properties.containerName}
+        options={props.editorState.containerNames.map(containerName => ({
+          label: `+${containerName}`,
+          value: containerName
+        }))}
+        error={errors['properties.containerName']}
+        onValueChanged={containerName => setProperty('containerName', containerName)}
+      />
     </DesignerEditorView>
   );
 }

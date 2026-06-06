@@ -9,7 +9,7 @@ export function SchemaSubEditor() {
   const state = useProcessEditor();
 
   const [schema, setSchema] = useState(() => {
-    const s = DefinitionPath.readPath<JsonSchema>(state.definition.value, state.path!);
+    const s = DefinitionPath.readPath<JsonSchema>(state.definition.value, state.subPath!);
     return {
       schema: JSON.stringify(s, null, 2),
       isValid: true
@@ -41,7 +41,7 @@ export function SchemaSubEditor() {
     const newDefinition = {
       ...state.definition.value
     };
-    DefinitionPath.writePath(newDefinition, state.path!, newSchema);
+    DefinitionPath.writePath(newDefinition, state.subPath!, newSchema);
     state.setDefinition(wrapDefinition(newDefinition));
     state.switchToDesigner();
   }

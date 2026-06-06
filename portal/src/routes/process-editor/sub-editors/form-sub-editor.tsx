@@ -3,7 +3,7 @@ import { ProcessSubEditorView } from '../../../views/process-editor/process-sub-
 
 export function FormSubEditor() {
   const state = useProcessEditor();
-  const path = state.path;
+  const path = state.subPath;
   if (!path) {
     throw new Error('Path is required');
   }

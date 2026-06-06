@@ -1,4 +1,4 @@
-import { ProcessDefinition, ProcessDto, ProcessValidator } from '@aila/model';
+import { ContainerLiteDto, ProcessDefinition, ProcessDto, ProcessStepValidator, ProcessRootValidator, ProcessValidator } from '@aila/model';
 import { useReducer } from 'react';
 import { useContext } from 'react';
 import { createContext } from 'react';
@@ -13,14 +13,19 @@ export enum ProcessEditorMode {
 
 export interface EditorDataState {
   mode: ProcessEditorMode;
+  subPath?: string;
+
+  rootValidator: ProcessRootValidator;
+  stepValidator: ProcessStepValidator;
+  containerNames: string[];
+
+  isDirty: boolean;
   id?: string;
   name: string;
   isNameValid: boolean;
   description: string;
   definition: WrappedDefinition<ProcessDefinition>;
   selectedStepId: string | null;
-  path?: string;
-  isDirty: boolean;
 }
 
 export interface ProcessEditorState extends EditorDataState {
@@ -54,18 +59,27 @@ function createEmptyDefinition(): ProcessDefinition {
   };
 }
 
-function createState(process?: ProcessDto): EditorDataState {
-  const definition = wrapDefinition<ProcessDefinition>(process ? process.definition : createEmptyDefinition());
-  const name = process?.name ?? 'new_process';
+function createState(props: Omit<ProcessEditorContextProps, 'children'>): EditorDataState {
+  const containerNames = props.containers.map(c => c.name);
+  const rootValidator = new ProcessRootValidator();
+  const stepValidator = new ProcessStepValidator(containerNames);
+
+  const definition = wrapDefinition<ProcessDefinition>(props.process ? props.process.definition : createEmptyDefinition());
+  const name = props.process?.name ?? 'new_process';
   return {
     mode: ProcessEditorMode.DESIGNER,
-    id: process?.id,
+
+    rootValidator,
+    stepValidator,
+    containerNames,
+
+    id: props.process?.id,
     name,
     isNameValid: !ProcessValidator.validateName(name),
-    description: process?.description ?? '',
+    description: props.process?.description ?? '',
     selectedStepId: null,
     definition,
-    isDirty: process ? false : true
+    isDirty: props.process ? false : true
   };
 }
 
@@ -73,8 +87,14 @@ function reduceState(state: EditorDataState, delta: Partial<EditorDataState>): E
   return { ...state, ...delta };
 }
 
-export function ProcessEditorContext(props: { children: React.ReactNode; process?: ProcessDto }) {
-  const [state, dispatch] = useReducer(reduceState, undefined, () => createState(props.process));
+export interface ProcessEditorContextProps {
+  process?: ProcessDto;
+  containers: ContainerLiteDto[];
+  children: React.ReactNode;
+}
+
+export function ProcessEditorContext(props: ProcessEditorContextProps) {
+  const [state, dispatch] = useReducer(reduceState, undefined, () => createState(props));
 
   function setId(id: string, isDirty: boolean) {
     dispatch({
@@ -121,24 +141,24 @@ export function ProcessEditorContext(props: { children: React.ReactNode; process
     });
   }
 
-  function switchToSchemaEditor(path: string) {
+  function switchToSchemaEditor(subPath: string) {
     dispatch({
       mode: ProcessEditorMode.SCHEMA_EDITOR,
-      path
+      subPath
     });
   }
 
-  function switchToFormEditor(path: string) {
+  function switchToFormEditor(subPath: string) {
     dispatch({
       mode: ProcessEditorMode.FORM_EDITOR,
-      path
+      subPath
     });
   }
 
-  function switchToScriptEditor(path: string) {
+  function switchToScriptEditor(subPath: string) {
     dispatch({
       mode: ProcessEditorMode.SCRIPT_EDITOR,
-      path
+      subPath
     });
   }
 

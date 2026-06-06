@@ -1,6 +1,7 @@
-import { ProcessDefinition, UpdateProcessRequest } from '@aila/model';
+import { ProcessDefinition, ProcessRootValidator, ProcessStepValidator, UpdateProcessRequest } from '@aila/model';
 import { Repository } from '../repository';
 import { randomUUID } from 'crypto';
+import { DefinitionWalker } from 'sequential-workflow-model';
 
 function countInputs(definition: ProcessDefinition): number {
   return definition.properties.variables.filter(v => v.input).length;
@@ -10,8 +11,31 @@ function countOutputs(definition: ProcessDefinition): number {
   return definition.properties.variables.filter(v => v.output).length;
 }
 
+function validateProcessDefinition(
+  definition: ProcessDefinition,
+  rootValidator: ProcessRootValidator,
+  stepValidator: ProcessStepValidator
+) {
+  if (!rootValidator.validate(definition.properties)) {
+    throw new Error('Validation failed for root properties');
+  }
+
+  const walker = new DefinitionWalker();
+  walker.forEach(definition, step => {
+    if (!stepValidator.validateStep(step)) {
+      throw new Error(`Validation failed for step: ${step.id}`);
+    }
+  });
+}
+
 export class Process {
-  public static create(data: Omit<UpdateProcessRequest, 'id'>): Process {
+  public static create(
+    data: Omit<UpdateProcessRequest, 'id'>,
+    rootValidator: ProcessRootValidator,
+    stepValidator: ProcessStepValidator
+  ): Process {
+    validateProcessDefinition(data.definition, rootValidator, stepValidator);
+
     return new Process(
       randomUUID(),
       data.name,
@@ -33,10 +57,12 @@ export class Process {
     public nOutputs: number
   ) {}
 
-  public update(data: UpdateProcessRequest) {
+  public update(data: UpdateProcessRequest, rootValidator: ProcessRootValidator, stepValidator: ProcessStepValidator) {
     if (data.id !== this.id) {
       throw new Error('Process ID cannot be changed');
     }
+    validateProcessDefinition(data.definition, rootValidator, stepValidator);
+
     this.name = data.name;
     this.description = data.description;
     this.userList = data.userList;

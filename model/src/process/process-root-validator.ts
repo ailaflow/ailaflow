@@ -1,8 +1,8 @@
 import { Definition } from 'sequential-workflow-model';
 import { ProcessDefinition } from './process-definition';
 
-export class ProcessDefinitionValidator {
-  public static validate(properties: ProcessDefinition['properties']): Record<string, string> {
+export class ProcessRootValidator {
+  public validate(properties: ProcessDefinition['properties']): Record<string, string> {
     const errors: Record<string, string> = {};
     const usedVariableNames: string[] = [];
 
@@ -22,7 +22,7 @@ export class ProcessDefinitionValidator {
     return errors;
   }
 
-  public static validateRoot(definition: Definition): boolean {
-    return Object.keys(ProcessDefinitionValidator.validate((definition as ProcessDefinition).properties)).length === 0;
-  }
+  public readonly validateRoot = (definition: Definition): boolean => {
+    return Object.keys(this.validate((definition as ProcessDefinition).properties)).length === 0;
+  };
 }

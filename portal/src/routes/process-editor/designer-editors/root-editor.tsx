@@ -1,4 +1,4 @@
-import { ProcessDefinition, ProcessDefinitionValidator, VariableDefinition } from '@aila/model';
+import { ProcessDefinition, VariableDefinition } from '@aila/model';
 import { useRootEditor } from 'sequential-workflow-designer-react';
 import { ProcessEditorState } from '../process-editor-context';
 import { DesignerEditorView } from '../../../views/process-editor/designer-editors/designer-editor-view';
@@ -12,7 +12,7 @@ export interface RootEditorProps {
 
 export function RootEditor(props: RootEditorProps) {
   const { properties, setProperty } = useRootEditor<ProcessDefinition>();
-  const validationErrors = ProcessDefinitionValidator.validate(properties);
+  const validationErrors = props.editorState.rootValidator.validate(properties);
   const variables = properties.variables || [];
 
   function setVariables(nextVariables: VariableDefinition[]) {

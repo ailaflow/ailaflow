@@ -99,7 +99,7 @@ export class Server {
       new SendFrontedToolResultEndpoint(frontendToolBus),
       new GetProcessesEndpoint(processListQuerier),
       new GetProcessEndpoint(processRepository),
-      new UpdateProcessEndpoint(processRepository),
+      new UpdateProcessEndpoint(processRepository, containerListQuerier),
       new TestProcessEndpoint(processRepository),
       new GetContainersEndpoint(containerListQuerier),
       new GetContainerEndpoint(containerRepository),

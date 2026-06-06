@@ -1,5 +1,5 @@
 import z from 'zod';
-import { ProcessDefinition, ProcessDefinitionValidator } from '../process';
+import { ProcessDefinition } from '../process';
 
 // getProcesses
 
@@ -43,13 +43,7 @@ export const updateProcessRequest = z.object({
   name: z.string(),
   description: z.string(),
   userList: z.string(),
-  definition: z.custom<ProcessDefinition>(d => {
-    if (typeof d === 'object' && d !== null) {
-      const definition = d as ProcessDefinition;
-      return ProcessDefinitionValidator.validateRoot(definition);
-    }
-    return false;
-  })
+  definition: z.custom<ProcessDefinition>()
 });
 export const updateProcessResponse = z.object({
   id: z.string()

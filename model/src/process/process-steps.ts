@@ -10,6 +10,7 @@ export interface ScriptStep extends Step {
   type: 'script';
   properties: {
     script: Script;
+    containerName: string;
   };
 }
 

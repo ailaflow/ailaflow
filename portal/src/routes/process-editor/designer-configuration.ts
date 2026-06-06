@@ -44,7 +44,8 @@ const scriptStep: Omit<ScriptStep, 'id'> = {
           modifiedAt: 0
         }
       ]
-    }
+    },
+    containerName: 'default'
   }
 };
 

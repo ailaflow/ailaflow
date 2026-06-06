@@ -2,11 +2,11 @@ import { useStepEditor } from 'sequential-workflow-designer-react';
 import { DesignerEditorView } from '../../../views/process-editor/designer-editors/designer-editor-view';
 import { StepEditorProps } from './step-editor';
 import { StringEditorPropertyView } from '../../../views/process-editor/designer-editors/string-editor-property-view';
-import { AgentStep, ProcessStepValidator } from '@aila/model';
+import { AgentStep } from '@aila/model';
 
-export function TaskStepEditor(_props: StepEditorProps) {
+export function TaskStepEditor(props: StepEditorProps) {
   const { name, step, setName } = useStepEditor<AgentStep>();
-  const errors = ProcessStepValidator.validate(step);
+  const errors = props.editorState.stepValidator.validate(step);
 
   return (
     <DesignerEditorView>

@@ -118,6 +118,9 @@ importers:
       sequential-workflow-machine:
         specifier: ^0.7.1
         version: 0.7.1(sequential-workflow-model@0.2.0)(xstate@4.38.3)
+      sequential-workflow-model:
+        specifier: ^0.2.0
+        version: 0.2.0
     devDependencies:
       '@types/express':
         specifier: ^5.0.6

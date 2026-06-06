@@ -2,7 +2,9 @@ import { Step } from 'sequential-workflow-model';
 import { ScriptStep } from './process-steps';
 
 export class ProcessStepValidator {
-  public static validate(step: Step): Record<string, string> {
+  public constructor(private readonly containerNames: string[]) {}
+
+  public validate(step: Step): Record<string, string> {
     const errors: Record<string, string> = {};
 
     if (step.name.length < 1 || step.name.length > 24) {
@@ -14,12 +16,15 @@ export class ProcessStepValidator {
       if (!scriptStep.properties.script.contents.find(content => content.path === 'package.json')) {
         errors['properties.script'] = 'Script must contain a package.json file.';
       }
+      if (!this.containerNames.includes(scriptStep.properties.containerName)) {
+        errors['properties.containerName'] = 'No container with the specified name exists.';
+      }
     }
 
     return errors;
   }
 
-  public static validateStep(step: Step): boolean {
-    return Object.keys(ProcessStepValidator.validate(step)).length === 0;
-  }
+  public readonly validateStep = (step: Step): boolean => {
+    return Object.keys(this.validate(step)).length === 0;
+  };
 }
