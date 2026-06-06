@@ -3,7 +3,7 @@ import { useApiClient } from '../../auth/auth-context';
 import { useLoader } from '../../core/use-loader';
 import { ProcessTesterContent } from './process-tester-content';
 import { AdminPortal, AdminPortalError, AdminPortalLoading } from '../common/admin-portal';
-import { ProcessEditorView } from '../../views/process-editor/process-editor-view';
+import { ResourceEditorView } from '../../views/resource-editor/resource-editor-view';
 
 export function ProcessTester() {
   const { processId } = useParams();
@@ -28,7 +28,8 @@ export function ProcessTester() {
 
   return (
     <AdminPortal>
-      <ProcessEditorView
+      <ResourceEditorView
+        icon="/"
         name={data.process.name}
         isNameReadOnly={true}
         isNameValid={true}
@@ -37,7 +38,7 @@ export function ProcessTester() {
         onSwitch={openEditor}
       >
         <ProcessTesterContent process={data.process} />
-      </ProcessEditorView>
+      </ResourceEditorView>
     </AdminPortal>
   );
 }

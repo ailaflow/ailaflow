@@ -6,6 +6,8 @@ import { Install } from './install/install';
 import { ProcessList } from './process-list/process-list';
 import { ProcessEditor } from './process-editor/process-editor';
 import { ProcessTester } from './process-tester/process-tester';
+import { ContainerList } from './container-list/container-list';
+import { ContainerEditor } from './container-editor/container-editor';
 
 const router = createBrowserRouter([
   {
@@ -35,6 +37,18 @@ const router = createBrowserRouter([
   {
     path: '/admin/processes/:processId/test',
     element: <AuthGate route={<ProcessTester />} />
+  },
+  {
+    path: '/admin/containers',
+    element: <AuthGate route={<ContainerList />} />
+  },
+  {
+    path: '/admin/create-container',
+    element: <AuthGate route={<ContainerEditor />} />
+  },
+  {
+    path: '/admin/containers/:name',
+    element: <AuthGate route={<ContainerEditor />} />
   }
 ]);
 

@@ -33,6 +33,13 @@ import { UserToolSetProvider } from './chat-session/stores/user-tool-set-provide
 import { AdminChatSessionStore } from './chat-session/stores/admin-chat-session-store';
 import { FrontendToolFactory } from './chat-session/tools/frontend-tool-factory';
 import { ChatSessionStore } from './chat-session/stores/chat-session-store';
+import { ContainerRepository } from './repositories/container-repository/container-repository';
+import { SqliteContainerRepository } from './repositories/container-repository/sqlite-container-repository';
+import { ContainerListQuerier } from './queriers/container-list/container-list-querier';
+import { SqliteContainerListQuerier } from './queriers/container-list/sqlite-container-list-querier';
+import { GetContainersEndpoint } from './api/container/get-containers-endpoint';
+import { GetContainerEndpoint } from './api/container/get-container-endpoint';
+import { UpsertContainerEndpoint } from './api/container/upsert-container-endpoint';
 
 const PORT = process.env.PORT || 2048;
 
@@ -47,16 +54,25 @@ export class Server {
     let userRepository: UserRepository;
     let authTokenRepository: AuthTokenRepository;
     let processRepository: ProcessRepository;
+    let containerRepository: ContainerRepository;
     let processListQuerier: ProcessListQuerier;
+    let containerListQuerier: ContainerListQuerier;
 
     const sqliteDatabases = new SqliteDatabases(serverPaths);
 
     userRepository = new SqliteUserRepository(sqliteDatabases);
     authTokenRepository = new SqliteAuthTokenRepository(sqliteDatabases);
     processRepository = new SqliteProcessRepository(sqliteDatabases);
+    containerRepository = new SqliteContainerRepository(sqliteDatabases);
     processListQuerier = new SqliteProcessListQuerier(sqliteDatabases);
+    containerListQuerier = new SqliteContainerListQuerier(sqliteDatabases);
 
-    await Promise.all([userRepository.setup(abortSignal), authTokenRepository.setup(abortSignal), processRepository.setup(abortSignal)]);
+    await Promise.all([
+      userRepository.setup(abortSignal),
+      authTokenRepository.setup(abortSignal),
+      processRepository.setup(abortSignal),
+      containerRepository.setup(abortSignal)
+    ]);
 
     const sandboxManager = new SandboxManager(serverPaths);
     const sandboxExecutorManager = new SandboxExecutorManager(sandboxManager);
@@ -84,7 +100,10 @@ export class Server {
       new GetProcessesEndpoint(processListQuerier),
       new GetProcessEndpoint(processRepository),
       new UpdateProcessEndpoint(processRepository),
-      new TestProcessEndpoint(processRepository)
+      new TestProcessEndpoint(processRepository),
+      new GetContainersEndpoint(containerListQuerier),
+      new GetContainerEndpoint(containerRepository),
+      new UpsertContainerEndpoint(containerRepository)
     ];
     const authMiddleware = new AuthMiddleware(authTokenRepository);
     const router = new Router(app, endpoints, authMiddleware);

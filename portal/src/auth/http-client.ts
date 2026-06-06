@@ -44,7 +44,8 @@ export class HttpClient {
       headers,
       method,
       body: body ? JSON.stringify(body) : undefined,
-      signal: abortSignal
+      signal: abortSignal,
+      cache: 'no-store'
     });
 
     const status = response.status;
