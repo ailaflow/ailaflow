@@ -5,13 +5,15 @@ import { StepEditorProps } from './step-editor';
 import { EditorProperty } from '../../../components/process-editor/designer-editors/editor-property';
 import { StringEditorProperty } from '../../../components/process-editor/designer-editors/string-editor-property';
 import { ProcessStepValidator, ScriptStep } from '@aila/model';
+import { DefinitionPath } from '../../../core/definition-path';
 
 export function ScriptStepEditor(props: StepEditorProps) {
   const { id, name, step, setName } = useStepEditor<ScriptStep>();
   const errors = ProcessStepValidator.validate(step);
 
   function editScript() {
-    props.editorState.switchToScriptEditor(`step:${id}/properties.script`);
+    const path = DefinitionPath.createStepPath(id, 'properties.script');
+    props.editorState.switchToScriptEditor(path);
   }
 
   return (

@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@aila/model": "workspace:*",
+    "sequential-workflow-model": "^0.2.0",
     "sequential-workflow-designer": "^0.37.3",
     "sequential-workflow-designer-react": "^0.37.3",
     "react": "^19.0.0",

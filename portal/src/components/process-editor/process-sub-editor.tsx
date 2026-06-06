@@ -32,7 +32,7 @@ export function ProcessSubEditor(props: ProcessSubEditorProps) {
         </div>
       </div>
 
-      <div className="min-h-0 flex-1 p-5">{props.children}</div>
+      <div className="min-h-0 flex-1">{props.children}</div>
     </div>
   );
 }

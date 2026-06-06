@@ -4,6 +4,7 @@ import { ProcessEditorState } from '../process-editor-context';
 import { DesignerEditor } from '../../../components/process-editor/designer-editors/designer-editor';
 import { SubValuePreview } from '../../../components/process-editor/designer-editors/sub-value-preview';
 import { EditorProperty } from '../../../components/process-editor/designer-editors/editor-property';
+import { DefinitionPath } from '../../../core/definition-path';
 
 export interface RootEditorProps {
   editorState: ProcessEditorState;
@@ -42,11 +43,13 @@ export function RootEditor(props: RootEditorProps) {
   }
 
   function editVariableSchema(index: number) {
-    props.editorState.switchToSchemaEditor(`variables.${index}.schema`);
+    const path = DefinitionPath.createRootPath(`properties.variables.${index}.schema`);
+    props.editorState.switchToSchemaEditor(path);
   }
 
   function editStartFrom() {
-    props.editorState.switchToFormEditor('properties.startForm');
+    const path = DefinitionPath.createRootPath(`properties.startForm`);
+    props.editorState.switchToFormEditor(path);
   }
 
   return (

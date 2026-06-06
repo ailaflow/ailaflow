@@ -1,9 +1,15 @@
 import { Step } from 'sequential-workflow-model';
+import { Script } from '../script/script';
+
+export interface ScriptFileContent {
+  mimeType: string;
+  content: string;
+}
 
 export interface ScriptStep extends Step {
   type: 'script';
   properties: {
-    script: string;
+    script: Script;
   };
 }
 

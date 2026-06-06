@@ -6,7 +6,10 @@ const scriptStep: Omit<ScriptStep, 'id'> = {
   name: 'Script',
   componentType: 'task',
   properties: {
-    script: ''
+    script: {
+      sandboxName: null,
+      contents: []
+    }
   }
 };
 

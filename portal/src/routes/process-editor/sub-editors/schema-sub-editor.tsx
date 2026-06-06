@@ -3,21 +3,15 @@ import { useProcessEditor } from '../process-editor-context';
 import { wrapDefinition } from 'sequential-workflow-designer-react';
 import { useState } from 'react';
 import { ProcessSubEditor } from '../../../components/process-editor/process-sub-editor';
+import { DefinitionPath } from '../../../core/definition-path';
 
 export function SchemaSubEditor() {
   const state = useProcessEditor();
-  const path = state.path;
-  if (!path) {
-    throw new Error('Path is required');
-  }
 
-  const index = Number(path.split('.', 2)[1]);
   const [schema, setSchema] = useState(() => {
-    const variable = state.definition.value.properties.variables[index];
-
+    const s = DefinitionPath.readPath<JsonSchema>(state.definition.value, state.path!);
     return {
-      variable,
-      schema: JSON.stringify(variable.schema, null, 2),
+      schema: JSON.stringify(s, null, 2),
       isValid: true
     };
   });
@@ -45,20 +39,15 @@ export function SchemaSubEditor() {
     }
 
     const newDefinition = {
-      ...state.definition.value,
-      properties: {
-        ...state.definition.value.properties,
-        variables: state.definition.value.properties.variables.map((variable, currentIndex) =>
-          currentIndex === index ? { ...variable, schema: newSchema } : variable
-        )
-      }
+      ...state.definition.value
     };
+    DefinitionPath.writePath(newDefinition, state.path!, newSchema);
     state.setDefinition(wrapDefinition(newDefinition));
     state.switchToDesigner();
   }
 
   return (
-    <ProcessSubEditor title={`${schema.variable.name} - Schema`} canOk={schema.isValid} onCancel={state.switchToDesigner} onOk={ok}>
+    <ProcessSubEditor title={`Schema`} canOk={schema.isValid} onCancel={state.switchToDesigner} onOk={ok}>
       <textarea
         value={schema.schema}
         onChange={e => setSchema2(e.target.value)}

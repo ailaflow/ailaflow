@@ -53,6 +53,9 @@ importers:
       sequential-workflow-designer-react:
         specifier: ^0.37.3
         version: 0.37.3(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(sequential-workflow-designer@0.37.3(sequential-workflow-model@0.2.0))
+      sequential-workflow-model:
+        specifier: ^0.2.0
+        version: 0.2.0
     devDependencies:
       '@tailwindcss/vite':
         specifier: ^4.3.0
