@@ -2,7 +2,7 @@ import { JsonSchema } from '@aila/model';
 import { useProcessEditor } from '../process-editor-context';
 import { wrapDefinition } from 'sequential-workflow-designer-react';
 import { useState } from 'react';
-import { ProcessSubEditor } from '../../../components/process-editor/process-sub-editor';
+import { ProcessSubEditorView } from '../../../views/process-editor/process-sub-editor-view';
 import { DefinitionPath } from '../../../core/definition-path';
 
 export function SchemaSubEditor() {
@@ -47,12 +47,12 @@ export function SchemaSubEditor() {
   }
 
   return (
-    <ProcessSubEditor title={`Schema`} canOk={schema.isValid} onCancel={state.switchToDesigner} onOk={ok}>
+    <ProcessSubEditorView title={`Schema`} canOk={schema.isValid} onCancel={state.switchToDesigner} onOk={ok}>
       <textarea
         value={schema.schema}
         onChange={e => setSchema2(e.target.value)}
         className="h-full w-full resize-none rounded-md border border-slate-300 bg-white p-3 font-mono text-sm leading-5 text-slate-800 outline-none transition-colors placeholder:text-slate-400 focus:border-slate-400"
       />
-    </ProcessSubEditor>
+    </ProcessSubEditorView>
   );
 }

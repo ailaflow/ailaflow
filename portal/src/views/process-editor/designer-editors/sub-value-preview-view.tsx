@@ -1,9 +1,9 @@
-export interface SubValuePreviewProps {
+export interface SubValuePreviewViewProps {
   children: React.ReactNode;
   onEdit: () => void;
 }
 
-export function SubValuePreview(props: SubValuePreviewProps) {
+export function SubValuePreviewView(props: SubValuePreviewViewProps) {
   return (
     <div className="rounded-md border border-slate-200 bg-slate-50 px-2.5 py-2">
       <div className="flex flex-wrap items-center justify-between gap-2">

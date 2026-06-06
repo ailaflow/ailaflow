@@ -1,10 +1,10 @@
-import { AdminPortalLayout } from '../../components/layouts/admin-portal-layout';
 import { ProcessEditorContent } from './process-editor-content';
 import { ProcessEditorContext } from './process-editor-context';
 import { useParams } from 'react-router-dom';
 import { useApiClient } from '../../auth/auth-context';
 import { ProcessDto } from '@aila/model';
 import { useLoader } from '../../core/use-loader';
+import { AdminPortal, AdminPortalError, AdminPortalLoading } from '../common/admin-portal';
 
 export function ProcessEditor() {
   const { processId } = useParams();
@@ -14,21 +14,19 @@ export function ProcessEditor() {
     const { data, error, isLoading } = useLoader(abortSignal => apiClient.process.getProcess(abortSignal, processId), [processId]);
 
     if (isLoading) {
-      return <AdminPortalLayout disableScroll={true}>Loading...</AdminPortalLayout>;
+      return <AdminPortalLoading />;
     }
-
     if (error) {
-      return <AdminPortalLayout disableScroll={true}>Error: {error.message}</AdminPortalLayout>;
+      return <AdminPortalError error={error} />;
     }
-
     process = data.process;
   }
 
   return (
-    <AdminPortalLayout disableScroll={true}>
+    <AdminPortal>
       <ProcessEditorContext process={process}>
         <ProcessEditorContent />
       </ProcessEditorContext>
-    </AdminPortalLayout>
+    </AdminPortal>
   );
 }

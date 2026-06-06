@@ -1,9 +1,9 @@
 import { useStepEditor } from 'sequential-workflow-designer-react';
-import { DesignerEditor } from '../../../components/process-editor/designer-editors/designer-editor';
-import { SubValuePreview } from '../../../components/process-editor/designer-editors/sub-value-preview';
+import { DesignerEditorView } from '../../../views/process-editor/designer-editors/designer-editor-view';
+import { SubValuePreviewView } from '../../../views/process-editor/designer-editors/sub-value-preview-view';
 import { StepEditorProps } from './step-editor';
-import { EditorProperty } from '../../../components/process-editor/designer-editors/editor-property';
-import { StringEditorProperty } from '../../../components/process-editor/designer-editors/string-editor-property';
+import { EditorPropertyView } from '../../../views/process-editor/designer-editors/editor-property-view';
+import { StringEditorPropertyView } from '../../../views/process-editor/designer-editors/string-editor-property-view';
 import { ProcessStepValidator, ScriptStep } from '@aila/model';
 import { DefinitionPath } from '../../../core/definition-path';
 
@@ -17,12 +17,12 @@ export function ScriptStepEditor(props: StepEditorProps) {
   }
 
   return (
-    <DesignerEditor>
-      <StringEditorProperty label="Name" value={name} onValueChanged={setName} error={errors['name']}></StringEditorProperty>
+    <DesignerEditorView>
+      <StringEditorPropertyView label="Name" value={name} onValueChanged={setName} error={errors['name']}></StringEditorPropertyView>
 
-      <EditorProperty label="Script">
-        <SubValuePreview onEdit={editScript}>Script is not defined</SubValuePreview>
-      </EditorProperty>
-    </DesignerEditor>
+      <EditorPropertyView label="Script">
+        <SubValuePreviewView onEdit={editScript}>Script is not defined</SubValuePreviewView>
+      </EditorPropertyView>
+    </DesignerEditorView>
   );
 }

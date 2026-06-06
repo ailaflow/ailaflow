@@ -1,12 +1,10 @@
-import { EditorProperty } from './editor-property';
+import { EditorPropertyView } from './editor-property-view';
 
-export function StringEditorProperty(props: { label: string; value: string; error?: string; onValueChanged: (value: string) => void }) {
+export function StringEditorPropertyView(props: { label: string; value: string; error?: string; onValueChanged: (value: string) => void }) {
   return (
-    <EditorProperty label={props.label}>
+    <EditorPropertyView label={props.label}>
       <label
-        className={`flex h-9 min-w-0 overflow-hidden rounded-md border bg-white ${
-          props.error ? 'border-red-300' : 'border-slate-300'
-        }`}
+        className={`flex h-9 min-w-0 overflow-hidden rounded-md border bg-white ${props.error ? 'border-red-300' : 'border-slate-300'}`}
       >
         <input
           type="text"
@@ -17,6 +15,6 @@ export function StringEditorProperty(props: { label: string; value: string; erro
         />
       </label>
       {props.error && <div className="px-1 text-xs text-red-700">{props.error}</div>}
-    </EditorProperty>
+    </EditorPropertyView>
   );
 }

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-export interface ProcessEditorProps {
+export interface ProcessEditorViewProps {
   name: string;
   isNameValid: boolean;
   isNameReadOnly: boolean;
@@ -15,7 +15,7 @@ export interface ProcessEditorProps {
   children: React.ReactNode;
 }
 
-export function ProcessEditor(props: ProcessEditorProps) {
+export function ProcessEditorView(props: ProcessEditorViewProps) {
   const [isDetailsExpanded, setIsDetailsExpanded] = useState(false);
   const nameInputLabelClassName = `flex h-9 w-full max-w-md overflow-hidden rounded-md border bg-transparent transition-colors focus-within:bg-white ${
     props.isNameValid ? 'border-transparent focus-within:border-slate-300' : 'border-red-300 bg-red-50/30 focus-within:border-red-400'

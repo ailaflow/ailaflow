@@ -1,7 +1,10 @@
-import { SubmitEvent, useState } from 'react';
+import { useState } from 'react';
+import type { SubmitEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { InstallResponse } from '@aila/model';
 import { useApiClient } from '../../auth/auth-context';
+import { CenteredFormLayout } from '../../views/centered-form/centered-form-layout';
+import { InstallView } from '../../views/centered-form/install-view';
 
 export function Install() {
   const apiClient = useApiClient();
@@ -35,22 +38,15 @@ export function Install() {
   };
 
   return (
-    <main>
-      <h1>Install</h1>
-      <form onSubmit={onSubmit}>
-        <label>
-          Root user name
-          <input name="rootUserName" type="text" value={rootUserName} onChange={e => setRootUserName(e.target.value)} />
-        </label>
-        <br />
-        <label>
-          Root password
-          <input name="rootPassword" type="password" value={rootPassword} onChange={e => setRootPassword(e.target.value)} />
-        </label>
-        {error && <p style={{ color: 'red' }}>{error}</p>}
-        <br />
-        <button type="submit">Install</button>
-      </form>
-    </main>
+    <CenteredFormLayout>
+      <InstallView
+        rootUserName={rootUserName}
+        rootPassword={rootPassword}
+        error={error}
+        onRootUserNameChange={setRootUserName}
+        onRootPasswordChange={setRootPassword}
+        onSubmit={onSubmit}
+      />
+    </CenteredFormLayout>
   );
 }

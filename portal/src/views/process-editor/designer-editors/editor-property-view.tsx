@@ -1,4 +1,4 @@
-export interface EditorPropertyProps {
+export interface EditorPropertyViewProps {
   label: string;
   children: React.ReactNode;
   buttons?: {
@@ -8,7 +8,7 @@ export interface EditorPropertyProps {
   onButtonClick?: (command: string) => void;
 }
 
-export function EditorProperty(props: EditorPropertyProps) {
+export function EditorPropertyView(props: EditorPropertyViewProps) {
   return (
     <>
       <div className="flex flex-wrap items-center justify-between gap-2">

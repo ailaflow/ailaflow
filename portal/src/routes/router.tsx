@@ -1,6 +1,6 @@
 import { RouterProvider, createBrowserRouter } from 'react-router-dom';
 import { Login } from './login/login';
-import { AuthGate } from './auth-gate';
+import { AuthGate } from './common/auth-gate';
 import { Dashboard } from './dashboard/dashboard';
 import { Install } from './install/install';
 import { ProcessList } from './process-list/process-list';

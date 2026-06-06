@@ -1,9 +1,9 @@
 import { useNavigate, useParams } from 'react-router-dom';
-import { AdminPortalLayout } from '../../components/layouts/admin-portal-layout';
 import { useApiClient } from '../../auth/auth-context';
 import { useLoader } from '../../core/use-loader';
-import { ProcessEditor } from '../../components/process-editor/process-editor';
 import { ProcessTesterContent } from './process-tester-content';
+import { AdminPortal, AdminPortalError, AdminPortalLoading } from '../common/admin-portal';
+import { ProcessEditorView } from '../../views/process-editor/process-editor-view';
 
 export function ProcessTester() {
   const { processId } = useParams();
@@ -16,11 +16,10 @@ export function ProcessTester() {
   const { data, error, isLoading } = useLoader(abortSignal => apiClient.process.getProcess(abortSignal, processId), [processId]);
 
   if (isLoading) {
-    return <AdminPortalLayout disableScroll={true}>Loading...</AdminPortalLayout>;
+    return <AdminPortalLoading />;
   }
-
   if (error) {
-    return <AdminPortalLayout disableScroll={true}>Error: {error.message}</AdminPortalLayout>;
+    return <AdminPortalError error={error} />;
   }
 
   function openEditor() {
@@ -28,8 +27,8 @@ export function ProcessTester() {
   }
 
   return (
-    <AdminPortalLayout disableScroll={true}>
-      <ProcessEditor
+    <AdminPortal>
+      <ProcessEditorView
         name={data.process.name}
         isNameReadOnly={true}
         isNameValid={true}
@@ -38,7 +37,7 @@ export function ProcessTester() {
         onSwitch={openEditor}
       >
         <ProcessTesterContent process={data.process} />
-      </ProcessEditor>
-    </AdminPortalLayout>
+      </ProcessEditorView>
+    </AdminPortal>
   );
 }

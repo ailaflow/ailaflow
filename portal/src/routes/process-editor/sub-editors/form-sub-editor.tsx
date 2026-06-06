@@ -1,5 +1,5 @@
 import { useProcessEditor } from '../process-editor-context';
-import { ProcessSubEditor } from '../../../components/process-editor/process-sub-editor';
+import { ProcessSubEditorView } from '../../../views/process-editor/process-sub-editor-view';
 
 export function FormSubEditor() {
   const state = useProcessEditor();
@@ -9,8 +9,8 @@ export function FormSubEditor() {
   }
 
   return (
-    <ProcessSubEditor title="Form Editor" canOk={true} onCancel={state.switchToDesigner} onOk={() => {}}>
+    <ProcessSubEditorView title="Form Editor" canOk={true} onCancel={state.switchToDesigner} onOk={() => {}}>
       {path}
-    </ProcessSubEditor>
+    </ProcessSubEditorView>
   );
 }

@@ -1,44 +1,23 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useAuthState } from '../../auth/auth-context';
 
-type LinkMenuItem = {
+export type LinkMenuItem = {
   icon: string;
   label: string;
   action: 'link';
   href: string;
 };
 
-type MenuCommand = 'logout';
-
-type CommandMenuItem = {
+export type CommandMenuItem = {
   icon: string;
   label: string;
   action: 'command';
-  command: MenuCommand;
+  command: string;
 };
 
-type MenuItem = LinkMenuItem | CommandMenuItem;
+export type MenuItem = LinkMenuItem | CommandMenuItem;
 
-const userLinks: MenuItem[] = [
-  { icon: 'T', label: 'My tasks', action: 'link', href: '#' },
-  { icon: 'N', label: 'My notifications', action: 'link', href: '#' },
-  { icon: 'P', label: 'My processes', action: 'link', href: '#' },
-  { icon: 'V', label: 'My views', action: 'link', href: '#' },
-  { icon: 'X', label: 'Log out', action: 'command', command: 'logout' }
-];
-
-const adminLinks: MenuItem[] = [
-  { icon: '/', label: 'Processes', action: 'link', href: '/admin/processes' },
-  { icon: '#', label: 'Tables', action: 'link', href: '#' },
-  { icon: '#', label: 'Users', action: 'link', href: '#' },
-  { icon: '*', label: 'Views', action: 'link', href: '#' },
-  { icon: '*', label: 'Logs', action: 'link', href: '#' },
-  { icon: '*', label: 'Configuration', action: 'link', href: '#' },
-  { icon: '*', label: 'Containers', action: 'link', href: '#' }
-];
-
-function SidebarMenuItem(props: { item: MenuItem; onCommand(command: MenuCommand): void; onSelect?: () => void }) {
+function MenuItemView(props: { item: MenuItem; onCommand(command: string): void; onSelect?: () => void }) {
   const itemClassName =
     'flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors hover:bg-slate-100 cursor-pointer';
   const { item } = props;
@@ -74,22 +53,15 @@ function SidebarMenuItem(props: { item: MenuItem; onCommand(command: MenuCommand
 }
 
 export interface PortalLayoutProps {
-  children: React.ReactNode | React.ReactNode[];
+  children: React.ReactNode;
+  userName: string;
+  userItems: MenuItem[];
+  adminItems?: MenuItem[];
+  onCommand(command: string): void;
 }
 
 export function PortalLayout(props: PortalLayoutProps) {
-  const { setSession } = useAuthState();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-
-  function logout() {
-    setSession(null);
-  }
-
-  function runCommand(command: MenuCommand) {
-    if (command === 'logout') {
-      logout();
-    }
-  }
 
   function closeSidebar() {
     setIsSidebarOpen(false);
@@ -108,7 +80,7 @@ export function PortalLayout(props: PortalLayoutProps) {
         )}
 
         <aside
-          className={`fixed inset-y-0 left-0 z-40 w-[170px] shrink-0 border-r border-slate-200 bg-white px-2 py-5 transition-transform duration-200 md:static md:z-auto md:w-[150px] ${
+          className={`fixed inset-y-0 left-0 z-40 w-42.5 shrink-0 border-r border-slate-200 bg-white px-2 py-5 transition-transform duration-200 md:static md:z-auto md:w-37.5 ${
             isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
           }`}
         >
@@ -123,23 +95,25 @@ export function PortalLayout(props: PortalLayoutProps) {
               </Link>
             </div>
 
-            <div className="mt-4 px-2 text-xs font-medium text-slate-500">@b4rtaz</div>
+            <div className="mt-4 px-2 text-xs font-medium text-slate-500">@{props.userName}</div>
 
             <div className="text-sm">
               <nav className="mt-4 flex flex-col gap-1.5">
-                {userLinks.map(item => (
-                  <SidebarMenuItem key={item.label} item={item} onCommand={runCommand} onSelect={closeSidebar} />
+                {props.userItems.map(item => (
+                  <MenuItemView key={item.label} item={item} onCommand={props.onCommand} onSelect={closeSidebar} />
                 ))}
               </nav>
 
-              <div className="mt-5 border-t border-slate-200 pt-4">
-                <div className="mb-2.5 px-2 text-xs font-semibold tracking-wide text-slate-500">Admin</div>
-                <nav className="flex flex-col gap-1.5">
-                  {adminLinks.map(item => (
-                    <SidebarMenuItem key={item.label} item={item} onCommand={runCommand} onSelect={closeSidebar} />
-                  ))}
-                </nav>
-              </div>
+              {props.adminItems && (
+                <div className="mt-5 border-t border-slate-200 pt-4">
+                  <div className="mb-2.5 px-2 text-xs font-semibold tracking-wide text-slate-500">Admin</div>
+                  <nav className="flex flex-col gap-1.5">
+                    {props.adminItems.map(item => (
+                      <MenuItemView key={item.label} item={item} onCommand={props.onCommand} onSelect={closeSidebar} />
+                    ))}
+                  </nav>
+                </div>
+              )}
             </div>
           </div>
         </aside>

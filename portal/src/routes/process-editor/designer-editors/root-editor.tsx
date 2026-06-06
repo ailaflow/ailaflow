@@ -1,9 +1,9 @@
 import { ProcessDefinition, ProcessDefinitionValidator, VariableDefinition } from '@aila/model';
 import { useRootEditor } from 'sequential-workflow-designer-react';
 import { ProcessEditorState } from '../process-editor-context';
-import { DesignerEditor } from '../../../components/process-editor/designer-editors/designer-editor';
-import { SubValuePreview } from '../../../components/process-editor/designer-editors/sub-value-preview';
-import { EditorProperty } from '../../../components/process-editor/designer-editors/editor-property';
+import { DesignerEditorView } from '../../../views/process-editor/designer-editors/designer-editor-view';
+import { SubValuePreviewView } from '../../../views/process-editor/designer-editors/sub-value-preview-view';
+import { EditorPropertyView } from '../../../views/process-editor/designer-editors/editor-property-view';
 import { DefinitionPath } from '../../../core/definition-path';
 
 export interface RootEditorProps {
@@ -53,12 +53,12 @@ export function RootEditor(props: RootEditorProps) {
   }
 
   return (
-    <DesignerEditor>
-      <EditorProperty label="Start Form">
-        <SubValuePreview onEdit={editStartFrom}>Form is not defined</SubValuePreview>
-      </EditorProperty>
+    <DesignerEditorView>
+      <EditorPropertyView label="Start Form">
+        <SubValuePreviewView onEdit={editStartFrom}>Form is not defined</SubValuePreviewView>
+      </EditorPropertyView>
 
-      <EditorProperty label="Variables" buttons={[{ command: 'add-variable', label: 'Add' }]} onButtonClick={addVariable}>
+      <EditorPropertyView label="Variables" buttons={[{ command: 'add-variable', label: 'Add' }]} onButtonClick={addVariable}>
         {variables.length === 0 && (
           <div className="rounded-md border border-slate-200 px-3 py-2 text-sm text-slate-500">No variables yet.</div>
         )}
@@ -133,13 +133,13 @@ export function RootEditor(props: RootEditorProps) {
                 </label>
               </div>
 
-              <SubValuePreview onEdit={() => editVariableSchema(index)}>
+              <SubValuePreviewView onEdit={() => editVariableSchema(index)}>
                 Schema: <span className="font-medium text-slate-700">{variable.schema.type}</span>
-              </SubValuePreview>
+              </SubValuePreviewView>
             </div>
           );
         })}
-      </EditorProperty>
-    </DesignerEditor>
+      </EditorPropertyView>
+    </DesignerEditorView>
   );
 }

@@ -2,7 +2,7 @@ import { ProcessEditorMode, useProcessEditor } from './process-editor-context';
 import { SchemaSubEditor } from './sub-editors/schema-sub-editor';
 import { DesignerSubEditor } from './sub-editors/designer-sub-editor';
 import { useApiClient } from '../../auth/auth-context';
-import { ProcessEditor } from '../../components/process-editor/process-editor';
+import { ProcessEditorView } from '../../views/process-editor/process-editor-view';
 import { useNavigate } from 'react-router-dom';
 import { FormSubEditor } from './sub-editors/form-sub-editor';
 import { ScriptSubEditor } from './sub-editors/script-sub-editor';
@@ -42,7 +42,7 @@ export function ProcessEditorContent() {
   }
 
   return (
-    <ProcessEditor
+    <ProcessEditorView
       name={state.name}
       isNameValid={state.isNameValid}
       isNameReadOnly={!isDesigner}
@@ -59,7 +59,7 @@ export function ProcessEditorContent() {
       {state.mode === ProcessEditorMode.SCHEMA_EDITOR && <SchemaSubEditor />}
       {state.mode === ProcessEditorMode.FORM_EDITOR && <FormSubEditor />}
       {state.mode === ProcessEditorMode.SCRIPT_EDITOR && <ScriptSubEditor />}
-    </ProcessEditor>
+    </ProcessEditorView>
   );
 }
 

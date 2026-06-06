@@ -1,7 +1,7 @@
 import { useStepEditor } from 'sequential-workflow-designer-react';
-import { DesignerEditor } from '../../../components/process-editor/designer-editors/designer-editor';
+import { DesignerEditorView } from '../../../views/process-editor/designer-editors/designer-editor-view';
 import { StepEditorProps } from './step-editor';
-import { StringEditorProperty } from '../../../components/process-editor/designer-editors/string-editor-property';
+import { StringEditorPropertyView } from '../../../views/process-editor/designer-editors/string-editor-property-view';
 import { NotificationStep, ProcessStepValidator } from '@aila/model';
 
 export function NotificationStepEditor(_props: StepEditorProps) {
@@ -9,8 +9,8 @@ export function NotificationStepEditor(_props: StepEditorProps) {
   const errors = ProcessStepValidator.validate(step);
 
   return (
-    <DesignerEditor>
-      <StringEditorProperty label="Name" value={name} onValueChanged={setName} error={errors['name']}></StringEditorProperty>
-    </DesignerEditor>
+    <DesignerEditorView>
+      <StringEditorPropertyView label="Name" value={name} onValueChanged={setName} error={errors['name']}></StringEditorPropertyView>
+    </DesignerEditorView>
   );
 }

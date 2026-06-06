@@ -1,4 +1,4 @@
-export interface ProcessSubEditorProps {
+export interface ProcessSubEditorViewProps {
   title: string;
   canOk: boolean;
   onCancel: () => void;
@@ -6,7 +6,7 @@ export interface ProcessSubEditorProps {
   children: React.ReactNode;
 }
 
-export function ProcessSubEditor(props: ProcessSubEditorProps) {
+export function ProcessSubEditorView(props: ProcessSubEditorViewProps) {
   return (
     <div className="flex h-full min-h-0 flex-col bg-white">
       <div className="shrink-0 border-b border-slate-200 px-5 py-3">
