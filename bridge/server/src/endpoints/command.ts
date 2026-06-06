@@ -1,16 +1,22 @@
-import { join } from 'path';
 import { spawn } from 'node:child_process';
-import { SseResponse } from './sse-response.mjs';
-import { Logger } from '../core/logger.mjs';
+import { join } from 'path';
+import type { Express, Request, Response } from 'express';
+import { Logger } from '../core/logger';
+import { SseResponse } from '../core/sse-response';
 
-const INSTANCE_ID = process.env.INSTANCE_ID;
-const INSTANCE_PATH = `/${INSTANCE_ID}/`;
+interface CommandRequestBody {
+  folderPath: string;
+  command: string;
+  args?: string[];
+  stdin?: string;
+}
 
-export default function setup(app) {
+export function setupCommandEndpoint(app: Express): void {
   const logger = new Logger('CommandEndpoint');
 
-  app.post('/command', (req, res) => {
-    const cwd = join(INSTANCE_PATH, req.body.folderPath);
+  app.post('/command', (req: Request<unknown, unknown, CommandRequestBody>, res: Response) => {
+    const instancePath = `/${process.env.INSTANCE_ID}/`;
+    const cwd = join(instancePath, req.body.folderPath);
     const command = req.body.command;
     const args = req.body.args ?? [];
     const stdin = req.body.stdin;
@@ -27,7 +33,6 @@ export default function setup(app) {
     });
 
     if (stdin) {
-      child.stdin.setEncoding('utf8');
       child.stdin.on('error', error => {
         sse.writeEvent({ error: error.message });
         sse.end();
@@ -39,8 +44,8 @@ export default function setup(app) {
     child.stdout.setEncoding('utf8');
     child.stderr.setEncoding('utf8');
 
-    child.stdout.on('data', stdout => sse.writeEvent({ stdout }));
-    child.stderr.on('data', stderr => sse.writeEvent({ stderr }));
+    child.stdout.on('data', (stdout: string) => sse.writeEvent({ stdout }));
+    child.stderr.on('data', (stderr: string) => sse.writeEvent({ stderr }));
     child.on('error', error => {
       sse.writeEvent({ error: error.message });
       sse.end();

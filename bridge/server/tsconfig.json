@@ -10,8 +10,6 @@
     "allowJs": false,
     "declaration": true,
     "esModuleInterop": true,
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
     "types": ["node"],
     "lib": ["dom", "es2021"]
   }

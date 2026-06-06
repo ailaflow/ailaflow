@@ -1,26 +1,24 @@
+import type { Response } from 'express';
+
 export class SseResponse {
-  /**
-   * @param {import('express').Response} res
-   */
-  constructor(res) {
-    this.res = res;
+  public constructor(private readonly res: Response) {
     res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
     res.setHeader('Cache-Control', 'no-cache, no-transform');
     res.setHeader('Connection', 'keep-alive');
     res.flushHeaders?.();
   }
 
-  writeEvent(payload) {
+  public writeEvent(payload: unknown): void {
     if (!this.res.writableEnded) {
       this.res.write(`data: ${JSON.stringify(payload)}\n\n`);
     }
   }
 
-  end() {
+  public end(): void {
     this.res.end();
   }
 
-  onClose(callback) {
+  public onClose(callback: () => void): void {
     this.res.on('close', callback);
   }
 }

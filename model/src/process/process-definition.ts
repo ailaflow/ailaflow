@@ -15,6 +15,8 @@ export interface VariableDefinition {
 
 export interface ProcessDefinition extends Definition {
   properties: {
+    inputForm?: object;
+    outputForm?: object;
     variables: VariableDefinition[];
   };
 }

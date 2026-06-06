@@ -1,0 +1,21 @@
+{
+  "name": "@aila/bridge-server",
+  "private": true,
+  "version": "1.0.0",
+  "license": "../../LICENSE",
+  "type": "commonjs",
+  "scripts": {
+    "build": "rm -rf dist && tsc",
+    "prettier": "prettier --check ./src",
+    "prettier:fix": "prettier --write ./src"
+  },
+  "dependencies": {
+    "express": "^5.2.1"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/node": "^22.10.1",
+    "prettier": "^3.8.3",
+    "typescript": "^6.0.3"
+  }
+}

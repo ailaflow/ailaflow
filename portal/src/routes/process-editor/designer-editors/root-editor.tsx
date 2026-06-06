@@ -47,15 +47,24 @@ export function RootEditor(props: RootEditorProps) {
     props.editorState.switchToSchemaEditor(path);
   }
 
-  function editStartFrom() {
-    const path = DefinitionPath.createRootPath(`properties.startForm`);
+  function editInputFrom() {
+    const path = DefinitionPath.createRootPath(`properties.inputForm`);
+    props.editorState.switchToFormEditor(path);
+  }
+
+  function editOutputFrom() {
+    const path = DefinitionPath.createRootPath(`properties.outputForm`);
     props.editorState.switchToFormEditor(path);
   }
 
   return (
     <DesignerEditorView>
-      <EditorPropertyView label="Start Form">
-        <SubValuePreviewView onEdit={editStartFrom}>Form is not defined</SubValuePreviewView>
+      <EditorPropertyView label="Input Form">
+        <SubValuePreviewView onEdit={editInputFrom}>Form is not defined</SubValuePreviewView>
+      </EditorPropertyView>
+
+      <EditorPropertyView label="Output Form">
+        <SubValuePreviewView onEdit={editOutputFrom}>Form is not defined</SubValuePreviewView>
       </EditorPropertyView>
 
       <EditorPropertyView label="Variables" buttons={[{ command: 'add-variable', label: 'Add' }]} onButtonClick={addVariable}>

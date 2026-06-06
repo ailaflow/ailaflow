@@ -1,8 +1,0 @@
-{
-  "name": "@aila/bridge-lib",
-  "private": true,
-  "type": "module",
-  "exports": {
-    ".": "./lib.mjs"
-  }
-}

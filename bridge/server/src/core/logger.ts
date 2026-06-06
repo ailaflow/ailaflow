@@ -1,13 +1,11 @@
 export class Logger {
-  constructor(tag) {
-    this.tag = tag;
-  }
+  public constructor(private readonly tag: string) {}
 
-  log(message) {
+  public log(message: string): void {
     console.log(`${this.prefix()} ${message}`);
   }
 
-  prefix() {
+  private prefix(): string {
     const iso = new Date().toISOString();
     const t = iso.indexOf('T');
     const z = iso.indexOf('Z');

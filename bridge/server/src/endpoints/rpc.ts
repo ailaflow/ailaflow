@@ -1,14 +1,33 @@
-import { SseResponse } from './sse-response.mjs';
+import type { Express, Request, Response } from 'express';
+import { SseResponse } from '../core/sse-response';
 
-export default function setup(app) {
-  const rpcMap = new Map();
+interface RpcRequestBody {
+  type: string;
+  payload: unknown;
+}
+
+interface RpcResponseBody {
+  id: number;
+  payload: unknown;
+}
+
+interface RpcRequest {
+  id: number;
+  type: string;
+  payload: unknown;
+  res: Response;
+  deadline: number;
+}
+
+export function setupRpcEndpoint(app: Express): void {
+  const rpcMap = new Map<number, RpcRequest>();
   let lastId = 0;
-  let listener = null;
+  let listener: ((rpc: RpcRequest) => void) | null = null;
 
-  app.get('/rpc', (req, res) => {
+  app.get('/rpc', (_, res) => {
     const sse = new SseResponse(res);
 
-    function dropOutdatedRequests() {
+    function dropOutdatedRequests(): void {
       const now = Date.now();
       for (const [id, rpc] of rpcMap) {
         if (rpc.deadline < now) {
@@ -20,11 +39,11 @@ export default function setup(app) {
       }
     }
 
-    function sendPing() {
+    function sendPing(): void {
       sse.writeEvent({ ping: true });
     }
 
-    const iv = setInterval(() => {
+    const interval = setInterval(() => {
       dropOutdatedRequests();
       sendPing();
     }, 1_000);
@@ -40,12 +59,12 @@ export default function setup(app) {
     };
 
     sse.onClose(() => {
-      clearInterval(iv);
+      clearInterval(interval);
       listener = null;
     });
   });
 
-  app.post('/rpc', (req, res) => {
+  app.post('/rpc', (req: Request<unknown, unknown, RpcRequestBody>, res: Response) => {
     if (!listener) {
       res.status(503).json({ error: 'No listener' });
       return;
@@ -60,7 +79,7 @@ export default function setup(app) {
     listener(rpc);
   });
 
-  app.post('/rpc-response', (req, res) => {
+  app.post('/rpc-response', (req: Request<unknown, unknown, RpcResponseBody>, res: Response) => {
     const { id, payload } = req.body;
     const request = rpcMap.get(id);
     if (!request) {

@@ -3,17 +3,21 @@ import { readFileSync } from 'fs';
 const TOKEN_PRE = '>'.repeat(20);
 const TOKEN_POST = '<'.repeat(20);
 
-export function readInput() {
-  return JSON.parse(readFileSync(0, 'utf-8'));
+export interface RpcConfig {
+  timeout?: number;
 }
 
-export function writeOutput(result) {
+export function readInput<T = unknown>(): T {
+  return JSON.parse(readFileSync(0, 'utf-8')) as T;
+}
+
+export function writeOutput(result: unknown): void {
   process.stdout.write(TOKEN_PRE);
   process.stdout.write(JSON.stringify(result));
   process.stdout.write(TOKEN_POST);
 }
 
-export async function rpc(type, payload, config) {
+export async function rpc<T = unknown>(type: string, payload: unknown, config?: RpcConfig): Promise<T> {
   const response = await fetch('http://127.0.0.1:4096/rpc', {
     method: 'POST',
     headers: {
@@ -26,9 +30,9 @@ export async function rpc(type, payload, config) {
   if (!response.ok) {
     throw new Error('Failed to send request to host');
   }
-  return await response.json();
+  return (await response.json()) as T;
 }
 
-export function sendNotification(user, notification) {
+export function sendNotification(user: string, notification: unknown): Promise<unknown> {
   return rpc('notification', { user, notification });
 }

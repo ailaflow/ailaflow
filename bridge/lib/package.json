@@ -1,0 +1,25 @@
+{
+  "name": "@aila/bridge-lib",
+  "private": true,
+  "version": "1.0.0",
+  "license": "../../LICENSE",
+  "type": "commonjs",
+  "main": "dist/lib.js",
+  "types": "dist/lib.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/lib.d.ts",
+      "default": "./dist/lib.js"
+    }
+  },
+  "scripts": {
+    "build": "rm -rf dist && tsc",
+    "prettier": "prettier --check ./src",
+    "prettier:fix": "prettier --write ./src"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.1",
+    "prettier": "^3.8.3",
+    "typescript": "^6.0.3"
+  }
+}

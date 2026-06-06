@@ -2,17 +2,16 @@
   "name": "@aila/model",
   "private": true,
   "version": "1.0.0",
+  "type": "commonjs",
   "license": "../LICENSE",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "start": "pnpm build:watch",
+    "start": "tsc --watch",
     "build": "rm -rf dist && tsc",
-    "build:watch": "rm -rf dist && tsc --watch",
     "prettier": "prettier --check ./src",
     "prettier:fix": "prettier --write ./src",
-    "test": "tsx --test --watch",
-    "test:single": "tsx --test"
+    "test": "pnpm build && node --test dist/**/*.test.js"
   },
   "dependencies": {
     "zod": "^4.4.3",
@@ -20,8 +19,8 @@
     "sequential-workflow-model": "^0.2.0"
   },
   "devDependencies": {
+    "@types/node": "^22.10.1",
     "prettier": "^3.8.3",
-    "tsx": "^4.22.3",
     "typescript": "^6.0.3"
   }
 }

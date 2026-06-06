@@ -8,6 +8,37 @@ importers:
 
   .: {}
 
+  bridge/lib:
+    devDependencies:
+      '@types/node':
+        specifier: ^22.10.1
+        version: 22.19.19
+      prettier:
+        specifier: ^3.8.3
+        version: 3.8.3
+      typescript:
+        specifier: ^6.0.3
+        version: 6.0.3
+
+  bridge/server:
+    dependencies:
+      express:
+        specifier: ^5.2.1
+        version: 5.2.1
+    devDependencies:
+      '@types/express':
+        specifier: ^5.0.6
+        version: 5.0.6
+      '@types/node':
+        specifier: ^22.10.1
+        version: 22.19.19
+      prettier:
+        specifier: ^3.8.3
+        version: 3.8.3
+      typescript:
+        specifier: ^6.0.3
+        version: 6.0.3
+
   model:
     dependencies:
       openai:
@@ -20,12 +51,12 @@ importers:
         specifier: ^4.4.3
         version: 4.4.3
     devDependencies:
+      '@types/node':
+        specifier: ^22.10.1
+        version: 22.19.19
       prettier:
         specifier: ^3.8.3
         version: 3.8.3
-      tsx:
-        specifier: ^4.22.3
-        version: 4.22.3
       typescript:
         specifier: ^6.0.3
         version: 6.0.3
