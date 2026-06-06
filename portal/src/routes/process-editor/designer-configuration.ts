@@ -1,6 +1,28 @@
 import { ToolboxConfiguration } from 'sequential-workflow-designer';
 import { ScriptStep, AgentStep, TaskStep, NotificationStep } from '@aila/model';
 
+const SCRIPT_PACKAGE_JSON = JSON.stringify(
+  {
+    name: 'test',
+    private: true,
+    dependencies: {
+      '@aila/bridge-lib': 'file:/bridge/lib'
+    }
+  },
+  null,
+  2
+);
+
+const SCRIPT_MAIN_JS = [
+  `import { readInput, writeOutput } from '@aila/bridge-lib';`,
+  ``,
+  `async function main() {`,
+  `  const input = readInput();`,
+  `  writeOutput({ /* Output here */ });`,
+  `}`,
+  `main();`
+].join('\n');
+
 const scriptStep: Omit<ScriptStep, 'id'> = {
   type: 'script',
   name: 'Script',
@@ -8,7 +30,20 @@ const scriptStep: Omit<ScriptStep, 'id'> = {
   properties: {
     script: {
       sandboxName: null,
-      contents: []
+      contents: [
+        {
+          mimeType: 'text/json',
+          path: 'package.json',
+          modifiedAt: 0,
+          content: SCRIPT_PACKAGE_JSON
+        },
+        {
+          mimeType: 'text/javascript',
+          path: 'main.mjs',
+          content: SCRIPT_MAIN_JS,
+          modifiedAt: 0
+        }
+      ]
     }
   }
 };
