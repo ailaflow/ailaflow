@@ -12,7 +12,7 @@ export function ProcessEditor() {
   const { data, error, isLoading } = useLoader(
     abortSignal =>
       Promise.all([
-        processId ? apiClient.process.getProcess(abortSignal, processId) : null,
+        processId ? apiClient.process.getProcess(abortSignal, processId) : Promise.resolve(null),
         apiClient.container.getContainers(abortSignal)
       ]),
     [processId]
@@ -27,7 +27,7 @@ export function ProcessEditor() {
 
   return (
     <AdminPortal>
-      <ProcessEditorContext process={data[0]?.process} containers={data[1].containers}>
+      <ProcessEditorContext key={processId ?? '_new'} process={data[0]?.process} containers={data[1].containers}>
         <ProcessEditorContent />
       </ProcessEditorContext>
     </AdminPortal>

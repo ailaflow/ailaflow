@@ -19,8 +19,7 @@ import {
   TestProcessUpdate,
   UpdateProcessRequest,
   UpdateProcessResponse,
-  UpsertContainerRequest,
-  UpsertContainerResponse
+  UpsertContainerRequest
 } from '@aila/model';
 
 export class ApiClient {
@@ -117,7 +116,7 @@ export class ProcessApiClient {
 export class ContainerApiClient {
   public constructor(private readonly client: HttpClient) {}
 
-  public async upsertContainer(abortSignal: AbortSignal, request: UpsertContainerRequest): Promise<UpsertContainerResponse> {
+  public async upsertContainer(abortSignal: AbortSignal, request: UpsertContainerRequest): Promise<void> {
     return this.client.json(abortSignal, 'POST', '/api/container', request);
   }
 

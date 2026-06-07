@@ -25,7 +25,8 @@ export class GetContainerEndpoint implements Endpoint {
         name: container.name,
         isEnabled: container.isEnabled,
         description: container.description,
-        configuration: container.configuration
+        configuration: container.configuration,
+        envVariables: container.envVariables
       }
     };
   }

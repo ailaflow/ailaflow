@@ -6,6 +6,7 @@ import { ResourceEditorView } from '../../views/resource-editor/resource-editor-
 import { useNavigate } from 'react-router-dom';
 import { FormSubEditor } from './sub-editors/form-sub-editor';
 import { ScriptSubEditor } from './sub-editors/script-sub-editor';
+import { ResourceSimpleDetailsView } from '../../views/resource-editor/resource-simple-details-view';
 
 export function ProcessEditorContent() {
   const state = useProcessEditor();
@@ -13,8 +14,8 @@ export function ProcessEditorContent() {
   const navigate = useNavigate();
 
   const isDesigner = state.mode === ProcessEditorMode.DESIGNER;
-  const canSave = Boolean(state.definition.isValid && state.isDirty);
-  const canTest = Boolean(state.definition.isValid && !state.isDirty);
+  const canSave = Boolean(state.isValid && state.isDirty);
+  const canTest = Boolean(state.isValid && !state.isDirty);
 
   function openTester() {
     navigate(`/admin/processes/${state.id}/test`);
@@ -35,7 +36,11 @@ export function ProcessEditorContent() {
         definition: state.definition.value
       });
 
-      state.setId(response.id, false);
+      if (state.id) {
+        state.setDirtyFalse();
+      } else {
+        navigate(`/admin/processes/${response.id}`);
+      }
     } catch (e) {
       alert(`Failed to save process: ${(e as Error).message ?? e}`);
     }
@@ -45,11 +50,20 @@ export function ProcessEditorContent() {
     <ResourceEditorView
       icon="/"
       name={state.name}
-      isNameValid={state.isNameValid}
+      isNameValid={state.nameError === null}
       isNameReadOnly={!isDesigner}
       onNameChange={state.setName}
       detailsId="admin-process-editor-details"
-      details={isDesigner ? <Details description={state.description} onDescriptionChange={state.setDescription} /> : undefined}
+      details={
+        isDesigner ? (
+          <ResourceSimpleDetailsView
+            id="admin-process-editor-details"
+            description={state.description}
+            descriptionError={state.descriptionError}
+            onDescriptionChange={state.setDescription}
+          />
+        ) : undefined
+      }
       areDetailsVisible={isDesigner}
       canSave={canSave}
       onSave={isDesigner ? save : undefined}
@@ -62,21 +76,5 @@ export function ProcessEditorContent() {
       {state.mode === ProcessEditorMode.FORM_EDITOR && <FormSubEditor />}
       {state.mode === ProcessEditorMode.SCRIPT_EDITOR && <ScriptSubEditor />}
     </ResourceEditorView>
-  );
-}
-
-function Details(props: { description: string; onDescriptionChange: (description: string) => void }) {
-  return (
-    <div id="admin-process-editor-details" className="pt-1">
-      <label className="flex h-8 w-full max-w-md overflow-hidden rounded-md border border-transparent bg-transparent transition-colors focus-within:border-slate-300 focus-within:bg-white">
-        <input
-          type="text"
-          value={props.description}
-          onChange={e => props.onDescriptionChange(e.target.value)}
-          className="h-full min-w-0 flex-1 px-2 text-sm text-slate-600 outline-none placeholder:text-slate-400"
-          placeholder="Description"
-        />
-      </label>
-    </div>
   );
 }

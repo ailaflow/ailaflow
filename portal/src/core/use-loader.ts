@@ -27,6 +27,8 @@ export function useLoader<T>(loader: (abortSignal: AbortSignal) => Promise<T>, d
     const abortController = new AbortController();
 
     async function load() {
+      setData(null);
+
       try {
         const data = await loader(abortController.signal);
         setData({ data });

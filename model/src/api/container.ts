@@ -21,7 +21,8 @@ const containerDto = z.object({
   name: z.string(),
   isEnabled: z.boolean(),
   description: z.string(),
-  configuration: z.string()
+  configuration: z.string(),
+  envVariables: z.record(z.string(), z.string())
 });
 
 export const getContainerResponse = z.object({
@@ -37,11 +38,8 @@ export const upsertContainerRequest = z.object({
   name: z.string(),
   isEnabled: z.boolean(),
   description: z.string(),
-  configuration: z.string()
-});
-export const upsertContainerResponse = z.object({
-  name: z.string()
+  configuration: z.string(),
+  envVariables: z.record(z.string(), z.string())
 });
 
 export type UpsertContainerRequest = z.infer<typeof upsertContainerRequest>;
-export type UpsertContainerResponse = z.infer<typeof upsertContainerResponse>;

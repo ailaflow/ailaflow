@@ -51,7 +51,10 @@ export function ResourceEditorView(props: ResourceEditorViewProps) {
               <button
                 type="button"
                 disabled={!props.canSave}
-                onClick={props.onSave}
+                onClick={e => {
+                  e.preventDefault();
+                  props.onSave?.();
+                }}
                 className="inline-flex h-9 shrink-0 items-center rounded-md border cursor-pointer border-slate-900 bg-slate-900 px-3 text-sm font-medium text-white transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:border-slate-300 disabled:bg-slate-300 disabled:hover:bg-slate-300"
               >
                 Save

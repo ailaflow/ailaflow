@@ -1,5 +1,5 @@
 import { Request } from 'express';
-import { upsertContainerRequest, UpsertContainerResponse } from '@aila/model';
+import { upsertContainerRequest } from '@aila/model';
 import { Container, ContainerRepository } from '../../repositories/container-repository/container-repository';
 import { Endpoint } from '../endpoint';
 
@@ -11,14 +11,12 @@ export class UpsertContainerEndpoint implements Endpoint {
 
   public constructor(private readonly containerRepository: ContainerRepository) {}
 
-  public async handle(req: Request): Promise<UpsertContainerResponse> {
+  public async handle(req: Request) {
     const request = upsertContainerRequest.parse(req.body);
     const container = Container.create(request);
 
     await this.containerRepository.upsert(container);
 
-    return {
-      name: container.name
-    };
+    return {};
   }
 }

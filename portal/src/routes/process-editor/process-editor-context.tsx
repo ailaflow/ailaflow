@@ -22,14 +22,16 @@ export interface EditorDataState {
   isDirty: boolean;
   id?: string;
   name: string;
-  isNameValid: boolean;
+  nameError: string | null;
   description: string;
+  descriptionError: string | null;
   definition: WrappedDefinition<ProcessDefinition>;
   selectedStepId: string | null;
 }
 
 export interface ProcessEditorState extends EditorDataState {
-  setId(id: string, isDirty: boolean): void;
+  isValid: boolean;
+  setDirtyFalse(): void;
   setName(name: string): void;
   setDescription(description: string): void;
   setDefinition(definition: WrappedDefinition): void;
@@ -66,6 +68,7 @@ function createState(props: Omit<ProcessEditorContextProps, 'children'>): Editor
 
   const definition = wrapDefinition<ProcessDefinition>(props.process ? props.process.definition : createEmptyDefinition());
   const name = props.process?.name ?? 'new_process';
+  const description = props.process?.description ?? '';
   return {
     mode: ProcessEditorMode.DESIGNER,
 
@@ -75,8 +78,9 @@ function createState(props: Omit<ProcessEditorContextProps, 'children'>): Editor
 
     id: props.process?.id,
     name,
-    isNameValid: !ProcessValidator.validateName(name),
-    description: props.process?.description ?? '',
+    nameError: ProcessValidator.validateName(name),
+    description,
+    descriptionError: ProcessValidator.validateDescription(description),
     selectedStepId: null,
     definition,
     isDirty: props.process ? false : true
@@ -95,18 +99,18 @@ export interface ProcessEditorContextProps {
 
 export function ProcessEditorContext(props: ProcessEditorContextProps) {
   const [state, dispatch] = useReducer(reduceState, undefined, () => createState(props));
+  const isValid = state.nameError === null && state.descriptionError === null && state.definition.isValid === true;
 
-  function setId(id: string, isDirty: boolean) {
+  function setDirtyFalse() {
     dispatch({
-      id,
-      isDirty
+      isDirty: false
     });
   }
 
   function setName(name: string) {
     dispatch({
       name,
-      isNameValid: !ProcessValidator.validateName(name),
+      nameError: ProcessValidator.validateName(name),
       isDirty: true
     });
   }
@@ -114,6 +118,7 @@ export function ProcessEditorContext(props: ProcessEditorContextProps) {
   function setDescription(description: string) {
     dispatch({
       description,
+      descriptionError: ProcessValidator.validateDescription(description),
       isDirty: true
     });
   }
@@ -166,7 +171,8 @@ export function ProcessEditorContext(props: ProcessEditorContextProps) {
     <processEditorContext.Provider
       value={{
         ...state,
-        setId,
+        isValid,
+        setDirtyFalse,
         setName,
         setDescription,
         setDefinition,

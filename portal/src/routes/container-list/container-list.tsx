@@ -2,6 +2,7 @@ import { useApiClient } from '../../auth/auth-context';
 import { useLoader } from '../../core/use-loader';
 import { AdminPortal, AdminPortalError, AdminPortalLoading } from '../common/admin-portal';
 import { ResourceListView } from '../../views/resource-list/resource-list-view';
+import { PencilIcon } from '../../views/common/svg-icons';
 
 export function ContainerList() {
   const apiClient = useApiClient();
@@ -48,7 +49,8 @@ export function ContainerList() {
         emptyMessage="No containers found."
         actions={[
           {
-            label: 'Edit',
+            label: <PencilIcon className="h-4 w-4" />,
+            ariaLabel: 'Edit container',
             getTo: container => `/admin/containers/${encodeURIComponent(container.name)}`
           }
         ]}

@@ -11,7 +11,8 @@ export interface ResourceListColumn<T> {
 }
 
 export interface ResourceListAction<T> {
-  label: string;
+  label: string | ReactNode;
+  ariaLabel?: string;
   getTo(item: T): string;
 }
 
@@ -100,9 +101,10 @@ export function ResourceListView<T>(props: ResourceListViewProps<T>) {
                     {props.actions && props.actions.length > 0 ? (
                       <td className="px-3 py-3">
                         <div className="flex flex-nowrap justify-end gap-2">
-                          {props.actions.map(action => (
+                          {props.actions.map((action, i) => (
                             <Link
-                              key={action.label}
+                              key={i}
+                              aria-label={action.ariaLabel}
                               className="inline-flex h-8 shrink-0 items-center justify-center rounded-md border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 hover:text-slate-900"
                               to={action.getTo(row)}
                             >
