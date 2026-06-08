@@ -1,16 +1,17 @@
 import { AdminChatView } from '../../views/admin/admin-chat-view';
 import { PortalErrorView } from '../../views/portal/portal-error-view';
 import { PortalLoadingView } from '../../views/portal/portal-loading-view';
-import { AdminPortalContext } from './admin-portal-context';
+import { AdminPortalChat } from './admin-portal-chat';
+import { AiBindingsContextProvider } from './ai-bindings/ai-bindings-context';
 import { Portal } from './portal';
 
 export function AdminPortal(props: { children: React.ReactNode }) {
   return (
-    <AdminPortalContext>
+    <AiBindingsContextProvider>
       <Portal>
-        <AdminChatView chat={<div>chat</div>}>{props.children}</AdminChatView>
+        <AdminChatView chat={<AdminPortalChat />}>{props.children}</AdminChatView>
       </Portal>
-    </AdminPortalContext>
+    </AiBindingsContextProvider>
   );
 }
 

@@ -1,10 +1,11 @@
 import { useNavigate } from 'react-router-dom';
 import { useApiClient } from '../../auth/auth-context';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ContainerDto, ContainerValidator } from '@aila/model';
 import { ResourceEditorView } from '../../views/resource-editor/resource-editor-view';
 import { ContainerEditorView, ContainerEnvVariable } from '../../views/container-editor/container-editor-view';
 import { ResourceSimpleDetailsView } from '../../views/resource-editor/resource-simple-details-view';
+import { useAiBindings } from '../common/ai-bindings/ai-bindings-context';
 
 interface EditorDataState {
   envVariables: ContainerEnvVariable[];
@@ -17,6 +18,7 @@ interface EditorDataState {
 
 export function ContainerEditorContent(props: { container?: ContainerDto }) {
   const apiClient = useApiClient();
+  const aiBindings = useAiBindings();
   const navigate = useNavigate();
 
   const lastEnvVariableId = useRef(0);
@@ -35,9 +37,31 @@ export function ContainerEditorContent(props: { container?: ContainerDto }) {
     isDirty: false
   }));
 
+  const isNameReadOnly = Boolean(props.container);
   const nameError = ContainerValidator.validateName(state.name);
   const descriptionError = ContainerValidator.validateDescription(state.description);
   const canSave = nameError === null && descriptionError === null && state.isDirty;
+
+  useEffect(
+    () =>
+      aiBindings.containerEditor.bind({
+        container_editor_set_name: async name => {
+          if (isNameReadOnly) {
+            return 'Container name cannot be changed.';
+          }
+          update({ name });
+          return 'Name updated.';
+        },
+        container_editor_get_name: async () => {
+          return state.name;
+        },
+        container_editor_set_is_enabled: async isEnabled => {
+          update({ isEnabled });
+          return 'Enabled state updated.';
+        }
+      }),
+    [aiBindings]
+  );
 
   async function save() {
     try {
@@ -103,7 +127,7 @@ export function ContainerEditorContent(props: { container?: ContainerDto }) {
     <ResourceEditorView
       icon="+"
       name={state.name}
-      isNameReadOnly={Boolean(props.container)}
+      isNameReadOnly={isNameReadOnly}
       isNameValid={nameError === null}
       canSave={canSave}
       onSave={save}
