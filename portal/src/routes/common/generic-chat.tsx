@@ -5,7 +5,7 @@ import { HttpClientSseListener } from '../../auth/http-client';
 import { GenericChatView } from '../../views/generic-chat/generic-chat-view';
 
 export interface GenericChatProps {
-  restoreRequest: RestoreChatRequest;
+  request: RestoreChatRequest;
   onFrontendToolCalls(abortSignal: AbortSignal, toolCalls: ToolCall): Promise<object | null>;
 }
 
@@ -47,7 +47,9 @@ export function GenericChat(props: GenericChatProps) {
               callId: toolCall.id,
               result: `Error executing tool call: ${error}`
             });
-          } catch {}
+          } catch (e) {
+            console.warn(e);
+          }
         }
       }
     }
@@ -81,10 +83,10 @@ export function GenericChat(props: GenericChatProps) {
       onClose() {}
     };
 
-    apiClient.chat.restoreChat(abrotController.signal, listener, props.restoreRequest);
+    apiClient.chat.restoreChat(abrotController.signal, listener, props.request);
 
     return () => abrotController.abort();
-  }, [props.restoreRequest]);
+  }, [props.request]);
 
   async function onSendMessage() {
     if (!chatSessionId || !message) {

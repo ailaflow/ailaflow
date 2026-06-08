@@ -3,7 +3,8 @@ import { ProcessEditorContext } from './process-editor-context';
 import { useParams } from 'react-router-dom';
 import { useApiClient } from '../../auth/auth-context';
 import { useLoader } from '../../core/use-loader';
-import { AdminPortal, AdminPortalError, AdminPortalLoading } from '../common/admin-portal';
+import { PortalLoadingView } from '../../views/portal/portal-loading-view';
+import { PortalErrorView } from '../../views/portal/portal-error-view';
 
 export function ProcessEditor() {
   const { processId } = useParams();
@@ -19,17 +20,15 @@ export function ProcessEditor() {
   );
 
   if (isLoading) {
-    return <AdminPortalLoading />;
+    return <PortalLoadingView />;
   }
   if (error) {
-    return <AdminPortalError error={error} />;
+    return <PortalErrorView error={error} />;
   }
 
   return (
-    <AdminPortal>
-      <ProcessEditorContext key={processId ?? '_new'} process={data[0]?.process} containers={data[1].containers}>
-        <ProcessEditorContent />
-      </ProcessEditorContext>
-    </AdminPortal>
+    <ProcessEditorContext key={processId ?? '_new'} process={data[0]?.process} containers={data[1].containers}>
+      <ProcessEditorContent />
+    </ProcessEditorContext>
   );
 }

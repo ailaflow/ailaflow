@@ -6,7 +6,7 @@ import { useEffect, useMemo } from 'react';
 
 export function AdminPortalChat() {
   const bindings = useAiBindings();
-  const admin: RestoreChatRequest['admin'] = useMemo(() => {
+  const request: RestoreChatRequest = useMemo(() => {
     const frontendToolDescriptors: ToolDescriptor[] = bindings.stores
       .map(s => s.bindings)
       .flat()
@@ -15,7 +15,9 @@ export function AdminPortalChat() {
         type: 'function'
       }));
     const hash = fnv1a(frontendToolDescriptors);
-    return { frontendToolDescriptors, hash };
+    return {
+      admin: { frontendToolDescriptors, hash }
+    };
   }, [bindings]);
 
   async function resolveToolCall(_abortSignal: AbortSignal, toolCall: ToolCall): Promise<object | null> {
@@ -44,12 +46,5 @@ export function AdminPortalChat() {
     [bindings.global]
   );
 
-  return (
-    <GenericChat
-      restoreRequest={{
-        admin
-      }}
-      onFrontendToolCalls={resolveToolCall}
-    />
-  );
+  return <GenericChat request={request} onFrontendToolCalls={resolveToolCall} />;
 }

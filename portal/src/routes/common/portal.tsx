@@ -1,7 +1,5 @@
 import { MenuItem, PortalLayout } from '../../views/portal/portal-layout';
 import { useAuthState } from '../../auth/auth-context';
-import { PortalLoadingView } from '../../views/portal/portal-loading-view';
-import { PortalErrorView } from '../../views/portal/portal-error-view';
 
 const userItems: MenuItem[] = [
   { icon: 'T', label: 'My tasks', action: 'link', href: '#' },
@@ -34,21 +32,5 @@ export function Portal(props: { children: React.ReactNode }) {
     <PortalLayout userItems={userItems} adminItems={adminItems} userName={session!.userName} onCommand={onCommand}>
       {props.children}
     </PortalLayout>
-  );
-}
-
-export function PortalLoading() {
-  return (
-    <Portal>
-      <PortalLoadingView />
-    </Portal>
-  );
-}
-
-export function PortalError(props: { error: Error }) {
-  return (
-    <Portal>
-      <PortalErrorView error={props.error} />
-    </Portal>
   );
 }

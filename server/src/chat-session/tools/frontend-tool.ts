@@ -9,7 +9,7 @@ export class FrontendTool implements Tool {
   ) {}
 
   public async execute(abortSignal: AbortSignal, call: ToolCall): Promise<string> {
-    const signal = AbortSignal.any([abortSignal, AbortSignal.timeout(30_000)]);
+    const signal = AbortSignal.any([abortSignal, AbortSignal.timeout(10_000)]);
     return this.bus.waitForResult(signal, call.id);
   }
 }

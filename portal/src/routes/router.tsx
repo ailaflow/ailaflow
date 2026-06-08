@@ -8,6 +8,7 @@ import { ProcessEditor } from './process-editor/process-editor';
 import { ProcessTester } from './process-tester/process-tester';
 import { ContainerList } from './container-list/container-list';
 import { ContainerEditor } from './container-editor/container-editor';
+import { AdminPortal } from './common/admin-portal';
 
 const router = createBrowserRouter([
   {
@@ -23,32 +24,38 @@ const router = createBrowserRouter([
     element: <Install />
   },
   {
-    path: '/admin/processes',
-    element: <AuthGate route={<ProcessList />} />
-  },
-  {
-    path: '/admin/processes/:processId',
-    element: <AuthGate route={<ProcessEditor />} />
-  },
-  {
-    path: '/admin/create-process',
-    element: <AuthGate route={<ProcessEditor />} />
-  },
-  {
-    path: '/admin/processes/:processId/test',
-    element: <AuthGate route={<ProcessTester />} />
-  },
-  {
-    path: '/admin/containers',
-    element: <AuthGate route={<ContainerList />} />
-  },
-  {
-    path: '/admin/create-container',
-    element: <AuthGate route={<ContainerEditor />} />
-  },
-  {
-    path: '/admin/containers/:name',
-    element: <AuthGate route={<ContainerEditor />} />
+    path: '/admin',
+    element: <AuthGate route={<AdminPortal />} />,
+    children: [
+      {
+        path: '/admin/processes',
+        element: <ProcessList />
+      },
+      {
+        path: '/admin/processes/:processId',
+        element: <ProcessEditor />
+      },
+      {
+        path: '/admin/create-process',
+        element: <ProcessEditor />
+      },
+      {
+        path: '/admin/processes/:processId/test',
+        element: <ProcessTester />
+      },
+      {
+        path: '/admin/containers',
+        element: <ContainerList />
+      },
+      {
+        path: '/admin/create-container',
+        element: <ContainerEditor />
+      },
+      {
+        path: '/admin/containers/:name',
+        element: <ContainerEditor />
+      }
+    ]
   }
 ]);
 
