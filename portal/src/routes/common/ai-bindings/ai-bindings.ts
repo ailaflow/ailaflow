@@ -22,7 +22,7 @@ export interface AiBinding<_Arg, Name extends string> {
 export type AiSetter<Bindings extends readonly AiBinding<any, string>[]> = {
   [Binding in Bindings[number] as Binding['descriptor']['name']]: (
     arg: Binding extends AiBinding<infer Arg, string> ? Arg : never
-  ) => Promise<string> | string;
+  ) => Promise<object>;
 };
 
 export interface AiBindingsStore<Bindings extends readonly AiBinding<any, string>[] = readonly AiBinding<any, string>[]> {

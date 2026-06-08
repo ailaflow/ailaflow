@@ -6,7 +6,7 @@ import { GenericChatView } from '../../views/generic-chat/generic-chat-view';
 
 export interface GenericChatProps {
   restoreRequest: RestoreChatRequest;
-  onFrontendToolCalls(abortSignal: AbortSignal, toolCalls: ToolCall): Promise<string | null>;
+  onFrontendToolCalls(abortSignal: AbortSignal, toolCalls: ToolCall): Promise<object | null>;
 }
 
 export function GenericChat(props: GenericChatProps) {
@@ -27,7 +27,7 @@ export function GenericChat(props: GenericChatProps) {
           if (result !== null) {
             toReturn.push({
               callId: toolCall.id,
-              result
+              result: JSON.stringify(result)
             });
           }
         }

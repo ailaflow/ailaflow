@@ -23,10 +23,14 @@ export class ToolMessage implements Message {
           try {
             content = await tool.execute(abortSignal, call);
           } catch (e) {
-            content = `ERROR: tool execution failed: ${(e as Error).message ?? e}`;
+            content = JSON.stringify({
+              error: `Tool execution failed: ${(e as Error).message ?? e}`
+            });
           }
         } else {
-          content = `ERROR: tool "${call.function.name}" not found`;
+          content = JSON.stringify({
+            error: `Tool not found: ${call.function.name}`
+          });
         }
         return {
           role: 'tool',

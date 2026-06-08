@@ -45,19 +45,34 @@ export function ContainerEditorContent(props: { container?: ContainerDto }) {
   useEffect(
     () =>
       aiBindings.containerEditor.bind({
-        container_editor_set_name: async name => {
+        container_editor_set_name: async arg => {
           if (isNameReadOnly) {
-            return 'Container name cannot be changed.';
+            return {
+              error: 'Container name cannot be changed.'
+            };
           }
-          update({ name });
-          return 'Name updated.';
+          const validationError = ContainerValidator.validateName(arg.name);
+          if (validationError) {
+            return { validationError };
+          }
+          update({ name: arg.name });
+          return {
+            ok: 'Container name updated.'
+          };
         },
         container_editor_get_name: async () => {
-          return state.name;
+          return {
+            name: state.name
+          };
         },
-        container_editor_set_is_enabled: async isEnabled => {
-          update({ isEnabled });
-          return 'Enabled state updated.';
+        container_editor_get_is_enabled: async () => {
+          return { isEnabled: state.isEnabled };
+        },
+        container_editor_set_is_enabled: async arg => {
+          update({ isEnabled: arg.isEnabled });
+          return {
+            ok: 'Container enabled state updated.'
+          };
         }
       }),
     [aiBindings]

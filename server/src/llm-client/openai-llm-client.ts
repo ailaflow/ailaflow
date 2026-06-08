@@ -34,18 +34,7 @@ export class OpenaiLlmClient implements LlmClient {
       throw new Error('No choices returned from AI API');
     }
 
-    const completedMessage: CompletedMessage = {
-      role: 'assistant',
-      tool_calls: choice.message.tool_calls,
-      content: choice.message.content
-        ? [
-            {
-              type: 'text',
-              text: choice.message.content
-            }
-          ]
-        : undefined
-    };
+    const completedMessage: CompletedMessage = choice.message;
 
     return { completedMessage, totalTokens: response.usage?.total_tokens };
   }
