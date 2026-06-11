@@ -1,7 +1,7 @@
 import { Logger } from './core/logger';
 import { ServerPaths } from './core/server-paths';
 import express from 'express';
-import { SandboxIntanceManager } from './sandbox/sandbox-instance-manager';
+import { SandboxInstanceManager } from './sandbox/sandbox-instance-manager';
 import { OpenaiLlmClient } from './llm-client/openai-llm-client';
 import { LoginEndpoint } from './api/auth/login-endpoint';
 import { Router } from './api/router';
@@ -74,7 +74,7 @@ export class Server {
       sandboxRepository.setup(abortSignal)
     ]);
 
-    const sandboxInstanceManager = new SandboxIntanceManager(serverPaths, sandboxRepository);
+    const sandboxInstanceManager = new SandboxInstanceManager(serverPaths, sandboxRepository);
 
     const workflowMachineFactory = new WorkflowMachineFactory(sandboxInstanceManager);
 
@@ -117,7 +117,7 @@ export class Server {
   }
 
   public constructor(
-    private readonly sandboxInstanceManager: SandboxIntanceManager,
+    private readonly sandboxInstanceManager: SandboxInstanceManager,
     private readonly sqliteDatabases: SqliteDatabases
   ) {}
 

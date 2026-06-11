@@ -1,15 +1,13 @@
 import { HttpSseHandler } from '../core/http-client';
-import { ExecCommandUpdate } from './bridge-client';
-import { SandboxRuntime } from './sandbox-runtime';
+import { ExecuteCommandUpdate } from './bridge-client';
+import { CommandResult, SandboxRuntime } from './sandbox-runtime';
 
-export interface SandboxExecutorRequest<T> {
+export interface SandboxExecutorRequest {
   cwd: string;
   scriptName: string;
-  input: T;
+  stdin?: string;
+  executionToken?: string;
 }
-
-const TOKEN_PRE = '>'.repeat(20);
-const TOKEN_POST = '<'.repeat(20);
 
 export class SandboxExecutorError extends Error {
   public constructor(message: string) {
@@ -17,8 +15,8 @@ export class SandboxExecutorError extends Error {
   }
 }
 
-export interface SandboxExecutorResult<T> {
-  output: T | null;
+export interface SandboxExecutorResult {
+  result: CommandResult;
   totalTime: number;
 }
 
@@ -27,9 +25,9 @@ export class SandboxExecutor {
 
   public async execute(
     abortSignal: AbortSignal,
-    request: SandboxExecutorRequest<string>,
-    handler?: HttpSseHandler<ExecCommandUpdate>
-  ): Promise<SandboxExecutorResult<string>> {
+    request: SandboxExecutorRequest,
+    handler?: HttpSseHandler<ExecuteCommandUpdate>
+  ): Promise<SandboxExecutorResult> {
     const start = Date.now();
 
     const result = await this.runtime.runCommand(
@@ -38,7 +36,12 @@ export class SandboxExecutor {
         cwd: request.cwd,
         command: 'node',
         args: [request.scriptName],
-        stdin: request.input
+        stdin: request.stdin,
+        env: request.executionToken
+          ? {
+              EXECUTION_TOKEN: request.executionToken
+            }
+          : {}
       },
       handler
     );
@@ -50,41 +53,10 @@ export class SandboxExecutor {
       );
     }
 
-    const startPos = result.stdout.indexOf(TOKEN_PRE);
-    const endPos = startPos >= 0 ? result.stdout.indexOf(TOKEN_POST, startPos + TOKEN_PRE.length) : -1;
     const totalTime = Date.now() - start;
-    if (startPos < 0 || endPos < 0) {
-      return {
-        totalTime,
-        output: null
-      };
-    }
-
-    const output = result.stdout.substring(startPos + TOKEN_PRE.length, endPos);
     return {
       totalTime,
-      output
+      result
     };
-  }
-
-  public async executeJSON<R extends object = object, T extends object = object>(
-    abortSignal: AbortSignal,
-    request: SandboxExecutorRequest<R>
-  ): Promise<SandboxExecutorResult<T>> {
-    const r0 = await this.execute(abortSignal, {
-      cwd: request.cwd,
-      scriptName: request.scriptName,
-      input: JSON.stringify(request.input)
-    });
-    const r1 = r0 as unknown as SandboxExecutorResult<T>;
-    if (!r0.output) {
-      return r1;
-    }
-    try {
-      r1.output = JSON.parse(r0.output) as T;
-      return r1;
-    } catch (e) {
-      throw new SandboxExecutorError(`Failed to parse script output as JSON, output: ${r0.output.substring(0, 32)}`);
-    }
   }
 }

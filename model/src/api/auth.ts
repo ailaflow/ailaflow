@@ -1,26 +1,25 @@
-import z from 'zod';
+import z from 'zod/v4';
 
 // login
 
-export const loginRequest = z.object({
+export const loginRequestSchema = z.object({
   userName: z.string(),
   password: z.string()
 });
-export const loginResponse = z.object({
+export const loginResponseSchema = z.object({
   authToken: z.string(),
   isAdmin: z.boolean()
 });
-export type LoginRequest = z.infer<typeof loginRequest>;
-export type LoginResponse = z.infer<typeof loginResponse>;
+export type LoginRequest = z.infer<typeof loginRequestSchema>;
+export type LoginResponse = z.infer<typeof loginResponseSchema>;
 
 // refreshToken
 
-export const refreshTokenRequest = z.object({
+export const refreshTokenRequestSchema = z.object({
   authToken: z.string().min(1)
 });
-export const refreshTokenResponse = z.object({
+export const refreshTokenResponseSchema = z.object({
   authToken: z.string().min(1)
 });
-
-export type RefreshTokenRequest = z.infer<typeof refreshTokenRequest>;
-export type RefreshTokenResponse = z.infer<typeof refreshTokenResponse>;
+export type RefreshTokenRequest = z.infer<typeof refreshTokenRequestSchema>;
+export type RefreshTokenResponse = z.infer<typeof refreshTokenResponseSchema>;

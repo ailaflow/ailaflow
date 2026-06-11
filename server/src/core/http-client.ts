@@ -20,12 +20,12 @@ export class HttpClient {
     return (await response.json()) as T;
   }
 
-  public async sse(
+  public async sse<Update extends object>(
     abortSignal: AbortSignal,
     method: string,
     path: string,
     body: object | undefined,
-    handler: HttpSseHandler<any>
+    handler: HttpSseHandler<Update>
   ): Promise<void> {
     const response = await this.request(abortSignal, method, path, body);
     const reader = response.body?.getReader();

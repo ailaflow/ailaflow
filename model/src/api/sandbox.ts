@@ -1,23 +1,23 @@
-import z from 'zod';
+import z from 'zod/v4';
 
 // getSandboxes
 
-const sandboxLiteDto = z.object({
+const sandboxLiteDtoSchema = z.object({
   name: z.string(),
   isEnabled: z.boolean(),
   description: z.string()
 });
 
-export const getSandboxesResponse = z.object({
-  sandboxes: z.array(sandboxLiteDto)
+export const getSandboxesResponseSchema = z.object({
+  sandboxes: z.array(sandboxLiteDtoSchema)
 });
 
-export type SandboxLiteDto = z.infer<typeof sandboxLiteDto>;
-export type GetSandboxesResponse = z.infer<typeof getSandboxesResponse>;
+export type SandboxLiteDto = z.infer<typeof sandboxLiteDtoSchema>;
+export type GetSandboxesResponse = z.infer<typeof getSandboxesResponseSchema>;
 
 // getSandbox
 
-const sandboxDto = z.object({
+const sandboxDtoSchema = z.object({
   name: z.string(),
   isEnabled: z.boolean(),
   description: z.string(),
@@ -25,16 +25,16 @@ const sandboxDto = z.object({
   envVariables: z.record(z.string(), z.string())
 });
 
-export const getSandboxResponse = z.object({
-  sandbox: sandboxDto
+export const getSandboxResponseSchema = z.object({
+  sandbox: sandboxDtoSchema
 });
 
-export type SandboxDto = z.infer<typeof sandboxDto>;
-export type GetSandboxResponse = z.infer<typeof getSandboxResponse>;
+export type SandboxDto = z.infer<typeof sandboxDtoSchema>;
+export type GetSandboxResponse = z.infer<typeof getSandboxResponseSchema>;
 
 // upsertSandbox
 
-export const upsertSandboxRequest = z.object({
+export const upsertSandboxRequestSchema = z.object({
   name: z.string(),
   isEnabled: z.boolean(),
   description: z.string(),
@@ -43,4 +43,4 @@ export const upsertSandboxRequest = z.object({
   hash: z.string()
 });
 
-export type UpsertSandboxRequest = z.infer<typeof upsertSandboxRequest>;
+export type UpsertSandboxRequest = z.infer<typeof upsertSandboxRequestSchema>;

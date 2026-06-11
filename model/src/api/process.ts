@@ -1,9 +1,9 @@
-import z from 'zod';
+import z from 'zod/v4';
 import { ProcessDefinition } from '../process';
 
 // getProcesses
 
-const processLiteDto = z.object({
+const processLiteDtoSchema = z.object({
   id: z.string(),
   name: z.string(),
   description: z.string(),
@@ -12,16 +12,16 @@ const processLiteDto = z.object({
   nOutputs: z.number()
 });
 
-export const getProcessesResponse = z.object({
-  processes: z.array(processLiteDto)
+export const getProcessesResponseSchema = z.object({
+  processes: z.array(processLiteDtoSchema)
 });
 
-export type ProcessLiteDto = z.infer<typeof processLiteDto>;
-export type GetProcessesResponse = z.infer<typeof getProcessesResponse>;
+export type ProcessLiteDto = z.infer<typeof processLiteDtoSchema>;
+export type GetProcessesResponse = z.infer<typeof getProcessesResponseSchema>;
 
 // getProcess
 
-const processDto = z.object({
+const processDtoSchema = z.object({
   id: z.string(),
   name: z.string(),
   description: z.string(),
@@ -29,16 +29,16 @@ const processDto = z.object({
   definition: z.custom<ProcessDefinition>()
 });
 
-export const getProcessResponse = z.object({
-  process: processDto
+export const getProcessResponseSchema = z.object({
+  process: processDtoSchema
 });
 
-export type ProcessDto = z.infer<typeof processDto>;
-export type GetProcessResponse = z.infer<typeof getProcessResponse>;
+export type ProcessDto = z.infer<typeof processDtoSchema>;
+export type GetProcessResponse = z.infer<typeof getProcessResponseSchema>;
 
 // updateProcess
 
-export const updateProcessRequest = z.object({
+export const updateProcessRequestSchema = z.object({
   id: z.string().optional(),
   name: z.string(),
   description: z.string(),
@@ -46,20 +46,20 @@ export const updateProcessRequest = z.object({
   definition: z.custom<ProcessDefinition>(),
   hash: z.string()
 });
-export const updateProcessResponse = z.object({
+export const updateProcessResponseSchema = z.object({
   id: z.string()
 });
 
-export type UpdateProcessRequest = z.infer<typeof updateProcessRequest>;
-export type UpdateProcessResponse = z.infer<typeof updateProcessResponse>;
+export type UpdateProcessRequest = z.infer<typeof updateProcessRequestSchema>;
+export type UpdateProcessResponse = z.infer<typeof updateProcessResponseSchema>;
 
 // testProcess
 
-export const testProcessRequest = z.object({
+export const testProcessRequestSchema = z.object({
   input: z.record(z.string(), z.any())
 });
 
-export type TestProcessRequest = z.infer<typeof testProcessRequest>;
+export type TestProcessRequest = z.infer<typeof testProcessRequestSchema>;
 
 export interface TestProcessUpdate {
   log?: {

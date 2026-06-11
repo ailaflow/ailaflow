@@ -4,14 +4,15 @@ export interface GetHealthResponse {
   status: string;
 }
 
-export interface ExecCommandRequest {
+export interface ExecuteCommandRequest {
   cwd: string;
   command: string;
   args?: string[];
   stdin?: string;
+  env?: Record<string, string>;
 }
 
-export interface ExecCommandUpdate {
+export interface ExecuteCommandUpdate {
   stdout?: string;
   stderr?: string;
   close?: {
@@ -26,10 +27,12 @@ export interface ListenRpcUpdate {
     id: string;
     type: string;
     payload: object;
+    executionToken: string;
+    timeout: number;
   };
 }
 
-export interface SendRpcResponseRequest {
+export interface SendRpcReplyRequest {
   id: string;
   type: string;
   payload?: object;
@@ -45,15 +48,19 @@ export class BridgeClient {
     return this.httpClient.json<GetHealthResponse>(abortSignal, 'GET', '/health');
   }
 
-  public execCommand(abortSignal: AbortSignal, request: ExecCommandRequest, handler: HttpSseHandler<ExecCommandUpdate>): Promise<void> {
-    return this.httpClient.sse(abortSignal, 'POST', '/command', request, handler);
+  public executeCommand(
+    abortSignal: AbortSignal,
+    request: ExecuteCommandRequest,
+    handler: HttpSseHandler<ExecuteCommandUpdate>
+  ): Promise<void> {
+    return this.httpClient.sse<ExecuteCommandUpdate>(abortSignal, 'POST', '/command', request, handler);
   }
 
   public listenRpc(abortSignal: AbortSignal, handler: HttpSseHandler<ListenRpcUpdate>): Promise<void> {
-    return this.httpClient.sse(abortSignal, 'GET', '/rpc', undefined, handler);
+    return this.httpClient.sse<ListenRpcUpdate>(abortSignal, 'GET', '/rpc', undefined, handler);
   }
 
-  public sendRpcResponse(abortSignal: AbortSignal, request: SendRpcResponseRequest): Promise<void> {
-    return this.httpClient.json<void>(abortSignal, 'POST', '/rpc-response', request);
+  public sendRpcReply(abortSignal: AbortSignal, request: SendRpcReplyRequest): Promise<void> {
+    return this.httpClient.json<void>(abortSignal, 'POST', '/rpc-reply', request);
   }
 }

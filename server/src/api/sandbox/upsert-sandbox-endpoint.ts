@@ -1,7 +1,8 @@
 import { Request } from 'express';
-import { upsertSandboxRequest } from '@aila/model';
+import { upsertSandboxRequestSchema } from '@aila/model';
 import { Sandbox, SandboxRepository } from '../../repositories/sandbox-repository/sandbox-repository';
 import { Endpoint } from '../endpoint';
+import { parseBody } from '../parse-body';
 
 export class UpsertSandboxEndpoint implements Endpoint {
   public readonly method = 'post';
@@ -12,7 +13,7 @@ export class UpsertSandboxEndpoint implements Endpoint {
   public constructor(private readonly sandboxRepository: SandboxRepository) {}
 
   public async handle(req: Request) {
-    const request = upsertSandboxRequest.parse(req.body);
+    const request = parseBody(upsertSandboxRequestSchema, req.body);
     const sandbox = await Sandbox.create(request);
 
     await this.sandboxRepository.upsert(sandbox);

@@ -3,17 +3,18 @@ import type { Express, Request, Response } from 'express';
 import { Logger } from '../core/logger';
 import { SseResponse } from '../core/sse-response';
 
-interface CommandRequestBody {
+interface ExecuteCommandRequest {
   cwd: string;
   command: string;
   args?: string[];
   stdin?: string;
+  env?: Record<string, string>;
 }
 
-export function setupCommandEndpoint(app: Express): void {
+export function setupExecuteCommandEndpoint(app: Express): void {
   const logger = new Logger('CommandEndpoint');
 
-  app.post('/command', (req: Request<unknown, unknown, CommandRequestBody>, res: Response) => {
+  app.post('/command', (req: Request<unknown, unknown, ExecuteCommandRequest>, res: Response) => {
     const cwd = req.body.cwd;
     const command = req.body.command;
     const args = req.body.args ?? [];
@@ -21,19 +22,24 @@ export function setupCommandEndpoint(app: Express): void {
 
     logger.log(`Received command: ${command} ${args.join(' ')}, cwd: ${cwd}`);
 
+    const env = {
+      ...process.env,
+      NODE_COMPILE_CACHE: '/tmp/node_compile_cache'
+    };
+    if (req.body.env) {
+      Object.assign(env, req.body.env);
+    }
+
     const sse = new SseResponse(res);
     const child = spawn(command, args, {
       cwd,
-      env: {
-        ...process.env,
-        NODE_COMPILE_CACHE: '/tmp/node_compile_cache'
-      },
+      env,
       shell: false
     });
 
     if (stdin) {
       child.stdin.on('error', error => {
-        sse.writeEvent({ error: error.message });
+        sse.write({ error: error.message });
         sse.end();
       });
       child.stdin.write(stdin);
@@ -43,14 +49,14 @@ export function setupCommandEndpoint(app: Express): void {
     child.stdout.setEncoding('utf8');
     child.stderr.setEncoding('utf8');
 
-    child.stdout.on('data', (stdout: string) => sse.writeEvent({ stdout }));
-    child.stderr.on('data', (stderr: string) => sse.writeEvent({ stderr }));
+    child.stdout.on('data', (stdout: string) => sse.write({ stdout }));
+    child.stderr.on('data', (stderr: string) => sse.write({ stderr }));
     child.on('error', error => {
-      sse.writeEvent({ error: error.message });
+      sse.write({ error: error.message });
       sse.end();
     });
     child.on('close', (code, signal) => {
-      sse.writeEvent({ close: { code: code ?? -2, signal } });
+      sse.write({ close: { code: code ?? -2, signal } });
       sse.end();
     });
 

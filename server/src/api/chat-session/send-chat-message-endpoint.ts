@@ -2,8 +2,9 @@ import { Request } from 'express';
 import { Endpoint } from '../endpoint';
 import { getAuthToken } from '../auth/auth-middleware';
 import { EndpointError } from '../endpoint-error';
-import { sendChatMessageRequest, SendChatMessageResponse } from '@aila/model';
+import { sendChatMessageRequestSchema, SendChatMessageResponse } from '@aila/model';
 import { ChatSessionStore } from '../../chat-session/stores/chat-session-store';
+import { parseBody } from '../parse-body';
 
 export class SendChatMessageEndpoint implements Endpoint {
   public readonly method = 'post';
@@ -14,7 +15,7 @@ export class SendChatMessageEndpoint implements Endpoint {
 
   public async handle(req: Request): Promise<SendChatMessageResponse> {
     const authToken = getAuthToken(req);
-    const request = sendChatMessageRequest.parse(req.body);
+    const request = parseBody(sendChatMessageRequestSchema, req.body);
 
     const chatSession = this.chatSessionStore.tryGet(authToken.userName, request.chatSessionId);
     if (!chatSession) {

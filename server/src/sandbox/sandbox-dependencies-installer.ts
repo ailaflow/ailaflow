@@ -2,7 +2,7 @@ import { Process } from '../repositories/process-repository/process-repository';
 import { SandboxHostPaths } from './sandbox-host-paths';
 import { SandboxRuntime } from './sandbox-runtime';
 import { HttpSseHandler } from '../core/http-client';
-import { ExecCommandUpdate } from './bridge-client';
+import { ExecuteCommandUpdate } from './bridge-client';
 import { Logger } from '../core/logger';
 
 export class SandboxDependenciesInstaller {
@@ -13,7 +13,7 @@ export class SandboxDependenciesInstaller {
     private readonly paths: SandboxHostPaths
   ) {}
 
-  public async install(abortSignal: AbortSignal, process: Process, handler?: HttpSseHandler<ExecCommandUpdate>) {
+  public async install(abortSignal: AbortSignal, process: Process, handler?: HttpSseHandler<ExecuteCommandUpdate>) {
     const startTime = Date.now();
 
     const result = await this.runtime.runCommand(

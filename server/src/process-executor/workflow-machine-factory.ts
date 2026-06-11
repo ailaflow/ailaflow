@@ -1,6 +1,6 @@
 import { createWorkflowMachineBuilder } from 'sequential-workflow-machine';
 import { Process } from '../repositories/process-repository/process-repository';
-import { SandboxIntanceManager } from '../sandbox/sandbox-instance-manager';
+import { SandboxInstanceManager } from '../sandbox/sandbox-instance-manager';
 import { WorkflowMachine, WorkflowMachineVariableValues } from './workflow-machine';
 import { activitySet } from './activities/activity-set';
 import { WorkflowLogger } from './services/workflow-logger';
@@ -10,15 +10,17 @@ import { WorkflowScriptExecutor } from './services/workflow-script-executor';
 export class WorkflowMachineFactory {
   private readonly builder = createWorkflowMachineBuilder(activitySet);
 
-  public constructor(private readonly sandboxInstanceManager: SandboxIntanceManager) {}
+  public constructor(private readonly sandboxInstanceManager: SandboxInstanceManager) {}
 
   public create(process: Process, input: WorkflowMachineVariableValues): WorkflowMachine {
     const variablesState = { ...input };
 
+    const executionToken = 'test';
+
     const machine = this.builder.build(process.definition);
     const $logger = new WorkflowLogger();
     const $variables = new WorkflowVariableManager(variablesState);
-    const $scriptExecutor = new WorkflowScriptExecutor(process, $logger, this.sandboxInstanceManager);
+    const $scriptExecutor = new WorkflowScriptExecutor(executionToken, process, $logger, this.sandboxInstanceManager);
 
     const interpreter = machine.create({
       init: () => {

@@ -1,4 +1,4 @@
-import { ExecCommandRequest, ExecCommandUpdate, BridgeClient, ListenRpcUpdate, SendRpcResponseRequest } from './bridge-client';
+import { ExecuteCommandRequest, ExecuteCommandUpdate, BridgeClient, ListenRpcUpdate, SendRpcReplyRequest } from './bridge-client';
 import { Docker } from './docker';
 import { Logger } from '../core/logger';
 import { HttpSseHandler } from '../core/http-client';
@@ -14,7 +14,7 @@ export interface CommandResult {
 }
 
 export interface SandboxRuntimeHandler {
-  onSandboxRpc(name: string, type: string, payload: object): Promise<object>;
+  onSandboxRpc(abortSignal: AbortSignal, name: string, type: string, payload: object, executionToken: string): Promise<object>;
   onSandboxClose(name: string, error?: Error): void;
 }
 
@@ -111,9 +111,11 @@ export class SandboxRuntime {
   }
 
   private async handleRpc(rpc: NonNullable<ListenRpcUpdate['rpc']>): Promise<void> {
-    let result: SendRpcResponseRequest;
+    const abortSignal = AbortSignal.any([AbortSignal.timeout(rpc.timeout), this.stopAbortController.signal]);
+
+    let result: SendRpcReplyRequest;
     try {
-      const payload = await this.handler.onSandboxRpc(this.name, rpc.type, rpc.payload);
+      const payload = await this.handler.onSandboxRpc(abortSignal, this.name, rpc.type, rpc.payload, rpc.executionToken);
       result = {
         id: rpc.id,
         type: rpc.type,
@@ -127,8 +129,9 @@ export class SandboxRuntime {
         error
       };
     }
+
     try {
-      await this.client.sendRpcResponse(this.stopAbortController.signal, result);
+      await this.client.sendRpcReply(abortSignal, result);
     } catch (e) {
       const error = (e as Error)?.message ?? String(e);
       this.logger.error(`Failed to send ${rpc.type} RPC response to bridge: ${error}`);
@@ -137,8 +140,8 @@ export class SandboxRuntime {
 
   public async runCommand(
     abortSignal: AbortSignal,
-    command: ExecCommandRequest,
-    handler?: HttpSseHandler<ExecCommandUpdate>
+    command: ExecuteCommandRequest,
+    handler?: HttpSseHandler<ExecuteCommandUpdate>
   ): Promise<CommandResult> {
     if (!this.isRunning) {
       throw new Error('Sandbox is not running');
@@ -148,7 +151,7 @@ export class SandboxRuntime {
     let stdout = '';
     let stderr = '';
     let error: Error | undefined;
-    await this.client.execCommand(abortSignal, command, {
+    await this.client.executeCommand(abortSignal, command, {
       onData(update) {
         if (update.stdout) {
           stdout += update.stdout;

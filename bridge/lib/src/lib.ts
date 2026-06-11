@@ -1,38 +1,32 @@
-import { readFileSync } from 'fs';
+import { rpc, RpcConfig } from './core';
 
-const TOKEN_PRE = '>'.repeat(20);
-const TOKEN_POST = '<'.repeat(20);
-
-export interface RpcConfig {
-  timeout?: number;
+/**
+ * Reads a variable from the currently executing process.
+ * @param name The name of the variable to read.
+ * @param rpcConfig Optional configuration for the RPC call.
+ * @returns The value of the variable or `null` if the variable is not set.
+ * @throws If the variable does not exist or if the RPC call fails.
+ */
+export function readVariable<T = any>(name: string, rpcConfig?: RpcConfig): Promise<T | null> {
+  return rpc<T>('readVariable', { name }, rpcConfig);
 }
 
-export function readInput<T = unknown>(): T {
-  return JSON.parse(readFileSync(0, 'utf-8')) as T;
+/**
+ * Writes a value to a variable in the currently executing process.
+ * @param name The name of the variable to write to.
+ * @param value The value to write.
+ * @param rpcConfig Optional configuration for the RPC call.
+ * @throws If the variable does not exist or if the RPC call fails.
+ */
+export async function writeVariable(name: string, value: unknown, rpcConfig?: RpcConfig): Promise<void> {
+  return rpc<void>('writeVariable', { name, value }, rpcConfig);
 }
 
-export function writeOutput(result: unknown): void {
-  process.stdout.write(TOKEN_PRE);
-  process.stdout.write(JSON.stringify(result));
-  process.stdout.write(TOKEN_POST);
-}
-
-export async function rpc<T = unknown>(type: string, payload: unknown, config?: RpcConfig): Promise<T> {
-  const response = await fetch('http://127.0.0.1:4096/rpc', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({ type, payload }),
-    keepalive: true,
-    signal: AbortSignal.timeout(config?.timeout ?? 30_000)
-  });
-  if (!response.ok) {
-    throw new Error('Failed to send request to host');
-  }
-  return (await response.json()) as T;
-}
-
-export function sendNotification(user: string, notification: unknown): Promise<unknown> {
-  return rpc('notification', { user, notification });
+/**
+ * Logs a message to the process logs.
+ * @param texts The texts to log. They will be concatenated with spaces.
+ */
+export function log(...texts: unknown[]) {
+  const items = texts.map(t => (typeof t === 'string' ? t : JSON.stringify(t)));
+  process.stdout.write(items.join(' ') + '\n');
 }

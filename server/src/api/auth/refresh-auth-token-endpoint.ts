@@ -1,9 +1,10 @@
 import { Request } from 'express';
 import { Endpoint } from '../endpoint';
-import { refreshTokenRequest, RefreshTokenResponse } from '@aila/model';
+import { refreshTokenRequestSchema, RefreshTokenResponse } from '@aila/model';
 import { AuthToken, AuthTokenRepository } from '../../repositories/auth-token-repository/auth-token-repository';
 import { EndpointError } from '../endpoint-error';
 import { Logger } from '../../core/logger';
+import { parseBody } from '../parse-body';
 
 export class RefreshAuthTokenEndpoint implements Endpoint {
   private readonly logger = new Logger(RefreshAuthTokenEndpoint.name);
@@ -14,7 +15,7 @@ export class RefreshAuthTokenEndpoint implements Endpoint {
   public constructor(private readonly authTokenRepository: AuthTokenRepository) {}
 
   public async handle(req: Request): Promise<RefreshTokenResponse> {
-    const request = refreshTokenRequest.parse(req.body);
+    const request = parseBody(refreshTokenRequestSchema, req.body);
 
     const authToken = await this.authTokenRepository.tryGetByToken(request.authToken);
     if (!authToken || authToken.isExpired()) {

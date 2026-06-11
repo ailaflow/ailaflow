@@ -1,10 +1,11 @@
-import { testProcessRequest, TestProcessUpdate } from '@aila/model';
+import { testProcessRequestSchema, TestProcessUpdate } from '@aila/model';
 import { SseResponse } from '../../utilities/sse-response';
 import { Endpoint } from '../endpoint';
 import { Request, Response } from 'express';
 import { ProcessRepository } from '../../repositories/process-repository/process-repository';
 import { EndpointError } from '../endpoint-error';
 import { WorkflowMachineFactory } from '../../process-executor/workflow-machine-factory';
+import { parseBody } from '../parse-body';
 
 export class TestProcessEndpoint implements Endpoint {
   public readonly method = 'post';
@@ -19,7 +20,7 @@ export class TestProcessEndpoint implements Endpoint {
 
   public async handle(req: Request, res: Response) {
     const processId = String(req.params.id);
-    const request = testProcessRequest.parse(req.body);
+    const request = parseBody(testProcessRequestSchema, req.body);
     const process = await this.processRepository.tryGetById(processId);
     if (!process) {
       throw new EndpointError('Process not found', 404);

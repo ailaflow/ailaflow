@@ -1,8 +1,9 @@
 import { Request } from 'express';
 import { Endpoint } from '../endpoint';
 import { User, UserRepository } from '../../repositories/user-repository/user-repository';
-import { installRequest, InstallResponse } from '@aila/model';
+import { installRequestSchema, InstallResponse } from '@aila/model';
 import { PasswordHasher } from '../../repositories/user-repository/password-hasher';
+import { parseBody } from '../parse-body';
 
 export class InstallEndpoint implements Endpoint {
   public readonly method = 'post';
@@ -14,7 +15,7 @@ export class InstallEndpoint implements Endpoint {
   ) {}
 
   public async handle(req: Request): Promise<InstallResponse> {
-    const request = installRequest.parse(req.body);
+    const request = parseBody(installRequestSchema, req.body);
 
     if ((await this.userRepository.count()) > 0) {
       return {

@@ -1,9 +1,9 @@
-import z from 'zod';
+import z from 'zod/v4';
 import { CompletedMessage, MessageType, ToolDescriptor } from '../chat-session';
 
 // restoreChat
 
-export const restoreChatRequest = z.object({
+export const restoreChatRequestSchema = z.object({
   admin: z
     .object({
       hash: z.string(),
@@ -16,7 +16,7 @@ export const restoreChatRequest = z.object({
     })
     .optional()
 });
-export type RestoreChatRequest = z.infer<typeof restoreChatRequest>;
+export type RestoreChatRequest = z.infer<typeof restoreChatRequestSchema>;
 
 export interface MessageChatUpdate {
   id: number;
@@ -37,22 +37,22 @@ export interface ChatUpdate {
 
 // sendChatSessionMessage
 
-export const sendChatMessageRequest = z.object({
+export const sendChatMessageRequestSchema = z.object({
   chatSessionId: z.string().min(1),
   message: z.string().min(1)
 });
-export const sendChatMessageResponse = z.object({
+export const sendChatMessageResponseSchema = z.object({
   id: z.number()
 });
 
-export type SendChatMessageRequest = z.infer<typeof sendChatMessageRequest>;
-export type SendChatMessageResponse = z.infer<typeof sendChatMessageResponse>;
+export type SendChatMessageRequest = z.infer<typeof sendChatMessageRequestSchema>;
+export type SendChatMessageResponse = z.infer<typeof sendChatMessageResponseSchema>;
 
 // sendFrontendToolResult
 
-export const sendFrontendToolResultRequest = z.object({
+export const sendFrontendToolResultRequestSchema = z.object({
   callId: z.string().min(1),
   result: z.string()
 });
 
-export type SendFrontendToolResultRequest = z.infer<typeof sendFrontendToolResultRequest>;
+export type SendFrontendToolResultRequest = z.infer<typeof sendFrontendToolResultRequestSchema>;

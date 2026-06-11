@@ -3,7 +3,7 @@ import { SandboxRepository } from '../repositories/sandbox-repository/sandbox-re
 import { SandboxInstance } from './sandbox-instance';
 import { SandboxRuntimeHandler } from './sandbox-runtime';
 
-export class SandboxIntanceManager {
+export class SandboxInstanceManager {
   private readonly instances = new Map<string, SandboxInstance>();
 
   public constructor(
@@ -21,8 +21,10 @@ export class SandboxIntanceManager {
 
       const handler: SandboxRuntimeHandler = {
         onSandboxClose: () => {},
-        onSandboxRpc: async (instanceName: string, type: string, payload: object) => {
-          return {};
+        onSandboxRpc: async (_, name, type, __, token) => {
+          return {
+            call: `${type} called on ${name} with token ${token}`
+          };
         }
       };
 

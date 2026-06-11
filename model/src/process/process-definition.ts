@@ -1,17 +1,21 @@
 import { Definition } from 'sequential-workflow-model';
+import z from 'zod/v4';
 
-export interface JsonSchema {
-  type: string;
-  properties?: Record<string, unknown>;
-}
+export const jsonSchemaSchema = z.object({
+  type: z.string(),
+  properties: z.record(z.string(), z.unknown()).optional()
+});
 
-export interface VariableDefinition {
-  name: string;
-  description: string;
-  input: boolean;
-  output: boolean;
-  schema: JsonSchema;
-}
+export const variableDefinitionSchema = z.object({
+  name: z.string(),
+  description: z.string(),
+  input: z.boolean(),
+  output: z.boolean(),
+  schema: jsonSchemaSchema
+});
+
+export type JsonSchema = z.infer<typeof jsonSchemaSchema>;
+export type VariableDefinition = z.infer<typeof variableDefinitionSchema>;
 
 export interface ProcessDefinition extends Definition {
   properties: {

@@ -2,11 +2,12 @@ import { Request, Response } from 'express';
 import { Endpoint } from '../endpoint';
 import { getAuthToken } from '../auth/auth-middleware';
 import { MessageUpdate } from '../../chat-session/chat-session';
-import { ChatUpdate, RestoreChatRequest, restoreChatRequest } from '@aila/model';
+import { ChatUpdate, RestoreChatRequest, restoreChatRequestSchema } from '@aila/model';
 import { SseResponse } from '../../utilities/sse-response';
 import { UserChatSessionStore } from '../../chat-session/stores/user-chat-session-store';
 import { AdminChatSessionStore } from '../../chat-session/stores/admin-chat-session-store';
 import { AuthToken } from '../../repositories/auth-token-repository/auth-token-repository';
+import { parseBody } from '../parse-body';
 
 export class RestoreSessionEndpoint implements Endpoint {
   public readonly method = 'post';
@@ -20,7 +21,7 @@ export class RestoreSessionEndpoint implements Endpoint {
 
   public async handle(req: Request, res: Response) {
     const authToken = getAuthToken(req);
-    const request = restoreChatRequest.parse(req.body);
+    const request = parseBody(restoreChatRequestSchema, req.body);
 
     const chatSession = this.getChatSession(authToken, request);
     const sseResponse = new SseResponse<ChatUpdate>(res);

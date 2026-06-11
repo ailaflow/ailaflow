@@ -1,10 +1,11 @@
 import { Request } from 'express';
 import { Endpoint } from '../endpoint';
 import { UserRepository } from '../../repositories/user-repository/user-repository';
-import { loginRequest, LoginResponse } from '@aila/model';
+import { loginRequestSchema, LoginResponse } from '@aila/model';
 import { PasswordHasher } from '../../repositories/user-repository/password-hasher';
 import { AuthToken, AuthTokenRepository } from '../../repositories/auth-token-repository/auth-token-repository';
 import { EndpointError } from '../endpoint-error';
+import { parseBody } from '../parse-body';
 
 export class LoginEndpoint implements Endpoint {
   public readonly method = 'post';
@@ -17,7 +18,7 @@ export class LoginEndpoint implements Endpoint {
   ) {}
 
   public async handle(req: Request): Promise<LoginResponse> {
-    const request = loginRequest.parse(req.body);
+    const request = parseBody(loginRequestSchema, req.body);
 
     const user = await this.userRepository.tryGetUser(request.userName);
     if (!user || !(await user.comparePassword(request.password, this.passwordHasher))) {

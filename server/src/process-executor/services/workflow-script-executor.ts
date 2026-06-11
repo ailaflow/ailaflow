@@ -1,21 +1,22 @@
 import { Script } from '@aila/model';
-import { SandboxIntanceManager } from '../../sandbox/sandbox-instance-manager';
+import { SandboxInstanceManager } from '../../sandbox/sandbox-instance-manager';
 import { Process } from '../../repositories/process-repository/process-repository';
 import { WorkflowLogger } from './workflow-logger';
 import { HttpSseHandler } from '../../core/http-client';
-import { ExecCommandUpdate } from '../../sandbox/bridge-client';
+import { ExecuteCommandUpdate } from '../../sandbox/bridge-client';
 
 export class WorkflowScriptExecutor {
   public constructor(
+    private readonly executionToken: string,
     private readonly process: Process,
     private readonly logger: WorkflowLogger,
-    private readonly sandboxInstanceManager: SandboxIntanceManager
+    private readonly sandboxInstanceManager: SandboxInstanceManager
   ) {}
 
   public async execute(abortSignal: AbortSignal, stepId: string, script: Script) {
     const instance = await this.sandboxInstanceManager.get(abortSignal, script.sandboxName);
 
-    const sseHandler: HttpSseHandler<ExecCommandUpdate> = {
+    const sseHandler: HttpSseHandler<ExecuteCommandUpdate> = {
       onData: data => {
         if (data.stdout) {
           this.logger.info(`stdout: ${data.stdout}`);
@@ -38,8 +39,8 @@ export class WorkflowScriptExecutor {
       abortSignal,
       {
         cwd: `/app/${this.process.name}/${stepId}`,
-        input: '{}',
-        scriptName: 'main.js'
+        scriptName: 'main.js',
+        executionToken: this.executionToken
       },
       sseHandler
     );

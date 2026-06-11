@@ -1,9 +1,10 @@
 import { Request } from 'express';
 import { Endpoint } from '../endpoint';
-import { ProcessRootValidator, ProcessStepValidator, updateProcessRequest, UpdateProcessResponse } from '@aila/model';
+import { ProcessRootValidator, ProcessStepValidator, updateProcessRequestSchema, UpdateProcessResponse } from '@aila/model';
 import { Process, ProcessRepository } from '../../repositories/process-repository/process-repository';
 import { EndpointError } from '../endpoint-error';
 import { SandboxListQuerier } from '../../queriers/sandbox-list/sandbox-list-querier';
+import { parseBody } from '../parse-body';
 
 export class UpdateProcessEndpoint implements Endpoint {
   public readonly method = 'post';
@@ -17,7 +18,7 @@ export class UpdateProcessEndpoint implements Endpoint {
   ) {}
 
   public async handle(req: Request): Promise<UpdateProcessResponse> {
-    const request = updateProcessRequest.parse(req.body);
+    const request = parseBody(updateProcessRequestSchema, req.body);
 
     const { rootValidator, stepValidator } = await this.getValidators();
 

@@ -1,6 +1,6 @@
 import type { Response } from 'express';
 
-export class SseResponse {
+export class SseResponse<Update> {
   public constructor(private readonly res: Response) {
     res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
     res.setHeader('Cache-Control', 'no-cache, no-transform');
@@ -8,9 +8,9 @@ export class SseResponse {
     res.flushHeaders?.();
   }
 
-  public writeEvent(payload: unknown): void {
+  public write(update: Update): void {
     if (!this.res.writableEnded) {
-      this.res.write(`data: ${JSON.stringify(payload)}\n\n`);
+      this.res.write(`data: ${JSON.stringify(update)}\n\n`);
     }
   }
 
