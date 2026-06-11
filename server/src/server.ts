@@ -32,13 +32,13 @@ import { UserToolSetProvider } from './chat-session/stores/user-tool-set-provide
 import { AdminChatSessionStore } from './chat-session/stores/admin-chat-session-store';
 import { FrontendToolFactory } from './chat-session/tools/frontend-tool-factory';
 import { ChatSessionStore } from './chat-session/stores/chat-session-store';
-import { ContainerRepository } from './repositories/container-repository/container-repository';
-import { SqliteContainerRepository } from './repositories/container-repository/sqlite-container-repository';
-import { ContainerListQuerier } from './queriers/container-list/container-list-querier';
-import { SqliteContainerListQuerier } from './queriers/container-list/sqlite-container-list-querier';
-import { GetContainersEndpoint } from './api/container/get-containers-endpoint';
-import { GetContainerEndpoint } from './api/container/get-container-endpoint';
-import { UpsertContainerEndpoint } from './api/container/upsert-container-endpoint';
+import { SandboxRepository } from './repositories/sandbox-repository/sandbox-repository';
+import { SqliteSandboxRepository } from './repositories/sandbox-repository/sqlite-sandbox-repository';
+import { SandboxListQuerier } from './queriers/sandbox-list/sandbox-list-querier';
+import { SqliteSandboxListQuerier } from './queriers/sandbox-list/sqlite-sandbox-list-querier';
+import { GetSandboxesEndpoint } from './api/sandbox/get-sandboxes-endpoint';
+import { GetSandboxEndpoint } from './api/sandbox/get-sandbox-endpoint';
+import { UpsertSandboxEndpoint } from './api/sandbox/upsert-sandbox-endpoint';
 import { WorkflowMachineFactory } from './process-executor/workflow-machine-factory';
 
 const PORT = process.env.PORT || 2048;
@@ -54,27 +54,27 @@ export class Server {
     let userRepository: UserRepository;
     let authTokenRepository: AuthTokenRepository;
     let processRepository: ProcessRepository;
-    let containerRepository: ContainerRepository;
+    let sandboxRepository: SandboxRepository;
     let processListQuerier: ProcessListQuerier;
-    let containerListQuerier: ContainerListQuerier;
+    let sandboxListQuerier: SandboxListQuerier;
 
     const sqliteDatabases = new SqliteDatabases(serverPaths);
 
     userRepository = new SqliteUserRepository(sqliteDatabases);
     authTokenRepository = new SqliteAuthTokenRepository(sqliteDatabases);
     processRepository = new SqliteProcessRepository(sqliteDatabases);
-    containerRepository = new SqliteContainerRepository(sqliteDatabases);
+    sandboxRepository = new SqliteSandboxRepository(sqliteDatabases);
     processListQuerier = new SqliteProcessListQuerier(sqliteDatabases);
-    containerListQuerier = new SqliteContainerListQuerier(sqliteDatabases);
+    sandboxListQuerier = new SqliteSandboxListQuerier(sqliteDatabases);
 
     await Promise.all([
       userRepository.setup(abortSignal),
       authTokenRepository.setup(abortSignal),
       processRepository.setup(abortSignal),
-      containerRepository.setup(abortSignal)
+      sandboxRepository.setup(abortSignal)
     ]);
 
-    const sandboxInstanceManager = new SandboxIntanceManager(serverPaths, containerRepository);
+    const sandboxInstanceManager = new SandboxIntanceManager(serverPaths, sandboxRepository);
 
     const workflowMachineFactory = new WorkflowMachineFactory(sandboxInstanceManager);
 
@@ -100,11 +100,11 @@ export class Server {
       new SendFrontedToolResultEndpoint(frontendToolBus),
       new GetProcessesEndpoint(processListQuerier),
       new GetProcessEndpoint(processRepository),
-      new UpdateProcessEndpoint(processRepository, containerListQuerier),
+      new UpdateProcessEndpoint(processRepository, sandboxListQuerier),
       new TestProcessEndpoint(processRepository, workflowMachineFactory),
-      new GetContainersEndpoint(containerListQuerier),
-      new GetContainerEndpoint(containerRepository),
-      new UpsertContainerEndpoint(containerRepository)
+      new GetSandboxesEndpoint(sandboxListQuerier),
+      new GetSandboxEndpoint(sandboxRepository),
+      new UpsertSandboxEndpoint(sandboxRepository)
     ];
     const authMiddleware = new AuthMiddleware(authTokenRepository);
     const router = new Router(app, endpoints, authMiddleware);

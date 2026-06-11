@@ -6,8 +6,8 @@ import { Install } from './install/install';
 import { ProcessList } from './process-list/process-list';
 import { ProcessEditor } from './process-editor/process-editor';
 import { ProcessTester } from './process-tester/process-tester';
-import { ContainerList } from './container-list/container-list';
-import { ContainerEditor } from './container-editor/container-editor';
+import { SandboxList } from './sandbox-list/sandbox-list';
+import { SandboxEditor } from './sandbox-editor/sandbox-editor';
 import { AdminPortal } from './common/admin-portal';
 
 const router = createBrowserRouter([
@@ -44,16 +44,16 @@ const router = createBrowserRouter([
         element: <ProcessTester />
       },
       {
-        path: '/admin/containers',
-        element: <ContainerList />
+        path: '/admin/sandboxes',
+        element: <SandboxList />
       },
       {
-        path: '/admin/create-container',
-        element: <ContainerEditor />
+        path: '/admin/create-sandbox',
+        element: <SandboxEditor />
       },
       {
-        path: '/admin/containers/:name',
-        element: <ContainerEditor />
+        path: '/admin/sandboxes/:name',
+        element: <SandboxEditor />
       }
     ]
   }

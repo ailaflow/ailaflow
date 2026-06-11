@@ -1,15 +1,15 @@
 import { useNavigate } from 'react-router-dom';
 import { useApiClient } from '../../auth/auth-context';
 import { useEffect, useRef, useState } from 'react';
-import { ContainerDto, ContainerValidator } from '@aila/model';
+import { SandboxDto, SandboxValidator } from '@aila/model';
 import { ResourceEditorView } from '../../views/resource-editor/resource-editor-view';
-import { ContainerEditorView, ContainerEnvVariable } from '../../views/container-editor/container-editor-view';
+import { SandboxEditorView, SandboxEnvVariable } from '../../views/sandbox-editor/sandbox-editor-view';
 import { ResourceSimpleDetailsView } from '../../views/resource-editor/resource-simple-details-view';
 import { useAiBindings } from '../common/ai-bindings/ai-bindings-context';
 import { fnv1a } from '../../core/fnv1a';
 
 interface EditorDataState {
-  envVariables: ContainerEnvVariable[];
+  envVariables: SandboxEnvVariable[];
   name: string;
   description: string;
   isEnabled: boolean;
@@ -17,62 +17,62 @@ interface EditorDataState {
   isDirty: boolean;
 }
 
-export function ContainerEditorContent(props: { container?: ContainerDto }) {
+export function SandboxEditorContent(props: { sandbox?: SandboxDto }) {
   const apiClient = useApiClient();
   const aiBindings = useAiBindings();
   const navigate = useNavigate();
 
   const lastEnvVariableId = useRef(0);
   const [state, setState] = useState<EditorDataState>(() => ({
-    envVariables: props.container
-      ? Object.keys(props.container.envVariables).map(key => ({
+    envVariables: props.sandbox
+      ? Object.keys(props.sandbox.envVariables).map(key => ({
           id: lastEnvVariableId.current++,
           key,
-          value: props.container!.envVariables[key]
+          value: props.sandbox!.envVariables[key]
         }))
       : [],
-    name: props.container?.name ?? '',
-    description: props.container?.description ?? '',
-    isEnabled: props.container?.isEnabled ?? true,
-    configuration: props.container?.configuration ?? '',
+    name: props.sandbox?.name ?? '',
+    description: props.sandbox?.description ?? '',
+    isEnabled: props.sandbox?.isEnabled ?? true,
+    configuration: props.sandbox?.configuration ?? '',
     isDirty: false
   }));
 
-  const isNameReadOnly = Boolean(props.container);
-  const nameError = ContainerValidator.validateName(state.name);
-  const descriptionError = ContainerValidator.validateDescription(state.description);
+  const isNameReadOnly = Boolean(props.sandbox);
+  const nameError = SandboxValidator.validateName(state.name);
+  const descriptionError = SandboxValidator.validateDescription(state.description);
   const canSave = nameError === null && descriptionError === null && state.isDirty;
 
   useEffect(
     () =>
-      aiBindings.containerEditor.bind({
-        container_editor_set_name: async arg => {
+      aiBindings.sandboxEditor.bind({
+        sandbox_editor_set_name: async arg => {
           if (isNameReadOnly) {
             return {
-              error: 'Container name cannot be changed.'
+              error: 'Sandbox name cannot be changed.'
             };
           }
-          const validationError = ContainerValidator.validateName(arg.name);
+          const validationError = SandboxValidator.validateName(arg.name);
           if (validationError) {
             return { validationError };
           }
           update({ name: arg.name });
           return {
-            ok: 'Container name updated.'
+            ok: 'Sandbox name updated.'
           };
         },
-        container_editor_get_name: async () => {
+        sandbox_editor_get_name: async () => {
           return {
             name: state.name
           };
         },
-        container_editor_get_is_enabled: async () => {
+        sandbox_editor_get_is_enabled: async () => {
           return { isEnabled: state.isEnabled };
         },
-        container_editor_set_is_enabled: async arg => {
+        sandbox_editor_set_is_enabled: async arg => {
           update({ isEnabled: arg.isEnabled });
           return {
-            ok: 'Container enabled state updated.'
+            ok: 'Sandbox enabled state updated.'
           };
         }
       }),
@@ -85,7 +85,7 @@ export function ContainerEditorContent(props: { container?: ContainerDto }) {
         (acc, variable) => ({ ...acc, [variable.key]: variable.value }),
         {}
       );
-      await apiClient.container.upsertContainer(AbortSignal.timeout(5_000), {
+      await apiClient.sandbox.upsertSandbox(AbortSignal.timeout(5_000), {
         name: state.name,
         description: state.description,
         isEnabled: state.isEnabled,
@@ -96,13 +96,13 @@ export function ContainerEditorContent(props: { container?: ContainerDto }) {
           configuration: state.configuration
         })
       });
-      if (props.container) {
+      if (props.sandbox) {
         setState({ ...state, isDirty: false });
       } else {
-        navigate(`/admin/containers/${state.name}`);
+        navigate(`/admin/sandboxes/${state.name}`);
       }
     } catch (e) {
-      alert(`Failed to save container: ${e}`);
+      alert(`Failed to save sandbox: ${e}`);
     }
   }
 
@@ -141,7 +141,7 @@ export function ContainerEditorContent(props: { container?: ContainerDto }) {
     });
   }
 
-  const detailsId = 'admin-container-editor-details';
+  const detailsId = 'admin-sandbox-editor-details';
 
   return (
     <ResourceEditorView
@@ -165,7 +165,7 @@ export function ContainerEditorContent(props: { container?: ContainerDto }) {
       canSwitch={false}
       switchLabel=""
     >
-      <ContainerEditorView
+      <SandboxEditorView
         isEnabled={state.isEnabled}
         configuration={state.configuration}
         envVariables={state.envVariables}

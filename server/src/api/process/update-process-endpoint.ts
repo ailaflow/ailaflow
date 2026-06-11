@@ -3,7 +3,7 @@ import { Endpoint } from '../endpoint';
 import { ProcessRootValidator, ProcessStepValidator, updateProcessRequest, UpdateProcessResponse } from '@aila/model';
 import { Process, ProcessRepository } from '../../repositories/process-repository/process-repository';
 import { EndpointError } from '../endpoint-error';
-import { ContainerListQuerier } from '../../queriers/container-list/container-list-querier';
+import { SandboxListQuerier } from '../../queriers/sandbox-list/sandbox-list-querier';
 
 export class UpdateProcessEndpoint implements Endpoint {
   public readonly method = 'post';
@@ -13,7 +13,7 @@ export class UpdateProcessEndpoint implements Endpoint {
 
   public constructor(
     private readonly processRepository: ProcessRepository,
-    private readonly containerListQuerier: ContainerListQuerier
+    private readonly sandboxListQuerier: SandboxListQuerier
   ) {}
 
   public async handle(req: Request): Promise<UpdateProcessResponse> {
@@ -41,10 +41,10 @@ export class UpdateProcessEndpoint implements Endpoint {
   }
 
   private async getValidators() {
-    const containers = await this.containerListQuerier.query();
+    const sandboxes = await this.sandboxListQuerier.query();
     return {
       rootValidator: new ProcessRootValidator(),
-      stepValidator: new ProcessStepValidator(containers.map(c => c.name))
+      stepValidator: new ProcessStepValidator(sandboxes.map(sandbox => sandbox.name))
     };
   }
 }

@@ -1,11 +1,11 @@
 import { createContext, useContext, useState } from 'react';
 import { AiBindingsStore } from './ai-bindings';
-import { containerEditorAiBindingsFactory, ContainerEditorAiBindingsStore } from './container-editor-ai-bindings';
+import { sandboxEditorAiBindingsFactory, SandboxEditorAiBindingsStore } from './sandbox-editor-ai-bindings';
 import { globalAiBindingsFactory, GlobalAiBindingsStore } from './global-ai-bindings';
 
 export interface AiBindingsContext {
   global: GlobalAiBindingsStore;
-  containerEditor: ContainerEditorAiBindingsStore;
+  sandboxEditor: SandboxEditorAiBindingsStore;
   stores: AiBindingsStore[];
 }
 
@@ -22,11 +22,11 @@ export function useAiBindings(): AiBindingsContext {
 export function AiBindingsContextProvider(props: { children: React.ReactNode }) {
   const [state] = useState<AiBindingsContext>(() => {
     const global = globalAiBindingsFactory();
-    const containerEditor = containerEditorAiBindingsFactory();
+    const sandboxEditor = sandboxEditorAiBindingsFactory();
     return {
       global,
-      containerEditor,
-      stores: [global, containerEditor]
+      sandboxEditor,
+      stores: [global, sandboxEditor]
     };
   });
 

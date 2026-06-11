@@ -2,16 +2,16 @@ import { DockerfileContent } from '@aila/model';
 import { useLayoutEffect, useRef, useState } from 'react';
 import { EyeClosedIcon, EyeOpenIcon, XIcon } from '../common/svg-icons';
 
-export interface ContainerEnvVariable {
+export interface SandboxEnvVariable {
   id: number;
   key: string;
   value: string;
 }
 
-export interface ContainerEditorViewProps {
+export interface SandboxEditorViewProps {
   isEnabled: boolean;
   configuration: string;
-  envVariables: ContainerEnvVariable[];
+  envVariables: SandboxEnvVariable[];
   onIsEnabledChange(isEnabled: boolean): void;
   onConfigurationChange(configuration: string): void;
   onEnvVariableAdd(): void;
@@ -20,7 +20,7 @@ export interface ContainerEditorViewProps {
   onEnvVariableValueChange(id: number, value: string): void;
 }
 
-export function ContainerEditorView(props: ContainerEditorViewProps) {
+export function SandboxEditorView(props: SandboxEditorViewProps) {
   const configurationTextareaRef = useRef<HTMLTextAreaElement>(null);
   const [visibleEnvVariableValueIds, setVisibleEnvVariableValueIds] = useState<Set<number>>(() => new Set());
 
@@ -63,7 +63,7 @@ export function ContainerEditorView(props: ContainerEditorViewProps) {
     <div className="h-full overflow-auto p-5">
       <div className="mx-auto flex w-full max-w-5xl flex-col gap-5">
         <div>
-          <span className="mb-1.5 block text-sm font-medium text-slate-700">Is container enabled</span>
+          <span className="mb-1.5 block text-sm font-medium text-slate-700">Is sandbox enabled</span>
           <button
             type="button"
             role="switch"

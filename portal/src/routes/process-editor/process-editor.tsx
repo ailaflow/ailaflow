@@ -14,7 +14,7 @@ export function ProcessEditor() {
     abortSignal =>
       Promise.all([
         processId ? apiClient.process.getProcess(abortSignal, processId) : Promise.resolve(null),
-        apiClient.container.getContainers(abortSignal)
+        apiClient.sandbox.getSandboxes(abortSignal)
       ]),
     [processId]
   );
@@ -27,7 +27,7 @@ export function ProcessEditor() {
   }
 
   return (
-    <ProcessEditorContext key={processId ?? '_new'} process={data[0]?.process} containers={data[1].containers}>
+    <ProcessEditorContext key={processId ?? '_new'} process={data[0]?.process} sandboxes={data[1].sandboxes}>
       <ProcessEditorContent />
     </ProcessEditorContext>
   );

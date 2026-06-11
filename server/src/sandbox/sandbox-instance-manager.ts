@@ -1,5 +1,5 @@
 import { ServerPaths } from '../core/server-paths';
-import { ContainerRepository } from '../repositories/container-repository/container-repository';
+import { SandboxRepository } from '../repositories/sandbox-repository/sandbox-repository';
 import { SandboxInstance } from './sandbox-instance';
 import { SandboxRuntimeHandler } from './sandbox-runtime';
 
@@ -8,15 +8,15 @@ export class SandboxIntanceManager {
 
   public constructor(
     private readonly paths: ServerPaths,
-    private readonly containerRepository: ContainerRepository
+    private readonly sandboxRepository: SandboxRepository
   ) {}
 
-  public async get(abortSignal: AbortSignal, containerName: string): Promise<SandboxInstance> {
-    let sandbox = this.instances.get(containerName);
-    if (!sandbox) {
-      const container = await this.containerRepository.tryGet(containerName);
-      if (!container) {
-        throw new Error(`Cannot find container: ${containerName}`);
+  public async get(abortSignal: AbortSignal, sandboxName: string): Promise<SandboxInstance> {
+    let instance = this.instances.get(sandboxName);
+    if (!instance) {
+      const sandbox = await this.sandboxRepository.tryGet(sandboxName);
+      if (!sandbox) {
+        throw new Error(`Cannot find sandbox: ${sandboxName}`);
       }
 
       const handler: SandboxRuntimeHandler = {
@@ -26,17 +26,17 @@ export class SandboxIntanceManager {
         }
       };
 
-      sandbox = await SandboxInstance.create(
+      instance = await SandboxInstance.create(
         abortSignal,
         this.paths.getAilaFolderPath(),
         this.paths.getAppDataFolderPath(),
-        container.name,
-        container,
+        sandbox.name,
+        sandbox,
         handler
       );
-      this.instances.set(containerName, sandbox);
+      this.instances.set(sandboxName, instance);
     }
-    return sandbox;
+    return instance;
   }
 
   public async stop(error?: Error) {

@@ -3,7 +3,7 @@ import fs from 'node:fs/promises';
 import { Process } from '../repositories/process-repository/process-repository';
 import { DefinitionWalker } from 'sequential-workflow-model';
 import { DockerfileContent, ProcessDefinition, Script, ScriptStep } from '@aila/model';
-import { Container } from '../repositories/container-repository/container-repository';
+import { Sandbox } from '../repositories/sandbox-repository/sandbox-repository';
 import { SandboxHostPaths } from './sandbox-host-paths';
 import { Logger } from '../core/logger';
 
@@ -21,20 +21,20 @@ export class SandboxMaterializer {
 
   public constructor(private readonly paths: SandboxHostPaths) {}
 
-  public async tryMaterializeContainer(abortSignal: AbortSignal, container: Container): Promise<boolean> {
+  public async tryMaterializeSandbox(abortSignal: AbortSignal, sandbox: Sandbox): Promise<boolean> {
     const versionPath = join(this.paths.appFolderAbsolutePath, 'version');
-    if ((await tryRead(versionPath)) === container.hash) {
+    if ((await tryRead(versionPath)) === sandbox.hash) {
       return false;
     }
 
-    const dockerfileContent = DockerfileContent.build(container.configuration);
+    const dockerfileContent = DockerfileContent.build(sandbox.configuration);
     await fs.mkdir(this.paths.appFolderAbsolutePath, { recursive: true });
     await fs.mkdir(this.paths.dataFolderAbsolutePath, { recursive: true });
     await fs.writeFile(this.paths.dockerfileAbsolitePath, dockerfileContent);
-    await fs.writeFile(versionPath, container.hash);
+    await fs.writeFile(versionPath, sandbox.hash);
 
     abortSignal.throwIfAborted();
-    this.logger.log(`Materialized container ${container.name} in sandbox ${this.paths.sandboxName}`);
+    this.logger.log(`Materialized sandbox ${sandbox.name} in sandbox ${this.paths.sandboxName}`);
     return true;
   }
 

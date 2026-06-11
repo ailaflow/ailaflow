@@ -1,20 +1,20 @@
 import { useParams } from 'react-router-dom';
 import { useApiClient } from '../../auth/auth-context';
 import { useLoader } from '../../core/use-loader';
-import { ContainerEditorContent } from './container-editor-content';
+import { SandboxEditorContent } from './sandbox-editor-content';
 import { PortalLoadingView } from '../../views/portal/portal-loading-view';
 import { PortalErrorView } from '../../views/portal/portal-error-view';
 
-export function ContainerEditor() {
+export function SandboxEditor() {
   const { name } = useParams();
   const apiClient = useApiClient();
   const { data, error, isLoading } = useLoader(
     abortSignal => {
-      return name ? apiClient.container.getContainer(abortSignal, name) : Promise.resolve(null);
+      return name ? apiClient.sandbox.getSandbox(abortSignal, name) : Promise.resolve(null);
     },
     [name]
   );
-  const container = data?.container;
+  const sandbox = data?.sandbox;
 
   if (isLoading) {
     return <PortalLoadingView />;
@@ -23,5 +23,5 @@ export function ContainerEditor() {
     return <PortalErrorView error={error} />;
   }
 
-  return <ContainerEditorContent key={container?.name ?? '_new'} container={container} />;
+  return <SandboxEditorContent key={sandbox?.name ?? '_new'} sandbox={sandbox} />;
 }

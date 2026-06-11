@@ -16,7 +16,7 @@ const adminItems: MenuItem[] = [
   { icon: '*', label: 'Views', action: 'link', href: '#' },
   { icon: '*', label: 'Logs', action: 'link', href: '#' },
   { icon: '*', label: 'Configuration', action: 'link', href: '#' },
-  { icon: '+', label: 'Containers', action: 'link', href: '/admin/containers' }
+  { icon: '+', label: 'Sandboxes', action: 'link', href: '/admin/sandboxes' }
 ];
 
 export function Portal(props: { children: React.ReactNode }) {

@@ -1,19 +1,19 @@
 import { DatabaseSync } from 'node:sqlite';
-import { ContainerLiteDto } from '@aila/model';
+import { SandboxLiteDto } from '@aila/model';
 import { SqliteDatabases } from '../../core/sqlite-databases';
-import { ContainerListQuerier } from './container-list-querier';
+import { SandboxListQuerier } from './sandbox-list-querier';
 
-export class SqliteContainerListQuerier implements ContainerListQuerier {
+export class SqliteSandboxListQuerier implements SandboxListQuerier {
   private readonly db: DatabaseSync;
 
   public constructor(dbs: SqliteDatabases) {
     this.db = dbs.modelDb;
   }
 
-  public async query(): Promise<ContainerLiteDto[]> {
+  public async query(): Promise<SandboxLiteDto[]> {
     const statement = this.db.prepare(`
       SELECT name, isEnabled, description
-      FROM containers
+      FROM sandboxes
     `);
     const rows = statement.all() as {
       name: string;

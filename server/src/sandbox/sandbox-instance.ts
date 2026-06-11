@@ -1,4 +1,4 @@
-import { Container } from '../repositories/container-repository/container-repository';
+import { Sandbox } from '../repositories/sandbox-repository/sandbox-repository';
 import { SandboxDependenciesInstaller } from './sandbox-dependencies-installer';
 import { SandboxExecutor } from './sandbox-executor';
 import { SandboxHostPaths } from './sandbox-host-paths';
@@ -11,16 +11,16 @@ export class SandboxInstance {
     ailaFolderAbsolutePath: string,
     appDataFolderAbsolutePath: string,
     name: string,
-    container: Container,
+    sandbox: Sandbox,
     runtimeHandler: SandboxRuntimeHandler
   ): Promise<SandboxInstance> {
     const hostPaths = new SandboxHostPaths(ailaFolderAbsolutePath, appDataFolderAbsolutePath, name);
 
     const materializer = new SandboxMaterializer(hostPaths);
 
-    await materializer.tryMaterializeContainer(abortSignal, container);
+    await materializer.tryMaterializeSandbox(abortSignal, sandbox);
 
-    const runtime = await SandboxRuntime.create(abortSignal, hostPaths, name, container.envVariables, runtimeHandler);
+    const runtime = await SandboxRuntime.create(abortSignal, hostPaths, name, sandbox.envVariables, runtimeHandler);
 
     const dependenciesInstaller = new SandboxDependenciesInstaller(runtime, hostPaths);
     const executor = new SandboxExecutor(runtime);

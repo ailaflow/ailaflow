@@ -1,8 +1,8 @@
 import { HttpClient, HttpClientSseListener } from './http-client';
 import {
   ChatUpdate,
-  GetContainerResponse,
-  GetContainersResponse,
+  GetSandboxResponse,
+  GetSandboxesResponse,
   GetProcessesResponse,
   GetProcessResponse,
   InstallRequest,
@@ -19,7 +19,7 @@ import {
   TestProcessUpdate,
   UpdateProcessRequest,
   UpdateProcessResponse,
-  UpsertContainerRequest
+  UpsertSandboxRequest
 } from '@aila/model';
 
 export class ApiClient {
@@ -28,7 +28,7 @@ export class ApiClient {
   public readonly auth: AuthApiClient;
   public readonly chat: ChatApiClient;
   public readonly process: ProcessApiClient;
-  public readonly container: ContainerApiClient;
+  public readonly sandbox: SandboxApiClient;
 
   public constructor(authToken: string | null) {
     this.client = new HttpClient(authToken);
@@ -36,7 +36,7 @@ export class ApiClient {
     this.auth = new AuthApiClient(this.client);
     this.chat = new ChatApiClient(this.client);
     this.process = new ProcessApiClient(this.client);
-    this.container = new ContainerApiClient(this.client);
+    this.sandbox = new SandboxApiClient(this.client);
   }
 
   public setOnUnauthorizedListener(listener: (() => void) | null) {
@@ -113,18 +113,18 @@ export class ProcessApiClient {
   }
 }
 
-export class ContainerApiClient {
+export class SandboxApiClient {
   public constructor(private readonly client: HttpClient) {}
 
-  public async upsertContainer(abortSignal: AbortSignal, request: UpsertContainerRequest): Promise<void> {
-    return this.client.json(abortSignal, 'POST', '/api/container', request);
+  public async upsertSandbox(abortSignal: AbortSignal, request: UpsertSandboxRequest): Promise<void> {
+    return this.client.json(abortSignal, 'POST', '/api/sandbox', request);
   }
 
-  public async getContainers(abortSignal: AbortSignal): Promise<GetContainersResponse> {
-    return this.client.json(abortSignal, 'GET', '/api/containers');
+  public async getSandboxes(abortSignal: AbortSignal): Promise<GetSandboxesResponse> {
+    return this.client.json(abortSignal, 'GET', '/api/sandboxes');
   }
 
-  public async getContainer(abortSignal: AbortSignal, name: string): Promise<GetContainerResponse> {
-    return this.client.json(abortSignal, 'GET', `/api/containers/${encodeURIComponent(name)}`);
+  public async getSandbox(abortSignal: AbortSignal, name: string): Promise<GetSandboxResponse> {
+    return this.client.json(abortSignal, 'GET', `/api/sandboxes/${encodeURIComponent(name)}`);
   }
 }

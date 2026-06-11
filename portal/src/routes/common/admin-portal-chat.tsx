@@ -39,7 +39,7 @@ export function AdminPortalChat() {
       bindings.global.bind({
         get_current_page: async () => {
           return {
-            page: 'container_editor'
+            page: 'sandbox_editor'
           };
         }
       }),

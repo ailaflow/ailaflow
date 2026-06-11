@@ -1,8 +1,8 @@
 import { DatabaseSync } from 'node:sqlite';
 import { SqliteDatabases } from '../../core/sqlite-databases';
-import { Container, ContainerRepository } from './container-repository';
+import { Sandbox, SandboxRepository } from './sandbox-repository';
 
-export class SqliteContainerRepository implements ContainerRepository {
+export class SqliteSandboxRepository implements SandboxRepository {
   private readonly db: DatabaseSync;
 
   public constructor(dbs: SqliteDatabases) {
@@ -11,7 +11,7 @@ export class SqliteContainerRepository implements ContainerRepository {
 
   public async setup() {
     this.db.exec(`
-      CREATE TABLE IF NOT EXISTS containers (
+      CREATE TABLE IF NOT EXISTS sandboxes (
         name TEXT PRIMARY KEY,
         isEnabled INTEGER NOT NULL,
         description TEXT NOT NULL,
@@ -22,9 +22,9 @@ export class SqliteContainerRepository implements ContainerRepository {
     `);
   }
 
-  public async upsert(container: Container): Promise<void> {
+  public async upsert(sandbox: Sandbox): Promise<void> {
     const statement = this.db.prepare(`
-      INSERT INTO containers (name, isEnabled, description, configuration, serializedEnvVariables, hash)
+      INSERT INTO sandboxes (name, isEnabled, description, configuration, serializedEnvVariables, hash)
       VALUES (?, ?, ?, ?, ?, ?)
       ON CONFLICT(name) DO UPDATE SET
         isEnabled = excluded.isEnabled,
@@ -34,19 +34,19 @@ export class SqliteContainerRepository implements ContainerRepository {
         hash = excluded.hash
     `);
     statement.run(
-      container.name,
-      container.isEnabled ? 1 : 0,
-      container.description,
-      container.configuration,
-      JSON.stringify(container.envVariables),
-      container.hash
+      sandbox.name,
+      sandbox.isEnabled ? 1 : 0,
+      sandbox.description,
+      sandbox.configuration,
+      JSON.stringify(sandbox.envVariables),
+      sandbox.hash
     );
   }
 
-  public async tryGet(name: string): Promise<Container | null> {
+  public async tryGet(name: string): Promise<Sandbox | null> {
     const statement = this.db.prepare(`
       SELECT name, isEnabled, description, configuration, serializedEnvVariables, hash
-      FROM containers
+      FROM sandboxes
       WHERE name = ?
       LIMIT 1
     `);
@@ -62,7 +62,7 @@ export class SqliteContainerRepository implements ContainerRepository {
       | undefined;
 
     return row
-      ? new Container(
+      ? new Sandbox(
           row.name,
           row.isEnabled === 1,
           row.description,

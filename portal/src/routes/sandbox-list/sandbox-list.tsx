@@ -5,9 +5,9 @@ import { PencilIcon } from '../../views/common/svg-icons';
 import { PortalLoadingView } from '../../views/portal/portal-loading-view';
 import { PortalErrorView } from '../../views/portal/portal-error-view';
 
-export function ContainerList() {
+export function SandboxList() {
   const apiClient = useApiClient();
-  const { data, isLoading, error } = useLoader(abortSignal => apiClient.container.getContainers(abortSignal), [apiClient]);
+  const { data, isLoading, error } = useLoader(abortSignal => apiClient.sandbox.getSandboxes(abortSignal), [apiClient]);
 
   if (isLoading) {
     return <PortalLoadingView />;
@@ -18,10 +18,10 @@ export function ContainerList() {
 
   return (
     <ResourceListView
-      title="Containers"
+      title="Sandboxes"
       createNew={{
         label: 'Create new',
-        to: '/admin/create-container'
+        to: '/admin/create-sandbox'
       }}
       columns={[
         {
@@ -29,29 +29,29 @@ export function ContainerList() {
           title: 'Name',
           width: '24%',
           leadingBadge: '+',
-          getValue: container => container.name
+          getValue: sandbox => sandbox.name
         },
         {
           id: 'isEnabled',
           title: 'Status',
           width: '14%',
-          getValue: container => (container.isEnabled ? 'Enabled' : 'Disabled')
+          getValue: sandbox => (sandbox.isEnabled ? 'Enabled' : 'Disabled')
         },
         {
           id: 'description',
           title: 'Description',
           width: '44%',
-          getValue: container => container.description
+          getValue: sandbox => sandbox.description
         }
       ]}
-      rows={data.containers}
-      getRowKey={container => container.name}
-      emptyMessage="No containers found."
+      rows={data.sandboxes}
+      getRowKey={sandbox => sandbox.name}
+      emptyMessage="No sandboxes found."
       actions={[
         {
           label: <PencilIcon className="h-4 w-4" />,
-          ariaLabel: 'Edit container',
-          getTo: container => `/admin/containers/${encodeURIComponent(container.name)}`
+          ariaLabel: 'Edit sandbox',
+          getTo: sandbox => `/admin/sandboxes/${encodeURIComponent(sandbox.name)}`
         }
       ]}
     />

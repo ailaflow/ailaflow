@@ -17,7 +17,7 @@ export class ProcessStepValidator {
         errors['properties.script'] = 'Script must contain a package.json file.';
       }
       if (!this.sandboxNames.includes(scriptStep.properties.script.sandboxName)) {
-        errors['properties.containerName'] = 'No sandbox with the specified name exists.';
+        errors['properties.sandboxName'] = 'No sandbox with the specified name exists.';
       }
     }
 

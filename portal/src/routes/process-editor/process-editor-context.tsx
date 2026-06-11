@@ -1,4 +1,4 @@
-import { ContainerLiteDto, ProcessDefinition, ProcessDto, ProcessStepValidator, ProcessRootValidator, ProcessValidator } from '@aila/model';
+import { SandboxLiteDto, ProcessDefinition, ProcessDto, ProcessStepValidator, ProcessRootValidator, ProcessValidator } from '@aila/model';
 import { useReducer } from 'react';
 import { useContext } from 'react';
 import { createContext } from 'react';
@@ -17,7 +17,7 @@ export interface EditorDataState {
 
   rootValidator: ProcessRootValidator;
   stepValidator: ProcessStepValidator;
-  containerNames: string[];
+  sandboxNames: string[];
 
   isDirty: boolean;
   id?: string;
@@ -62,9 +62,9 @@ function createEmptyDefinition(): ProcessDefinition {
 }
 
 function createState(props: Omit<ProcessEditorContextProps, 'children'>): EditorDataState {
-  const containerNames = props.containers.map(c => c.name);
+  const sandboxNames = props.sandboxes.map(sandbox => sandbox.name);
   const rootValidator = new ProcessRootValidator();
-  const stepValidator = new ProcessStepValidator(containerNames);
+  const stepValidator = new ProcessStepValidator(sandboxNames);
 
   const definition = wrapDefinition<ProcessDefinition>(props.process ? props.process.definition : createEmptyDefinition());
   const name = props.process?.name ?? 'new_process';
@@ -74,7 +74,7 @@ function createState(props: Omit<ProcessEditorContextProps, 'children'>): Editor
 
     rootValidator,
     stepValidator,
-    containerNames,
+    sandboxNames,
 
     id: props.process?.id,
     name,
@@ -93,7 +93,7 @@ function reduceState(state: EditorDataState, delta: Partial<EditorDataState>): E
 
 export interface ProcessEditorContextProps {
   process?: ProcessDto;
-  containers: ContainerLiteDto[];
+  sandboxes: SandboxLiteDto[];
   children: React.ReactNode;
 }
 
