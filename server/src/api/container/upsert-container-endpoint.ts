@@ -13,7 +13,7 @@ export class UpsertContainerEndpoint implements Endpoint {
 
   public async handle(req: Request) {
     const request = upsertContainerRequest.parse(req.body);
-    const container = Container.create(request);
+    const container = await Container.create(request);
 
     await this.containerRepository.upsert(container);
 

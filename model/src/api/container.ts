@@ -39,7 +39,8 @@ export const upsertContainerRequest = z.object({
   isEnabled: z.boolean(),
   description: z.string(),
   configuration: z.string(),
-  envVariables: z.record(z.string(), z.string())
+  envVariables: z.record(z.string(), z.string()),
+  hash: z.string()
 });
 
 export type UpsertContainerRequest = z.infer<typeof upsertContainerRequest>;

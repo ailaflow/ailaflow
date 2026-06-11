@@ -3,7 +3,7 @@ import { Endpoint } from '../endpoint';
 import { getAuthToken } from '../auth/auth-middleware';
 import { MessageUpdate } from '../../chat-session/chat-session';
 import { ChatUpdate, RestoreChatRequest, restoreChatRequest } from '@aila/model';
-import { SseResponse } from '../../core/sse-response';
+import { SseResponse } from '../../utilities/sse-response';
 import { UserChatSessionStore } from '../../chat-session/stores/user-chat-session-store';
 import { AdminChatSessionStore } from '../../chat-session/stores/admin-chat-session-store';
 import { AuthToken } from '../../repositories/auth-token-repository/auth-token-repository';

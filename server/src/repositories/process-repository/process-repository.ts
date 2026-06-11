@@ -15,26 +15,29 @@ function validateProcessDefinition(
   definition: ProcessDefinition,
   rootValidator: ProcessRootValidator,
   stepValidator: ProcessStepValidator
-) {
+): number {
   if (!rootValidator.validate(definition.properties)) {
     throw new Error('Validation failed for root properties');
   }
 
   const walker = new DefinitionWalker();
+  let nSteps = 0;
   walker.forEach(definition, step => {
     if (!stepValidator.validateStep(step)) {
       throw new Error(`Validation failed for step: ${step.id}`);
     }
+    nSteps++;
   });
+  return nSteps;
 }
 
 export class Process {
-  public static create(
+  public static async create(
     data: Omit<UpdateProcessRequest, 'id'>,
     rootValidator: ProcessRootValidator,
     stepValidator: ProcessStepValidator
-  ): Process {
-    validateProcessDefinition(data.definition, rootValidator, stepValidator);
+  ): Promise<Process> {
+    const nSteps = validateProcessDefinition(data.definition, rootValidator, stepValidator);
 
     return new Process(
       randomUUID(),
@@ -42,8 +45,10 @@ export class Process {
       data.description,
       data.userList,
       data.definition,
+      data.hash,
       countInputs(data.definition),
-      countOutputs(data.definition)
+      countOutputs(data.definition),
+      nSteps
     );
   }
 
@@ -53,22 +58,26 @@ export class Process {
     public description: string,
     public userList: string,
     public definition: ProcessDefinition,
+    public hash: string,
     public nInputs: number,
-    public nOutputs: number
+    public nOutputs: number,
+    public nSteps: number
   ) {}
 
-  public update(data: UpdateProcessRequest, rootValidator: ProcessRootValidator, stepValidator: ProcessStepValidator) {
+  public async update(data: UpdateProcessRequest, rootValidator: ProcessRootValidator, stepValidator: ProcessStepValidator) {
     if (data.id !== this.id) {
       throw new Error('Process ID cannot be changed');
     }
-    validateProcessDefinition(data.definition, rootValidator, stepValidator);
+    const nSteps = validateProcessDefinition(data.definition, rootValidator, stepValidator);
 
     this.name = data.name;
     this.description = data.description;
     this.userList = data.userList;
     this.definition = data.definition;
+    this.hash = data.hash;
     this.nInputs = countInputs(data.definition);
     this.nOutputs = countOutputs(data.definition);
+    this.nSteps = nSteps;
   }
 }
 

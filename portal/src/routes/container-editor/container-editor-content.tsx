@@ -6,6 +6,7 @@ import { ResourceEditorView } from '../../views/resource-editor/resource-editor-
 import { ContainerEditorView, ContainerEnvVariable } from '../../views/container-editor/container-editor-view';
 import { ResourceSimpleDetailsView } from '../../views/resource-editor/resource-simple-details-view';
 import { useAiBindings } from '../common/ai-bindings/ai-bindings-context';
+import { fnv1a } from '../../core/fnv1a';
 
 interface EditorDataState {
   envVariables: ContainerEnvVariable[];
@@ -89,7 +90,11 @@ export function ContainerEditorContent(props: { container?: ContainerDto }) {
         description: state.description,
         isEnabled: state.isEnabled,
         configuration: state.configuration,
-        envVariables
+        envVariables,
+        hash: fnv1a({
+          envVariables,
+          configuration: state.configuration
+        })
       });
       if (props.container) {
         setState({ ...state, isDirty: false });

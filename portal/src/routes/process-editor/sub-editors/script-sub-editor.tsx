@@ -7,6 +7,7 @@ import { wrapDefinition } from 'sequential-workflow-designer-react';
 import { ScriptSubEditorView } from '../../../views/process-editor/script-sub-editor/script-sub-editor';
 import { FolderTreeItem, FolderTreeView } from '../../../views/process-editor/script-sub-editor/folder-tree-view';
 import { FileContentEditorView } from '../../../views/process-editor/script-sub-editor/file-content-editor-view';
+import { fnv1a } from '../../../core/fnv1a';
 
 export function ScriptSubEditor() {
   const state = useProcessEditor();
@@ -75,9 +76,11 @@ export function ScriptSubEditor() {
       ...state.definition.value
     };
     const currentScript = DefinitionPath.readPath<Script>(state.definition.value, state.subPath!);
+    const contents = flattenFolderTree(folderItems);
     const script: Script = {
       sandboxName: currentScript.sandboxName,
-      contents: flattenFolderTree(folderItems)
+      contents,
+      hash: fnv1a(contents)
     };
     DefinitionPath.writePath(newDefinition, state.subPath!, script);
     state.setDefinition(wrapDefinition(newDefinition));

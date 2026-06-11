@@ -2,8 +2,8 @@ import { UpsertContainerRequest } from '@aila/model';
 import { Repository } from '../repository';
 
 export class Container {
-  public static create(data: UpsertContainerRequest): Container {
-    return new Container(data.name, data.isEnabled, data.description, data.configuration, data.envVariables);
+  public static async create(data: UpsertContainerRequest): Promise<Container> {
+    return new Container(data.name, data.isEnabled, data.description, data.configuration, data.envVariables, data.hash);
   }
 
   public constructor(
@@ -11,7 +11,8 @@ export class Container {
     public isEnabled: boolean,
     public description: string,
     public configuration: string,
-    public envVariables: Record<string, string>
+    public envVariables: Record<string, string>,
+    public hash: string
   ) {}
 }
 

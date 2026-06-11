@@ -5,7 +5,7 @@ export interface GetHealthResponse {
 }
 
 export interface ExecCommandRequest {
-  folderPath: string;
+  cwd: string;
   command: string;
   args?: string[];
   stdin?: string;
@@ -14,7 +14,6 @@ export interface ExecCommandRequest {
 export interface ExecCommandUpdate {
   stdout?: string;
   stderr?: string;
-  error?: string;
   close?: {
     code: number;
     signal: string | null;

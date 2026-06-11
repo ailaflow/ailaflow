@@ -1,7 +1,9 @@
-import { Sandbox } from './sandbox';
+import { HttpSseHandler } from '../core/http-client';
+import { ExecCommandUpdate } from './bridge-client';
+import { SandboxRuntime } from './sandbox-runtime';
 
 export interface SandboxExecutorRequest<T> {
-  folderPath: string;
+  cwd: string;
   scriptName: string;
   input: T;
 }
@@ -16,39 +18,35 @@ export class SandboxExecutorError extends Error {
 }
 
 export interface SandboxExecutorResult<T> {
-  install: boolean;
   output: T | null;
   totalTime: number;
 }
 
 export class SandboxExecutor {
-  private readonly isInstalled = new Set<string>();
+  public constructor(private readonly runtime: SandboxRuntime) {}
 
-  public constructor(private readonly sandbox: Sandbox) {}
-
-  public async execute(abortSignal: AbortSignal, request: SandboxExecutorRequest<string>): Promise<SandboxExecutorResult<string>> {
+  public async execute(
+    abortSignal: AbortSignal,
+    request: SandboxExecutorRequest<string>,
+    handler?: HttpSseHandler<ExecCommandUpdate>
+  ): Promise<SandboxExecutorResult<string>> {
     const start = Date.now();
-    const install = !this.isInstalled.has(request.folderPath);
-    if (install) {
-      await this.sandbox.runCommand(abortSignal, {
-        folderPath: request.folderPath,
-        command: 'npm',
-        args: ['install']
-      });
-      this.isInstalled.add(request.folderPath);
-    }
 
-    const result = await this.sandbox.runCommand(abortSignal, {
-      folderPath: request.folderPath,
-      command: 'node',
-      args: [request.scriptName],
-      stdin: request.input
-    });
+    const result = await this.runtime.runCommand(
+      abortSignal,
+      {
+        cwd: request.cwd,
+        command: 'node',
+        args: [request.scriptName],
+        stdin: request.input
+      },
+      handler
+    );
 
     if (result.code !== 0) {
       const limitedError = result.stderr.substring(0, 256);
       throw new SandboxExecutorError(
-        `Script ${request.folderPath}/${request.scriptName} failed with code ${result.code} and error: ${limitedError}`
+        `Script ${request.cwd}/${request.scriptName} failed with code ${result.code} and error: ${limitedError}`
       );
     }
 
@@ -57,7 +55,6 @@ export class SandboxExecutor {
     const totalTime = Date.now() - start;
     if (startPos < 0 || endPos < 0) {
       return {
-        install,
         totalTime,
         output: null
       };
@@ -65,7 +62,6 @@ export class SandboxExecutor {
 
     const output = result.stdout.substring(startPos + TOKEN_PRE.length, endPos);
     return {
-      install,
       totalTime,
       output
     };
@@ -76,7 +72,7 @@ export class SandboxExecutor {
     request: SandboxExecutorRequest<R>
   ): Promise<SandboxExecutorResult<T>> {
     const r0 = await this.execute(abortSignal, {
-      folderPath: request.folderPath,
+      cwd: request.cwd,
       scriptName: request.scriptName,
       input: JSON.stringify(request.input)
     });

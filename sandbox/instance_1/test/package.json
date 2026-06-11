@@ -1,7 +1,0 @@
-{
-  "name": "test",
-  "private": true,
-  "dependencies": {
-    "@aila/bridge-lib": "file:/bridge/lib"
-  }
-}

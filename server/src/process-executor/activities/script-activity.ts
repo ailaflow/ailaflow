@@ -4,7 +4,8 @@ import { WorkflowMachineGlobalState } from '../workflow-machine-global-state';
 
 export const scriptStepActivity = createAtomActivity<ScriptStep, WorkflowMachineGlobalState>('script', {
   init: () => ({}),
-  handler: async (step: ScriptStep, { $logger }: WorkflowMachineGlobalState) => {
-    $logger.info('Test! ' + step.name);
+  handler: async (step: ScriptStep, { $scriptExecutor }: WorkflowMachineGlobalState) => {
+    const abortSignal = AbortSignal.timeout(10_000);
+    await $scriptExecutor.execute(abortSignal, step.id, step.properties.script);
   }
 });

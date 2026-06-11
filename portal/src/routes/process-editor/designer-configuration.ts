@@ -1,5 +1,6 @@
 import { ToolboxConfiguration } from 'sequential-workflow-designer';
-import { ScriptStep, AgentStep, TaskStep, NotificationStep } from '@aila/model';
+import { ScriptStep, AgentStep, TaskStep, NotificationStep, ScriptContent } from '@aila/model';
+import { fnv1a } from '../../core/fnv1a';
 
 const SCRIPT_PACKAGE_JSON = JSON.stringify(
   {
@@ -14,7 +15,7 @@ const SCRIPT_PACKAGE_JSON = JSON.stringify(
 );
 
 const SCRIPT_MAIN_JS = [
-  `import { readInput, writeOutput } from '@aila/bridge-lib';`,
+  `const { readInput, writeOutput } = require('@aila/bridge-lib');`,
   ``,
   `async function main() {`,
   `  const input = readInput();`,
@@ -23,29 +24,30 @@ const SCRIPT_MAIN_JS = [
   `main();`
 ].join('\n');
 
+const scriptDefaultContents: ScriptContent[] = [
+  {
+    mimeType: 'text/json',
+    path: 'package.json',
+    modifiedAt: 0,
+    content: SCRIPT_PACKAGE_JSON
+  },
+  {
+    mimeType: 'text/javascript',
+    path: 'main.js',
+    content: SCRIPT_MAIN_JS,
+    modifiedAt: 0
+  }
+];
 const scriptStep: Omit<ScriptStep, 'id'> = {
   type: 'script',
   name: 'Script',
   componentType: 'task',
   properties: {
     script: {
-      sandboxName: null,
-      contents: [
-        {
-          mimeType: 'text/json',
-          path: 'package.json',
-          modifiedAt: 0,
-          content: SCRIPT_PACKAGE_JSON
-        },
-        {
-          mimeType: 'text/javascript',
-          path: 'main.mjs',
-          content: SCRIPT_MAIN_JS,
-          modifiedAt: 0
-        }
-      ]
-    },
-    containerName: 'default'
+      sandboxName: 'default',
+      hash: fnv1a(scriptDefaultContents),
+      contents: scriptDefaultContents
+    }
   }
 };
 

@@ -4,32 +4,24 @@ import { promisify } from 'util';
 const execFileAsync = promisify(execFile);
 
 export class Docker {
-  public constructor(private readonly cwd: string) {}
+  public constructor(private readonly hostCwd: string) {}
 
-  public async build(imageTag: string, envs: Record<string, string>) {
+  public async build(imageTag: string, dockerfilePath: string, envs: Record<string, string>) {
     const args = ['build', '-t', imageTag];
     for (const [key, value] of Object.entries(envs)) {
       args.push('--build-arg', `${key}=${value}`);
     }
-    args.push('-f', './Dockerfile', '.');
+    args.push('-f', dockerfilePath, '.');
 
     await this.execDocker(args);
   }
 
-  public async run(
-    imageTag: string,
-    internalPort: number,
-    options?: {
-      v: string;
-      name?: string;
-    }
-  ): Promise<string> {
+  public async run(imageTag: string, internalPort: number, options?: [name: '-v' | '--name', string][]): Promise<string> {
     const args = ['run', '-d', '-p', `127.0.0.1::${internalPort}`];
-    if (options?.name) {
-      args.push('--name', options.name);
-    }
-    if (options?.v) {
-      args.push('-v', options.v);
+    if (options) {
+      for (const o of options) {
+        args.push(o[0], o[1]);
+      }
     }
     args.push(imageTag);
 
@@ -54,6 +46,6 @@ export class Docker {
   }
 
   private execDocker(args: string[]) {
-    return execFileAsync('docker', args, { cwd: this.cwd });
+    return execFileAsync('docker', args, { cwd: this.hostCwd });
   }
 }

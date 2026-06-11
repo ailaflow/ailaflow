@@ -8,7 +8,7 @@ export class SqliteDatabases {
   public readonly modelDb: DatabaseSync;
 
   public constructor(serverPaths: ServerPaths) {
-    const dataFolderPath = serverPaths.getDataFolderPath();
+    const dataFolderPath = serverPaths.getDatabaseFolderPath();
 
     this.userDb = new DatabaseSync(path.join(dataFolderPath, 'users.db'), {
       open: true

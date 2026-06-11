@@ -1,8 +1,7 @@
 import { Logger } from './core/logger';
 import { ServerPaths } from './core/server-paths';
 import express from 'express';
-import { SandboxManager } from './managers/sandbox-manager';
-import { SandboxExecutorManager } from './managers/sandbox-executor-manager';
+import { SandboxIntanceManager } from './sandbox/sandbox-instance-manager';
 import { OpenaiLlmClient } from './llm-client/openai-llm-client';
 import { LoginEndpoint } from './api/auth/login-endpoint';
 import { Router } from './api/router';
@@ -40,6 +39,7 @@ import { SqliteContainerListQuerier } from './queriers/container-list/sqlite-con
 import { GetContainersEndpoint } from './api/container/get-containers-endpoint';
 import { GetContainerEndpoint } from './api/container/get-container-endpoint';
 import { UpsertContainerEndpoint } from './api/container/upsert-container-endpoint';
+import { WorkflowMachineFactory } from './process-executor/workflow-machine-factory';
 
 const PORT = process.env.PORT || 2048;
 
@@ -74,14 +74,15 @@ export class Server {
       containerRepository.setup(abortSignal)
     ]);
 
-    const sandboxManager = new SandboxManager(serverPaths);
-    const sandboxExecutorManager = new SandboxExecutorManager(sandboxManager);
+    const sandboxInstanceManager = new SandboxIntanceManager(serverPaths, containerRepository);
+
+    const workflowMachineFactory = new WorkflowMachineFactory(sandboxInstanceManager);
 
     const passwordHasher = new PasswordHasher();
 
     const llmClient = new OpenaiLlmClient();
     const chatSessionFactory = new ChatSessionFactory();
-    const userToolSetProvider = new UserToolSetProvider(sandboxExecutorManager);
+    const userToolSetProvider = new UserToolSetProvider();
 
     const frontendToolBus = new FrontendToolBus();
     const frontendToolFactory = new FrontendToolFactory(frontendToolBus);
@@ -100,7 +101,7 @@ export class Server {
       new GetProcessesEndpoint(processListQuerier),
       new GetProcessEndpoint(processRepository),
       new UpdateProcessEndpoint(processRepository, containerListQuerier),
-      new TestProcessEndpoint(processRepository),
+      new TestProcessEndpoint(processRepository, workflowMachineFactory),
       new GetContainersEndpoint(containerListQuerier),
       new GetContainerEndpoint(containerRepository),
       new UpsertContainerEndpoint(containerRepository)
@@ -112,16 +113,16 @@ export class Server {
     app.listen(PORT, () => {
       logger.log(`Server is running on port ${PORT}`);
     });
-    return new Server(sandboxManager, sqliteDatabases);
+    return new Server(sandboxInstanceManager, sqliteDatabases);
   }
 
   public constructor(
-    private readonly sandboxManager: SandboxManager,
+    private readonly sandboxInstanceManager: SandboxIntanceManager,
     private readonly sqliteDatabases: SqliteDatabases
   ) {}
 
   public async close() {
-    this.sandboxManager.stop();
+    this.sandboxInstanceManager.stop();
     this.sqliteDatabases.dispose();
   }
 }

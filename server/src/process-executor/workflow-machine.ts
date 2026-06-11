@@ -1,12 +1,8 @@
-import { createWorkflowMachineBuilder, WorkflowMachineInterpreter } from 'sequential-workflow-machine';
-import { activitySet } from './activities/activity-set';
+import { WorkflowMachineInterpreter } from 'sequential-workflow-machine';
 import { ProcessDefinition } from '@aila/model';
 import { WorkflowLog, WorkflowLogger } from './services/workflow-logger';
 import { WorkflowMachineGlobalState } from './workflow-machine-global-state';
 import { Ev } from '../core/ev';
-import { WorkflowVariableManager } from './services/workflow-variable-manager';
-
-const builder = createWorkflowMachineBuilder(activitySet);
 
 export type WorkflowMachineVariableValues = Record<string, unknown>;
 
@@ -21,25 +17,6 @@ export type WorkflowMachineResult =
     };
 
 export class WorkflowMachine {
-  public static create(definition: ProcessDefinition, input: WorkflowMachineVariableValues): WorkflowMachine {
-    const variablesState = { ...input };
-
-    const machine = builder.build(definition);
-    const $logger = new WorkflowLogger();
-    const $variables = new WorkflowVariableManager(variablesState);
-
-    const interpreter = machine.create({
-      init: () => {
-        return {
-          variablesState,
-          $logger,
-          $variables
-        };
-      }
-    });
-    return new WorkflowMachine(definition, interpreter, $logger);
-  }
-
   public readonly onDone = new Ev<WorkflowMachineResult>();
   public readonly onLog = new Ev<WorkflowLog>();
 

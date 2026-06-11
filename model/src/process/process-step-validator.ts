@@ -2,7 +2,7 @@ import { Step } from 'sequential-workflow-model';
 import { ScriptStep } from './process-steps';
 
 export class ProcessStepValidator {
-  public constructor(private readonly containerNames: string[]) {}
+  public constructor(private readonly sandboxNames: string[]) {}
 
   public validate(step: Step): Record<string, string> {
     const errors: Record<string, string> = {};
@@ -16,8 +16,8 @@ export class ProcessStepValidator {
       if (!scriptStep.properties.script.contents.find(content => content.path === 'package.json')) {
         errors['properties.script'] = 'Script must contain a package.json file.';
       }
-      if (!this.containerNames.includes(scriptStep.properties.containerName)) {
-        errors['properties.containerName'] = 'No container with the specified name exists.';
+      if (!this.sandboxNames.includes(scriptStep.properties.script.sandboxName)) {
+        errors['properties.containerName'] = 'No sandbox with the specified name exists.';
       }
     }
 

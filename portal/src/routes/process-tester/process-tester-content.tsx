@@ -47,12 +47,14 @@ export function ProcessTesterContent(props: ProcessTesterContentProps) {
     return <DefaultStartForm definition={props.process.definition} onSubmit={setFormData} />;
   }
   return (
-    <div>
+    <div className="overflow-auto h-full p-4">
       <h2>Process Updates</h2>
       {error && <div style={{ color: 'red' }}>{error}</div>}
       <ul>
         {updates.map((update, index) => (
-          <li key={index}>{JSON.stringify(update)}</li>
+          <li key={index}>
+            <pre>{JSON.stringify(update, null, 2)}</pre>
+          </li>
         ))}
       </ul>
     </div>

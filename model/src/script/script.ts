@@ -6,9 +6,7 @@ export interface ScriptContent {
 }
 
 export interface Script {
-  /**
-   * If `null` then the default sandbox will be used.
-   */
-  sandboxName: string | null;
+  sandboxName: string;
   contents: ScriptContent[];
+  hash: string;
 }

@@ -30,13 +30,13 @@ export function ScriptStepEditor(props: StepEditorProps) {
 
       <SelectEditorPropertyView
         label="Container"
-        value={properties.containerName}
+        value={properties.script.sandboxName}
         options={props.editorState.containerNames.map(containerName => ({
           label: `+${containerName}`,
           value: containerName
         }))}
         error={errors['properties.containerName']}
-        onValueChanged={containerName => setProperty('containerName', containerName)}
+        onValueChanged={sandboxName => setProperty('script', { ...properties.script, sandboxName })}
       />
     </DesignerEditorView>
   );

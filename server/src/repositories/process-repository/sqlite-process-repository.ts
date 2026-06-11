@@ -19,15 +19,17 @@ export class SqliteProcessRepository implements ProcessRepository {
         userList TEXT NOT NULL,
         nInputs INTEGER NOT NULL,
         nOutputs INTEGER NOT NULL,
-        definition TEXT NOT NULL
+        nSteps INTEGER NOT NULL,
+        serializedDefinition TEXT NOT NULL,
+        definitionHash TEXT NOT NULL
       )
     `);
   }
 
   public async insert(process: Process): Promise<void> {
     const statement = this.db.prepare(`
-      INSERT INTO processes (id, name, description, userList, nInputs, nOutputs, definition)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO processes (id, name, description, userList, nInputs, nOutputs, nSteps, serializedDefinition, definitionHash)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
     statement.run(
       process.id,
@@ -36,7 +38,9 @@ export class SqliteProcessRepository implements ProcessRepository {
       process.userList,
       process.nInputs,
       process.nOutputs,
-      JSON.stringify(process.definition)
+      process.nSteps,
+      JSON.stringify(process.definition),
+      process.hash
     );
   }
 
@@ -49,7 +53,9 @@ export class SqliteProcessRepository implements ProcessRepository {
         userList = ?,
         nInputs = ?,
         nOutputs = ?,
-        definition = ?
+        nSteps = ?,
+        serializedDefinition = ?,
+        definitionHash = ?
       WHERE id = ?
     `);
     statement.run(
@@ -58,14 +64,16 @@ export class SqliteProcessRepository implements ProcessRepository {
       process.userList,
       process.nInputs,
       process.nOutputs,
+      process.nSteps,
       JSON.stringify(process.definition),
+      process.hash,
       process.id
     );
   }
 
   public async tryGetById(id: string): Promise<Process | null> {
     const statement = this.db.prepare(`
-      SELECT id, name, description, userList, nInputs, nOutputs, definition
+      SELECT id, name, description, userList, nInputs, nOutputs, nSteps, serializedDefinition, definitionHash
       FROM processes
       WHERE id = ?
       LIMIT 1
@@ -78,7 +86,9 @@ export class SqliteProcessRepository implements ProcessRepository {
           userList: string;
           nInputs: number;
           nOutputs: number;
-          definition: string;
+          nSteps: number;
+          serializedDefinition: string;
+          definitionHash: string;
         }
       | undefined;
 
@@ -88,9 +98,11 @@ export class SqliteProcessRepository implements ProcessRepository {
           row.name,
           row.description,
           row.userList,
-          JSON.parse(row.definition) as ProcessDefinition,
+          JSON.parse(row.serializedDefinition) as ProcessDefinition,
+          row.definitionHash,
           row.nInputs,
-          row.nOutputs
+          row.nOutputs,
+          row.nSteps
         )
       : null;
   }

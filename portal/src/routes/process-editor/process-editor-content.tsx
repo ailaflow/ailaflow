@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { FormSubEditor } from './sub-editors/form-sub-editor';
 import { ScriptSubEditor } from './sub-editors/script-sub-editor';
 import { ResourceSimpleDetailsView } from '../../views/resource-editor/resource-simple-details-view';
+import { fnv1a } from '../../core/fnv1a';
 
 export function ProcessEditorContent() {
   const state = useProcessEditor();
@@ -28,12 +29,14 @@ export function ProcessEditorContent() {
 
     try {
       const timeout = AbortSignal.timeout(5_000);
+      const hash = fnv1a(state.definition.value);
       const response = await apiClient.process.updateProcess(timeout, {
         id: state.id,
         description: state.description,
         name: state.name,
         userList: '',
-        definition: state.definition.value
+        definition: state.definition.value,
+        hash
       });
 
       if (state.id) {

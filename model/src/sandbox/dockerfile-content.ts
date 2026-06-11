@@ -1,18 +1,21 @@
 export class DockerfileContent {
   public static prefix = `FROM node:24-alpine
 
-ARG INSTANCE_ID
+ARG SANDBOX_NAME
 
-WORKDIR /\${INSTANCE_ID}
-COPY ./\${INSTANCE_ID} ./\${INSTANCE_ID}
+RUN npm install -g pnpm@11
 
 WORKDIR /bridge
-COPY ./bridge ./
+COPY bridge .
 
 WORKDIR /bridge/server
-RUN npm install --omit=dev`;
+RUN pnpm install --prod`;
 
-  public static suffix = `ENV INSTANCE_ID=\${INSTANCE_ID}
+  public static suffix = `ENV SANDBOX_NAME=\${SANDBOX_NAME}
 EXPOSE 4096
-CMD ["node", "src/main.mjs"]`;
+CMD ["node", "dist/main.js"]`;
+
+  public static build(configuration: string): string {
+    return `${this.prefix}\n${configuration}\n${this.suffix}`;
+  }
 }

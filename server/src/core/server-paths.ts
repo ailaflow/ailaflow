@@ -12,12 +12,15 @@ export class ServerPaths {
     }
     throw new Error('Cannot locate the project root');
   }
-
-  public getSandboxFolderPath(): string {
-    return path.join(this.rootPath, 'sandbox');
+  public getAilaFolderPath(): string {
+    return this.rootPath;
   }
 
-  public getDataFolderPath(): string {
-    return path.join(this.rootPath, 'data');
+  public getAppDataFolderPath(): string {
+    return this.rootPath;
+  }
+
+  public getDatabaseFolderPath(): string {
+    return path.join(this.getAppDataFolderPath(), 'data', 'database');
   }
 }

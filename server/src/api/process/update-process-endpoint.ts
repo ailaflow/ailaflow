@@ -28,10 +28,10 @@ export class UpdateProcessEndpoint implements Endpoint {
         throw new EndpointError('Process not found', 404);
       }
       process = existingProcess;
-      process.update(request, rootValidator, stepValidator);
+      await process.update(request, rootValidator, stepValidator);
       await this.processRepository.update(process);
     } else {
-      process = Process.create(request, rootValidator, stepValidator);
+      process = await Process.create(request, rootValidator, stepValidator);
       await this.processRepository.insert(process);
     }
 

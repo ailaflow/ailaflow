@@ -1,10 +1,9 @@
-import { InstanceIdValidator } from '@aila/model';
 import { ExecCommandRequest, ExecCommandUpdate, BridgeClient, ListenRpcUpdate, SendRpcResponseRequest } from './bridge-client';
 import { Docker } from './docker';
 import { Logger } from '../core/logger';
-import { abortableSleep } from '../core/abortable-sleep';
 import { HttpSseHandler } from '../core/http-client';
-import path from 'node:path';
+import { abortableSleep } from '../utilities/abortable-sleep';
+import { SandboxHostPaths } from './sandbox-host-paths';
 
 const BRIDGE_PORT = 4096;
 
@@ -14,52 +13,50 @@ export interface CommandResult {
   stderr: string;
 }
 
-export interface SandboxHandler {
-  onSandboxRpc(instanceId: string, type: string, payload: object): Promise<object>;
-  onSandboxClose(instanceId: string, error?: Error): void;
+export interface SandboxRuntimeHandler {
+  onSandboxRpc(name: string, type: string, payload: object): Promise<object>;
+  onSandboxClose(name: string, error?: Error): void;
 }
 
-export class Sandbox {
+export class SandboxRuntime {
   /**
    * @throws Error if sandbox setup failed.
    */
   public static async create(
     abortSignal: AbortSignal,
-    rootFolderPath: string,
-    instanceId: string,
-    handler: SandboxHandler
-  ): Promise<Sandbox> {
-    InstanceIdValidator.assert(instanceId);
+    hostPaths: SandboxHostPaths,
+    name: string,
+    envVariables: Record<string, string>,
+    handler: SandboxRuntimeHandler
+  ): Promise<SandboxRuntime> {
+    const logger = new Logger(`Sandbox:${name}`);
 
-    const logger = new Logger(`Sandbox:${instanceId}`);
+    const imageTag = `aila_sandbox_${name}`;
+    const dockerName = `aila_sandbox_${name}`;
+    const finalEnvVariables = {
+      ...envVariables,
+      SANDBOX_NAME: name
+    };
 
-    const instanceFolderPath = path.join(rootFolderPath, instanceId);
-    const imageTag = `aila_sandbox_${instanceId}`;
-    const containerName = `aila_sandbox_${instanceId}`;
-
-    const docker = new Docker(rootFolderPath);
-    await docker.tryRemove(containerName);
-    await docker.build(imageTag, { INSTANCE_ID: instanceId });
+    const docker = new Docker(hostPaths.ailaFolderAbsolutePath);
+    await docker.tryRemove(dockerName);
+    await docker.build(imageTag, hostPaths.dockerfileAbsolitePath, finalEnvVariables);
     logger.log(`Built image with tag ${imageTag}`);
 
-    try {
-      const containerId = await docker.run(imageTag, BRIDGE_PORT, {
-        name: containerName,
-        v: `${instanceFolderPath}:/${instanceId}`
-      });
-      const target = await docker.getMappedHttpTarget(containerId, BRIDGE_PORT);
-      const client = new BridgeClient(target);
+    const containerId = await docker.run(imageTag, BRIDGE_PORT, [
+      ['--name', dockerName],
+      ['-v', `${hostPaths.appFolderAbsolutePath}:/app`],
+      ['-v', `${hostPaths.dataFolderAbsolutePath}:/data`]
+    ]);
+    const target = await docker.getMappedHttpTarget(containerId, BRIDGE_PORT);
+    const client = new BridgeClient(target);
 
-      if (!(await checkHealth(abortSignal, client))) {
-        throw new Error('Cannot reach sandbox bridge server');
-      }
-
-      logger.log(`Sandbox is ready`);
-      return new Sandbox(instanceId, containerId, client, docker, logger, handler);
-    } catch (e) {
-      // await docker.tryRemove(containerName);
-      throw e;
+    if (!(await checkHealth(abortSignal, client))) {
+      throw new Error('Cannot reach sandbox bridge server');
     }
+
+    logger.log(`Sandbox is ready`);
+    return new SandboxRuntime(name, client, docker, logger, handler);
   }
 
   private isRunning = true;
@@ -69,12 +66,11 @@ export class Sandbox {
   private readonly stopAbortController = new AbortController();
 
   public constructor(
-    private readonly instanceId: string,
-    private readonly containerId: string,
+    private readonly name: string,
     private readonly client: BridgeClient,
     private readonly docker: Docker,
     private readonly logger: Logger,
-    private readonly handler: SandboxHandler
+    private readonly handler: SandboxRuntimeHandler
   ) {
     this.healthCheck();
     this.listenRpc();
@@ -117,7 +113,7 @@ export class Sandbox {
   private async handleRpc(rpc: NonNullable<ListenRpcUpdate['rpc']>): Promise<void> {
     let result: SendRpcResponseRequest;
     try {
-      const payload = await this.handler.onSandboxRpc(this.instanceId, rpc.type, rpc.payload);
+      const payload = await this.handler.onSandboxRpc(this.name, rpc.type, rpc.payload);
       result = {
         id: rpc.id,
         type: rpc.type,
@@ -193,10 +189,10 @@ export class Sandbox {
       clearInterval(this.healthCheckIv);
     }
 
-    await this.docker.tryRemove(this.containerId);
+    await this.docker.tryRemove(this.name);
 
     try {
-      this.handler.onSandboxClose(this.instanceId, error);
+      this.handler.onSandboxClose(this.name, error);
     } catch {
       this.logger.error('Sandbox close handler failed');
     }

@@ -1,11 +1,10 @@
 import { spawn } from 'node:child_process';
-import { join } from 'path';
 import type { Express, Request, Response } from 'express';
 import { Logger } from '../core/logger';
 import { SseResponse } from '../core/sse-response';
 
 interface CommandRequestBody {
-  folderPath: string;
+  cwd: string;
   command: string;
   args?: string[];
   stdin?: string;
@@ -15,8 +14,7 @@ export function setupCommandEndpoint(app: Express): void {
   const logger = new Logger('CommandEndpoint');
 
   app.post('/command', (req: Request<unknown, unknown, CommandRequestBody>, res: Response) => {
-    const instancePath = `/${process.env.INSTANCE_ID}/`;
-    const cwd = join(instancePath, req.body.folderPath);
+    const cwd = req.body.cwd;
     const command = req.body.command;
     const args = req.body.args ?? [];
     const stdin = req.body.stdin;
@@ -27,7 +25,8 @@ export function setupCommandEndpoint(app: Express): void {
     const child = spawn(command, args, {
       cwd,
       env: {
-        NODE_COMPILE_CACHE: '/tmp/node-compile-cache'
+        ...process.env,
+        NODE_COMPILE_CACHE: '/tmp/node_compile_cache'
       },
       shell: false
     });
