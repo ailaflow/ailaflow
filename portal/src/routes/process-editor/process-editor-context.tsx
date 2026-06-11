@@ -34,7 +34,7 @@ export interface ProcessEditorState extends EditorDataState {
   setDirtyFalse(): void;
   setName(name: string): void;
   setDescription(description: string): void;
-  setDefinition(definition: WrappedDefinition): void;
+  setDefinition(definition: WrappedDefinition, markDirty: boolean): void;
   setSelectedStepId(stepId: string | null): void;
   switchToDesigner(): void;
   switchToSchemaEditor(path: string): void;
@@ -123,12 +123,11 @@ export function ProcessEditorContext(props: ProcessEditorContextProps) {
     });
   }
 
-  function setDefinition(newDefinition: WrappedDefinition<ProcessDefinition>) {
+  function setDefinition(newDefinition: WrappedDefinition<ProcessDefinition>, markDirty: boolean) {
     const delta: Partial<EditorDataState> = {
       definition: newDefinition
     };
-    // When designer starts it validates the definition and sets isValid, we need to skip setting isDirty until that happens.
-    if (state.definition.isValid !== undefined) {
+    if (markDirty) {
       delta.isDirty = true;
     }
     dispatch(delta);
