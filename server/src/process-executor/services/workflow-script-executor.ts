@@ -7,14 +7,14 @@ import { ExecuteCommandUpdate } from '../../sandbox/bridge-client';
 
 export class WorkflowScriptExecutor {
   public constructor(
-    private readonly executionToken: string,
+    private readonly executionId: string,
     private readonly process: Process,
     private readonly logger: WorkflowLogger,
     private readonly sandboxInstanceManager: SandboxInstanceManager
   ) {}
 
   public async execute(abortSignal: AbortSignal, stepId: string, script: Script) {
-    const instance = await this.sandboxInstanceManager.get(abortSignal, script.sandboxName);
+    const instance = await this.sandboxInstanceManager.getOrCreate(abortSignal, script.sandboxName);
 
     const sseHandler: HttpSseHandler<ExecuteCommandUpdate> = {
       onData: data => {
@@ -29,18 +29,14 @@ export class WorkflowScriptExecutor {
       }
     };
 
-    const commit = await instance.materializer.tryBeginMaterializationOfProcess(abortSignal, this.process);
-    if (commit) {
-      await instance.dependenciesInstaller.install(abortSignal, this.process, sseHandler);
-      await commit();
-    }
+    await instance.tryMaterializeProcess(abortSignal, this.process, sseHandler);
 
-    const result = await instance.executor.execute(
+    const result = await instance.execute(
       abortSignal,
       {
         cwd: `/app/${this.process.name}/${stepId}`,
         scriptName: 'main.js',
-        executionToken: this.executionToken
+        executionId: this.executionId
       },
       sseHandler
     );

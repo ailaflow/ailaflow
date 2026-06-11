@@ -39,7 +39,11 @@ import { SqliteSandboxListQuerier } from './queriers/sandbox-list/sqlite-sandbox
 import { GetSandboxesEndpoint } from './api/sandbox/get-sandboxes-endpoint';
 import { GetSandboxEndpoint } from './api/sandbox/get-sandbox-endpoint';
 import { UpsertSandboxEndpoint } from './api/sandbox/upsert-sandbox-endpoint';
-import { WorkflowMachineFactory } from './process-executor/workflow-machine-factory';
+import { ProcessExecutor } from './process-executor/process-executor';
+import { ProcessExecutionStore } from './process-executor/process-execution-store';
+import { SandboxRpcHandlerProvider } from './sandbox/sandbox-rpc-handler-provider';
+import { ReadVariableRpcHandler } from './process-executor/rpc-handlers/read-variable-rpc-handler';
+import { WriteVariableRpcHandler } from './process-executor/rpc-handlers/write-variable-rpc-handler';
 
 const PORT = process.env.PORT || 2048;
 
@@ -74,9 +78,15 @@ export class Server {
       sandboxRepository.setup(abortSignal)
     ]);
 
-    const sandboxInstanceManager = new SandboxInstanceManager(serverPaths, sandboxRepository);
+    const processExecutionStore = new ProcessExecutionStore();
+    const rpcHandler = new SandboxRpcHandlerProvider([
+      new ReadVariableRpcHandler(processExecutionStore),
+      new WriteVariableRpcHandler(processExecutionStore)
+    ]);
 
-    const workflowMachineFactory = new WorkflowMachineFactory(sandboxInstanceManager);
+    const sandboxInstanceManager = new SandboxInstanceManager(serverPaths, sandboxRepository, rpcHandler);
+
+    const workflowMachineFactory = new ProcessExecutor(sandboxInstanceManager, processExecutionStore);
 
     const passwordHasher = new PasswordHasher();
 

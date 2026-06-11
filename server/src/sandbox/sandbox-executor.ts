@@ -3,10 +3,10 @@ import { ExecuteCommandUpdate } from './bridge-client';
 import { CommandResult, SandboxRuntime } from './sandbox-runtime';
 
 export interface SandboxExecutorRequest {
+  executionId: string;
   cwd: string;
   scriptName: string;
   stdin?: string;
-  executionToken?: string;
 }
 
 export class SandboxExecutorError extends Error {
@@ -37,17 +37,15 @@ export class SandboxExecutor {
         command: 'node',
         args: [request.scriptName],
         stdin: request.stdin,
-        env: request.executionToken
-          ? {
-              EXECUTION_TOKEN: request.executionToken
-            }
-          : {}
+        env: {
+          EXECUTION_ID: request.executionId
+        }
       },
       handler
     );
 
     if (result.code !== 0) {
-      const limitedError = result.stderr.substring(0, 256);
+      const limitedError = result.stderr.substring(0, 512);
       throw new SandboxExecutorError(
         `Script ${request.cwd}/${request.scriptName} failed with code ${result.code} and error: ${limitedError}`
       );

@@ -4,6 +4,8 @@ import { Logger } from '../core/logger';
 import { HttpSseHandler } from '../core/http-client';
 import { abortableSleep } from '../utilities/abortable-sleep';
 import { SandboxHostPaths } from './sandbox-host-paths';
+import { Ev } from '../core/ev';
+import { SandboxRpcHandlerProvider } from './sandbox-rpc-handler-provider';
 
 const BRIDGE_PORT = 4096;
 
@@ -11,11 +13,6 @@ export interface CommandResult {
   code: number;
   stdout: string;
   stderr: string;
-}
-
-export interface SandboxRuntimeHandler {
-  onSandboxRpc(abortSignal: AbortSignal, name: string, type: string, payload: object, executionToken: string): Promise<object>;
-  onSandboxClose(name: string, error?: Error): void;
 }
 
 export class SandboxRuntime {
@@ -27,7 +24,7 @@ export class SandboxRuntime {
     hostPaths: SandboxHostPaths,
     name: string,
     envVariables: Record<string, string>,
-    handler: SandboxRuntimeHandler
+    rpcHandlerProvider: SandboxRpcHandlerProvider
   ): Promise<SandboxRuntime> {
     const logger = new Logger(`Sandbox:${name}`);
 
@@ -56,7 +53,7 @@ export class SandboxRuntime {
     }
 
     logger.log(`Sandbox is ready`);
-    return new SandboxRuntime(name, client, docker, logger, handler);
+    return new SandboxRuntime(name, client, docker, logger, rpcHandlerProvider);
   }
 
   private isRunning = true;
@@ -65,12 +62,14 @@ export class SandboxRuntime {
 
   private readonly stopAbortController = new AbortController();
 
+  public readonly onClose = new Ev<Error | undefined>();
+
   public constructor(
     private readonly name: string,
     private readonly client: BridgeClient,
     private readonly docker: Docker,
     private readonly logger: Logger,
-    private readonly handler: SandboxRuntimeHandler
+    private readonly rpcHandlerProvider: SandboxRpcHandlerProvider
   ) {
     this.healthCheck();
     this.listenRpc();
@@ -115,17 +114,15 @@ export class SandboxRuntime {
 
     let result: SendRpcReplyRequest;
     try {
-      const payload = await this.handler.onSandboxRpc(abortSignal, this.name, rpc.type, rpc.payload, rpc.executionToken);
+      const data = await this.rpcHandlerProvider.get(rpc.methodName).handle(abortSignal, this.name, rpc.executionId, rpc.data);
       result = {
-        id: rpc.id,
-        type: rpc.type,
-        payload
+        callId: rpc.callId,
+        data
       };
     } catch (e) {
       const error = (e as Error)?.message ?? String(e);
       result = {
-        id: rpc.id,
-        type: rpc.type,
+        callId: rpc.callId,
         error
       };
     }
@@ -134,7 +131,7 @@ export class SandboxRuntime {
       await this.client.sendRpcReply(abortSignal, result);
     } catch (e) {
       const error = (e as Error)?.message ?? String(e);
-      this.logger.error(`Failed to send ${rpc.type} RPC response to bridge: ${error}`);
+      this.logger.error(`Failed to send ${rpc.methodName} RPC response to bridge: ${error}`);
     }
   }
 
@@ -194,12 +191,7 @@ export class SandboxRuntime {
 
     await this.docker.tryRemove(this.name);
 
-    try {
-      this.handler.onSandboxClose(this.name, error);
-    } catch {
-      this.logger.error('Sandbox close handler failed');
-    }
-
+    this.onClose.emit(error);
     this.logger.log('Sandbox is stopped');
     return true;
   }

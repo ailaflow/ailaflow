@@ -1,32 +1,32 @@
 import { WorkflowMachineInterpreter } from 'sequential-workflow-machine';
-import { ProcessDefinition } from '@aila/model';
 import { WorkflowLog, WorkflowLogger } from './services/workflow-logger';
 import { WorkflowMachineGlobalState } from './workflow-machine-global-state';
 import { Ev } from '../core/ev';
+import { WorkflowVariableManager } from './services/workflow-variable-manager';
 
-export type WorkflowMachineVariableValues = Record<string, unknown>;
+export type ProcessExecutionVariableValues = Record<string, unknown>;
 
-export type WorkflowMachineResult =
+export type ProcessExecutionResult =
   | {
       error: string;
       stepId?: string | null;
       interruptedCode?: number;
     }
   | {
-      output: WorkflowMachineVariableValues;
+      output: ProcessExecutionVariableValues;
     };
 
-export class WorkflowMachine {
-  public readonly onDone = new Ev<WorkflowMachineResult>();
+export class ProcessExecution {
+  public readonly onDone = new Ev<ProcessExecutionResult>();
   public readonly onLog = new Ev<WorkflowLog>();
 
   public constructor(
-    private readonly definition: ProcessDefinition,
     private readonly interpreter: WorkflowMachineInterpreter<WorkflowMachineGlobalState>,
-    private readonly workflowLogger: WorkflowLogger
+    private readonly workflowLogger: WorkflowLogger,
+    private readonly variableManager: WorkflowVariableManager
   ) {}
 
-  private resolveResult(): WorkflowMachineResult {
+  private resolveResult(): ProcessExecutionResult {
     const snapshot = this.interpreter.getSnapshot();
     if (snapshot.isFailed()) {
       if (snapshot.unhandledError) {
@@ -51,14 +51,8 @@ export class WorkflowMachine {
       };
     }
     if (snapshot.isFinished()) {
-      const output: WorkflowMachineVariableValues = {};
-      for (const variable of this.definition.properties.variables) {
-        if (variable.output) {
-          output[variable.name] = snapshot.globalState.$variables.get(variable.name);
-        }
-      }
       return {
-        output: {}
+        output: this.variableManager.dump()
       };
     }
     return {
@@ -80,5 +74,13 @@ export class WorkflowMachine {
 
     this.workflowLogger.onLog.subscribe(this.onLog.emit);
     this.interpreter.start();
+  }
+
+  public readVariable(name: string): unknown | null {
+    return this.variableManager.get(name);
+  }
+
+  public writeVariable(name: string, value: unknown) {
+    this.variableManager.set(name, value);
   }
 }

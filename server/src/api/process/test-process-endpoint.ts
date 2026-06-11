@@ -4,7 +4,7 @@ import { Endpoint } from '../endpoint';
 import { Request, Response } from 'express';
 import { ProcessRepository } from '../../repositories/process-repository/process-repository';
 import { EndpointError } from '../endpoint-error';
-import { WorkflowMachineFactory } from '../../process-executor/workflow-machine-factory';
+import { ProcessExecutor } from '../../process-executor/process-executor';
 import { parseBody } from '../parse-body';
 
 export class TestProcessEndpoint implements Endpoint {
@@ -15,7 +15,7 @@ export class TestProcessEndpoint implements Endpoint {
 
   public constructor(
     private readonly processRepository: ProcessRepository,
-    private readonly workflowMachineFactory: WorkflowMachineFactory
+    private readonly processExecutor: ProcessExecutor
   ) {}
 
   public async handle(req: Request, res: Response) {
@@ -28,16 +28,16 @@ export class TestProcessEndpoint implements Endpoint {
 
     // We need to initialize the workflow machine before sending SSE headers.
     // If the workflow machine fails, the user will receive the expected HTTP 500 response.
-    const machine = this.workflowMachineFactory.create(process, request.input);
+    const execution = this.processExecutor.initialize(process, request.input);
 
     const abortController = new AbortController();
     const sseResponse = new SseResponse<TestProcessUpdate>(res);
     sseResponse.onClose(() => abortController.abort());
 
-    machine.onLog.subscribe(log => {
+    execution.onLog.subscribe(log => {
       sseResponse.send({ log });
     });
-    machine.onDone.subscribe(result => {
+    execution.onDone.subscribe(result => {
       sseResponse.send({
         log: {
           level: 'done',
@@ -46,6 +46,6 @@ export class TestProcessEndpoint implements Endpoint {
       });
       res.end();
     });
-    machine.run(abortController.signal);
+    execution.run(abortController.signal);
   }
 }

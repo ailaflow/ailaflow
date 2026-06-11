@@ -24,18 +24,17 @@ export interface ExecuteCommandUpdate {
 export interface ListenRpcUpdate {
   ping?: number;
   rpc?: {
-    id: string;
-    type: string;
-    payload: object;
-    executionToken: string;
+    callId: number;
+    executionId: string;
+    methodName: string;
+    data: object;
     timeout: number;
   };
 }
 
 export interface SendRpcReplyRequest {
-  id: string;
-  type: string;
-  payload?: object;
+  callId: number;
+  data?: unknown;
   error?: string;
 }
 
