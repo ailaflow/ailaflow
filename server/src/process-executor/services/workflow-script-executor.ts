@@ -1,4 +1,4 @@
-import { Script } from '@aila/model';
+import { ScriptDefinition } from '@aila/model';
 import { SandboxInstanceManager } from '../../sandbox/sandbox-instance-manager';
 import { Process } from '../../repositories/process-repository/process-repository';
 import { WorkflowLogger } from './workflow-logger';
@@ -13,7 +13,7 @@ export class WorkflowScriptExecutor {
     private readonly sandboxInstanceManager: SandboxInstanceManager
   ) {}
 
-  public async execute(abortSignal: AbortSignal, stepId: string, script: Script) {
+  public async execute(abortSignal: AbortSignal, stepId: string, script: ScriptDefinition) {
     const instance = await this.sandboxInstanceManager.getOrCreate(abortSignal, script.sandboxName);
 
     const sseHandler: HttpSseHandler<ExecuteCommandUpdate> = {

@@ -1,5 +1,5 @@
 import { ToolboxConfiguration } from 'sequential-workflow-designer';
-import { ScriptStep, AgentStep, TaskStep, NotificationStep, ScriptContent } from '@aila/model';
+import { ScriptStep, AgentStep, TaskStep, NotificationStep, FileContent } from '@aila/model';
 import { fnv1a } from '../../core/fnv1a';
 
 const SCRIPT_PACKAGE_JSON = JSON.stringify(
@@ -24,7 +24,7 @@ const SCRIPT_MAIN_JS = [
   `main();`
 ].join('\n');
 
-const scriptDefaultContents: ScriptContent[] = [
+const scriptDefaultContents: FileContent[] = [
   {
     mimeType: 'text/json',
     path: 'package.json',
@@ -66,9 +66,13 @@ const taskStep: Omit<TaskStep, 'id'> = {
   componentType: 'task',
   properties: {
     user: '',
-    outputVariableNames: [],
     deadlineMinutes: 60,
-    stopProcessOnDeadline: false
+    stopProcessOnDeadline: false,
+    form: {
+      css: '',
+      html: '',
+      js: ''
+    }
   }
 };
 

@@ -42,7 +42,7 @@ export function SchemaSubEditor() {
       ...state.definition.value
     };
     DefinitionPath.writePath(newDefinition, state.subPath!, newSchema);
-    state.setDefinition(wrapDefinition(newDefinition));
+    state.setDefinition(wrapDefinition(newDefinition), true);
     state.switchToDesigner();
   }
 

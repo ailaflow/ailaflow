@@ -23,7 +23,7 @@ export function ScriptStepEditor(props: StepEditorProps) {
 
       <EditorPropertyView label="Script">
         <SubValuePreviewView onEdit={editScript} error={errors['properties.script']}>
-          {step.properties.script.contents.length > 0 && step.properties.script.contents.map(c => c.path).join(', ')}
+          {step.properties.script.contents.length > 0 && step.properties.script.contents.map(c => <p>{c.path}</p>)}
           {step.properties.script.contents.length === 0 && <>No script files</>}
         </SubValuePreviewView>
       </EditorPropertyView>

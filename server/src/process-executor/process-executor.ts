@@ -23,7 +23,7 @@ export class ProcessExecutor {
     const machine = this.builder.build(process.definition);
 
     const $logger = new WorkflowLogger();
-    const $variables = new WorkflowVariableManager(input, process.definition.properties.variables);
+    const $variables = new WorkflowVariableManager(input, process.getVariableValidatorMap());
     const $scriptExecutor = new WorkflowScriptExecutor(executionId, process, $logger, this.sandboxInstanceManager);
 
     const interpreter = machine.create({

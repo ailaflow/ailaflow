@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import fs from 'node:fs/promises';
 import { Process } from '../repositories/process-repository/process-repository';
 import { DefinitionWalker } from 'sequential-workflow-model';
-import { DockerfileContent, ProcessDefinition, Script, ScriptStep } from '@aila/model';
+import { DockerfileContent, ProcessDefinition, ScriptDefinition, ScriptStep } from '@aila/model';
 import { Sandbox } from '../repositories/sandbox-repository/sandbox-repository';
 import { SandboxHostPaths } from './sandbox-host-paths';
 import { Logger } from '../core/logger';
@@ -77,8 +77,8 @@ export class SandboxMaterializer {
     };
   }
 
-  private readScripts(definition: ProcessDefinition): Map<string, Script> {
-    const scripts = new Map<string, Script>();
+  private readScripts(definition: ProcessDefinition): Map<string, ScriptDefinition> {
+    const scripts = new Map<string, ScriptDefinition>();
     this.walker.forEach(definition, step => {
       if (step.type === 'script') {
         const scriptStep = step as ScriptStep;
@@ -95,7 +95,7 @@ export class SandboxMaterializer {
     });
   }
 
-  private createPnpmWorkspaceYamlContent(scriptMap: Map<string, Script>): string {
+  private createPnpmWorkspaceYamlContent(scriptMap: Map<string, ScriptDefinition>): string {
     let content = 'packages:\n';
     for (const stepId of scriptMap.keys()) {
       content += `  - ./${stepId}\n`;

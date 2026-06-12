@@ -13,7 +13,7 @@ export const fileContentSchema = z
   })
   .describe('The content of a file.');
 
-export const scriptSchema = z
+export const scriptDefinitionSchema = z
   .object({
     sandboxName: z.string().min(3).describe('The name of the sandbox environment where the script will be executed.'),
     contents: z.array(fileContentSchema).describe('An array of file contents that make up the script.'),
@@ -22,4 +22,4 @@ export const scriptSchema = z
   .describe('A script that can be executed in a sandbox environment.');
 
 export type FileContent = z.infer<typeof fileContentSchema>;
-export type Script = z.infer<typeof scriptSchema>;
+export type ScriptDefinition = z.infer<typeof scriptDefinitionSchema>;

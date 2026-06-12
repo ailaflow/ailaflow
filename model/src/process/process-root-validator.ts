@@ -1,5 +1,6 @@
 import { Definition } from 'sequential-workflow-model';
 import { ProcessDefinition } from './process-definition';
+import z from 'zod';
 
 export class ProcessRootValidator {
   public validate(properties: ProcessDefinition['properties']): Record<string, string> {
@@ -16,6 +17,11 @@ export class ProcessRootValidator {
         errors[`variables.${i}.name`] = 'Variable name must be unique.';
       } else {
         usedVariableNames.push(variable.name);
+      }
+      try {
+        z.fromJSONSchema(variable.schema);
+      } catch (e) {
+        errors[`variables.${i}.schema`] = `Invalid schema: ${(e as Error)?.message ?? e}.`;
       }
     }
 

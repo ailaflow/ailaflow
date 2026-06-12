@@ -142,7 +142,7 @@ export function RootEditor(props: RootEditorProps) {
                 </label>
               </div>
 
-              <SubValuePreviewView onEdit={() => editVariableSchema(index)}>
+              <SubValuePreviewView onEdit={() => editVariableSchema(index)} error={validationErrors[`variables.${index}.schema`]}>
                 Schema: <span className="font-medium text-slate-700">{variable.schema.type}</span>
               </SubValuePreviewView>
             </div>

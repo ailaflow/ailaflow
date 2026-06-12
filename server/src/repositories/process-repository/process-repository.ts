@@ -2,6 +2,7 @@ import { ProcessDefinition, ProcessRootValidator, ProcessStepValidator, UpdatePr
 import { Repository } from '../repository';
 import { randomUUID } from 'crypto';
 import { DefinitionWalker } from 'sequential-workflow-model';
+import z from 'zod/v4';
 
 function countInputs(definition: ProcessDefinition): number {
   return definition.properties.variables.filter(v => v.input).length;
@@ -31,6 +32,8 @@ function validateProcessDefinition(
   return nSteps;
 }
 
+export type VariableValidatorMap = Map<string, z.ZodType>;
+
 export class Process {
   public static async create(
     data: Omit<UpdateProcessRequest, 'id'>,
@@ -51,6 +54,8 @@ export class Process {
       nSteps
     );
   }
+
+  private vvmCache: VariableValidatorMap | null = null;
 
   public constructor(
     public readonly id: string,
@@ -74,10 +79,18 @@ export class Process {
     this.description = data.description;
     this.userList = data.userList;
     this.definition = data.definition;
+    this.vvmCache = null;
     this.hash = data.hash;
     this.nInputs = countInputs(data.definition);
     this.nOutputs = countOutputs(data.definition);
     this.nSteps = nSteps;
+  }
+
+  public getVariableValidatorMap(): VariableValidatorMap {
+    if (!this.vvmCache) {
+      this.vvmCache = new Map(this.definition.properties.variables.map(v => [v.name, z.fromJSONSchema(v.schema)]));
+    }
+    return this.vvmCache;
   }
 }
 

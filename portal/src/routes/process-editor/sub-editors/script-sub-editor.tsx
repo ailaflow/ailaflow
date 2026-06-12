@@ -1,7 +1,7 @@
 import { useProcessEditor } from '../process-editor-context';
 import { ProcessSubEditorView } from '../../../views/process-editor/process-sub-editor-view';
 import { DefinitionPath } from '../../../core/definition-path';
-import type { Script, ScriptContent } from '@aila/model';
+import type { FileContent, ScriptDefinition } from '@aila/model';
 import { useState } from 'react';
 import { wrapDefinition } from 'sequential-workflow-designer-react';
 import { ScriptSubEditorView } from '../../../views/process-editor/script-sub-editor/script-sub-editor';
@@ -13,7 +13,7 @@ export function ScriptSubEditor() {
   const state = useProcessEditor();
 
   const [folderItems, setFolderItems] = useState<FolderTreeItem[]>(() => {
-    const script = DefinitionPath.readPath<Script>(state.definition.value, state.subPath!);
+    const script = DefinitionPath.readPath<ScriptDefinition>(state.definition.value, state.subPath!);
     return createFolderTree(script.contents);
   });
   const [selectedFilePath, setSelectedFilePath] = useState<string | undefined>(() => getFirstFilePath(folderItems));
@@ -29,7 +29,7 @@ export function ScriptSubEditor() {
       return;
     }
 
-    const file: ScriptContent = {
+    const file: FileContent = {
       path,
       mimeType: getMimeType(path),
       content: '',
@@ -75,15 +75,15 @@ export function ScriptSubEditor() {
     const newDefinition = {
       ...state.definition.value
     };
-    const currentScript = DefinitionPath.readPath<Script>(state.definition.value, state.subPath!);
+    const currentScript = DefinitionPath.readPath<ScriptDefinition>(state.definition.value, state.subPath!);
     const contents = flattenFolderTree(folderItems);
-    const script: Script = {
+    const script: ScriptDefinition = {
       sandboxName: currentScript.sandboxName,
       contents,
       hash: fnv1a(contents)
     };
     DefinitionPath.writePath(newDefinition, state.subPath!, script);
-    state.setDefinition(wrapDefinition(newDefinition));
+    state.setDefinition(wrapDefinition(newDefinition), true);
     state.switchToDesigner();
   }
 
@@ -103,7 +103,7 @@ export function ScriptSubEditor() {
   );
 }
 
-function createFolderTree(contents: ScriptContent[]): FolderTreeItem[] {
+function createFolderTree(contents: FileContent[]): FolderTreeItem[] {
   const root: FolderNode = { name: '', path: '', type: 'folder', children: [] };
   const folderByPath = new Map<string, FolderNode>([['', root]]);
 
@@ -141,12 +141,12 @@ function createFolderTree(contents: ScriptContent[]): FolderTreeItem[] {
   return sortFolderTree(root.children);
 }
 
-function addFileToTree(items: FolderTreeItem[], file: ScriptContent): FolderTreeItem[] {
+function addFileToTree(items: FolderTreeItem[], file: FileContent): FolderTreeItem[] {
   const parts = file.path.split('/').filter(Boolean);
   return sortFolderTree(addFileToTreeItems(items, parts, file));
 }
 
-function addFileToTreeItems(items: FolderTreeItem[], parts: string[], file: ScriptContent, parentPath = ''): FolderTreeItem[] {
+function addFileToTreeItems(items: FolderTreeItem[], parts: string[], file: FileContent, parentPath = ''): FolderTreeItem[] {
   const [name, ...rest] = parts;
   if (!name) {
     return items;
@@ -267,8 +267,8 @@ function getFirstFilePath(items: FolderTreeItem[]): string | undefined {
   return path;
 }
 
-function flattenFolderTree(items: FolderTreeItem[]): ScriptContent[] {
-  const contents: ScriptContent[] = [];
+function flattenFolderTree(items: FolderTreeItem[]): FileContent[] {
+  const contents: FileContent[] = [];
   walkFiles(items, file => {
     contents.push({
       path: file.path,

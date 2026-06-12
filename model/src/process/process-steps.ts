@@ -1,11 +1,12 @@
 import { Step } from 'sequential-workflow-model';
-import { scriptSchema } from '../script/script';
+import { scriptDefinitionSchema } from './script-definition';
 import z from 'zod/v4';
+import { FormDefinition } from './form-definition';
 
 // script step
 
 export const scriptStepPropertiesSchema = z.object({
-  script: scriptSchema
+  script: scriptDefinitionSchema
 });
 
 export type ScriptStepProperties = z.infer<typeof scriptStepPropertiesSchema>;
@@ -39,9 +40,8 @@ export interface TaskStep extends Step {
   type: 'task';
   properties: {
     user: string;
-    outputVariableNames: string[];
     deadlineMinutes: number;
     stopProcessOnDeadline: boolean;
-    form?: object;
+    form: FormDefinition;
   };
 }
