@@ -1,10 +1,16 @@
-import { Step } from 'sequential-workflow-model';
-import { ScriptStep } from './process-steps';
+import { Definition, Sequence, Step } from 'sequential-workflow-model';
+import { ScriptStep, TaskStep } from './process-steps';
+import { VariableCachedValidator } from './variable-cached-validator';
+import { FormDefinitionValidator } from './form-definition-validator';
+import { ProcessDefinition } from './process-definition';
 
 export class ProcessStepValidator {
-  public constructor(private readonly sandboxNames: string[]) {}
+  public constructor(
+    private readonly sandboxNames: string[],
+    private readonly variableValidator: VariableCachedValidator
+  ) {}
 
-  public validate(step: Step): Record<string, string> {
+  public validate(step: Step, definition: ProcessDefinition): Record<string, string> {
     const errors: Record<string, string> = {};
 
     if (step.name.length < 1 || step.name.length > 24) {
@@ -21,10 +27,18 @@ export class ProcessStepValidator {
       }
     }
 
+    if (step.type === 'task') {
+      const taskStep = step as TaskStep;
+      const error = FormDefinitionValidator.validate(taskStep.properties.form, definition, this.variableValidator);
+      if (error) {
+        errors['properties.form'] = error;
+      }
+    }
+
     return errors;
   }
 
-  public readonly validateStep = (step: Step): boolean => {
-    return Object.keys(this.validate(step)).length === 0;
+  public readonly validateStep = (step: Step, _: Sequence, definition: Definition): boolean => {
+    return Object.keys(this.validate(step, definition as ProcessDefinition)).length === 0;
   };
 }

@@ -17,14 +17,14 @@ function validateProcessDefinition(
   rootValidator: ProcessRootValidator,
   stepValidator: ProcessStepValidator
 ): number {
-  if (!rootValidator.validate(definition.properties)) {
-    throw new Error('Validation failed for root properties');
+  if (!rootValidator.validate(definition)) {
+    throw new Error('Validation failed for root');
   }
 
   const walker = new DefinitionWalker();
   let nSteps = 0;
-  walker.forEach(definition, step => {
-    if (!stepValidator.validateStep(step)) {
+  walker.forEach(definition, (step, _, sequence) => {
+    if (!stepValidator.validateStep(step, sequence, definition)) {
       throw new Error(`Validation failed for step: ${step.id}`);
     }
     nSteps++;

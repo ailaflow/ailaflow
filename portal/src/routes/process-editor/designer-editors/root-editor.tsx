@@ -1,18 +1,23 @@
-import { ProcessDefinition, VariableDefinition } from '@aila/model';
+import { JsonSchema, ProcessDefinition, VariableDefinition } from '@aila/model';
 import { useRootEditor } from 'sequential-workflow-designer-react';
 import { ProcessEditorState } from '../process-editor-context';
 import { DesignerEditorView } from '../../../views/process-editor/designer-editors/designer-editor-view';
-import { SubValuePreviewView } from '../../../views/process-editor/designer-editors/sub-value-preview-view';
 import { EditorPropertyView } from '../../../views/process-editor/designer-editors/editor-property-view';
 import { DefinitionPath } from '../../../core/definition-path';
+import {
+  DisabledSubValuePreviewView,
+  EnabledSubValuePreviewView
+} from '../../../views/process-editor/designer-editors/sub-value-preview-view';
+import { XIcon } from '../../../views/common/svg-icons';
+import { fnv1a } from '../../../core/fnv1a';
 
 export interface RootEditorProps {
   editorState: ProcessEditorState;
 }
 
 export function RootEditor(props: RootEditorProps) {
-  const { properties, setProperty } = useRootEditor<ProcessDefinition>();
-  const validationErrors = props.editorState.rootValidator.validate(properties);
+  const { properties, definition, setProperty } = useRootEditor<ProcessDefinition>();
+  const validationErrors = props.editorState.rootValidator.validate(definition);
   const variables = properties.variables || [];
 
   function setVariables(nextVariables: VariableDefinition[]) {
@@ -20,6 +25,9 @@ export function RootEditor(props: RootEditorProps) {
   }
 
   function addVariable() {
+    const schema: JsonSchema['schema'] = {
+      type: 'string'
+    };
     setVariables([
       ...variables,
       {
@@ -28,7 +36,8 @@ export function RootEditor(props: RootEditorProps) {
         input: true,
         output: false,
         schema: {
-          type: 'string'
+          schema,
+          hash: fnv1a(schema)
         }
       }
     ]);
@@ -47,9 +56,31 @@ export function RootEditor(props: RootEditorProps) {
     props.editorState.switchToSchemaEditor(path);
   }
 
+  function addInputForm() {
+    setProperty('inputForm', {
+      css: '',
+      html: '',
+      js: ''
+    });
+  }
+
   function editInputFrom() {
     const path = DefinitionPath.createRootPath(`properties.inputForm`);
     props.editorState.switchToFormEditor(path);
+  }
+
+  function addOutputForm() {
+    setProperty('outputForm', {
+      css: '',
+      html: '',
+      js: ''
+    });
+  }
+
+  function removeInputForm() {
+    if (window.confirm('Are you sure?')) {
+      setProperty('inputForm', undefined);
+    }
   }
 
   function editOutputFrom() {
@@ -57,14 +88,30 @@ export function RootEditor(props: RootEditorProps) {
     props.editorState.switchToFormEditor(path);
   }
 
+  function removeOutputForm() {
+    if (window.confirm('Are you sure?')) {
+      setProperty('outputForm', undefined);
+    }
+  }
+
   return (
     <DesignerEditorView>
       <EditorPropertyView label="Input Form">
-        <SubValuePreviewView onEdit={editInputFrom}>Form is not defined</SubValuePreviewView>
+        {!properties.inputForm && <DisabledSubValuePreviewView onEnable={addInputForm} label="Enable" />}
+        {properties.inputForm && (
+          <EnabledSubValuePreviewView onEdit={editInputFrom} onRemove={removeInputForm}>
+            Form
+          </EnabledSubValuePreviewView>
+        )}
       </EditorPropertyView>
 
       <EditorPropertyView label="Output Form">
-        <SubValuePreviewView onEdit={editOutputFrom}>Form is not defined</SubValuePreviewView>
+        {!properties.outputForm && <DisabledSubValuePreviewView onEnable={addOutputForm} label="Enable" />}
+        {properties.outputForm && (
+          <EnabledSubValuePreviewView onEdit={editOutputFrom} onRemove={removeOutputForm}>
+            Form
+          </EnabledSubValuePreviewView>
+        )}
       </EditorPropertyView>
 
       <EditorPropertyView label="Variables" buttons={[{ command: 'add-variable', label: 'Add' }]} onButtonClick={addVariable}>
@@ -101,9 +148,11 @@ export function RootEditor(props: RootEditorProps) {
                 <button
                   type="button"
                   onClick={() => removeVariable(index)}
-                  className="inline-flex h-9 shrink-0 items-center justify-center rounded-md border border-slate-200 bg-white px-2.5 text-sm font-medium text-slate-500 transition-colors hover:bg-slate-50 hover:text-slate-700"
+                  className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-slate-300 bg-white/60 text-slate-400 transition-colors hover:border-red-300 hover:bg-red-50 hover:text-red-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400"
+                  aria-label={`Remove variable ${variable.name || index + 1}`}
+                  title="Remove variable"
                 >
-                  Remove
+                  <XIcon className="h-4 w-4" />
                 </button>
               </div>
 
@@ -142,9 +191,9 @@ export function RootEditor(props: RootEditorProps) {
                 </label>
               </div>
 
-              <SubValuePreviewView onEdit={() => editVariableSchema(index)} error={validationErrors[`variables.${index}.schema`]}>
-                Schema: <span className="font-medium text-slate-700">{variable.schema.type}</span>
-              </SubValuePreviewView>
+              <EnabledSubValuePreviewView onEdit={() => editVariableSchema(index)} error={validationErrors[`variables.${index}.schema`]}>
+                Schema: <span className="font-medium text-slate-700">{variable.schema.schema.type}</span>
+              </EnabledSubValuePreviewView>
             </div>
           );
         })}

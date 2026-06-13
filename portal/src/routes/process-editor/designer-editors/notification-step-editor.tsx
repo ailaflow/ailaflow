@@ -2,11 +2,11 @@ import { useStepEditor } from 'sequential-workflow-designer-react';
 import { DesignerEditorView } from '../../../views/process-editor/designer-editors/designer-editor-view';
 import { StepEditorProps } from './step-editor';
 import { StringEditorPropertyView } from '../../../views/process-editor/designer-editors/string-editor-property-view';
-import { NotificationStep } from '@aila/model';
+import { NotificationStep, ProcessDefinition } from '@aila/model';
 
 export function NotificationStepEditor(props: StepEditorProps) {
-  const { name, step, setName } = useStepEditor<NotificationStep>();
-  const errors = props.editorState.stepValidator.validate(step);
+  const { name, step, definition, setName } = useStepEditor<NotificationStep, ProcessDefinition>();
+  const errors = props.editorState.stepValidator.validate(step, definition);
 
   return (
     <DesignerEditorView>

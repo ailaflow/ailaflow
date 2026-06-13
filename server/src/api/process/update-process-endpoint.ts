@@ -1,6 +1,12 @@
 import { Request } from 'express';
 import { Endpoint } from '../endpoint';
-import { ProcessRootValidator, ProcessStepValidator, updateProcessRequestSchema, UpdateProcessResponse } from '@aila/model';
+import {
+  ProcessRootValidator,
+  ProcessStepValidator,
+  updateProcessRequestSchema,
+  UpdateProcessResponse,
+  VariableCachedValidator
+} from '@aila/model';
 import { Process, ProcessRepository } from '../../repositories/process-repository/process-repository';
 import { EndpointError } from '../endpoint-error';
 import { SandboxListQuerier } from '../../queriers/sandbox-list/sandbox-list-querier';
@@ -43,9 +49,13 @@ export class UpdateProcessEndpoint implements Endpoint {
 
   private async getValidators() {
     const sandboxes = await this.sandboxListQuerier.query();
+    const variableValidator = new VariableCachedValidator();
     return {
-      rootValidator: new ProcessRootValidator(),
-      stepValidator: new ProcessStepValidator(sandboxes.map(sandbox => sandbox.name))
+      rootValidator: new ProcessRootValidator(variableValidator),
+      stepValidator: new ProcessStepValidator(
+        sandboxes.map(sandbox => sandbox.name),
+        variableValidator
+      )
     };
   }
 }

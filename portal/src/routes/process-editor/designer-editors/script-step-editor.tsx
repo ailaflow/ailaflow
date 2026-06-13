@@ -1,16 +1,16 @@
 import { useStepEditor } from 'sequential-workflow-designer-react';
 import { DesignerEditorView } from '../../../views/process-editor/designer-editors/designer-editor-view';
-import { SubValuePreviewView } from '../../../views/process-editor/designer-editors/sub-value-preview-view';
 import { StepEditorProps } from './step-editor';
 import { EditorPropertyView } from '../../../views/process-editor/designer-editors/editor-property-view';
 import { StringEditorPropertyView } from '../../../views/process-editor/designer-editors/string-editor-property-view';
 import { SelectEditorPropertyView } from '../../../views/process-editor/designer-editors/select-editor-property-view';
-import { ScriptStep } from '@aila/model';
+import { ProcessDefinition, ScriptStep } from '@aila/model';
 import { DefinitionPath } from '../../../core/definition-path';
+import { EnabledSubValuePreviewView } from '../../../views/process-editor/designer-editors/sub-value-preview-view';
 
 export function ScriptStepEditor(props: StepEditorProps) {
-  const { id, name, step, setName, properties, setProperty } = useStepEditor<ScriptStep>();
-  const errors = props.editorState.stepValidator.validate(step);
+  const { id, name, step, properties, definition, setName, setProperty } = useStepEditor<ScriptStep, ProcessDefinition>();
+  const errors = props.editorState.stepValidator.validate(step, definition);
 
   function editScript() {
     const path = DefinitionPath.createStepPath(id, 'properties.script');
@@ -22,10 +22,10 @@ export function ScriptStepEditor(props: StepEditorProps) {
       <StringEditorPropertyView label="Name" value={name} onValueChanged={setName} error={errors['name']}></StringEditorPropertyView>
 
       <EditorPropertyView label="Script">
-        <SubValuePreviewView onEdit={editScript} error={errors['properties.script']}>
-          {step.properties.script.contents.length > 0 && step.properties.script.contents.map(c => <p>{c.path}</p>)}
+        <EnabledSubValuePreviewView onEdit={editScript} error={errors['properties.script']}>
+          {step.properties.script.contents.length > 0 && step.properties.script.contents.map(c => <p key={c.path}>{c.path}</p>)}
           {step.properties.script.contents.length === 0 && <>No script files</>}
-        </SubValuePreviewView>
+        </EnabledSubValuePreviewView>
       </EditorPropertyView>
 
       <SelectEditorPropertyView

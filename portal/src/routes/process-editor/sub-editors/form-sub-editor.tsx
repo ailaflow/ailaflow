@@ -7,6 +7,8 @@ import { FormDefinition } from '@aila/model';
 export function FormSubEditor() {
   const state = useProcessEditor();
 
+  const e = state.variableValidator.validateVariableExists('s', state.definition.value);
+
   const [form, setForm] = useState(() => {
     const f = DefinitionPath.readPath<FormDefinition>(state.definition.value, state.subPath!);
     return {

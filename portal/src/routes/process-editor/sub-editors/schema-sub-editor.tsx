@@ -4,6 +4,7 @@ import { wrapDefinition } from 'sequential-workflow-designer-react';
 import { useState } from 'react';
 import { ProcessSubEditorView } from '../../../views/process-editor/process-sub-editor-view';
 import { DefinitionPath } from '../../../core/definition-path';
+import { fnv1a } from '../../../core/fnv1a';
 
 export function SchemaSubEditor() {
   const state = useProcessEditor();
@@ -11,7 +12,7 @@ export function SchemaSubEditor() {
   const [schema, setSchema] = useState(() => {
     const s = DefinitionPath.readPath<JsonSchema>(state.definition.value, state.subPath!);
     return {
-      schema: JSON.stringify(s, null, 2),
+      schema: JSON.stringify(s.schema, null, 2),
       isValid: true
     };
   });
@@ -33,7 +34,11 @@ export function SchemaSubEditor() {
   function ok() {
     let newSchema: JsonSchema;
     try {
-      newSchema = JSON.parse(schema.schema);
+      const s = JSON.parse(schema.schema);
+      newSchema = {
+        schema: s,
+        hash: fnv1a(s)
+      };
     } catch (e) {
       return;
     }
