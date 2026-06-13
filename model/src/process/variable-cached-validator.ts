@@ -14,7 +14,7 @@ export class VariableCachedValidator {
       if (variable.name === name) {
         let zod = this.cache.get(name);
         if (!zod || zod.hash !== variable.schema.hash) {
-          zod = { hash: variable.schema.hash, zod: z.fromJSONSchema(variable.schema) };
+          zod = { hash: variable.schema.hash, zod: z.fromJSONSchema(variable.schema.schema) };
           this.cache.set(name, zod);
         }
         return zod.zod;
@@ -39,7 +39,7 @@ export class VariableCachedValidator {
     try {
       zod.parse(value);
     } catch (e) {
-      return `Value for variable \${name} does not match the schema: ${e instanceof Error ? e.message : String(e)}`;
+      return `Value for variable \$${name} does not match the schema: ${e instanceof Error ? e.message : String(e)}`;
     }
     return null;
   }

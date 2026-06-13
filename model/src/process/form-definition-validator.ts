@@ -3,26 +3,42 @@ import { ProcessDefinition } from './process-definition';
 import { VariableCachedValidator } from './variable-cached-validator';
 
 export class FormDefinitionValidator {
-  public static validate(form: FormDefinition, definition: ProcessDefinition, variableValidator: VariableCachedValidator): string | null {
+  public static validate(
+    form: FormDefinition,
+    definition: ProcessDefinition,
+    variableValidator: VariableCachedValidator
+  ): Record<string, string> {
+    const errors: Record<string, string> = {};
+
     if (form.inputVariables) {
-      for (const v of form.inputVariables) {
-        const error = v.testValue
-          ? variableValidator.validateVariableValue(v.name, v.testValue, definition)
-          : variableValidator.validateVariableExists(v.name, definition);
+      for (let i = 0; i < form.inputVariables.length; i++) {
+        const v = form.inputVariables[i];
+        let error: string | null = null;
+        if (v.testValue) {
+          try {
+            const json = JSON.parse(v.testValue);
+            error = variableValidator.validateVariableValue(v.name, json, definition);
+          } catch {
+            error = `Test value is not valid JSON`;
+          }
+        } else {
+          error = variableValidator.validateVariableExists(v.name, definition);
+        }
         if (error) {
-          return error;
+          errors[`inputVariables.${i}`] = error;
         }
       }
     }
 
     if (form.outputVariables) {
-      for (const v of form.outputVariables) {
+      for (let i = 0; i < form.outputVariables.length; i++) {
+        const v = form.outputVariables[i];
         const error = variableValidator.validateVariableExists(v.name, definition);
         if (error) {
-          return error;
+          errors[`outputVariables.${i}`] = error;
         }
       }
     }
-    return null;
+    return errors;
   }
 }

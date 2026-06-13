@@ -29,9 +29,9 @@ export class ProcessStepValidator {
 
     if (step.type === 'task') {
       const taskStep = step as TaskStep;
-      const error = FormDefinitionValidator.validate(taskStep.properties.form, definition, this.variableValidator);
-      if (error) {
-        errors['properties.form'] = error;
+      const e = Object.values(FormDefinitionValidator.validate(taskStep.properties.form, definition, this.variableValidator));
+      if (e.length > 0) {
+        errors['properties.form'] = e[0];
       }
     }
 

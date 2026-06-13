@@ -1,3 +1,4 @@
+export * from './form-definition-validator';
 export * from './form-definition';
 export * from './process-validator';
 export * from './process-definition';

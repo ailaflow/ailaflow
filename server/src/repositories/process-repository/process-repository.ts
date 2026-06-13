@@ -88,7 +88,7 @@ export class Process {
 
   public getVariableValidatorMap(): VariableValidatorMap {
     if (!this.vvmCache) {
-      this.vvmCache = new Map(this.definition.properties.variables.map(v => [v.name, z.fromJSONSchema(v.schema)]));
+      this.vvmCache = new Map(this.definition.properties.variables.map(v => [v.name, z.fromJSONSchema(v.schema.schema)]));
     }
     return this.vvmCache;
   }

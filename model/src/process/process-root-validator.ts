@@ -23,7 +23,7 @@ export class ProcessRootValidator {
         usedVariableNames.push(variable.name);
       }
       try {
-        z.fromJSONSchema(variable.schema);
+        z.fromJSONSchema(variable.schema.schema);
       } catch (e) {
         errors[`variables.${i}.schema`] = `Invalid schema: ${(e as Error)?.message ?? e}.`;
       }
@@ -31,16 +31,16 @@ export class ProcessRootValidator {
 
     if (Object.keys(errors).length === 0) {
       if (definition.properties.inputForm) {
-        const error = FormDefinitionValidator.validate(definition.properties.inputForm, definition, this.variableValidator);
-        if (error) {
-          errors['properties.inputForm'] = error;
+        const e = Object.values(FormDefinitionValidator.validate(definition.properties.inputForm, definition, this.variableValidator));
+        if (e.length > 0) {
+          errors['properties.inputForm'] = e[0];
         }
       }
 
       if (definition.properties.outputForm) {
-        const error = FormDefinitionValidator.validate(definition.properties.outputForm, definition, this.variableValidator);
-        if (error) {
-          errors['properties.outputForm'] = error;
+        const e = Object.values(FormDefinitionValidator.validate(definition.properties.outputForm, definition, this.variableValidator));
+        if (e.length > 0) {
+          errors['properties.outputForm'] = e[0];
         }
       }
     }
