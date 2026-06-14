@@ -1,4 +1,4 @@
-import type { FormDefinition, FormInputVariable } from '@aila/model';
+import type { FormDefinition, FormInputExample, TaskStep } from '@aila/model';
 import { FormDefinitionValidator } from '@aila/model';
 import { useState } from 'react';
 import { wrapDefinition } from 'sequential-workflow-designer-react';
@@ -9,77 +9,56 @@ import { useProcessEditor } from '../process-editor-context';
 
 export function FormSubEditor() {
   const state = useProcessEditor();
-  const availableVariables = state.definition.value.properties.variables.map(variable => variable.name);
-  const [selectedTab, setSelectedTab] = useState<FormEditorTab>('Input & Output');
 
   const [formState, setFormState] = useState(() => {
-    const form = DefinitionPath.readPath<FormDefinition>(state.definition.value, state.subPath!);
+    const { isRoot, object, value: form } = DefinitionPath.readPath<FormDefinition>(state.definition.value, state.subPath!);
+    const inputVariableNames = isRoot ? [] : (object as TaskStep).properties.inputVariableNames;
+    const normalizedForm = {
+      ...form,
+      inputExamples: inputVariableNames.map(variableName => {
+        return form.inputExamples.find(example => example.variableName === variableName) ?? { variableName };
+      })
+    };
     return {
-      form,
-      errors: FormDefinitionValidator.validate(form, state.definition.value, state.variableValidator)
+      form: normalizedForm,
+      inputVariableNames,
+      errors: FormDefinitionValidator.validate(
+        normalizedForm,
+        inputVariableNames,
+        state.definition.value,
+        state.variableValidator
+      )
     };
   });
+  const [selectedTab, setSelectedTab] = useState<FormEditorTab>(
+    formState.inputVariableNames.length > 0 ? 'Example Inputs' : 'HTML'
+  );
 
   function setForm(form: FormDefinition) {
-    setFormState({
+    setFormState(s => ({
+      ...s,
       form,
-      errors: FormDefinitionValidator.validate(form, state.definition.value, state.variableValidator)
-    });
+      errors: FormDefinitionValidator.validate(form, s.inputVariableNames, state.definition.value, state.variableValidator)
+    }));
   }
 
-  function addInputVariable(name: string) {
-    if (!name || formState.form.inputVariables?.some(variable => variable.name === name)) {
-      return;
-    }
-    setForm({
-      ...formState.form,
-      inputVariables: [...(formState.form.inputVariables ?? []), { name }]
-    });
-  }
-
-  function updateInputVariable(index: number, variable: FormInputVariable) {
-    setForm({
-      ...formState.form,
-      inputVariables: formState.form.inputVariables?.map((current, currentIndex) => (currentIndex === index ? variable : current))
-    });
-  }
-
-  function removeInputVariable(index: number) {
-    setForm({
-      ...formState.form,
-      inputVariables: removeAt(formState.form.inputVariables, index)
-    });
-  }
-
-  function setInputTestValue(index: number, testValue: string) {
-    const variable = formState.form.inputVariables?.[index];
-    if (!variable) {
+  function setInputExampleValue(index: number, exampleValue: string) {
+    const inputExample = formState.form.inputExamples[index];
+    if (!inputExample) {
       return;
     }
 
-    const nextVariable = { ...variable };
-    if (testValue) {
-      nextVariable.testValue = testValue;
+    const nextInputExample: FormInputExample = { ...inputExample };
+    if (exampleValue) {
+      nextInputExample.exampleValue = exampleValue;
     } else {
-      delete nextVariable.testValue;
-    }
-    updateInputVariable(index, nextVariable);
-  }
-
-  function addOutputVariable(name: string) {
-    if (!name || formState.form.outputVariables?.some(variable => variable.name === name)) {
-      return;
+      delete nextInputExample.exampleValue;
     }
     setForm({
       ...formState.form,
-      outputVariables: [...(formState.form.outputVariables ?? []), { name }]
-    });
-  }
-
-  function removeOutputVariable(index: number) {
-    setForm({
-      ...formState.form,
-      outputVariables: removeAt(formState.form.outputVariables, index)
+      inputExamples: formState.form.inputExamples.map((current, currentIndex) =>
+        currentIndex === index ? nextInputExample : current
+      )
     });
   }
 
@@ -105,26 +84,16 @@ export function FormSubEditor() {
     >
       <FormSubEditorView
         selectedTab={selectedTab}
-        availableVariables={availableVariables}
-        inputVariables={formState.form.inputVariables ?? []}
-        outputVariables={formState.form.outputVariables ?? []}
+        showExampleInputs={formState.inputVariableNames.length > 0}
+        inputExamples={formState.form.inputExamples}
         errors={formState.errors}
         form={formState.form}
         onSelectTab={setSelectedTab}
-        onAddInput={addInputVariable}
-        onSetInputTestValue={setInputTestValue}
-        onRemoveInput={removeInputVariable}
-        onAddOutput={addOutputVariable}
-        onRemoveOutput={removeOutputVariable}
+        onSetInputExampleValue={setInputExampleValue}
         onHtmlChange={html => setForm({ ...formState.form, html })}
         onCssChange={css => setForm({ ...formState.form, css })}
         onJsChange={js => setForm({ ...formState.form, js })}
       />
     </ProcessSubEditorView>
   );
-}
-
-function removeAt<T>(items: T[] | undefined, index: number): T[] | undefined {
-  const nextItems = items?.filter((_, currentIndex) => currentIndex !== index);
-  return nextItems && nextItems.length > 0 ? nextItems : undefined;
 }

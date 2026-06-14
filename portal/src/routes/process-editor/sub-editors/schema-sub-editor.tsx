@@ -10,7 +10,7 @@ export function SchemaSubEditor() {
   const state = useProcessEditor();
 
   const [schema, setSchema] = useState(() => {
-    const s = DefinitionPath.readPath<JsonSchema>(state.definition.value, state.subPath!);
+    const { value: s } = DefinitionPath.readPath<JsonSchema>(state.definition.value, state.subPath!);
     return {
       schema: JSON.stringify(s.schema, null, 2),
       isValid: true

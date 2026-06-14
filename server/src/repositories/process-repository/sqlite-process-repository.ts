@@ -17,8 +17,7 @@ export class SqliteProcessRepository implements ProcessRepository {
         name TEXT NOT NULL UNIQUE,
         description TEXT NOT NULL,
         userList TEXT NOT NULL,
-        nInputs INTEGER NOT NULL,
-        nOutputs INTEGER NOT NULL,
+        nStartInputs INTEGER NOT NULL,
         nSteps INTEGER NOT NULL,
         serializedDefinition TEXT NOT NULL,
         definitionHash TEXT NOT NULL
@@ -28,16 +27,15 @@ export class SqliteProcessRepository implements ProcessRepository {
 
   public async insert(process: Process): Promise<void> {
     const statement = this.db.prepare(`
-      INSERT INTO processes (id, name, description, userList, nInputs, nOutputs, nSteps, serializedDefinition, definitionHash)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO processes (id, name, description, userList, nStartInputs, nSteps, serializedDefinition, definitionHash)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `);
     statement.run(
       process.id,
       process.name,
       process.description,
       process.userList,
-      process.nInputs,
-      process.nOutputs,
+      process.nStartInputs,
       process.nSteps,
       JSON.stringify(process.definition),
       process.hash
@@ -51,8 +49,7 @@ export class SqliteProcessRepository implements ProcessRepository {
         name = ?,
         description = ?,
         userList = ?,
-        nInputs = ?,
-        nOutputs = ?,
+        nStartInputs = ?,
         nSteps = ?,
         serializedDefinition = ?,
         definitionHash = ?
@@ -62,8 +59,7 @@ export class SqliteProcessRepository implements ProcessRepository {
       process.name,
       process.description,
       process.userList,
-      process.nInputs,
-      process.nOutputs,
+      process.nStartInputs,
       process.nSteps,
       JSON.stringify(process.definition),
       process.hash,
@@ -73,7 +69,7 @@ export class SqliteProcessRepository implements ProcessRepository {
 
   public async tryGetById(id: string): Promise<Process | null> {
     const statement = this.db.prepare(`
-      SELECT id, name, description, userList, nInputs, nOutputs, nSteps, serializedDefinition, definitionHash
+      SELECT id, name, description, userList, nStartInputs, nSteps, serializedDefinition, definitionHash
       FROM processes
       WHERE id = ?
       LIMIT 1
@@ -84,8 +80,7 @@ export class SqliteProcessRepository implements ProcessRepository {
           name: string;
           description: string;
           userList: string;
-          nInputs: number;
-          nOutputs: number;
+          nStartInputs: number;
           nSteps: number;
           serializedDefinition: string;
           definitionHash: string;
@@ -100,8 +95,7 @@ export class SqliteProcessRepository implements ProcessRepository {
           row.userList,
           JSON.parse(row.serializedDefinition) as ProcessDefinition,
           row.definitionHash,
-          row.nInputs,
-          row.nOutputs,
+          row.nStartInputs,
           row.nSteps
         )
       : null;

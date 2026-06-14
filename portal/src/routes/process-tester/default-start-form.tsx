@@ -8,7 +8,9 @@ export interface DefaultStartFormProps {
 
 export function DefaultStartForm(props: DefaultStartFormProps) {
   const [data, setData] = useState<Record<string, unknown>>({});
-  const inputVariables = props.definition.properties.variables.filter(v => v.input);
+  const inputVariables = props.definition.properties.startVariableNames.map(
+    n => props.definition.properties.variables.find(v => v.name === n)!
+  );
 
   return (
     <div className="h-full overflow-auto bg-slate-50 p-5">

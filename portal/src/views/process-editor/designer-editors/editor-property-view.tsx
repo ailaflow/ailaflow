@@ -1,6 +1,7 @@
 export interface EditorPropertyViewProps {
   label: string;
   children: React.ReactNode;
+  action?: React.ReactNode;
   buttons?: {
     command: string;
     label: string;
@@ -13,6 +14,7 @@ export function EditorPropertyView(props: EditorPropertyViewProps) {
     <>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="text-sm font-semibold text-slate-800">{props.label}</div>
+        {props.action}
         {props.buttons &&
           props.buttons.map(button => (
             <button

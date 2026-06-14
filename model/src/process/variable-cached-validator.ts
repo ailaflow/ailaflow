@@ -26,7 +26,7 @@ export class VariableCachedValidator {
   public validateVariableExists(name: string, definition: ProcessDefinition): string | null {
     const zod = this.resolve(name, definition);
     if (!zod) {
-      return `Variable ${name} is not defined in the process definition`;
+      return `Variable \$${name} does not exist.`;
     }
     return null;
   }
@@ -34,7 +34,7 @@ export class VariableCachedValidator {
   public validateVariableValue(name: string, value: unknown, definition: ProcessDefinition): string | null {
     const zod = this.resolve(name, definition);
     if (!zod) {
-      return `Variable ${name} is not defined in the process definition`;
+      return `Variable \$${name} does not exist.`;
     }
     try {
       zod.parse(value);

@@ -4,14 +4,6 @@ import { randomUUID } from 'crypto';
 import { DefinitionWalker } from 'sequential-workflow-model';
 import z from 'zod/v4';
 
-function countInputs(definition: ProcessDefinition): number {
-  return definition.properties.variables.filter(v => v.input).length;
-}
-
-function countOutputs(definition: ProcessDefinition): number {
-  return definition.properties.variables.filter(v => v.output).length;
-}
-
 function validateProcessDefinition(
   definition: ProcessDefinition,
   rootValidator: ProcessRootValidator,
@@ -49,8 +41,7 @@ export class Process {
       data.userList,
       data.definition,
       data.hash,
-      countInputs(data.definition),
-      countOutputs(data.definition),
+      data.definition.properties.startVariableNames.length,
       nSteps
     );
   }
@@ -64,8 +55,7 @@ export class Process {
     public userList: string,
     public definition: ProcessDefinition,
     public hash: string,
-    public nInputs: number,
-    public nOutputs: number,
+    public nStartInputs: number,
     public nSteps: number
   ) {}
 
@@ -81,8 +71,7 @@ export class Process {
     this.definition = data.definition;
     this.vvmCache = null;
     this.hash = data.hash;
-    this.nInputs = countInputs(data.definition);
-    this.nOutputs = countOutputs(data.definition);
+    this.nStartInputs = data.definition.properties.startVariableNames.length;
     this.nSteps = nSteps;
   }
 

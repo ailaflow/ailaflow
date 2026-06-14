@@ -8,8 +8,7 @@ const processLiteDtoSchema = z.object({
   name: z.string(),
   description: z.string(),
   userList: z.string(),
-  nInputs: z.number(),
-  nOutputs: z.number()
+  nStartInputs: z.number()
 });
 
 export const getProcessesResponseSchema = z.object({

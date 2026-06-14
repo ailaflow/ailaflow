@@ -30,18 +30,25 @@ export class ProcessRootValidator {
     }
 
     if (Object.keys(errors).length === 0) {
-      if (definition.properties.inputForm) {
-        const e = Object.values(FormDefinitionValidator.validate(definition.properties.inputForm, definition, this.variableValidator));
+      if (definition.properties.startForm) {
+        const e = Object.values(
+          FormDefinitionValidator.validate(
+            definition.properties.startForm,
+            definition.properties.startVariableNames,
+            definition,
+            this.variableValidator
+          )
+        );
         if (e.length > 0) {
           errors['properties.inputForm'] = e[0];
         }
       }
+    }
 
-      if (definition.properties.outputForm) {
-        const e = Object.values(FormDefinitionValidator.validate(definition.properties.outputForm, definition, this.variableValidator));
-        if (e.length > 0) {
-          errors['properties.outputForm'] = e[0];
-        }
+    for (const v of definition.properties.startVariableNames) {
+      const error = this.variableValidator.validateVariableExists(v, definition);
+      if (error) {
+        errors[`properties.startVariableNames`] = error;
       }
     }
     return errors;

@@ -10,6 +10,8 @@ import {
 } from '../../../views/process-editor/designer-editors/sub-value-preview-view';
 import { XIcon } from '../../../views/common/svg-icons';
 import { fnv1a } from '../../../core/fnv1a';
+import { VariableSelectorPropertyView } from '../../../views/process-editor/designer-editors/variable-selector-property-view';
+import { createEmptyFormDefinition } from '../designer-configuration';
 
 export interface RootEditorProps {
   editorState: ProcessEditorState;
@@ -17,7 +19,7 @@ export interface RootEditorProps {
 
 export function RootEditor(props: RootEditorProps) {
   const { properties, definition, setProperty } = useRootEditor<ProcessDefinition>();
-  const validationErrors = props.editorState.rootValidator.validate(definition);
+  const errors = props.editorState.rootValidator.validate(definition);
   const variables = properties.variables || [];
 
   function setVariables(nextVariables: VariableDefinition[]) {
@@ -33,8 +35,6 @@ export function RootEditor(props: RootEditorProps) {
       {
         name: '',
         description: '',
-        input: true,
-        output: false,
         schema: {
           schema,
           hash: fnv1a(schema)
@@ -56,63 +56,37 @@ export function RootEditor(props: RootEditorProps) {
     props.editorState.switchToSchemaEditor(path);
   }
 
-  function addInputForm() {
-    setProperty('inputForm', {
-      css: '',
-      html: '',
-      js: ''
-    });
+  function addStartForm() {
+    setProperty('startForm', createEmptyFormDefinition());
   }
 
-  function editInputFrom() {
-    const path = DefinitionPath.createRootPath(`properties.inputForm`);
+  function editStartFrom() {
+    const path = DefinitionPath.createRootPath(`properties.startForm`);
     props.editorState.switchToFormEditor(path);
   }
 
-  function addOutputForm() {
-    setProperty('outputForm', {
-      css: '',
-      html: '',
-      js: ''
-    });
-  }
-
-  function removeInputForm() {
-    if (window.confirm('Are you sure?')) {
-      setProperty('inputForm', undefined);
-    }
-  }
-
-  function editOutputFrom() {
-    const path = DefinitionPath.createRootPath(`properties.outputForm`);
-    props.editorState.switchToFormEditor(path);
-  }
-
-  function removeOutputForm() {
-    if (window.confirm('Are you sure?')) {
-      setProperty('outputForm', undefined);
-    }
+  function removeStartForm() {
+    setProperty('startForm', undefined);
   }
 
   return (
     <DesignerEditorView>
-      <EditorPropertyView label="Input Form">
-        {!properties.inputForm && <DisabledSubValuePreviewView onEnable={addInputForm} label="Enable" />}
-        {properties.inputForm && (
-          <EnabledSubValuePreviewView onEdit={editInputFrom} onRemove={removeInputForm}>
+      <EditorPropertyView label="Start Form">
+        {!properties.startForm && <DisabledSubValuePreviewView onEnable={addStartForm} label="Enable" />}
+        {properties.startForm && (
+          <EnabledSubValuePreviewView onEdit={editStartFrom} onRemove={removeStartForm}>
             Form
           </EnabledSubValuePreviewView>
         )}
       </EditorPropertyView>
 
-      <EditorPropertyView label="Output Form">
-        {!properties.outputForm && <DisabledSubValuePreviewView onEnable={addOutputForm} label="Enable" />}
-        {properties.outputForm && (
-          <EnabledSubValuePreviewView onEdit={editOutputFrom} onRemove={removeOutputForm}>
-            Form
-          </EnabledSubValuePreviewView>
-        )}
-      </EditorPropertyView>
+      <VariableSelectorPropertyView
+        label="Start Variables"
+        variables={definition.properties.variables}
+        variableNames={properties.startVariableNames}
+        onChange={n => setProperty('startVariableNames', n)}
+        error={errors['properties.startVariableNames']}
+      />
 
       <EditorPropertyView label="Variables" buttons={[{ command: 'add-variable', label: 'Add' }]} onButtonClick={addVariable}>
         {variables.length === 0 && (
@@ -120,7 +94,7 @@ export function RootEditor(props: RootEditorProps) {
         )}
 
         {variables.map((variable, index) => {
-          const nameError: string | undefined = validationErrors[`variables.${index}.name`];
+          const nameError: string | undefined = errors[`variables.${index}.name`];
 
           return (
             <div
@@ -169,29 +143,7 @@ export function RootEditor(props: RootEditorProps) {
                 />
               </label>
 
-              <div className="flex flex-wrap gap-2">
-                <label className="inline-flex h-8 items-center gap-2 rounded-md px-1 text-sm text-slate-700">
-                  <input
-                    type="checkbox"
-                    checked={variable.input}
-                    onChange={e => updateVariable(index, { input: e.target.checked })}
-                    className="h-4 w-4 rounded border-slate-300"
-                  />
-                  Input
-                </label>
-
-                <label className="inline-flex h-8 items-center gap-2 rounded-md px-1 text-sm text-slate-700">
-                  <input
-                    type="checkbox"
-                    checked={variable.output}
-                    onChange={e => updateVariable(index, { output: e.target.checked })}
-                    className="h-4 w-4 rounded border-slate-300"
-                  />
-                  Output
-                </label>
-              </div>
-
-              <EnabledSubValuePreviewView onEdit={() => editVariableSchema(index)} error={validationErrors[`variables.${index}.schema`]}>
+              <EnabledSubValuePreviewView onEdit={() => editVariableSchema(index)} error={errors[`variables.${index}.schema`]}>
                 Schema: <span className="font-medium text-slate-700">{variable.schema.schema.type}</span>
               </EnabledSubValuePreviewView>
             </div>

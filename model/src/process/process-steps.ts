@@ -39,6 +39,8 @@ export interface NotificationStep extends Step {
 export interface TaskStep extends Step {
   type: 'task';
   properties: {
+    inputVariableNames: string[];
+    outputVariableNames: string[];
     user: string;
     deadlineMinutes: number;
     stopProcessOnDeadline: boolean;

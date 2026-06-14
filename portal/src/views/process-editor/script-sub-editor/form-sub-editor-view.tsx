@@ -1,23 +1,17 @@
-import type { FormDefinition, FormInputVariable, FormOutputVariable } from '@aila/model';
-import { XIcon } from '../../common/svg-icons';
+import type { FormDefinition, FormInputExample } from '@aila/model';
 import { FormRenderer } from '../../form-renderer/form-renderer';
 
-export const formEditorTabs = ['Input & Output', 'HTML', 'CSS', 'JS', 'Preview'] as const;
+export const formEditorTabs = ['Example Inputs', 'HTML', 'CSS', 'JS', 'Preview'] as const;
 export type FormEditorTab = (typeof formEditorTabs)[number];
 
 export interface FormSubEditorViewProps {
   selectedTab: FormEditorTab;
-  availableVariables: string[];
-  inputVariables: FormInputVariable[];
-  outputVariables: FormOutputVariable[];
+  showExampleInputs: boolean;
+  inputExamples: FormInputExample[];
   errors: Record<string, string>;
   form: FormDefinition;
   onSelectTab: (tab: FormEditorTab) => void;
-  onAddInput: (name: string) => void;
-  onSetInputTestValue: (index: number, testValue: string) => void;
-  onRemoveInput: (index: number) => void;
-  onAddOutput: (name: string) => void;
-  onRemoveOutput: (index: number) => void;
+  onSetInputExampleValue: (index: number, exampleValue: string) => void;
   onHtmlChange: (value: string) => void;
   onCssChange: (value: string) => void;
   onJsChange: (value: string) => void;
@@ -31,7 +25,7 @@ export function FormSubEditorView(props: FormSubEditorViewProps) {
         aria-label="Form editor sections"
         className="flex h-10 shrink-0 overflow-x-auto border-b border-slate-300 bg-slate-100"
       >
-        {formEditorTabs.map(tab => {
+        {formEditorTabs.filter(tab => tab !== 'Example Inputs' || props.showExampleInputs).map(tab => {
           const isSelected = tab === props.selectedTab;
           return (
             <button
@@ -53,17 +47,11 @@ export function FormSubEditorView(props: FormSubEditorViewProps) {
       </div>
 
       <div className="min-h-0 flex-1">
-        {props.selectedTab === 'Input & Output' && (
-          <InputOutputEditor
-            availableVariables={props.availableVariables}
-            inputVariables={props.inputVariables}
-            outputVariables={props.outputVariables}
+        {props.selectedTab === 'Example Inputs' && (
+          <ExampleInputsEditor
+            inputExamples={props.inputExamples}
             errors={props.errors}
-            onAddInput={props.onAddInput}
-            onSetInputTestValue={props.onSetInputTestValue}
-            onRemoveInput={props.onRemoveInput}
-            onAddOutput={props.onAddOutput}
-            onRemoveOutput={props.onRemoveOutput}
+            onSetInputExampleValue={props.onSetInputExampleValue}
           />
         )}
         {props.selectedTab === 'HTML' && <CodeEditor label="HTML" value={props.form.html} onChange={props.onHtmlChange} />}
@@ -75,122 +63,58 @@ export function FormSubEditorView(props: FormSubEditorViewProps) {
   );
 }
 
-interface InputOutputEditorProps {
-  availableVariables: string[];
-  inputVariables: FormInputVariable[];
-  outputVariables: FormOutputVariable[];
+interface ExampleInputsEditorProps {
+  inputExamples: FormInputExample[];
   errors: Record<string, string>;
-  onAddInput: (name: string) => void;
-  onSetInputTestValue: (index: number, testValue: string) => void;
-  onRemoveInput: (index: number) => void;
-  onAddOutput: (name: string) => void;
-  onRemoveOutput: (index: number) => void;
+  onSetInputExampleValue: (index: number, exampleValue: string) => void;
 }
 
-function InputOutputEditor(props: InputOutputEditorProps) {
+function ExampleInputsEditor(props: ExampleInputsEditorProps) {
   return (
-    <div className="grid h-full min-h-0 grid-cols-1 overflow-auto lg:grid-cols-2 lg:divide-x lg:divide-slate-200 lg:overflow-hidden">
-      <VariablePanel
-        title="Input variables"
-        description="Variables supplied to the form. An optional example must be valid JSON for the variable schema."
-        availableVariables={props.availableVariables}
-        selectedNames={props.inputVariables.map(variable => variable.name)}
-        onAdd={props.onAddInput}
-      >
-        {props.inputVariables.map((variable, index) => (
-          <InputVariableRow
-            key={`${variable.name}_${index}`}
-            variable={variable}
-            error={props.errors[`inputVariables.${index}`]}
-            onTestValueChange={testValue => props.onSetInputTestValue(index, testValue)}
-            onRemove={() => props.onRemoveInput(index)}
-          />
-        ))}
-      </VariablePanel>
-
-      <VariablePanel
-        title="Output variables"
-        description="Variables populated by the form."
-        availableVariables={props.availableVariables}
-        selectedNames={props.outputVariables.map(variable => variable.name)}
-        onAdd={props.onAddOutput}
-      >
-        {props.outputVariables.map((variable, index) => (
-          <VariableRow
-            key={`${variable.name}_${index}`}
-            name={variable.name}
-            error={props.errors[`outputVariables.${index}`]}
-            onRemove={() => props.onRemoveOutput(index)}
-          />
-        ))}
-      </VariablePanel>
-    </div>
-  );
-}
-
-interface VariablePanelProps {
-  title: string;
-  description: string;
-  availableVariables: string[];
-  selectedNames: string[];
-  onAdd: (name: string) => void;
-  children: React.ReactNode;
-}
-
-function VariablePanel(props: VariablePanelProps) {
-  const choices = props.availableVariables.filter(name => !props.selectedNames.includes(name));
-
-  return (
-    <section className="flex min-h-0 flex-col border-b border-slate-200 bg-white lg:border-b-0">
+    <section className="flex h-full min-h-0 flex-col bg-white">
       <div className="shrink-0 border-b border-slate-200 bg-slate-50 px-4 py-3">
-        <h3 className="text-sm font-semibold text-slate-800">{props.title}</h3>
-        <p className="mt-1 text-xs leading-5 text-slate-500">{props.description}</p>
-        <select
-          value=""
-          disabled={choices.length === 0}
-          onChange={event => props.onAdd(event.target.value)}
-          className="mt-3 h-9 w-full rounded-md border border-slate-300 bg-white px-2 text-sm text-slate-700 outline-none transition-colors focus:border-blue-400 focus:ring-2 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
-          aria-label={`Add ${props.title.toLowerCase()}`}
-        >
-          <option value="">{choices.length === 0 ? 'No variables available' : 'Add variable...'}</option>
-          {choices.map(name => (
-            <option key={name} value={name}>
-              {name}
-            </option>
-          ))}
-        </select>
+        <h3 className="text-sm font-semibold text-slate-800">Example input values</h3>
+        <p className="mt-1 text-xs leading-5 text-slate-500">
+          Optional example values must be valid JSON and match the input variable schema.
+        </p>
       </div>
 
-      <div className="space-y-3 p-4 lg:min-h-0 lg:flex-1 lg:overflow-auto">
-        {props.selectedNames.length === 0 ? (
+      <div className="min-h-0 flex-1 space-y-3 overflow-auto p-4">
+        {props.inputExamples.length === 0 ? (
           <div className="rounded-md border border-dashed border-slate-300 px-3 py-6 text-center text-sm text-slate-500">
-            No variables selected.
+            No input variables expected.
           </div>
         ) : (
-          props.children
+          props.inputExamples.map((inputExample, index) => (
+            <InputExampleRow
+              key={inputExample.variableName}
+              inputExample={inputExample}
+              error={props.errors[`inputExamples.${index}`]}
+              onExampleValueChange={exampleValue => props.onSetInputExampleValue(index, exampleValue)}
+            />
+          ))
         )}
       </div>
     </section>
   );
 }
 
-interface InputVariableRowProps {
-  variable: FormInputVariable;
+interface InputExampleRowProps {
+  inputExample: FormInputExample;
   error?: string;
-  onTestValueChange: (testValue: string) => void;
-  onRemove: () => void;
+  onExampleValueChange: (exampleValue: string) => void;
 }
 
-function InputVariableRow(props: InputVariableRowProps) {
+function InputExampleRow(props: InputExampleRowProps) {
   return (
     <div className={`rounded-md border p-3 ${props.error ? 'border-red-300 bg-red-50/30' : 'border-slate-200'}`}>
-      <VariableHeader name={props.variable.name} onRemove={props.onRemove} />
+      <div className="truncate font-mono text-sm font-medium text-slate-800">${props.inputExample.variableName}</div>
       <label className="mt-3 block">
         <span className="mb-1 block text-xs text-slate-500">Example JSON value (optional)</span>
         <textarea
           rows={3}
-          value={props.variable.testValue ?? ''}
-          onChange={event => props.onTestValueChange(event.target.value)}
+          value={props.inputExample.exampleValue ?? ''}
+          onChange={event => props.onExampleValueChange(event.target.value)}
           spellCheck={false}
           placeholder={'{"example": true}'}
           className={`w-full resize-y rounded-md border bg-white px-3 py-2 font-mono text-sm leading-5 text-slate-800 outline-none transition-colors ${
@@ -199,32 +123,6 @@ function InputVariableRow(props: InputVariableRowProps) {
         />
       </label>
       {props.error && <div className="mt-2 text-xs text-red-700">{props.error}</div>}
-    </div>
-  );
-}
-
-function VariableRow(props: { name: string; error?: string; onRemove: () => void }) {
-  return (
-    <div className={`rounded-md border p-3 ${props.error ? 'border-red-300 bg-red-50/30' : 'border-slate-200'}`}>
-      <VariableHeader name={props.name} onRemove={props.onRemove} />
-      {props.error && <div className="mt-2 text-xs text-red-700">{props.error}</div>}
-    </div>
-  );
-}
-
-function VariableHeader(props: { name: string; onRemove: () => void }) {
-  return (
-    <div className="flex min-w-0 items-center gap-3">
-      <div className="min-w-0 flex-1 truncate font-mono text-sm font-medium text-slate-800">${props.name}</div>
-      <button
-        type="button"
-        onClick={props.onRemove}
-        className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-slate-300 bg-white text-slate-400 transition-colors hover:border-red-300 hover:bg-red-50 hover:text-red-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400"
-        aria-label={`Remove variable ${props.name}`}
-        title="Remove variable"
-      >
-        <XIcon className="h-4 w-4" />
-      </button>
     </div>
   );
 }

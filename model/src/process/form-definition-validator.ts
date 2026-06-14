@@ -5,38 +5,29 @@ import { VariableCachedValidator } from './variable-cached-validator';
 export class FormDefinitionValidator {
   public static validate(
     form: FormDefinition,
+    inputVariableNames: string[],
     definition: ProcessDefinition,
     variableValidator: VariableCachedValidator
   ): Record<string, string> {
     const errors: Record<string, string> = {};
 
-    if (form.inputVariables) {
-      for (let i = 0; i < form.inputVariables.length; i++) {
-        const v = form.inputVariables[i];
-        let error: string | null = null;
-        if (v.testValue) {
-          try {
-            const json = JSON.parse(v.testValue);
-            error = variableValidator.validateVariableValue(v.name, json, definition);
-          } catch {
-            error = `Test value is not valid JSON`;
-          }
-        } else {
-          error = variableValidator.validateVariableExists(v.name, definition);
+    for (let i = 0; i < form.inputExamples.length; i++) {
+      const v = form.inputExamples[i];
+      let error: string | null = null;
+      if (!inputVariableNames.includes(v.variableName)) {
+        error = `Variable "${v.variableName}" is not defined as an input variable.`;
+      } else if (v.exampleValue) {
+        try {
+          const json = JSON.parse(v.exampleValue);
+          error = variableValidator.validateVariableValue(v.variableName, json, definition);
+        } catch {
+          error = `Test value is not valid JSON`;
         }
-        if (error) {
-          errors[`inputVariables.${i}`] = error;
-        }
+      } else {
+        error = variableValidator.validateVariableExists(v.variableName, definition);
       }
-    }
-
-    if (form.outputVariables) {
-      for (let i = 0; i < form.outputVariables.length; i++) {
-        const v = form.outputVariables[i];
-        const error = variableValidator.validateVariableExists(v.name, definition);
-        if (error) {
-          errors[`outputVariables.${i}`] = error;
-        }
+      if (error) {
+        errors[`inputExamples.${i}`] = error;
       }
     }
     return errors;

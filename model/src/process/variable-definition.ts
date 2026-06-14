@@ -9,8 +9,6 @@ export const jsonSchema = z.object({
 export const variableDefinitionSchema = z.object({
   name: z.string(),
   description: z.string(),
-  input: z.boolean(),
-  output: z.boolean(),
   schema: jsonSchema
 });
 

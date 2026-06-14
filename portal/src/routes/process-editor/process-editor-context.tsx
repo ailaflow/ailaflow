@@ -64,6 +64,7 @@ const processEditorContext = createContext<ProcessEditorState | null>(null);
 function createEmptyDefinition(): ProcessDefinition {
   return {
     properties: {
+      startVariableNames: [],
       variables: []
     },
     sequence: []
@@ -110,7 +111,7 @@ export interface ProcessEditorContextProps {
 
 export function ProcessEditorContext(props: ProcessEditorContextProps) {
   const [state, dispatch] = useReducer(reduceState, undefined, () => createState(props));
-  const isValid = state.nameError === null && state.descriptionError === null && state.definition.isValid === true;
+  const isValid = state.nameError === null && state.descriptionError === null && state.definition.isValid !== false;
 
   function setDirtyFalse() {
     dispatch({

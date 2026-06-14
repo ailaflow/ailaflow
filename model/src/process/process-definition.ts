@@ -4,8 +4,8 @@ import { VariableDefinition } from './variable-definition';
 
 export interface ProcessDefinition extends Definition {
   properties: {
-    inputForm?: FormDefinition;
-    outputForm?: FormDefinition;
+    startForm?: FormDefinition;
+    startVariableNames: string[];
     variables: VariableDefinition[];
   };
 }

@@ -1,5 +1,5 @@
 import { ProcessDefinition } from '@aila/model';
-import { DefinitionWalker } from 'sequential-workflow-model';
+import { Definition, DefinitionWalker, Step } from 'sequential-workflow-model';
 
 const processWalker = new DefinitionWalker();
 
@@ -12,9 +12,20 @@ export class DefinitionPath {
     return `root/${path}`;
   }
 
-  public static readPath<T>(definition: ProcessDefinition, path: string): T {
-    const { object, pathParts } = parse(definition, path);
-    return resolve(object, pathParts, pathParts.length) as T;
+  public static readPath<T>(
+    definition: ProcessDefinition,
+    path: string
+  ): {
+    isRoot: boolean;
+    object: Definition | Step;
+    value: T;
+  } {
+    const { isRoot, object, pathParts } = parse(definition, path);
+    return {
+      isRoot,
+      object,
+      value: resolve(object, pathParts, pathParts.length) as T
+    };
   }
 
   public static writePath<T>(definition: ProcessDefinition, path: string, value: T) {
@@ -28,9 +39,11 @@ export class DefinitionPath {
 function parse(definition: ProcessDefinition, path: string) {
   const [type, p0, p1] = path.split('/', 3);
 
-  let object: object;
+  let isRoot = false;
+  let object: Definition | Step;
   let parts: string;
   if (type === 'root') {
+    isRoot = true;
     object = definition;
     parts = p0;
   } else if (type === 'step') {
@@ -45,6 +58,7 @@ function parse(definition: ProcessDefinition, path: string) {
   }
 
   return {
+    isRoot,
     object,
     pathParts: parts.split('.')
   };

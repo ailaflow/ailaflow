@@ -1,53 +1,65 @@
 import { ToolboxConfiguration } from 'sequential-workflow-designer';
-import { ScriptStep, AgentStep, TaskStep, NotificationStep, FileContent } from '@aila/model';
+import { ScriptStep, AgentStep, TaskStep, NotificationStep, FileContent, FormDefinition, ScriptDefinition } from '@aila/model';
 import { fnv1a } from '../../core/fnv1a';
 
-const SCRIPT_PACKAGE_JSON = JSON.stringify(
-  {
-    name: 'test',
-    private: true,
-    dependencies: {
-      '@aila/bridge-lib': 'file:/bridge/lib'
+export function createEmptyFormDefinition(): FormDefinition {
+  return {
+    inputExamples: [],
+    html: '<form>\n<h3>Test Form</h3>\n</form>\n',
+    css: 'body {\n  font: 14px/1.3em Arial, Tahoma;\n  margin: 0;\n  padding: 20px;\n  background-color: white;\n}\n',
+    js: '// JS here'
+  };
+}
+
+function createEmptyScriptDefinition(): ScriptDefinition {
+  const SCRIPT_PACKAGE_JSON = JSON.stringify(
+    {
+      name: 'process-script',
+      private: true,
+      dependencies: {
+        '@aila/bridge-lib': 'file:/bridge/lib'
+      }
+    },
+    null,
+    2
+  );
+  const SCRIPT_MAIN_JS = [
+    `const { readInput, writeOutput } = require('@aila/bridge-lib');`,
+    ``,
+    `async function main() {`,
+    `  const input = readInput();`,
+    `  writeOutput({ /* Output here */ });`,
+    `}`,
+    `main();`
+  ].join('\n');
+
+  const contents: FileContent[] = [
+    {
+      mimeType: 'text/json',
+      path: 'package.json',
+      modifiedAt: 0,
+      content: SCRIPT_PACKAGE_JSON
+    },
+    {
+      mimeType: 'text/javascript',
+      path: 'main.js',
+      content: SCRIPT_MAIN_JS,
+      modifiedAt: 0
     }
-  },
-  null,
-  2
-);
+  ];
+  return {
+    sandboxName: 'default',
+    hash: fnv1a(contents),
+    contents
+  };
+}
 
-const SCRIPT_MAIN_JS = [
-  `const { readInput, writeOutput } = require('@aila/bridge-lib');`,
-  ``,
-  `async function main() {`,
-  `  const input = readInput();`,
-  `  writeOutput({ /* Output here */ });`,
-  `}`,
-  `main();`
-].join('\n');
-
-const scriptDefaultContents: FileContent[] = [
-  {
-    mimeType: 'text/json',
-    path: 'package.json',
-    modifiedAt: 0,
-    content: SCRIPT_PACKAGE_JSON
-  },
-  {
-    mimeType: 'text/javascript',
-    path: 'main.js',
-    content: SCRIPT_MAIN_JS,
-    modifiedAt: 0
-  }
-];
 const scriptStep: Omit<ScriptStep, 'id'> = {
   type: 'script',
   name: 'Script',
   componentType: 'task',
   properties: {
-    script: {
-      sandboxName: 'default',
-      hash: fnv1a(scriptDefaultContents),
-      contents: scriptDefaultContents
-    }
+    script: createEmptyScriptDefinition()
   }
 };
 
@@ -65,14 +77,12 @@ const taskStep: Omit<TaskStep, 'id'> = {
   name: 'Task',
   componentType: 'task',
   properties: {
+    inputVariableNames: [],
+    outputVariableNames: [],
     user: '',
     deadlineMinutes: 60,
     stopProcessOnDeadline: false,
-    form: {
-      css: '',
-      html: '',
-      js: ''
-    }
+    form: createEmptyFormDefinition()
   }
 };
 
