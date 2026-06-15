@@ -40,6 +40,20 @@ export class ProcessStepValidator {
       if (e.length > 0) {
         errors['properties.form'] = e[0];
       }
+
+      this.variableValidator.setErrorIfAnyVariableIsMissing(
+        taskStep.properties.inputVariableNames,
+        definition,
+        errors,
+        'properties.readableVariableNames'
+      );
+
+      this.variableValidator.setErrorIfAnyVariableIsMissing(
+        taskStep.properties.outputVariableNames,
+        definition,
+        errors,
+        'properties.outputVariableNames'
+      );
     }
 
     return errors;

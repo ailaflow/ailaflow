@@ -1,5 +1,5 @@
 import type { FormDefinition, FormInputExample } from '@aila/model';
-import { FormRenderer } from '../../form-renderer/form-renderer';
+import { IframeForm } from '../../../routes/form-renderer/iframe-form';
 
 export const formEditorTabs = ['Example Inputs', 'HTML', 'CSS', 'JS', 'Preview'] as const;
 export type FormEditorTab = (typeof formEditorTabs)[number];
@@ -25,25 +25,27 @@ export function FormSubEditorView(props: FormSubEditorViewProps) {
         aria-label="Form editor sections"
         className="flex h-10 shrink-0 overflow-x-auto border-b border-slate-300 bg-slate-100"
       >
-        {formEditorTabs.filter(tab => tab !== 'Example Inputs' || props.showExampleInputs).map(tab => {
-          const isSelected = tab === props.selectedTab;
-          return (
-            <button
-              key={tab}
-              type="button"
-              role="tab"
-              aria-selected={isSelected}
-              onClick={() => props.onSelectTab(tab)}
-              className={`relative h-10 shrink-0 border-r border-slate-300 px-4 text-sm transition-colors ${
-                isSelected
-                  ? 'bg-white font-medium text-slate-900 after:absolute after:inset-x-0 after:top-0 after:h-0.5 after:bg-blue-500'
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-              }`}
-            >
-              {tab}
-            </button>
-          );
-        })}
+        {formEditorTabs
+          .filter(tab => tab !== 'Example Inputs' || props.showExampleInputs)
+          .map(tab => {
+            const isSelected = tab === props.selectedTab;
+            return (
+              <button
+                key={tab}
+                type="button"
+                role="tab"
+                aria-selected={isSelected}
+                onClick={() => props.onSelectTab(tab)}
+                className={`relative h-10 shrink-0 border-r border-slate-300 px-4 text-sm transition-colors ${
+                  isSelected
+                    ? 'bg-white font-medium text-slate-900 after:absolute after:inset-x-0 after:top-0 after:h-0.5 after:bg-blue-500'
+                    : 'bg-slate-100 text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                }`}
+              >
+                {tab}
+              </button>
+            );
+          })}
       </div>
 
       <div className="min-h-0 flex-1">
@@ -57,7 +59,7 @@ export function FormSubEditorView(props: FormSubEditorViewProps) {
         {props.selectedTab === 'HTML' && <CodeEditor label="HTML" value={props.form.html} onChange={props.onHtmlChange} />}
         {props.selectedTab === 'CSS' && <CodeEditor label="CSS" value={props.form.css} onChange={props.onCssChange} />}
         {props.selectedTab === 'JS' && <CodeEditor label="JavaScript" value={props.form.js} onChange={props.onJsChange} />}
-        {props.selectedTab === 'Preview' && <FormRenderer form={props.form} />}
+        {props.selectedTab === 'Preview' && <IframeForm form={props.form} onSubmit={() => {}} />}
       </div>
     </div>
   );

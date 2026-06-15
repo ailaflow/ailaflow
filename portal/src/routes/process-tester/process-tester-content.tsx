@@ -1,7 +1,7 @@
 import { ProcessDto, TestProcessUpdate } from '@aila/model';
-import { DefaultStartForm } from './default-start-form';
 import { useApiClient } from '../../auth/auth-context';
 import { useEffect, useState } from 'react';
+import { FormRenderer } from '../form-renderer/form-renderer';
 
 export interface ProcessTesterContentProps {
   process: ProcessDto;
@@ -43,9 +43,21 @@ export function ProcessTesterContent(props: ProcessTesterContentProps) {
     return () => abortController.abort();
   }, [formData]);
 
-  if (formData === null) {
-    return <DefaultStartForm definition={props.process.definition} onSubmit={setFormData} />;
+  function onSubmitValidData(data: Record<string, unknown>) {
+    setFormData(data);
   }
+
+  if (formData === null) {
+    return (
+      <FormRenderer
+        definition={props.process.definition}
+        form={props.process.definition.properties.startForm}
+        outputVariableNames={props.process.definition.properties.startVariableNames}
+        onSubmitValidData={onSubmitValidData}
+      />
+    );
+  }
+
   return (
     <div className="overflow-auto h-full p-4">
       <h2>Process Updates</h2>

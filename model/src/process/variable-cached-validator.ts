@@ -31,6 +31,16 @@ export class VariableCachedValidator {
     return null;
   }
 
+  public setErrorIfAnyVariableIsMissing(names: string[], definition: ProcessDefinition, errors: Record<string, string>, key: string) {
+    for (const name of names) {
+      const error = this.validateVariableExists(name, definition);
+      if (error) {
+        errors[key] = error;
+        break;
+      }
+    }
+  }
+
   public validateVariableValue(name: string, value: unknown, definition: ProcessDefinition): string | null {
     const zod = this.resolve(name, definition);
     if (!zod) {

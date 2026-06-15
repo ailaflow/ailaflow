@@ -45,12 +45,12 @@ export class ProcessRootValidator {
       }
     }
 
-    for (const v of definition.properties.startVariableNames) {
-      const error = this.variableValidator.validateVariableExists(v, definition);
-      if (error) {
-        errors[`properties.startVariableNames`] = error;
-      }
-    }
+    this.variableValidator.setErrorIfAnyVariableIsMissing(
+      definition.properties.startVariableNames,
+      definition,
+      errors,
+      'properties.startVariableNames'
+    );
     return errors;
   }
 
