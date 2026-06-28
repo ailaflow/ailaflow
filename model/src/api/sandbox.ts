@@ -22,7 +22,7 @@ const sandboxDtoSchema = z.object({
   isEnabled: z.boolean(),
   description: z.string(),
   configuration: z.string(),
-  envVariables: z.record(z.string(), z.string())
+  secrets: z.record(z.string(), z.string())
 });
 
 export const getSandboxResponseSchema = z.object({
@@ -39,7 +39,7 @@ export const upsertSandboxRequestSchema = z.object({
   isEnabled: z.boolean(),
   description: z.string(),
   configuration: z.string(),
-  envVariables: z.record(z.string(), z.string()),
+  secrets: z.record(z.string(), z.string()),
   hash: z.string()
 });
 

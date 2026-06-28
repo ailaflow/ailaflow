@@ -3,7 +3,7 @@ import { Repository } from '../repository';
 
 export class Sandbox {
   public static async create(data: UpsertSandboxRequest): Promise<Sandbox> {
-    return new Sandbox(data.name, data.isEnabled, data.description, data.configuration, data.envVariables, data.hash);
+    return new Sandbox(data.name, data.isEnabled, data.description, data.configuration, data.secrets, data.hash);
   }
 
   public constructor(
@@ -11,7 +11,7 @@ export class Sandbox {
     public isEnabled: boolean,
     public description: string,
     public configuration: string,
-    public envVariables: Record<string, string>,
+    public secrets: Record<string, string>,
     public hash: string
   ) {}
 }

@@ -10,7 +10,7 @@ import { SandboxList } from './sandbox-list/sandbox-list';
 import { SandboxEditor } from './sandbox-editor/sandbox-editor';
 import { AdminPortal } from './common/admin-portal';
 
-const router = createBrowserRouter([
+export const routes = [
   {
     path: '/',
     element: <AuthGate route={<Dashboard />} />
@@ -24,7 +24,6 @@ const router = createBrowserRouter([
     element: <Install />
   },
   {
-    path: '/admin',
     element: <AuthGate route={<AdminPortal />} />,
     children: [
       {
@@ -57,7 +56,9 @@ const router = createBrowserRouter([
       }
     ]
   }
-]);
+];
+
+const router = createBrowserRouter(routes);
 
 export function Router() {
   return <RouterProvider router={router} />;

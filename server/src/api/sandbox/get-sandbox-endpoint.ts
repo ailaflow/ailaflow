@@ -26,7 +26,7 @@ export class GetSandboxEndpoint implements Endpoint {
         isEnabled: sandbox.isEnabled,
         description: sandbox.description,
         configuration: sandbox.configuration,
-        envVariables: sandbox.envVariables
+        secrets: sandbox.secrets
       }
     };
   }

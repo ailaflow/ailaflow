@@ -2,7 +2,7 @@ import { DockerfileContent } from '@aila/model';
 import { useLayoutEffect, useRef, useState } from 'react';
 import { EyeClosedIcon, EyeOpenIcon, XIcon } from '../common/svg-icons';
 
-export interface SandboxEnvVariable {
+export interface SandboxSecret {
   id: number;
   key: string;
   value: string;
@@ -11,18 +11,18 @@ export interface SandboxEnvVariable {
 export interface SandboxEditorViewProps {
   isEnabled: boolean;
   configuration: string;
-  envVariables: SandboxEnvVariable[];
+  secrets: SandboxSecret[];
   onIsEnabledChange(isEnabled: boolean): void;
   onConfigurationChange(configuration: string): void;
-  onEnvVariableAdd(): void;
-  onEnvVariableRemove(id: number): void;
-  onEnvVariableKeyChange(id: number, key: string): void;
-  onEnvVariableValueChange(id: number, value: string): void;
+  onSecretAdd(): void;
+  onSecretRemove(id: number): void;
+  onSecretKeyChange(id: number, key: string): void;
+  onSecretValueChange(id: number, value: string): void;
 }
 
 export function SandboxEditorView(props: SandboxEditorViewProps) {
   const configurationTextareaRef = useRef<HTMLTextAreaElement>(null);
-  const [visibleEnvVariableValueIds, setVisibleEnvVariableValueIds] = useState<Set<number>>(() => new Set());
+  const [visibleSecretValueIds, setVisibleSecretValueIds] = useState<Set<number>>(() => new Set());
 
   useLayoutEffect(() => {
     const textarea = configurationTextareaRef.current;
@@ -34,12 +34,12 @@ export function SandboxEditorView(props: SandboxEditorViewProps) {
     textarea.style.height = `${textarea.scrollHeight}px`;
   }, [props.configuration]);
 
-  function isEnvVariableValueVisible(id: number): boolean {
-    return visibleEnvVariableValueIds.has(id);
+  function isSecretValueVisible(id: number): boolean {
+    return visibleSecretValueIds.has(id);
   }
 
-  function toggleEnvVariableValueVisibility(id: number) {
-    setVisibleEnvVariableValueIds(current => {
+  function toggleSecretValueVisibility(id: number) {
+    setVisibleSecretValueIds(current => {
       const next = new Set(current);
       if (next.has(id)) {
         next.delete(id);
@@ -50,9 +50,9 @@ export function SandboxEditorView(props: SandboxEditorViewProps) {
     });
   }
 
-  function removeEnvVariable(id: number) {
-    props.onEnvVariableRemove(id);
-    setVisibleEnvVariableValueIds(current => {
+  function removeSecret(id: number) {
+    props.onSecretRemove(id);
+    setVisibleSecretValueIds(current => {
       const next = new Set(current);
       next.delete(id);
       return next;
@@ -86,13 +86,13 @@ export function SandboxEditorView(props: SandboxEditorViewProps) {
 
         <div>
           <div className="mb-1.5 flex items-center justify-between gap-3">
-            <span className="block text-sm font-medium text-slate-700">Environment variables</span>
+            <span className="block text-sm font-medium text-slate-700">Secrets</span>
             <button
               type="button"
-              onClick={props.onEnvVariableAdd}
+              onClick={props.onSecretAdd}
               className="inline-flex h-8 shrink-0 items-center justify-center rounded-md border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 hover:text-slate-900"
             >
-              Add variable
+              Add secret
             </button>
           </div>
 
@@ -112,20 +112,20 @@ export function SandboxEditorView(props: SandboxEditorViewProps) {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 bg-white">
-                {props.envVariables.length === 0 ? (
+                {props.secrets.length === 0 ? (
                   <tr>
                     <td colSpan={3} className="px-3 py-8 text-center text-sm text-slate-500">
-                      No environment variables
+                      No secrets
                     </td>
                   </tr>
                 ) : (
-                  props.envVariables.map(variable => (
-                    <tr key={variable.id}>
+                  props.secrets.map(secret => (
+                    <tr key={secret.id}>
                       <td className="px-3 py-2">
                         <input
                           type="text"
-                          value={variable.key}
-                          onChange={e => props.onEnvVariableKeyChange(variable.id, e.target.value)}
+                          value={secret.key}
+                          onChange={e => props.onSecretKeyChange(secret.id, e.target.value)}
                           className="h-9 w-full rounded-md border border-slate-200 px-2.5 font-mono text-sm text-slate-900 outline-none transition-colors placeholder:text-slate-400 focus:border-slate-400"
                           placeholder="KEY_NAME"
                           spellCheck={false}
@@ -134,20 +134,20 @@ export function SandboxEditorView(props: SandboxEditorViewProps) {
                       <td className="px-3 py-2">
                         <div className="flex h-9 overflow-hidden rounded-md border border-slate-200 transition-colors focus-within:border-slate-400">
                           <input
-                            type={isEnvVariableValueVisible(variable.id) ? 'text' : 'password'}
-                            value={variable.value}
-                            onChange={e => props.onEnvVariableValueChange(variable.id, e.target.value)}
+                            type={isSecretValueVisible(secret.id) ? 'text' : 'password'}
+                            value={secret.value}
+                            onChange={e => props.onSecretValueChange(secret.id, e.target.value)}
                             className="min-w-0 flex-1 border-0 px-2.5 font-mono text-sm text-slate-900 outline-none placeholder:text-slate-400"
                             placeholder="value"
                             spellCheck={false}
                           />
                           <button
                             type="button"
-                            aria-label={`${isEnvVariableValueVisible(variable.id) ? 'Hide' : 'Show'} ${variable.key || 'environment variable'} value`}
-                            onClick={() => toggleEnvVariableValueVisibility(variable.id)}
+                            aria-label={`${isSecretValueVisible(secret.id) ? 'Hide' : 'Show'} ${secret.key || 'secret'} value`}
+                            onClick={() => toggleSecretValueVisibility(secret.id)}
                             className="inline-flex h-full w-9 shrink-0 items-center justify-center border-l border-slate-200 bg-white text-slate-500 transition-colors hover:bg-slate-50 hover:text-slate-800"
                           >
-                            {isEnvVariableValueVisible(variable.id) ? (
+                            {isSecretValueVisible(secret.id) ? (
                               <EyeClosedIcon className="h-4 w-4" />
                             ) : (
                               <EyeOpenIcon className="h-4 w-4" />
@@ -158,8 +158,8 @@ export function SandboxEditorView(props: SandboxEditorViewProps) {
                       <td className="px-3 py-2 text-right">
                         <button
                           type="button"
-                          aria-label={`Remove ${variable.key || 'environment variable'}`}
-                          onClick={() => removeEnvVariable(variable.id)}
+                          aria-label={`Remove ${secret.key || 'secret'}`}
+                          onClick={() => removeSecret(secret.id)}
                           className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-slate-200 bg-white text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900"
                         >
                           <XIcon className="h-4 w-4" />

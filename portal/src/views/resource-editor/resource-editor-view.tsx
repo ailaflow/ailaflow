@@ -10,7 +10,7 @@ export interface ResourceEditorViewProps {
   areDetailsVisible?: boolean;
   details?: React.ReactNode;
   canSave?: boolean;
-  onSave?: () => void;
+  onSave?: () => Promise<void>;
   canSwitch: boolean;
   onSwitch?: () => void;
   switchLabel: string;
@@ -51,9 +51,15 @@ export function ResourceEditorView(props: ResourceEditorViewProps) {
               <button
                 type="button"
                 disabled={!props.canSave}
-                onClick={e => {
+                onClick={async e => {
                   e.preventDefault();
-                  props.onSave?.();
+                  try {
+                    if (props.onSave) {
+                      await props.onSave();
+                    }
+                  } catch (e) {
+                    alert(`Failed to save: ${(e as Error)?.message ?? e}`);
+                  }
                 }}
                 className="inline-flex h-9 shrink-0 items-center rounded-md border cursor-pointer border-slate-900 bg-slate-900 px-3 text-sm font-medium text-white transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:border-slate-300 disabled:bg-slate-300 disabled:hover:bg-slate-300"
               >

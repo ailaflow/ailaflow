@@ -8,10 +8,15 @@ import { FormSubEditor } from './sub-editors/form-sub-editor';
 import { ScriptSubEditor } from './sub-editors/script-sub-editor';
 import { ResourceSimpleDetailsView } from '../../views/resource-editor/resource-simple-details-view';
 import { fnv1a } from '../../core/fnv1a';
+import { useAiBindings } from '../common/ai-bindings/ai-bindings-context';
+import { useEffect } from 'react';
+import { ProcessValidator } from '@aila/model';
+import { toolError, toolSuccess } from '../common/ai-bindings/ai-tool-results';
 
 export function ProcessEditorContent() {
   const state = useProcessEditor();
   const apiClient = useApiClient();
+  const { stores } = useAiBindings();
   const navigate = useNavigate();
 
   const isDesigner = state.mode === ProcessEditorMode.DESIGNER;
@@ -48,6 +53,27 @@ export function ProcessEditorContent() {
       alert(`Failed to save process: ${(e as Error).message ?? e}`);
     }
   }
+
+  useEffect(
+    () =>
+      stores.processEditor.bind({
+        async process_editor_get_details() {
+          return {
+            name: state.name,
+            description: state.description
+          };
+        },
+        async process_editor_set_name(arg) {
+          const error = ProcessValidator.validateName(arg.name);
+          if (error) {
+            return toolError(error);
+          }
+          state.setName(arg.name);
+          return toolSuccess('Name updated');
+        }
+      }),
+    [stores, state]
+  );
 
   return (
     <ResourceEditorView

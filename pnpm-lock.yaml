@@ -87,6 +87,9 @@ importers:
       sequential-workflow-model:
         specifier: ^0.2.0
         version: 0.2.0
+      zod:
+        specifier: ^4.4.3
+        version: 4.4.3
     devDependencies:
       '@tailwindcss/vite':
         specifier: ^4.3.0

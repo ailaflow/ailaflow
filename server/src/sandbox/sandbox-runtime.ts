@@ -23,21 +23,21 @@ export class SandboxRuntime {
     abortSignal: AbortSignal,
     hostPaths: SandboxHostPaths,
     name: string,
-    envVariables: Record<string, string>,
+    secrets: Record<string, string>,
     rpcHandlerProvider: SandboxRpcHandlerProvider
   ): Promise<SandboxRuntime> {
     const logger = new Logger(`Sandbox:${name}`);
 
     const imageTag = `aila_sandbox_${name}`;
     const dockerName = `aila_sandbox_${name}`;
-    const finalEnvVariables = {
-      ...envVariables,
+    const buildArgs = {
+      ...secrets,
       SANDBOX_NAME: name
     };
 
     const docker = new Docker(hostPaths.ailaFolderAbsolutePath);
     await docker.tryRemove(dockerName);
-    await docker.build(imageTag, hostPaths.dockerfileAbsolitePath, finalEnvVariables);
+    await docker.build(imageTag, hostPaths.dockerfileAbsolitePath, buildArgs);
     logger.log(`Built image with tag ${imageTag}`);
 
     const containerId = await docker.run(imageTag, BRIDGE_PORT, [

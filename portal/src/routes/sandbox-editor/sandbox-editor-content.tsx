@@ -1,15 +1,16 @@
 import { useNavigate } from 'react-router-dom';
 import { useApiClient } from '../../auth/auth-context';
 import { useEffect, useRef, useState } from 'react';
-import { SandboxDto, SandboxValidator } from '@aila/model';
+import { DockerfileContent, SandboxDto, SandboxValidator } from '@aila/model';
 import { ResourceEditorView } from '../../views/resource-editor/resource-editor-view';
-import { SandboxEditorView, SandboxEnvVariable } from '../../views/sandbox-editor/sandbox-editor-view';
+import { SandboxEditorView, SandboxSecret } from '../../views/sandbox-editor/sandbox-editor-view';
 import { ResourceSimpleDetailsView } from '../../views/resource-editor/resource-simple-details-view';
 import { useAiBindings } from '../common/ai-bindings/ai-bindings-context';
 import { fnv1a } from '../../core/fnv1a';
+import { toolError, toolSuccess } from '../common/ai-bindings/ai-tool-results';
 
 interface EditorDataState {
-  envVariables: SandboxEnvVariable[];
+  secrets: SandboxSecret[];
   name: string;
   description: string;
   isEnabled: boolean;
@@ -19,16 +20,16 @@ interface EditorDataState {
 
 export function SandboxEditorContent(props: { sandbox?: SandboxDto }) {
   const apiClient = useApiClient();
-  const aiBindings = useAiBindings();
+  const { stores } = useAiBindings();
   const navigate = useNavigate();
 
-  const lastEnvVariableId = useRef(0);
+  const lastSecretId = useRef(0);
   const [state, setState] = useState<EditorDataState>(() => ({
-    envVariables: props.sandbox
-      ? Object.keys(props.sandbox.envVariables).map(key => ({
-          id: lastEnvVariableId.current++,
+    secrets: props.sandbox
+      ? Object.keys(props.sandbox.secrets).map(key => ({
+          id: lastSecretId.current++,
           key,
-          value: props.sandbox!.envVariables[key]
+          value: props.sandbox!.secrets[key]
         }))
       : [],
     name: props.sandbox?.name ?? '',
@@ -45,64 +46,66 @@ export function SandboxEditorContent(props: { sandbox?: SandboxDto }) {
 
   useEffect(
     () =>
-      aiBindings.sandboxEditor.bind({
+      stores.sandboxEditor.bind({
+        sandbox_editor_get_details: async () => {
+          return {
+            name: state.name,
+            description: state.description,
+            isEnabled: state.isEnabled,
+            configurationPrefix: DockerfileContent.prefix,
+            configuration: state.configuration,
+            configurationSuffix: DockerfileContent.suffix,
+            secretNames: state.secrets.map(secret => secret.key)
+          };
+        },
         sandbox_editor_set_name: async arg => {
           if (isNameReadOnly) {
-            return {
-              error: 'Sandbox name cannot be changed.'
-            };
+            return toolError('Sandbox name cannot be changed.');
           }
-          const validationError = SandboxValidator.validateName(arg.name);
-          if (validationError) {
-            return { validationError };
+          const error = SandboxValidator.validateName(arg.name);
+          if (error) {
+            return toolError(error);
           }
           update({ name: arg.name });
-          return {
-            ok: 'Sandbox name updated.'
-          };
-        },
-        sandbox_editor_get_name: async () => {
-          return {
-            name: state.name
-          };
-        },
-        sandbox_editor_get_is_enabled: async () => {
-          return { isEnabled: state.isEnabled };
+          return toolSuccess('Updated.');
         },
         sandbox_editor_set_is_enabled: async arg => {
           update({ isEnabled: arg.isEnabled });
-          return {
-            ok: 'Sandbox enabled state updated.'
-          };
+          return toolSuccess('Updated.');
+        },
+        sandbox_editor_set_configuration: async arg => {
+          update({ configuration: arg.configuration });
+          return toolSuccess('Updated.');
+        },
+        sandbox_editor_save: async () => {
+          if (!canSave) {
+            return toolError('Cannot save sandbox due to validation errors or no changes made.');
+          }
+          await save();
+          return toolSuccess('Saved.');
         }
       }),
-    [aiBindings]
+    [stores, isNameReadOnly, state]
   );
 
   async function save() {
-    try {
-      const envVariables = state.envVariables.reduce<Record<string, string>>(
-        (acc, variable) => ({ ...acc, [variable.key]: variable.value }),
-        {}
-      );
-      await apiClient.sandbox.upsertSandbox(AbortSignal.timeout(5_000), {
-        name: state.name,
-        description: state.description,
-        isEnabled: state.isEnabled,
-        configuration: state.configuration,
-        envVariables,
-        hash: fnv1a({
-          envVariables,
-          configuration: state.configuration
-        })
-      });
-      if (props.sandbox) {
-        setState({ ...state, isDirty: false });
-      } else {
-        navigate(`/admin/sandboxes/${state.name}`);
-      }
-    } catch (e) {
-      alert(`Failed to save sandbox: ${e}`);
+    const secrets = state.secrets.reduce<Record<string, string>>((acc, secret) => ({ ...acc, [secret.key]: secret.value }), {});
+    const abortSignal = AbortSignal.timeout(5_000);
+    await apiClient.sandbox.upsertSandbox(abortSignal, {
+      name: state.name,
+      description: state.description,
+      isEnabled: state.isEnabled,
+      configuration: state.configuration,
+      secrets,
+      hash: fnv1a({
+        secrets,
+        configuration: state.configuration
+      })
+    });
+    if (props.sandbox) {
+      setState({ ...state, isDirty: false });
+    } else {
+      navigate(`/admin/sandboxes/${state.name}`);
     }
   }
 
@@ -110,12 +113,12 @@ export function SandboxEditorContent(props: { sandbox?: SandboxDto }) {
     setState(state => ({ ...state, ...delta, isDirty: true }));
   }
 
-  function onEnvVariableAdd() {
+  function onSecretAdd() {
     update({
-      envVariables: [
-        ...state.envVariables,
+      secrets: [
+        ...state.secrets,
         {
-          id: lastEnvVariableId.current++,
+          id: lastSecretId.current++,
           key: '',
           value: ''
         }
@@ -123,21 +126,21 @@ export function SandboxEditorContent(props: { sandbox?: SandboxDto }) {
     });
   }
 
-  function onEnvVariableRemove(id: number) {
+  function onSecretRemove(id: number) {
     update({
-      envVariables: state.envVariables.filter(variable => variable.id !== id)
+      secrets: state.secrets.filter(secret => secret.id !== id)
     });
   }
 
-  function onEnvVariableKeyChange(id: number, key: string) {
+  function onSecretKeyChange(id: number, key: string) {
     update({
-      envVariables: state.envVariables.map(variable => (variable.id === id ? { ...variable, key: key.toUpperCase() } : variable))
+      secrets: state.secrets.map(secret => (secret.id === id ? { ...secret, key: key.toUpperCase() } : secret))
     });
   }
 
-  function onEnvVariableValueChange(id: number, value: string) {
+  function onSecretValueChange(id: number, value: string) {
     update({
-      envVariables: state.envVariables.map(variable => (variable.id === id ? { ...variable, value } : variable))
+      secrets: state.secrets.map(secret => (secret.id === id ? { ...secret, value } : secret))
     });
   }
 
@@ -168,13 +171,13 @@ export function SandboxEditorContent(props: { sandbox?: SandboxDto }) {
       <SandboxEditorView
         isEnabled={state.isEnabled}
         configuration={state.configuration}
-        envVariables={state.envVariables}
+        secrets={state.secrets}
         onIsEnabledChange={isEnabled => update({ isEnabled })}
         onConfigurationChange={configuration => update({ configuration })}
-        onEnvVariableAdd={onEnvVariableAdd}
-        onEnvVariableRemove={onEnvVariableRemove}
-        onEnvVariableKeyChange={onEnvVariableKeyChange}
-        onEnvVariableValueChange={onEnvVariableValueChange}
+        onSecretAdd={onSecretAdd}
+        onSecretRemove={onSecretRemove}
+        onSecretKeyChange={onSecretKeyChange}
+        onSecretValueChange={onSecretValueChange}
       />
     </ResourceEditorView>
   );

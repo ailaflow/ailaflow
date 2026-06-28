@@ -18,10 +18,8 @@ export interface ResourceListAction<T> {
 
 export interface ResourceListViewProps<T> {
   title: string;
-  createNew?: {
-    label: string;
-    to: string;
-  };
+  createNewLabel?: string;
+  onCreateNewClicked?(): void | Promise<void>;
   columns: ResourceListColumn<T>[];
   rows: T[];
   getRowKey(item: T): string;
@@ -40,13 +38,14 @@ export function ResourceListView<T>(props: ResourceListViewProps<T>) {
             <h1 className="text-3xl font-semibold tracking-tight text-slate-900">{props.title}</h1>
           </div>
 
-          {props.createNew ? (
-            <Link
-              to={props.createNew.to}
+          {props.createNewLabel && props.onCreateNewClicked ? (
+            <button
+              type="button"
+              onClick={() => void props.onCreateNewClicked?.()}
               className="inline-flex h-9 shrink-0 items-center justify-center rounded-md border border-slate-900 bg-slate-900 px-3 text-sm font-medium text-white transition-colors hover:bg-slate-800"
             >
-              {props.createNew.label}
-            </Link>
+              {props.createNewLabel}
+            </button>
           ) : null}
         </div>
       </div>

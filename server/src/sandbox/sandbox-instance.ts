@@ -24,7 +24,7 @@ export class SandboxInstance {
 
     await materializer.tryMaterializeSandbox(abortSignal, sandbox);
 
-    const runtime = await SandboxRuntime.create(abortSignal, hostPaths, name, sandbox.envVariables, rpcHandlerProvider);
+    const runtime = await SandboxRuntime.create(abortSignal, hostPaths, name, sandbox.secrets, rpcHandlerProvider);
 
     const dependenciesInstaller = new SandboxDependenciesInstaller(runtime, hostPaths);
     const executor = new SandboxExecutor(runtime);

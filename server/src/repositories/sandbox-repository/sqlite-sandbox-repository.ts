@@ -16,7 +16,7 @@ export class SqliteSandboxRepository implements SandboxRepository {
         isEnabled INTEGER NOT NULL,
         description TEXT NOT NULL,
         configuration TEXT NOT NULL,
-        serializedEnvVariables TEXT NOT NULL,
+        serializedSecrets TEXT NOT NULL,
         hash TEXT NOT NULL
       )
     `);
@@ -24,13 +24,13 @@ export class SqliteSandboxRepository implements SandboxRepository {
 
   public async upsert(sandbox: Sandbox): Promise<void> {
     const statement = this.db.prepare(`
-      INSERT INTO sandboxes (name, isEnabled, description, configuration, serializedEnvVariables, hash)
+      INSERT INTO sandboxes (name, isEnabled, description, configuration, serializedSecrets, hash)
       VALUES (?, ?, ?, ?, ?, ?)
       ON CONFLICT(name) DO UPDATE SET
         isEnabled = excluded.isEnabled,
         description = excluded.description,
         configuration = excluded.configuration,
-        serializedEnvVariables = excluded.serializedEnvVariables,
+        serializedSecrets = excluded.serializedSecrets,
         hash = excluded.hash
     `);
     statement.run(
@@ -38,14 +38,14 @@ export class SqliteSandboxRepository implements SandboxRepository {
       sandbox.isEnabled ? 1 : 0,
       sandbox.description,
       sandbox.configuration,
-      JSON.stringify(sandbox.envVariables),
+      JSON.stringify(sandbox.secrets),
       sandbox.hash
     );
   }
 
   public async tryGet(name: string): Promise<Sandbox | null> {
     const statement = this.db.prepare(`
-      SELECT name, isEnabled, description, configuration, serializedEnvVariables, hash
+      SELECT name, isEnabled, description, configuration, serializedSecrets, hash
       FROM sandboxes
       WHERE name = ?
       LIMIT 1
@@ -56,7 +56,7 @@ export class SqliteSandboxRepository implements SandboxRepository {
           isEnabled: number;
           description: string;
           configuration: string;
-          serializedEnvVariables: string;
+          serializedSecrets: string;
           hash: string;
         }
       | undefined;
@@ -67,7 +67,7 @@ export class SqliteSandboxRepository implements SandboxRepository {
           row.isEnabled === 1,
           row.description,
           row.configuration,
-          JSON.parse(row.serializedEnvVariables) as Record<string, string>,
+          JSON.parse(row.serializedSecrets) as Record<string, string>,
           row.hash
         )
       : null;

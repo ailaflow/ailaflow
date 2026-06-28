@@ -1,11 +1,22 @@
 import { ToolDescriptor } from '@aila/model';
+import z from 'zod/v4';
+import { toolError, toolWait } from './ai-tool-results';
 
-export function buildAiBinding<Name extends string>(name: Name) {
+export function aiBinding<Name extends string>(name: Name, description: string) {
   return {
-    arg<Arg>(descriptor: Omit<ToolDescriptor['function'], 'name'>): AiBinding<Arg, Name> {
+    arg<S extends z.ZodObject>(zod: S): AiBinding<z.infer<S>, Name> {
       return {
         descriptor: {
-          ...descriptor,
+          description,
+          parameters: zod.toJSONSchema(),
+          name
+        }
+      };
+    },
+    void(): AiBinding<void, Name> {
+      return {
+        descriptor: {
+          description,
           name
         }
       };
@@ -25,24 +36,53 @@ export type AiSetter<Bindings extends readonly AiBinding<any, string>[]> = {
   ) => Promise<object>;
 };
 
-export interface AiBindingsStore<Bindings extends readonly AiBinding<any, string>[] = readonly AiBinding<any, string>[]> {
-  readonly bindings: Bindings;
-  readonly functionNames: Set<string>;
-  readonly notAvailableMessage: string;
-  tryGet(): AiSetter<Bindings> | null;
-  bind(setter: AiSetter<Bindings>): () => void;
+export interface AiRoute<_Arg = any> {
+  name: string;
+  paths: string[];
+  notAvailableMessage: string;
+  argSchema?: ToolDescriptor['function']['parameters'];
 }
 
-export function buildAiBindingStoreFactory<Bindings extends readonly AiBinding<any, string>[]>(
+export function aiRoute(name: string, paths: string[], notAvailableMessage: string) {
+  return {
+    arg<S extends z.ZodObject>(zod: S): AiRoute<z.infer<S>> {
+      return {
+        name,
+        paths,
+        notAvailableMessage,
+        argSchema: zod.toJSONSchema()
+      };
+    },
+    void(): AiRoute<void> {
+      return {
+        name,
+        paths,
+        notAvailableMessage
+      };
+    }
+  };
+}
+
+export interface AiBindingsStore<Bindings extends readonly AiBinding<any, string>[] = readonly AiBinding<any, string>[], RouteArg = any> {
+  readonly bindings: Bindings;
+  readonly functionNames: Set<string>;
+  readonly route?: AiRoute<RouteArg>;
+  tryGet(): AiSetter<Bindings> | null;
+  bind(setter: AiSetter<Bindings>): () => void;
+  bindWait(finishSignal: AbortSignal): () => void;
+  bindError(error: string | Error): () => void;
+}
+
+export function buildAiBindingStoreFactory<Bindings extends readonly AiBinding<any, string>[], RouteArg>(
   bindings: Bindings,
-  notAvailableMessage: string
-): () => AiBindingsStore<Bindings> {
+  route?: AiRoute<RouteArg>
+): () => AiBindingsStore<Bindings, RouteArg> {
   return () => {
     let setter: AiSetter<Bindings> | null = null;
     return {
       bindings,
       functionNames: new Set(bindings.map(b => b.descriptor.name)),
-      notAvailableMessage,
+      route,
       tryGet() {
         return setter;
       },
@@ -51,6 +91,20 @@ export function buildAiBindingStoreFactory<Bindings extends readonly AiBinding<a
         return () => {
           setter = null;
         };
+      },
+      bindWait(finishSignal: AbortSignal) {
+        const setter: AiSetter<any> = {};
+        for (const binding of bindings) {
+          setter[binding.descriptor.name] = async () => toolWait(finishSignal);
+        }
+        return this.bind(setter as AiSetter<Bindings>);
+      },
+      bindError(error: string | Error) {
+        const setter: AiSetter<any> = {};
+        for (const binding of bindings) {
+          setter[binding.descriptor.name] = async () => toolError(error);
+        }
+        return this.bind(setter as AiSetter<Bindings>);
       }
     };
   };

@@ -1,23 +1,28 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 export type LoaderResult<T> =
   | {
       isLoading: false;
+      finishSignal: AbortSignal;
       data: T;
       error?: never;
     }
   | {
       isLoading: false;
+      finishSignal: AbortSignal;
       error: Error;
       data?: never;
     }
   | {
       isLoading: true;
+      finishSignal: AbortSignal;
       data?: never;
       error?: never;
     };
 
 export function useLoader<T>(loader: (abortSignal: AbortSignal) => Promise<T>, deps: unknown[] = []): LoaderResult<T> {
+  const finishAbortController = useMemo(() => new AbortController(), deps);
+  const finishSignal = finishAbortController.signal;
   const [data, setData] = useState<{
     data?: T;
     error?: Error;
@@ -31,10 +36,16 @@ export function useLoader<T>(loader: (abortSignal: AbortSignal) => Promise<T>, d
 
       try {
         const data = await loader(abortController.signal);
-        setData({ data });
+        if (!abortController.signal.aborted) {
+          setData({ data });
+        }
       } catch (e) {
-        const error = e instanceof Error ? e : new Error(String(e));
-        setData({ error });
+        if (!abortController.signal.aborted) {
+          const error = e instanceof Error ? e : new Error(String(e));
+          setData({ error });
+        }
+      } finally {
+        finishAbortController.abort();
       }
     }
 
@@ -43,10 +54,10 @@ export function useLoader<T>(loader: (abortSignal: AbortSignal) => Promise<T>, d
   }, deps);
 
   if (data === null) {
-    return { isLoading: true };
+    return { isLoading: true, finishSignal };
   }
   if (data.error) {
-    return { isLoading: false, error: data.error };
+    return { isLoading: false, finishSignal, error: data.error };
   }
-  return { isLoading: false, data: data.data! };
+  return { isLoading: false, finishSignal, data: data.data! };
 }

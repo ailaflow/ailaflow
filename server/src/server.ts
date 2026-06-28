@@ -99,7 +99,13 @@ export class Server {
 
     const chatSessionStore = new ChatSessionStore();
     const userChatSessionStore = new UserChatSessionStore(chatSessionStore, chatSessionFactory, llmClient, userToolSetProvider);
-    const adminChatSessionStore = new AdminChatSessionStore(chatSessionStore, chatSessionFactory, frontendToolFactory, llmClient);
+    const adminChatSessionStore = new AdminChatSessionStore(
+      chatSessionStore,
+      chatSessionFactory,
+      frontendToolFactory,
+      llmClient,
+      serverPaths
+    );
 
     const endpoints = [
       new InstallEndpoint(userRepository, passwordHasher),

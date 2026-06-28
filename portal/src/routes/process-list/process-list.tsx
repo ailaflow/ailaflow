@@ -4,10 +4,44 @@ import { ResourceListView } from '../../views/resource-list/resource-list-view';
 import { PencilIcon } from '../../views/common/svg-icons';
 import { PortalLoadingView } from '../../views/portal/portal-loading-view';
 import { PortalErrorView } from '../../views/portal/portal-error-view';
+import { useEffect } from 'react';
+import { useAiBindings } from '../common/ai-bindings/ai-bindings-context';
+import { toolError, toolSuccess, toolWait } from '../common/ai-bindings/ai-tool-results';
+import { useNavigate } from 'react-router';
 
 export function ProcessList() {
   const apiClient = useApiClient();
-  const { data, isLoading, error } = useLoader(abortSignal => apiClient.process.getProcesses(abortSignal), [apiClient]);
+  const navigate = useNavigate();
+  const { data, isLoading, finishSignal, error } = useLoader(abortSignal => apiClient.process.getProcesses(abortSignal), [apiClient]);
+  const { stores } = useAiBindings();
+
+  function createNew() {
+    return navigate('/admin/create-process');
+  }
+
+  useEffect(
+    () =>
+      stores.processList.bind({
+        process_list_get_processes: async () => {
+          if (isLoading) {
+            return toolWait(finishSignal);
+          }
+          if (error) {
+            return toolError(error);
+          }
+          return data.processes.map(process => ({
+            name: `\$${process.name}`,
+            description: process.description,
+            userList: process.userList
+          }));
+        },
+        process_list_create_new: async () => {
+          await createNew();
+          return toolSuccess('Redirected to the process creation form.');
+        }
+      }),
+    [stores]
+  );
 
   if (isLoading) {
     return <PortalLoadingView />;
@@ -19,10 +53,8 @@ export function ProcessList() {
   return (
     <ResourceListView
       title="Processes"
-      createNew={{
-        label: 'Create new',
-        to: '/admin/create-process'
-      }}
+      createNewLabel="Create new"
+      onCreateNewClicked={createNew}
       columns={[
         {
           id: 'name',

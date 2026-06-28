@@ -4,10 +4,43 @@ import { ResourceListView } from '../../views/resource-list/resource-list-view';
 import { PencilIcon } from '../../views/common/svg-icons';
 import { PortalLoadingView } from '../../views/portal/portal-loading-view';
 import { PortalErrorView } from '../../views/portal/portal-error-view';
+import { useAiStore } from '../common/ai-bindings/ai-bindings-context';
+import { useNavigate } from 'react-router';
+import { toolSuccess } from '../common/ai-bindings/ai-tool-results';
+import { useCallback } from 'react';
 
 export function SandboxList() {
   const apiClient = useApiClient();
-  const { data, isLoading, error } = useLoader(abortSignal => apiClient.sandbox.getSandboxes(abortSignal), [apiClient]);
+  const navigate = useNavigate();
+  const { data, isLoading, finishSignal, error } = useLoader(abortSignal => apiClient.sandbox.getSandboxes(abortSignal), [apiClient]);
+
+  const createNew = useCallback(() => {
+    return navigate('/admin/create-sandbox');
+  }, [navigate]);
+
+  useAiStore(
+    s => {
+      if (isLoading) {
+        return s.sandboxList.bindWait(finishSignal);
+      }
+      if (error) {
+        return s.sandboxList.bindError(error);
+      }
+      return s.sandboxList.bind({
+        sandbox_list_get_sandboxes: async () =>
+          data.sandboxes.map(sandbox => ({
+            name: sandbox.name,
+            description: sandbox.description,
+            isEnabled: sandbox.isEnabled
+          })),
+        sandbox_list_create_new: async () => {
+          await createNew();
+          return toolSuccess('Redirected to the sandbox creation form.');
+        }
+      });
+    },
+    [isLoading, finishSignal, error, data, createNew]
+  );
 
   if (isLoading) {
     return <PortalLoadingView />;
@@ -19,10 +52,8 @@ export function SandboxList() {
   return (
     <ResourceListView
       title="Sandboxes"
-      createNew={{
-        label: 'Create new',
-        to: '/admin/create-sandbox'
-      }}
+      createNewLabel="Create new"
+      onCreateNewClicked={createNew}
       columns={[
         {
           id: 'name',
