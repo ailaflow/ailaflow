@@ -17,6 +17,7 @@ export function DesignerSubEditor() {
   return (
     <SequentialWorkflowDesigner
       theme="soft"
+      controller={state.controller}
       definition={state.definition}
       controlBar={true}
       onDefinitionChange={setDefinition}

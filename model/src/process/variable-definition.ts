@@ -1,8 +1,7 @@
 import z from 'zod/v4';
-import { JSONSchema } from 'zod/v4/core';
 
 export const jsonSchema = z.object({
-  schema: z.custom<JSONSchema.JSONSchema>(),
+  schema: z.record(z.string(), z.unknown()),
   hash: z.string()
 });
 

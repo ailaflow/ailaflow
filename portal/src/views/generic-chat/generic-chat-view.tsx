@@ -66,12 +66,26 @@ function GenericChatUpdateView(props: { update: MessageChatUpdate }) {
 
   return (
     <li data-id={props.update.id} className="space-y-2">
-      {messages.map((message, index) => (
-        <div key={index} className="rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm">
-          <div className="mb-1 text-xs font-medium uppercase text-slate-500">{message.role}</div>
-          <div className="whitespace-pre-wrap break-words leading-6">{getContent(message)}</div>
-        </div>
-      ))}
+      {messages.map((message, index) => {
+        const toolCalls = getToolCalls(message);
+        const content = getContent(message);
+        return (
+          <div key={index} className="rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm">
+            <div className="mb-1 text-xs font-medium uppercase text-slate-500">{message.role}</div>
+            {toolCalls && (
+              <div>
+                {toolCalls.map(call => (
+                  <div>
+                    <strong>Call: {call.function.name}</strong>
+                    <textarea>{call.function.arguments}</textarea>
+                  </div>
+                ))}
+              </div>
+            )}
+            <div className="whitespace-pre-wrap break-words leading-6">{content}</div>
+          </div>
+        );
+      })}
     </li>
   );
 }
@@ -80,9 +94,19 @@ function arr<T>(i: T | T[]): T[] {
   return Array.isArray(i) ? i : [i];
 }
 
+function getToolCalls(message: CompletedMessage) {
+  if (message.role === 'assistant' && message.tool_calls) {
+    return message.tool_calls.filter(c => c.type === 'function');
+  }
+  return null;
+}
+
 function getContent(message: CompletedMessage): string | null {
   if (typeof message.content === 'string') {
     return message.content;
+  }
+  if (message.role === 'assistant' && 'reasoning' in message && typeof message.reasoning === 'string') {
+    return message.reasoning;
   }
   if (message.content?.[0].type === 'text') {
     return message.content[0].text;

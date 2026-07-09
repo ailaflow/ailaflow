@@ -8,6 +8,7 @@ import { routes } from '../../router';
 import { ToolCall, ToolDescriptor } from '@aila/model';
 import { sandboxListAiBindingsFactory, SandboxListAiBindingsStore } from './bindings/sandbox-list-ai-bindings';
 import { isToolWait, toolError, toolSuccess } from './ai-tool-results';
+import z from 'zod/v4';
 
 export interface AiBindingsContext {
   stores: {
@@ -72,7 +73,13 @@ export function AiBindingsContextProvider(props: { children: React.ReactNode }) 
     const toolDescriptors: ToolDescriptor[] = [];
     const routeByNameMap: Record<string, AiRoute> = {};
     const routeByPathMap: Record<string, AiRoute> = {};
-    const functionMap: Record<string, AiBindingsStore> = {};
+    const functionMap: Record<
+      string,
+      {
+        store: AiBindingsStore;
+        zod?: z.ZodObject;
+      }
+    > = {};
 
     toolDescriptors.push({
       type: 'function',
@@ -102,7 +109,10 @@ export function AiBindingsContextProvider(props: { children: React.ReactNode }) 
           type: 'function',
           function: binding.descriptor
         });
-        functionMap[binding.descriptor.name] = store;
+        functionMap[binding.descriptor.name] = {
+          store,
+          zod: binding.zod
+        };
       }
     }
 
@@ -121,6 +131,7 @@ export function AiBindingsContextProvider(props: { children: React.ReactNode }) 
 
       if (toolCall.function.name === 'router_get_current_page') {
         const currentRoute = currentRoutePath.current ? state.routeByPathMap[currentRoutePath.current.path] : null;
+        console.warn('Cannot determine current route', currentRoutePath.current);
         if (!currentRoute) {
           return { error: 'Cannot determine current route' };
         }
@@ -142,12 +153,18 @@ export function AiBindingsContextProvider(props: { children: React.ReactNode }) 
         return toolSuccess(`Redirected to ${routeName}`);
       }
 
-      const store = state.functionMap[toolCall.function.name];
-      if (store) {
+      const fn = state.functionMap[toolCall.function.name];
+      if (fn) {
         for (let attempt = 0; ; attempt++) {
-          const setter = store.tryGet();
+          const setter = fn.store.tryGet();
           if (!setter) {
-            return toolError(store.route?.notAvailableMessage ?? 'Cannot find setter for the requested function');
+            return toolError(fn.store.route?.notAvailableMessage ?? 'Cannot find setter for the requested function');
+          }
+          if (fn.zod) {
+            const parseResult = fn.zod.safeParse(arg);
+            if (!parseResult.success) {
+              return toolError(`Invalid arguments: ${parseResult.error.message}`);
+            }
           }
           const result = await setter[toolCall.function.name](arg);
           if (isToolWait(result)) {
@@ -162,7 +179,7 @@ export function AiBindingsContextProvider(props: { children: React.ReactNode }) 
         }
       }
 
-      return { error: 'Cannot find handler the requested function' };
+      return { error: 'Cannot find handler for the requested function' };
     },
     [state]
   );

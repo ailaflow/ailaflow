@@ -9,6 +9,12 @@ export class OpenaiLlmClient implements LlmClient {
     this.openai = new OpenAI({
       baseURL: process.env.AI_PROVIDER_BASE_URL!,
       apiKey: process.env.AI_PROVIDER_API_KEY!
+      /*fetch: async (input, init) => {
+        const response = await fetch(input, init);
+        const body = await response.clone().text();
+        console.log('AI response:', body);
+        return response;
+      }*/
     });
   }
 

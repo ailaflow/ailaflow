@@ -1,14 +1,19 @@
 import { ToolDescriptor } from '@aila/model';
 import z from 'zod/v4';
 import { toolError, toolWait } from './ai-tool-results';
+import type { JSONSchema } from 'zod/v4/core';
 
 export function aiBinding<Name extends string>(name: Name, description: string) {
   return {
-    arg<S extends z.ZodObject>(zod: S): AiBinding<z.infer<S>, Name> {
+    arg<S extends z.ZodObject>(zod: S, override?: (jsonSchema: JSONSchema.BaseSchema) => void): AiBinding<z.infer<S>, Name> {
       return {
+        zod,
         descriptor: {
           description,
-          parameters: zod.toJSONSchema(),
+          parameters: zod.toJSONSchema({
+            reused: 'ref',
+            override: override ? ctx => override(ctx.jsonSchema) : undefined
+          }),
           name
         }
       };
@@ -25,6 +30,7 @@ export function aiBinding<Name extends string>(name: Name, description: string) 
 }
 
 export interface AiBinding<_Arg, Name extends string> {
+  zod?: z.ZodObject;
   descriptor: ToolDescriptor['function'] & {
     name: Name;
   };

@@ -102,7 +102,8 @@ export class ChatSession {
       this.isWorking = false;
       this.tryNext();
     } catch (e) {
-      const failReason = (e as Error)?.message ?? String(e);
+      const error = (e as Error)?.message ?? String(e);
+      const failReason = `LLM server returned an error: ${error}`;
 
       this.stack.fail(message, failReason);
       this.onMessageFailed.emit({

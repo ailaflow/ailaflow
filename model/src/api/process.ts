@@ -1,5 +1,5 @@
 import z from 'zod/v4';
-import { ProcessDefinition } from '../process';
+import { processDefinitionSchema } from '../process';
 
 // getProcesses
 
@@ -25,7 +25,7 @@ const processDtoSchema = z.object({
   name: z.string(),
   description: z.string(),
   userList: z.string(),
-  definition: z.custom<ProcessDefinition>()
+  definition: processDefinitionSchema
 });
 
 export const getProcessResponseSchema = z.object({
@@ -42,7 +42,7 @@ export const updateProcessRequestSchema = z.object({
   name: z.string(),
   description: z.string(),
   userList: z.string(),
-  definition: z.custom<ProcessDefinition>(),
+  definition: processDefinitionSchema,
   hash: z.string()
 });
 export const updateProcessResponseSchema = z.object({

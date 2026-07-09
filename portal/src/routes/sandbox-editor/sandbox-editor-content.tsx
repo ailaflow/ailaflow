@@ -1,11 +1,11 @@
 import { useNavigate } from 'react-router-dom';
 import { useApiClient } from '../../auth/auth-context';
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { DockerfileContent, SandboxDto, SandboxValidator } from '@aila/model';
 import { ResourceEditorView } from '../../views/resource-editor/resource-editor-view';
 import { SandboxEditorView, SandboxSecret } from '../../views/sandbox-editor/sandbox-editor-view';
 import { ResourceSimpleDetailsView } from '../../views/resource-editor/resource-simple-details-view';
-import { useAiBindings } from '../common/ai-bindings/ai-bindings-context';
+import { useAiStore } from '../common/ai-bindings/ai-bindings-context';
 import { fnv1a } from '../../core/fnv1a';
 import { toolError, toolSuccess } from '../common/ai-bindings/ai-tool-results';
 
@@ -20,7 +20,6 @@ interface EditorDataState {
 
 export function SandboxEditorContent(props: { sandbox?: SandboxDto }) {
   const apiClient = useApiClient();
-  const { stores } = useAiBindings();
   const navigate = useNavigate();
 
   const lastSecretId = useRef(0);
@@ -44,8 +43,8 @@ export function SandboxEditorContent(props: { sandbox?: SandboxDto }) {
   const descriptionError = SandboxValidator.validateDescription(state.description);
   const canSave = nameError === null && descriptionError === null && state.isDirty;
 
-  useEffect(
-    () =>
+  useAiStore(
+    stores =>
       stores.sandboxEditor.bind({
         sandbox_editor_get_details: async () => {
           return {
@@ -85,7 +84,7 @@ export function SandboxEditorContent(props: { sandbox?: SandboxDto }) {
           return toolSuccess('Saved.');
         }
       }),
-    [stores, isNameReadOnly, state]
+    [isNameReadOnly, state]
   );
 
   async function save() {

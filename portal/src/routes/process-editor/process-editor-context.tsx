@@ -10,7 +10,8 @@ import {
 import { useReducer } from 'react';
 import { useContext } from 'react';
 import { createContext } from 'react';
-import { wrapDefinition, WrappedDefinition } from 'sequential-workflow-designer-react';
+import { SequentialWorkflowDesignerController, wrapDefinition, WrappedDefinition } from 'sequential-workflow-designer-react';
+import { DefinitionWalker } from 'sequential-workflow-model';
 
 export enum ProcessEditorMode {
   DESIGNER,
@@ -23,9 +24,11 @@ export interface EditorDataState {
   mode: ProcessEditorMode;
   subPath?: string;
 
+  controller: SequentialWorkflowDesignerController;
   variableValidator: VariableCachedValidator;
   rootValidator: ProcessRootValidator;
   stepValidator: ProcessStepValidator;
+  walker: DefinitionWalker;
   sandboxNames: string[];
 
   isDirty: boolean;
@@ -40,10 +43,11 @@ export interface EditorDataState {
 
 export interface ProcessEditorState extends EditorDataState {
   isValid: boolean;
-  setDirtyFalse(): void;
+  setIsDirty(isDirty: boolean): void;
   setName(name: string): void;
   setDescription(description: string): void;
   setDefinition(definition: WrappedDefinition, markDirty: boolean): void;
+  notifyDefinitionChange(): void;
   setSelectedStepId(stepId: string | null): void;
   switchToDesigner(): void;
   switchToSchemaEditor(path: string): void;
@@ -80,12 +84,16 @@ function createState(props: Omit<ProcessEditorContextProps, 'children'>): Editor
   const definition = wrapDefinition<ProcessDefinition>(props.process ? props.process.definition : createEmptyDefinition());
   const name = props.process?.name ?? 'new_process';
   const description = props.process?.description ?? '';
+  const controller = SequentialWorkflowDesignerController.create();
+
   return {
     mode: ProcessEditorMode.DESIGNER,
 
+    controller,
     variableValidator,
     rootValidator,
     stepValidator,
+    walker: new DefinitionWalker(),
     sandboxNames,
 
     id: props.process?.id,
@@ -113,9 +121,9 @@ export function ProcessEditorContext(props: ProcessEditorContextProps) {
   const [state, dispatch] = useReducer(reduceState, undefined, () => createState(props));
   const isValid = state.nameError === null && state.descriptionError === null && state.definition.isValid !== false;
 
-  function setDirtyFalse() {
+  function setIsDirty(isDirty: boolean) {
     dispatch({
-      isDirty: false
+      isDirty
     });
   }
 
@@ -143,6 +151,16 @@ export function ProcessEditorContext(props: ProcessEditorContextProps) {
       delta.isDirty = true;
     }
     dispatch(delta);
+  }
+
+  function notifyDefinitionChange() {
+    if (state.controller.isReady()) {
+      state.controller.updateRootComponent();
+      state.controller.updateBadges();
+    }
+    dispatch({
+      isDirty: true
+    });
   }
 
   function setSelectedStepId(stepId: string | null) {
@@ -183,10 +201,11 @@ export function ProcessEditorContext(props: ProcessEditorContextProps) {
       value={{
         ...state,
         isValid,
-        setDirtyFalse,
+        setIsDirty: setIsDirty,
         setName,
         setDescription,
         setDefinition,
+        notifyDefinitionChange,
         setSelectedStepId,
         switchToDesigner,
         switchToSchemaEditor,

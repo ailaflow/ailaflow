@@ -8,15 +8,15 @@ import { FormSubEditor } from './sub-editors/form-sub-editor';
 import { ScriptSubEditor } from './sub-editors/script-sub-editor';
 import { ResourceSimpleDetailsView } from '../../views/resource-editor/resource-simple-details-view';
 import { fnv1a } from '../../core/fnv1a';
-import { useAiBindings } from '../common/ai-bindings/ai-bindings-context';
-import { useEffect } from 'react';
-import { ProcessValidator } from '@aila/model';
+import { useAiStore } from '../common/ai-bindings/ai-bindings-context';
+import { anyStepSchema, ProcessValidator } from '@aila/model';
 import { toolError, toolSuccess } from '../common/ai-bindings/ai-tool-results';
+import { toolboxConfiguration } from './designer-configuration';
+import { ObjectCloner, Step, Uid } from 'sequential-workflow-designer';
 
 export function ProcessEditorContent() {
   const state = useProcessEditor();
   const apiClient = useApiClient();
-  const { stores } = useAiBindings();
   const navigate = useNavigate();
 
   const isDesigner = state.mode === ProcessEditorMode.DESIGNER;
@@ -32,30 +32,26 @@ export function ProcessEditorContent() {
       return;
     }
 
-    try {
-      const timeout = AbortSignal.timeout(5_000);
-      const hash = fnv1a(state.definition.value);
-      const response = await apiClient.process.updateProcess(timeout, {
-        id: state.id,
-        description: state.description,
-        name: state.name,
-        userList: '',
-        definition: state.definition.value,
-        hash
-      });
+    const timeout = AbortSignal.timeout(5_000);
+    const hash = fnv1a(state.definition.value);
+    const response = await apiClient.process.updateProcess(timeout, {
+      id: state.id,
+      description: state.description,
+      name: state.name,
+      userList: '',
+      definition: state.definition.value,
+      hash
+    });
 
-      if (state.id) {
-        state.setDirtyFalse();
-      } else {
-        navigate(`/admin/processes/${response.id}`);
-      }
-    } catch (e) {
-      alert(`Failed to save process: ${(e as Error).message ?? e}`);
+    if (state.id) {
+      state.setIsDirty(false);
+    } else {
+      navigate(`/admin/processes/${response.id}`);
     }
   }
 
-  useEffect(
-    () =>
+  useAiStore(
+    stores =>
       stores.processEditor.bind({
         async process_editor_get_details() {
           return {
@@ -70,9 +66,87 @@ export function ProcessEditorContent() {
           }
           state.setName(arg.name);
           return toolSuccess('Name updated');
+        },
+        async process_editor_set_description(arg) {
+          const error = ProcessValidator.validateDescription(arg.name);
+          if (error) {
+            return toolError(error);
+          }
+          state.setDescription(arg.name);
+          return toolSuccess('Description updated');
+        },
+        async process_editor_get_available_new_steps() {
+          return toolboxConfiguration.groups
+            .flatMap(group => group.steps)
+            .map(step => ({
+              type: step.type,
+              defaultName: step.name
+            }));
+        },
+        process_editor_get_workflow: async () => {
+          const definition = ObjectCloner.deepClone(state.definition.value);
+          state.walker.forEach(definition, step => {
+            const s = step as { properties?: unknown };
+            delete s.properties;
+          });
+          return definition;
+        },
+        process_editor_read_workflow_step: async arg => {
+          const step = state.walker.findById(state.definition.value, arg.stepId);
+          if (!step) {
+            return toolError('Step ID not found');
+          }
+          return step;
+        },
+        process_editor_delete_workflow_step: async arg => {
+          const found = state.walker.findParentSequence(state.definition.value, arg.stepId);
+          if (!found) {
+            return toolError('Step ID not found. The step was not deleted.');
+          }
+          found.parentSequence.splice(found.index, 1);
+          state.notifyDefinitionChange();
+          return toolSuccess('Step deleted');
+        },
+        process_editor_create_workflow_step: async arg => {
+          const template = toolboxConfiguration.groups.flatMap(group => group.steps).find(step => step.type === arg.type);
+          if (!template) {
+            return toolError('Step type not found');
+          }
+          const newStep = ObjectCloner.deepClone(template) as Step;
+          newStep.id = Uid.next();
+          newStep.name = arg.name;
+          return newStep;
+        },
+        process_editor_append_workflow_step: async arg => {
+          const parseResult = anyStepSchema.safeParse(arg.step);
+          if (!parseResult.success) {
+            return toolError(`Invalid step JSON: ${parseResult.error.message}. The step was not added.`);
+          }
+          const found = state.walker.findParentSequence(state.definition.value, arg.targetStepId);
+          if (!found) {
+            return toolError('Step ID not found. The step was not added.');
+          }
+          found.parentSequence.splice(arg.placement === 'before' ? found.index : found.index + 1, 0, arg.step);
+
+          state.notifyDefinitionChange();
+          return toolSuccess('Workflow updated');
+        },
+        process_editor_replace_workflow_step: async arg => {
+          const parseResult = anyStepSchema.safeParse(arg.step);
+          if (!parseResult.success) {
+            return toolError(`Invalid step JSON: ${parseResult.error.message}. The step was not replaced.`);
+          }
+          const found = state.walker.findParentSequence(state.definition.value, arg.step.id);
+          if (!found) {
+            return toolError('Step ID not found. The step was not replaced.');
+          }
+          found.parentSequence[found.index] = arg.step;
+
+          state.notifyDefinitionChange();
+          return toolSuccess('Workflow updated');
         }
       }),
-    [stores, state]
+    [state]
   );
 
   return (
