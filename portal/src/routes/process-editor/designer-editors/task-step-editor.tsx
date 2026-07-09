@@ -7,6 +7,7 @@ import { EditorPropertyView } from '../../../views/process-editor/designer-edito
 import { EnabledSubValuePreviewView } from '../../../views/process-editor/designer-editors/sub-value-preview-view';
 import { DefinitionPath } from '../../../core/definition-path';
 import { VariableSelectorPropertyView } from '../../../views/process-editor/designer-editors/variable-selector-property-view';
+import { ProcessEditorChildRoute } from '../process-editor-context';
 
 export function TaskStepEditor(props: StepEditorProps) {
   const { id, name, step, properties, definition, setName, setProperty } = useStepEditor<TaskStep, ProcessDefinition>();
@@ -14,7 +15,7 @@ export function TaskStepEditor(props: StepEditorProps) {
 
   function editForm() {
     const path = DefinitionPath.createStepPath(id, `properties.form`);
-    props.editorState.switchToFormEditor(path);
+    props.editorState.switchToChildRoute(ProcessEditorChildRoute.FORM_EDITOR, path);
   }
 
   return (

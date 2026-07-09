@@ -1,4 +1,4 @@
-import { CompletedMessage, MessageChatUpdate } from '@aila/model';
+import { CompletedMessage, MessageChatUpdate, ToolCall } from '@aila/model';
 import { useEffect, useRef } from 'react';
 import type { KeyboardEvent } from 'react';
 
@@ -67,26 +67,121 @@ function GenericChatUpdateView(props: { update: MessageChatUpdate }) {
   return (
     <li data-id={props.update.id} className="space-y-2">
       {messages.map((message, index) => {
-        const toolCalls = getToolCalls(message);
-        const content = getContent(message);
-        return (
-          <div key={index} className="rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm">
-            <div className="mb-1 text-xs font-medium uppercase text-slate-500">{message.role}</div>
-            {toolCalls && (
-              <div>
-                {toolCalls.map(call => (
-                  <div>
-                    <strong>Call: {call.function.name}</strong>
-                    <textarea>{call.function.arguments}</textarea>
-                  </div>
-                ))}
-              </div>
-            )}
-            <div className="whitespace-pre-wrap break-words leading-6">{content}</div>
-          </div>
-        );
+        return <GenericChatMessageView key={index} message={message} />;
       })}
     </li>
+  );
+}
+
+function GenericChatMessageView(props: { message: CompletedMessage }) {
+  if (props.message.role === 'user') {
+    return <UserMessageView content={getContent(props.message)} />;
+  }
+
+  if (props.message.role === 'assistant') {
+    return <AssistantMessageView message={props.message} />;
+  }
+
+  if (props.message.role === 'tool') {
+    return <ToolMessageView message={props.message} />;
+  }
+
+  return <SystemMessageView message={props.message} />;
+}
+
+function UserMessageView(props: { content: string | null }) {
+  return (
+    <div className="flex justify-end">
+      <article className="max-w-[82%] rounded-md bg-slate-900 px-3 py-2 text-sm text-white shadow-sm">
+        <div className="mb-1 text-xs font-medium uppercase text-slate-300">User</div>
+        <MessageContentView content={props.content} />
+      </article>
+    </div>
+  );
+}
+
+function AssistantMessageView(props: { message: CompletedMessage }) {
+  const toolCalls = getToolCalls(props.message);
+  const content = getContent(props.message);
+
+  return (
+    <div className="flex justify-start">
+      <article className="max-w-[88%] rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm">
+        <div className="mb-1 text-xs font-medium uppercase text-slate-500">Assistant</div>
+        <MessageContentView content={content} />
+        {toolCalls && <ToolCallsView toolCalls={toolCalls} />}
+      </article>
+    </div>
+  );
+}
+
+function SystemMessageView(props: { message: CompletedMessage }) {
+  return (
+    <div className="flex justify-center">
+      <article className="max-w-[88%] rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
+        <div className="mb-1 font-medium uppercase text-slate-500">{props.message.role}</div>
+        <MessageContentView content={getContent(props.message)} />
+      </article>
+    </div>
+  );
+}
+
+function ToolMessageView(props: { message: CompletedMessage }) {
+  const content = getContent(props.message);
+  const label = getToolResponseLabel(content);
+
+  return (
+    <div className="flex justify-start">
+      <details className="group max-w-[88%] rounded-md border border-slate-200 bg-slate-50 text-sm text-slate-900 shadow-sm">
+        <summary className="flex cursor-pointer list-none items-center gap-2 px-3 py-2 text-xs font-medium text-slate-700 marker:hidden">
+          <span className="flex h-5 w-5 items-center justify-center rounded border border-slate-300 bg-white text-[10px] text-slate-500 group-open:hidden">
+            +
+          </span>
+          <span className="hidden h-5 w-5 items-center justify-center rounded border border-slate-300 bg-white text-[10px] text-slate-500 group-open:flex">
+            -
+          </span>
+          <span className="truncate">
+            Tool response{label && <>: <span className="font-semibold text-slate-950">{label}</span></>}
+          </span>
+        </summary>
+        <pre className="max-h-72 overflow-auto border-t border-slate-200 bg-white px-3 py-2 text-xs leading-5 text-slate-800">
+          {formatMaybeJson(content)}
+        </pre>
+      </details>
+    </div>
+  );
+}
+
+function MessageContentView(props: { content: string | null }) {
+  if (!props.content) {
+    return null;
+  }
+
+  return <div className="whitespace-pre-wrap break-words leading-6">{props.content}</div>;
+}
+
+function ToolCallsView(props: { toolCalls: ToolCall[] }) {
+  return (
+    <div className="mt-3 space-y-2 border-t border-slate-100 pt-3">
+      {props.toolCalls.map(call => (
+        <details key={call.id} className="group rounded-md border border-slate-200 bg-slate-50">
+          <summary className="flex cursor-pointer list-none items-center gap-2 px-3 py-2 text-xs font-medium text-slate-700 marker:hidden">
+            <span className="flex h-5 w-5 items-center justify-center rounded border border-slate-300 bg-white text-[10px] text-slate-500 group-open:hidden">
+              +
+            </span>
+            <span className="hidden h-5 w-5 items-center justify-center rounded border border-slate-300 bg-white text-[10px] text-slate-500 group-open:flex">
+              -
+            </span>
+            <span className="truncate">
+              Function call: <span className="font-semibold text-slate-950">{call.function.name}</span>
+            </span>
+          </summary>
+          <pre className="max-h-72 overflow-auto border-t border-slate-200 bg-white px-3 py-2 text-xs leading-5 text-slate-800">
+            {formatToolArguments(call.function.arguments)}
+          </pre>
+        </details>
+      ))}
+    </div>
   );
 }
 
@@ -99,6 +194,68 @@ function getToolCalls(message: CompletedMessage) {
     return message.tool_calls.filter(c => c.type === 'function');
   }
   return null;
+}
+
+function formatToolArguments(argumentsJson: string) {
+  try {
+    return JSON.stringify(JSON.parse(argumentsJson), null, 2);
+  } catch {
+    return argumentsJson;
+  }
+}
+
+function formatMaybeJson(content: string | null) {
+  if (!content) {
+    return '';
+  }
+
+  try {
+    return JSON.stringify(JSON.parse(content), null, 2);
+  } catch {
+    return content;
+  }
+}
+
+function getToolResponseLabel(content: string | null) {
+  if (!content) {
+    return null;
+  }
+
+  try {
+    const parsed = JSON.parse(content);
+    const value = getToolStatusField(parsed);
+    if (value) {
+      return limitText(value, 72);
+    }
+  } catch {
+    return null;
+  }
+
+  return null;
+}
+
+function getToolStatusField(value: unknown): string | null {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return null;
+  }
+
+  const object = value as Record<string, unknown>;
+  for (const key of ['error', 'success']) {
+    const field = object[key];
+    if (typeof field === 'string' && field.trim()) {
+      return field;
+    }
+  }
+
+  return null;
+}
+
+function limitText(value: string, maxLength: number) {
+  const text = value.replace(/\s+/g, ' ').trim();
+  if (text.length <= maxLength) {
+    return text;
+  }
+  return `${text.slice(0, maxLength - 1)}...`;
 }
 
 function getContent(message: CompletedMessage): string | null {

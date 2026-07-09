@@ -1,8 +1,8 @@
 import { aiBinding, AiBindingsStore, aiRoute, buildAiBindingStoreFactory } from '../ai-bindings';
 
 export const processListAiBindings = [
-  aiBinding('process_list_get_processes', 'Get all created processes.').void(),
-  aiBinding('process_list_create_new', 'Open a page to create a new process.').void()
+  aiBinding('processList_getProcesses', 'Get all created processes.').void(),
+  aiBinding('processList_createNew', 'Open a page to create a new process.').void()
 ];
 
 export type ProcessListAiBindingsStore = AiBindingsStore<typeof processListAiBindings>;

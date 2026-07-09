@@ -22,7 +22,7 @@ export function ProcessList() {
   useEffect(
     () =>
       stores.processList.bind({
-        process_list_get_processes: async () => {
+        processList_getProcesses: async () => {
           if (isLoading) {
             return toolWait(finishSignal);
           }
@@ -35,12 +35,12 @@ export function ProcessList() {
             userList: process.userList
           }));
         },
-        process_list_create_new: async () => {
+        processList_createNew: async () => {
           await createNew();
           return toolSuccess('Redirected to the process creation form.');
         }
       }),
-    [stores]
+    [stores, data, error, finishSignal]
   );
 
   if (isLoading) {

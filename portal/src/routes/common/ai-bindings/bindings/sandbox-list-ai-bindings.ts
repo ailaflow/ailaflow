@@ -1,8 +1,8 @@
 import { aiBinding, AiBindingsStore, aiRoute, buildAiBindingStoreFactory } from '../ai-bindings';
 
 export const sandboxListAiBindings = [
-  aiBinding('sandbox_list_get_sandboxes', 'Get all created sandboxes.').void(),
-  aiBinding('sandbox_list_create_new', 'Open a form to create a new sandbox.').void()
+  aiBinding('sandboxList_getSandboxes', 'Get all created sandboxes.').void(),
+  aiBinding('sandboxList_createNew', 'Open a form to create a new sandbox.').void()
 ];
 
 export type SandboxListAiBindingsStore = AiBindingsStore<typeof sandboxListAiBindings>;

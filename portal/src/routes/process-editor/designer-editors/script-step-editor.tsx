@@ -7,6 +7,7 @@ import { SelectEditorPropertyView } from '../../../views/process-editor/designer
 import { ProcessDefinition, ScriptStep } from '@aila/model';
 import { DefinitionPath } from '../../../core/definition-path';
 import { EnabledSubValuePreviewView } from '../../../views/process-editor/designer-editors/sub-value-preview-view';
+import { ProcessEditorChildRoute } from '../process-editor-context';
 
 export function ScriptStepEditor(props: StepEditorProps) {
   const { id, name, step, properties, definition, setName, setProperty } = useStepEditor<ScriptStep, ProcessDefinition>();
@@ -14,7 +15,7 @@ export function ScriptStepEditor(props: StepEditorProps) {
 
   function editScript() {
     const path = DefinitionPath.createStepPath(id, 'properties.script');
-    props.editorState.switchToScriptEditor(path);
+    props.editorState.switchToChildRoute(ProcessEditorChildRoute.SCRIPT_EDITOR, path);
   }
 
   return (

@@ -12,6 +12,38 @@ export class DefinitionPath {
     return `root/${path}`;
   }
 
+  public static parsePath(definition: ProcessDefinition, path: string) {
+    if (!path) {
+      throw new Error('Path is empty');
+    }
+    const [type, p0, p1] = path.split('/', 3);
+
+    let stepId: string | null;
+    let object: Definition | Step;
+    let parts: string;
+    if (type === 'root') {
+      stepId = null;
+      object = definition;
+      parts = p0;
+    } else if (type === 'step') {
+      stepId = p0;
+      const step = processWalker.findById(definition, stepId);
+      if (!step) {
+        throw new Error(`Cannot find step: ${stepId}`);
+      }
+      object = step;
+      parts = p1;
+    } else {
+      throw new Error(`Invalid path: ${path}`);
+    }
+
+    return {
+      stepId,
+      object,
+      pathParts: parts.split('.')
+    };
+  }
+
   public static readPath<T>(
     definition: ProcessDefinition,
     path: string
@@ -20,48 +52,20 @@ export class DefinitionPath {
     object: Definition | Step;
     value: T;
   } {
-    const { isRoot, object, pathParts } = parse(definition, path);
+    const { stepId, object, pathParts } = DefinitionPath.parsePath(definition, path);
     return {
-      isRoot,
+      isRoot: stepId === null,
       object,
       value: resolve(object, pathParts, pathParts.length) as T
     };
   }
 
   public static writePath<T>(definition: ProcessDefinition, path: string, value: T) {
-    const { object, pathParts: names } = parse(definition, path);
+    const { object, pathParts: names } = DefinitionPath.parsePath(definition, path);
     const c = names.length - 1;
     const target = resolve(object, names, c);
     target[names[c]] = value;
   }
-}
-
-function parse(definition: ProcessDefinition, path: string) {
-  const [type, p0, p1] = path.split('/', 3);
-
-  let isRoot = false;
-  let object: Definition | Step;
-  let parts: string;
-  if (type === 'root') {
-    isRoot = true;
-    object = definition;
-    parts = p0;
-  } else if (type === 'step') {
-    const step = processWalker.findById(definition, p0);
-    if (!step) {
-      throw new Error(`Cannot find step: ${p0}`);
-    }
-    object = step;
-    parts = p1;
-  } else {
-    throw new Error(`Invalid path: ${path}`);
-  }
-
-  return {
-    isRoot,
-    object,
-    pathParts: parts.split('.')
-  };
 }
 
 function resolve(object: object, pathParts: string[], count: number) {

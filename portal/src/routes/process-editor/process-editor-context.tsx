@@ -13,16 +13,16 @@ import { createContext } from 'react';
 import { SequentialWorkflowDesignerController, wrapDefinition, WrappedDefinition } from 'sequential-workflow-designer-react';
 import { DefinitionWalker } from 'sequential-workflow-model';
 
-export enum ProcessEditorMode {
-  DESIGNER,
-  SCHEMA_EDITOR,
-  FORM_EDITOR,
-  SCRIPT_EDITOR
+export enum ProcessEditorChildRoute {
+  DESIGNER = 'designer',
+  SCHEMA_EDITOR = 'schema-editor',
+  FORM_EDITOR = 'form-editor',
+  SCRIPT_EDITOR = 'script-editor'
 }
 
 export interface EditorDataState {
-  mode: ProcessEditorMode;
-  subPath?: string;
+  childRoute: ProcessEditorChildRoute;
+  childPath?: string;
 
   controller: SequentialWorkflowDesignerController;
   variableValidator: VariableCachedValidator;
@@ -50,9 +50,7 @@ export interface ProcessEditorState extends EditorDataState {
   notifyDefinitionChange(): void;
   setSelectedStepId(stepId: string | null): void;
   switchToDesigner(): void;
-  switchToSchemaEditor(path: string): void;
-  switchToFormEditor(path: string): void;
-  switchToScriptEditor(path: string): void;
+  switchToChildRoute(childRoute: ProcessEditorChildRoute, path: string): void;
 }
 
 export function useProcessEditor(): ProcessEditorState {
@@ -87,7 +85,7 @@ function createState(props: Omit<ProcessEditorContextProps, 'children'>): Editor
   const controller = SequentialWorkflowDesignerController.create();
 
   return {
-    mode: ProcessEditorMode.DESIGNER,
+    childRoute: ProcessEditorChildRoute.DESIGNER,
 
     controller,
     variableValidator,
@@ -171,28 +169,14 @@ export function ProcessEditorContext(props: ProcessEditorContextProps) {
 
   function switchToDesigner() {
     dispatch({
-      mode: ProcessEditorMode.DESIGNER
+      childRoute: ProcessEditorChildRoute.DESIGNER
     });
   }
 
-  function switchToSchemaEditor(subPath: string) {
+  function switchToChildRoute(childRoute: ProcessEditorChildRoute, childPath: string) {
     dispatch({
-      mode: ProcessEditorMode.SCHEMA_EDITOR,
-      subPath
-    });
-  }
-
-  function switchToFormEditor(subPath: string) {
-    dispatch({
-      mode: ProcessEditorMode.FORM_EDITOR,
-      subPath
-    });
-  }
-
-  function switchToScriptEditor(subPath: string) {
-    dispatch({
-      mode: ProcessEditorMode.SCRIPT_EDITOR,
-      subPath
+      childRoute,
+      childPath
     });
   }
 
@@ -208,9 +192,7 @@ export function ProcessEditorContext(props: ProcessEditorContextProps) {
         notifyDefinitionChange,
         setSelectedStepId,
         switchToDesigner,
-        switchToSchemaEditor,
-        switchToFormEditor,
-        switchToScriptEditor
+        switchToChildRoute
       }}
     >
       {props.children}

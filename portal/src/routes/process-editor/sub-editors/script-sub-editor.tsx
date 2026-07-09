@@ -13,7 +13,7 @@ export function ScriptSubEditor() {
   const state = useProcessEditor();
 
   const [folderItems, setFolderItems] = useState<FolderTreeItem[]>(() => {
-    const { value: script } = DefinitionPath.readPath<ScriptDefinition>(state.definition.value, state.subPath!);
+    const { value: script } = DefinitionPath.readPath<ScriptDefinition>(state.definition.value, state.childPath!);
     return createFolderTree(script.contents);
   });
   const [selectedFilePath, setSelectedFilePath] = useState<string | undefined>(() => getFirstFilePath(folderItems));
@@ -75,14 +75,14 @@ export function ScriptSubEditor() {
     const newDefinition = {
       ...state.definition.value
     };
-    const { value: currentScript } = DefinitionPath.readPath<ScriptDefinition>(state.definition.value, state.subPath!);
+    const { value: currentScript } = DefinitionPath.readPath<ScriptDefinition>(state.definition.value, state.childPath!);
     const contents = flattenFolderTree(folderItems);
     const script: ScriptDefinition = {
       sandboxName: currentScript.sandboxName,
       contents,
       hash: fnv1a(contents)
     };
-    DefinitionPath.writePath(newDefinition, state.subPath!, script);
+    DefinitionPath.writePath(newDefinition, state.childPath!, script);
     state.setDefinition(wrapDefinition(newDefinition), true);
     state.switchToDesigner();
   }

@@ -1,6 +1,6 @@
 import { JsonSchema, ProcessDefinition, VariableDefinition } from '@aila/model';
 import { useRootEditor } from 'sequential-workflow-designer-react';
-import { ProcessEditorState } from '../process-editor-context';
+import { ProcessEditorChildRoute, ProcessEditorState } from '../process-editor-context';
 import { DesignerEditorView } from '../../../views/process-editor/designer-editors/designer-editor-view';
 import { EditorPropertyView } from '../../../views/process-editor/designer-editors/editor-property-view';
 import { DefinitionPath } from '../../../core/definition-path';
@@ -53,7 +53,7 @@ export function RootEditor(props: RootEditorProps) {
 
   function editVariableSchema(index: number) {
     const path = DefinitionPath.createRootPath(`properties.variables.${index}.schema`);
-    props.editorState.switchToSchemaEditor(path);
+    props.editorState.switchToChildRoute(ProcessEditorChildRoute.SCHEMA_EDITOR, path);
   }
 
   function addStartForm() {
@@ -62,7 +62,7 @@ export function RootEditor(props: RootEditorProps) {
 
   function editStartFrom() {
     const path = DefinitionPath.createRootPath(`properties.startForm`);
-    props.editorState.switchToFormEditor(path);
+    props.editorState.switchToChildRoute(ProcessEditorChildRoute.FORM_EDITOR, path);
   }
 
   function removeStartForm() {
@@ -144,7 +144,7 @@ export function RootEditor(props: RootEditorProps) {
               </label>
 
               <EnabledSubValuePreviewView onEdit={() => editVariableSchema(index)} error={errors[`variables.${index}.schema`]}>
-                Schema: <span className="font-medium text-slate-700">{variable.schema.schema.type}</span>
+                Schema: <span className="font-medium text-slate-700">{(variable.schema.schema as { type: string }).type}</span>
               </EnabledSubValuePreviewView>
             </div>
           );
