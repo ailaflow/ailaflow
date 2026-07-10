@@ -4,24 +4,23 @@ import { ResourceListView } from '../../views/resource-list/resource-list-view';
 import { PencilIcon } from '../../views/common/svg-icons';
 import { PortalLoadingView } from '../../views/portal/portal-loading-view';
 import { PortalErrorView } from '../../views/portal/portal-error-view';
-import { useEffect } from 'react';
-import { useAiBindings } from '../common/ai-bindings/ai-bindings-context';
-import { toolError, toolSuccess, toolWait } from '../common/ai-bindings/ai-tool-results';
+import { toolError, toolSuccess, toolWait } from '@aibindkit/react';
 import { useNavigate } from 'react-router';
+import { useAiStore } from '../common/admin-portal';
 
 export function ProcessList() {
   const apiClient = useApiClient();
   const navigate = useNavigate();
   const { data, isLoading, finishSignal, error } = useLoader(abortSignal => apiClient.process.getProcesses(abortSignal), [apiClient]);
-  const { stores } = useAiBindings();
 
   function createNew() {
     return navigate('/admin/create-process');
   }
 
-  useEffect(
-    () =>
-      stores.processList.bind({
+  useAiStore(
+    'processList',
+    store =>
+      store.bind({
         getProcesses: async () => {
           if (isLoading) {
             return toolWait(finishSignal);
@@ -40,7 +39,7 @@ export function ProcessList() {
           return toolSuccess('Redirected to the process creation form.');
         }
       }),
-    [stores, data, error, finishSignal]
+    [data, error, finishSignal, isLoading]
   );
 
   if (isLoading) {

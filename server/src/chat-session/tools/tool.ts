@@ -1,4 +1,4 @@
-import { ToolCall, ToolDescriptor } from '@aila/model';
+import type { ToolCall, ToolDescriptor } from '@aibindkit/model';
 
 export interface Tool {
   descriptor: ToolDescriptor;

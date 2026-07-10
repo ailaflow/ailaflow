@@ -9,6 +9,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@aibindkit/model": "workspace:*",
+    "@aibindkit/react": "workspace:*",
     "@aila/model": "workspace:*",
     "sequential-workflow-model": "^0.2.0",
     "sequential-workflow-designer": "^0.37.3",

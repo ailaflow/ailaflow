@@ -1,7 +1,7 @@
 import z from 'zod/v4';
-import { aiRoute, storeFactoryFromRoute, tool } from '../ai-bindings';
+import { route, storeFactory, tool } from '@aibindkit/react';
 
-const processEditorRoute = aiRoute('processEditor')
+const processEditorRoute = route('processEditor')
   .unavailable('You are not on a process editor page.')
   .paths(['/admin/processes/:processId', '/admin/create-process'])
   .params(
@@ -111,6 +111,6 @@ const processEditorRoute = aiRoute('processEditor')
     )
   });
 
-export const processEditorAiBindingsFactory = storeFactoryFromRoute(processEditorRoute);
+export const processEditorAiBindingsFactory = storeFactory(processEditorRoute);
 
 export type ProcessEditorAiBindingsStore = ReturnType<typeof processEditorAiBindingsFactory>;

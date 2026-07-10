@@ -4,10 +4,10 @@ import { ResourceListView } from '../../views/resource-list/resource-list-view';
 import { PencilIcon } from '../../views/common/svg-icons';
 import { PortalLoadingView } from '../../views/portal/portal-loading-view';
 import { PortalErrorView } from '../../views/portal/portal-error-view';
-import { useAiStore } from '../common/ai-bindings/ai-bindings-context';
 import { useNavigate } from 'react-router';
-import { toolSuccess } from '../common/ai-bindings/ai-tool-results';
+import { toolSuccess } from '@aibindkit/react';
 import { useCallback } from 'react';
+import { useAiStore } from '../common/admin-portal';
 
 export function SandboxList() {
   const apiClient = useApiClient();
@@ -19,14 +19,15 @@ export function SandboxList() {
   }, [navigate]);
 
   useAiStore(
-    s => {
+    'sandboxList',
+    store => {
       if (isLoading) {
-        return s.sandboxList.bindWait(finishSignal);
+        return store.bindWait(finishSignal);
       }
       if (error) {
-        return s.sandboxList.bindError(error);
+        return store.bindError(error);
       }
-      return s.sandboxList.bind({
+      return store.bind({
         getSandboxes: async () =>
           data.sandboxes.map(sandbox => ({
             name: sandbox.name,

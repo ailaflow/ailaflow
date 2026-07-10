@@ -1,4 +1,6 @@
 packages:
+  - './@aibindkit/model'
+  - './@aibindkit/react'
   - './model'
   - './server'
   - './portal'

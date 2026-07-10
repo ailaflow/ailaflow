@@ -1,11 +1,11 @@
 import { RestoreChatRequest } from '@aila/model';
-import { useAiBindings } from './ai-bindings/ai-bindings-context';
 import { GenericChat } from './generic-chat';
 import { fnv1a } from '../../core/fnv1a';
 import { useMemo } from 'react';
+import { useAiEnvironment } from './admin-portal';
 
 export function AdminPortalChat() {
-  const { toolDescriptors, handleToolCall } = useAiBindings();
+  const { toolDescriptors, handleToolCall } = useAiEnvironment();
 
   const request: RestoreChatRequest = useMemo(() => {
     const hash = fnv1a(toolDescriptors);

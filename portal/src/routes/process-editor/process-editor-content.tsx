@@ -8,13 +8,13 @@ import { FormSubEditor } from './sub-editors/form-sub-editor';
 import { ScriptSubEditor } from './sub-editors/script-sub-editor';
 import { ResourceSimpleDetailsView } from '../../views/resource-editor/resource-simple-details-view';
 import { fnv1a } from '../../core/fnv1a';
-import { useAiStore } from '../common/ai-bindings/ai-bindings-context';
 import { anyStepSchema, FormDefinition, ProcessValidator, TaskStep } from '@aila/model';
-import { toolError, toolSuccess } from '../common/ai-bindings/ai-tool-results';
+import { toolError, toolSuccess } from '@aibindkit/react';
 import { createEmptyFormDefinition, toolboxConfiguration } from './designer-configuration';
 import { ObjectCloner, Step, Uid } from 'sequential-workflow-designer';
 import { DefinitionPath } from '../../core/definition-path';
 import { wrapDefinition } from 'sequential-workflow-designer-react';
+import { useAiStore } from '../common/admin-portal';
 
 export function ProcessEditorContent() {
   const state = useProcessEditor();
@@ -53,8 +53,9 @@ export function ProcessEditorContent() {
   }
 
   useAiStore(
-    stores =>
-      stores.processEditor.bind({
+    'processEditor',
+    store =>
+      store.bind({
         async getDetails() {
           return {
             name: state.name,

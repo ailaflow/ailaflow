@@ -1,5 +1,6 @@
 import z from 'zod/v4';
-import { CompletedMessage, MessageType, ToolDescriptor } from '../chat-session';
+import type { ToolDescriptor } from '@aibindkit/model';
+import { CompletedMessage, MessageType } from '../chat-session';
 
 // restoreChat
 

@@ -1,6 +1,6 @@
-import { aiRoute, storeFactoryFromRoute, tool } from '../ai-bindings';
+import { route, storeFactory, tool } from '@aibindkit/react';
 
-const processListRoute = aiRoute('processList')
+const processListRoute = route('processList')
   .paths(['/admin/processes'])
   .unavailable('You are not on a process list page.')
   .tools({
@@ -8,6 +8,6 @@ const processListRoute = aiRoute('processList')
     createNew: tool('Open a page to create a new process.')
   });
 
-export const processListAiBindingsFactory = storeFactoryFromRoute(processListRoute);
+export const processListAiStore = storeFactory(processListRoute);
 
-export type ProcessListAiBindingsStore = ReturnType<typeof processListAiBindingsFactory>;
+export type ProcessListAiStore = ReturnType<typeof processListAiStore>;

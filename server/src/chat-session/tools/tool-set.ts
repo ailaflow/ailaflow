@@ -1,4 +1,4 @@
-import { ToolDescriptor } from '@aila/model';
+import type { ToolDescriptor } from '@aibindkit/model';
 import { Tool } from './tool';
 
 export class ToolSet {

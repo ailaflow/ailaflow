@@ -1,4 +1,5 @@
-import { MessageType, ToolCall, ToolResponse } from '@aila/model';
+import type { ToolCall, ToolResponse } from '@aibindkit/model';
+import { MessageType } from '@aila/model';
 import { ToolSet } from '../tools/tool-set';
 import { CompleteResult, Message } from './message';
 

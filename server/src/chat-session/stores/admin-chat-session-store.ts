@@ -1,4 +1,4 @@
-import { ToolDescriptor } from '@aila/model';
+import type { ToolDescriptor } from '@aibindkit/model';
 import { ChatSessionFactory } from '../chat-session-factory';
 import { LlmClient } from '../../llm-client/llm-client';
 import { ToolSet } from '../tools/tool-set';

@@ -1,4 +1,5 @@
-import { CompletedMessage, MessageChatUpdate, ToolCall } from '@aila/model';
+import type { ToolCall } from '@aibindkit/model';
+import { CompletedMessage, MessageChatUpdate } from '@aila/model';
 import { useEffect, useRef } from 'react';
 import type { KeyboardEvent } from 'react';
 

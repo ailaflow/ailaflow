@@ -5,12 +5,10 @@ import { useApiClient } from '../../auth/auth-context';
 import { useLoader } from '../../core/use-loader';
 import { PortalLoadingView } from '../../views/portal/portal-loading-view';
 import { PortalErrorView } from '../../views/portal/portal-error-view';
-import { useAiBindings } from '../common/ai-bindings/ai-bindings-context';
-import { useEffect } from 'react';
+import { useAiStore } from '../common/admin-portal';
 
 export function ProcessEditor() {
   const { processId } = useParams();
-  const { stores } = useAiBindings();
   const apiClient = useApiClient();
 
   const { data, isLoading, finishSignal, error } = useLoader(
@@ -22,14 +20,14 @@ export function ProcessEditor() {
     [processId]
   );
 
-  useEffect(() => {
+  useAiStore('processEditor', store => {
     if (isLoading) {
-      return stores.processEditor.bindWait(finishSignal);
+      return store.bindWait(finishSignal);
     }
     if (error) {
-      return stores.processEditor.bindError(error);
+      return store.bindError(error);
     }
-  }, [stores, error, isLoading, finishSignal]);
+  }, [error, isLoading, finishSignal]);
 
   if (isLoading) {
     return <PortalLoadingView />;

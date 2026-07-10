@@ -1,6 +1,6 @@
-import { aiRoute, storeFactoryFromRoute, tool } from '../ai-bindings';
+import { route, storeFactory, tool } from '@aibindkit/react';
 
-const sandboxListRoute = aiRoute('sandboxList')
+const sandboxListRoute = route('sandboxList')
   .paths(['/admin/sandboxes'])
   .unavailable('You are not on a sandbox list page.')
   .tools({
@@ -8,6 +8,6 @@ const sandboxListRoute = aiRoute('sandboxList')
     createNew: tool('Open a form to create a new sandbox.')
   });
 
-export const sandboxListAiBindingsFactory = storeFactoryFromRoute(sandboxListRoute);
+export const sandboxListAiBindingsFactory = storeFactory(sandboxListRoute);
 
 export type SandboxListAiBindingsStore = ReturnType<typeof sandboxListAiBindingsFactory>;

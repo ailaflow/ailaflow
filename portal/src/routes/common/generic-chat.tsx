@@ -1,4 +1,5 @@
-import { ChatUpdate, MessageChatUpdate, RestoreChatRequest, SendFrontendToolResultRequest, ToolCall } from '@aila/model';
+import type { ToolCall } from '@aibindkit/model';
+import { ChatUpdate, MessageChatUpdate, RestoreChatRequest, SendFrontendToolResultRequest } from '@aila/model';
 import { useApiClient } from '../../auth/auth-context';
 import { useEffect, useState } from 'react';
 import { HttpClientSseListener } from '../../auth/http-client';

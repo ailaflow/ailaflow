@@ -1,7 +1,7 @@
 import z from 'zod/v4';
-import { aiRoute, storeFactoryFromRoute, tool } from '../ai-bindings';
+import { route, storeFactory, tool } from '@aibindkit/react';
 
-const sandboxEditorRoute = aiRoute('sandboxEditor')
+const sandboxEditorRoute = route('sandboxEditor')
   .paths(['/admin/sandboxes/:name', '/admin/create-sandbox'])
   .unavailable('You are not on a sandbox editor page.')
   .params(
@@ -37,6 +37,6 @@ const sandboxEditorRoute = aiRoute('sandboxEditor')
     save: tool('Save the changes made to the sandbox')
   });
 
-export const sandboxEditorAiBindingsFactory = storeFactoryFromRoute(sandboxEditorRoute);
+export const sandboxEditorAiBindingsFactory = storeFactory(sandboxEditorRoute);
 
 export type SandboxEditorAiBindingsStore = ReturnType<typeof sandboxEditorAiBindingsFactory>;

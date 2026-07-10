@@ -8,6 +8,35 @@ importers:
 
   .: {}
 
+  '@aibindkit/model':
+    dependencies:
+      openai:
+        specifier: ^6.39.0
+        version: 6.39.0(zod@4.4.3)
+    devDependencies:
+      typescript:
+        specifier: ^6.0.3
+        version: 6.0.3
+
+  '@aibindkit/react':
+    dependencies:
+      '@aibindkit/model':
+        specifier: workspace:*
+        version: link:../model
+      react:
+        specifier: ^19.0.0
+        version: 19.2.6
+      zod:
+        specifier: ^4.4.3
+        version: 4.4.3
+    devDependencies:
+      '@types/react':
+        specifier: ^19.0.0
+        version: 19.2.15
+      typescript:
+        specifier: ^6.0.3
+        version: 6.0.3
+
   bridge/lib:
     devDependencies:
       '@types/node':
@@ -41,6 +70,9 @@ importers:
 
   model:
     dependencies:
+      '@aibindkit/model':
+        specifier: workspace:*
+        version: link:../@aibindkit/model
       openai:
         specifier: ^6.39.0
         version: 6.39.0(zod@4.4.3)
@@ -63,6 +95,12 @@ importers:
 
   portal:
     dependencies:
+      '@aibindkit/model':
+        specifier: workspace:*
+        version: link:../@aibindkit/model
+      '@aibindkit/react':
+        specifier: workspace:*
+        version: link:../@aibindkit/react
       '@aila/model':
         specifier: workspace:*
         version: link:../model
@@ -112,6 +150,9 @@ importers:
 
   server:
     dependencies:
+      '@aibindkit/model':
+        specifier: workspace:*
+        version: link:../@aibindkit/model
       '@aila/model':
         specifier: workspace:*
         version: link:../model

@@ -5,9 +5,9 @@ import { DockerfileContent, SandboxDto, SandboxValidator } from '@aila/model';
 import { ResourceEditorView } from '../../views/resource-editor/resource-editor-view';
 import { SandboxEditorView, SandboxSecret } from '../../views/sandbox-editor/sandbox-editor-view';
 import { ResourceSimpleDetailsView } from '../../views/resource-editor/resource-simple-details-view';
-import { useAiStore } from '../common/ai-bindings/ai-bindings-context';
 import { fnv1a } from '../../core/fnv1a';
-import { toolError, toolSuccess } from '../common/ai-bindings/ai-tool-results';
+import { toolError, toolSuccess } from '@aibindkit/react';
+import { useAiStore } from '../common/admin-portal';
 
 interface EditorDataState {
   secrets: SandboxSecret[];
@@ -44,8 +44,9 @@ export function SandboxEditorContent(props: { sandbox?: SandboxDto }) {
   const canSave = nameError === null && descriptionError === null && state.isDirty;
 
   useAiStore(
-    stores =>
-      stores.sandboxEditor.bind({
+    'sandboxEditor',
+    store =>
+      store.bind({
         getDetails: async () => {
           return {
             name: state.name,

@@ -1,15 +1,4 @@
-export function toolError(error: string | Error): { error: string } {
-  if (typeof error === 'string') {
-    return { error };
-  }
-  return { error: error.message };
-}
-
-export function toolSuccess(message: string): { success: string } {
-  return { success: message };
-}
-
-class ToolWait {
+export class ToolWait {
   public constructor(public finishSignal: AbortSignal) {}
 
   public wait(abortSignal: AbortSignal) {
@@ -30,6 +19,17 @@ class ToolWait {
       );
     });
   }
+}
+
+export function toolError(error: string | Error): { error: string } {
+  if (typeof error === 'string') {
+    return { error };
+  }
+  return { error: error.message };
+}
+
+export function toolSuccess(message: string): { success: string } {
+  return { success: message };
 }
 
 export function toolWait(finishSignal: AbortSignal) {
