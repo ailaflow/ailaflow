@@ -55,13 +55,13 @@ export function ProcessEditorContent() {
   useAiStore(
     stores =>
       stores.processEditor.bind({
-        async processEditor_getDetails() {
+        async getDetails() {
           return {
             name: state.name,
             description: state.description
           };
         },
-        async processEditor_setName(arg) {
+        async setName(arg) {
           const error = ProcessValidator.validateName(arg.name);
           if (error) {
             return toolError(error);
@@ -69,7 +69,7 @@ export function ProcessEditorContent() {
           state.setName(arg.name);
           return toolSuccess('Name updated');
         },
-        async processEditor_setDescription(arg) {
+        async setDescription(arg) {
           const error = ProcessValidator.validateDescription(arg.name);
           if (error) {
             return toolError(error);
@@ -77,7 +77,7 @@ export function ProcessEditorContent() {
           state.setDescription(arg.name);
           return toolSuccess('Description updated');
         },
-        async processEditor_getAvailableNewSteps() {
+        async getAvailableNewSteps() {
           return toolboxConfiguration.groups
             .flatMap(group => group.steps)
             .map(step => ({
@@ -85,7 +85,7 @@ export function ProcessEditorContent() {
               defaultName: step.name
             }));
         },
-        processEditor_getWorkflow: async () => {
+        getWorkflow: async () => {
           const definition = ObjectCloner.deepClone(state.definition.value);
           state.walker.forEach(definition, step => {
             const s = step as { properties?: unknown };
@@ -93,14 +93,14 @@ export function ProcessEditorContent() {
           });
           return definition;
         },
-        processEditor_readWorkflowStep: async arg => {
+        readWorkflowStep: async arg => {
           const step = state.walker.findById(state.definition.value, arg.stepId);
           if (!step) {
             return toolError('Step ID not found');
           }
           return step;
         },
-        processEditor_deleteWorkflowStep: async arg => {
+        deleteWorkflowStep: async arg => {
           const found = state.walker.findParentSequence(state.definition.value, arg.stepId);
           if (!found) {
             return toolError('Step ID not found. The step was not deleted.');
@@ -109,7 +109,7 @@ export function ProcessEditorContent() {
           state.notifyDefinitionChange();
           return toolSuccess('Step deleted');
         },
-        processEditor_createWorkflowStep: async arg => {
+        createWorkflowStep: async arg => {
           const template = toolboxConfiguration.groups.flatMap(group => group.steps).find(step => step.type === arg.type);
           if (!template) {
             return toolError('Step type not found');
@@ -119,7 +119,7 @@ export function ProcessEditorContent() {
           newStep.name = arg.name;
           return newStep;
         },
-        processEditor_appendWorkflowStep: async arg => {
+        appendWorkflowStep: async arg => {
           const parseResult = anyStepSchema.safeParse(arg.step);
           if (!parseResult.success) {
             return toolError(`Invalid step JSON: ${parseResult.error.message}. The step was not added.`);
@@ -133,7 +133,7 @@ export function ProcessEditorContent() {
           state.notifyDefinitionChange();
           return toolSuccess('Workflow updated');
         },
-        processEditor_replaceWorkflowStep: async arg => {
+        replaceWorkflowStep: async arg => {
           const parseResult = anyStepSchema.safeParse(arg.step);
           if (!parseResult.success) {
             return toolError(`Invalid step JSON: ${parseResult.error.message}. The step was not replaced.`);
@@ -147,34 +147,34 @@ export function ProcessEditorContent() {
           state.notifyDefinitionChange();
           return toolSuccess('Workflow updated');
         },
-        processEditor_getRootVariables: async () => {
+        getRootVariables: async () => {
           return state.definition.value.properties.variables;
         },
-        processEditor_isRootStartFormEnabled: async () => {
+        isRootStartFormEnabled: async () => {
           return {
             isEnabled: Boolean(state.definition.value.properties.startForm)
           };
         },
-        processEditor_switchRootStartForm: async arg => {
+        switchRootStartForm: async arg => {
           state.definition.value.properties.startForm = arg.isEnabled ? createEmptyFormDefinition() : undefined;
           state.notifyDefinitionChange();
           return toolSuccess(`Start form ${arg.isEnabled ? 'enabled' : 'disabled'}`);
         },
-        processEditor_openRootStartFormEditor: async () => {
+        openRootStartFormEditor: async () => {
           if (!state.definition.value.properties.startForm) {
             return toolError('Start form is not enabled.');
           }
           state.switchToChildRoute(ProcessEditorChildRoute.FORM_EDITOR, DefinitionPath.createRootPath('properties.startForm'));
           return toolSuccess('Start form editor opened');
         },
-        processEditor_openDesigner: async () => {
+        openDesigner: async () => {
           if (state.childRoute === ProcessEditorChildRoute.DESIGNER) {
             return toolError('Designer is already open.');
           }
           state.switchToDesigner();
           return toolSuccess('Designer opened');
         },
-        processEditor_getChildRoute: async () => {
+        getChildRoute: async () => {
           if (state.childRoute === ProcessEditorChildRoute.DESIGNER) {
             return {
               mode: ProcessEditorChildRoute.DESIGNER
@@ -189,7 +189,7 @@ export function ProcessEditorContent() {
           };
         },
 
-        processEditor_formEditor_getAvailableVariables: async () => {
+        formEditor_getAvailableVariables: async () => {
           if (state.childRoute !== ProcessEditorChildRoute.FORM_EDITOR || !state.childPath) {
             return toolError('Form editor is not open.');
           }
@@ -201,7 +201,7 @@ export function ProcessEditorContent() {
             outputVariableNames
           };
         },
-        processEditor_formEditor_get: async arg => {
+        formEditor_get: async arg => {
           if (state.childRoute !== ProcessEditorChildRoute.FORM_EDITOR || !state.childPath) {
             return toolError('Form editor is not open.');
           }
@@ -210,7 +210,7 @@ export function ProcessEditorContent() {
             value: value[arg.type]
           };
         },
-        processEditor_formEditor_set: async arg => {
+        formEditor_set: async arg => {
           if (state.childRoute !== ProcessEditorChildRoute.FORM_EDITOR || !state.childPath) {
             return toolError('Form editor is not open.');
           }

@@ -1,45 +1,42 @@
 import z from 'zod/v4';
-import { aiBinding, AiBindingsStore, aiRoute, buildAiBindingStoreFactory } from '../ai-bindings';
+import { aiRoute, storeFactoryFromRoute, tool } from '../ai-bindings';
 
-export const sandboxEditorSetterAiBindings = [
-  aiBinding(
-    'sandboxEditor_getDetails',
-    'Get the sandbox’s name, description, enabled status, configuration, and secret names. Secret values are not visible to AI; they are only visible to the user.'
-  ).void(),
-  aiBinding('sandboxEditor_setIsEnabled', 'Set whether the sandbox is enabled').arg(
+const sandboxEditorRoute = aiRoute('sandboxEditor')
+  .paths(['/admin/sandboxes/:name', '/admin/create-sandbox'])
+  .unavailable('You are not on a sandbox editor page.')
+  .params(
     z.object({
-      isEnabled: z.boolean().describe('Whether the sandbox should be enabled')
+      name: z.string().describe('The name of the sandbox')
     })
-  ),
-  aiBinding('sandboxEditor_setName', 'Set the name of the sandbox').arg(
-    z.object({
-      name: z.string().describe('The new name of the sandbox')
-    })
-  ),
-  aiBinding(
-    'sandboxEditor_setConfiguration',
-    'Set the Docker configuration of the sandbox that will be inserted after the prefix, and before the suffix. DO NOT include the prefix or suffix in this configuration, as they will be automatically added.'
-  ).arg(
-    z.object({
-      configuration: z.string().describe('The new configuration of the sandbox')
-    })
-  ),
-  aiBinding('sandboxEditor_save', 'Save the changes made to the sandbox').void()
-] as const;
+  )
+  .tools({
+    getDetails: tool(
+      "Get the sandbox's name, description, enabled status, configuration, and secret names. Secret values are not visible to AI; they are only visible to the user."
+    ),
 
-export type SandboxEditorAiBindingsStore = AiBindingsStore<typeof sandboxEditorSetterAiBindings>;
+    setIsEnabled: tool('Set whether the sandbox is enabled').input(
+      z.object({
+        isEnabled: z.boolean().describe('Whether the sandbox should be enabled')
+      })
+    ),
 
-const processListRoute = aiRoute(
-  'sandboxEditor',
-  ['/admin/sandboxes/:name', '/admin/create-sandbox'],
-  'You are not on a sandbox editor page.'
-).arg(
-  z.object({
-    name: z.string().describe('The name of the sandbox')
-  })
-);
+    setName: tool('Set the name of the sandbox').input(
+      z.object({
+        name: z.string().describe('The new name of the sandbox')
+      })
+    ),
 
-export const sandboxEditorAiBindingsFactory = buildAiBindingStoreFactory<typeof sandboxEditorSetterAiBindings, typeof processListRoute>(
-  sandboxEditorSetterAiBindings,
-  processListRoute
-);
+    setConfiguration: tool(
+      'Set the Docker configuration of the sandbox that will be inserted after the prefix, and before the suffix. DO NOT include the prefix or suffix in this configuration, as they will be automatically added.'
+    ).input(
+      z.object({
+        configuration: z.string().describe('The new configuration of the sandbox')
+      })
+    ),
+
+    save: tool('Save the changes made to the sandbox')
+  });
+
+export const sandboxEditorAiBindingsFactory = storeFactoryFromRoute(sandboxEditorRoute);
+
+export type SandboxEditorAiBindingsStore = ReturnType<typeof sandboxEditorAiBindingsFactory>;

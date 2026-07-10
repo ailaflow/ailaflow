@@ -77,6 +77,7 @@ export function AiBindingsContextProvider(props: { children: React.ReactNode }) 
       string,
       {
         store: AiBindingsStore;
+        name: string;
         zod?: z.ZodObject;
       }
     > = {};
@@ -96,7 +97,7 @@ export function AiBindingsContextProvider(props: { children: React.ReactNode }) 
           function: {
             name: `router_open_${store.route.name}`,
             description: `Opening the \`${store.route.name}\` route`,
-            parameters: store.route.argSchema
+            parameters: store.route.paramsSchema
           }
         });
         routeByNameMap[store.route.name] = store.route;
@@ -105,17 +106,22 @@ export function AiBindingsContextProvider(props: { children: React.ReactNode }) 
         }
       }
       for (const binding of store.bindings) {
+        const name = store.route ? `${store.route.name}_${binding.name}` : binding.name;
         toolDescriptors.push({
           type: 'function',
-          function: binding.descriptor
+          function: {
+            name,
+            description: binding.description,
+            parameters: binding.parameters
+          }
         });
-        functionMap[binding.descriptor.name] = {
+        functionMap[name] = {
           store,
+          name: binding.name,
           zod: binding.zod
         };
       }
     }
-
     return {
       stores,
       toolDescriptors,
@@ -166,7 +172,7 @@ export function AiBindingsContextProvider(props: { children: React.ReactNode }) 
               return toolError(`Invalid arguments: ${parseResult.error.message}`);
             }
           }
-          const result = await setter[toolCall.function.name](arg);
+          const result = await setter[fn.name](arg);
           if (isToolWait(result)) {
             if (attempt === 0) {
               await result.wait(abortSignal);

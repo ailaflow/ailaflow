@@ -46,7 +46,7 @@ export function SandboxEditorContent(props: { sandbox?: SandboxDto }) {
   useAiStore(
     stores =>
       stores.sandboxEditor.bind({
-        sandboxEditor_getDetails: async () => {
+        getDetails: async () => {
           return {
             name: state.name,
             description: state.description,
@@ -57,7 +57,7 @@ export function SandboxEditorContent(props: { sandbox?: SandboxDto }) {
             secretNames: state.secrets.map(secret => secret.key)
           };
         },
-        sandboxEditor_setName: async arg => {
+        setName: async arg => {
           if (isNameReadOnly) {
             return toolError('Sandbox name cannot be changed.');
           }
@@ -68,15 +68,15 @@ export function SandboxEditorContent(props: { sandbox?: SandboxDto }) {
           update({ name: arg.name });
           return toolSuccess('Updated.');
         },
-        sandboxEditor_setIsEnabled: async arg => {
+        setIsEnabled: async arg => {
           update({ isEnabled: arg.isEnabled });
           return toolSuccess('Updated.');
         },
-        sandboxEditor_setConfiguration: async arg => {
+        setConfiguration: async arg => {
           update({ configuration: arg.configuration });
           return toolSuccess('Updated.');
         },
-        sandboxEditor_save: async () => {
+        save: async () => {
           if (!canSave) {
             return toolError('Cannot save sandbox due to validation errors or no changes made.');
           }

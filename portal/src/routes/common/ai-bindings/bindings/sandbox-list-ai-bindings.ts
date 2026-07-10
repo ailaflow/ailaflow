@@ -1,15 +1,13 @@
-import { aiBinding, AiBindingsStore, aiRoute, buildAiBindingStoreFactory } from '../ai-bindings';
+import { aiRoute, storeFactoryFromRoute, tool } from '../ai-bindings';
 
-export const sandboxListAiBindings = [
-  aiBinding('sandboxList_getSandboxes', 'Get all created sandboxes.').void(),
-  aiBinding('sandboxList_createNew', 'Open a form to create a new sandbox.').void()
-];
+const sandboxListRoute = aiRoute('sandboxList')
+  .paths(['/admin/sandboxes'])
+  .unavailable('You are not on a sandbox list page.')
+  .tools({
+    getSandboxes: tool('Get all created sandboxes.'),
+    createNew: tool('Open a form to create a new sandbox.')
+  });
 
-export type SandboxListAiBindingsStore = AiBindingsStore<typeof sandboxListAiBindings>;
+export const sandboxListAiBindingsFactory = storeFactoryFromRoute(sandboxListRoute);
 
-const sandboxListRoute = aiRoute('sandboxList', ['/admin/sandboxes'], 'You are not on a sandbox list page.').void();
-
-export const sandboxListAiBindingsFactory = buildAiBindingStoreFactory<typeof sandboxListAiBindings, void>(
-  sandboxListAiBindings,
-  sandboxListRoute
-);
+export type SandboxListAiBindingsStore = ReturnType<typeof sandboxListAiBindingsFactory>;

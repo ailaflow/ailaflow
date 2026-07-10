@@ -1,15 +1,13 @@
-import { aiBinding, AiBindingsStore, aiRoute, buildAiBindingStoreFactory } from '../ai-bindings';
+import { aiRoute, storeFactoryFromRoute, tool } from '../ai-bindings';
 
-export const processListAiBindings = [
-  aiBinding('processList_getProcesses', 'Get all created processes.').void(),
-  aiBinding('processList_createNew', 'Open a page to create a new process.').void()
-];
+const processListRoute = aiRoute('processList')
+  .paths(['/admin/processes'])
+  .unavailable('You are not on a process list page.')
+  .tools({
+    getProcesses: tool('Get all created processes.'),
+    createNew: tool('Open a page to create a new process.')
+  });
 
-export type ProcessListAiBindingsStore = AiBindingsStore<typeof processListAiBindings>;
+export const processListAiBindingsFactory = storeFactoryFromRoute(processListRoute);
 
-const processListRoute = aiRoute('processList', ['/admin/processes'], 'You are not on a process list page.').void();
-
-export const processListAiBindingsFactory = buildAiBindingStoreFactory<typeof processListAiBindings, void>(
-  processListAiBindings,
-  processListRoute
-);
+export type ProcessListAiBindingsStore = ReturnType<typeof processListAiBindingsFactory>;

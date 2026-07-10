@@ -27,13 +27,13 @@ export function SandboxList() {
         return s.sandboxList.bindError(error);
       }
       return s.sandboxList.bind({
-        sandboxList_getSandboxes: async () =>
+        getSandboxes: async () =>
           data.sandboxes.map(sandbox => ({
             name: sandbox.name,
             description: sandbox.description,
             isEnabled: sandbox.isEnabled
           })),
-        sandboxList_createNew: async () => {
+        createNew: async () => {
           await createNew();
           return toolSuccess('Redirected to the sandbox creation form.');
         }
