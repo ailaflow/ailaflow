@@ -7,7 +7,7 @@ export const processListAiBindings = [
 
 export type ProcessListAiBindingsStore = AiBindingsStore<typeof processListAiBindings>;
 
-const processListRoute = aiRoute('process_list', ['/admin/processes'], 'You are not on a process list page.').void();
+const processListRoute = aiRoute('processList', ['/admin/processes'], 'You are not on a process list page.').void();
 
 export const processListAiBindingsFactory = buildAiBindingStoreFactory<typeof processListAiBindings, void>(
   processListAiBindings,

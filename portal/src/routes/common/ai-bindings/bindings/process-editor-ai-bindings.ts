@@ -94,6 +94,10 @@ export const processEditorSetterAiBindings = [
 
   aiBinding('processEditor_getChildRoute', 'Return the child route of the process editor.').void(),
 
+  aiBinding(
+    'processEditor_formEditor_getAvailableVariables',
+    'Get the list of available input and output variables for the currently edited form. Variables can be used in the form logic.'
+  ).void(),
   aiBinding('processEditor_formEditor_get', 'Get the HTML, CSS, or JS of the currently edited form in the form editor.').arg(
     z.object({
       type: z.enum(['html', 'css', 'js']).describe('The type of the form content to get.')
@@ -110,7 +114,7 @@ export const processEditorSetterAiBindings = [
 export type ProcessEditorAiBindingsStore = AiBindingsStore<typeof processEditorSetterAiBindings>;
 
 const processEditorRoute = aiRoute(
-  'process_editor',
+  'processEditor',
   ['/admin/processes/:processId', '/admin/create-process'],
   'You are not on a process editor page.'
 ).arg(

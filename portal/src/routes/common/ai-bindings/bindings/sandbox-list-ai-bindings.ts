@@ -7,7 +7,7 @@ export const sandboxListAiBindings = [
 
 export type SandboxListAiBindingsStore = AiBindingsStore<typeof sandboxListAiBindings>;
 
-const sandboxListRoute = aiRoute('sandbox_list', ['/admin/sandboxes'], 'You are not on a sandbox list page.').void();
+const sandboxListRoute = aiRoute('sandboxList', ['/admin/sandboxes'], 'You are not on a sandbox list page.').void();
 
 export const sandboxListAiBindingsFactory = buildAiBindingStoreFactory<typeof sandboxListAiBindings, void>(
   sandboxListAiBindings,

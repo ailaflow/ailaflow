@@ -30,7 +30,7 @@ export const sandboxEditorSetterAiBindings = [
 export type SandboxEditorAiBindingsStore = AiBindingsStore<typeof sandboxEditorSetterAiBindings>;
 
 const processListRoute = aiRoute(
-  'sandbox_editor',
+  'sandboxEditor',
   ['/admin/sandboxes/:name', '/admin/create-sandbox'],
   'You are not on a sandbox editor page.'
 ).arg(

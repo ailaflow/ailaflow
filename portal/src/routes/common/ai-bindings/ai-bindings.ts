@@ -83,6 +83,14 @@ export function buildAiBindingStoreFactory<Bindings extends readonly AiBinding<a
   bindings: Bindings,
   route?: AiRoute<RouteArg>
 ): () => AiBindingsStore<Bindings, RouteArg> {
+  if (route) {
+    for (const binding of bindings) {
+      if (!binding.descriptor.name.startsWith(`${route.name}_`)) {
+        throw new Error(`Binding name "${binding.descriptor.name}" does not start with route name "${route.name}_"`);
+      }
+    }
+  }
+
   return () => {
     let setter: AiSetter<Bindings> | null = null;
     return {

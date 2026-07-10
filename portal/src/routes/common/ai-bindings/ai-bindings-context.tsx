@@ -84,7 +84,7 @@ export function AiBindingsContextProvider(props: { children: React.ReactNode }) 
     toolDescriptors.push({
       type: 'function',
       function: {
-        name: 'getCurrentPage',
+        name: 'router_getCurrentRoute',
         description: 'Get the current route already opened in the browser'
       }
     });
@@ -95,7 +95,7 @@ export function AiBindingsContextProvider(props: { children: React.ReactNode }) 
           type: 'function',
           function: {
             name: `router_open_${store.route.name}`,
-            description: `Opening the ${store.route.name} route`,
+            description: `Opening the \`${store.route.name}\` route`,
             parameters: store.route.argSchema
           }
         });
@@ -129,7 +129,7 @@ export function AiBindingsContextProvider(props: { children: React.ReactNode }) 
     async (abortSignal: AbortSignal, toolCall: ToolCall): Promise<object | null> => {
       const arg = JSON.parse(toolCall.function.arguments);
 
-      if (toolCall.function.name === 'getCurrentPage') {
+      if (toolCall.function.name === 'router_getCurrentRoute') {
         const currentRoute = currentRoutePath.current ? state.routeByPathMap[currentRoutePath.current.path] : null;
         console.warn('Cannot determine current route', currentRoutePath.current);
         if (!currentRoute) {

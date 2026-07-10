@@ -9,7 +9,7 @@ import { ScriptSubEditor } from './sub-editors/script-sub-editor';
 import { ResourceSimpleDetailsView } from '../../views/resource-editor/resource-simple-details-view';
 import { fnv1a } from '../../core/fnv1a';
 import { useAiStore } from '../common/ai-bindings/ai-bindings-context';
-import { anyStepSchema, FormDefinition, ProcessValidator } from '@aila/model';
+import { anyStepSchema, FormDefinition, ProcessValidator, TaskStep } from '@aila/model';
 import { toolError, toolSuccess } from '../common/ai-bindings/ai-tool-results';
 import { createEmptyFormDefinition, toolboxConfiguration } from './designer-configuration';
 import { ObjectCloner, Step, Uid } from 'sequential-workflow-designer';
@@ -189,6 +189,18 @@ export function ProcessEditorContent() {
           };
         },
 
+        processEditor_formEditor_getAvailableVariables: async () => {
+          if (state.childRoute !== ProcessEditorChildRoute.FORM_EDITOR || !state.childPath) {
+            return toolError('Form editor is not open.');
+          }
+          const { isRoot, object } = DefinitionPath.readPath<FormDefinition>(state.definition.value, state.childPath!);
+          const inputVariableNames = isRoot ? [] : (object as TaskStep).properties.inputVariableNames;
+          const outputVariableNames = isRoot ? [] : (object as TaskStep).properties.outputVariableNames;
+          return {
+            inputVariableNames,
+            outputVariableNames
+          };
+        },
         processEditor_formEditor_get: async arg => {
           if (state.childRoute !== ProcessEditorChildRoute.FORM_EDITOR || !state.childPath) {
             return toolError('Form editor is not open.');
