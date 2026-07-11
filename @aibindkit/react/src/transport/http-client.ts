@@ -1,3 +1,5 @@
+import { SimpleEvent } from '@aibindkit/core';
+
 export class HttpClientError extends Error {
   public constructor(
     message: string,
@@ -15,13 +17,9 @@ export interface HttpClientSseListener<U> {
 }
 
 export class HttpClient {
-  private onUnauthorizedListener: (() => void) | null = null;
+  public readonly onUnauthorized = new SimpleEvent<void>();
 
   public constructor(private headers: Record<string, string> = {}) {}
-
-  public setOnUnauthorizedListener(listener: (() => void) | null) {
-    this.onUnauthorizedListener = listener;
-  }
 
   public updateHeaders(headers: Record<string, string>) {
     this.headers = headers;
@@ -56,7 +54,7 @@ export class HttpClient {
       } catch {}
 
       if (status === 401) {
-        this.onUnauthorizedListener?.();
+        this.onUnauthorized.emit();
       }
       if (message) {
         throw new HttpClientError(message, status, data);

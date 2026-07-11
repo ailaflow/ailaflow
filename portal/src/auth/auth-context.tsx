@@ -57,8 +57,9 @@ export function AuthContext(props: AuthContextProps) {
   });
 
   useEffect(() => {
-    apiClient.setOnUnauthorizedListener(() => setSession(null));
-    return () => apiClient.setOnUnauthorizedListener(null);
+    const listener = () => setSession(null);
+    apiClient.onUnauthorized.subscribe(listener);
+    return () => apiClient.onUnauthorized.unsubscribe(listener);
   }, [apiClient]);
 
   useEffect(() => {

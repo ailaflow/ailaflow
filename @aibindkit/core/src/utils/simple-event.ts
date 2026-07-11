@@ -1,12 +1,11 @@
-// Event
-export class Ev<T> {
-  private readonly listeners: EvListener<T>[] = [];
+export class SimpleEvent<T> {
+  private readonly listeners: SimpleEventListener<T>[] = [];
 
-  public subscribe(listener: EvListener<T>) {
+  public subscribe(listener: SimpleEventListener<T>) {
     this.listeners.push(listener);
   }
 
-  public unsubscribe(listener: EvListener<T>) {
+  public unsubscribe(listener: SimpleEventListener<T>) {
     const index = this.listeners.indexOf(listener);
     if (index >= 0) {
       this.listeners.splice(index, 1);
@@ -22,4 +21,4 @@ export class Ev<T> {
   };
 }
 
-export type EvListener<T> = (value: T) => void;
+export type SimpleEventListener<T> = (value: T) => void;

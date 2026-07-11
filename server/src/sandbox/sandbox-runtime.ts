@@ -4,7 +4,7 @@ import { Logger } from '../core/logger';
 import { HttpSseHandler } from '../core/http-client';
 import { abortableSleep } from '../utilities/abortable-sleep';
 import { SandboxHostPaths } from './sandbox-host-paths';
-import { Ev } from '../core/ev';
+import { SimpleEvent } from '@aibindkit/core';
 import { SandboxRpcHandlerProvider } from './sandbox-rpc-handler-provider';
 
 const BRIDGE_PORT = 4096;
@@ -62,7 +62,7 @@ export class SandboxRuntime {
 
   private readonly stopAbortController = new AbortController();
 
-  public readonly onClose = new Ev<Error | undefined>();
+  public readonly onClose = new SimpleEvent<Error | undefined>();
 
   public constructor(
     private readonly name: string,

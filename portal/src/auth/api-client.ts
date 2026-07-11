@@ -34,8 +34,8 @@ export class ApiClient {
     this.sandbox = new SandboxApiClient(this.client);
   }
 
-  public setOnUnauthorizedListener(listener: (() => void) | null) {
-    this.client.setOnUnauthorizedListener(listener);
+  public get onUnauthorized() {
+    return this.client.onUnauthorized;
   }
 
   public updateAuthToken(authToken: string) {

@@ -1,4 +1,4 @@
-import { Ev } from '../../core/ev';
+import { SimpleEvent } from '@aibindkit/core';
 
 export interface WorkflowLog {
   level: 'info' | 'warning' | 'error';
@@ -6,7 +6,7 @@ export interface WorkflowLog {
 }
 
 export class WorkflowLogger {
-  public readonly onLog = new Ev<WorkflowLog>();
+  public readonly onLog = new SimpleEvent<WorkflowLog>();
 
   public info(message: string) {
     this.onLog.emit({ level: 'info', message });

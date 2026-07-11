@@ -15,8 +15,8 @@ export class SseTransport implements ChatTransport {
     this.client = clientOrHeaders instanceof HttpClient ? clientOrHeaders : new HttpClient(clientOrHeaders);
   }
 
-  public setOnUnauthorizedListener(listener: (() => void) | null) {
-    this.client.setOnUnauthorizedListener(listener);
+  public get onUnauthorized() {
+    return this.client.onUnauthorized;
   }
 
   public updateHeaders(headers: Record<string, string>) {

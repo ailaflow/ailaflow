@@ -1,7 +1,7 @@
 import { WorkflowMachineInterpreter } from 'sequential-workflow-machine';
 import { WorkflowLog, WorkflowLogger } from './services/workflow-logger';
 import { WorkflowMachineGlobalState } from './workflow-machine-global-state';
-import { Ev } from '../core/ev';
+import { SimpleEvent } from '@aibindkit/core';
 import { WorkflowVariableManager } from './services/workflow-variable-manager';
 
 export type ProcessExecutionVariableValues = Record<string, unknown>;
@@ -17,8 +17,8 @@ export type ProcessExecutionResult =
     };
 
 export class ProcessExecution {
-  public readonly onDone = new Ev<ProcessExecutionResult>();
-  public readonly onLog = new Ev<WorkflowLog>();
+  public readonly onDone = new SimpleEvent<ProcessExecutionResult>();
+  public readonly onLog = new SimpleEvent<WorkflowLog>();
 
   public constructor(
     private readonly interpreter: WorkflowMachineInterpreter<WorkflowMachineGlobalState>,

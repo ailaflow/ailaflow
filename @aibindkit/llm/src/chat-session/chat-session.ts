@@ -1,6 +1,5 @@
 import type { CompletedMessage } from '@aibindkit/core';
-import { MessageType } from '@aibindkit/core';
-import { Ev } from '../core/ev';
+import { MessageType, SimpleEvent } from '@aibindkit/core';
 import { Message } from './messages/message';
 import { MessageFactory } from './messages/message-factory';
 import { SessionStack } from './session-stack';
@@ -13,8 +12,8 @@ export interface MessageUpdate {
 }
 
 export class ChatSession {
-  public readonly onMessageCompleted = new Ev<MessageUpdate>();
-  public readonly onMessageFailed = new Ev<MessageUpdate>();
+  public readonly onMessageCompleted = new SimpleEvent<MessageUpdate>();
+  public readonly onMessageFailed = new SimpleEvent<MessageUpdate>();
 
   public totalTokens?: number;
 
