@@ -1,5 +1,4 @@
-import { CurrentTimeTool } from '../tools/current-time-tool';
-import { ToolSet } from '../tools/tool-set';
+import { CurrentTimeTool, ToolSet } from '@aibindkit/llm';
 
 export class UserToolSetProvider {
   public readonly hash = '0x0';

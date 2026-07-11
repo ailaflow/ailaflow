@@ -4,23 +4,30 @@
   "version": "0.0.0",
   "type": "module",
   "license": "../../LICENSE",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "./lib/cjs/index.cjs",
+  "module": "./lib/esm/index.js",
+  "types": "./lib/index.d.ts",
   "exports": {
     ".": {
-      "types": "./src/index.ts",
-      "import": "./src/index.ts"
+      "types": "./lib/index.d.ts",
+      "import": "./lib/esm/index.js",
+      "require": "./lib/cjs/index.cjs",
+      "default": "./lib/esm/index.js"
     }
   },
   "scripts": {
-    "build": "rm -rf dist && tsc",
+    "build": "rm -rf build lib dist && rollup -c",
     "prettier": "prettier --check ./src",
     "prettier:fix": "prettier --write ./src"
   },
   "dependencies": {
-    "openai": "^6.39.0"
+    "openai": "^6.39.0",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
+    "rollup": "^4.62.2",
+    "rollup-plugin-dts": "^6.4.1",
+    "rollup-plugin-typescript2": "^0.37.0",
     "typescript": "^6.0.3"
   }
 }

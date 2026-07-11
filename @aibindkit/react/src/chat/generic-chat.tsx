@@ -1,30 +1,48 @@
-import type { ToolCall } from '@aibindkit/model';
-import { ChatUpdate, MessageChatUpdate, RestoreChatRequest, SendFrontendToolResultRequest } from '@aila/model';
-import { useApiClient } from '../../auth/auth-context';
-import { useEffect, useState } from 'react';
-import { HttpClientSseListener } from '../../auth/http-client';
-import { GenericChatView } from '../../views/generic-chat/generic-chat-view';
+import type { ChatUpdate, MessageChatUpdate, RestoreChatRequest, SendFrontendToolResultRequest, ToolCall } from '@aibindkit/model';
+import { useEffect, useMemo, useState } from 'react';
+import { GenericChatView } from './generic-chat-view';
+import type { SendChatMessageRequest, SendChatMessageResponse, ToolDescriptor } from '@aibindkit/model';
+
+export interface ChatTransportListener {
+  onMessage(data: ChatUpdate): void;
+  onClose(error?: Error): void;
+}
+
+export interface ChatTransport {
+  restoreChat(abortSignal: AbortSignal, listener: ChatTransportListener, request: RestoreChatRequest): Promise<void>;
+  sendChatMessage(abortSignal: AbortSignal, request: SendChatMessageRequest): Promise<SendChatMessageResponse>;
+  sendFrontendToolResult(abortSignal: AbortSignal, request: SendFrontendToolResultRequest): Promise<void>;
+}
 
 export interface GenericChatProps {
-  request: RestoreChatRequest;
+  transport: ChatTransport;
+  frontendTools: ToolDescriptor[];
+  channel: Record<string, unknown>;
   onFrontendToolCalls(abortSignal: AbortSignal, toolCalls: ToolCall): Promise<object | null>;
 }
 
 export function GenericChat(props: GenericChatProps) {
-  const apiClient = useApiClient();
+  const request = useMemo<RestoreChatRequest>(
+    () => ({
+      channel: props.channel,
+      frontendTools: props.frontendTools,
+      frontendToolsHash: fnv1a(props.frontendTools)
+    }),
+    [props.frontendTools, props.channel]
+  );
   const [chatSessionId, setChatSessionId] = useState<string | null>(null);
   const [updates, setUpdates] = useState<MessageChatUpdate[]>([]);
   const [message, setMessage] = useState('');
 
   useEffect(() => {
-    const abrotController = new AbortController();
+    const abortController = new AbortController();
 
     async function resolveToolCalls(toolCalls: ToolCall[]) {
       const resolvedIds = new Set<string>();
       try {
         const toReturn: SendFrontendToolResultRequest[] = [];
         for (const toolCall of toolCalls) {
-          const result = await props.onFrontendToolCalls(abrotController.signal, toolCall);
+          const result = await props.onFrontendToolCalls(abortController.signal, toolCall);
           if (result !== null) {
             toReturn.push({
               callId: toolCall.id,
@@ -34,7 +52,7 @@ export function GenericChat(props: GenericChatProps) {
         }
 
         for (const r of toReturn) {
-          await apiClient.chat.sendFrontendToolResult(abrotController.signal, r);
+          await props.transport.sendFrontendToolResult(abortController.signal, r);
           resolvedIds.add(r.callId);
         }
       } catch (e) {
@@ -44,7 +62,7 @@ export function GenericChat(props: GenericChatProps) {
             continue;
           }
           try {
-            await apiClient.chat.sendFrontendToolResult(abrotController.signal, {
+            await props.transport.sendFrontendToolResult(abortController.signal, {
               callId: toolCall.id,
               result: `Error executing tool call: ${error}`
             });
@@ -55,7 +73,7 @@ export function GenericChat(props: GenericChatProps) {
       }
     }
 
-    const listener: HttpClientSseListener<ChatUpdate> = {
+    const listener: ChatTransportListener = {
       onMessage(update) {
         console.log(update);
         if (update.hello) {
@@ -84,17 +102,17 @@ export function GenericChat(props: GenericChatProps) {
       onClose() {}
     };
 
-    apiClient.chat.restoreChat(abrotController.signal, listener, props.request);
+    props.transport.restoreChat(abortController.signal, listener, request);
 
-    return () => abrotController.abort();
-  }, [props.request]);
+    return () => abortController.abort();
+  }, [request, props.transport]);
 
   async function onSendMessage() {
     if (!chatSessionId || !message) {
       return;
     }
     const abortSignal = AbortSignal.timeout(3_000);
-    await apiClient.chat.sendChatMessage(abortSignal, {
+    await props.transport.sendChatMessage(abortSignal, {
       chatSessionId,
       message
     });
@@ -112,4 +130,16 @@ function tryGetToolCalls(update: MessageChatUpdate): ToolCall[] | null {
     }
   }
   return null;
+}
+
+function fnv1a(input: string | object): string {
+  if (typeof input === 'object') {
+    input = JSON.stringify(input);
+  }
+  let hash = 0x811c9dc5;
+  for (let i = 0; i < input.length; i++) {
+    hash ^= input.charCodeAt(i);
+    hash += (hash << 1) + (hash << 4) + (hash << 7) + (hash << 8) + (hash << 24);
+  }
+  return (hash >>> 0).toString(16).padStart(8, '0');
 }

@@ -1,8 +1,9 @@
 import { Request, Response } from 'express';
 import { Endpoint } from '../endpoint';
 import { getAuthToken } from '../auth/auth-middleware';
-import { MessageUpdate } from '../../chat-session/chat-session';
-import { ChatUpdate, RestoreChatRequest, restoreChatRequestSchema } from '@aila/model';
+import { MessageUpdate } from '@aibindkit/llm';
+import type { ChatUpdate, RestoreChatRequest } from '@aibindkit/model';
+import { restoreChatRequestSchema } from '@aibindkit/model';
 import { SseResponse } from '../../utilities/sse-response';
 import { UserChatSessionStore } from '../../chat-session/stores/user-chat-session-store';
 import { AdminChatSessionStore } from '../../chat-session/stores/admin-chat-session-store';
@@ -48,16 +49,17 @@ export class RestoreSessionEndpoint implements Endpoint {
   }
 
   private getChatSession(authToken: AuthToken, request: RestoreChatRequest) {
-    if (authToken.isAdmin && request.admin) {
+    const channel = request.channel;
+    if (channel.admin === true) {
       return (
-        this.adminChatSessionStore.tryGet(authToken.userName, request.admin.hash) ??
-        this.adminChatSessionStore.create(authToken.userName, request.admin.hash, request.admin.frontendToolDescriptors)
+        this.adminChatSessionStore.tryGet(authToken.userName, request.frontendToolsHash) ??
+        this.adminChatSessionStore.create(authToken.userName, request.frontendToolsHash, request.frontendTools)
       );
     }
-    if (request.user) {
+    if (typeof channel.name === 'string') {
       return (
-        this.userChatSessionStore.tryGet(authToken.userName, request.user.channelName) ??
-        this.userChatSessionStore.create(authToken.userName, request.user.channelName)
+        this.userChatSessionStore.tryGet(authToken.userName, channel.name) ??
+        this.userChatSessionStore.create(authToken.userName, channel.name)
       );
     }
     throw new Error('Unsupported request');

@@ -1,7 +1,7 @@
 import type { ToolCall, ToolResponse } from '@aibindkit/model';
-import { MessageType } from '@aila/model';
+import { MessageType } from '@aibindkit/model';
 import { ToolSet } from '../tools/tool-set';
-import { CompleteResult, Message } from './message';
+import { Message, MessageCompleteResult } from './message';
 
 export class ToolMessage implements Message {
   public readonly type = MessageType.TOOL;
@@ -12,7 +12,7 @@ export class ToolMessage implements Message {
     private readonly toolSet: ToolSet
   ) {}
 
-  public async complete(abortSignal: AbortSignal): Promise<CompleteResult> {
+  public async complete(abortSignal: AbortSignal): Promise<MessageCompleteResult> {
     const completedMessage = await Promise.all(
       this.calls.map<Promise<ToolResponse>>(async call => {
         if (call.type !== 'function') {

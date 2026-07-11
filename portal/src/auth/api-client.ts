@@ -1,6 +1,13 @@
 import { HttpClient, HttpClientSseListener } from './http-client';
-import {
+import type {
   ChatUpdate,
+  RestoreChatRequest,
+  SendChatMessageRequest,
+  SendChatMessageResponse,
+  SendFrontendToolResultRequest
+} from '@aibindkit/model';
+import type { ChatTransport, ChatTransportListener } from '@aibindkit/react';
+import type {
   GetSandboxResponse,
   GetSandboxesResponse,
   GetProcessesResponse,
@@ -11,10 +18,6 @@ import {
   LoginResponse,
   RefreshTokenRequest,
   RefreshTokenResponse,
-  RestoreChatRequest,
-  SendChatMessageRequest,
-  SendChatMessageResponse,
-  SendFrontendToolResultRequest,
   TestProcessRequest,
   TestProcessUpdate,
   UpdateProcessRequest,
@@ -68,12 +71,12 @@ export class AuthApiClient {
   }
 }
 
-export class ChatApiClient {
+export class ChatApiClient implements ChatTransport {
   public constructor(private readonly client: HttpClient) {}
 
   public async restoreChat(
     abortSignal: AbortSignal,
-    listener: HttpClientSseListener<ChatUpdate>,
+    listener: ChatTransportListener,
     request: RestoreChatRequest
   ): Promise<void> {
     return this.client.sse(abortSignal, listener, 'POST', '/api/chat', request);

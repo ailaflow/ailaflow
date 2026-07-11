@@ -1,3 +1,3 @@
-import OpenAI from 'openai';
+import type OpenAI from 'openai';
 
 export type ToolDescriptor = OpenAI.Chat.ChatCompletionFunctionTool;

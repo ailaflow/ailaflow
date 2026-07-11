@@ -1,5 +1,5 @@
 {
-  "name": "@aibindkit/react",
+  "name": "@aibindkit/llm",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -13,8 +13,7 @@
       "import": "./lib/esm/index.js",
       "require": "./lib/cjs/index.cjs",
       "default": "./lib/esm/index.js"
-    },
-    "./css/chat.css": "./css/chat.css"
+    }
   },
   "scripts": {
     "build": "rm -rf build lib dist && rollup -c",
@@ -23,11 +22,10 @@
   },
   "dependencies": {
     "@aibindkit/model": "workspace:*",
-    "react": "^19.0.0",
-    "zod": "^4.4.3"
+    "openai": "^6.39.0"
   },
   "devDependencies": {
-    "@types/react": "^19.0.0",
+    "@types/node": "^22.10.1",
     "rollup": "^4.62.2",
     "rollup-plugin-dts": "^6.4.1",
     "rollup-plugin-typescript2": "^0.37.0",

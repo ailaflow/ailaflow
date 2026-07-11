@@ -1,9 +1,9 @@
-import { CompleteResult, Message } from './message';
+import { Message, MessageCompleteResult } from './message';
 import { ToolSet } from '../tools/tool-set';
 import { SessionStack } from '../session-stack';
-import { LlmClient } from '../../llm-client/llm-client';
+import { LlmClient } from '../../client/llm-client';
 import type { ToolCall } from '@aibindkit/model';
-import { MessageType } from '@aila/model';
+import { MessageType } from '@aibindkit/model';
 
 export class AiMessage implements Message {
   public readonly type = MessageType.AI;
@@ -14,7 +14,7 @@ export class AiMessage implements Message {
     private readonly toolSet: ToolSet
   ) {}
 
-  public async complete(abortSignal: AbortSignal, stack: SessionStack): Promise<CompleteResult> {
+  public async complete(abortSignal: AbortSignal, stack: SessionStack): Promise<MessageCompleteResult> {
     const completedMessages = stack.getCompletedMessagesBeforeLast();
     const toolDescriptors = this.toolSet.getDescriptorsOrUndefined();
 

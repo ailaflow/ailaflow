@@ -1,5 +1,5 @@
 import type { ToolCall } from '@aibindkit/model';
-import { CompletedMessage, MessageChatUpdate } from '@aila/model';
+import type { CompletedMessage, MessageChatUpdate } from '@aibindkit/model';
 import { useEffect, useRef } from 'react';
 import type { KeyboardEvent } from 'react';
 
@@ -27,29 +27,25 @@ export function GenericChatView(props: GenericChatViewProps) {
   }
 
   return (
-    <section className="flex h-full min-h-0 w-full flex-col overflow-hidden bg-white">
-      <ul className="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 py-4">
+    <section className="abk-chat">
+      <ul className="abk-chat-messages">
         {props.updates.map(update => (
           <GenericChatUpdateView key={update.id} update={update} />
         ))}
         <li ref={messagesEndRef} aria-hidden="true" />
       </ul>
 
-      <div className="shrink-0 border-t border-slate-200 bg-slate-50 p-3">
-        <div className="flex min-h-12 items-end gap-2 rounded-md border border-slate-200 bg-white p-2 shadow-sm focus-within:border-slate-400">
+      <div className="abk-chat-composer">
+        <div className="abk-chat-composer-inner">
           <textarea
             value={props.message}
             onChange={e => props.onMessageChanged(e.currentTarget.value)}
             onKeyDown={onMessageKeyDown}
             rows={1}
             placeholder="Type a message..."
-            className="max-h-36 min-h-8 flex-1 resize-none overflow-y-auto border-0 bg-transparent px-1 py-1 text-sm leading-6 text-slate-900 outline-none placeholder:text-slate-400"
+            className="abk-chat-input"
           />
-          <button
-            type="button"
-            onClick={props.onSendMessage}
-            className="inline-flex h-9 shrink-0 items-center justify-center rounded-md bg-slate-900 px-4 text-sm font-medium text-white transition-colors hover:bg-slate-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900"
-          >
+          <button type="button" onClick={props.onSendMessage} className="abk-chat-send">
             Send
           </button>
         </div>
@@ -60,13 +56,13 @@ export function GenericChatView(props: GenericChatViewProps) {
 
 function GenericChatUpdateView(props: { update: MessageChatUpdate }) {
   if (props.update.failReason) {
-    return <li className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">Failed: {props.update.failReason}</li>;
+    return <li className="abk-chat-failure">Failed: {props.update.failReason}</li>;
   }
 
   const messages = arr(props.update.completedMessage ?? []);
 
   return (
-    <li data-id={props.update.id} className="space-y-2">
+    <li data-id={props.update.id} className="abk-chat-update">
       {messages.map((message, index) => {
         return <GenericChatMessageView key={index} message={message} />;
       })}
@@ -92,9 +88,9 @@ function GenericChatMessageView(props: { message: CompletedMessage }) {
 
 function UserMessageView(props: { content: string | null }) {
   return (
-    <div className="flex justify-end">
-      <article className="max-w-[82%] rounded-md bg-slate-900 px-3 py-2 text-sm text-white shadow-sm">
-        <div className="mb-1 text-xs font-medium uppercase text-slate-300">User</div>
+    <div className="abk-chat-row abk-chat-row-user">
+      <article className="abk-chat-bubble abk-chat-bubble-user">
+        <div className="abk-chat-label">User</div>
         <MessageContentView content={props.content} />
       </article>
     </div>
@@ -106,9 +102,9 @@ function AssistantMessageView(props: { message: CompletedMessage }) {
   const content = getContent(props.message);
 
   return (
-    <div className="flex justify-start">
-      <article className="max-w-[88%] rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm">
-        <div className="mb-1 text-xs font-medium uppercase text-slate-500">Assistant</div>
+    <div className="abk-chat-row abk-chat-row-assistant">
+      <article className="abk-chat-bubble abk-chat-bubble-assistant">
+        <div className="abk-chat-label">Assistant</div>
         <MessageContentView content={content} />
         {toolCalls && <ToolCallsView toolCalls={toolCalls} />}
       </article>
@@ -118,9 +114,9 @@ function AssistantMessageView(props: { message: CompletedMessage }) {
 
 function SystemMessageView(props: { message: CompletedMessage }) {
   return (
-    <div className="flex justify-center">
-      <article className="max-w-[88%] rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
-        <div className="mb-1 font-medium uppercase text-slate-500">{props.message.role}</div>
+    <div className="abk-chat-row abk-chat-row-system">
+      <article className="abk-chat-bubble abk-chat-bubble-system">
+        <div className="abk-chat-label">{props.message.role}</div>
         <MessageContentView content={getContent(props.message)} />
       </article>
     </div>
@@ -132,22 +128,16 @@ function ToolMessageView(props: { message: CompletedMessage }) {
   const label = getToolResponseLabel(content);
 
   return (
-    <div className="flex justify-start">
-      <details className="group max-w-[88%] rounded-md border border-slate-200 bg-slate-50 text-sm text-slate-900 shadow-sm">
-        <summary className="flex cursor-pointer list-none items-center gap-2 px-3 py-2 text-xs font-medium text-slate-700 marker:hidden">
-          <span className="flex h-5 w-5 items-center justify-center rounded border border-slate-300 bg-white text-[10px] text-slate-500 group-open:hidden">
-            +
-          </span>
-          <span className="hidden h-5 w-5 items-center justify-center rounded border border-slate-300 bg-white text-[10px] text-slate-500 group-open:flex">
-            -
-          </span>
-          <span className="truncate">
-            Tool response{label && <>: <span className="font-semibold text-slate-950">{label}</span></>}
+    <div className="abk-chat-row abk-chat-row-tool">
+      <details className="abk-chat-details">
+        <summary className="abk-chat-summary">
+          <span className="abk-chat-toggle abk-chat-toggle-closed">+</span>
+          <span className="abk-chat-toggle abk-chat-toggle-open">-</span>
+          <span className="abk-chat-summary-text">
+            Tool response{label && <>: <span className="abk-chat-summary-strong">{label}</span></>}
           </span>
         </summary>
-        <pre className="max-h-72 overflow-auto border-t border-slate-200 bg-white px-3 py-2 text-xs leading-5 text-slate-800">
-          {formatMaybeJson(content)}
-        </pre>
+        <pre className="abk-chat-pre">{formatMaybeJson(content)}</pre>
       </details>
     </div>
   );
@@ -158,28 +148,22 @@ function MessageContentView(props: { content: string | null }) {
     return null;
   }
 
-  return <div className="whitespace-pre-wrap break-words leading-6">{props.content}</div>;
+  return <div className="abk-chat-content">{props.content}</div>;
 }
 
 function ToolCallsView(props: { toolCalls: ToolCall[] }) {
   return (
-    <div className="mt-3 space-y-2 border-t border-slate-100 pt-3">
+    <div className="abk-chat-tool-calls">
       {props.toolCalls.map(call => (
-        <details key={call.id} className="group rounded-md border border-slate-200 bg-slate-50">
-          <summary className="flex cursor-pointer list-none items-center gap-2 px-3 py-2 text-xs font-medium text-slate-700 marker:hidden">
-            <span className="flex h-5 w-5 items-center justify-center rounded border border-slate-300 bg-white text-[10px] text-slate-500 group-open:hidden">
-              +
-            </span>
-            <span className="hidden h-5 w-5 items-center justify-center rounded border border-slate-300 bg-white text-[10px] text-slate-500 group-open:flex">
-              -
-            </span>
-            <span className="truncate">
-              Function call: <span className="font-semibold text-slate-950">{call.function.name}</span>
+        <details key={call.id} className="abk-chat-details abk-chat-tool-call">
+          <summary className="abk-chat-summary">
+            <span className="abk-chat-toggle abk-chat-toggle-closed">+</span>
+            <span className="abk-chat-toggle abk-chat-toggle-open">-</span>
+            <span className="abk-chat-summary-text">
+              Function call: <span className="abk-chat-summary-strong">{call.function.name}</span>
             </span>
           </summary>
-          <pre className="max-h-72 overflow-auto border-t border-slate-200 bg-white px-3 py-2 text-xs leading-5 text-slate-800">
-            {formatToolArguments(call.function.arguments)}
-          </pre>
+          <pre className="abk-chat-pre">{formatToolArguments(call.function.arguments)}</pre>
         </details>
       ))}
     </div>

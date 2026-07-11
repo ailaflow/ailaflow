@@ -1,8 +1,6 @@
-import { ChatSessionFactory } from '../chat-session-factory';
-import { LlmClient } from '../../llm-client/llm-client';
+import { ChatSession, ChatSessionFactory, LlmClient } from '@aibindkit/llm';
 import { UserToolSetProvider } from './user-tool-set-provider';
 import { ChatSessionStore } from './chat-session-store';
-import { ChatSession } from '../chat-session';
 
 const SYSTEM_PROMPT = 'You are Aila, an AI assistant.';
 

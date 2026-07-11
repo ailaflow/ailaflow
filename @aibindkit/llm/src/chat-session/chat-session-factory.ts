@@ -1,4 +1,4 @@
-import { LlmClient } from '../llm-client/llm-client';
+import { LlmClient } from '../client/llm-client';
 import { ChatSession } from './chat-session';
 import { MessageFactory } from './messages/message-factory';
 import { ToolSet } from './tools/tool-set';

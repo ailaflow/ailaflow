@@ -1,10 +1,6 @@
 import type { ToolDescriptor } from '@aibindkit/model';
-import { ChatSessionFactory } from '../chat-session-factory';
-import { LlmClient } from '../../llm-client/llm-client';
-import { ToolSet } from '../tools/tool-set';
-import { FrontendToolFactory } from '../tools/frontend-tool-factory';
+import { ChatSession, ChatSessionFactory, FrontendToolFactory, LlmClient, ToolSet } from '@aibindkit/llm';
 import { ChatSessionStore } from './chat-session-store';
-import { ChatSession } from '../chat-session';
 import { readFileSync } from 'fs';
 import { ServerPaths } from '../../core/server-paths';
 

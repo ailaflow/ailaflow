@@ -1,4 +1,5 @@
-import { CompletedMessage, MessageType } from '@aila/model';
+import type { CompletedMessage } from '@aibindkit/model';
+import { MessageType } from '@aibindkit/model';
 import { Ev } from '../core/ev';
 import { Message } from './messages/message';
 import { MessageFactory } from './messages/message-factory';

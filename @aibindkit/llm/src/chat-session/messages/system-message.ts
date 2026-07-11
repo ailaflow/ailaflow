@@ -1,5 +1,6 @@
-import { CompletedMessage, MessageType } from '@aila/model';
-import { CompleteResult, Message } from './message';
+import type { CompletedMessage } from '@aibindkit/model';
+import { MessageType } from '@aibindkit/model';
+import { Message, MessageCompleteResult } from './message';
 
 export class SystemMessage implements Message {
   public readonly type = MessageType.SYSTEM;
@@ -9,7 +10,7 @@ export class SystemMessage implements Message {
     public readonly content: string
   ) {}
 
-  public async complete(): Promise<CompleteResult> {
+  public async complete(): Promise<MessageCompleteResult> {
     const completedMessage: CompletedMessage = {
       role: 'system',
       content: [

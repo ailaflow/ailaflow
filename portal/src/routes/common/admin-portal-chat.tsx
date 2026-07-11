@@ -1,18 +1,12 @@
-import { RestoreChatRequest } from '@aila/model';
-import { GenericChat } from './generic-chat';
-import { fnv1a } from '../../core/fnv1a';
-import { useMemo } from 'react';
+import { GenericChat } from '@aibindkit/react';
 import { useAiEnvironment } from './admin-portal';
+import { useApiClient } from '../../auth/auth-context';
+import { useMemo } from 'react';
 
 export function AdminPortalChat() {
+  const api = useApiClient();
   const { toolDescriptors, handleToolCall } = useAiEnvironment();
+  const channel = useMemo(() => ({ admin: true }), []);
 
-  const request: RestoreChatRequest = useMemo(() => {
-    const hash = fnv1a(toolDescriptors);
-    return {
-      admin: { frontendToolDescriptors: toolDescriptors, hash }
-    };
-  }, [toolDescriptors]);
-
-  return <GenericChat request={request} onFrontendToolCalls={handleToolCall} />;
+  return <GenericChat transport={api.chat} channel={channel} frontendTools={toolDescriptors} onFrontendToolCalls={handleToolCall} />;
 }

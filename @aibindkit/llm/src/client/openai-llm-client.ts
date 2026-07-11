@@ -1,21 +1,15 @@
 import OpenAI from 'openai';
 import { CompleteResult, LlmClient } from './llm-client';
 import type { ToolDescriptor } from '@aibindkit/model';
-import { CompletedMessage } from '@aila/model';
+import type { CompletedMessage } from '@aibindkit/model';
 
 export class OpenaiLlmClient implements LlmClient {
   private readonly openai: OpenAI;
 
-  public constructor() {
+  public constructor(config: { baseUrl: string; apiKey: string }) {
     this.openai = new OpenAI({
-      baseURL: process.env.AI_PROVIDER_BASE_URL!,
-      apiKey: process.env.AI_PROVIDER_API_KEY!
-      /*fetch: async (input, init) => {
-        const response = await fetch(input, init);
-        const body = await response.clone().text();
-        console.log('AI response:', body);
-        return response;
-      }*/
+      baseURL: config.baseUrl,
+      apiKey: config.apiKey
     });
   }
 

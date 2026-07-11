@@ -1,4 +1,4 @@
-import { ChatSession } from '../chat-session';
+import { ChatSession } from '@aibindkit/llm';
 
 export class ChatSessionStore {
   private readonly sessions = new Map<string, ChatSession>();

@@ -1,5 +1,5 @@
 import type { ToolCall } from '@aibindkit/model';
-import { LlmClient } from '../../llm-client/llm-client';
+import { LlmClient } from '../../client/llm-client';
 import { ToolSet } from '../tools/tool-set';
 import { AiMessage } from './ai-message';
 import { SystemMessage } from './system-message';

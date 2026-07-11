@@ -2,7 +2,7 @@ import { Logger } from './core/logger';
 import { ServerPaths } from './core/server-paths';
 import express from 'express';
 import { SandboxInstanceManager } from './sandbox/sandbox-instance-manager';
-import { OpenaiLlmClient } from './llm-client/openai-llm-client';
+import { ChatSessionFactory, FrontendToolBus, FrontendToolFactory, OpenaiLlmClient } from '@aibindkit/llm';
 import { LoginEndpoint } from './api/auth/login-endpoint';
 import { Router } from './api/router';
 import { UserRepository } from './repositories/user-repository/user-repository';
@@ -25,12 +25,9 @@ import { SqliteProcessListQuerier } from './queriers/process-list/sqlite-process
 import { GetProcessEndpoint } from './api/process/get-process-endpoint';
 import { TestProcessEndpoint } from './api/process/test-process-endpoint';
 import { SendFrontedToolResultEndpoint } from './api/chat-session/send-frontend-tool-result-endpoint';
-import { FrontendToolBus } from './chat-session/tools/frontend-tool-bus';
-import { ChatSessionFactory } from './chat-session/chat-session-factory';
 import { UserChatSessionStore } from './chat-session/stores/user-chat-session-store';
 import { UserToolSetProvider } from './chat-session/stores/user-tool-set-provider';
 import { AdminChatSessionStore } from './chat-session/stores/admin-chat-session-store';
-import { FrontendToolFactory } from './chat-session/tools/frontend-tool-factory';
 import { ChatSessionStore } from './chat-session/stores/chat-session-store';
 import { SandboxRepository } from './repositories/sandbox-repository/sandbox-repository';
 import { SqliteSandboxRepository } from './repositories/sandbox-repository/sqlite-sandbox-repository';
@@ -90,7 +87,10 @@ export class Server {
 
     const passwordHasher = new PasswordHasher();
 
-    const llmClient = new OpenaiLlmClient();
+    const llmClient = new OpenaiLlmClient({
+      baseUrl: process.env.AI_PROVIDER_BASE_URL!,
+      apiKey: process.env.AI_PROVIDER_API_KEY!
+    });
     const chatSessionFactory = new ChatSessionFactory();
     const userToolSetProvider = new UserToolSetProvider();
 

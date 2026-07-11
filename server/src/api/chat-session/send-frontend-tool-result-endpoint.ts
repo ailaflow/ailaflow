@@ -1,8 +1,8 @@
 import { Request } from 'express';
 import { Endpoint } from '../endpoint';
 import { EndpointError } from '../endpoint-error';
-import { sendFrontendToolResultRequestSchema } from '@aila/model';
-import { FrontendToolBus } from '../../chat-session/tools/frontend-tool-bus';
+import { sendFrontendToolResultRequestSchema } from '@aibindkit/model';
+import { FrontendToolBus } from '@aibindkit/llm';
 import { parseBody } from '../parse-body';
 
 export class SendFrontedToolResultEndpoint implements Endpoint {

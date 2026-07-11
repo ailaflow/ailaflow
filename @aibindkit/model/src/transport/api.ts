@@ -1,21 +1,13 @@
 import z from 'zod/v4';
-import type { ToolDescriptor } from '@aibindkit/model';
-import { CompletedMessage, MessageType } from '../chat-session';
+import type { CompletedMessage, MessageType } from '../chat-session';
+import type { ToolDescriptor } from '../tools';
 
 // restoreChat
 
 export const restoreChatRequestSchema = z.object({
-  admin: z
-    .object({
-      hash: z.string(),
-      frontendToolDescriptors: z.array(z.custom<ToolDescriptor>())
-    })
-    .optional(),
-  user: z
-    .object({
-      channelName: z.string()
-    })
-    .optional()
+  frontendTools: z.array(z.custom<ToolDescriptor>()),
+  frontendToolsHash: z.string().min(1),
+  channel: z.record(z.string(), z.unknown())
 });
 export type RestoreChatRequest = z.infer<typeof restoreChatRequestSchema>;
 

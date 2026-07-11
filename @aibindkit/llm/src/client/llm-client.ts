@@ -1,5 +1,5 @@
 import type { ToolDescriptor } from '@aibindkit/model';
-import { CompletedMessage } from '@aila/model';
+import type { CompletedMessage } from '@aibindkit/model';
 
 export interface CompleteResult {
   completedMessage: CompletedMessage;
