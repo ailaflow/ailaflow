@@ -136,16 +136,16 @@ export function aiEnvironment<Stores extends Record<string, AiBindingsStore>>(st
   }
 
   function useAiEnvironment() {
-    const c = useContext(context);
-    if (!c) {
-      throw new Error('Cannot locate AI bindings context');
+    const env = useContext(context);
+    if (!env) {
+      throw new Error('Cannot locate AI environment');
     }
-    return c;
+    return env;
   }
 
   function useAiStore<S extends keyof Stores>(storeName: S, bind: (store: Stores[S]) => void | (() => void), deps: unknown[]) {
-    const c = useAiEnvironment();
-    useEffect(() => bind(c.stores[storeName]), [c, storeName, ...deps]);
+    const env = useAiEnvironment();
+    useEffect(() => bind(env.stores[storeName]), [env, storeName, ...deps]);
   }
 
   return {

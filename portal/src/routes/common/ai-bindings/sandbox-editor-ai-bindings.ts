@@ -37,6 +37,6 @@ const sandboxEditorRoute = route('sandboxEditor')
     save: tool('Save the changes made to the sandbox')
   });
 
-export const sandboxEditorAiBindingsFactory = storeFactory(sandboxEditorRoute);
+export const sandboxEditorAiStoreFactory = storeFactory(sandboxEditorRoute);
 
-export type SandboxEditorAiBindingsStore = ReturnType<typeof sandboxEditorAiBindingsFactory>;
+export type SandboxEditorAiStore = ReturnType<typeof sandboxEditorAiStoreFactory>;

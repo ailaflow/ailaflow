@@ -111,6 +111,6 @@ const processEditorRoute = route('processEditor')
     )
   });
 
-export const processEditorAiBindingsFactory = storeFactory(processEditorRoute);
+export const processEditorAiStoreFactory = storeFactory(processEditorRoute);
 
-export type ProcessEditorAiBindingsStore = ReturnType<typeof processEditorAiBindingsFactory>;
+export type ProcessEditorAiBindingsStore = ReturnType<typeof processEditorAiStoreFactory>;

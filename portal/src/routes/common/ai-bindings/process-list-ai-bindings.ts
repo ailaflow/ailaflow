@@ -8,6 +8,6 @@ const processListRoute = route('processList')
     createNew: tool('Open a page to create a new process.')
   });
 
-export const processListAiStore = storeFactory(processListRoute);
+export const processListAiStoreFactory = storeFactory(processListRoute);
 
-export type ProcessListAiStore = ReturnType<typeof processListAiStore>;
+export type ProcessListAiStore = ReturnType<typeof processListAiStoreFactory>;

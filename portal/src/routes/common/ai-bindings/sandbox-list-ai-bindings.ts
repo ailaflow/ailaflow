@@ -8,6 +8,6 @@ const sandboxListRoute = route('sandboxList')
     createNew: tool('Open a form to create a new sandbox.')
   });
 
-export const sandboxListAiBindingsFactory = storeFactory(sandboxListRoute);
+export const sandboxListAiStoreFactory = storeFactory(sandboxListRoute);
 
-export type SandboxListAiBindingsStore = ReturnType<typeof sandboxListAiBindingsFactory>;
+export type SandboxListAiStore = ReturnType<typeof sandboxListAiStoreFactory>;

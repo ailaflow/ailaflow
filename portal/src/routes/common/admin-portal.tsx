@@ -3,18 +3,18 @@ import { AdminChatView } from '../../views/admin/admin-chat-view';
 import { AdminPortalChat } from './admin-portal-chat';
 import { RouterAdapter, aiEnvironment } from '@aibindkit/react';
 import { Portal } from './portal';
-import { sandboxListAiBindingsFactory } from './ai-bindings/bindings/sandbox-list-ai-bindings';
-import { sandboxEditorAiBindingsFactory } from './ai-bindings/bindings/sandbox-editor-ai-bindings';
-import { processEditorAiBindingsFactory } from './ai-bindings/bindings/process-editor-ai-bindings';
-import { processListAiStore } from './ai-bindings/bindings/process-list-ai-bindings';
+import { sandboxListAiStoreFactory } from './ai-bindings/sandbox-list-ai-bindings';
+import { sandboxEditorAiStoreFactory } from './ai-bindings/sandbox-editor-ai-bindings';
+import { processEditorAiStoreFactory } from './ai-bindings/process-editor-ai-bindings';
+import { processListAiStoreFactory } from './ai-bindings/process-list-ai-bindings';
 import { routes } from '../router';
 import { useEffect, useMemo, useRef } from 'react';
 
 export const env = aiEnvironment({
-  sandboxList: sandboxListAiBindingsFactory(),
-  sandboxEditor: sandboxEditorAiBindingsFactory(),
-  processEditor: processEditorAiBindingsFactory(),
-  processList: processListAiStore()
+  sandboxList: sandboxListAiStoreFactory(),
+  sandboxEditor: sandboxEditorAiStoreFactory(),
+  processEditor: processEditorAiStoreFactory(),
+  processList: processListAiStoreFactory()
 });
 export const useAiEnvironment = env.useAiEnvironment;
 export const useAiStore = env.useAiStore;
