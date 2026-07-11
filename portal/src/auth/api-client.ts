@@ -1,12 +1,4 @@
-import { HttpClient, HttpClientSseListener } from './http-client';
-import type {
-  ChatUpdate,
-  RestoreChatRequest,
-  SendChatMessageRequest,
-  SendChatMessageResponse,
-  SendFrontendToolResultRequest
-} from '@aibindkit/model';
-import type { ChatTransport, ChatTransportListener } from '@aibindkit/react';
+import { HttpClient, HttpClientSseListener, SseTransport } from '@aibindkit/react';
 import type {
   GetSandboxResponse,
   GetSandboxesResponse,
@@ -29,15 +21,15 @@ export class ApiClient {
   private readonly client: HttpClient;
   public readonly install: InstallApiClient;
   public readonly auth: AuthApiClient;
-  public readonly chat: ChatApiClient;
+  public readonly chat: SseTransport;
   public readonly process: ProcessApiClient;
   public readonly sandbox: SandboxApiClient;
 
   public constructor(authToken: string | null) {
-    this.client = new HttpClient(authToken);
+    this.client = new HttpClient(createHeaders(authToken));
     this.install = new InstallApiClient(this.client);
     this.auth = new AuthApiClient(this.client);
-    this.chat = new ChatApiClient(this.client);
+    this.chat = new SseTransport(this.client);
     this.process = new ProcessApiClient(this.client);
     this.sandbox = new SandboxApiClient(this.client);
   }
@@ -47,8 +39,12 @@ export class ApiClient {
   }
 
   public updateAuthToken(authToken: string) {
-    this.client.updateAuthToken(authToken);
+    this.client.updateHeaders(createHeaders(authToken));
   }
+}
+
+function createHeaders(authToken: string | null): Record<string, string> {
+  return authToken ? { Authorization: `Bearer ${authToken}` } : {};
 }
 
 export class InstallApiClient {
@@ -68,26 +64,6 @@ export class AuthApiClient {
 
   public async refreshToken(abortSignal: AbortSignal, request: RefreshTokenRequest): Promise<RefreshTokenResponse> {
     return this.client.json(abortSignal, 'POST', '/api/auth/token/refresh', request);
-  }
-}
-
-export class ChatApiClient implements ChatTransport {
-  public constructor(private readonly client: HttpClient) {}
-
-  public async restoreChat(
-    abortSignal: AbortSignal,
-    listener: ChatTransportListener,
-    request: RestoreChatRequest
-  ): Promise<void> {
-    return this.client.sse(abortSignal, listener, 'POST', '/api/chat', request);
-  }
-
-  public async sendChatMessage(abortSignal: AbortSignal, request: SendChatMessageRequest): Promise<SendChatMessageResponse> {
-    return this.client.json(abortSignal, 'POST', '/api/chat/message', request);
-  }
-
-  public async sendFrontendToolResult(abortSignal: AbortSignal, request: SendFrontendToolResultRequest): Promise<void> {
-    return this.client.json(abortSignal, 'POST', '/api/chat/front-end-tool', request);
   }
 }
 

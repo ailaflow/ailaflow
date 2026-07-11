@@ -1,5 +1,5 @@
-import type { ToolCall, ToolResponse } from '@aibindkit/model';
-import { MessageType } from '@aibindkit/model';
+import type { ToolCall, ToolResponse } from '@aibindkit/core';
+import { MessageType } from '@aibindkit/core';
 import { ToolSet } from '../tools/tool-set';
 import { Message, MessageCompleteResult } from './message';
 

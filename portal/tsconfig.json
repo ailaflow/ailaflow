@@ -16,7 +16,7 @@
     "jsx": "react-jsx",
     "types": ["vite/client"],
     "paths": {
-      "@aibindkit/model": ["../@aibindkit/model/src/index.ts"],
+      "@aibindkit/core": ["../@aibindkit/core/src/index.ts"],
       "@aibindkit/react": ["../@aibindkit/react/src/index.ts"],
       "@aila/model": ["../model/src/index.ts"]
     }

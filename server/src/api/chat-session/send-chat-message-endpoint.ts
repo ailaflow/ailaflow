@@ -2,8 +2,8 @@ import { Request } from 'express';
 import { Endpoint } from '../endpoint';
 import { getAuthToken } from '../auth/auth-middleware';
 import { EndpointError } from '../endpoint-error';
-import type { SendChatMessageResponse } from '@aibindkit/model';
-import { sendChatMessageRequestSchema } from '@aibindkit/model';
+import type { SendChatMessageResponse } from '@aibindkit/core';
+import { sendChatMessageRequestSchema } from '@aibindkit/core';
 import { ChatSessionStore } from '../../chat-session/stores/chat-session-store';
 import { parseBody } from '../parse-body';
 

@@ -1,18 +1,14 @@
-import type { ChatUpdate, MessageChatUpdate, RestoreChatRequest, SendFrontendToolResultRequest, ToolCall } from '@aibindkit/model';
+import type {
+  ChatTransport,
+  ToolDescriptor,
+  MessageChatUpdate,
+  RestoreChatRequest,
+  SendFrontendToolResultRequest,
+  ToolCall,
+  ChatTransportListener
+} from '@aibindkit/core';
 import { useEffect, useMemo, useState } from 'react';
 import { GenericChatView } from './generic-chat-view';
-import type { SendChatMessageRequest, SendChatMessageResponse, ToolDescriptor } from '@aibindkit/model';
-
-export interface ChatTransportListener {
-  onMessage(data: ChatUpdate): void;
-  onClose(error?: Error): void;
-}
-
-export interface ChatTransport {
-  restoreChat(abortSignal: AbortSignal, listener: ChatTransportListener, request: RestoreChatRequest): Promise<void>;
-  sendChatMessage(abortSignal: AbortSignal, request: SendChatMessageRequest): Promise<SendChatMessageResponse>;
-  sendFrontendToolResult(abortSignal: AbortSignal, request: SendFrontendToolResultRequest): Promise<void>;
-}
 
 export interface GenericChatProps {
   transport: ChatTransport;

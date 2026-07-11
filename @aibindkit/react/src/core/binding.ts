@@ -1,4 +1,4 @@
-import type { ToolDescriptor } from '@aibindkit/model';
+import type { ToolDescriptor } from '@aibindkit/core';
 import z from 'zod/v4';
 
 export interface AiBinding<Input = any, Name extends string = string> {

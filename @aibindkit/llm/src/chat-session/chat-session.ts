@@ -1,5 +1,5 @@
-import type { CompletedMessage } from '@aibindkit/model';
-import { MessageType } from '@aibindkit/model';
+import type { CompletedMessage } from '@aibindkit/core';
+import { MessageType } from '@aibindkit/core';
 import { Ev } from '../core/ev';
 import { Message } from './messages/message';
 import { MessageFactory } from './messages/message-factory';

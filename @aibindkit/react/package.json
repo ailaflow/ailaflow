@@ -22,7 +22,7 @@
     "prettier:fix": "prettier --write ./src"
   },
   "dependencies": {
-    "@aibindkit/model": "workspace:*",
+    "@aibindkit/core": "workspace:*",
     "react": "^19.0.0",
     "zod": "^4.4.3"
   },

@@ -1,4 +1,4 @@
-import type { CompletedMessage } from '@aibindkit/model';
+import type { CompletedMessage } from '@aibindkit/core';
 import { Message } from './messages/message';
 
 export interface SessionStackItem {

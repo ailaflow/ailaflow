@@ -1,7 +1,7 @@
 import { Request } from 'express';
 import { Endpoint } from '../endpoint';
 import { EndpointError } from '../endpoint-error';
-import { sendFrontendToolResultRequestSchema } from '@aibindkit/model';
+import { sendFrontendToolResultRequestSchema } from '@aibindkit/core';
 import { FrontendToolBus } from '@aibindkit/llm';
 import { parseBody } from '../parse-body';
 

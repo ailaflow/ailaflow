@@ -14,7 +14,7 @@
     "test": "pnpm build && node --test dist/**/*.test.js"
   },
   "dependencies": {
-    "@aibindkit/model": "workspace:*",
+    "@aibindkit/core": "workspace:*",
     "zod": "^4.4.3",
     "openai": "^6.39.0",
     "sequential-workflow-model": "^0.2.0"

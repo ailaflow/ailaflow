@@ -13,7 +13,8 @@ function external(id) {
 }
 
 const ts = typescript({
-  useTsconfigDeclarationDir: true
+  useTsconfigDeclarationDir: true,
+  clean: true
 });
 
 export default [

@@ -49,3 +49,16 @@ export const sendFrontendToolResultRequestSchema = z.object({
 });
 
 export type SendFrontendToolResultRequest = z.infer<typeof sendFrontendToolResultRequestSchema>;
+
+// transport
+
+export interface ChatTransportListener {
+  onMessage(data: ChatUpdate): void;
+  onClose(error?: Error): void;
+}
+
+export interface ChatTransport {
+  restoreChat(abortSignal: AbortSignal, listener: ChatTransportListener, request: RestoreChatRequest): Promise<void>;
+  sendChatMessage(abortSignal: AbortSignal, request: SendChatMessageRequest): Promise<SendChatMessageResponse>;
+  sendFrontendToolResult(abortSignal: AbortSignal, request: SendFrontendToolResultRequest): Promise<void>;
+}

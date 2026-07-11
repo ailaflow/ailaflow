@@ -1,8 +1,4 @@
 export class HttpClientError extends Error {
-  public static is(obj: unknown): obj is HttpClientError {
-    return (obj as Error).name === 'HttpClientError';
-  }
-
   public constructor(
     message: string,
     public readonly statusCode: number,
@@ -21,23 +17,20 @@ export interface HttpClientSseListener<U> {
 export class HttpClient {
   private onUnauthorizedListener: (() => void) | null = null;
 
-  public constructor(private authToken: string | null) {}
+  public constructor(private headers: Record<string, string> = {}) {}
 
   public setOnUnauthorizedListener(listener: (() => void) | null) {
     this.onUnauthorizedListener = listener;
   }
 
-  public updateAuthToken(authToken: string) {
-    this.authToken = authToken;
+  public updateHeaders(headers: Record<string, string>) {
+    this.headers = headers;
   }
 
   private async fetch(abortSignal: AbortSignal, method: string, path: string, body?: object): Promise<Response> {
-    const headers: Record<string, string> = {};
+    const headers: Record<string, string> = { ...this.headers };
     if (body) {
       headers['Content-Type'] = 'application/json';
-    }
-    if (this.authToken) {
-      headers['Authorization'] = `Bearer ${this.authToken}`;
     }
 
     const response = await fetch(path, {
@@ -57,10 +50,10 @@ export class HttpClient {
         if (typeof json === 'object') {
           data = json;
           if (json['error']) {
-            message = json['error'];
+            message = String(json['error']);
           }
         }
-      } catch (e) {}
+      } catch {}
 
       if (status === 401) {
         this.onUnauthorizedListener?.();
@@ -74,6 +67,7 @@ export class HttpClient {
       if (status === 500) {
         throw new HttpClientError('Internal server error', status, data);
       }
+      throw new HttpClientError(`Request failed with status ${status}`, status, data);
     }
     return response;
   }

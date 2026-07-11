@@ -2,8 +2,8 @@ import { Message, MessageCompleteResult } from './message';
 import { ToolSet } from '../tools/tool-set';
 import { SessionStack } from '../session-stack';
 import { LlmClient } from '../../client/llm-client';
-import type { ToolCall } from '@aibindkit/model';
-import { MessageType } from '@aibindkit/model';
+import type { ToolCall } from '@aibindkit/core';
+import { MessageType } from '@aibindkit/core';
 
 export class AiMessage implements Message {
   public readonly type = MessageType.AI;

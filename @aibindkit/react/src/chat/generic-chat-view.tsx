@@ -1,5 +1,5 @@
-import type { ToolCall } from '@aibindkit/model';
-import type { CompletedMessage, MessageChatUpdate } from '@aibindkit/model';
+import type { ToolCall } from '@aibindkit/core';
+import type { CompletedMessage, MessageChatUpdate } from '@aibindkit/core';
 import { useEffect, useRef } from 'react';
 import type { KeyboardEvent } from 'react';
 

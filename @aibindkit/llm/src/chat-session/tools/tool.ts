@@ -1,4 +1,4 @@
-import type { ToolCall, ToolDescriptor } from '@aibindkit/model';
+import type { ToolCall, ToolDescriptor } from '@aibindkit/core';
 
 export interface Tool {
   descriptor: ToolDescriptor;

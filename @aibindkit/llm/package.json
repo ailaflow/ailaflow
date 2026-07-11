@@ -21,7 +21,7 @@
     "prettier:fix": "prettier --write ./src"
   },
   "dependencies": {
-    "@aibindkit/model": "workspace:*",
+    "@aibindkit/core": "workspace:*",
     "openai": "^6.39.0"
   },
   "devDependencies": {

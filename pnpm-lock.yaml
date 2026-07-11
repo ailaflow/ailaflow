@@ -10,9 +10,9 @@ importers:
 
   '@aibindkit/llm':
     dependencies:
-      '@aibindkit/model':
+      '@aibindkit/core':
         specifier: workspace:*
-        version: link:../model
+        version: link:../core
       openai:
         specifier: ^6.39.0
         version: 6.39.0(zod@4.4.3)
@@ -33,7 +33,7 @@ importers:
         specifier: ^6.0.3
         version: 6.0.3
 
-  '@aibindkit/model':
+  '@aibindkit/core':
     dependencies:
       openai:
         specifier: ^6.39.0
@@ -57,9 +57,9 @@ importers:
 
   '@aibindkit/react':
     dependencies:
-      '@aibindkit/model':
+      '@aibindkit/core':
         specifier: workspace:*
-        version: link:../model
+        version: link:../core
       react:
         specifier: ^19.0.0
         version: 19.2.6
@@ -116,9 +116,9 @@ importers:
 
   model:
     dependencies:
-      '@aibindkit/model':
+      '@aibindkit/core':
         specifier: workspace:*
-        version: link:../@aibindkit/model
+        version: link:../@aibindkit/core
       openai:
         specifier: ^6.39.0
         version: 6.39.0(zod@4.4.3)
@@ -141,9 +141,9 @@ importers:
 
   portal:
     dependencies:
-      '@aibindkit/model':
+      '@aibindkit/core':
         specifier: workspace:*
-        version: link:../@aibindkit/model
+        version: link:../@aibindkit/core
       '@aibindkit/react':
         specifier: workspace:*
         version: link:../@aibindkit/react
@@ -199,9 +199,9 @@ importers:
       '@aibindkit/llm':
         specifier: workspace:*
         version: link:../@aibindkit/llm
-      '@aibindkit/model':
+      '@aibindkit/core':
         specifier: workspace:*
-        version: link:../@aibindkit/model
+        version: link:../@aibindkit/core
       '@aila/model':
         specifier: workspace:*
         version: link:../model

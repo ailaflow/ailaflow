@@ -1,4 +1,4 @@
-import type { ToolCall, ToolDescriptor } from '@aibindkit/model';
+import type { ToolCall, ToolDescriptor } from '@aibindkit/core';
 import { Tool } from './tool';
 import { FrontendToolBus } from './frontend-tool-bus';
 

@@ -1,4 +1,4 @@
-import type { ToolDescriptor } from '@aibindkit/model';
+import type { ToolDescriptor } from '@aibindkit/core';
 import z from 'zod/v4';
 import { AiBinding } from './binding';
 import { AiToolBuilder } from './tool';

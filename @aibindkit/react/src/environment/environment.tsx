@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useMemo } from 'react';
-import type { ToolCall, ToolDescriptor } from '@aibindkit/model';
+import type { ToolCall, ToolDescriptor } from '@aibindkit/core';
 import { AiBinding, AiBindingsStore, AiRoute, isToolWait, toolError, toolSuccess } from '../core';
 import { RouterAdapter } from './router-adapter';
 

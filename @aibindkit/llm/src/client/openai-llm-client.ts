@@ -1,7 +1,7 @@
 import OpenAI from 'openai';
 import { CompleteResult, LlmClient } from './llm-client';
-import type { ToolDescriptor } from '@aibindkit/model';
-import type { CompletedMessage } from '@aibindkit/model';
+import type { ToolDescriptor } from '@aibindkit/core';
+import type { CompletedMessage } from '@aibindkit/core';
 
 export class OpenaiLlmClient implements LlmClient {
   private readonly openai: OpenAI;
