@@ -1,5 +1,6 @@
 packages:
   - './@aibindkit/core'
+  - './@aibindkit/express'
   - './@aibindkit/llm'
   - './@aibindkit/react'
   - './model'

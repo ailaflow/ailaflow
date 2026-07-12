@@ -13,6 +13,7 @@
   "dependencies": {
     "@aibindkit/llm": "workspace:*",
     "@aibindkit/core": "workspace:*",
+    "@aibindkit/express": "workspace:*",
     "@aila/model": "workspace:*",
     "express": "^5.2.1",
     "zod": "^4.4.3",

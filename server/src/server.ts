@@ -2,7 +2,8 @@ import { Logger } from './core/logger';
 import { ServerPaths } from './core/server-paths';
 import express from 'express';
 import { SandboxInstanceManager } from './sandbox/sandbox-instance-manager';
-import { ChatSessionFactory, FrontendToolBus, FrontendToolFactory, OpenaiLlmClient } from '@aibindkit/llm';
+import { OpenaiLlmClient } from '@aibindkit/llm';
+import { setupServer } from '@aibindkit/express';
 import { LoginEndpoint } from './api/auth/login-endpoint';
 import { Router } from './api/router';
 import { UserRepository } from './repositories/user-repository/user-repository';
@@ -13,8 +14,6 @@ import { AuthTokenRepository } from './repositories/auth-token-repository/auth-t
 import { RefreshAuthTokenEndpoint } from './api/auth/refresh-auth-token-endpoint';
 import { AuthMiddleware } from './api/auth/auth-middleware';
 import { InstallEndpoint } from './api/install/install-endpoint';
-import { RestoreSessionEndpoint } from './api/chat-session/restore-chat-endpoint';
-import { SendChatMessageEndpoint } from './api/chat-session/send-chat-message-endpoint';
 import { GetProcessesEndpoint } from './api/process/get-processes-endpoint';
 import { UpdateProcessEndpoint } from './api/process/update-process-endpoint';
 import { ProcessRepository } from './repositories/process-repository/process-repository';
@@ -24,11 +23,7 @@ import { ProcessListQuerier } from './queriers/process-list/process-list-querier
 import { SqliteProcessListQuerier } from './queriers/process-list/sqlite-process-list-querier';
 import { GetProcessEndpoint } from './api/process/get-process-endpoint';
 import { TestProcessEndpoint } from './api/process/test-process-endpoint';
-import { SendFrontedToolResultEndpoint } from './api/chat-session/send-frontend-tool-result-endpoint';
-import { UserChatSessionStore } from './chat-session/stores/user-chat-session-store';
 import { UserToolSetProvider } from './chat-session/stores/user-tool-set-provider';
-import { AdminChatSessionStore } from './chat-session/stores/admin-chat-session-store';
-import { ChatSessionStore } from './chat-session/stores/chat-session-store';
 import { SandboxRepository } from './repositories/sandbox-repository/sandbox-repository';
 import { SqliteSandboxRepository } from './repositories/sandbox-repository/sqlite-sandbox-repository';
 import { SandboxListQuerier } from './queriers/sandbox-list/sandbox-list-querier';
@@ -41,6 +36,7 @@ import { ProcessExecutionStore } from './process-executor/process-execution-stor
 import { SandboxRpcHandlerProvider } from './sandbox/sandbox-rpc-handler-provider';
 import { ReadVariableRpcHandler } from './process-executor/rpc-handlers/read-variable-rpc-handler';
 import { WriteVariableRpcHandler } from './process-executor/rpc-handlers/write-variable-rpc-handler';
+import { AilaChatSessionResolver } from './chat-session/aila-chat-session-resolver';
 
 const PORT = process.env.PORT || 2048;
 
@@ -91,29 +87,21 @@ export class Server {
       baseUrl: process.env.AI_PROVIDER_BASE_URL!,
       apiKey: process.env.AI_PROVIDER_API_KEY!
     });
-    const chatSessionFactory = new ChatSessionFactory();
     const userToolSetProvider = new UserToolSetProvider();
+    const authMiddleware = new AuthMiddleware(authTokenRepository);
+    const chatSessionResolver = new AilaChatSessionResolver(llmClient, userToolSetProvider, serverPaths);
 
-    const frontendToolBus = new FrontendToolBus();
-    const frontendToolFactory = new FrontendToolFactory(frontendToolBus);
-
-    const chatSessionStore = new ChatSessionStore();
-    const userChatSessionStore = new UserChatSessionStore(chatSessionStore, chatSessionFactory, llmClient, userToolSetProvider);
-    const adminChatSessionStore = new AdminChatSessionStore(
-      chatSessionStore,
-      chatSessionFactory,
-      frontendToolFactory,
-      llmClient,
-      serverPaths
-    );
+    app.use('/api/chat', (req, res, next) => {
+      void authMiddleware.wrap(false, async () => {
+        next();
+      })(req, res);
+    });
+    setupServer(app, chatSessionResolver);
 
     const endpoints = [
       new InstallEndpoint(userRepository, passwordHasher),
       new LoginEndpoint(userRepository, authTokenRepository, passwordHasher),
       new RefreshAuthTokenEndpoint(authTokenRepository),
-      new RestoreSessionEndpoint(userChatSessionStore, adminChatSessionStore),
-      new SendChatMessageEndpoint(chatSessionStore),
-      new SendFrontedToolResultEndpoint(frontendToolBus),
       new GetProcessesEndpoint(processListQuerier),
       new GetProcessEndpoint(processRepository),
       new UpdateProcessEndpoint(processRepository, sandboxListQuerier),
@@ -122,7 +110,6 @@ export class Server {
       new GetSandboxEndpoint(sandboxRepository),
       new UpsertSandboxEndpoint(sandboxRepository)
     ];
-    const authMiddleware = new AuthMiddleware(authTokenRepository);
     const router = new Router(app, endpoints, authMiddleware);
 
     router.setup();

@@ -134,7 +134,12 @@ function ToolMessageView(props: { message: CompletedMessage }) {
           <span className="abk-chat-toggle abk-chat-toggle-closed">+</span>
           <span className="abk-chat-toggle abk-chat-toggle-open">-</span>
           <span className="abk-chat-summary-text">
-            Tool response{label && <>: <span className="abk-chat-summary-strong">{label}</span></>}
+            Tool response
+            {label && (
+              <>
+                : <span className="abk-chat-summary-strong">{label}</span>
+              </>
+            )}
           </span>
         </summary>
         <pre className="abk-chat-pre">{formatMaybeJson(content)}</pre>

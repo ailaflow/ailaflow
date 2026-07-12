@@ -8,15 +8,46 @@ importers:
 
   .: {}
 
-  '@aibindkit/llm':
+  '@aibindkit/core':
+    dependencies:
+      openai:
+        specifier: ^6.39.0
+        version: 6.39.0(zod@4.4.3)
+      zod:
+        specifier: ^4.4.3
+        version: 4.4.3
+    devDependencies:
+      rollup:
+        specifier: ^4.62.2
+        version: 4.62.2
+      rollup-plugin-dts:
+        specifier: ^6.4.1
+        version: 6.4.1(rollup@4.62.2)(typescript@6.0.3)
+      rollup-plugin-typescript2:
+        specifier: ^0.37.0
+        version: 0.37.0(rollup@4.62.2)(typescript@6.0.3)
+      typescript:
+        specifier: ^6.0.3
+        version: 6.0.3
+
+  '@aibindkit/express':
     dependencies:
       '@aibindkit/core':
         specifier: workspace:*
         version: link:../core
-      openai:
-        specifier: ^6.39.0
-        version: 6.39.0(zod@4.4.3)
+      '@aibindkit/llm':
+        specifier: workspace:*
+        version: link:../llm
+      express:
+        specifier: ^5.2.1
+        version: 5.2.1
+      zod:
+        specifier: ^4.4.3
+        version: 4.4.3
     devDependencies:
+      '@types/express':
+        specifier: ^5.0.6
+        version: 5.0.6
       '@types/node':
         specifier: ^22.10.1
         version: 22.19.19
@@ -33,15 +64,18 @@ importers:
         specifier: ^6.0.3
         version: 6.0.3
 
-  '@aibindkit/core':
+  '@aibindkit/llm':
     dependencies:
+      '@aibindkit/core':
+        specifier: workspace:*
+        version: link:../core
       openai:
         specifier: ^6.39.0
         version: 6.39.0(zod@4.4.3)
-      zod:
-        specifier: ^4.4.3
-        version: 4.4.3
     devDependencies:
+      '@types/node':
+        specifier: ^22.10.1
+        version: 22.19.19
       rollup:
         specifier: ^4.62.2
         version: 4.62.2
@@ -196,12 +230,15 @@ importers:
 
   server:
     dependencies:
-      '@aibindkit/llm':
-        specifier: workspace:*
-        version: link:../@aibindkit/llm
       '@aibindkit/core':
         specifier: workspace:*
         version: link:../@aibindkit/core
+      '@aibindkit/express':
+        specifier: workspace:*
+        version: link:../@aibindkit/express
+      '@aibindkit/llm':
+        specifier: workspace:*
+        version: link:../@aibindkit/llm
       '@aila/model':
         specifier: workspace:*
         version: link:../model

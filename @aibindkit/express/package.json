@@ -1,0 +1,39 @@
+{
+  "name": "@aibindkit/express",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "license": "../../LICENSE",
+  "main": "./lib/cjs/index.cjs",
+  "module": "./lib/esm/index.js",
+  "types": "./lib/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/index.d.ts",
+      "import": "./lib/esm/index.js",
+      "require": "./lib/cjs/index.cjs",
+      "default": "./lib/esm/index.js"
+    }
+  },
+  "scripts": {
+    "build": "rm -rf build lib dist && rollup -c",
+    "prettier": "prettier --check ./src",
+    "prettier:fix": "prettier --write ./src"
+  },
+  "dependencies": {
+    "@aibindkit/core": "workspace:*",
+    "@aibindkit/llm": "workspace:*",
+    "zod": "^4.4.3"
+  },
+  "peerDependencies": {
+    "express": "^5.2.1"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/node": "^22.10.1",
+    "rollup": "^4.62.2",
+    "rollup-plugin-dts": "^6.4.1",
+    "rollup-plugin-typescript2": "^0.37.0",
+    "typescript": "^6.0.3"
+  }
+}

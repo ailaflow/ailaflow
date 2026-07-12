@@ -1,0 +1,55 @@
+import type { Request, Response } from 'express';
+import type { ChatUpdate } from '@aibindkit/core';
+import { restoreChatRequestSchema } from '@aibindkit/core';
+import type { ChatSession, MessageUpdate } from '@aibindkit/llm';
+import type { Endpoint } from './endpoint';
+import { ChatSessionProvider } from '../chat-session-provider';
+import { SseResponse } from './sse-response';
+import { ChatSessionInitializerError } from '../chat-session-resolver';
+
+export class RestoreChatEndpoint implements Endpoint {
+  public readonly method = 'post';
+  public readonly path = '/api/chat';
+
+  public constructor(private readonly chatSessionProvider: ChatSessionProvider) {}
+
+  public handle(req: Request, res: Response) {
+    const { data: request, error } = restoreChatRequestSchema.safeParse(req.body);
+    if (error) {
+      res.status(400).json({ error: 'Invalid request body' }).end();
+      return;
+    }
+
+    let chatSession: ChatSession;
+    try {
+      chatSession = this.chatSessionProvider.getOrCreate(req, request);
+    } catch (e) {
+      if (ChatSessionInitializerError.is(e)) {
+        res.status(400).json({ error: e.message }).end();
+        return;
+      }
+      throw e;
+    }
+
+    const sseResponse = new SseResponse<ChatUpdate>(res);
+
+    function onMessageCompletedOrFailed(update: MessageUpdate) {
+      sseResponse.send({ currentMessage: update });
+    }
+
+    sseResponse.send({
+      hello: {
+        chatSessionId: chatSession.id
+      },
+      messages: chatSession.getAll()
+    });
+
+    chatSession.onMessageCompleted.subscribe(onMessageCompletedOrFailed);
+    chatSession.onMessageFailed.subscribe(onMessageCompletedOrFailed);
+
+    sseResponse.onClose(() => {
+      chatSession.onMessageCompleted.unsubscribe(onMessageCompletedOrFailed);
+      chatSession.onMessageFailed.unsubscribe(onMessageCompletedOrFailed);
+    });
+  }
+}
