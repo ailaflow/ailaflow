@@ -1,29 +1,34 @@
 import type { CompletedMessage } from '@aibindkit/core';
 import { MessageType, SimpleEvent } from '@aibindkit/core';
-import { Message } from './messages/message';
+import { Message, MessageCompleteResult } from './messages/message';
 import { MessageFactory } from './messages/message-factory';
 import { SessionStack } from './session-stack';
+import { ChatSessionQueue } from './chat-session-queue';
 
 export interface MessageUpdate {
   id: number;
   type: MessageType;
+  isInterrupted?: true;
   failReason?: string;
   completedMessage?: CompletedMessage | CompletedMessage[];
 }
 
+export interface ChatSessionUpdate {
+  isWorking: boolean;
+  update: MessageUpdate;
+}
+
 export class ChatSession {
-  public readonly onMessageCompleted = new SimpleEvent<MessageUpdate>();
-  public readonly onMessageFailed = new SimpleEvent<MessageUpdate>();
+  public readonly onMessageCompleted = new SimpleEvent<ChatSessionUpdate>();
+  public readonly onMessageFailed = new SimpleEvent<ChatSessionUpdate>();
 
-  public totalTokens?: number;
-
-  private readonly stopAbortController = new AbortController();
+  private interruptAbortController = new AbortController();
   private isWorking = false;
-  private isStopped = false;
+  private isInterrupted = false;
   private lastId = 0;
 
   private readonly stack = new SessionStack();
-  private readonly queue: Message[] = [];
+  private readonly queue = new ChatSessionQueue();
 
   public constructor(
     public readonly id: string,
@@ -36,15 +41,27 @@ export class ChatSession {
   }
 
   public queueUserMessage(content: string): number {
+    if (this.isInterrupted) {
+      this.isInterrupted = false;
+      this.interruptAbortController = new AbortController();
+    }
+
     const id = this.nextId();
     this.queue.push(this.messageFactory.createUser(id, content));
     this.tryNext();
     return id;
   }
 
-  public stop() {
-    this.isStopped = true;
-    this.stopAbortController.abort();
+  public tryInterrupt(): boolean {
+    if (!this.isWorking || this.isInterrupted) {
+      return false;
+    }
+
+    this.queue.clear();
+
+    this.isInterrupted = true;
+    this.interruptAbortController.abort('User interrupted the session');
+    return true;
   }
 
   public getAll(): MessageUpdate[] {
@@ -55,6 +72,7 @@ export class ChatSession {
         (result[index] = {
           id: item.message.id,
           type: item.message.type,
+          isInterrupted: item.isInterrupted,
           failReason: item.failReason,
           completedMessage: item.completedMessage
         })
@@ -63,58 +81,83 @@ export class ChatSession {
   }
 
   private tryNext() {
-    if (this.isWorking || this.isStopped) {
-      return;
+    if (this.isWorking) {
+      return null;
     }
 
-    let nextMessage = this.queue.shift();
-    if (!nextMessage) {
-      const last = this.stack.tryGetLast();
-      const isLastAi = last?.message.type === MessageType.AI;
-      if (isLastAi) {
-        return;
+    const last = this.stack.tryGetLast();
+    let message: Message;
+    if (last && last.message.type === MessageType.TOOL) {
+      message = this.messageFactory.createAi(this.nextId());
+    } else {
+      const nextMessage = this.queue.shift();
+      if (nextMessage) {
+        message = nextMessage;
+      } else {
+        const isLastAi = last?.message.type === MessageType.AI;
+        if (isLastAi) {
+          return false;
+        }
+        message = this.messageFactory.createAi(this.nextId());
       }
-      nextMessage = this.messageFactory.createAi(this.nextId());
     }
-    this.stack.push(nextMessage);
+
+    this.stack.push(message);
     this.isWorking = true;
-    void this.next(nextMessage);
+    setTimeout(() => this.next(message), 0);
+    return true;
   }
 
   private async next(message: Message) {
+    const interruptSignal = this.interruptAbortController.signal;
+    let result: MessageCompleteResult;
     try {
-      const result = await message.complete(this.stopAbortController.signal, this.stack);
-      if (result.totalTokens) {
-        this.totalTokens = result.totalTokens;
-      }
-
-      this.stack.complete(message, result.completedMessage);
-      this.onMessageCompleted.emit({
-        id: message.id,
-        type: message.type,
-        completedMessage: result.completedMessage
-      });
-
-      if (result.toolCalls) {
-        this.queue.push(this.messageFactory.createTool(this.nextId(), result.toolCalls));
-      }
-
-      this.isWorking = false;
-      this.tryNext();
+      interruptSignal.throwIfAborted();
+      result = await message.complete(interruptSignal, this.stack);
     } catch (e) {
-      const error = (e as Error)?.message ?? String(e);
-      const failReason = `LLM server returned an error: ${error}`;
+      const failReason = (e as Error)?.message ?? String(e);
+      const isInterrupted = interruptSignal.aborted;
 
-      this.stack.fail(message, failReason);
+      if (isInterrupted) {
+        this.stack.interrupt(message);
+      } else {
+        this.stack.fail(message, failReason);
+      }
+      // TODO: we should probably restore user messages in UI here, that a user won't lose their input if the session fails.
+      this.queue.clear();
+
       this.onMessageFailed.emit({
-        id: message.id,
-        type: message.type,
-        failReason
+        isWorking: false,
+        update: {
+          id: message.id,
+          type: message.type,
+          isInterrupted: isInterrupted ? true : undefined,
+          failReason: isInterrupted ? undefined : failReason
+        }
       });
 
       console.error('Error completing message:', failReason);
+      return;
+    } finally {
       this.isWorking = false;
     }
+
+    this.stack.complete(message, result.completedMessage);
+
+    if (result.toolCalls) {
+      const toolMessage = this.messageFactory.createTool(this.nextId(), result.toolCalls);
+      this.queue.pushAfterType(toolMessage, MessageType.TOOL);
+    }
+
+    const hasNext = this.tryNext();
+    this.onMessageCompleted.emit({
+      isWorking: hasNext === true,
+      update: {
+        id: message.id,
+        type: message.type,
+        completedMessage: result.completedMessage
+      }
+    });
   }
 
   private nextId(): number {

@@ -1,7 +1,7 @@
 import type { Request, Response } from 'express';
 import type { ChatUpdate } from '@aibindkit/core';
 import { restoreChatRequestSchema } from '@aibindkit/core';
-import type { ChatSession, MessageUpdate } from '@aibindkit/llm';
+import type { ChatSession, ChatSessionUpdate } from '@aibindkit/llm';
 import type { Endpoint } from './endpoint';
 import { ChatSessionProvider } from '../chat-session-provider';
 import { SseResponse } from './sse-response';
@@ -33,8 +33,8 @@ export class RestoreChatEndpoint implements Endpoint {
 
     const sseResponse = new SseResponse<ChatUpdate>(res);
 
-    function onMessageCompletedOrFailed(update: MessageUpdate) {
-      sseResponse.send({ currentMessage: update });
+    function onMessageCompletedOrFailed(update: ChatSessionUpdate) {
+      sseResponse.send({ currentMessage: update.update, isWorking: update.isWorking });
     }
 
     sseResponse.send({

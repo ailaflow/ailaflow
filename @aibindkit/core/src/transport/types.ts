@@ -14,6 +14,7 @@ export type RestoreChatRequest = z.infer<typeof restoreChatRequestSchema>;
 export interface MessageChatUpdate {
   id: number;
   type: MessageType;
+  isInterrupted?: boolean;
   failReason?: string;
   completedMessage?: CompletedMessage | CompletedMessage[];
 }
@@ -26,6 +27,7 @@ export interface ChatUpdate {
   hello?: HelloChatUpdate;
   messages?: MessageChatUpdate[];
   currentMessage?: MessageChatUpdate;
+  isWorking?: boolean;
 }
 
 // sendChatSessionMessage

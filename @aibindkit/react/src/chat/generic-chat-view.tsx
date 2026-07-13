@@ -1,13 +1,15 @@
-import type { ToolCall } from '@aibindkit/core';
+import { MessageType, type ToolCall } from '@aibindkit/core';
 import type { CompletedMessage, MessageChatUpdate } from '@aibindkit/core';
 import { useEffect, useRef } from 'react';
 import type { KeyboardEvent } from 'react';
 
 export interface GenericChatViewProps {
   updates: MessageChatUpdate[];
+  isWorking: boolean;
   message: string;
   onMessageChanged: (message: string) => void;
   onSendMessage: () => void;
+  onStopClicked: () => void;
 }
 
 export function GenericChatView(props: GenericChatViewProps) {
@@ -45,6 +47,11 @@ export function GenericChatView(props: GenericChatViewProps) {
             placeholder="Type a message..."
             className="abk-chat-input"
           />
+          {props.isWorking && (
+            <button type="button" onClick={props.onStopClicked} className="abk-chat-send">
+              Stop
+            </button>
+          )}
           <button type="button" onClick={props.onSendMessage} className="abk-chat-send">
             Send
           </button>
@@ -57,6 +64,9 @@ export function GenericChatView(props: GenericChatViewProps) {
 function GenericChatUpdateView(props: { update: MessageChatUpdate }) {
   if (props.update.failReason) {
     return <li className="abk-chat-failure">Failed: {props.update.failReason}</li>;
+  }
+  if (props.update.isInterrupted) {
+    return <li className="abk-chat-failure">Interrupted</li>;
   }
 
   const messages = arr(props.update.completedMessage ?? []);

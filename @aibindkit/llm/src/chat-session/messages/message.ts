@@ -13,4 +13,6 @@ export interface Message {
   id: number;
   type: MessageType;
   complete(abortSignal: AbortSignal, stack: SessionStack): Promise<MessageCompleteResult>;
+  interrupt?(): CompletedMessage;
+  fail?(reason: string): CompletedMessage;
 }

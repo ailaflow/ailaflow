@@ -2,7 +2,7 @@ import { Message, MessageCompleteResult } from './message';
 import { ToolSet } from '../tools/tool-set';
 import { SessionStack } from '../session-stack';
 import { LlmClient } from '../../client/llm-client';
-import type { ToolCall } from '@aibindkit/core';
+import type { CompletedMessage, ToolCall } from '@aibindkit/core';
 import { MessageType } from '@aibindkit/core';
 
 export class AiMessage implements Message {
@@ -32,6 +32,20 @@ export class AiMessage implements Message {
       completedMessage,
       toolCalls,
       totalTokens
+    };
+  }
+
+  public fail(reason: string): CompletedMessage {
+    return {
+      role: 'user',
+      content: `The request to AI server failed with reason: ${reason}`
+    };
+  }
+
+  public interrupt(): CompletedMessage {
+    return {
+      role: 'user',
+      content: 'The request to AI server was interrupted by the user.'
     };
   }
 }

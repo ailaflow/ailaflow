@@ -19,6 +19,14 @@ export class SimpleEvent<T> {
       this.listeners.forEach(listener => listener(value));
     }
   };
+
+  public once(listener: SimpleEventListener<T>) {
+    const wrapper = (value: T) => {
+      listener(value);
+      this.unsubscribe(wrapper);
+    };
+    this.subscribe(wrapper);
+  }
 }
 
 export type SimpleEventListener<T> = (value: T) => void;

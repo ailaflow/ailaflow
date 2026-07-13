@@ -22,9 +22,8 @@ export class InterruptChatEndpoint implements Endpoint {
       return;
     }
 
-    chatSession.stop();
     return {
-      ok: true
+      ok: chatSession.tryInterrupt()
     };
   }
 }

@@ -5,6 +5,7 @@ export interface SessionStackItem {
   message: Message;
   completedMessage?: CompletedMessage;
   failReason?: string;
+  isInterrupted?: true;
 }
 
 export class SessionStack {
@@ -48,6 +49,20 @@ export class SessionStack {
       throw new Error('Cannot find message');
     }
     item.failReason = reason;
+    if (message.fail) {
+      item.completedMessage = message.fail(reason);
+    }
+  }
+
+  public interrupt(message: Message) {
+    const item = this.map.get(message);
+    if (!item) {
+      throw new Error('Cannot find message');
+    }
+    item.isInterrupted = true;
+    if (message.interrupt) {
+      item.completedMessage = message.interrupt();
+    }
   }
 
   public tryGetLast(): SessionStackItem | null {
@@ -59,7 +74,7 @@ export class SessionStack {
     for (let i = 0; i < this.stack.length - 1; i++) {
       const item = this.stack[i];
       if (!item.completedMessage) {
-        if (item.failReason) {
+        if (item.failReason || item.isInterrupted) {
           continue;
         }
         throw new Error(`Message ${i} is not completed`);

@@ -28,6 +28,7 @@ export function GenericChat(props: GenericChatProps) {
   );
   const [chatSessionId, setChatSessionId] = useState<string | null>(null);
   const [updates, setUpdates] = useState<MessageChatUpdate[]>([]);
+  const [isWorking, setIsWorking] = useState(false);
   const [message, setMessage] = useState('');
 
   useEffect(() => {
@@ -81,18 +82,21 @@ export function GenericChat(props: GenericChatProps) {
         if (update.currentMessage) {
           const currentMessage = update.currentMessage;
           setUpdates(u => {
-            const current = u.find(m => m.id === currentMessage.id);
-            if (current) {
-              Object.assign(current, update.currentMessage);
+            const index = u.findIndex(m => m.id === currentMessage.id);
+            if (index >= 0) {
+              u[index] = currentMessage;
               return [...u];
-            } else {
-              const toolCalls = tryGetToolCalls(currentMessage);
-              if (toolCalls) {
-                resolveToolCalls(toolCalls);
-              }
-              return [...u, update.currentMessage!];
             }
+
+            const toolCalls = tryGetToolCalls(currentMessage);
+            if (toolCalls) {
+              void resolveToolCalls(toolCalls);
+            }
+            return [...u, currentMessage];
           });
+        }
+        if (update.isWorking !== undefined) {
+          setIsWorking(update.isWorking);
         }
       },
       onClose() {}
@@ -115,7 +119,26 @@ export function GenericChat(props: GenericChatProps) {
     setMessage('');
   }
 
-  return <GenericChatView updates={updates} message={message} onMessageChanged={setMessage} onSendMessage={onSendMessage} />;
+  async function onStopClicked() {
+    if (!chatSessionId || !isWorking) {
+      return;
+    }
+    const abortSignal = AbortSignal.timeout(3_000);
+    await props.transport.interruptChat(abortSignal, {
+      chatSessionId
+    });
+  }
+
+  return (
+    <GenericChatView
+      updates={updates}
+      isWorking={isWorking}
+      message={message}
+      onMessageChanged={setMessage}
+      onSendMessage={onSendMessage}
+      onStopClicked={onStopClicked}
+    />
+  );
 }
 
 function tryGetToolCalls(update: MessageChatUpdate): ToolCall[] | null {
