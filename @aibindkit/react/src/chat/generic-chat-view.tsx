@@ -175,7 +175,10 @@ function ToolCallsView(props: { toolCalls: ToolCall[] }) {
             <span className="abk-chat-toggle abk-chat-toggle-closed">+</span>
             <span className="abk-chat-toggle abk-chat-toggle-open">-</span>
             <span className="abk-chat-summary-text">
-              Function call: <span className="abk-chat-summary-strong">{call.function.name}</span>
+              Function:{' '}
+              <span className="abk-chat-summary-strong" title={call.function.name}>
+                {call.function.name}
+              </span>
             </span>
           </summary>
           <pre className="abk-chat-pre">{formatToolArguments(call.function.arguments)}</pre>

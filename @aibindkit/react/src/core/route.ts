@@ -8,7 +8,7 @@ export interface AiRoute<Params = void, Bindings extends readonly AiBinding[] = 
   name: string;
   paths: string[];
   notAvailableMessage: string;
-  paramsSchema?: ToolDescriptor['function']['parameters'];
+  paramsSchema: ToolDescriptor['function']['parameters'];
   bindings: Bindings;
 }
 
@@ -62,11 +62,19 @@ export class AiRouteBuilder<Input = void, Bindings extends readonly AiBinding[] 
     if (!this.state.unavailableMessage) {
       throw new Error('Unavailable message must be set');
     }
+    const params = (this.state.params ?? z.object({})).extend({
+      __force: z
+        .boolean()
+        .optional()
+        .default(false)
+        .describe('Whether navigation should ignore unsaved changes. The default value is `false`.')
+    });
+
     return {
       name: this.state.name,
       paths: this.state.paths,
       notAvailableMessage: this.state.unavailableMessage,
-      paramsSchema: this.state.params?.toJSONSchema(),
+      paramsSchema: params.toJSONSchema(),
       bindings: this.bindings
     };
   }

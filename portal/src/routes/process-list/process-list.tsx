@@ -29,6 +29,7 @@ export function ProcessList() {
             return toolError(error);
           }
           return data.processes.map(process => ({
+            id: process.id,
             name: `\$${process.name}`,
             description: process.description,
             userList: process.userList

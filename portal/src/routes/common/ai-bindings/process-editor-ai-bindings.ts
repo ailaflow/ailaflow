@@ -1,51 +1,53 @@
 import z from 'zod/v4';
 import { route, storeFactory, tool } from '@aibindkit/react';
 
+// Conventions:
+// - don't add a dot `.` at the end of the description to reduce amount of tokens.
+// - keep the descriptions as short as possible to reduce the amount of tokens.
+
 const processEditorRoute = route('processEditor')
   .unavailable('You are not on a process editor page.')
   .paths(['/admin/processes/:processId', '/admin/create-process'])
   .params(
     z.object({
-      processId: z.string().describe('The ID of the process to edit.')
+      processId: z.string().describe('ID of the process to edit')
     })
   )
   .tools({
-    getDetails: tool('Get the process name and description.'),
+    getDetails: tool('Get the process name and description'),
 
-    setName: tool('Set the name of the process').input(
+    setName: tool('Rename the process').input(
       z.object({
         name: z.string().describe('The new name of the process')
       })
     ),
 
-    setDescription: tool('Set the description of the process').input(
+    setDescription: tool('Update the process description').input(
       z.object({
-        name: z.string().describe('The new description of the process')
+        name: z.string().describe('The new process description')
       })
     ),
 
-    getAvailableNewSteps: tool('Get the list of available new steps that can be added to the workflow.'),
+    getAvailableNewSteps: tool('List step types that can be added to the workflow'),
 
-    deleteWorkflowStep: tool('Delete a step from the process').input(
+    deleteWorkflowStep: tool('Delete a step from the workflow').input(
       z.object({
         stepId: z.string().describe('The ID of the step to delete')
       })
     ),
 
-    readWorkflowStep: tool(
-      'Read the JSON of a workflow step. The JSON contains all fields including the `properties` field of the step.'
-    ).input(
+    readWorkflowStep: tool('Read the full JSON for one workflow step, including its `properties`').input(
       z.object({
-        stepId: z.string().describe('The ID of the step to read the properties for')
+        stepId: z.string().describe('The ID of the workflow step to read')
       })
     ),
 
     getWorkflow: tool(
-      'Read the workflow definition as JSON. It contains the workflow topology: step IDs, names, and execution order. The `properties` fields are omitted to reduce payload size; use `readWorkflowStep` to retrieve the full JSON of a step.'
+      'Read workflow topology as JSON: step IDs, names, and order; omits `properties`, use `readWorkflowStep` for full step JSON'
     ),
 
     createWorkflowStep: tool(
-      'Create a new step and returns its JSON. The JSON contains all required fields. The step is not added to the workflow. Use `appendWorkflowStep` to add this JSON to the proper place in the workflow definition.'
+      'Create JSON for a new step without adding it to the workflow; then call `appendWorkflowStep` to insert it'
     ).input(
       z.object({
         type: z.string().describe('The type of the new step'),
@@ -54,59 +56,54 @@ const processEditorRoute = route('processEditor')
     ),
 
     appendWorkflowStep: tool(
-      'Append a new step to the workflow definition before or after a specified step ID. You need to provide the JSON of the new step. If you want to create a new step, use `createWorkflowStep` first to get the JSON of the new step. If you want to move an existing step, use `readWorkflowStep` to get the JSON of the existing step, but first delete it from the previous position.'
+      'Insert step JSON before or after a target step; create new JSON with `createWorkflowStep`, or read then delete an existing step before moving it'
     ).input(
       z.object({
-        step: z.any().describe('The JSON of the step to append. It must be a valid step JSON.'),
-        targetStepId: z.string().describe('The ID of a step that we want to append the new step before or after.'),
-        placement: z.enum(['before', 'after']).describe('Whether to append the new step before or after the specified step ID')
+        step: z.any().describe('Valid JSON for the step to insert'),
+        targetStepId: z.string().describe('ID of the step to insert before or after'),
+        placement: z.enum(['before', 'after']).describe('Whether to insert the step before or after the target step')
       })
     ),
 
-    replaceWorkflowStep: tool(
-      'Replace an existing step in the workflow definition with a new step. You need to provide the JSON of the new step. If you want to create a new step, use `createWorkflowStep` first to get the JSON of the new step. If you want to move an existing step, use `readWorkflowStep` to get the JSON of the existing step, but first delete it from the previous position.'
-    ).input(
+    replaceWorkflowStep: tool('Replace an existing workflow step with step JSON; the replacement target is selected by `step.id`').input(
       z.object({
-        step: z
-          .any()
-          .describe(
-            'The JSON of the step to replace with. It must be a valid step JSON. We use the ID from this JSON to find the step to replace.'
-          )
+        step: z.any().describe('Valid replacement step JSON; its `id` identifies the workflow step to replace')
       })
     ),
 
-    getRootVariables: tool('Get the list of variables defined in the process.'),
+    hasUnsavedChanges: tool('Checks if there is any unsaved change'),
+    save: tool('Save all changes'),
 
-    isRootStartFormEnabled: tool('Check if the start form of the process is enabled.'),
+    // root
 
-    switchRootStartForm: tool('Enable or disable the start form of the process.').input(
+    getRootVariables: tool('List process variables with their names and JSON schemas'),
+    isRootStartFormEnabled: tool('Check whether the process start form is enabled'),
+    switchRootStartForm: tool('Enable or disable the process start form').input(
       z.object({
-        isEnabled: z.boolean()
+        isEnabled: z.boolean().describe('Whether the start form should be enabled')
+      })
+    ),
+    openRootStartFormEditorOverlay: tool('Open the process start form editor overlay'),
+
+    // overlay
+
+    getCurrentOverlay: tool('Return the currently open overlay'),
+    closeOverlay: tool('Close the currently open overlay'),
+
+    // formEditor overlay
+
+    formEditor_getAvailableVariables: tool('List input and output variables available to the currently edited form'),
+
+    formEditor_get: tool('Get the HTML, CSS, or JS for the currently edited form').input(
+      z.object({
+        type: z.enum(['html', 'css', 'js']).describe('The form content type to read')
       })
     ),
 
-    openDesigner: tool(
-      'Open the process designer. This changes the child route to `designer`. The designer is the default child route of the process editor.'
-    ),
-
-    openRootStartFormEditor: tool('Open the start form editor for the process. This changes the child route to `form-editor`.'),
-
-    getChildRoute: tool('Return the child route of the process editor.'),
-
-    formEditor_getAvailableVariables: tool(
-      'Get the list of available input and output variables for the currently edited form. Variables can be used in the form logic.'
-    ),
-
-    formEditor_get: tool('Get the HTML, CSS, or JS of the currently edited form in the form editor.').input(
+    formEditor_set: tool('Set the HTML, CSS, or JS for the currently edited form').input(
       z.object({
-        type: z.enum(['html', 'css', 'js']).describe('The type of the form content to get.')
-      })
-    ),
-
-    formEditor_set: tool('Set the HTML, CSS, or JS of the currently edited form in the form editor.').input(
-      z.object({
-        type: z.enum(['html', 'css', 'js']).describe('The type of the form content to get.'),
-        value: z.string().describe('The new value of the form content to set.')
+        type: z.enum(['html', 'css', 'js']).describe('The form content type to update'),
+        value: z.string().describe('The new form content')
       })
     )
   });

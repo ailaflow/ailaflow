@@ -14,7 +14,7 @@ import { createEmptyFormDefinition, toolboxConfiguration } from './designer-conf
 import { ObjectCloner, Step, Uid } from 'sequential-workflow-designer';
 import { DefinitionPath } from '../../core/definition-path';
 import { wrapDefinition } from 'sequential-workflow-designer-react';
-import { useAiStore } from '../common/admin-portal';
+import { useAiStore, useUnsavedChangesController } from '../common/admin-portal';
 
 export function ProcessEditorContent() {
   const state = useProcessEditor();
@@ -52,6 +52,8 @@ export function ProcessEditorContent() {
     }
   }
 
+  useUnsavedChangesController(state.isDirty);
+
   useAiStore(
     'processEditor',
     store =>
@@ -68,7 +70,7 @@ export function ProcessEditorContent() {
             return toolError(error);
           }
           state.setName(arg.name);
-          return toolSuccess('Name updated');
+          return toolSuccess('Process name updated');
         },
         async setDescription(arg) {
           const error = ProcessValidator.validateDescription(arg.name);
@@ -76,7 +78,7 @@ export function ProcessEditorContent() {
             return toolError(error);
           }
           state.setDescription(arg.name);
-          return toolSuccess('Description updated');
+          return toolSuccess('Process description updated');
         },
         async getAvailableNewSteps() {
           return toolboxConfiguration.groups
@@ -97,23 +99,23 @@ export function ProcessEditorContent() {
         readWorkflowStep: async arg => {
           const step = state.walker.findById(state.definition.value, arg.stepId);
           if (!step) {
-            return toolError('Step ID not found');
+            return toolError('No workflow step was found with the provided ID');
           }
           return step;
         },
         deleteWorkflowStep: async arg => {
           const found = state.walker.findParentSequence(state.definition.value, arg.stepId);
           if (!found) {
-            return toolError('Step ID not found. The step was not deleted.');
+            return toolError('No workflow step was found with the provided ID; no step was deleted');
           }
           found.parentSequence.splice(found.index, 1);
           state.notifyDefinitionChange();
-          return toolSuccess('Step deleted');
+          return toolSuccess('Workflow step deleted');
         },
         createWorkflowStep: async arg => {
           const template = toolboxConfiguration.groups.flatMap(group => group.steps).find(step => step.type === arg.type);
           if (!template) {
-            return toolError('Step type not found');
+            return toolError('No available workflow step type matches the provided type');
           }
           const newStep = ObjectCloner.deepClone(template) as Step;
           newStep.id = Uid.next();
@@ -123,31 +125,46 @@ export function ProcessEditorContent() {
         appendWorkflowStep: async arg => {
           const parseResult = anyStepSchema.safeParse(arg.step);
           if (!parseResult.success) {
-            return toolError(`Invalid step JSON: ${parseResult.error.message}. The step was not added.`);
+            return toolError(`Invalid step JSON: ${parseResult.error.message}; no step was inserted`);
           }
           const found = state.walker.findParentSequence(state.definition.value, arg.targetStepId);
           if (!found) {
-            return toolError('Step ID not found. The step was not added.');
+            return toolError('No target workflow step was found with the provided ID; no step was inserted');
           }
           found.parentSequence.splice(arg.placement === 'before' ? found.index : found.index + 1, 0, arg.step);
 
           state.notifyDefinitionChange();
-          return toolSuccess('Workflow updated');
+          return toolSuccess('Workflow step inserted');
         },
         replaceWorkflowStep: async arg => {
           const parseResult = anyStepSchema.safeParse(arg.step);
           if (!parseResult.success) {
-            return toolError(`Invalid step JSON: ${parseResult.error.message}. The step was not replaced.`);
+            return toolError(`Invalid step JSON: ${parseResult.error.message}; no step was replaced`);
           }
           const found = state.walker.findParentSequence(state.definition.value, arg.step.id);
           if (!found) {
-            return toolError('Step ID not found. The step was not replaced.');
+            return toolError('No workflow step was found with the replacement step ID; no step was replaced');
           }
           found.parentSequence[found.index] = arg.step;
 
           state.notifyDefinitionChange();
-          return toolSuccess('Workflow updated');
+          return toolSuccess('Workflow step replaced');
         },
+        async hasUnsavedChanges() {
+          return {
+            hasUnsavedChanges: state.isDirty
+          };
+        },
+        async save() {
+          if (!state.isDirty) {
+            return toolError('All changes are already saved');
+          }
+          await save();
+          return toolSuccess('All changes are saved');
+        },
+
+        // root
+
         getRootVariables: async () => {
           return state.definition.value.properties.variables;
         },
@@ -159,40 +176,48 @@ export function ProcessEditorContent() {
         switchRootStartForm: async arg => {
           state.definition.value.properties.startForm = arg.isEnabled ? createEmptyFormDefinition() : undefined;
           state.notifyDefinitionChange();
-          return toolSuccess(`Start form ${arg.isEnabled ? 'enabled' : 'disabled'}`);
+          return toolSuccess(`Process start form ${arg.isEnabled ? 'enabled' : 'disabled'}`);
         },
-        openRootStartFormEditor: async () => {
+        openRootStartFormEditorOverlay: async () => {
           if (!state.definition.value.properties.startForm) {
-            return toolError('Start form is not enabled.');
+            return toolError('Enable the process start form before opening its editor overlay');
           }
           state.switchToChildRoute(ProcessEditorChildRoute.FORM_EDITOR, DefinitionPath.createRootPath('properties.startForm'));
-          return toolSuccess('Start form editor opened');
+          return toolSuccess('Process start form editor overlay opened');
         },
-        openDesigner: async () => {
-          if (state.childRoute === ProcessEditorChildRoute.DESIGNER) {
-            return toolError('Designer is already open.');
-          }
-          state.switchToDesigner();
-          return toolSuccess('Designer opened');
-        },
-        getChildRoute: async () => {
+
+        // overlay
+
+        getCurrentOverlay: async () => {
           if (state.childRoute === ProcessEditorChildRoute.DESIGNER) {
             return {
-              mode: ProcessEditorChildRoute.DESIGNER
+              isOpened: false
             };
           }
           const { stepId, pathParts } = DefinitionPath.parsePath(state.definition.value, state.childPath!);
           return {
-            mode: state.childRoute,
-            stepId,
-            isRoot: stepId === null,
-            path: pathParts.join('.')
+            isOpened: true,
+            name: state.childRoute,
+            params: {
+              stepId,
+              isRoot: stepId === null,
+              path: pathParts.join('.')
+            }
           };
         },
+        closeOverlay: async () => {
+          if (state.childRoute === ProcessEditorChildRoute.DESIGNER) {
+            return toolError('No overlay is currently open');
+          }
+          state.switchToDesigner();
+          return toolSuccess('Overlay closed');
+        },
+
+        // form editor
 
         formEditor_getAvailableVariables: async () => {
           if (state.childRoute !== ProcessEditorChildRoute.FORM_EDITOR || !state.childPath) {
-            return toolError('Form editor is not open.');
+            return toolError('The form editor overlay is not open');
           }
           const { isRoot, object } = DefinitionPath.readPath<FormDefinition>(state.definition.value, state.childPath!);
           const inputVariableNames = isRoot ? [] : (object as TaskStep).properties.inputVariableNames;
@@ -204,7 +229,7 @@ export function ProcessEditorContent() {
         },
         formEditor_get: async arg => {
           if (state.childRoute !== ProcessEditorChildRoute.FORM_EDITOR || !state.childPath) {
-            return toolError('Form editor is not open.');
+            return toolError('The form editor overlay is not open');
           }
           const { value } = DefinitionPath.readPath<FormDefinition>(state.definition.value, state.childPath);
           return {
@@ -213,7 +238,7 @@ export function ProcessEditorContent() {
         },
         formEditor_set: async arg => {
           if (state.childRoute !== ProcessEditorChildRoute.FORM_EDITOR || !state.childPath) {
-            return toolError('Form editor is not open.');
+            return toolError('The form editor overlay is not open');
           }
           const { value } = DefinitionPath.readPath<FormDefinition>(state.definition.value, state.childPath);
           value[arg.type] = arg.value;

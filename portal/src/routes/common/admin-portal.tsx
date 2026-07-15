@@ -18,6 +18,7 @@ export const env = aiEnvironment({
 });
 export const useAiEnvironment = env.useAiEnvironment;
 export const useAiStore = env.useAiStore;
+export const useUnsavedChangesController = env.useUnsavedChangesController;
 
 function resolveCurrentRoute(location: Location) {
   const match = matchRoutes(routes, location)?.find(r => !r.route.children);
