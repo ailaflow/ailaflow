@@ -1,6 +1,5 @@
 import { useProcessEditor } from '../process-editor-context';
 import { ProcessSubEditorView } from '../../../views/process-editor/process-sub-editor-view';
-import { DefinitionPath } from '../../../core/definition-path';
 import type { FileContent, ScriptDefinition } from '@aila/model';
 import { useState } from 'react';
 import { wrapDefinition } from 'sequential-workflow-designer-react';
@@ -8,12 +7,13 @@ import { ScriptSubEditorView } from '../../../views/process-editor/script-sub-ed
 import { FolderTreeItem, FolderTreeView } from '../../../views/process-editor/script-sub-editor/folder-tree-view';
 import { FileContentEditorView } from '../../../views/process-editor/script-sub-editor/file-content-editor-view';
 import { fnv1a } from '../../../core/fnv1a';
+import { ScriptChildEditorUtils } from './script-child-editor-utils';
 
-export function ScriptSubEditor() {
+export function ScriptChildEditor() {
   const state = useProcessEditor();
 
   const [folderItems, setFolderItems] = useState<FolderTreeItem[]>(() => {
-    const { value: script } = DefinitionPath.readPath<ScriptDefinition>(state.definition.value, state.childPath!);
+    const { form: script } = ScriptChildEditorUtils.getData(state);
     return createFolderTree(script.contents);
   });
   const [selectedFilePath, setSelectedFilePath] = useState<string | undefined>(() => getFirstFilePath(folderItems));
@@ -72,23 +72,20 @@ export function ScriptSubEditor() {
   }
 
   function ok() {
-    const newDefinition = {
-      ...state.definition.value
-    };
-    const { value: currentScript } = DefinitionPath.readPath<ScriptDefinition>(state.definition.value, state.childPath!);
+    const { form: currentScript } = ScriptChildEditorUtils.getData(state);
     const contents = flattenFolderTree(folderItems);
     const script: ScriptDefinition = {
       sandboxName: currentScript.sandboxName,
       contents,
       hash: fnv1a(contents)
     };
-    DefinitionPath.writePath(newDefinition, state.childPath!, script);
-    state.setDefinition(wrapDefinition(newDefinition), true);
-    state.switchToDesigner();
+    Object.assign(currentScript, script);
+    state.setDefinition(wrapDefinition(state.definition.value), true);
+    state.closeOverlay();
   }
 
   return (
-    <ProcessSubEditorView title="Script Editor" canOk={true} onCancel={state.switchToDesigner} onOk={ok}>
+    <ProcessSubEditorView title="Script Editor" canOk={true} onCancel={state.closeOverlay} onOk={ok}>
       <ScriptSubEditorView>
         <FolderTreeView
           items={folderItems}

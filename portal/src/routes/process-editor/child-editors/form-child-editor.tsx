@@ -1,18 +1,18 @@
-import type { FormDefinition, FormInputExample, TaskStep } from '@aila/model';
+import type { FormDefinition, FormInputExample } from '@aila/model';
 import { FormDefinitionValidator } from '@aila/model';
 import { useMemo, useState } from 'react';
 import { wrapDefinition } from 'sequential-workflow-designer-react';
-import { DefinitionPath } from '../../../core/definition-path';
 import { ProcessSubEditorView } from '../../../views/process-editor/process-sub-editor-view';
 import { FormEditorTab, FormSubEditorView } from '../../../views/process-editor/script-sub-editor/form-sub-editor-view';
+import { ProcessEditorOverlayType } from '../process-editor-context';
 import { useProcessEditor } from '../process-editor-context';
+import { FormChildEditorUtils } from './form-child-editor-utils';
 
-export function FormSubEditor() {
+export function FormChildEditor() {
   const state = useProcessEditor();
 
   const formState = useMemo(() => {
-    const { isRoot, object, value: form } = DefinitionPath.readPath<FormDefinition>(state.definition.value, state.childPath!);
-    const inputVariableNames = isRoot ? [] : (object as TaskStep).properties.inputVariableNames;
+    const { form, inputVariableNames } = FormChildEditorUtils.getData(state);
     const normalizedForm = {
       ...form,
       inputExamples: inputVariableNames.map(variableName => {
@@ -24,13 +24,14 @@ export function FormSubEditor() {
       inputVariableNames,
       errors: FormDefinitionValidator.validate(normalizedForm, inputVariableNames, state.definition.value, state.variableValidator)
     };
-  }, [state.childPath, state.definition, state.variableValidator]);
+  }, [state.overlay, state.definition, state.variableValidator]);
 
   const [selectedTab, setSelectedTab] = useState<FormEditorTab>(formState.inputVariableNames.length > 0 ? 'Example Inputs' : 'HTML');
   const selectedVisibleTab = selectedTab === 'Example Inputs' && formState.inputVariableNames.length === 0 ? 'HTML' : selectedTab;
 
   function setForm(form: FormDefinition) {
-    DefinitionPath.writePath(state.definition.value, state.childPath!, form);
+    const { value } = state.getOverlayObject<FormDefinition>(ProcessEditorOverlayType.FORM_EDITOR);
+    Object.assign(value, form);
     state.setDefinition(wrapDefinition(state.definition.value), true);
   }
 
@@ -57,16 +58,11 @@ export function FormSubEditor() {
       return;
     }
 
-    state.switchToDesigner();
+    state.closeOverlay();
   }
 
   return (
-    <ProcessSubEditorView
-      title="Form Editor"
-      canOk={Object.keys(formState.errors).length === 0}
-      onCancel={state.switchToDesigner}
-      onOk={ok}
-    >
+    <ProcessSubEditorView title="Form Editor" canOk={Object.keys(formState.errors).length === 0} onCancel={state.closeOverlay} onOk={ok}>
       <FormSubEditorView
         selectedTab={selectedVisibleTab}
         showExampleInputs={formState.inputVariableNames.length > 0}

@@ -1,27 +1,29 @@
-import { ProcessEditorChildRoute, useProcessEditor } from './process-editor-context';
-import { SchemaSubEditor } from './sub-editors/schema-sub-editor';
-import { DesignerSubEditor } from './sub-editors/designer-sub-editor';
+import { ProcessEditorOverlayType, useProcessEditor } from './process-editor-context';
+import { SchemaChildEditor } from './child-editors/schema-child-editor';
+import { DesignerChildEditor } from './child-editors/designer-child-editor';
 import { useApiClient } from '../../auth/auth-context';
 import { ResourceEditorView } from '../../views/resource-editor/resource-editor-view';
 import { useNavigate } from 'react-router-dom';
-import { FormSubEditor } from './sub-editors/form-sub-editor';
-import { ScriptSubEditor } from './sub-editors/script-sub-editor';
+import { FormChildEditor } from './child-editors/form-child-editor';
+import { ScriptChildEditor } from './child-editors/script-child-editor';
 import { ResourceSimpleDetailsView } from '../../views/resource-editor/resource-simple-details-view';
 import { fnv1a } from '../../core/fnv1a';
-import { anyStepSchema, FormDefinition, ProcessValidator, TaskStep } from '@aila/model';
+import { anyStepSchema, ProcessValidator } from '@aila/model';
 import { toolError, toolSuccess } from '@aibindkit/react';
 import { createEmptyFormDefinition, toolboxConfiguration } from './designer-configuration';
 import { ObjectCloner, Step, Uid } from 'sequential-workflow-designer';
 import { DefinitionPath } from '../../core/definition-path';
 import { wrapDefinition } from 'sequential-workflow-designer-react';
 import { useAiStore, useUnsavedChangesController } from '../common/admin-portal';
+import { FormChildEditorUtils } from './child-editors/form-child-editor-utils';
+import { ScriptChildEditorUtils } from './child-editors/script-child-editor-utils';
 
 export function ProcessEditorContent() {
   const state = useProcessEditor();
   const apiClient = useApiClient();
   const navigate = useNavigate();
 
-  const isDesigner = state.childRoute === ProcessEditorChildRoute.DESIGNER;
+  const isDesigner = !state.overlay;
   const canSave = Boolean(state.isValid && state.isDirty);
   const canTest = Boolean(state.isValid && !state.isDirty);
 
@@ -166,7 +168,12 @@ export function ProcessEditorContent() {
         // root
 
         getRootVariables: async () => {
-          return state.definition.value.properties.variables;
+          const variables = state.definition.value.properties.variables;
+          return variables.map(v => ({
+            name: v.name,
+            description: v.description,
+            schema: v.schema.schema
+          }));
         },
         isRootStartFormEnabled: async () => {
           return {
@@ -182,68 +189,66 @@ export function ProcessEditorContent() {
           if (!state.definition.value.properties.startForm) {
             return toolError('Enable the process start form before opening its editor overlay');
           }
-          state.switchToChildRoute(ProcessEditorChildRoute.FORM_EDITOR, DefinitionPath.createRootPath('properties.startForm'));
+          state.openOverlay(ProcessEditorOverlayType.FORM_EDITOR, DefinitionPath.createRootPath('properties.startForm'));
           return toolSuccess('Process start form editor overlay opened');
         },
 
         // overlay
 
         getCurrentOverlay: async () => {
-          if (state.childRoute === ProcessEditorChildRoute.DESIGNER) {
+          if (!state.overlay) {
             return {
               isOpened: false
             };
           }
-          const { stepId, pathParts } = DefinitionPath.parsePath(state.definition.value, state.childPath!);
+          const { stepId, pathParts } = DefinitionPath.parsePath(state.definition.value, state.overlay.path);
           return {
             isOpened: true,
-            name: state.childRoute,
+            name: state.overlay.type,
             params: {
-              stepId,
               isRoot: stepId === null,
+              stepId,
               path: pathParts.join('.')
             }
           };
         },
         closeOverlay: async () => {
-          if (state.childRoute === ProcessEditorChildRoute.DESIGNER) {
+          if (!state.overlay) {
             return toolError('No overlay is currently open');
           }
-          state.switchToDesigner();
+          state.closeOverlay();
           return toolSuccess('Overlay closed');
         },
 
         // form editor
 
-        formEditor_getAvailableVariables: async () => {
-          if (state.childRoute !== ProcessEditorChildRoute.FORM_EDITOR || !state.childPath) {
-            return toolError('The form editor overlay is not open');
-          }
-          const { isRoot, object } = DefinitionPath.readPath<FormDefinition>(state.definition.value, state.childPath!);
-          const inputVariableNames = isRoot ? [] : (object as TaskStep).properties.inputVariableNames;
-          const outputVariableNames = isRoot ? [] : (object as TaskStep).properties.outputVariableNames;
+        formEditor_getVariables: async () => {
+          const v = FormChildEditorUtils.getData(state);
           return {
-            inputVariableNames,
-            outputVariableNames
+            inputVariableNames: v.inputVariableNames,
+            outputVariableNames: v.outputVariableNames
           };
         },
-        formEditor_get: async arg => {
-          if (state.childRoute !== ProcessEditorChildRoute.FORM_EDITOR || !state.childPath) {
-            return toolError('The form editor overlay is not open');
-          }
-          const { value } = DefinitionPath.readPath<FormDefinition>(state.definition.value, state.childPath);
+        formEditor_getContent: async arg => {
+          const v = FormChildEditorUtils.getData(state);
           return {
-            value: value[arg.type]
+            content: v.form[arg.type]
           };
         },
-        formEditor_set: async arg => {
-          if (state.childRoute !== ProcessEditorChildRoute.FORM_EDITOR || !state.childPath) {
-            return toolError('The form editor overlay is not open');
-          }
-          const { value } = DefinitionPath.readPath<FormDefinition>(state.definition.value, state.childPath);
-          value[arg.type] = arg.value;
+        formEditor_setContent: async arg => {
+          const v = FormChildEditorUtils.getData(state);
+          v.form[arg.type] = arg.content;
           state.setDefinition(wrapDefinition(state.definition.value), true);
           return toolSuccess('Form content updated');
+        },
+
+        // scriptEditor
+
+        async scriptEditor_getFiles() {
+          const v = ScriptChildEditorUtils.getData(state);
+          return {
+            filePaths: v.form.contents.map(c => c.path)
+          };
         }
       }),
     [state]
@@ -274,10 +279,10 @@ export function ProcessEditorContent() {
       canSwitch={canTest}
       onSwitch={isDesigner ? openTester : undefined}
     >
-      {isDesigner && <DesignerSubEditor />}
-      {state.childRoute === ProcessEditorChildRoute.SCHEMA_EDITOR && <SchemaSubEditor />}
-      {state.childRoute === ProcessEditorChildRoute.FORM_EDITOR && <FormSubEditor />}
-      {state.childRoute === ProcessEditorChildRoute.SCRIPT_EDITOR && <ScriptSubEditor />}
+      {isDesigner && <DesignerChildEditor />}
+      {state.overlay?.type === ProcessEditorOverlayType.SCHEMA_EDITOR && <SchemaChildEditor />}
+      {state.overlay?.type === ProcessEditorOverlayType.FORM_EDITOR && <FormChildEditor />}
+      {state.overlay?.type === ProcessEditorOverlayType.SCRIPT_EDITOR && <ScriptChildEditor />}
     </ResourceEditorView>
   );
 }

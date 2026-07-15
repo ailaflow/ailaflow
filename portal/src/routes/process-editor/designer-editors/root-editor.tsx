@@ -1,6 +1,6 @@
 import { JsonSchema, ProcessDefinition, VariableDefinition } from '@aila/model';
 import { useRootEditor } from 'sequential-workflow-designer-react';
-import { ProcessEditorChildRoute, ProcessEditorState } from '../process-editor-context';
+import { ProcessEditorOverlayType, ProcessEditorState } from '../process-editor-context';
 import { DesignerEditorView } from '../../../views/process-editor/designer-editors/designer-editor-view';
 import { EditorPropertyView } from '../../../views/process-editor/designer-editors/editor-property-view';
 import { DefinitionPath } from '../../../core/definition-path';
@@ -53,7 +53,7 @@ export function RootEditor(props: RootEditorProps) {
 
   function editVariableSchema(index: number) {
     const path = DefinitionPath.createRootPath(`properties.variables.${index}.schema`);
-    props.editorState.switchToChildRoute(ProcessEditorChildRoute.SCHEMA_EDITOR, path);
+    props.editorState.openOverlay(ProcessEditorOverlayType.SCHEMA_EDITOR, path);
   }
 
   function addStartForm() {
@@ -62,7 +62,7 @@ export function RootEditor(props: RootEditorProps) {
 
   function editStartFrom() {
     const path = DefinitionPath.createRootPath(`properties.startForm`);
-    props.editorState.switchToChildRoute(ProcessEditorChildRoute.FORM_EDITOR, path);
+    props.editorState.openOverlay(ProcessEditorOverlayType.FORM_EDITOR, path);
   }
 
   function removeStartForm() {

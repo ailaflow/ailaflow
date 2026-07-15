@@ -1,7 +1,19 @@
 import { ProcessDefinition } from '@aila/model';
-import { Definition, DefinitionWalker, Step } from 'sequential-workflow-model';
+import { DefinitionWalker, Step } from 'sequential-workflow-model';
 
 const processWalker = new DefinitionWalker();
+
+export type DefinitionPathValue<T> =
+  | {
+      isRoot: true;
+      parent: ProcessDefinition;
+      value: T;
+    }
+  | {
+      isRoot: false;
+      parent: Step;
+      value: T;
+    };
 
 export class DefinitionPath {
   public static createStepPath(stepId: string, path: string): string {
@@ -12,58 +24,57 @@ export class DefinitionPath {
     return `root/${path}`;
   }
 
-  public static parsePath(definition: ProcessDefinition, path: string) {
+  public static parsePath(
+    definition: ProcessDefinition,
+    path: string
+  ): { stepId: null; parent: ProcessDefinition; pathParts: string[] } | { stepId: string; parent: Step; pathParts: string[] } {
     if (!path) {
       throw new Error('Path is empty');
     }
     const [type, p0, p1] = path.split('/', 3);
 
-    let stepId: string | null;
-    let object: Definition | Step;
-    let parts: string;
     if (type === 'root') {
-      stepId = null;
-      object = definition;
-      parts = p0;
-    } else if (type === 'step') {
-      stepId = p0;
-      const step = processWalker.findById(definition, stepId);
-      if (!step) {
-        throw new Error(`Cannot find step: ${stepId}`);
-      }
-      object = step;
-      parts = p1;
-    } else {
-      throw new Error(`Invalid path: ${path}`);
+      return {
+        stepId: null,
+        parent: definition,
+        pathParts: p0.split('.')
+      };
     }
-
-    return {
-      stepId,
-      object,
-      pathParts: parts.split('.')
-    };
+    if (type === 'step') {
+      const step = processWalker.findById(definition, p0);
+      if (!step) {
+        throw new Error(`Cannot find step: ${p0}`);
+      }
+      return {
+        stepId: p0,
+        parent: step,
+        pathParts: p1.split('.')
+      };
+    }
+    throw new Error(`Unsupported path: ${path}`);
   }
 
-  public static readPath<T>(
-    definition: ProcessDefinition,
-    path: string
-  ): {
-    isRoot: boolean;
-    object: Definition | Step;
-    value: T;
-  } {
-    const { stepId, object, pathParts } = DefinitionPath.parsePath(definition, path);
+  public static readPath<T>(definition: ProcessDefinition, path: string): DefinitionPathValue<T> {
+    const { stepId, parent, pathParts } = DefinitionPath.parsePath(definition, path);
+    const value = resolve(parent, pathParts, pathParts.length) as T;
+    if (stepId !== null) {
+      return {
+        isRoot: false,
+        parent,
+        value
+      };
+    }
     return {
-      isRoot: stepId === null,
-      object,
-      value: resolve(object, pathParts, pathParts.length) as T
+      isRoot: true,
+      parent,
+      value
     };
   }
 
   public static writePath<T>(definition: ProcessDefinition, path: string, value: T) {
-    const { object, pathParts: names } = DefinitionPath.parsePath(definition, path);
+    const { parent, pathParts: names } = DefinitionPath.parsePath(definition, path);
     const c = names.length - 1;
-    const target = resolve(object, names, c);
+    const target = resolve(parent, names, c);
     target[names[c]] = value;
   }
 }

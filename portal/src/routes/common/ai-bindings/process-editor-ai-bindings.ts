@@ -76,7 +76,6 @@ const processEditorRoute = route('processEditor')
 
     // root
 
-    getRootVariables: tool('List process variables with their names and JSON schemas'),
     isRootStartFormEnabled: tool('Check whether the process start form is enabled'),
     switchRootStartForm: tool('Enable or disable the process start form').input(
       z.object({
@@ -84,6 +83,7 @@ const processEditorRoute = route('processEditor')
       })
     ),
     openRootStartFormEditorOverlay: tool('Open the process start form editor overlay'),
+    getRootVariables: tool('List process variables with their names and JSON schemas'),
 
     // overlay
 
@@ -92,20 +92,24 @@ const processEditorRoute = route('processEditor')
 
     // formEditor overlay
 
-    formEditor_getAvailableVariables: tool('List input and output variables available to the currently edited form'),
+    formEditor_getVariables: tool('List input and output variables available to the currently edited form'),
 
-    formEditor_get: tool('Get the HTML, CSS, or JS for the currently edited form').input(
+    formEditor_getContent: tool('Get the HTML, CSS, or JS for the currently edited form').input(
       z.object({
         type: z.enum(['html', 'css', 'js']).describe('The form content type to read')
       })
     ),
 
-    formEditor_set: tool('Set the HTML, CSS, or JS for the currently edited form').input(
+    formEditor_setContent: tool('Set the HTML, CSS, or JS for the currently edited form').input(
       z.object({
         type: z.enum(['html', 'css', 'js']).describe('The form content type to update'),
-        value: z.string().describe('The new form content')
+        content: z.string().describe('The new form content')
       })
-    )
+    ),
+
+    // scriptEditor overlay
+
+    scriptEditor_getFiles: tool('Returns a list of created files')
   });
 
 export const processEditorAiStoreFactory = storeFactory(processEditorRoute);

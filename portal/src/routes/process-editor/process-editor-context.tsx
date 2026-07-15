@@ -7,22 +7,24 @@ import {
   ProcessValidator,
   VariableCachedValidator
 } from '@aila/model';
-import { useReducer } from 'react';
+import { useMemo, useReducer } from 'react';
 import { useContext } from 'react';
 import { createContext } from 'react';
 import { SequentialWorkflowDesignerController, wrapDefinition, WrappedDefinition } from 'sequential-workflow-designer-react';
 import { DefinitionWalker } from 'sequential-workflow-model';
+import { DefinitionPath, DefinitionPathValue } from '../../core/definition-path';
 
-export enum ProcessEditorChildRoute {
-  DESIGNER = 'designer',
-  SCHEMA_EDITOR = 'schema-editor',
-  FORM_EDITOR = 'form-editor',
-  SCRIPT_EDITOR = 'script-editor'
+export enum ProcessEditorOverlayType {
+  SCHEMA_EDITOR = 'schemaEditor',
+  FORM_EDITOR = 'formEditor',
+  SCRIPT_EDITOR = 'scriptEditor'
 }
 
-export interface EditorDataState {
-  childRoute: ProcessEditorChildRoute;
-  childPath?: string;
+export interface ProcessEditorData {
+  overlay?: {
+    type: ProcessEditorOverlayType;
+    path: string;
+  };
 
   controller: SequentialWorkflowDesignerController;
   variableValidator: VariableCachedValidator;
@@ -41,7 +43,7 @@ export interface EditorDataState {
   selectedStepId: string | null;
 }
 
-export interface ProcessEditorState extends EditorDataState {
+export interface ProcessEditorState extends ProcessEditorData {
   isValid: boolean;
   setIsDirty(isDirty: boolean): void;
   setName(name: string): void;
@@ -49,14 +51,15 @@ export interface ProcessEditorState extends EditorDataState {
   setDefinition(definition: WrappedDefinition, markDirty: boolean): void;
   notifyDefinitionChange(): void;
   setSelectedStepId(stepId: string | null): void;
-  switchToDesigner(): void;
-  switchToChildRoute(childRoute: ProcessEditorChildRoute, path: string): void;
+  closeOverlay(): void;
+  openOverlay(type: ProcessEditorOverlayType, path: string): void;
+  getOverlayObject<T>(assertType: ProcessEditorOverlayType): DefinitionPathValue<T>;
 }
 
 export function useProcessEditor(): ProcessEditorState {
   const context = useContext(processEditorContext);
   if (!context) {
-    throw new Error('Cannot find admin process editor context');
+    throw new Error('Cannot find process editor context');
   }
   return context;
 }
@@ -73,7 +76,7 @@ function createEmptyDefinition(): ProcessDefinition {
   };
 }
 
-function createState(props: Omit<ProcessEditorContextProps, 'children'>): EditorDataState {
+function createData(props: Omit<ProcessEditorContextProps, 'children'>): ProcessEditorData {
   const sandboxNames = props.sandboxes.map(sandbox => sandbox.name);
   const variableValidator = new VariableCachedValidator();
   const rootValidator = new ProcessRootValidator(variableValidator);
@@ -85,8 +88,6 @@ function createState(props: Omit<ProcessEditorContextProps, 'children'>): Editor
   const controller = SequentialWorkflowDesignerController.create();
 
   return {
-    childRoute: ProcessEditorChildRoute.DESIGNER,
-
     controller,
     variableValidator,
     rootValidator,
@@ -105,7 +106,7 @@ function createState(props: Omit<ProcessEditorContextProps, 'children'>): Editor
   };
 }
 
-function reduceState(state: EditorDataState, delta: Partial<EditorDataState>): EditorDataState {
+function reduceState(state: ProcessEditorData, delta: Partial<ProcessEditorData>): ProcessEditorData {
   return { ...state, ...delta };
 }
 
@@ -116,86 +117,93 @@ export interface ProcessEditorContextProps {
 }
 
 export function ProcessEditorContext(props: ProcessEditorContextProps) {
-  const [state, dispatch] = useReducer(reduceState, undefined, () => createState(props));
-  const isValid = state.nameError === null && state.descriptionError === null && state.definition.isValid !== false;
+  const [data, update] = useReducer(reduceState, undefined, () => createData(props));
 
-  function setIsDirty(isDirty: boolean) {
-    dispatch({
-      isDirty
-    });
-  }
+  const state = useMemo<ProcessEditorState>(() => {
+    const isValid = data.nameError === null && data.descriptionError === null && data.definition.isValid !== false;
 
-  function setName(name: string) {
-    dispatch({
-      name,
-      nameError: ProcessValidator.validateName(name),
-      isDirty: true
-    });
-  }
+    function setIsDirty(isDirty: boolean) {
+      update({
+        isDirty
+      });
+    }
 
-  function setDescription(description: string) {
-    dispatch({
-      description,
-      descriptionError: ProcessValidator.validateDescription(description),
-      isDirty: true
-    });
-  }
+    function setName(name: string) {
+      update({
+        name,
+        nameError: ProcessValidator.validateName(name),
+        isDirty: true
+      });
+    }
 
-  function setDefinition(newDefinition: WrappedDefinition<ProcessDefinition>, markDirty: boolean) {
-    const delta: Partial<EditorDataState> = {
-      definition: newDefinition
+    function setDescription(description: string) {
+      update({
+        description,
+        descriptionError: ProcessValidator.validateDescription(description),
+        isDirty: true
+      });
+    }
+
+    function setDefinition(newDefinition: WrappedDefinition<ProcessDefinition>, markDirty: boolean) {
+      const delta: Partial<ProcessEditorData> = {
+        definition: newDefinition
+      };
+      if (markDirty) {
+        delta.isDirty = true;
+      }
+      update(delta);
+    }
+
+    function notifyDefinitionChange() {
+      if (data.controller.isReady()) {
+        data.controller.updateRootComponent();
+        data.controller.updateBadges();
+      }
+      update({
+        definition: wrapDefinition(data.definition.value),
+        isDirty: true
+      });
+    }
+
+    function setSelectedStepId(stepId: string | null) {
+      update({
+        selectedStepId: stepId
+      });
+    }
+
+    function closeOverlay() {
+      update({
+        overlay: undefined
+      });
+    }
+
+    function openOverlay(type: ProcessEditorOverlayType, path: string) {
+      update({
+        overlay: { type, path }
+      });
+    }
+
+    function getOverlayObject<T>(assertType: ProcessEditorOverlayType): DefinitionPathValue<T> {
+      if (!data.overlay || data.overlay.type !== assertType) {
+        throw new Error(`${assertType} is not opened`);
+      }
+      return DefinitionPath.readPath<T>(data.definition.value, data.overlay.path);
+    }
+
+    return {
+      ...data,
+      isValid,
+      setIsDirty,
+      setName,
+      setDescription,
+      setDefinition,
+      notifyDefinitionChange,
+      setSelectedStepId,
+      closeOverlay,
+      openOverlay,
+      getOverlayObject
     };
-    if (markDirty) {
-      delta.isDirty = true;
-    }
-    dispatch(delta);
-  }
+  }, [data]);
 
-  function notifyDefinitionChange() {
-    if (state.controller.isReady()) {
-      state.controller.updateRootComponent();
-      state.controller.updateBadges();
-    }
-    dispatch({
-      isDirty: true
-    });
-  }
-
-  function setSelectedStepId(stepId: string | null) {
-    dispatch({
-      selectedStepId: stepId
-    });
-  }
-
-  function switchToDesigner() {
-    dispatch({
-      childRoute: ProcessEditorChildRoute.DESIGNER
-    });
-  }
-
-  function switchToChildRoute(childRoute: ProcessEditorChildRoute, childPath: string) {
-    dispatch({
-      childRoute,
-      childPath
-    });
-  }
-
-  return (
-    <processEditorContext.Provider
-      value={{
-        ...state,
-        isValid,
-        setIsDirty: setIsDirty,
-        setName,
-        setDescription,
-        setDefinition,
-        notifyDefinitionChange,
-        setSelectedStepId,
-        switchToDesigner,
-        switchToChildRoute
-      }}
-    >
-      {props.children}
-    </processEditorContext.Provider>
-  );
+  return <processEditorContext.Provider value={state}>{props.children}</processEditorContext.Provider>;
 }

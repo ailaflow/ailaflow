@@ -1,16 +1,15 @@
 import { JsonSchema } from '@aila/model';
-import { useProcessEditor } from '../process-editor-context';
+import { ProcessEditorOverlayType, useProcessEditor } from '../process-editor-context';
 import { wrapDefinition } from 'sequential-workflow-designer-react';
 import { useState } from 'react';
 import { ProcessSubEditorView } from '../../../views/process-editor/process-sub-editor-view';
-import { DefinitionPath } from '../../../core/definition-path';
 import { fnv1a } from '../../../core/fnv1a';
 
-export function SchemaSubEditor() {
+export function SchemaChildEditor() {
   const state = useProcessEditor();
 
   const [schema, setSchema] = useState(() => {
-    const { value: s } = DefinitionPath.readPath<JsonSchema>(state.definition.value, state.childPath!);
+    const { value: s } = state.getOverlayObject<JsonSchema>(ProcessEditorOverlayType.SCHEMA_EDITOR);
     return {
       schema: JSON.stringify(s.schema, null, 2),
       isValid: true
@@ -43,16 +42,14 @@ export function SchemaSubEditor() {
       return;
     }
 
-    const newDefinition = {
-      ...state.definition.value
-    };
-    DefinitionPath.writePath(newDefinition, state.childPath!, newSchema);
-    state.setDefinition(wrapDefinition(newDefinition), true);
-    state.switchToDesigner();
+    const { value } = state.getOverlayObject<JsonSchema>(ProcessEditorOverlayType.SCHEMA_EDITOR);
+    Object.assign(value, newSchema);
+    state.setDefinition(wrapDefinition(state.definition.value), true);
+    state.closeOverlay();
   }
 
   return (
-    <ProcessSubEditorView title={`Schema`} canOk={schema.isValid} onCancel={state.switchToDesigner} onOk={ok}>
+    <ProcessSubEditorView title={`Schema`} canOk={schema.isValid} onCancel={state.closeOverlay} onOk={ok}>
       <textarea
         value={schema.schema}
         onChange={e => setSchema2(e.target.value)}

@@ -5,7 +5,7 @@ import { StepEditor } from '../designer-editors/step-editor';
 import { toolboxConfiguration } from '../designer-configuration';
 import { useRef } from 'react';
 
-export function DesignerSubEditor() {
+export function DesignerChildEditor() {
   const state = useProcessEditor();
   const isFirstUpdate = useRef(true);
 
