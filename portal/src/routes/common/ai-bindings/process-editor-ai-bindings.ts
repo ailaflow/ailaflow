@@ -84,6 +84,11 @@ const processEditorRoute = route('processEditor')
     ),
     openRootStartFormEditorOverlay: tool('Open the process start form editor overlay'),
     getRootVariables: tool('List process variables with their names and JSON schemas'),
+    getRootVariableSchema: tool('Get the JSON schema for a specific process variable').input(
+      z.object({
+        variableName: z.string().min(1).describe('The name of the variable')
+      })
+    ),
 
     // overlay
 
@@ -93,23 +98,50 @@ const processEditorRoute = route('processEditor')
     // formEditor overlay
 
     formEditor_getVariables: tool('List input and output variables available to the currently edited form'),
-
     formEditor_getContent: tool('Get the HTML, CSS, or JS for the currently edited form').input(
       z.object({
-        type: z.enum(['html', 'css', 'js']).describe('The form content type to read')
+        part: z.enum(['html', 'css', 'js']).describe('The form content type to read')
       })
     ),
-
     formEditor_setContent: tool('Set the HTML, CSS, or JS for the currently edited form').input(
       z.object({
-        type: z.enum(['html', 'css', 'js']).describe('The form content type to update'),
+        part: z.enum(['html', 'css', 'js']).describe('The form content type to update'),
         content: z.string().describe('The new form content')
+      })
+    ),
+    formEditor_getInputJsonExample: tool('Get the JSON example for the input variable').input(
+      z.object({
+        variableName: z.string().min(1).describe('The name of the variable')
+      })
+    ),
+    formEditor_setInputJsonExample: tool('Set the JSON example for the input variable').input(
+      z.object({
+        variableName: z.string().min(1).describe('The name of the variable'),
+        content: z.unknown().describe('The JSON content for the input variable')
       })
     ),
 
     // scriptEditor overlay
 
-    scriptEditor_getFiles: tool('Returns a list of created files')
+    scriptEditor_getFiles: tool('Returns a list of created files'),
+    scriptEditor_getCurrentOpenFile: tool('Return the currently open file in the script editor'),
+    scriptEditor_getContent: tool('Return the content of a specific file').input(
+      z.object({
+        filePath: z.string().min(1).describe('The path of the file to read')
+      })
+    ),
+    scriptEditor_setContent: tool('Set the content of a specific file').input(
+      z.object({
+        filePath: z.string().min(1).describe('The path of the file to update'),
+        content: z.string().describe('The new content for the file'),
+        mode: z.enum(['edit', 'create']).describe('Set "edit" to update the file, "create" to create a new file')
+      })
+    ),
+    scriptEditor_deleteFile: tool('Delete a specific file').input(
+      z.object({
+        filePath: z.string().min(1).describe('The path of the file to delete')
+      })
+    )
   });
 
 export const processEditorAiStoreFactory = storeFactory(processEditorRoute);

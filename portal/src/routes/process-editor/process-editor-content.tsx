@@ -5,7 +5,7 @@ import { useApiClient } from '../../auth/auth-context';
 import { ResourceEditorView } from '../../views/resource-editor/resource-editor-view';
 import { useNavigate } from 'react-router-dom';
 import { FormChildEditor } from './child-editors/form-child-editor';
-import { ScriptChildEditor } from './child-editors/script-child-editor';
+import { ScriptChildEditor, ScriptChildEditorState } from './child-editors/script-child-editor';
 import { ResourceSimpleDetailsView } from '../../views/resource-editor/resource-simple-details-view';
 import { fnv1a } from '../../core/fnv1a';
 import { anyStepSchema, ProcessValidator } from '@aila/model';
@@ -13,10 +13,10 @@ import { toolError, toolSuccess } from '@aibindkit/react';
 import { createEmptyFormDefinition, toolboxConfiguration } from './designer-configuration';
 import { ObjectCloner, Step, Uid } from 'sequential-workflow-designer';
 import { DefinitionPath } from '../../core/definition-path';
-import { wrapDefinition } from 'sequential-workflow-designer-react';
 import { useAiStore, useUnsavedChangesController } from '../common/admin-portal';
 import { FormChildEditorUtils } from './child-editors/form-child-editor-utils';
 import { ScriptChildEditorUtils } from './child-editors/script-child-editor-utils';
+import z from 'zod/v4';
 
 export function ProcessEditorContent() {
   const state = useProcessEditor();
@@ -90,7 +90,7 @@ export function ProcessEditorContent() {
               defaultName: step.name
             }));
         },
-        getWorkflow: async () => {
+        async getWorkflow() {
           const definition = ObjectCloner.deepClone(state.definition.value);
           state.walker.forEach(definition, step => {
             const s = step as { properties?: unknown };
@@ -98,14 +98,14 @@ export function ProcessEditorContent() {
           });
           return definition;
         },
-        readWorkflowStep: async arg => {
+        async readWorkflowStep(arg) {
           const step = state.walker.findById(state.definition.value, arg.stepId);
           if (!step) {
             return toolError('No workflow step was found with the provided ID');
           }
           return step;
         },
-        deleteWorkflowStep: async arg => {
+        async deleteWorkflowStep(arg) {
           const found = state.walker.findParentSequence(state.definition.value, arg.stepId);
           if (!found) {
             return toolError('No workflow step was found with the provided ID; no step was deleted');
@@ -114,7 +114,7 @@ export function ProcessEditorContent() {
           state.notifyDefinitionChange();
           return toolSuccess('Workflow step deleted');
         },
-        createWorkflowStep: async arg => {
+        async createWorkflowStep(arg) {
           const template = toolboxConfiguration.groups.flatMap(group => group.steps).find(step => step.type === arg.type);
           if (!template) {
             return toolError('No available workflow step type matches the provided type');
@@ -124,7 +124,7 @@ export function ProcessEditorContent() {
           newStep.name = arg.name;
           return newStep;
         },
-        appendWorkflowStep: async arg => {
+        async appendWorkflowStep(arg) {
           const parseResult = anyStepSchema.safeParse(arg.step);
           if (!parseResult.success) {
             return toolError(`Invalid step JSON: ${parseResult.error.message}; no step was inserted`);
@@ -138,7 +138,7 @@ export function ProcessEditorContent() {
           state.notifyDefinitionChange();
           return toolSuccess('Workflow step inserted');
         },
-        replaceWorkflowStep: async arg => {
+        async replaceWorkflowStep(arg) {
           const parseResult = anyStepSchema.safeParse(arg.step);
           if (!parseResult.success) {
             return toolError(`Invalid step JSON: ${parseResult.error.message}; no step was replaced`);
@@ -167,7 +167,7 @@ export function ProcessEditorContent() {
 
         // root
 
-        getRootVariables: async () => {
+        async getRootVariables() {
           const variables = state.definition.value.properties.variables;
           return variables.map(v => ({
             name: v.name,
@@ -175,17 +175,26 @@ export function ProcessEditorContent() {
             schema: v.schema.schema
           }));
         },
-        isRootStartFormEnabled: async () => {
+        async getRootVariableSchema(arg) {
+          const variable = state.definition.value.properties.variables.find(v => v.name === arg.variableName);
+          if (!variable) {
+            return toolError(`Cannot find \$${arg.variableName} variable`);
+          }
+          return {
+            schema: variable.schema.schema
+          };
+        },
+        async isRootStartFormEnabled() {
           return {
             isEnabled: Boolean(state.definition.value.properties.startForm)
           };
         },
-        switchRootStartForm: async arg => {
+        async switchRootStartForm(arg) {
           state.definition.value.properties.startForm = arg.isEnabled ? createEmptyFormDefinition() : undefined;
           state.notifyDefinitionChange();
           return toolSuccess(`Process start form ${arg.isEnabled ? 'enabled' : 'disabled'}`);
         },
-        openRootStartFormEditorOverlay: async () => {
+        async openRootStartFormEditorOverlay() {
           if (!state.definition.value.properties.startForm) {
             return toolError('Enable the process start form before opening its editor overlay');
           }
@@ -195,7 +204,7 @@ export function ProcessEditorContent() {
 
         // overlay
 
-        getCurrentOverlay: async () => {
+        async getCurrentOverlay() {
           if (!state.overlay) {
             return {
               isOpened: false
@@ -212,7 +221,7 @@ export function ProcessEditorContent() {
             }
           };
         },
-        closeOverlay: async () => {
+        async closeOverlay() {
           if (!state.overlay) {
             return toolError('No overlay is currently open');
           }
@@ -222,33 +231,97 @@ export function ProcessEditorContent() {
 
         // form editor
 
-        formEditor_getVariables: async () => {
+        async formEditor_getVariables() {
           const v = FormChildEditorUtils.getData(state);
           return {
             inputVariableNames: v.inputVariableNames,
             outputVariableNames: v.outputVariableNames
           };
         },
-        formEditor_getContent: async arg => {
+        async formEditor_getContent(arg) {
           const v = FormChildEditorUtils.getData(state);
           return {
-            content: v.form[arg.type]
+            content: v.form[arg.part]
           };
         },
-        formEditor_setContent: async arg => {
+        async formEditor_setContent(arg) {
           const v = FormChildEditorUtils.getData(state);
-          v.form[arg.type] = arg.content;
-          state.setDefinition(wrapDefinition(state.definition.value), true);
+          v.form[arg.part] = arg.content;
+          state.notifyDefinitionChange();
           return toolSuccess('Form content updated');
+        },
+        async formEditor_getInputJsonExample(arg) {
+          const v = FormChildEditorUtils.getData(state);
+          const example = v.form.inputExamples.find(i => i.variableName === arg.variableName);
+          if (!example) {
+            return toolError('Cannot find the input variable attached to this form');
+          }
+          if (!example.exampleValue) {
+            return toolError(`Example value is not set for \$${arg.variableName}`);
+          }
+          return {
+            content: example.exampleValue
+          };
+        },
+        async formEditor_setInputJsonExample(arg) {
+          const v = FormChildEditorUtils.getData(state);
+          if (!v.inputVariableNames.includes(arg.variableName)) {
+            return toolError(`The \$${arg.variableName} is defined as the input variable for this form`);
+          }
+          const variable = state.definition.value.properties.variables.find(i => i.name === arg.variableName);
+          if (!variable) {
+            return toolError('Cannot find variable');
+          }
+          const result = z.fromJSONSchema(variable.schema).safeParse(arg.content);
+          if (result.error) {
+            return toolError(`The example value does not match the variable schema: ${result.error}`);
+          }
+          const exampleValue = JSON.stringify(arg.content);
+          let example = v.form.inputExamples.find(i => i.variableName === arg.variableName);
+          if (!example) {
+            example = { variableName: arg.variableName, exampleValue };
+            v.form.inputExamples.push(example);
+          } else {
+            example.exampleValue = exampleValue;
+          }
+          state.notifyDefinitionChange();
+          return toolSuccess('Example updated');
         },
 
         // scriptEditor
 
         async scriptEditor_getFiles() {
-          const v = ScriptChildEditorUtils.getData(state);
+          const d = ScriptChildEditorUtils.getData(state);
           return {
-            filePaths: v.form.contents.map(c => c.path)
+            filePaths: d.form.contents.map(c => c.path)
           };
+        },
+        async scriptEditor_getCurrentOpenFile() {
+          const s = state.getOverlayState<ScriptChildEditorState>();
+          return {
+            selectedFilePath: s.selectedFilePath
+          };
+        },
+        async scriptEditor_getContent(arg) {
+          const d = ScriptChildEditorUtils.getData(state);
+          const content = ScriptChildEditorUtils.getFileContent(d, arg.filePath);
+          return content === null ? toolError('File not found') : { content };
+        },
+        async scriptEditor_setContent(arg) {
+          const d = ScriptChildEditorUtils.getData(state);
+          const result = ScriptChildEditorUtils.setFileContent(d, arg.filePath, arg.content, arg.mode);
+          if (result === 'fileNotFound') {
+            return toolError('File not found');
+          }
+          if (result === 'fileAlreadyExists') {
+            return toolError('File already exists');
+          }
+          state.notifyDefinitionChange();
+          return toolSuccess('File content updated');
+        },
+        async scriptEditor_deleteFile(arg) {
+          const d = ScriptChildEditorUtils.getData(state);
+          return ScriptChildEditorUtils.deleteFile(d, arg.filePath) ? toolSuccess('File deleted') : toolError('File not found');
         }
       }),
     [state]

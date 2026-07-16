@@ -9,6 +9,10 @@ import { FileContentEditorView } from '../../../views/process-editor/script-sub-
 import { fnv1a } from '../../../core/fnv1a';
 import { ScriptChildEditorUtils } from './script-child-editor-utils';
 
+export interface ScriptChildEditorState {
+  selectedFilePath: string | undefined;
+}
+
 export function ScriptChildEditor() {
   const state = useProcessEditor();
 
@@ -16,8 +20,12 @@ export function ScriptChildEditor() {
     const { form: script } = ScriptChildEditorUtils.getData(state);
     return createFolderTree(script.contents);
   });
-  const [selectedFilePath, setSelectedFilePath] = useState<string | undefined>(() => getFirstFilePath(folderItems));
+  const { selectedFilePath } = state.getOverlayState<ScriptChildEditorState>(() => ({ selectedFilePath: getFirstFilePath(folderItems) }));
   const selectedFile = selectedFilePath ? findFile(folderItems, selectedFilePath) : undefined;
+
+  function setSelectedFilePath(path: string | undefined) {
+    state.setOverlayState({ selectedFilePath: path });
+  }
 
   function addFile() {
     const path = window.prompt('File name');
@@ -31,7 +39,7 @@ export function ScriptChildEditor() {
 
     const file: FileContent = {
       path,
-      mimeType: getMimeType(path),
+      mimeType: ScriptChildEditorUtils.resolveMimeType(path),
       content: '',
       modifiedAt: Date.now()
     };
@@ -289,17 +297,4 @@ function walkFiles(items: FolderTreeItem[], visit: (file: FileNode) => boolean):
     }
   }
   return true;
-}
-
-function getMimeType(path: string) {
-  if (path.endsWith('.json')) {
-    return 'application/json';
-  }
-  if (path.endsWith('.ts')) {
-    return 'text/typescript';
-  }
-  if (path.endsWith('.js') || path.endsWith('.mjs') || path.endsWith('.cjs')) {
-    return 'text/javascript';
-  }
-  return 'text/plain';
 }

@@ -10,7 +10,7 @@ export interface FormChildEditorData {
 export class FormChildEditorUtils {
   public static getData(state: ProcessEditorState): FormChildEditorData {
     const v = state.getOverlayObject<FormDefinition>(ProcessEditorOverlayType.FORM_EDITOR);
-    const inputVariableNames = v.isRoot ? [] : (v.parent as TaskStep).properties.inputVariableNames;
+    const inputVariableNames = v.isRoot ? v.parent.properties.startVariableNames : (v.parent as TaskStep).properties.inputVariableNames;
     const outputVariableNames = v.isRoot ? [] : (v.parent as TaskStep).properties.outputVariableNames;
     return {
       form: v.value,

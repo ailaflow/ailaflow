@@ -24,6 +24,7 @@ export interface ProcessEditorData {
   overlay?: {
     type: ProcessEditorOverlayType;
     path: string;
+    state?: unknown;
   };
 
   controller: SequentialWorkflowDesignerController;
@@ -53,7 +54,9 @@ export interface ProcessEditorState extends ProcessEditorData {
   setSelectedStepId(stepId: string | null): void;
   closeOverlay(): void;
   openOverlay(type: ProcessEditorOverlayType, path: string): void;
-  getOverlayObject<T>(assertType: ProcessEditorOverlayType): DefinitionPathValue<T>;
+  getOverlayObject<T>(type: ProcessEditorOverlayType): DefinitionPathValue<T>;
+  getOverlayState<T>(create?: () => T): T;
+  setOverlayState<T>(state: T): void;
 }
 
 export function useProcessEditor(): ProcessEditorState {
@@ -190,6 +193,29 @@ export function ProcessEditorContext(props: ProcessEditorContextProps) {
       return DefinitionPath.readPath<T>(data.definition.value, data.overlay.path);
     }
 
+    function getOverlayState<T>(create?: () => T): T {
+      if (!data.overlay) {
+        throw new Error('No overlay is open');
+      }
+      if (!data.overlay.state) {
+        if (!create) {
+          throw new Error('The overlay state is not available');
+        }
+        data.overlay.state = create();
+      }
+      return data.overlay.state as T;
+    }
+
+    function setOverlayState<T>(state: T) {
+      if (!data.overlay) {
+        throw new Error('No overlay is open');
+      }
+      data.overlay.state = state;
+      update({
+        overlay: data.overlay
+      });
+    }
+
     return {
       ...data,
       isValid,
@@ -201,7 +227,9 @@ export function ProcessEditorContext(props: ProcessEditorContextProps) {
       setSelectedStepId,
       closeOverlay,
       openOverlay,
-      getOverlayObject
+      getOverlayObject,
+      getOverlayState,
+      setOverlayState
     };
   }, [data]);
 
