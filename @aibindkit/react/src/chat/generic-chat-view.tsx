@@ -1,12 +1,15 @@
-import { MessageType, type ToolCall } from '@aibindkit/core';
-import type { CompletedMessage, MessageChatUpdate } from '@aibindkit/core';
+import type { ToolCall, CompletedMessage, MessageChatUpdate } from '@aibindkit/core';
 import { useLayoutEffect, useRef } from 'react';
 import { GenericChatComposerView } from './generic-chat-composer-view';
+import { SvgIcon } from './svg-icon';
 
 export interface GenericChatViewProps {
-  updates: MessageChatUpdate[];
+  isLoading: boolean;
   isWorking: boolean;
+  updates: MessageChatUpdate[];
   message: string;
+  connectionError: string | null;
+  onReconnectClicked: () => void;
   onMessageChanged: (message: string) => void;
   onSendMessage: () => void;
   onStopClicked: () => void;
@@ -26,16 +29,13 @@ export function GenericChatView(props: GenericChatViewProps) {
   return (
     <section className="abk-chat">
       <ul ref={messagesRef} className="abk-chat-messages">
-        {props.updates.length === 0 && (
-          <li className="abk-chat-empty">
-            <div className="abk-chat-empty-title">Start a conversation</div>
-            <div className="abk-chat-empty-text">Type a message below and the assistant will respond here.</div>
-          </li>
-        )}
+        {props.updates.length === 0 && (props.isLoading ? <LoadingChatView /> : <EmptyChatView />)}
         {props.updates.map(update => (
           <GenericChatUpdateView key={update.id} update={update} />
         ))}
       </ul>
+
+      {props.connectionError && <ConnectionErrorBar error={props.connectionError} onReconnectClicked={props.onReconnectClicked} />}
 
       <GenericChatComposerView
         isWorking={props.isWorking}
@@ -46,6 +46,37 @@ export function GenericChatView(props: GenericChatViewProps) {
         onStartNewConversation={props.onStartNewConversation}
       />
     </section>
+  );
+}
+
+function ConnectionErrorBar(props: { error: string; onReconnectClicked: () => void }) {
+  return (
+    <div className="abk-chat-connection-bar">
+      <div className="abk-chat-connection-text">
+        <span className="abk-chat-connection-title">Disconnected</span>
+        <span className="abk-chat-connection-message">{props.error}</span>
+      </div>
+      <button type="button" className="abk-chat-reconnect" onClick={props.onReconnectClicked}>
+        Reconnect
+      </button>
+    </div>
+  );
+}
+
+function EmptyChatView() {
+  return <ChatStatusView title="Start a conversation" text="Type a message below and the assistant will respond here." />;
+}
+
+function LoadingChatView() {
+  return <ChatStatusView title="Connecting..." text="Restoring the conversation." />;
+}
+
+function ChatStatusView(props: { title: string; text: string }) {
+  return (
+    <li className="abk-chat-status">
+      <div className="abk-chat-status-title">{props.title}</div>
+      <div className="abk-chat-status-text">{props.text}</div>
+    </li>
   );
 }
 
@@ -72,15 +103,12 @@ function GenericChatMessageView(props: { message: CompletedMessage }) {
   if (props.message.role === 'user') {
     return <UserMessageView content={getContent(props.message)} />;
   }
-
   if (props.message.role === 'assistant') {
     return <AssistantMessageView message={props.message} />;
   }
-
   if (props.message.role === 'tool') {
     return <ToolMessageView message={props.message} />;
   }
-
   return <SystemMessageView message={props.message} />;
 }
 
@@ -129,8 +157,12 @@ function ToolMessageView(props: { message: CompletedMessage }) {
     <div className="abk-chat-row abk-chat-row-tool">
       <details className="abk-chat-details">
         <summary className="abk-chat-summary">
-          <span className="abk-chat-toggle abk-chat-toggle-closed">+</span>
-          <span className="abk-chat-toggle abk-chat-toggle-open">-</span>
+          <span className="abk-chat-toggle abk-chat-toggle-closed">
+            <SvgIcon name="detailsClosed" />
+          </span>
+          <span className="abk-chat-toggle abk-chat-toggle-open">
+            <SvgIcon name="detailsOpen" />
+          </span>
           <span className="abk-chat-summary-text">
             Tool response
             {label && (
@@ -160,8 +192,12 @@ function ToolCallsView(props: { toolCalls: ToolCall[] }) {
       {props.toolCalls.map(call => (
         <details key={call.id} className="abk-chat-details abk-chat-tool-call">
           <summary className="abk-chat-summary">
-            <span className="abk-chat-toggle abk-chat-toggle-closed">+</span>
-            <span className="abk-chat-toggle abk-chat-toggle-open">-</span>
+            <span className="abk-chat-toggle abk-chat-toggle-closed">
+              <SvgIcon name="detailsClosed" />
+            </span>
+            <span className="abk-chat-toggle abk-chat-toggle-open">
+              <SvgIcon name="detailsOpen" />
+            </span>
             <span className="abk-chat-summary-text">
               Function:{' '}
               <span className="abk-chat-summary-strong" title={call.function.name}>

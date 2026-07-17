@@ -1,5 +1,5 @@
 import { VariableDefinition } from '@aila/model';
-import { XIcon } from '../../common/svg-icons';
+import { SvgIcon } from '../../common/svg-icons';
 import { EditorPropertyView } from './editor-property-view';
 
 export interface VariableSelectorPropertyViewProps {
@@ -60,7 +60,7 @@ export function VariableSelectorPropertyView(props: VariableSelectorPropertyView
             aria-label={`Remove variable ${name}`}
             title="Remove variable"
           >
-            <XIcon className="h-4 w-4" />
+            <SvgIcon name="x" className="h-4 w-4" />
           </button>
         </div>
       ))}

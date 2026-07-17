@@ -1,6 +1,6 @@
 import { DockerfileContent } from '@aila/model';
 import { useLayoutEffect, useRef, useState } from 'react';
-import { EyeClosedIcon, EyeOpenIcon, XIcon } from '../common/svg-icons';
+import { SvgIcon } from '../common/svg-icons';
 
 export interface SandboxSecret {
   id: number;
@@ -148,9 +148,9 @@ export function SandboxEditorView(props: SandboxEditorViewProps) {
                             className="inline-flex h-full w-9 shrink-0 items-center justify-center border-l border-slate-200 bg-white text-slate-500 transition-colors hover:bg-slate-50 hover:text-slate-800"
                           >
                             {isSecretValueVisible(secret.id) ? (
-                              <EyeClosedIcon className="h-4 w-4" />
+                              <SvgIcon name="eyeClosed" className="h-4 w-4" />
                             ) : (
-                              <EyeOpenIcon className="h-4 w-4" />
+                              <SvgIcon name="eyeOpen" className="h-4 w-4" />
                             )}
                           </button>
                         </div>
@@ -162,7 +162,7 @@ export function SandboxEditorView(props: SandboxEditorViewProps) {
                           onClick={() => removeSecret(secret.id)}
                           className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-slate-200 bg-white text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900"
                         >
-                          <XIcon className="h-4 w-4" />
+                          <SvgIcon name="x" className="h-4 w-4" />
                         </button>
                       </td>
                     </tr>

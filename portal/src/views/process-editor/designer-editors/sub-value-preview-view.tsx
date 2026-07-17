@@ -1,4 +1,4 @@
-import { PencilIcon, XIcon } from '../../common/svg-icons';
+import { SvgIcon } from '../../common/svg-icons';
 
 export interface DisabledSubValuePreviewViewProps {
   label: string;
@@ -30,11 +30,11 @@ export function EnabledSubValuePreviewView(props: EnabledSubValuePreviewViewProp
       <div className="min-w-0 flex-1 text-s text-slate-500">{props.children}</div>
       <div className="flex shrink-0 items-center gap-1">
         <SubValuePreviewButton iconOnly onClick={props.onEdit} label="Edit">
-          <PencilIcon className="h-4 w-4" />
+          <SvgIcon name="pencil" className="h-4 w-4" />
         </SubValuePreviewButton>
         {props.onRemove && (
           <SubValuePreviewButton danger iconOnly onClick={props.onRemove} label="Remove">
-            <XIcon className="h-4 w-4" />
+            <SvgIcon name="x" className="h-4 w-4" />
           </SubValuePreviewButton>
         )}
       </div>

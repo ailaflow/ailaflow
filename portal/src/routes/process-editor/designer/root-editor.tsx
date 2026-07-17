@@ -8,7 +8,7 @@ import {
   DisabledSubValuePreviewView,
   EnabledSubValuePreviewView
 } from '../../../views/process-editor/designer-editors/sub-value-preview-view';
-import { XIcon } from '../../../views/common/svg-icons';
+import { SvgIcon } from '../../../views/common/svg-icons';
 import { fnv1a } from '../../../core/fnv1a';
 import { VariableSelectorPropertyView } from '../../../views/process-editor/designer-editors/variable-selector-property-view';
 import { createEmptyFormDefinition } from '../designer-configuration';
@@ -126,7 +126,7 @@ export function RootEditor(props: RootEditorProps) {
                   aria-label={`Remove variable ${variable.name || index + 1}`}
                   title="Remove variable"
                 >
-                  <XIcon className="h-4 w-4" />
+                  <SvgIcon name="x" className="h-4 w-4" />
                 </button>
               </div>
 

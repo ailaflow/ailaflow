@@ -2,6 +2,7 @@ import { MenuItem, PortalLayout } from '../../views/portal/portal-layout';
 import { useAuthState } from '../../auth/auth-context';
 
 const userItems: MenuItem[] = [
+  { icon: 'C', label: 'My chat', action: 'link', href: '/my-chat' },
   { icon: 'T', label: 'My tasks', action: 'link', href: '#' },
   { icon: 'N', label: 'My notifications', action: 'link', href: '#' },
   { icon: 'P', label: 'My processes', action: 'link', href: '#' },

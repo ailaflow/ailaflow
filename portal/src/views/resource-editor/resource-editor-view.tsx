@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { SvgIcon } from '../common/svg-icons';
 
 export interface ResourceEditorViewProps {
   icon: string;
@@ -76,15 +77,7 @@ export function ResourceEditorView(props: ResourceEditorViewProps) {
                 onClick={() => setIsDetailsExpanded(isExpanded => !isExpanded)}
                 className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-800"
               >
-                <svg aria-hidden="true" className="h-4 w-4" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path
-                    d={isDetailsExpanded ? 'M5 12.5L10 7.5L15 12.5' : 'M5 7.5L10 12.5L15 7.5'}
-                    stroke="currentColor"
-                    strokeWidth="1.8"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
+                <SvgIcon name={isDetailsExpanded ? 'chevronUp' : 'chevronDown'} className="h-4 w-4" />
               </button>
             )}
             {(props.onSave || props.details) && props.onSwitch && <span className="text-gray-300">|</span>}

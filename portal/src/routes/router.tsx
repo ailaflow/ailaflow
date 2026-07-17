@@ -9,12 +9,9 @@ import { ProcessTester } from './process-tester/process-tester';
 import { SandboxList } from './sandbox-list/sandbox-list';
 import { SandboxEditor } from './sandbox-editor/sandbox-editor';
 import { AdminPortal } from './common/admin-portal';
+import { MyChat } from './my-chat/my-chat';
 
 export const routes = [
-  {
-    path: '/',
-    element: <AuthGate route={<Dashboard />} />
-  },
   {
     path: '/login',
     element: <Login />
@@ -22,6 +19,14 @@ export const routes = [
   {
     path: '/install',
     element: <Install />
+  },
+  {
+    path: '/',
+    element: <AuthGate route={<Dashboard />} />
+  },
+  {
+    path: '/my-chat',
+    element: <AuthGate route={<MyChat />} />
   },
   {
     element: <AuthGate route={<AdminPortal />} />,

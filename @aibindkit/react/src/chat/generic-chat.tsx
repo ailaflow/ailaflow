@@ -9,23 +9,30 @@ import type {
 } from '@aibindkit/core';
 import { useEffect, useMemo, useState } from 'react';
 import { GenericChatView } from './generic-chat-view';
+import { fnv1a } from './fnv1a';
 
 export interface GenericChatProps {
   transport: ChatTransport;
   frontendTools: ToolDescriptor[];
   channel: Record<string, unknown>;
+  skipSystemPrompt?: boolean;
   onFrontendToolCalls(abortSignal: AbortSignal, toolCalls: ToolCall): Promise<object | null>;
 }
 
 export function GenericChat(props: GenericChatProps) {
-  const request = useMemo<RestoreChatRequest>(
-    () => ({
-      channel: props.channel,
-      frontendTools: props.frontendTools,
-      frontendToolsHash: fnv1a(props.frontendTools)
-    }),
-    [props.frontendTools, props.channel]
+  const request = useMemo(
+    () =>
+      ({
+        channel: props.channel,
+        frontendTools: props.frontendTools,
+        frontendToolsHash: fnv1a(props.frontendTools),
+        skipSystemPrompt: props.skipSystemPrompt
+      }) satisfies RestoreChatRequest,
+    [props.channel, props.frontendTools]
   );
+
+  const [connectionError, setConnectionError] = useState<string | null>(null);
+  const [reconnectKey, setReconnectKey] = useState(0);
   const [chatSessionId, setChatSessionId] = useState<string | null>(null);
   const [updates, setUpdates] = useState<MessageChatUpdate[]>([]);
   const [isWorking, setIsWorking] = useState(false);
@@ -98,13 +105,24 @@ export function GenericChat(props: GenericChatProps) {
           setIsWorking(update.isWorking);
         }
       },
-      onClose() {}
+      onClose(e) {
+        const error = e?.message ?? 'Connection closed';
+        setConnectionError(error);
+      }
     };
 
-    props.transport.restoreChat(abortController.signal, listener, request);
+    async function connect() {
+      try {
+        await props.transport.restoreChat(abortController.signal, listener, request);
+      } catch (e) {
+        const error = (e as Error)?.message ?? String(e);
+        setConnectionError(error);
+      }
+    }
 
+    connect();
     return () => abortController.abort();
-  }, [request, props.transport]);
+  }, [request, reconnectKey, props.transport]);
 
   async function onSendMessage() {
     if (!chatSessionId || !message) {
@@ -140,11 +158,20 @@ export function GenericChat(props: GenericChatProps) {
     setIsWorking(false);
   }
 
+  function onReconnectClicked() {
+    setConnectionError(null);
+    setChatSessionId(null);
+    setReconnectKey(k => k + 1);
+  }
+
   return (
     <GenericChatView
-      updates={updates}
+      isLoading={chatSessionId === null}
       isWorking={isWorking}
+      updates={updates}
       message={message}
+      connectionError={connectionError}
+      onReconnectClicked={onReconnectClicked}
       onMessageChanged={setMessage}
       onSendMessage={onSendMessage}
       onStopClicked={onStopClicked}
@@ -161,16 +188,4 @@ function tryGetToolCalls(update: MessageChatUpdate): ToolCall[] | null {
     }
   }
   return null;
-}
-
-function fnv1a(input: string | object): string {
-  if (typeof input === 'object') {
-    input = JSON.stringify(input);
-  }
-  let hash = 0x811c9dc5;
-  for (let i = 0; i < input.length; i++) {
-    hash ^= input.charCodeAt(i);
-    hash += (hash << 1) + (hash << 4) + (hash << 7) + (hash << 8) + (hash << 24);
-  }
-  return (hash >>> 0).toString(16).padStart(8, '0');
 }

@@ -19,11 +19,20 @@
   list-style: none;
 }
 
+.abk-chat-update,
+.abk-chat-status,
+.abk-chat-failure {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 840px;
+  margin: 0 auto;
+}
+
 .abk-chat-update + .abk-chat-update {
   margin-top: 12px;
 }
 
-.abk-chat-empty {
+.abk-chat-status {
   display: flex;
   min-height: 100%;
   box-sizing: border-box;
@@ -35,16 +44,76 @@
   text-align: center;
 }
 
-.abk-chat-empty-title {
+.abk-chat-status-title {
   color: #334155;
   font-size: 15px;
   font-weight: 700;
 }
 
-.abk-chat-empty-text {
+.abk-chat-status-text {
   max-width: 320px;
   margin-top: 4px;
   font-size: 13px;
+}
+
+.abk-chat-connection-bar {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 12px;
+  border-top: 1px solid #fed7aa;
+  background: #fff7ed;
+  color: #9a3412;
+}
+
+.abk-chat-connection-text {
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.abk-chat-connection-title {
+  flex: 0 0 auto;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.abk-chat-connection-message {
+  min-width: 0;
+  overflow: hidden;
+  color: #c2410c;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.abk-chat-reconnect {
+  display: inline-flex;
+  height: 28px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  padding: 0 10px;
+  border: 1px solid #fdba74;
+  border-radius: 6px;
+  background: #ffedd5;
+  color: #9a3412;
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.abk-chat-reconnect:hover {
+  background: #fed7aa;
+}
+
+.abk-chat-reconnect:focus-visible {
+  outline: 2px solid #f97316;
+  outline-offset: 2px;
 }
 
 .abk-chat-row {
@@ -57,12 +126,9 @@
 }
 
 .abk-chat-row-assistant,
-.abk-chat-row-tool {
-  justify-content: flex-start;
-}
-
+.abk-chat-row-tool,
 .abk-chat-row-system {
-  justify-content: center;
+  justify-content: flex-start;
 }
 
 .abk-chat-bubble,
@@ -114,6 +180,8 @@
 }
 
 .abk-chat-failure {
+  width: 100%;
+  max-width: 840px;
   padding: 8px 12px;
   background: #fef2f2;
   color: #b91c1c;
@@ -148,6 +216,12 @@
   background: #fff;
   color: #64748b;
   font-size: 11px;
+}
+
+.abk-chat-toggle svg {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
 }
 
 .abk-chat-toggle-open {

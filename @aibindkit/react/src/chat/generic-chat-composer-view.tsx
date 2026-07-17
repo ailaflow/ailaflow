@@ -1,12 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { KeyboardEvent } from 'react';
-
-import { Icon } from './icon';
-
-const SEND_ICON_PATH = 'M440-160v-487L216-423l-56-57 320-320 320 320-56 57-224-224v487h-80Z';
-const STOP_ICON_PATH = 'm256-200-56-56 224-224-224-224 56-56 224 224 224-224 56 56-224 224 224 224-56 56-224-224-224 224Z';
-const DOTS_ICON_PATH =
-  'M480-160q-33 0-56.5-23.5T400-240q0-33 23.5-56.5T480-320q33 0 56.5 23.5T560-240q0 33-23.5 56.5T480-160Zm0-240q-33 0-56.5-23.5T400-480q0-33 23.5-56.5T480-560q33 0 56.5 23.5T560-480q0 33-23.5 56.5T480-400Zm0-240q-33 0-56.5-23.5T400-720q0-33 23.5-56.5T480-800q33 0 56.5 23.5T560-720q0 33-23.5 56.5T480-640Z';
+import { SvgIcon } from './svg-icon';
 
 export interface GenericChatComposerViewProps {
   isWorking: boolean;
@@ -73,11 +67,11 @@ export function GenericChatComposerView(props: GenericChatComposerViewProps) {
         />
         {props.isWorking && (
           <button type="button" onClick={props.onStopClicked} className="abk-chat-send" aria-label="Stop" title="Stop">
-            <Icon d={STOP_ICON_PATH} />
+            <SvgIcon name="stop" />
           </button>
         )}
         <button type="button" onClick={props.onSendMessage} className="abk-chat-send" aria-label="Send" title="Send">
-          <Icon d={SEND_ICON_PATH} />
+          <SvgIcon name="send" />
         </button>
         <div ref={menuRef} className="abk-chat-menu">
           <button
@@ -88,7 +82,7 @@ export function GenericChatComposerView(props: GenericChatComposerViewProps) {
             aria-expanded={isMenuOpen}
             onClick={() => setIsMenuOpen(open => !open)}
           >
-            <Icon d={DOTS_ICON_PATH} />
+            <SvgIcon name="dots" />
           </button>
           {isMenuOpen && (
             <div role="menu" className="abk-chat-menu-panel">

@@ -1,7 +1,7 @@
 import { useApiClient } from '../../auth/auth-context';
 import { useLoader } from '../../core/use-loader';
 import { ResourceListView } from '../../views/resource-list/resource-list-view';
-import { PencilIcon } from '../../views/common/svg-icons';
+import { SvgIcon } from '../../views/common/svg-icons';
 import { PortalLoadingView } from '../../views/portal/portal-loading-view';
 import { PortalErrorView } from '../../views/portal/portal-error-view';
 import { toolError, toolSuccess, toolWait } from '@aibindkit/react';
@@ -81,7 +81,7 @@ export function ProcessList() {
       emptyMessage="No processes found."
       actions={[
         {
-          label: <PencilIcon className="h-4 w-4" />,
+          label: <SvgIcon name="pencil" className="h-4 w-4" />,
           getTo: process => `/admin/processes/${process.id}`
         },
         {
