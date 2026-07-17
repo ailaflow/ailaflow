@@ -7,9 +7,10 @@ export interface AiRoute<Params = void, Bindings extends readonly AiBinding[] = 
   readonly __params?: Params;
   name: string;
   paths: string[];
-  notAvailableMessage: string;
   paramsSchema: ToolDescriptor['function']['parameters'];
+  notAvailableMessage: string;
   bindings: Bindings;
+  currentPageFields: Record<string, string>;
 }
 
 interface AiRouteBuilderState {
@@ -18,15 +19,18 @@ interface AiRouteBuilderState {
   unavailableMessage?: string;
   params?: z.ZodObject;
   tools?: AiToolRecords;
+  currentPageFields: Record<string, string>;
 }
 
 type AiToolRecords = Record<string, AiToolBuilder<any>>;
 
 type AiBindingFromTool<Name extends string, T> = T extends AiToolBuilder<infer Arg> ? AiBinding<Arg, Name> : never;
 
-type AiBindingsFromTools<T extends AiToolRecords> = readonly {
+export type AiBindingsFromTools<T extends AiToolRecords> = readonly {
   [K in keyof T & string]: AiBindingFromTool<K, T[K]>;
 }[keyof T & string][];
+
+export type AiBindingName<T> = T extends AiBinding<any, infer Name> ? Name : never;
 
 export class AiRouteBuilder<Input = void, Bindings extends readonly AiBinding[] = []> {
   constructor(
@@ -55,6 +59,14 @@ export class AiRouteBuilder<Input = void, Bindings extends readonly AiBinding[] 
     return new AiRouteBuilder<Input, AiBindingsFromTools<T>>(this.state, bindings);
   }
 
+  /**
+   * Defined a custom field that will be included in the result of the `navigation_getCurrentPage` function.
+   */
+  public currentPageField(fieldName: string, functionName: AiBindingName<Bindings[number]>): this {
+    this.state.currentPageFields[fieldName] = functionName;
+    return this;
+  }
+
   public build(): AiRoute<Input, Bindings> {
     if (!this.state.paths) {
       throw new Error('Paths must be set');
@@ -75,11 +87,12 @@ export class AiRouteBuilder<Input = void, Bindings extends readonly AiBinding[] 
       paths: this.state.paths,
       notAvailableMessage: this.state.unavailableMessage,
       paramsSchema: params.toJSONSchema(),
-      bindings: this.bindings
+      bindings: this.bindings,
+      currentPageFields: this.state.currentPageFields
     };
   }
 }
 
 export function route(name: string): AiRouteBuilder {
-  return new AiRouteBuilder({ name }, []);
+  return new AiRouteBuilder({ name, currentPageFields: {} }, []);
 }

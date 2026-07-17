@@ -90,13 +90,15 @@ export class ToolCallHandler<Stores extends Record<string, AiBindingsStore>> {
       params: current.params
     };
 
-    const overlayFnName = `${route.name}_getCurrentOverlay`;
-    const overlayFn = this.functionMap[overlayFnName];
-    if (overlayFn) {
-      const setter = overlayFn.store.tryGet();
-      if (setter) {
-        const res = await setter.getCurrentOverlay({});
-        result.overlay = res;
+    for (const [fieldName, functionName] of Object.entries(route.currentPageFields)) {
+      const fnName = `${route.name}_${functionName}`;
+      const fn = this.functionMap[fnName];
+      if (fn) {
+        const setter = fn.store.tryGet();
+        if (setter) {
+          const res = await setter[functionName]({});
+          result[fieldName] = res;
+        }
       }
     }
     return result;

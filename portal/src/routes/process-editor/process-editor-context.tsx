@@ -11,7 +11,7 @@ import { useMemo, useReducer } from 'react';
 import { useContext } from 'react';
 import { createContext } from 'react';
 import { SequentialWorkflowDesignerController, wrapDefinition, WrappedDefinition } from 'sequential-workflow-designer-react';
-import { DefinitionWalker } from 'sequential-workflow-model';
+import { DefinitionWalker, Step } from 'sequential-workflow-model';
 import { DefinitionPath, DefinitionPathValue } from '../../core/definition-path';
 
 export enum ProcessEditorOverlayType {
@@ -47,9 +47,10 @@ export interface ProcessEditorData {
 export interface ProcessEditorState extends ProcessEditorData {
   isValid: boolean;
   setIsDirty(isDirty: boolean): void;
-  setName(name: string): void;
-  setDescription(description: string): void;
+  setName(name: string, throwIfInvalid: boolean): void;
+  setDescription(description: string, throwIfInvalid: boolean): void;
   setDefinition(definition: WrappedDefinition, markDirty: boolean): void;
+  getStep<S extends Step>(id: string, requiredType?: S['type']): S;
   notifyDefinitionChange(): void;
   setSelectedStepId(stepId: string | null): void;
   closeOverlay(): void;
@@ -131,18 +132,26 @@ export function ProcessEditorContext(props: ProcessEditorContextProps) {
       });
     }
 
-    function setName(name: string) {
+    function setName(name: string, throwIfInvalid: boolean) {
+      const nameError = ProcessValidator.validateName(name);
+      if (nameError && throwIfInvalid) {
+        throw new Error(`Invalid name: ${nameError}`);
+      }
       update({
         name,
-        nameError: ProcessValidator.validateName(name),
+        nameError,
         isDirty: true
       });
     }
 
-    function setDescription(description: string) {
+    function setDescription(description: string, throwIfInvalid: boolean) {
+      const descriptionError = ProcessValidator.validateDescription(description);
+      if (descriptionError && throwIfInvalid) {
+        throw new Error(`Invalid description: ${descriptionError}`);
+      }
       update({
         description,
-        descriptionError: ProcessValidator.validateDescription(description),
+        descriptionError,
         isDirty: true
       });
     }
@@ -166,6 +175,17 @@ export function ProcessEditorContext(props: ProcessEditorContextProps) {
         definition: wrapDefinition(data.definition.value),
         isDirty: true
       });
+    }
+
+    function getStep<S extends Step>(id: string, requiredType?: S['type']): S {
+      const step = state.walker.findById(state.definition.value, id);
+      if (!step) {
+        throw new Error(`Cannot find step with id: ${id}`);
+      }
+      if (requiredType && step.type !== requiredType) {
+        throw new Error(`Step with id: ${id} is not of type: ${requiredType}`);
+      }
+      return step as S;
     }
 
     function setSelectedStepId(stepId: string | null) {
@@ -224,6 +244,7 @@ export function ProcessEditorContext(props: ProcessEditorContextProps) {
       setDescription,
       setDefinition,
       notifyDefinitionChange,
+      getStep,
       setSelectedStepId,
       closeOverlay,
       openOverlay,

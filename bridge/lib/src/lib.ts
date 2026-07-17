@@ -8,6 +8,7 @@ import { rpc, RpcConfig } from './core';
  * @throws If the variable does not exist or if the RPC call fails.
  */
 export function readVariable<T = any>(name: string, rpcConfig?: RpcConfig): Promise<T | null> {
+  name = normalizeVariableName(name);
   return rpc<T>('readVariable', { name }, rpcConfig);
 }
 
@@ -19,6 +20,7 @@ export function readVariable<T = any>(name: string, rpcConfig?: RpcConfig): Prom
  * @throws If the variable does not exist or if the RPC call fails.
  */
 export async function writeVariable(name: string, value: unknown, rpcConfig?: RpcConfig): Promise<void> {
+  name = normalizeVariableName(name);
   return rpc<void>('writeVariable', { name, value }, rpcConfig);
 }
 
@@ -29,4 +31,11 @@ export async function writeVariable(name: string, value: unknown, rpcConfig?: Rp
 export function log(...texts: unknown[]) {
   const items = texts.map(t => (typeof t === 'string' ? t : JSON.stringify(t)));
   process.stdout.write(items.join(' ') + '\n');
+}
+
+function normalizeVariableName(name: string): string {
+  if (name.startsWith('$')) {
+    return name.substring(1);
+  }
+  return name;
 }

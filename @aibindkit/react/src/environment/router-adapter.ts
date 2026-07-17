@@ -1,4 +1,9 @@
 export interface RouterAdapter {
-  getCurrentRoute(): { path: string; params: Record<string, unknown> } | null;
+  getCurrentRoute(): CurrentRoute | null;
   navigate(path: string): Promise<void>;
+}
+
+export interface CurrentRoute {
+  path: string;
+  params: Record<string, unknown>;
 }

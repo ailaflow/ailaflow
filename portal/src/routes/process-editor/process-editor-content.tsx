@@ -8,10 +8,10 @@ import { FormChildEditor } from './child-editors/form-child-editor';
 import { ScriptChildEditor, ScriptChildEditorState } from './child-editors/script-child-editor';
 import { ResourceSimpleDetailsView } from '../../views/resource-editor/resource-simple-details-view';
 import { fnv1a } from '../../core/fnv1a';
-import { anyStepSchema, ProcessValidator } from '@aila/model';
+import { anyStepSchema, ScriptStep } from '@aila/model';
 import { toolError, toolSuccess } from '@aibindkit/react';
 import { createEmptyFormDefinition, toolboxConfiguration } from './designer-configuration';
-import { ObjectCloner, Step, Uid } from 'sequential-workflow-designer';
+import { BranchedStep, ObjectCloner, Sequence, SequentialStep, Step, Uid } from 'sequential-workflow-designer';
 import { DefinitionPath } from '../../core/definition-path';
 import { useAiStore, useUnsavedChangesController } from '../common/admin-portal';
 import { FormChildEditorUtils } from './child-editors/form-child-editor-utils';
@@ -60,29 +60,21 @@ export function ProcessEditorContent() {
     'processEditor',
     store =>
       store.bind({
-        async getDetails() {
+        async getProcessNameAndDescription() {
           return {
             name: state.name,
             description: state.description
           };
         },
-        async setName(arg) {
-          const error = ProcessValidator.validateName(arg.name);
-          if (error) {
-            return toolError(error);
-          }
-          state.setName(arg.name);
+        async setProcessName(arg) {
+          state.setName(arg.name, true);
           return toolSuccess('Process name updated');
         },
-        async setDescription(arg) {
-          const error = ProcessValidator.validateDescription(arg.name);
-          if (error) {
-            return toolError(error);
-          }
-          state.setDescription(arg.name);
+        async setProcessDescription(arg) {
+          state.setDescription(arg.name, true);
           return toolSuccess('Process description updated');
         },
-        async getAvailableNewSteps() {
+        async getAvailableNewStepTypes() {
           return toolboxConfiguration.groups
             .flatMap(group => group.steps)
             .map(step => ({
@@ -90,8 +82,15 @@ export function ProcessEditorContent() {
               defaultName: step.name
             }));
         },
+        async getSelectedStepId() {
+          return state.selectedStepId ? { isSelected: true, stepId: state.selectedStepId } : { isSelected: false };
+        },
         async getWorkflow() {
           const definition = ObjectCloner.deepClone(state.definition.value);
+          for (const variable of definition.properties.variables) {
+            const v = variable as { schema?: unknown };
+            delete v.schema;
+          }
           state.walker.forEach(definition, step => {
             const s = step as { properties?: unknown };
             delete s.properties;
@@ -114,6 +113,15 @@ export function ProcessEditorContent() {
           state.notifyDefinitionChange();
           return toolSuccess('Workflow step deleted');
         },
+        async renameWorkflowStep(arg) {
+          const step = state.walker.findById(state.definition.value, arg.stepId);
+          if (!step) {
+            return toolError('No workflow step was found with the provided ID; no step was renamed');
+          }
+          step.name = arg.newName;
+          state.notifyDefinitionChange();
+          return toolSuccess('Workflow step renamed');
+        },
         async createWorkflowStep(arg) {
           const template = toolboxConfiguration.groups.flatMap(group => group.steps).find(step => step.type === arg.type);
           if (!template) {
@@ -124,7 +132,7 @@ export function ProcessEditorContent() {
           newStep.name = arg.name;
           return newStep;
         },
-        async appendWorkflowStep(arg) {
+        async insertWorkflowStep(arg) {
           const parseResult = anyStepSchema.safeParse(arg.step);
           if (!parseResult.success) {
             return toolError(`Invalid step JSON: ${parseResult.error.message}; no step was inserted`);
@@ -151,6 +159,25 @@ export function ProcessEditorContent() {
 
           state.notifyDefinitionChange();
           return toolSuccess('Workflow step replaced');
+        },
+        async appendWorkflowStep(arg) {
+          const parseResult = anyStepSchema.safeParse(arg.step);
+          if (!parseResult.success) {
+            return toolError(`Invalid step JSON: ${parseResult.error.message}; no step was replaced`);
+          }
+          let sequence: Sequence;
+          if (!arg.targetStepId) {
+            sequence = state.definition.value.sequence;
+          } else {
+            const found = state.walker.findParentSequence(state.definition.value, arg.step.id);
+            if (!found) {
+              return toolError(`Cannot find the target step; no step was added`);
+            }
+            sequence = getStepSequence(found.step, arg.branchName);
+          }
+          sequence.push(arg.step);
+          state.notifyDefinitionChange();
+          return toolSuccess('Step was added');
         },
         async hasUnsavedChanges() {
           return {
@@ -189,7 +216,7 @@ export function ProcessEditorContent() {
             isEnabled: Boolean(state.definition.value.properties.startForm)
           };
         },
-        async switchRootStartForm(arg) {
+        async setRootStartFormEnabled(arg) {
           state.definition.value.properties.startForm = arg.isEnabled ? createEmptyFormDefinition() : undefined;
           state.notifyDefinitionChange();
           return toolSuccess(`Process start form ${arg.isEnabled ? 'enabled' : 'disabled'}`);
@@ -200,6 +227,46 @@ export function ProcessEditorContent() {
           }
           state.openOverlay(ProcessEditorOverlayType.FORM_EDITOR, DefinitionPath.createRootPath('properties.startForm'));
           return toolSuccess('Process start form editor overlay opened');
+        },
+        async getRootStartVariables() {
+          return {
+            variableNames: state.definition.value.properties.startVariableNames
+          };
+        },
+        async setRootStartVariables(arg) {
+          for (const name of arg.variableNames) {
+            const variable = state.definition.value.properties.variables.find(v => v.name === name);
+            if (!variable) {
+              return toolError(`Cannot find \$${name} variable; process start variable names were not updated`);
+            }
+          }
+          state.definition.value.properties.startVariableNames = arg.variableNames;
+          state.notifyDefinitionChange();
+          return toolSuccess('Process start variable names updated');
+        },
+
+        // steps
+
+        async scriptStep_openScriptEditorOverlay(arg) {
+          const step = state.getStep<ScriptStep>(arg.stepId, 'script');
+          const path = DefinitionPath.createStepPath(step.id, 'properties.script');
+          state.openOverlay(ProcessEditorOverlayType.SCRIPT_EDITOR, path);
+          return toolSuccess('Script editor overlay opened');
+        },
+        async scriptStep_getSandboxName(arg) {
+          const step = state.getStep<ScriptStep>(arg.stepId, 'script');
+          return {
+            sandboxName: step.properties.script.sandboxName
+          };
+        },
+        async scriptStep_setSandboxName(arg) {
+          if (!state.sandboxNames.includes(arg.sandboxName)) {
+            return toolError(`Sandbox name "${arg.sandboxName}" is not available`);
+          }
+          const step = state.getStep<ScriptStep>(arg.stepId, 'script');
+          step.properties.script.sandboxName = arg.sandboxName;
+          state.notifyDefinitionChange();
+          return toolSuccess('Sandbox name updated');
         },
 
         // overlay
@@ -333,7 +400,7 @@ export function ProcessEditorContent() {
       name={state.name}
       isNameValid={state.nameError === null}
       isNameReadOnly={!isDesigner}
-      onNameChange={state.setName}
+      onNameChange={name => state.setName(name, false)}
       detailsId="admin-process-editor-details"
       details={
         isDesigner ? (
@@ -341,7 +408,7 @@ export function ProcessEditorContent() {
             id="admin-process-editor-details"
             description={state.description}
             descriptionError={state.descriptionError}
-            onDescriptionChange={state.setDescription}
+            onDescriptionChange={description => state.setDescription(description, false)}
           />
         ) : undefined
       }
@@ -358,4 +425,21 @@ export function ProcessEditorContent() {
       {state.overlay?.type === ProcessEditorOverlayType.SCRIPT_EDITOR && <ScriptChildEditor />}
     </ResourceEditorView>
   );
+}
+
+function getStepSequence(step: Step, branchName?: string) {
+  if (branchName) {
+    const b = step as BranchedStep;
+    if (typeof b.branches === 'object') {
+      const bb = b.branches[branchName];
+      if (bb && Array.isArray(bb)) {
+        return b.branches[branchName];
+      }
+    }
+  }
+  const s = step as SequentialStep;
+  if (s.sequence && Array.isArray(s.sequence)) {
+    return s.sequence;
+  }
+  throw new Error('Cannot find sequence in the target step');
 }

@@ -67,7 +67,7 @@ The architecture of a process is as follows:
 - Start variables are required inputs that must be provided when the process starts.
 - Values provided for start variables must match the JSON Schema defined for each variable.
 - To run a process with start variables, values must be passed for all required start variables in JSON format.
-- Admins may create HTML forms that provide a user interface for collecting input from users and converting it into the expected input schema.
+- Admins may create a form that provide a user interface for collecting input from users and converting it into the expected input schema.
 - User-side AI assistance may also prepare valid input data because the expected schema is known.
 - Inside a process, the workflow engine executes steps sequentially.
 - The Aila framework provides multiple process step types. Each step type has different behavior and is designed for a specific kind of task.
@@ -75,9 +75,35 @@ The architecture of a process is as follows:
 
 #### Script step
 
-A **Script** step executes a script in a selected sandbox.
+A **Script** step executes a script in a selected sandbox. Script steps should contain the main business logic of the process. They can read and modify selected variables. Each step has access to the entire sandbox and can use any available tools to complete its work.
 
-A script is a Node.js CLI application that is expected to perform a specific task and then finish. It must not be a long-running application.
+More information about how scripts are built is available in the `script` section of this document.
+
+#### Task step
+
+A **Task** step pauses process execution and creates a task for one or more users.
+
+The task requires user interaction before the process can continue. A user may be asked to enter data, review information, approve or reject something, upload a file, or complete another action defined by the process.
+
+In the step definition, an admin selects which variables must receive data during the task. Similar to start variables, the collected data must match the JSON Schema defined for each selected variable.
+
+An admin may create an HTML form for the task step. The form provides a user interface for collecting data from users and converting it into the expected schema.
+
+AI assistance may also help users provide the required data when the expected schema is known.
+
+After the required data is collected, the task step finishes and process execution continues from the next step.
+
+#### Finish step
+
+A **Finish** step stops the execution of the process at its current position in the workflow.
+
+The step may be placed anywhere in the workflow, including inside branches or conditional structures. When the workflow reaches a Finish step, the process ends immediately and no further steps are executed.
+
+A Finish step may also define which process variable values should be returned to the caller as the process result. This allows the process to expose selected output data after execution completes.
+
+### Scripts
+
+A script is a Node.js CLI application that is expected to perform a specific task and then finish. The script MUST not be a long-running application.
 
 Each script contains a `package.json` file where NPM dependencies can be defined. The script entry file is `main.js`. Admins may also add additional JavaScript files when needed.
 
@@ -101,27 +127,13 @@ The framework supports multiple features:
 
   Writes a log entry to the dedicated Aila logger. These logs are visible in Aila debug mode.
 
-#### Task step
+### Forms
 
-A **Task** step pauses process execution and creates a task for one or more users.
+A form is an HTML form. Each form is built from separate HTML, CSS, and JS fragments. Aila combines these fragments into a single HTML page during rendering, similar to how CodePen works. The form is responsible for reading input variables when needed, rendering the interface, collecting data from the user, validating the data, and submitting the data to Aila. Inside the form, a set of available JS functions allows it to interact with the Aila Form framework. All functions are available in the global `aila` object.
 
-The task requires user interaction before the process can continue. A user may be asked to enter data, review information, approve or reject something, upload a file, or complete another action defined by the process.
+- `await aila.submitForm({ variableX: ..., variableY: ... });`
 
-In the step definition, an admin selects which variables must receive data during the task. Similar to start variables, the collected data must match the JSON Schema defined for each selected variable.
-
-An admin may create an HTML form for the task step. The form provides a user interface for collecting data from users and converting it into the expected schema.
-
-AI assistance may also help users provide the required data when the expected schema is known.
-
-After the required data is collected, the task step finishes and process execution continues from the next step.
-
-#### Finish step
-
-A **Finish** step stops the execution of the process at its current position in the workflow.
-
-The step may be placed anywhere in the workflow, including inside branches or conditional structures. When the workflow reaches a Finish step, the process ends immediately and no further steps are executed.
-
-A Finish step may also define which process variable values should be returned to the caller as the process result. This allows the process to expose selected output data after execution completes.
+  Submits the form. The passed object should contain values for each variable that the form needs to set. You MUST handle failure by wrapping this call inside `try { ... } catch (e) { ... }`. This operation may fail for many reasons, such as a network problem or an incorrect JSON data format.
 
 ## Role as an AI assistant for admins
 
