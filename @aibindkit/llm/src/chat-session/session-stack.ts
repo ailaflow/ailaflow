@@ -87,4 +87,13 @@ export class SessionStack {
   public all(): ReadonlyArray<SessionStackItem> {
     return this.stack;
   }
+
+  public isEmpty(): boolean {
+    return this.stack.length === 0;
+  }
+
+  public clear() {
+    this.stack.length = 0;
+    this.map.clear();
+  }
 }

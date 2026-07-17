@@ -37,6 +37,10 @@ export class RestoreChatEndpoint implements Endpoint {
       sseResponse.send({ currentMessage: update.update, isWorking: update.isWorking });
     }
 
+    function onReset() {
+      sseResponse.send({ messages: [] });
+    }
+
     sseResponse.send({
       hello: {
         chatSessionId: chatSession.id
@@ -46,10 +50,12 @@ export class RestoreChatEndpoint implements Endpoint {
 
     chatSession.onMessageCompleted.subscribe(onMessageCompletedOrFailed);
     chatSession.onMessageFailed.subscribe(onMessageCompletedOrFailed);
+    chatSession.onReset.subscribe(onReset);
 
     sseResponse.onClose(() => {
       chatSession.onMessageCompleted.unsubscribe(onMessageCompletedOrFailed);
       chatSession.onMessageFailed.unsubscribe(onMessageCompletedOrFailed);
+      chatSession.onReset.unsubscribe(onReset);
     });
   }
 }

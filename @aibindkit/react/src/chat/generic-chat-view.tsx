@@ -1,7 +1,7 @@
 import { MessageType, type ToolCall } from '@aibindkit/core';
 import type { CompletedMessage, MessageChatUpdate } from '@aibindkit/core';
-import { useEffect, useRef } from 'react';
-import type { KeyboardEvent } from 'react';
+import { useLayoutEffect, useRef } from 'react';
+import { GenericChatComposerView } from './generic-chat-composer-view';
 
 export interface GenericChatViewProps {
   updates: MessageChatUpdate[];
@@ -10,53 +10,41 @@ export interface GenericChatViewProps {
   onMessageChanged: (message: string) => void;
   onSendMessage: () => void;
   onStopClicked: () => void;
+  onStartNewConversation: () => void;
 }
 
 export function GenericChatView(props: GenericChatViewProps) {
-  const messagesEndRef = useRef<HTMLLIElement>(null);
+  const messagesRef = useRef<HTMLUListElement>(null);
 
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ block: 'end' });
-  }, [props.updates]);
-
-  function onMessageKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
-    if (event.key !== 'Enter' || event.ctrlKey) {
-      return;
+  useLayoutEffect(() => {
+    const messages = messagesRef.current;
+    if (messages) {
+      messages.scrollTop = messages.scrollHeight;
     }
-
-    event.preventDefault();
-    props.onSendMessage();
-  }
+  }, [props.updates]);
 
   return (
     <section className="abk-chat">
-      <ul className="abk-chat-messages">
+      <ul ref={messagesRef} className="abk-chat-messages">
+        {props.updates.length === 0 && (
+          <li className="abk-chat-empty">
+            <div className="abk-chat-empty-title">Start a conversation</div>
+            <div className="abk-chat-empty-text">Type a message below and the assistant will respond here.</div>
+          </li>
+        )}
         {props.updates.map(update => (
           <GenericChatUpdateView key={update.id} update={update} />
         ))}
-        <li ref={messagesEndRef} aria-hidden="true" />
       </ul>
 
-      <div className="abk-chat-composer">
-        <div className="abk-chat-composer-inner">
-          <textarea
-            value={props.message}
-            onChange={e => props.onMessageChanged(e.currentTarget.value)}
-            onKeyDown={onMessageKeyDown}
-            rows={1}
-            placeholder="Type a message..."
-            className="abk-chat-input"
-          />
-          {props.isWorking && (
-            <button type="button" onClick={props.onStopClicked} className="abk-chat-send">
-              Stop
-            </button>
-          )}
-          <button type="button" onClick={props.onSendMessage} className="abk-chat-send">
-            Send
-          </button>
-        </div>
-      </div>
+      <GenericChatComposerView
+        isWorking={props.isWorking}
+        message={props.message}
+        onMessageChanged={props.onMessageChanged}
+        onSendMessage={props.onSendMessage}
+        onStopClicked={props.onStopClicked}
+        onStartNewConversation={props.onStartNewConversation}
+      />
     </section>
   );
 }

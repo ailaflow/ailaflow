@@ -24,8 +24,6 @@ export interface ResolvedChatSession {
   createInitializer(): ChatSessionInitializer;
 }
 
-export interface ChatSessionSessionResolver {
+export interface ChatSessionResolver {
   resolve(httpRequest: Request, channel: Record<string, unknown>): ResolvedChatSession;
 }
-
-export type ChatSessionResolver = ChatSessionSessionResolver;

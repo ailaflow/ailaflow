@@ -30,7 +30,7 @@ export interface ChatUpdate {
   isWorking?: boolean;
 }
 
-// sendChatSessionMessage
+// sendChatMessage
 
 export const sendChatMessageRequestSchema = z.object({
   chatSessionId: z.string().min(1),
@@ -59,6 +59,13 @@ export const interruptChatRequestSchema = z.object({
 });
 export type InterruptChatRequest = z.infer<typeof interruptChatRequestSchema>;
 
+// restartChat
+
+export const restartChatRequestSchema = z.object({
+  chatSessionId: z.string().min(1)
+});
+export type RestartChatRequest = z.infer<typeof restartChatRequestSchema>;
+
 // transport
 
 export interface ChatTransportListener {
@@ -71,4 +78,5 @@ export interface ChatTransport {
   sendChatMessage(abortSignal: AbortSignal, request: SendChatMessageRequest): Promise<SendChatMessageResponse>;
   sendFrontendToolResult(abortSignal: AbortSignal, request: SendFrontendToolResultRequest): Promise<void>;
   interruptChat(abortSignal: AbortSignal, request: InterruptChatRequest): Promise<void>;
+  restartChat(abortSignal: AbortSignal, request: RestartChatRequest): Promise<void>;
 }

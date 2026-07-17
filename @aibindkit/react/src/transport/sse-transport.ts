@@ -5,7 +5,8 @@ import type {
   SendFrontendToolResultRequest,
   ChatTransport,
   ChatTransportListener,
-  InterruptChatRequest
+  InterruptChatRequest,
+  RestartChatRequest
 } from '@aibindkit/core';
 import { HttpClient } from './http-client';
 
@@ -38,5 +39,9 @@ export class SseTransport implements ChatTransport {
 
   public async interruptChat(abortSignal: AbortSignal, request: InterruptChatRequest): Promise<void> {
     return this.client.json(abortSignal, 'POST', '/api/chat/interrupt', request);
+  }
+
+  public async restartChat(abortSignal: AbortSignal, request: RestartChatRequest): Promise<void> {
+    return this.client.json(abortSignal, 'POST', '/api/chat/restart', request);
   }
 }

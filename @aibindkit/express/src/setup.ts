@@ -1,14 +1,15 @@
 import type { Express, Request, Response } from 'express';
 import { ChatSessionFactory, FrontendToolBus, FrontendToolFactory } from '@aibindkit/llm';
-import type { ChatSessionSessionResolver } from './chat-session-resolver';
+import type { ChatSessionResolver } from './chat-session-resolver';
 import { ChatSessionProvider } from './chat-session-provider';
 import { Endpoint } from './endpoints/endpoint';
 import { RestoreChatEndpoint } from './endpoints/restore-chat-endpoint';
 import { SendChatMessageEndpoint } from './endpoints/send-chat-message-endpoint';
 import { SendFrontendToolResultEndpoint } from './endpoints/send-frontend-tool-result-endpoint';
 import { InterruptChatEndpoint } from './endpoints/interrupt-chat-endpoint';
+import { RestartChatEndpoint } from './endpoints/restart-chat-endpoint';
 
-export function setupServer(app: Express, sessionResolver: ChatSessionSessionResolver) {
+export function setupServer(app: Express, sessionResolver: ChatSessionResolver) {
   const frontendToolBus = new FrontendToolBus();
   const frontendToolFactory = new FrontendToolFactory(frontendToolBus);
   const chatSessionFactory = new ChatSessionFactory();
@@ -18,7 +19,8 @@ export function setupServer(app: Express, sessionResolver: ChatSessionSessionRes
     new RestoreChatEndpoint(chatSessionProvider),
     new SendChatMessageEndpoint(chatSessionProvider),
     new SendFrontendToolResultEndpoint(frontendToolBus),
-    new InterruptChatEndpoint(chatSessionProvider)
+    new InterruptChatEndpoint(chatSessionProvider),
+    new RestartChatEndpoint(chatSessionProvider)
   ];
 
   for (const endpoint of endpoints) {

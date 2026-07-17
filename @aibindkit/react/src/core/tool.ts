@@ -3,7 +3,7 @@ import { AiBinding } from './binding';
 
 interface AiToolBuilderState {
   description: string;
-  zod?: z.ZodObject;
+  inputZod?: z.ZodObject;
 }
 
 export class AiToolBuilder<Input = any> {
@@ -12,16 +12,16 @@ export class AiToolBuilder<Input = any> {
   public constructor(private readonly state: AiToolBuilderState) {}
 
   public input<S extends z.ZodObject>(zod: S): AiToolBuilder<z.infer<S>> {
-    this.state.zod = zod;
+    this.state.inputZod = zod;
     return new AiToolBuilder<z.infer<S>>(this.state);
   }
 
   public build<Name extends string>(name: Name): AiBinding<Input, Name> {
     return {
-      zod: this.state.zod,
       name,
       description: this.state.description,
-      parameters: this.state.zod?.toJSONSchema()
+      inputZod: this.state.inputZod,
+      inputSchema: this.state.inputZod?.toJSONSchema()
     };
   }
 }

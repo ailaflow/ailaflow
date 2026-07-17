@@ -72,7 +72,6 @@ export function GenericChat(props: GenericChatProps) {
 
     const listener: ChatTransportListener = {
       onMessage(update) {
-        console.log(update);
         if (update.hello) {
           setChatSessionId(update.hello.chatSessionId);
         }
@@ -129,6 +128,18 @@ export function GenericChat(props: GenericChatProps) {
     });
   }
 
+  async function onStartNewConversation() {
+    if (!chatSessionId) {
+      return;
+    }
+    const abortSignal = AbortSignal.timeout(3_000);
+    await props.transport.restartChat(abortSignal, {
+      chatSessionId
+    });
+    setUpdates([]);
+    setIsWorking(false);
+  }
+
   return (
     <GenericChatView
       updates={updates}
@@ -137,6 +148,7 @@ export function GenericChat(props: GenericChatProps) {
       onMessageChanged={setMessage}
       onSendMessage={onSendMessage}
       onStopClicked={onStopClicked}
+      onStartNewConversation={onStartNewConversation}
     />
   );
 }

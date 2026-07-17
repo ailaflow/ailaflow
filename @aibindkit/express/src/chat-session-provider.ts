@@ -1,13 +1,13 @@
 import type { Request } from 'express';
 import type { RestoreChatRequest } from '@aibindkit/core';
 import { ChatSession, ChatSessionFactory, FrontendToolFactory, ToolSet } from '@aibindkit/llm';
-import type { ChatSessionSessionResolver } from './chat-session-resolver';
+import type { ChatSessionResolver } from './chat-session-resolver';
 
 export class ChatSessionProvider {
   private readonly sessions = new Map<string, ChatSession>();
 
   public constructor(
-    private readonly sessionResolver: ChatSessionSessionResolver,
+    private readonly sessionResolver: ChatSessionResolver,
     private readonly chatSessionFactory: ChatSessionFactory,
     private readonly frontendToolFactory: FrontendToolFactory
   ) {}

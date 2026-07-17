@@ -1,6 +1,6 @@
 import type { CompletedMessage } from '@aibindkit/core';
 import { MessageType, SimpleEvent } from '@aibindkit/core';
-import { Message, MessageCompleteResult } from './messages/message';
+import { Message, MessageCompletionResult } from './messages/message';
 import { MessageFactory } from './messages/message-factory';
 import { SessionStack } from './session-stack';
 import { ChatSessionQueue } from './chat-session-queue';
@@ -21,6 +21,7 @@ export interface ChatSessionUpdate {
 export class ChatSession {
   public readonly onMessageCompleted = new SimpleEvent<ChatSessionUpdate>();
   public readonly onMessageFailed = new SimpleEvent<ChatSessionUpdate>();
+  public readonly onReset = new SimpleEvent<void>();
 
   private interruptAbortController = new AbortController();
   private isWorking = false;
@@ -29,6 +30,7 @@ export class ChatSession {
 
   private readonly stack = new SessionStack();
   private readonly queue = new ChatSessionQueue();
+  private systemMessage?: string;
 
   public constructor(
     public readonly id: string,
@@ -36,14 +38,19 @@ export class ChatSession {
     private readonly messageFactory: MessageFactory
   ) {}
 
-  public pushSystemMessage(text: string) {
-    this.queue.push(this.messageFactory.createSystem(this.nextId(), text));
+  public setSystemMessage(text: string) {
+    this.systemMessage = text;
   }
 
   public queueUserMessage(content: string): number {
     if (this.isInterrupted) {
       this.isInterrupted = false;
       this.interruptAbortController = new AbortController();
+    }
+
+    if (this.systemMessage && this.stack.isEmpty() && this.queue.isEmpty()) {
+      const id = this.nextId();
+      this.queue.push(this.messageFactory.createSystem(id, this.systemMessage));
     }
 
     const id = this.nextId();
@@ -62,6 +69,13 @@ export class ChatSession {
     this.isInterrupted = true;
     this.interruptAbortController.abort('User interrupted the session');
     return true;
+  }
+
+  public reset() {
+    this.tryInterrupt();
+    this.queue.clear();
+    this.stack.clear();
+    this.onReset.emit();
   }
 
   public getAll(): MessageUpdate[] {
@@ -110,7 +124,7 @@ export class ChatSession {
 
   private async next(message: Message) {
     const interruptSignal = this.interruptAbortController.signal;
-    let result: MessageCompleteResult;
+    let result: MessageCompletionResult;
     try {
       interruptSignal.throwIfAborted();
       result = await message.complete(interruptSignal, this.stack);

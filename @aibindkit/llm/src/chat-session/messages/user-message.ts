@@ -1,6 +1,6 @@
 import type { CompletedMessage } from '@aibindkit/core';
 import { MessageType } from '@aibindkit/core';
-import { Message, MessageCompleteResult } from './message';
+import { Message, MessageCompletionResult } from './message';
 
 export class UserMessage implements Message {
   public readonly type = MessageType.USER;
@@ -10,7 +10,7 @@ export class UserMessage implements Message {
     public readonly text: string
   ) {}
 
-  public async complete(): Promise<MessageCompleteResult> {
+  public async complete(): Promise<MessageCompletionResult> {
     const completedMessage: CompletedMessage = {
       role: 'user',
       content: [

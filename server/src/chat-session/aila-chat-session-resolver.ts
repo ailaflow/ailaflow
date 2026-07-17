@@ -1,4 +1,4 @@
-import { ChatSessionInitializerError, ChatSessionSessionResolver, ResolvedChatSession } from '@aibindkit/express';
+import { ChatSessionInitializerError, ChatSessionResolver, ResolvedChatSession } from '@aibindkit/express';
 import { ChatSession, LlmClient } from '@aibindkit/llm';
 import { readFileSync } from 'fs';
 import { getAuthToken } from '../api/auth/auth-middleware';
@@ -8,7 +8,7 @@ import { Request } from 'express';
 
 const USER_SYSTEM_PROMPT = 'You are Aila, an AI assistant.';
 
-export class AilaChatSessionResolver implements ChatSessionSessionResolver {
+export class AilaChatSessionResolver implements ChatSessionResolver {
   private readonly adminSystemPrompt: string;
 
   public constructor(
@@ -29,7 +29,7 @@ export class AilaChatSessionResolver implements ChatSessionSessionResolver {
         createInitializer: () => ({
           llmClient: this.llmClient,
           backendTools: [],
-          onSessionCreated: session => this.pushSystemMessage(session, this.adminSystemPrompt)
+          onSessionCreated: session => session.setSystemMessage(this.adminSystemPrompt)
         })
       };
     }
@@ -41,7 +41,7 @@ export class AilaChatSessionResolver implements ChatSessionSessionResolver {
         createInitializer: () => ({
           llmClient: this.llmClient,
           backendTools: this.userToolSetProvider.tools,
-          onSessionCreated: session => this.pushSystemMessage(session, USER_SYSTEM_PROMPT)
+          onSessionCreated: session => session.setSystemMessage(USER_SYSTEM_PROMPT)
         })
       };
     }
@@ -51,9 +51,5 @@ export class AilaChatSessionResolver implements ChatSessionSessionResolver {
 
   private createSessionId(userName: string, channelId: string): string {
     return `${userName}:${channelId}`;
-  }
-
-  private pushSystemMessage(session: ChatSession, message: string): void {
-    session.pushSystemMessage(message);
   }
 }

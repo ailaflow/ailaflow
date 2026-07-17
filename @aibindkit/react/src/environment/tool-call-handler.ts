@@ -3,16 +3,16 @@ import { AiBinding, AiBindingsStore, AiRoute, isToolWait, toolError, toolSuccess
 import { RouterAdapter } from './router-adapter';
 import { UnsavedChangesController } from './unsaved-changes-controller';
 
-interface Fn {
-  store: AiBindingsStore;
+interface BindingWithStore {
   binding: AiBinding;
+  store: AiBindingsStore;
 }
 
 export class ToolCallHandler<Stores extends Record<string, AiBindingsStore>> {
   public readonly toolDescriptors: ToolDescriptor[] = [];
   private readonly routeByNameMap: Record<string, AiRoute> = {};
   private readonly routeByPathMap: Record<string, AiRoute> = {};
-  private readonly functionMap: Record<string, Fn> = {};
+  private readonly functionMap: Record<string, BindingWithStore> = {};
 
   public constructor(
     stores: Stores,
@@ -50,7 +50,7 @@ export class ToolCallHandler<Stores extends Record<string, AiBindingsStore>> {
           function: {
             name,
             description: binding.description,
-            parameters: binding.parameters
+            parameters: binding.inputSchema
           }
         });
         this.functionMap[name] = {
@@ -94,9 +94,9 @@ export class ToolCallHandler<Stores extends Record<string, AiBindingsStore>> {
       const fnName = `${route.name}_${functionName}`;
       const fn = this.functionMap[fnName];
       if (fn) {
-        const setter = fn.store.tryGet();
-        if (setter) {
-          const res = await setter[functionName]({});
+        const handler = fn.store.tryGet();
+        if (handler) {
+          const res = await handler[functionName]({});
           result[fieldName] = res;
         }
       }
@@ -124,19 +124,19 @@ export class ToolCallHandler<Stores extends Record<string, AiBindingsStore>> {
     return toolSuccess(`Redirected to the "${route.name}" page`);
   }
 
-  private async runFn(abortSignal: AbortSignal, fn: Fn, arg: Record<string, unknown>) {
+  private async runFn(abortSignal: AbortSignal, fn: BindingWithStore, arg: Record<string, unknown>) {
     for (let attempt = 0; ; attempt++) {
-      const setter = fn.store.tryGet();
-      if (!setter) {
+      const handler = fn.store.tryGet();
+      if (!handler) {
         return toolError(fn.store.route?.notAvailableMessage ?? 'The requested function is not available on the current page');
       }
-      if (fn.binding.zod) {
-        const parseResult = fn.binding.zod.safeParse(arg);
+      if (fn.binding.inputZod) {
+        const parseResult = fn.binding.inputZod.safeParse(arg);
         if (!parseResult.success) {
           return toolError(`Invalid arguments: ${parseResult.error.message}`);
         }
       }
-      const result = await setter[fn.binding.name](arg);
+      const result = await handler[fn.binding.name](arg);
       if (isToolWait(result)) {
         if (attempt === 0) {
           await result.wait(abortSignal);

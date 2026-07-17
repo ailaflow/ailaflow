@@ -3,7 +3,7 @@ import type { CompletedMessage } from '@aibindkit/core';
 import { MessageType } from '@aibindkit/core';
 import { SessionStack } from '../session-stack';
 
-export interface MessageCompleteResult {
+export interface MessageCompletionResult {
   completedMessage: CompletedMessage | CompletedMessage[];
   toolCalls?: ToolCall[];
   totalTokens?: number;
@@ -12,7 +12,7 @@ export interface MessageCompleteResult {
 export interface Message {
   id: number;
   type: MessageType;
-  complete(abortSignal: AbortSignal, stack: SessionStack): Promise<MessageCompleteResult>;
+  complete(abortSignal: AbortSignal, stack: SessionStack): Promise<MessageCompletionResult>;
   interrupt?(): CompletedMessage;
   fail?(reason: string): CompletedMessage;
 }
