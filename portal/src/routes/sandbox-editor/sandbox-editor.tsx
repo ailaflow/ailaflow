@@ -1,6 +1,6 @@
 import { useParams } from 'react-router-dom';
 import { useApiClient } from '../../auth/auth-context';
-import { useLoader } from '../../core/use-loader';
+import { useLoader } from '@aibindkit/react';
 import { SandboxEditorContent } from './sandbox-editor-content';
 import { PortalLoadingView } from '../../views/portal/portal-loading-view';
 import { PortalErrorView } from '../../views/portal/portal-error-view';

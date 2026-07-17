@@ -22,7 +22,6 @@ export type LoaderResult<T> =
 
 export function useLoader<T>(loader: (abortSignal: AbortSignal) => Promise<T>, deps: unknown[] = []): LoaderResult<T> {
   const finishAbortController = useMemo(() => new AbortController(), deps);
-  const finishSignal = finishAbortController.signal;
   const [data, setData] = useState<{
     data?: T;
     error?: Error;
@@ -53,11 +52,16 @@ export function useLoader<T>(loader: (abortSignal: AbortSignal) => Promise<T>, d
     return () => abortController.abort();
   }, deps);
 
-  if (data === null) {
-    return { isLoading: true, finishSignal };
-  }
-  if (data.error) {
-    return { isLoading: false, finishSignal, error: data.error };
-  }
-  return { isLoading: false, finishSignal, data: data.data! };
+  const result = useMemo<LoaderResult<T>>(() => {
+    const finishSignal = finishAbortController.signal;
+    if (data === null) {
+      return { isLoading: true, finishSignal };
+    }
+    if (data.error) {
+      return { isLoading: false, finishSignal, error: data.error };
+    }
+    return { isLoading: false, finishSignal, data: data.data! };
+  }, [data, finishAbortController]);
+
+  return result;
 }

@@ -1,5 +1,5 @@
 import { useApiClient } from '../../auth/auth-context';
-import { useLoader } from '../../core/use-loader';
+import { useLoader } from '@aibindkit/react';
 import { ResourceListView } from '../../views/resource-list/resource-list-view';
 import { SvgIcon } from '../../views/common/svg-icons';
 import { PortalLoadingView } from '../../views/portal/portal-loading-view';

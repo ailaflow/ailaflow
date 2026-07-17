@@ -3,6 +3,15 @@ export class ToolWait {
 
   public wait(abortSignal: AbortSignal) {
     return new Promise<void>((resolve, reject) => {
+      if (this.finishSignal.aborted) {
+        resolve();
+        return;
+      }
+      if (abortSignal.aborted) {
+        reject(new Error('Tool wait aborted'));
+        return;
+      }
+
       const onAbort = () => {
         abortSignal.removeEventListener('abort', onAbort);
         reject(new Error('Tool wait aborted'));

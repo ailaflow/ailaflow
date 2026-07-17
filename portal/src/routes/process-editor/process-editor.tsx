@@ -2,7 +2,7 @@ import { ProcessEditorContent } from './process-editor-content';
 import { ProcessEditorContext } from './process-editor-context';
 import { useParams } from 'react-router-dom';
 import { useApiClient } from '../../auth/auth-context';
-import { useLoader } from '../../core/use-loader';
+import { useLoader } from '@aibindkit/react';
 import { PortalLoadingView } from '../../views/portal/portal-loading-view';
 import { PortalErrorView } from '../../views/portal/portal-error-view';
 import { useAiStore } from '../common/admin-portal';

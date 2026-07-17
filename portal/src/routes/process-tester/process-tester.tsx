@@ -1,6 +1,6 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import { useApiClient } from '../../auth/auth-context';
-import { useLoader } from '../../core/use-loader';
+import { useLoader } from '@aibindkit/react';
 import { ProcessTesterContent } from './process-tester-content';
 import { ResourceEditorView } from '../../views/resource-editor/resource-editor-view';
 import { PortalLoadingView } from '../../views/portal/portal-loading-view';
