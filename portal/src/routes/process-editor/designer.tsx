@@ -1,11 +1,11 @@
 import { SequentialWorkflowDesigner, WrappedDefinition } from 'sequential-workflow-designer-react';
-import { useProcessEditor } from '../process-editor-context';
-import { RootEditor } from '../designer-editors/root-editor';
-import { StepEditor } from '../designer-editors/step-editor';
-import { toolboxConfiguration } from '../designer-configuration';
+import { useProcessEditor } from './process-editor-context';
+import { RootEditor } from './designer/root-editor';
+import { StepEditor } from './designer/step-editor';
+import { toolboxConfiguration } from './designer-configuration';
 import { useRef } from 'react';
 
-export function DesignerChildEditor() {
+export function Designer() {
   const state = useProcessEditor();
   const isFirstUpdate = useRef(true);
 

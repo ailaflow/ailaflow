@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { ProcessSubEditorView } from '../../../views/process-editor/process-sub-editor-view';
 import { fnv1a } from '../../../core/fnv1a';
 
-export function SchemaChildEditor() {
+export function SchemaEditorOverlay() {
   const state = useProcessEditor();
 
   const [schema, setSchema] = useState(() => {

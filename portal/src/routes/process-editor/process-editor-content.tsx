@@ -1,11 +1,11 @@
 import { ProcessEditorOverlayType, useProcessEditor } from './process-editor-context';
-import { SchemaChildEditor } from './child-editors/schema-child-editor';
-import { DesignerChildEditor } from './child-editors/designer-child-editor';
+import { SchemaEditorOverlay } from './overlays/schema-editor-overlay';
+import { Designer } from './designer';
 import { useApiClient } from '../../auth/auth-context';
 import { ResourceEditorView } from '../../views/resource-editor/resource-editor-view';
 import { useNavigate } from 'react-router-dom';
-import { FormChildEditor } from './child-editors/form-child-editor';
-import { ScriptChildEditor, ScriptChildEditorState } from './child-editors/script-child-editor';
+import { FormEditorOverlay } from './overlays/form-editor-overlay';
+import { ScriptEditorOverlay, ScriptEditorOverlayState } from './overlays/script-editor-overlay';
 import { ResourceSimpleDetailsView } from '../../views/resource-editor/resource-simple-details-view';
 import { fnv1a } from '../../core/fnv1a';
 import { anyStepSchema, ScriptStep } from '@aila/model';
@@ -14,9 +14,8 @@ import { createEmptyFormDefinition, toolboxConfiguration } from './designer-conf
 import { BranchedStep, ObjectCloner, Sequence, SequentialStep, Step, Uid } from 'sequential-workflow-designer';
 import { DefinitionPath } from '../../core/definition-path';
 import { useAiStore, useUnsavedChangesController } from '../common/admin-portal';
-import { FormChildEditorUtils } from './child-editors/form-child-editor-utils';
-import { ScriptChildEditorUtils } from './child-editors/script-child-editor-utils';
-import z from 'zod/v4';
+import { FormEditorOverlayUtils } from './overlays/form-editor-overlay-utils';
+import { ScriptEditorOverlayUtils } from './overlays/script-editor-overlay-utils';
 
 export function ProcessEditorContent() {
   const state = useProcessEditor();
@@ -98,11 +97,7 @@ export function ProcessEditorContent() {
           return definition;
         },
         async readWorkflowStep(arg) {
-          const step = state.walker.findById(state.definition.value, arg.stepId);
-          if (!step) {
-            return toolError('No workflow step was found with the provided ID');
-          }
-          return step;
+          return state.getStep(arg.stepId);
         },
         async deleteWorkflowStep(arg) {
           const found = state.walker.findParentSequence(state.definition.value, arg.stepId);
@@ -299,27 +294,27 @@ export function ProcessEditorContent() {
         // form editor
 
         async formEditor_getVariables() {
-          const v = FormChildEditorUtils.getData(state);
+          const data = FormEditorOverlayUtils.getData(state);
           return {
-            inputVariableNames: v.inputVariableNames,
-            outputVariableNames: v.outputVariableNames
+            inputVariableNames: data.inputVariableNames,
+            outputVariableNames: data.outputVariableNames
           };
         },
         async formEditor_getContent(arg) {
-          const v = FormChildEditorUtils.getData(state);
+          const data = FormEditorOverlayUtils.getData(state);
           return {
-            content: v.form[arg.part]
+            content: data.form[arg.part]
           };
         },
         async formEditor_setContent(arg) {
-          const v = FormChildEditorUtils.getData(state);
-          v.form[arg.part] = arg.content;
+          const data = FormEditorOverlayUtils.getData(state);
+          data.form[arg.part] = arg.content;
           state.notifyDefinitionChange();
-          return toolSuccess('Form content updated');
+          return toolSuccess('Content updated');
         },
         async formEditor_getInputJsonExample(arg) {
-          const v = FormChildEditorUtils.getData(state);
-          const example = v.form.inputExamples.find(i => i.variableName === arg.variableName);
+          const data = FormEditorOverlayUtils.getData(state);
+          const example = data.form.inputExamples.find(i => i.variableName === arg.variableName);
           if (!example) {
             return toolError('Cannot find the input variable attached to this form');
           }
@@ -331,25 +326,16 @@ export function ProcessEditorContent() {
           };
         },
         async formEditor_setInputJsonExample(arg) {
-          const v = FormChildEditorUtils.getData(state);
-          if (!v.inputVariableNames.includes(arg.variableName)) {
-            return toolError(`The \$${arg.variableName} is defined as the input variable for this form`);
+          const data = FormEditorOverlayUtils.getData(state);
+          const result = FormEditorOverlayUtils.setInputJsonExample(state, data, arg.variableName, arg.content);
+          if (result === 'notInputVariable') {
+            return toolError(`The \$${arg.variableName} is not defined as the input variable for this form`);
           }
-          const variable = state.definition.value.properties.variables.find(i => i.name === arg.variableName);
-          if (!variable) {
+          if (result === 'undefinedVariable') {
             return toolError('Cannot find variable');
           }
-          const result = z.fromJSONSchema(variable.schema).safeParse(arg.content);
-          if (result.error) {
-            return toolError(`The example value does not match the variable schema: ${result.error}`);
-          }
-          const exampleValue = JSON.stringify(arg.content);
-          let example = v.form.inputExamples.find(i => i.variableName === arg.variableName);
-          if (!example) {
-            example = { variableName: arg.variableName, exampleValue };
-            v.form.inputExamples.push(example);
-          } else {
-            example.exampleValue = exampleValue;
+          if (result === 'invalidContent') {
+            return toolError('The example value does not match the variable schema');
           }
           state.notifyDefinitionChange();
           return toolSuccess('Example updated');
@@ -358,25 +344,25 @@ export function ProcessEditorContent() {
         // scriptEditor
 
         async scriptEditor_getFiles() {
-          const d = ScriptChildEditorUtils.getData(state);
+          const data = ScriptEditorOverlayUtils.getData(state);
           return {
-            filePaths: d.form.contents.map(c => c.path)
+            filePaths: data.script.contents.map(c => c.path)
           };
         },
         async scriptEditor_getCurrentOpenFile() {
-          const s = state.getOverlayState<ScriptChildEditorState>();
+          const data = state.getOverlayState<ScriptEditorOverlayState>();
           return {
-            selectedFilePath: s.selectedFilePath
+            currentFilePath: data.selectedFilePath
           };
         },
         async scriptEditor_getContent(arg) {
-          const d = ScriptChildEditorUtils.getData(state);
-          const content = ScriptChildEditorUtils.getFileContent(d, arg.filePath);
+          const data = ScriptEditorOverlayUtils.getData(state);
+          const content = ScriptEditorOverlayUtils.getFileContent(data, arg.filePath);
           return content === null ? toolError('File not found') : { content };
         },
         async scriptEditor_setContent(arg) {
-          const d = ScriptChildEditorUtils.getData(state);
-          const result = ScriptChildEditorUtils.setFileContent(d, arg.filePath, arg.content, arg.mode);
+          const data = ScriptEditorOverlayUtils.getData(state);
+          const result = ScriptEditorOverlayUtils.setFileContent(data, arg.filePath, arg.content, arg.mode);
           if (result === 'fileNotFound') {
             return toolError('File not found');
           }
@@ -387,8 +373,8 @@ export function ProcessEditorContent() {
           return toolSuccess('File content updated');
         },
         async scriptEditor_deleteFile(arg) {
-          const d = ScriptChildEditorUtils.getData(state);
-          return ScriptChildEditorUtils.deleteFile(d, arg.filePath) ? toolSuccess('File deleted') : toolError('File not found');
+          const data = ScriptEditorOverlayUtils.getData(state);
+          return ScriptEditorOverlayUtils.deleteFile(data, arg.filePath) ? toolSuccess('File deleted') : toolError('File not found');
         }
       }),
     [state]
@@ -419,10 +405,10 @@ export function ProcessEditorContent() {
       canSwitch={canTest}
       onSwitch={isDesigner ? openTester : undefined}
     >
-      {isDesigner && <DesignerChildEditor />}
-      {state.overlay?.type === ProcessEditorOverlayType.SCHEMA_EDITOR && <SchemaChildEditor />}
-      {state.overlay?.type === ProcessEditorOverlayType.FORM_EDITOR && <FormChildEditor />}
-      {state.overlay?.type === ProcessEditorOverlayType.SCRIPT_EDITOR && <ScriptChildEditor />}
+      {isDesigner && <Designer />}
+      {state.overlay?.type === ProcessEditorOverlayType.SCHEMA_EDITOR && <SchemaEditorOverlay />}
+      {state.overlay?.type === ProcessEditorOverlayType.FORM_EDITOR && <FormEditorOverlay />}
+      {state.overlay?.type === ProcessEditorOverlayType.SCRIPT_EDITOR && <ScriptEditorOverlay />}
     </ResourceEditorView>
   );
 }

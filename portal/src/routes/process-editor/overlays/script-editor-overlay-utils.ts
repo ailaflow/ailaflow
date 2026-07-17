@@ -1,32 +1,32 @@
 import { ScriptDefinition } from '@aila/model';
 import { ProcessEditorOverlayType, ProcessEditorState } from '../process-editor-context';
 
-export interface ScriptChildEditorData {
-  form: ScriptDefinition;
+export interface ScriptEditorOverlayData {
+  script: ScriptDefinition;
   variableNames: string[];
 }
 
-export class ScriptChildEditorUtils {
-  public static getData(state: ProcessEditorState): ScriptChildEditorData {
+export class ScriptEditorOverlayUtils {
+  public static getData(state: ProcessEditorState): ScriptEditorOverlayData {
     const v = state.getOverlayObject<ScriptDefinition>(ProcessEditorOverlayType.SCRIPT_EDITOR);
     return {
-      form: v.value,
+      script: v.value,
       variableNames: state.definition.value.properties.variables.map(v => v.name)
     };
   }
 
-  public static getFileContent(data: ScriptChildEditorData, filePath: string): string | null {
-    const content = data.form.contents.find(c => c.path === filePath);
+  public static getFileContent(data: ScriptEditorOverlayData, filePath: string): string | null {
+    const content = data.script.contents.find(c => c.path === filePath);
     return content ? content.content : null;
   }
 
   public static setFileContent(
-    data: ScriptChildEditorData,
+    data: ScriptEditorOverlayData,
     filePath: string,
     content: string,
     mode: 'edit' | 'create'
   ): 'ok' | 'fileNotFound' | 'fileAlreadyExists' {
-    let c = data.form.contents.find(c => c.path === filePath);
+    let c = data.script.contents.find(c => c.path === filePath);
     if (mode === 'edit') {
       if (!c) {
         return 'fileNotFound';
@@ -37,7 +37,7 @@ export class ScriptChildEditorUtils {
       }
       c = {
         path: filePath,
-        mimeType: ScriptChildEditorUtils.resolveMimeType(filePath),
+        mimeType: ScriptEditorOverlayUtils.resolveMimeType(filePath),
         content: '',
         modifiedAt: 0
       };
@@ -49,12 +49,12 @@ export class ScriptChildEditorUtils {
     return 'ok';
   }
 
-  public static deleteFile(data: ScriptChildEditorData, filePath: string): boolean {
-    const index = data.form.contents.findIndex(c => c.path === filePath);
+  public static deleteFile(data: ScriptEditorOverlayData, filePath: string): boolean {
+    const index = data.script.contents.findIndex(c => c.path === filePath);
     if (index < 0) {
       return false;
     }
-    data.form.contents.splice(index, 1);
+    data.script.contents.splice(index, 1);
     return true;
   }
 

@@ -13,6 +13,7 @@ import { createContext } from 'react';
 import { SequentialWorkflowDesignerController, wrapDefinition, WrappedDefinition } from 'sequential-workflow-designer-react';
 import { DefinitionWalker, Step } from 'sequential-workflow-model';
 import { DefinitionPath, DefinitionPathValue } from '../../core/definition-path';
+import { DesignerUtils } from './designer-utils';
 
 export enum ProcessEditorOverlayType {
   SCHEMA_EDITOR = 'schemaEditor',
@@ -70,23 +71,13 @@ export function useProcessEditor(): ProcessEditorState {
 
 const processEditorContext = createContext<ProcessEditorState | null>(null);
 
-function createEmptyDefinition(): ProcessDefinition {
-  return {
-    properties: {
-      startVariableNames: [],
-      variables: []
-    },
-    sequence: []
-  };
-}
-
 function createData(props: Omit<ProcessEditorContextProps, 'children'>): ProcessEditorData {
   const sandboxNames = props.sandboxes.map(sandbox => sandbox.name);
   const variableValidator = new VariableCachedValidator();
   const rootValidator = new ProcessRootValidator(variableValidator);
   const stepValidator = new ProcessStepValidator(sandboxNames, variableValidator);
 
-  const definition = wrapDefinition<ProcessDefinition>(props.process ? props.process.definition : createEmptyDefinition());
+  const definition = wrapDefinition<ProcessDefinition>(props.process ? props.process.definition : DesignerUtils.createEmptyDefinition());
   const name = props.process?.name ?? 'new_process';
   const description = props.process?.description ?? '';
   const controller = SequentialWorkflowDesignerController.create();

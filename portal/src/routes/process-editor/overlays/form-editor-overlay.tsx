@@ -6,13 +6,13 @@ import { ProcessSubEditorView } from '../../../views/process-editor/process-sub-
 import { FormEditorTab, FormSubEditorView } from '../../../views/process-editor/script-sub-editor/form-sub-editor-view';
 import { ProcessEditorOverlayType } from '../process-editor-context';
 import { useProcessEditor } from '../process-editor-context';
-import { FormChildEditorUtils } from './form-child-editor-utils';
+import { FormEditorOverlayUtils } from './form-editor-overlay-utils';
 
-export function FormChildEditor() {
+export function FormEditorOverlay() {
   const state = useProcessEditor();
 
   const formState = useMemo(() => {
-    const { form, inputVariableNames } = FormChildEditorUtils.getData(state);
+    const { form, inputVariableNames } = FormEditorOverlayUtils.getData(state);
     const normalizedForm = {
       ...form,
       inputExamples: inputVariableNames.map(variableName => {

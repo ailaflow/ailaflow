@@ -7,20 +7,20 @@ import { ScriptSubEditorView } from '../../../views/process-editor/script-sub-ed
 import { FolderTreeItem, FolderTreeView } from '../../../views/process-editor/script-sub-editor/folder-tree-view';
 import { FileContentEditorView } from '../../../views/process-editor/script-sub-editor/file-content-editor-view';
 import { fnv1a } from '../../../core/fnv1a';
-import { ScriptChildEditorUtils } from './script-child-editor-utils';
+import { ScriptEditorOverlayUtils } from './script-editor-overlay-utils';
 
-export interface ScriptChildEditorState {
+export interface ScriptEditorOverlayState {
   selectedFilePath: string | undefined;
 }
 
-export function ScriptChildEditor() {
+export function ScriptEditorOverlay() {
   const state = useProcessEditor();
 
   const [folderItems, setFolderItems] = useState<FolderTreeItem[]>(() => {
-    const { form: script } = ScriptChildEditorUtils.getData(state);
+    const { script } = ScriptEditorOverlayUtils.getData(state);
     return createFolderTree(script.contents);
   });
-  const { selectedFilePath } = state.getOverlayState<ScriptChildEditorState>(() => ({ selectedFilePath: getFirstFilePath(folderItems) }));
+  const { selectedFilePath } = state.getOverlayState<ScriptEditorOverlayState>(() => ({ selectedFilePath: getFirstFilePath(folderItems) }));
   const selectedFile = selectedFilePath ? findFile(folderItems, selectedFilePath) : undefined;
 
   function setSelectedFilePath(path: string | undefined) {
@@ -39,7 +39,7 @@ export function ScriptChildEditor() {
 
     const file: FileContent = {
       path,
-      mimeType: ScriptChildEditorUtils.resolveMimeType(path),
+      mimeType: ScriptEditorOverlayUtils.resolveMimeType(path),
       content: '',
       modifiedAt: Date.now()
     };
@@ -80,7 +80,7 @@ export function ScriptChildEditor() {
   }
 
   function ok() {
-    const { form: currentScript } = ScriptChildEditorUtils.getData(state);
+    const { script: currentScript } = ScriptEditorOverlayUtils.getData(state);
     const contents = flattenFolderTree(folderItems);
     const script: ScriptDefinition = {
       sandboxName: currentScript.sandboxName,
