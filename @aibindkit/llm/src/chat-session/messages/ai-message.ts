@@ -29,7 +29,7 @@ export class AiMessage implements Message {
     }
 
     return {
-      completedMessage,
+      completedMessages: [completedMessage],
       toolCalls,
       totalTokens
     };

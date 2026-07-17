@@ -87,16 +87,16 @@ function GenericChatUpdateView(props: { update: MessageChatUpdate }) {
   if (props.update.isInterrupted) {
     return <li className="abk-chat-failure">Interrupted</li>;
   }
-
-  const messages = arr(props.update.completedMessage ?? []);
-
-  return (
-    <li data-id={props.update.id} className="abk-chat-update">
-      {messages.map((message, index) => {
-        return <GenericChatMessageView key={index} message={message} />;
-      })}
-    </li>
-  );
+  if (props.update.completedMessages) {
+    return (
+      <li data-id={props.update.id} className="abk-chat-update">
+        {props.update.completedMessages.map((message, index) => {
+          return <GenericChatMessageView key={index} message={message} />;
+        })}
+      </li>
+    );
+  }
+  return <li className="abk-chat-failure">Invalid update</li>;
 }
 
 function GenericChatMessageView(props: { message: CompletedMessage }) {

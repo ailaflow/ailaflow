@@ -24,6 +24,7 @@ export function MyChat() {
         channel={details.channel}
         frontendTools={details.frontendTools}
         onFrontendToolCalls={details.onFrontendToolCalls}
+        skipSystemPrompt={true}
       />
     </Portal>
   );

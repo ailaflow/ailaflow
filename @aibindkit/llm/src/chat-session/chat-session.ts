@@ -10,7 +10,7 @@ export interface MessageUpdate {
   type: MessageType;
   isInterrupted?: true;
   failReason?: string;
-  completedMessage?: CompletedMessage | CompletedMessage[];
+  completedMessages?: CompletedMessage[];
 }
 
 export interface ChatSessionUpdate {
@@ -80,17 +80,16 @@ export class ChatSession {
 
   public getAll(): MessageUpdate[] {
     const all = this.stack.all();
-    const result = new Array<MessageUpdate>(all.length);
-    all.forEach(
-      (item, index) =>
-        (result[index] = {
-          id: item.message.id,
-          type: item.message.type,
-          isInterrupted: item.isInterrupted,
-          failReason: item.failReason,
-          completedMessage: item.completedMessage
-        })
-    );
+    const result: MessageUpdate[] = [];
+    for (const item of all) {
+      result.push({
+        id: item.message.id,
+        type: item.message.type,
+        isInterrupted: item.isInterrupted,
+        failReason: item.failReason,
+        completedMessages: item.completedMessages
+      });
+    }
     return result;
   }
 
@@ -156,7 +155,7 @@ export class ChatSession {
       this.isWorking = false;
     }
 
-    this.stack.complete(message, result.completedMessage);
+    this.stack.complete(message, result.completedMessages);
 
     if (result.toolCalls) {
       const toolMessage = this.messageFactory.createTool(this.nextId(), result.toolCalls);
@@ -169,7 +168,7 @@ export class ChatSession {
       update: {
         id: message.id,
         type: message.type,
-        completedMessage: result.completedMessage
+        completedMessages: result.completedMessages
       }
     });
   }

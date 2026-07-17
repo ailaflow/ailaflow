@@ -20,6 +20,6 @@ export class UserMessage implements Message {
         }
       ]
     };
-    return { completedMessage };
+    return { completedMessages: [completedMessage] };
   }
 }

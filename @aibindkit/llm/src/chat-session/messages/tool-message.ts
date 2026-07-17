@@ -13,7 +13,7 @@ export class ToolMessage implements Message {
   ) {}
 
   public async complete(abortSignal: AbortSignal): Promise<MessageCompletionResult> {
-    const completedMessage = await Promise.all(
+    const completedMessages = await Promise.all(
       this.calls.map<Promise<ToolResponse>>(async call => {
         if (call.type !== 'function') {
           throw new Error('Invalid tool call type');
@@ -41,7 +41,7 @@ export class ToolMessage implements Message {
       })
     );
     return {
-      completedMessage
+      completedMessages
     };
   }
 }

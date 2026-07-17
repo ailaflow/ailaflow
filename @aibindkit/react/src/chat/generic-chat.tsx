@@ -1,11 +1,12 @@
-import type {
-  ChatTransport,
-  ToolDescriptor,
-  MessageChatUpdate,
-  RestoreChatRequest,
-  SendFrontendToolResultRequest,
-  ToolCall,
-  ChatTransportListener
+import {
+  type ChatTransport,
+  type ToolDescriptor,
+  type MessageChatUpdate,
+  type RestoreChatRequest,
+  type SendFrontendToolResultRequest,
+  type ToolCall,
+  type ChatTransportListener,
+  MessageType
 } from '@aibindkit/core';
 import { useEffect, useMemo, useState } from 'react';
 import { GenericChatView } from './generic-chat-view';
@@ -25,8 +26,7 @@ export function GenericChat(props: GenericChatProps) {
       ({
         channel: props.channel,
         frontendTools: props.frontendTools,
-        frontendToolsHash: fnv1a(props.frontendTools),
-        skipSystemPrompt: props.skipSystemPrompt
+        frontendToolsHash: fnv1a(props.frontendTools)
       }) satisfies RestoreChatRequest,
     [props.channel, props.frontendTools]
   );
@@ -40,6 +40,10 @@ export function GenericChat(props: GenericChatProps) {
 
   useEffect(() => {
     const abortController = new AbortController();
+
+    function canInclude(update: MessageChatUpdate) {
+      return !props.skipSystemPrompt || update.type !== MessageType.SYSTEM;
+    }
 
     async function resolveToolCalls(toolCalls: ToolCall[]) {
       const resolvedIds = new Set<string>();
@@ -83,9 +87,10 @@ export function GenericChat(props: GenericChatProps) {
           setChatSessionId(update.hello.chatSessionId);
         }
         if (update.messages) {
-          setUpdates(u => [...u, ...update.messages!]);
+          const messages = update.messages.filter(m => canInclude(m));
+          setUpdates(u => [...u, ...messages]);
         }
-        if (update.currentMessage) {
+        if (update.currentMessage && canInclude(update.currentMessage)) {
           const currentMessage = update.currentMessage;
           setUpdates(u => {
             const index = u.findIndex(m => m.id === currentMessage.id);
@@ -122,7 +127,7 @@ export function GenericChat(props: GenericChatProps) {
 
     connect();
     return () => abortController.abort();
-  }, [request, reconnectKey, props.transport]);
+  }, [request, reconnectKey, props.transport, props.skipSystemPrompt]);
 
   async function onSendMessage() {
     if (!chatSessionId || !message) {
@@ -181,10 +186,16 @@ export function GenericChat(props: GenericChatProps) {
 }
 
 function tryGetToolCalls(update: MessageChatUpdate): ToolCall[] | null {
-  if (update.completedMessage && !Array.isArray(update.completedMessage) && update.completedMessage.role === 'assistant') {
-    const toolCalls = (update.completedMessage.tool_calls ?? []).filter(t => t.type === 'function');
-    if (toolCalls.length > 0) {
-      return toolCalls;
+  if (update.type === MessageType.AI && update.completedMessages) {
+    const result: ToolCall[] = [];
+    for (const cm of update.completedMessages) {
+      if (cm.role === 'assistant') {
+        const calls = (cm.tool_calls ?? []).filter(t => t.type === 'function');
+        result.push(...calls);
+      }
+    }
+    if (result.length > 0) {
+      return result;
     }
   }
   return null;

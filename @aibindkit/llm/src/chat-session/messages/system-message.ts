@@ -20,6 +20,6 @@ export class SystemMessage implements Message {
         }
       ]
     };
-    return { completedMessage };
+    return { completedMessages: [completedMessage] };
   }
 }

@@ -7,8 +7,7 @@ import type { ToolDescriptor } from '../tools';
 export const restoreChatRequestSchema = z.object({
   frontendTools: z.array(z.custom<ToolDescriptor>()),
   frontendToolsHash: z.string().min(1),
-  channel: z.record(z.string(), z.unknown()),
-  skipSystemPrompt: z.boolean().optional()
+  channel: z.record(z.string(), z.unknown())
 });
 export type RestoreChatRequest = z.infer<typeof restoreChatRequestSchema>;
 
@@ -17,7 +16,7 @@ export interface MessageChatUpdate {
   type: MessageType;
   isInterrupted?: boolean;
   failReason?: string;
-  completedMessage?: CompletedMessage | CompletedMessage[];
+  completedMessages?: CompletedMessage[];
 }
 
 export interface HelloChatUpdate {

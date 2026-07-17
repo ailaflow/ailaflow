@@ -4,7 +4,7 @@ import { MessageType } from '@aibindkit/core';
 import { SessionStack } from '../session-stack';
 
 export interface MessageCompletionResult {
-  completedMessage: CompletedMessage | CompletedMessage[];
+  completedMessages: CompletedMessage[];
   toolCalls?: ToolCall[];
   totalTokens?: number;
 }
