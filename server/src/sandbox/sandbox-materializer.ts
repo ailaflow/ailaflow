@@ -1,9 +1,9 @@
 import { join } from 'node:path';
 import fs from 'node:fs/promises';
-import { Process } from '../repositories/process-repository/process-repository';
+import { Process } from '../repositories/process-repository/process';
 import { DefinitionWalker } from 'sequential-workflow-model';
 import { DockerfileContent, ProcessDefinition, ScriptDefinition, ScriptStep } from '@aila/model';
-import { Sandbox } from '../repositories/sandbox-repository/sandbox-repository';
+import { Sandbox } from '../repositories/sandbox-repository/sandbox';
 import { SandboxHostPaths } from './sandbox-host-paths';
 import { Logger } from '../core/logger';
 

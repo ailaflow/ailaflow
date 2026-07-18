@@ -6,6 +6,7 @@ import type {
   GetProcessResponse,
   InstallRequest,
   InstallResponse,
+  GetUsersResponse,
   LoginRequest,
   LoginResponse,
   RefreshTokenRequest,
@@ -24,6 +25,7 @@ export class ApiClient {
   public readonly chat: SseTransport;
   public readonly process: ProcessApiClient;
   public readonly sandbox: SandboxApiClient;
+  public readonly user: UserApiClient;
 
   public constructor(authToken: string | null) {
     this.client = new HttpClient(createHeaders(authToken));
@@ -32,6 +34,7 @@ export class ApiClient {
     this.chat = new SseTransport(this.client);
     this.process = new ProcessApiClient(this.client);
     this.sandbox = new SandboxApiClient(this.client);
+    this.user = new UserApiClient(this.client);
   }
 
   public get onUnauthorized() {
@@ -105,5 +108,13 @@ export class SandboxApiClient {
 
   public async getSandbox(abortSignal: AbortSignal, name: string): Promise<GetSandboxResponse> {
     return this.client.json(abortSignal, 'GET', `/api/sandboxes/${encodeURIComponent(name)}`);
+  }
+}
+
+export class UserApiClient {
+  public constructor(private readonly client: HttpClient) {}
+
+  public async getUsers(abortSignal: AbortSignal): Promise<GetUsersResponse> {
+    return this.client.json(abortSignal, 'GET', '/api/users');
   }
 }

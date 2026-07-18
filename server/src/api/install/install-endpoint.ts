@@ -1,6 +1,7 @@
 import { Request } from 'express';
 import { Endpoint } from '../endpoint';
-import { User, UserRepository } from '../../repositories/user-repository/user-repository';
+import { UserRepository } from '../../repositories/user-repository/user-repository';
+import { User } from '../../repositories/user-repository/user';
 import { installRequestSchema, InstallResponse } from '@aila/model';
 import { PasswordHasher } from '../../repositories/user-repository/password-hasher';
 import { parseBody } from '../parse-body';

@@ -7,10 +7,11 @@ import {
   UpdateProcessResponse,
   VariableCachedValidator
 } from '@aila/model';
-import { Process, ProcessRepository } from '../../repositories/process-repository/process-repository';
+import { ProcessRepository } from '../../repositories/process-repository/process-repository';
 import { EndpointError } from '../endpoint-error';
 import { SandboxListQuerier } from '../../queriers/sandbox-list/sandbox-list-querier';
 import { parseBody } from '../parse-body';
+import { Process } from '../../repositories/process-repository/process';
 
 export class UpdateProcessEndpoint implements Endpoint {
   public readonly method = 'post';

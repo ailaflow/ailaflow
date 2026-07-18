@@ -10,6 +10,7 @@ import { SandboxList } from './sandbox-list/sandbox-list';
 import { SandboxEditor } from './sandbox-editor/sandbox-editor';
 import { AdminPortal } from './common/admin-portal';
 import { MyChat } from './my-chat/my-chat';
+import { UserList } from './user-list/user-list';
 
 export const routes = [
   {
@@ -58,6 +59,10 @@ export const routes = [
       {
         path: '/admin/sandboxes/:name',
         element: <SandboxEditor />
+      },
+      {
+        path: '/admin/users',
+        element: <UserList />
       }
     ]
   }

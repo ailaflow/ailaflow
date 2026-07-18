@@ -1,19 +1,11 @@
-import { UpsertSandboxRequest } from '@aila/model';
 import { Repository } from '../repository';
+import { Sandbox } from './sandbox';
 
-export class Sandbox {
-  public static async create(data: UpsertSandboxRequest): Promise<Sandbox> {
-    return new Sandbox(data.name, data.isEnabled, data.description, data.configuration, data.secrets, data.hash);
+export class SandboxRepositoryError extends Error {
+  public constructor(message: string) {
+    super(message);
+    this.name = SandboxRepositoryError.name;
   }
-
-  public constructor(
-    public readonly name: string,
-    public isEnabled: boolean,
-    public description: string,
-    public configuration: string,
-    public secrets: Record<string, string>,
-    public hash: string
-  ) {}
 }
 
 export interface SandboxRepository extends Repository {

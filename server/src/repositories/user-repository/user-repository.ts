@@ -1,19 +1,10 @@
 import { Repository } from '../repository';
-import { PasswordHasher } from './password-hasher';
+import { User } from './user';
 
-export class User {
-  public static async create(name: string, password: string, isAdmin: boolean, hasher: PasswordHasher): Promise<User> {
-    return new User(name, await hasher.hash(password), isAdmin);
-  }
-
-  public constructor(
-    public readonly name: string,
-    public readonly passwordHash: string,
-    public readonly isAdmin: boolean
-  ) {}
-
-  public async comparePassword(password: string, hasher: PasswordHasher): Promise<boolean> {
-    return this.passwordHash === (await hasher.hash(password));
+export class UserRepositoryError extends Error {
+  public constructor(message: string) {
+    super(message);
+    this.name = UserRepositoryError.name;
   }
 }
 

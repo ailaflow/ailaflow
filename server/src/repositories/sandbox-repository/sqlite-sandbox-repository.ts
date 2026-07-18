@@ -1,6 +1,7 @@
 import { DatabaseSync } from 'node:sqlite';
 import { SqliteDatabases } from '../../core/sqlite-databases';
-import { Sandbox, SandboxRepository } from './sandbox-repository';
+import { SandboxRepository } from './sandbox-repository';
+import { Sandbox } from './sandbox';
 
 export class SqliteSandboxRepository implements SandboxRepository {
   private readonly db: DatabaseSync;
@@ -18,7 +19,7 @@ export class SqliteSandboxRepository implements SandboxRepository {
         configuration TEXT NOT NULL,
         serializedSecrets TEXT NOT NULL,
         hash TEXT NOT NULL
-      )
+      ) STRICT
     `);
   }
 

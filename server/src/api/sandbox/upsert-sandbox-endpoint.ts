@@ -1,6 +1,7 @@
 import { Request } from 'express';
 import { upsertSandboxRequestSchema } from '@aila/model';
-import { Sandbox, SandboxRepository } from '../../repositories/sandbox-repository/sandbox-repository';
+import { SandboxRepository } from '../../repositories/sandbox-repository/sandbox-repository';
+import { Sandbox } from '../../repositories/sandbox-repository/sandbox';
 import { Endpoint } from '../endpoint';
 import { parseBody } from '../parse-body';
 

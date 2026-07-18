@@ -16,7 +16,7 @@ export class SqliteAuthTokenRepository implements AuthTokenRepository {
         userName TEXT NOT NULL,
         isAdmin INTEGER NOT NULL,
         expiresAt INTEGER NOT NULL
-      )
+      ) STRICT
     `);
   }
 

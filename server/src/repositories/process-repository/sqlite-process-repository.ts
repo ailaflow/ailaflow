@@ -1,5 +1,6 @@
 import { ProcessDefinition } from '@aila/model';
-import { Process, ProcessRepository } from './process-repository';
+import { ProcessRepositoryError, ProcessRepository } from './process-repository';
+import { Process } from './process';
 import { SqliteDatabases } from '../../core/sqlite-databases';
 import { DatabaseSync } from 'node:sqlite';
 
@@ -21,7 +22,7 @@ export class SqliteProcessRepository implements ProcessRepository {
         nSteps INTEGER NOT NULL,
         serializedDefinition TEXT NOT NULL,
         definitionHash TEXT NOT NULL
-      )
+      ) STRICT
     `);
   }
 
@@ -30,16 +31,23 @@ export class SqliteProcessRepository implements ProcessRepository {
       INSERT INTO processes (id, name, description, userList, nStartInputs, nSteps, serializedDefinition, definitionHash)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `);
-    statement.run(
-      process.id,
-      process.name,
-      process.description,
-      process.userList,
-      process.nStartInputs,
-      process.nSteps,
-      JSON.stringify(process.definition),
-      process.hash
-    );
+    try {
+      statement.run(
+        process.id,
+        process.name,
+        process.description,
+        process.userList,
+        process.nStartInputs,
+        process.nSteps,
+        JSON.stringify(process.definition),
+        process.hash
+      );
+    } catch (e) {
+      if (isDuplicateProcessNameSqliteError(e)) {
+        throw new ProcessRepositoryError('A process name is already in use');
+      }
+      throw e;
+    }
   }
 
   public async update(process: Process): Promise<void> {
@@ -55,16 +63,23 @@ export class SqliteProcessRepository implements ProcessRepository {
         definitionHash = ?
       WHERE id = ?
     `);
-    statement.run(
-      process.name,
-      process.description,
-      process.userList,
-      process.nStartInputs,
-      process.nSteps,
-      JSON.stringify(process.definition),
-      process.hash,
-      process.id
-    );
+    try {
+      statement.run(
+        process.name,
+        process.description,
+        process.userList,
+        process.nStartInputs,
+        process.nSteps,
+        JSON.stringify(process.definition),
+        process.hash,
+        process.id
+      );
+    } catch (e) {
+      if (isDuplicateProcessNameSqliteError(e)) {
+        throw new ProcessRepositoryError('A process name is already in use');
+      }
+      throw e;
+    }
   }
 
   public async tryGetById(id: string): Promise<Process | null> {
@@ -100,4 +115,13 @@ export class SqliteProcessRepository implements ProcessRepository {
         )
       : null;
   }
+}
+
+function isDuplicateProcessNameSqliteError(error: unknown): boolean {
+  return (
+    error instanceof Error &&
+    'code' in error &&
+    error.code === 'ERR_SQLITE_ERROR' &&
+    error.message.includes('UNIQUE constraint failed: processes.name')
+  );
 }

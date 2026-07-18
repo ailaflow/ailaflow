@@ -13,7 +13,7 @@ const userItems: MenuItem[] = [
 const adminItems: MenuItem[] = [
   { icon: '/', label: 'Processes', action: 'link', href: '/admin/processes' },
   { icon: '#', label: 'Tables', action: 'link', href: '#' },
-  { icon: '#', label: 'Users', action: 'link', href: '#' },
+  { icon: '@', label: 'Users', action: 'link', href: '/admin/users' },
   { icon: '*', label: 'Views', action: 'link', href: '#' },
   { icon: '*', label: 'Logs', action: 'link', href: '#' },
   { icon: '*', label: 'Configuration', action: 'link', href: '#' },

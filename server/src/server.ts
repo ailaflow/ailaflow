@@ -31,6 +31,9 @@ import { SqliteSandboxListQuerier } from './queriers/sandbox-list/sqlite-sandbox
 import { GetSandboxesEndpoint } from './api/sandbox/get-sandboxes-endpoint';
 import { GetSandboxEndpoint } from './api/sandbox/get-sandbox-endpoint';
 import { UpsertSandboxEndpoint } from './api/sandbox/upsert-sandbox-endpoint';
+import { UserListQuerier } from './queriers/user-list/user-list-querier';
+import { SqliteUserListQuerier } from './queriers/user-list/sqlite-user-list-querier';
+import { GetUsersEndpoint } from './api/users/get-users-endpoint';
 import { ProcessExecutor } from './process-executor/process-executor';
 import { ProcessExecutionStore } from './process-executor/process-execution-store';
 import { SandboxRpcHandlerProvider } from './sandbox/sandbox-rpc-handler-provider';
@@ -54,6 +57,7 @@ export class Server {
     let sandboxRepository: SandboxRepository;
     let processListQuerier: ProcessListQuerier;
     let sandboxListQuerier: SandboxListQuerier;
+    let userListQuerier: UserListQuerier;
 
     const sqliteDatabases = new SqliteDatabases(serverPaths);
 
@@ -63,6 +67,7 @@ export class Server {
     sandboxRepository = new SqliteSandboxRepository(sqliteDatabases);
     processListQuerier = new SqliteProcessListQuerier(sqliteDatabases);
     sandboxListQuerier = new SqliteSandboxListQuerier(sqliteDatabases);
+    userListQuerier = new SqliteUserListQuerier(sqliteDatabases);
 
     await Promise.all([
       userRepository.setup(abortSignal),
@@ -108,7 +113,8 @@ export class Server {
       new TestProcessEndpoint(processRepository, workflowMachineFactory),
       new GetSandboxesEndpoint(sandboxListQuerier),
       new GetSandboxEndpoint(sandboxRepository),
-      new UpsertSandboxEndpoint(sandboxRepository)
+      new UpsertSandboxEndpoint(sandboxRepository),
+      new GetUsersEndpoint(userListQuerier)
     ];
     const router = new Router(app, endpoints, authMiddleware);
 

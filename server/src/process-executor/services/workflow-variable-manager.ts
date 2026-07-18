@@ -1,7 +1,6 @@
-import { VariableDefinition } from '@aila/model';
 import { ProcessExecutionVariableValues } from '../process-execution';
 import z from 'zod/v4';
-import { VariableValidatorMap } from '../../repositories/process-repository/process-repository';
+import { VariableValidatorMap } from '../../repositories/process-repository/process';
 
 interface Variable {
   zod: z.ZodType;

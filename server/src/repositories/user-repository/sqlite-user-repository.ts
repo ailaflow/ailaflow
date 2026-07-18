@@ -1,5 +1,6 @@
 import { DatabaseSync } from 'node:sqlite';
-import { User, UserRepository } from './user-repository';
+import { UserRepositoryError, UserRepository } from './user-repository';
+import { User } from './user';
 import { SqliteDatabases } from '../../core/sqlite-databases';
 
 export class SqliteUserRepository implements UserRepository {
@@ -12,36 +13,45 @@ export class SqliteUserRepository implements UserRepository {
   public async setup() {
     this.db.exec(`
       CREATE TABLE IF NOT EXISTS users (
+        id TEXT NOT NULL,
         name TEXT PRIMARY KEY,
         passwordHash TEXT NOT NULL,
         isAdmin INTEGER NOT NULL
-      )
+      ) STRICT
     `);
   }
 
   public async tryGetUser(userName: string): Promise<User | null> {
     const statement = this.db.prepare(`
-      SELECT name, passwordHash, isAdmin
+      SELECT id, name, passwordHash, isAdmin
       FROM users
       WHERE name = ?
       LIMIT 1
     `);
     const row = statement.get(userName) as
       | {
+          id: string;
           name: string;
           passwordHash: string;
           isAdmin: number;
         }
       | undefined;
-    return row ? new User(row.name, row.passwordHash, row.isAdmin === 1) : null;
+    return row ? new User(row.id, row.name, row.passwordHash, row.isAdmin === 1, {}) : null;
   }
 
   public async insert(user: User): Promise<void> {
     const statement = this.db.prepare(`
-      INSERT INTO users (name, passwordHash, isAdmin)
-      VALUES (?, ?, ?)
+      INSERT INTO users (id, name, passwordHash, isAdmin)
+      VALUES (?, ?, ?, ?)
     `);
-    statement.run(user.name, user.passwordHash, user.isAdmin ? 1 : 0);
+    try {
+      statement.run(user.id, user.name, user.passwordHash, user.isAdmin ? 1 : 0);
+    } catch (e) {
+      if (isDuplicateUserNameSqliteError(e)) {
+        throw new UserRepositoryError('A user name is already in use');
+      }
+      throw e;
+    }
   }
 
   public async count(): Promise<number> {
@@ -52,4 +62,13 @@ export class SqliteUserRepository implements UserRepository {
     const row = statement.get() as { count: number };
     return row.count;
   }
+}
+
+function isDuplicateUserNameSqliteError(error: unknown): boolean {
+  return (
+    error instanceof Error &&
+    'code' in error &&
+    error.code === 'ERR_SQLITE_ERROR' &&
+    error.message.includes('UNIQUE constraint failed: users.name')
+  );
 }

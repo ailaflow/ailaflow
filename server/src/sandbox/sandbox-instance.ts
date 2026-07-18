@@ -1,6 +1,6 @@
 import { HttpSseHandler } from '../core/http-client';
-import { Process } from '../repositories/process-repository/process-repository';
-import { Sandbox } from '../repositories/sandbox-repository/sandbox-repository';
+import { Process } from '../repositories/process-repository/process';
+import { Sandbox } from '../repositories/sandbox-repository/sandbox';
 import { ExecuteCommandUpdate } from './bridge-client';
 import { SandboxDependenciesInstaller } from './sandbox-dependencies-installer';
 import { SandboxExecutor, SandboxExecutorRequest, SandboxExecutorResult } from './sandbox-executor';
