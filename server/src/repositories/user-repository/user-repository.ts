@@ -10,6 +10,8 @@ export class UserRepositoryError extends Error {
 
 export interface UserRepository extends Repository {
   tryGetUser(userName: string): Promise<User | null>;
+  tryGetById(id: string): Promise<User | null>;
   insert(user: User): Promise<void>;
+  update(user: User): Promise<void>;
   count(): Promise<number>;
 }

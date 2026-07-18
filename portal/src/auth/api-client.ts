@@ -2,6 +2,7 @@ import { HttpClient, HttpClientSseListener, SseTransport } from '@aibindkit/reac
 import type {
   GetSandboxResponse,
   GetSandboxesResponse,
+  GetUserResponse,
   GetProcessesResponse,
   GetProcessResponse,
   InstallRequest,
@@ -13,6 +14,8 @@ import type {
   RefreshTokenResponse,
   TestProcessRequest,
   TestProcessUpdate,
+  UpdateUserRequest,
+  UpdateUserResponse,
   UpdateProcessRequest,
   UpdateProcessResponse,
   UpsertSandboxRequest
@@ -116,5 +119,13 @@ export class UserApiClient {
 
   public async getUsers(abortSignal: AbortSignal): Promise<GetUsersResponse> {
     return this.client.json(abortSignal, 'GET', '/api/users');
+  }
+
+  public async getUser(abortSignal: AbortSignal, id: string): Promise<GetUserResponse> {
+    return this.client.json(abortSignal, 'GET', `/api/users/${id}`);
+  }
+
+  public async updateUser(abortSignal: AbortSignal, request: UpdateUserRequest): Promise<UpdateUserResponse> {
+    return this.client.json(abortSignal, 'POST', '/api/user', request);
   }
 }

@@ -15,16 +15,34 @@ export const getUsersResponseSchema = z.object({
 export type UserLiteDto = z.infer<typeof userLiteDtoSchema>;
 export type GetUsersResponse = z.infer<typeof getUsersResponseSchema>;
 
-// createUser
+// getUser
 
-const createUserRequestSchema = z.object({
+const userDtoSchema = z.object({
+  id: z.string(),
   name: z.string(),
-  password: z.string()
-});
-const createUserResponseSchema = z.object({
-  success: z.boolean(),
-  error: z.string().optional()
+  isAdmin: z.boolean(),
+  attributes: z.record(z.string(), z.union([z.string(), z.number(), z.boolean()]))
 });
 
-export type CreateUserRequest = z.infer<typeof createUserRequestSchema>;
-export type CreateUserResponse = z.infer<typeof createUserResponseSchema>;
+export const getUserResponseSchema = z.object({
+  user: userDtoSchema
+});
+
+export type UserDto = z.infer<typeof userDtoSchema>;
+export type GetUserResponse = z.infer<typeof getUserResponseSchema>;
+
+// updateUser
+
+export const updateUserRequestSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  password: z.string().optional(),
+  isAdmin: z.boolean(),
+  attributes: z.record(z.string(), z.union([z.string(), z.number(), z.boolean()]))
+});
+const updateUserResponseSchema = z.object({
+  id: z.string()
+});
+
+export type UpdateUserRequest = z.infer<typeof updateUserRequestSchema>;
+export type UpdateUserResponse = z.infer<typeof updateUserResponseSchema>;

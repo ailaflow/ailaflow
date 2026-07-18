@@ -19,6 +19,10 @@ export class SqliteDatabases {
     this.modelDb = new DatabaseSync(path.join(dataFolderPath, 'model.db'), {
       open: true
     });
+
+    for (const db of [this.userDb, this.authTokenDb, this.modelDb]) {
+      db.exec(`PRAGMA foreign_keys = ON`);
+    }
   }
 
   public dispose() {

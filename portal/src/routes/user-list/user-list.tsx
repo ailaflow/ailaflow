@@ -4,6 +4,7 @@ import { PortalErrorView } from '../../views/portal/portal-error-view';
 import { PortalLoadingView } from '../../views/portal/portal-loading-view';
 import { ResourceListView } from '../../views/resource-list/resource-list-view';
 import { useAiStore } from '../common/admin-portal';
+import { SvgIcon } from '../../views/common/svg-icons';
 
 export function UserList() {
   const apiClient = useApiClient();
@@ -53,17 +54,18 @@ export function UserList() {
           title: 'Role',
           width: '18%',
           getValue: user => (user.isAdmin ? 'Admin' : 'User')
-        },
-        {
-          id: 'id',
-          title: 'ID',
-          width: '40%',
-          getValue: user => user.id
         }
       ]}
       rows={loader.data.users}
       getRowKey={user => user.id}
       emptyMessage="No users found."
+      actions={[
+        {
+          label: <SvgIcon name="pencil" className="h-4 w-4" />,
+          ariaLabel: 'Edit user',
+          getTo: user => `/admin/users/${user.id}`
+        }
+      ]}
     />
   );
 }

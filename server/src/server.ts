@@ -34,6 +34,8 @@ import { UpsertSandboxEndpoint } from './api/sandbox/upsert-sandbox-endpoint';
 import { UserListQuerier } from './queriers/user-list/user-list-querier';
 import { SqliteUserListQuerier } from './queriers/user-list/sqlite-user-list-querier';
 import { GetUsersEndpoint } from './api/users/get-users-endpoint';
+import { GetUserEndpoint } from './api/users/get-user-endpoint';
+import { UpdateUserEndpoint } from './api/users/update-user-endpoint';
 import { ProcessExecutor } from './process-executor/process-executor';
 import { ProcessExecutionStore } from './process-executor/process-execution-store';
 import { SandboxRpcHandlerProvider } from './sandbox/sandbox-rpc-handler-provider';
@@ -114,7 +116,9 @@ export class Server {
       new GetSandboxesEndpoint(sandboxListQuerier),
       new GetSandboxEndpoint(sandboxRepository),
       new UpsertSandboxEndpoint(sandboxRepository),
-      new GetUsersEndpoint(userListQuerier)
+      new GetUsersEndpoint(userListQuerier),
+      new GetUserEndpoint(userRepository),
+      new UpdateUserEndpoint(userRepository, passwordHasher)
     ];
     const router = new Router(app, endpoints, authMiddleware);
 
