@@ -1,29 +1,50 @@
-import { useLoader } from '@aibindkit/react';
-import { useParams } from 'react-router-dom';
+import { UserDto } from '@aila/model';
+import { useNavigate } from 'react-router-dom';
 import { useApiClient } from '../../auth/auth-context';
-import { PortalErrorView } from '../../views/portal/portal-error-view';
-import { PortalLoadingView } from '../../views/portal/portal-loading-view';
-import { UserEditorContent } from './user-editor-content';
+import { ResourceEditorView } from '../../views/resource-editor/resource-editor-view';
+import { UserEditorView } from '../../views/user-editor/user-editor-view';
+import { useUserEditorAi } from './user-editor-ai';
+import { useUserEditorState } from './user-editor-state';
+import { useUnsavedChangesController } from '../common/admin-portal';
 
-export function UserEditor() {
-  const { userId } = useParams();
+export function UserEditor(props: { user: UserDto }) {
   const apiClient = useApiClient();
-  const loader = useLoader(
-    abortSignal => {
-      if (!userId) {
-        throw new Error('User id is required');
-      }
-      return apiClient.user.getUser(abortSignal, userId);
-    },
-    [apiClient, userId]
+  const navigate = useNavigate();
+  const state = useUserEditorState(props.user);
+
+  async function save() {
+    const abortSignal = AbortSignal.timeout(5_000);
+    const response = await apiClient.user.updateUser(abortSignal, state.toUpdateRequest(props.user.id));
+    state.markSaved();
+    navigate(`/admin/users/${response.id}`);
+  }
+
+  useUserEditorAi(state, save);
+  useUnsavedChangesController(state.isDirty);
+
+  return (
+    <ResourceEditorView
+      icon="@"
+      name={state.name}
+      isNameReadOnly={false}
+      isNameValid={state.nameError === null}
+      canSave={state.canSave}
+      onSave={save}
+      onNameChange={state.setName}
+      canSwitch={false}
+      switchLabel=""
+    >
+      <UserEditorView
+        isAdmin={state.isAdmin}
+        password={state.password}
+        attributes={state.attributes}
+        attributeError={state.attributeError}
+        onIsAdminChange={state.setIsAdmin}
+        onPasswordChange={state.setPassword}
+        onAttributeAdd={state.addAttribute}
+        onAttributeRemove={state.removeAttribute}
+        onAttributeChange={state.updateAttribute}
+      />
+    </ResourceEditorView>
   );
-
-  if (loader.isLoading) {
-    return <PortalLoadingView />;
-  }
-  if (loader.error) {
-    return <PortalErrorView error={loader.error} />;
-  }
-
-  return <UserEditorContent key={loader.data.user.id} user={loader.data.user} />;
 }

@@ -8,6 +8,7 @@ import { sandboxEditorAiStoreFactory } from './ai-bindings/sandbox-editor-ai-bin
 import { processEditorAiStoreFactory } from './ai-bindings/process-editor-ai-bindings';
 import { processListAiStoreFactory } from './ai-bindings/process-list-ai-bindings';
 import { userListAiStoreFactory } from './ai-bindings/user-list-ai-bindings';
+import { userEditorAiStoreFactory } from './ai-bindings/user-editor-ai-binding';
 import { routes } from '../router';
 import { useEffect, useMemo, useRef } from 'react';
 
@@ -16,7 +17,8 @@ export const env = aiEnvironment({
   sandboxEditor: sandboxEditorAiStoreFactory(),
   processEditor: processEditorAiStoreFactory(),
   processList: processListAiStoreFactory(),
-  userList: userListAiStoreFactory()
+  userList: userListAiStoreFactory(),
+  userEditor: userEditorAiStoreFactory()
 });
 export const useAiEnvironment = env.useAiEnvironment;
 export const useAiStore = env.useAiStore;

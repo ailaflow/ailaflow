@@ -11,7 +11,7 @@ import { SandboxEditor } from './sandbox-editor/sandbox-editor';
 import { AdminPortal } from './common/admin-portal';
 import { MyChat } from './my-chat/my-chat';
 import { UserList } from './user-list/user-list';
-import { UserEditor } from './user-editor/user-editor';
+import { UserEditorPage } from './user-editor/user-editor-page';
 
 export const routes = [
   {
@@ -67,7 +67,7 @@ export const routes = [
       },
       {
         path: '/admin/users/:userId',
-        element: <UserEditor />
+        element: <UserEditorPage />
       }
     ]
   }
