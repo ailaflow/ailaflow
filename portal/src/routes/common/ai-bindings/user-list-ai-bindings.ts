@@ -1,4 +1,4 @@
-import { route, storeFactory, tool } from '@aibindkit/react';
+import { route, routeStoreFactory, tool } from '@aibindkit/react';
 
 const userListRoute = route('userList')
   .paths(['/admin/users'])
@@ -7,6 +7,6 @@ const userListRoute = route('userList')
     getUsers: tool('Get all created users.')
   });
 
-export const userListAiStoreFactory = storeFactory(userListRoute);
+export const userListAiStoreFactory = routeStoreFactory(userListRoute);
 
 export type UserListAiStore = ReturnType<typeof userListAiStoreFactory>;

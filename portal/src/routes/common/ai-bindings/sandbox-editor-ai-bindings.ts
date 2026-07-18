@@ -1,5 +1,5 @@
 import z from 'zod/v4';
-import { route, storeFactory, tool } from '@aibindkit/react';
+import { route, routeStoreFactory, tool } from '@aibindkit/react';
 
 const sandboxEditorRoute = route('sandboxEditor')
   .paths(['/admin/sandboxes/:name', '/admin/create-sandbox'])
@@ -37,6 +37,6 @@ const sandboxEditorRoute = route('sandboxEditor')
     save: tool('Save the changes made to the sandbox')
   });
 
-export const sandboxEditorAiStoreFactory = storeFactory(sandboxEditorRoute);
+export const sandboxEditorAiStoreFactory = routeStoreFactory(sandboxEditorRoute);
 
 export type SandboxEditorAiStore = ReturnType<typeof sandboxEditorAiStoreFactory>;

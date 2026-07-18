@@ -1,4 +1,4 @@
-import { route, storeFactory, tool } from '@aibindkit/react';
+import { route, routeStoreFactory, tool } from '@aibindkit/react';
 
 const processListRoute = route('processList')
   .paths(['/admin/processes'])
@@ -8,6 +8,6 @@ const processListRoute = route('processList')
     createNew: tool('Open a page to create a new process.')
   });
 
-export const processListAiStoreFactory = storeFactory(processListRoute);
+export const processListAiStoreFactory = routeStoreFactory(processListRoute);
 
 export type ProcessListAiStore = ReturnType<typeof processListAiStoreFactory>;

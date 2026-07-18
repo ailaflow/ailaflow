@@ -1,5 +1,5 @@
 import z from 'zod/v4';
-import { route, storeFactory, tool } from '@aibindkit/react';
+import { route, routeStoreFactory, tool } from '@aibindkit/react';
 
 // Conventions:
 // - don't add a dot `.` at the end of the description to reduce amount of tokens.
@@ -176,6 +176,6 @@ const processEditorRoute = route('processEditor')
   .currentPageField('overlay', 'getCurrentOverlay')
   .currentPageField('selectedStepId', 'getSelectedStepId');
 
-export const processEditorAiStoreFactory = storeFactory(processEditorRoute);
+export const processEditorAiStoreFactory = routeStoreFactory(processEditorRoute);
 
 export type ProcessEditorAiBindingsStore = ReturnType<typeof processEditorAiStoreFactory>;

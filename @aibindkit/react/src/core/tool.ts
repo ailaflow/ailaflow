@@ -6,6 +6,13 @@ interface AiToolBuilderState {
   inputZod?: z.ZodObject;
 }
 
+export type AiToolRecords = Record<string, AiToolBuilder<any>>;
+export type AiBindingFromTool<Name extends string, T> = T extends AiToolBuilder<infer Arg> ? AiBinding<Arg, Name> : never;
+
+export type AiBindingsFromTools<T extends AiToolRecords> = readonly {
+  [K in keyof T & string]: AiBindingFromTool<K, T[K]>;
+}[keyof T & string][];
+
 export class AiToolBuilder<Input = any> {
   declare private readonly __input?: Input;
 

@@ -1,5 +1,5 @@
 import z from 'zod/v4';
-import { route, storeFactory, tool } from '@aibindkit/react';
+import { route, routeStoreFactory, tool } from '@aibindkit/react';
 
 const userAttributeValue = z.union([z.string(), z.number(), z.boolean()]);
 
@@ -40,6 +40,6 @@ const userEditorRoute = route('userEditor')
     save: tool('Save all changes')
   });
 
-export const userEditorAiStoreFactory = storeFactory(userEditorRoute);
+export const userEditorAiStoreFactory = routeStoreFactory(userEditorRoute);
 
 export type UserEditorAiStore = ReturnType<typeof userEditorAiStoreFactory>;

@@ -1,9 +1,9 @@
 import type { ToolDescriptor } from '@aibindkit/core';
 import z from 'zod/v4';
 import { AiBinding } from './binding';
-import { AiToolBuilder } from './tool';
+import { AiBindingsFromTools, AiToolRecords } from './tool';
 
-export interface AiRoute<Params = void, Bindings extends readonly AiBinding[] = readonly AiBinding[]> {
+export interface AiRoute<Bindings extends readonly AiBinding[] = readonly AiBinding[], Params = void> {
   readonly __params?: Params;
   name: string;
   paths: string[];
@@ -18,22 +18,13 @@ interface AiRouteBuilderState {
   paths?: string[];
   unavailableMessage?: string;
   params?: z.ZodObject;
-  tools?: AiToolRecords;
   currentPageFields: Record<string, string>;
 }
-
-type AiToolRecords = Record<string, AiToolBuilder<any>>;
-
-type AiBindingFromTool<Name extends string, T> = T extends AiToolBuilder<infer Arg> ? AiBinding<Arg, Name> : never;
-
-export type AiBindingsFromTools<T extends AiToolRecords> = readonly {
-  [K in keyof T & string]: AiBindingFromTool<K, T[K]>;
-}[keyof T & string][];
 
 export type AiBindingName<T> = T extends AiBinding<any, infer Name> ? Name : never;
 
 export class AiRouteBuilder<Input = void, Bindings extends readonly AiBinding[] = []> {
-  constructor(
+  public constructor(
     private readonly state: AiRouteBuilderState,
     private readonly bindings: Bindings
   ) {}
@@ -55,7 +46,6 @@ export class AiRouteBuilder<Input = void, Bindings extends readonly AiBinding[] 
 
   public tools<T extends AiToolRecords>(tools: T): AiRouteBuilder<Input, AiBindingsFromTools<T>> {
     const bindings = Object.entries(tools).map(([name, builder]) => builder.build(name)) as unknown as AiBindingsFromTools<T>;
-    this.state.tools = tools;
     return new AiRouteBuilder<Input, AiBindingsFromTools<T>>(this.state, bindings);
   }
 
@@ -67,7 +57,7 @@ export class AiRouteBuilder<Input = void, Bindings extends readonly AiBinding[] 
     return this;
   }
 
-  public build(): AiRoute<Input, Bindings> {
+  public build(): AiRoute<Bindings, Input> {
     if (!this.state.paths) {
       throw new Error('Paths must be set');
     }

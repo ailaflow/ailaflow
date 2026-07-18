@@ -11,8 +11,10 @@ import { userListAiStoreFactory } from './ai-bindings/user-list-ai-bindings';
 import { userEditorAiStoreFactory } from './ai-bindings/user-editor-ai-binding';
 import { routes } from '../router';
 import { useEffect, useMemo, useRef } from 'react';
+import { globalAiStoreFactory } from './ai-bindings/global-ai-bindings';
 
 export const env = aiEnvironment({
+  global: globalAiStoreFactory(),
   sandboxList: sandboxListAiStoreFactory(),
   sandboxEditor: sandboxEditorAiStoreFactory(),
   processEditor: processEditorAiStoreFactory(),

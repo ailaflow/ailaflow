@@ -30,6 +30,7 @@ export function Login() {
 
     setSession({
       userName,
+      userId: response.userId,
       authToken: response.authToken,
       isAdmin: response.isAdmin
     });

@@ -7,6 +7,7 @@ export const loginRequestSchema = z.object({
   password: z.string()
 });
 export const loginResponseSchema = z.object({
+  userId: z.string(),
   authToken: z.string(),
   isAdmin: z.boolean()
 });
