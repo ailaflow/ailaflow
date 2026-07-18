@@ -23,7 +23,7 @@ import { ProcessListQuerier } from './queriers/process-list/process-list-querier
 import { SqliteProcessListQuerier } from './queriers/process-list/sqlite-process-list-querier';
 import { GetProcessEndpoint } from './api/process/get-process-endpoint';
 import { TestProcessEndpoint } from './api/process/test-process-endpoint';
-import { UserToolSetProvider } from './chat-session/stores/user-tool-set-provider';
+import { UserToolSetProvider } from './chat-session/user-tools/user-tool-set-provider';
 import { SandboxRepository } from './repositories/sandbox-repository/sandbox-repository';
 import { SqliteSandboxRepository } from './repositories/sandbox-repository/sqlite-sandbox-repository';
 import { SandboxListQuerier } from './queriers/sandbox-list/sandbox-list-querier';

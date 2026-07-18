@@ -1,6 +1,6 @@
 import { ToolboxConfiguration } from 'sequential-workflow-designer';
 import { ScriptStep, AgentStep, TaskStep, NotificationStep, FileContent, FormDefinition, ScriptDefinition } from '@aila/model';
-import { fnv1a } from '../../core/fnv1a';
+import { fnv1a } from '@aibindkit/core';
 
 export function createEmptyFormDefinition(): FormDefinition {
   return {

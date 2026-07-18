@@ -12,16 +12,12 @@ export class ChatSessionInitializerError extends Error {
   }
 }
 
-export interface ChatSessionInitializer {
-  llmClient: LlmClient;
-  backendTools: Tool[];
-  onSessionCreated?: (session: ChatSession) => void;
-}
-
 export interface ResolvedChatSession {
   sessionId: string;
+  backendTools: Tool[];
   backendToolsHash: string;
-  createInitializer(): ChatSessionInitializer;
+  llmClient: LlmClient;
+  initialize(session: ChatSession): void;
 }
 
 export interface ChatSessionResolver {

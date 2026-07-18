@@ -25,18 +25,17 @@ export class ChatSessionProvider {
       return session;
     }
 
-    const initializer = resolved.createInitializer();
     const toolSet = new ToolSet();
     for (const descriptor of restoreRequest.frontendTools) {
       toolSet.addTool(this.frontendToolFactory.create(descriptor));
     }
-    for (const tool of initializer.backendTools) {
+    for (const tool of resolved.backendTools) {
       toolSet.addTool(tool);
     }
 
-    session = this.chatSessionFactory.create(resolved.sessionId, hash, initializer.llmClient, toolSet);
+    session = this.chatSessionFactory.create(resolved.sessionId, hash, resolved.llmClient, toolSet);
     this.sessions.set(resolved.sessionId, session);
-    initializer.onSessionCreated?.(session);
+    resolved.initialize(session);
     return session;
   }
 }

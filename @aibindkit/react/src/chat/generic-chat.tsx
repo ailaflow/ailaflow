@@ -6,11 +6,11 @@ import {
   type SendFrontendToolResultRequest,
   type ToolCall,
   type ChatTransportListener,
+  fnv1a,
   MessageType
 } from '@aibindkit/core';
 import { useEffect, useMemo, useState } from 'react';
 import { GenericChatView } from './generic-chat-view';
-import { fnv1a } from './fnv1a';
 
 export interface GenericChatProps {
   transport: ChatTransport;

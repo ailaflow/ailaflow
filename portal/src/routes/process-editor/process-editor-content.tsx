@@ -7,7 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { FormEditorOverlay } from './overlays/form-editor-overlay';
 import { ScriptEditorOverlay, ScriptEditorOverlayState } from './overlays/script-editor-overlay';
 import { ResourceSimpleDetailsView } from '../../views/resource-editor/resource-simple-details-view';
-import { fnv1a } from '../../core/fnv1a';
+import { fnv1a } from '@aibindkit/core';
 import { anyStepSchema, ScriptStep } from '@aila/model';
 import { toolError, toolSuccess } from '@aibindkit/react';
 import { createEmptyFormDefinition, toolboxConfiguration } from './designer-configuration';

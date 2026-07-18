@@ -6,7 +6,7 @@ import { wrapDefinition } from 'sequential-workflow-designer-react';
 import { ScriptSubEditorView } from '../../../views/process-editor/script-sub-editor/script-sub-editor';
 import { FolderTreeItem, FolderTreeView } from '../../../views/process-editor/script-sub-editor/folder-tree-view';
 import { FileContentEditorView } from '../../../views/process-editor/script-sub-editor/file-content-editor-view';
-import { fnv1a } from '../../../core/fnv1a';
+import { fnv1a } from '@aibindkit/core';
 import { ScriptEditorOverlayUtils } from './script-editor-overlay-utils';
 
 export interface ScriptEditorOverlayState {

@@ -1,4 +1,5 @@
 import { JsonSchema, ProcessDefinition, VariableDefinition } from '@aila/model';
+import { fnv1a } from '@aibindkit/core';
 import { useRootEditor } from 'sequential-workflow-designer-react';
 import { ProcessEditorOverlayType, ProcessEditorState } from '../process-editor-context';
 import { DesignerEditorView } from '../../../views/process-editor/designer-editors/designer-editor-view';
@@ -9,7 +10,6 @@ import {
   EnabledSubValuePreviewView
 } from '../../../views/process-editor/designer-editors/sub-value-preview-view';
 import { SvgIcon } from '../../../views/common/svg-icons';
-import { fnv1a } from '../../../core/fnv1a';
 import { VariableSelectorPropertyView } from '../../../views/process-editor/designer-editors/variable-selector-property-view';
 import { createEmptyFormDefinition } from '../designer-configuration';
 

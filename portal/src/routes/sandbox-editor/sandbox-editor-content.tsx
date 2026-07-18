@@ -2,10 +2,10 @@ import { useNavigate } from 'react-router-dom';
 import { useApiClient } from '../../auth/auth-context';
 import { useRef, useState } from 'react';
 import { DockerfileContent, SandboxDto, SandboxValidator } from '@aila/model';
+import { fnv1a } from '@aibindkit/core';
 import { ResourceEditorView } from '../../views/resource-editor/resource-editor-view';
 import { SandboxEditorView, SandboxSecret } from '../../views/sandbox-editor/sandbox-editor-view';
 import { ResourceSimpleDetailsView } from '../../views/resource-editor/resource-simple-details-view';
-import { fnv1a } from '../../core/fnv1a';
 import { toolError, toolSuccess } from '@aibindkit/react';
 import { useAiStore } from '../common/admin-portal';
 

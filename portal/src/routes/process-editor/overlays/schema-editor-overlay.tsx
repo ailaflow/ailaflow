@@ -3,7 +3,7 @@ import { ProcessEditorOverlayType, useProcessEditor } from '../process-editor-co
 import { wrapDefinition } from 'sequential-workflow-designer-react';
 import { useState } from 'react';
 import { ProcessSubEditorView } from '../../../views/process-editor/process-sub-editor-view';
-import { fnv1a } from '../../../core/fnv1a';
+import { fnv1a } from '@aibindkit/core';
 
 export function SchemaEditorOverlay() {
   const state = useProcessEditor();
