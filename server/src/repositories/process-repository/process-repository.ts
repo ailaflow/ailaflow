@@ -9,7 +9,7 @@ export class ProcessRepositoryError extends Error {
 }
 
 export interface ProcessRepository extends Repository {
-  insert(process: Process): Promise<void>;
-  update(process: Process): Promise<void>;
-  tryGetByName(name: string): Promise<Process | null>;
+  insert(abortSignal: AbortSignal, process: Process): Promise<void>;
+  update(abortSignal: AbortSignal, process: Process): Promise<void>;
+  tryGetByName(abortSignal: AbortSignal, name: string): Promise<Process | null>;
 }

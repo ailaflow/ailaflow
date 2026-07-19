@@ -9,7 +9,7 @@ export class SqliteAuthTokenRepository implements AuthTokenRepository {
     this.db = dbs.authTokenDb;
   }
 
-  public async setup() {
+  public async setup(_: AbortSignal) {
     this.db.exec(`
       CREATE TABLE IF NOT EXISTS authTokens (
         token TEXT PRIMARY KEY,
@@ -20,7 +20,7 @@ export class SqliteAuthTokenRepository implements AuthTokenRepository {
     `);
   }
 
-  public async insert(authToken: AuthToken): Promise<void> {
+  public async insert(_: AbortSignal, authToken: AuthToken): Promise<void> {
     const statement = this.db.prepare(`
       INSERT INTO authTokens (token, userName, isAdmin, expiresAt)
       VALUES (?, ?, ?, ?)
@@ -28,7 +28,7 @@ export class SqliteAuthTokenRepository implements AuthTokenRepository {
     statement.run(authToken.token, authToken.userName, authToken.isAdmin ? 1 : 0, authToken.expiresAt);
   }
 
-  public async tryGetByToken(token: string): Promise<AuthToken | null> {
+  public async tryGetByToken(_: AbortSignal, token: string): Promise<AuthToken | null> {
     const statement = this.db.prepare(`
       SELECT token, userName, isAdmin, expiresAt
       FROM authTokens
@@ -46,7 +46,7 @@ export class SqliteAuthTokenRepository implements AuthTokenRepository {
     return row ? new AuthToken(row.token, row.userName, row.expiresAt, row.isAdmin === 1) : null;
   }
 
-  public async delete(token: string): Promise<void> {
+  public async delete(_: AbortSignal, token: string): Promise<void> {
     const statement = this.db.prepare(`
       DELETE FROM authTokens
       WHERE token = ?

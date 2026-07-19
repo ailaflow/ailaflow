@@ -1,8 +1,8 @@
 import { Express, Request, Response } from 'express';
-import { Endpoint } from './endpoint';
+import { Endpoint } from './framework/endpoint';
 import { Logger } from '../core/logger';
 import { AuthMiddleware } from './auth/auth-middleware';
-import { EndpointError } from './endpoint-error';
+import { EndpointError } from './framework/endpoint-error';
 
 export class Router {
   private readonly logger = new Logger(Router.name);
@@ -15,8 +15,15 @@ export class Router {
 
   public setup() {
     for (const endpoint of this.endpoints) {
-      let handler = async (req: Request, res: Response) => {
+      const handler = async (req: Request, res: Response) => {
         try {
+          if (endpoint.auth) {
+            const admin = endpoint.admin ?? false;
+            if (await this.authMiddleware.handle(admin, req, res)) {
+              return;
+            }
+          }
+
           const jsonOrVoid = await endpoint.handle(req, res);
           if (jsonOrVoid) {
             res.json(jsonOrVoid).end();
@@ -32,11 +39,6 @@ export class Router {
           res.status(500).json({ error: 'Internal Server Error' });
         }
       };
-
-      if (endpoint.auth) {
-        const admin = endpoint.admin ?? false;
-        handler = this.authMiddleware.wrap(admin, handler);
-      }
 
       this.app[endpoint.method](endpoint.path, handler);
       this.logger.log(`Registered endpoint: ${endpoint.method.toUpperCase()} ${endpoint.path}`);

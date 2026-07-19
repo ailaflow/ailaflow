@@ -10,7 +10,7 @@ export class SqliteUserListQuerier implements UserListQuerier {
     this.db = dbs.modelDb;
   }
 
-  public async query(): Promise<UserLiteDto[]> {
+  public async query(_: AbortSignal): Promise<UserLiteDto[]> {
     const statement = this.db.prepare(`
       SELECT name, isAdmin
       FROM users

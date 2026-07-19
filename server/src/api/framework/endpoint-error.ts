@@ -4,6 +4,6 @@ export class EndpointError extends Error {
     public readonly status: number
   ) {
     super(publicMessage);
-    this.name = 'EndpointError';
+    this.name = EndpointError.name;
   }
 }

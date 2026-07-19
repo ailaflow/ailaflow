@@ -103,11 +103,6 @@ export class Server {
     const authMiddleware = new AuthMiddleware(authTokenRepository);
     const chatSessionResolver = new AilaChatSessionResolver(llmClient, userToolSetProvider, serverPaths);
 
-    app.use('/api/chat', (req, res, next) => {
-      void authMiddleware.wrap(false, async () => {
-        next();
-      })(req, res);
-    });
     setupServer(app, chatSessionResolver);
 
     const endpoints = [

@@ -1,6 +1,8 @@
 import { ProcessListQuerier } from '../../queriers/process-list/process-list-querier';
-import { Endpoint } from '../endpoint';
+import { Endpoint } from '../framework/endpoint';
 import { GetProcessesResponse } from '@aila/model';
+import { Request } from 'express';
+import { getEndpointAbortSignal } from '../framework/endpoint-abort-signal';
 
 export class GetProcessesEndpoint implements Endpoint {
   public readonly method = 'get';
@@ -10,9 +12,10 @@ export class GetProcessesEndpoint implements Endpoint {
 
   public constructor(private readonly querier: ProcessListQuerier) {}
 
-  public async handle(): Promise<GetProcessesResponse> {
+  public async handle(req: Request): Promise<GetProcessesResponse> {
+    const abortSignal = getEndpointAbortSignal(req);
     return {
-      processes: await this.querier.query()
+      processes: await this.querier.query(abortSignal)
     };
   }
 }

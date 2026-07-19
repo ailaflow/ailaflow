@@ -11,7 +11,7 @@ export class SqliteUserAttributesRepository implements UserAttributesRepository 
     this.db = dbs.modelDb;
   }
 
-  public async setup(_abortSignal: AbortSignal) {
+  public async setup(_: AbortSignal) {
     this.db.exec(`
       CREATE TABLE IF NOT EXISTS user_attribute_definitions (
         attribute_name TEXT PRIMARY KEY,
@@ -85,7 +85,7 @@ export class SqliteUserAttributesRepository implements UserAttributesRepository 
     `);
   }
 
-  public async get(userName: string): Promise<UserAttributes> {
+  public async get(_: AbortSignal, userName: string): Promise<UserAttributes> {
     const statement = this.db.prepare(`
       SELECT attribute_name, attribute_type, value_string, value_integer, value_boolean
       FROM user_attributes
@@ -116,7 +116,7 @@ export class SqliteUserAttributesRepository implements UserAttributesRepository 
     return new UserAttributes(userName, attributes);
   }
 
-  public async replace(attributes: UserAttributes): Promise<void> {
+  public async replace(_: AbortSignal, attributes: UserAttributes): Promise<void> {
     const deleteAttributesStatement = this.db.prepare(`
       DELETE FROM user_attributes
       WHERE user_name = ?

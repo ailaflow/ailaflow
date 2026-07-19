@@ -1,8 +1,9 @@
 import { Request } from 'express';
 import { GetSandboxResponse } from '@aila/model';
 import { SandboxRepository } from '../../repositories/sandbox-repository/sandbox-repository';
-import { Endpoint } from '../endpoint';
-import { EndpointError } from '../endpoint-error';
+import { Endpoint } from '../framework/endpoint';
+import { EndpointError } from '../framework/endpoint-error';
+import { getEndpointAbortSignal } from '../framework/endpoint-abort-signal';
 
 export class GetSandboxEndpoint implements Endpoint {
   public readonly method = 'get';
@@ -13,9 +14,10 @@ export class GetSandboxEndpoint implements Endpoint {
   public constructor(private readonly repository: SandboxRepository) {}
 
   public async handle(req: Request): Promise<GetSandboxResponse> {
+    const abortSignal = getEndpointAbortSignal(req);
     const sandboxName = String(req.params.name);
 
-    const sandbox = await this.repository.tryGet(sandboxName);
+    const sandbox = await this.repository.tryGet(abortSignal, sandboxName);
     if (!sandbox) {
       throw new EndpointError('Sandbox not found', 404);
     }

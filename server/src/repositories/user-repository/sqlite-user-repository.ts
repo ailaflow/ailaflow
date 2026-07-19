@@ -10,7 +10,7 @@ export class SqliteUserRepository implements UserRepository {
     this.db = dbs.modelDb;
   }
 
-  public async setup() {
+  public async setup(_: AbortSignal) {
     this.db.exec(`
       CREATE TABLE IF NOT EXISTS users (
         name TEXT PRIMARY KEY,
@@ -20,7 +20,7 @@ export class SqliteUserRepository implements UserRepository {
     `);
   }
 
-  public async tryGetUser(userName: string): Promise<User | null> {
+  public async tryGetUser(_: AbortSignal, userName: string): Promise<User | null> {
     const statement = this.db.prepare(`
       SELECT name, passwordHash, isAdmin
       FROM users
@@ -40,7 +40,7 @@ export class SqliteUserRepository implements UserRepository {
     return new User(row.name, row.passwordHash, row.isAdmin === 1);
   }
 
-  public async insert(user: User): Promise<void> {
+  public async insert(_: AbortSignal, user: User): Promise<void> {
     const statement = this.db.prepare(`
       INSERT INTO users (name, passwordHash, isAdmin)
       VALUES (?, ?, ?)
@@ -55,7 +55,7 @@ export class SqliteUserRepository implements UserRepository {
     }
   }
 
-  public async update(user: User): Promise<void> {
+  public async update(_: AbortSignal, user: User): Promise<void> {
     const statement = this.db.prepare(`
       UPDATE users
       SET
@@ -66,7 +66,7 @@ export class SqliteUserRepository implements UserRepository {
     statement.run(user.passwordHash, user.isAdmin ? 1 : 0, user.name);
   }
 
-  public async count(): Promise<number> {
+  public async count(_: AbortSignal): Promise<number> {
     const statement = this.db.prepare(`
       SELECT COUNT(*) as count
       FROM users

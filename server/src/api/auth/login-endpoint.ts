@@ -1,11 +1,12 @@
 import { Request } from 'express';
-import { Endpoint } from '../endpoint';
+import { Endpoint } from '../framework/endpoint';
 import { UserRepository } from '../../repositories/user-repository/user-repository';
 import { loginRequestSchema, LoginResponse } from '@aila/model';
 import { PasswordHasher } from '../../repositories/user-repository/password-hasher';
 import { AuthToken, AuthTokenRepository } from '../../repositories/auth-token-repository/auth-token-repository';
-import { EndpointError } from '../endpoint-error';
-import { parseBody } from '../parse-body';
+import { EndpointError } from '../framework/endpoint-error';
+import { parseBody } from '../framework/parse-body';
+import { getEndpointAbortSignal } from '../framework/endpoint-abort-signal';
 
 export class LoginEndpoint implements Endpoint {
   public readonly method = 'post';
@@ -18,15 +19,16 @@ export class LoginEndpoint implements Endpoint {
   ) {}
 
   public async handle(req: Request): Promise<LoginResponse> {
+    const abortSignal = getEndpointAbortSignal(req);
     const request = parseBody(loginRequestSchema, req.body);
 
-    const user = await this.userRepository.tryGetUser(request.userName);
+    const user = await this.userRepository.tryGetUser(abortSignal, request.userName);
     if (!user || !(await user.comparePassword(request.password, this.passwordHasher))) {
       throw new EndpointError('Invalid username or password', 401);
     }
 
     const authToken = await AuthToken.create(user.name, user.isAdmin);
-    await this.authTokenRepository.insert(authToken);
+    await this.authTokenRepository.insert(abortSignal, authToken);
 
     return { userName: user.name, authToken: authToken.token, isAdmin: user.isAdmin };
   }

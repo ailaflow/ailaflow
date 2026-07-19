@@ -10,7 +10,7 @@ export class SqliteProcessListQuerier implements ProcessListQuerier {
     this.db = dbs.modelDb;
   }
 
-  public async query(): Promise<ProcessLiteDto[]> {
+  public async query(_: AbortSignal): Promise<ProcessLiteDto[]> {
     const statement = this.db.prepare(`
       SELECT name, description, userAccessExpression, nStartInputs
       FROM processes

@@ -1,6 +1,8 @@
 import { GetSandboxesResponse } from '@aila/model';
 import { SandboxListQuerier } from '../../queriers/sandbox-list/sandbox-list-querier';
-import { Endpoint } from '../endpoint';
+import { Endpoint } from '../framework/endpoint';
+import { Request } from 'express';
+import { getEndpointAbortSignal } from '../framework/endpoint-abort-signal';
 
 export class GetSandboxesEndpoint implements Endpoint {
   public readonly method = 'get';
@@ -10,9 +12,10 @@ export class GetSandboxesEndpoint implements Endpoint {
 
   public constructor(private readonly querier: SandboxListQuerier) {}
 
-  public async handle(): Promise<GetSandboxesResponse> {
+  public async handle(req: Request): Promise<GetSandboxesResponse> {
+    const abortSignal = getEndpointAbortSignal(req);
     return {
-      sandboxes: await this.querier.query()
+      sandboxes: await this.querier.query(abortSignal)
     };
   }
 }

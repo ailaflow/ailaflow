@@ -31,7 +31,7 @@ export class AuthToken {
 }
 
 export interface AuthTokenRepository extends Repository {
-  insert(authToken: AuthToken): Promise<void>;
-  tryGetByToken(token: string): Promise<AuthToken | null>;
-  delete(token: string): Promise<void>;
+  insert(abortSignal: AbortSignal, authToken: AuthToken): Promise<void>;
+  tryGetByToken(abortSignal: AbortSignal, token: string): Promise<AuthToken | null>;
+  delete(abortSignal: AbortSignal, token: string): Promise<void>;
 }

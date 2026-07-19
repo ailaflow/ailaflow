@@ -1,5 +1,5 @@
 import { SandboxLiteDto } from '@aila/model';
 
 export interface SandboxListQuerier {
-  query(): Promise<SandboxLiteDto[]>;
+  query(abortSignal: AbortSignal): Promise<SandboxLiteDto[]>;
 }

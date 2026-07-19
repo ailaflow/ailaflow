@@ -10,7 +10,7 @@ export class SqliteSandboxRepository implements SandboxRepository {
     this.db = dbs.modelDb;
   }
 
-  public async setup() {
+  public async setup(_: AbortSignal) {
     this.db.exec(`
       CREATE TABLE IF NOT EXISTS sandboxes (
         name TEXT PRIMARY KEY,
@@ -23,7 +23,7 @@ export class SqliteSandboxRepository implements SandboxRepository {
     `);
   }
 
-  public async upsert(sandbox: Sandbox): Promise<void> {
+  public async upsert(_: AbortSignal, sandbox: Sandbox): Promise<void> {
     const statement = this.db.prepare(`
       INSERT INTO sandboxes (name, isEnabled, description, configuration, serializedSecrets, hash)
       VALUES (?, ?, ?, ?, ?, ?)
@@ -44,7 +44,7 @@ export class SqliteSandboxRepository implements SandboxRepository {
     );
   }
 
-  public async tryGet(name: string): Promise<Sandbox | null> {
+  public async tryGet(_: AbortSignal, name: string): Promise<Sandbox | null> {
     const statement = this.db.prepare(`
       SELECT name, isEnabled, description, configuration, serializedSecrets, hash
       FROM sandboxes

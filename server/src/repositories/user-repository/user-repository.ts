@@ -9,8 +9,8 @@ export class UserRepositoryError extends Error {
 }
 
 export interface UserRepository extends Repository {
-  tryGetUser(userName: string): Promise<User | null>;
-  insert(user: User): Promise<void>;
-  update(user: User): Promise<void>;
-  count(): Promise<number>;
+  tryGetUser(abortSignal: AbortSignal, userName: string): Promise<User | null>;
+  insert(abortSignal: AbortSignal, user: User): Promise<void>;
+  update(abortSignal: AbortSignal, user: User): Promise<void>;
+  count(abortSignal: AbortSignal): Promise<number>;
 }

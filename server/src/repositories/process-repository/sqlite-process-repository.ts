@@ -11,7 +11,7 @@ export class SqliteProcessRepository implements ProcessRepository {
     this.db = dbs.modelDb;
   }
 
-  public async setup() {
+  public async setup(_: AbortSignal) {
     this.db.exec(`
       CREATE TABLE IF NOT EXISTS processes (
         name TEXT PRIMARY KEY,
@@ -25,7 +25,7 @@ export class SqliteProcessRepository implements ProcessRepository {
     `);
   }
 
-  public async insert(process: Process): Promise<void> {
+  public async insert(_: AbortSignal, process: Process): Promise<void> {
     const statement = this.db.prepare(`
       INSERT INTO processes (name, description, userAccessExpression, nStartInputs, nSteps, serializedDefinition, definitionHash)
       VALUES (?, ?, ?, ?, ?, ?, ?)
@@ -48,7 +48,7 @@ export class SqliteProcessRepository implements ProcessRepository {
     }
   }
 
-  public async update(process: Process): Promise<void> {
+  public async update(_: AbortSignal, process: Process): Promise<void> {
     const statement = this.db.prepare(`
       UPDATE processes
       SET
@@ -71,7 +71,7 @@ export class SqliteProcessRepository implements ProcessRepository {
     );
   }
 
-  public async tryGetByName(name: string): Promise<Process | null> {
+  public async tryGetByName(_: AbortSignal, name: string): Promise<Process | null> {
     const statement = this.db.prepare(`
       SELECT name, description, userAccessExpression, nStartInputs, nSteps, serializedDefinition, definitionHash
       FROM processes

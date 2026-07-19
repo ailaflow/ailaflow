@@ -1,7 +1,7 @@
 import { saveUserRequestSchema, SaveUserResponse } from '@aila/model';
 import { Request } from 'express';
-import { Endpoint } from '../endpoint';
-import { parseBody } from '../parse-body';
+import { Endpoint } from '../framework/endpoint';
+import { parseBody } from '../framework/parse-body';
 import { UserRepository, UserRepositoryError } from '../../repositories/user-repository/user-repository';
 import {
   UserAttributesRepository,
@@ -9,8 +9,9 @@ import {
 } from '../../repositories/user-attributes-repository/user-attributes-repository';
 import { UserAttributes } from '../../repositories/user-attributes-repository/user-attributes';
 import { PasswordHasher } from '../../repositories/user-repository/password-hasher';
-import { EndpointError } from '../endpoint-error';
+import { EndpointError } from '../framework/endpoint-error';
 import { User } from '../../repositories/user-repository/user';
+import { getEndpointAbortSignal } from '../framework/endpoint-abort-signal';
 
 export class SaveUserEndpoint implements Endpoint {
   public readonly method = 'post';
@@ -25,9 +26,10 @@ export class SaveUserEndpoint implements Endpoint {
   ) {}
 
   public async handle(req: Request): Promise<SaveUserResponse> {
+    const abortSignal = getEndpointAbortSignal(req);
     const request = parseBody(saveUserRequestSchema, req.body);
 
-    const existingUser = await this.userRepository.tryGetUser(request.name);
+    const existingUser = await this.userRepository.tryGetUser(abortSignal, request.name);
     let user: User;
     if (request.insert) {
       if (existingUser) {
@@ -68,11 +70,11 @@ export class SaveUserEndpoint implements Endpoint {
 
     try {
       if (request.insert) {
-        await this.userRepository.insert(user);
+        await this.userRepository.insert(abortSignal, user);
       } else {
-        await this.userRepository.update(user);
+        await this.userRepository.update(abortSignal, user);
       }
-      await this.userAttributesRepository.replace(attributes);
+      await this.userAttributesRepository.replace(abortSignal, attributes);
     } catch (e) {
       if (e instanceof UserRepositoryError || e instanceof UserAttributesRepositoryError) {
         throw new EndpointError(e.message, 400);

@@ -2,8 +2,9 @@ import { GetUserResponse } from '@aila/model';
 import { Request } from 'express';
 import { UserRepository } from '../../repositories/user-repository/user-repository';
 import { UserAttributesRepository } from '../../repositories/user-attributes-repository/user-attributes-repository';
-import { Endpoint } from '../endpoint';
-import { EndpointError } from '../endpoint-error';
+import { Endpoint } from '../framework/endpoint';
+import { EndpointError } from '../framework/endpoint-error';
+import { getEndpointAbortSignal } from '../framework/endpoint-abort-signal';
 
 export class GetUserEndpoint implements Endpoint {
   public readonly method = 'get';
@@ -17,14 +18,15 @@ export class GetUserEndpoint implements Endpoint {
   ) {}
 
   public async handle(req: Request): Promise<GetUserResponse> {
+    const abortSignal = getEndpointAbortSignal(req);
     const userName = String(req.params.name);
 
-    const user = await this.userRepository.tryGetUser(userName);
+    const user = await this.userRepository.tryGetUser(abortSignal, userName);
     if (!user) {
       throw new EndpointError('User not found', 404);
     }
 
-    const attributes = await this.userAttributesRepository.get(user.name);
+    const attributes = await this.userAttributesRepository.get(abortSignal, user.name);
 
     return {
       user: {

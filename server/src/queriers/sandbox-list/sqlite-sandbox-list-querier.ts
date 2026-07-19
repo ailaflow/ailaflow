@@ -10,7 +10,7 @@ export class SqliteSandboxListQuerier implements SandboxListQuerier {
     this.db = dbs.modelDb;
   }
 
-  public async query(): Promise<SandboxLiteDto[]> {
+  public async query(_: AbortSignal): Promise<SandboxLiteDto[]> {
     const statement = this.db.prepare(`
       SELECT name, isEnabled, description
       FROM sandboxes

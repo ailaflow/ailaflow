@@ -1,11 +1,12 @@
 import { testProcessRequestSchema, TestProcessUpdate } from '@aila/model';
 import { SseResponse } from '../../utilities/sse-response';
-import { Endpoint } from '../endpoint';
+import { Endpoint } from '../framework/endpoint';
 import { Request, Response } from 'express';
 import { ProcessRepository } from '../../repositories/process-repository/process-repository';
-import { EndpointError } from '../endpoint-error';
+import { EndpointError } from '../framework/endpoint-error';
 import { ProcessExecutor } from '../../process-executor/process-executor';
-import { parseBody } from '../parse-body';
+import { parseBody } from '../framework/parse-body';
+import { getEndpointAbortSignal } from '../framework/endpoint-abort-signal';
 
 export class TestProcessEndpoint implements Endpoint {
   public readonly method = 'post';
@@ -19,9 +20,10 @@ export class TestProcessEndpoint implements Endpoint {
   ) {}
 
   public async handle(req: Request, res: Response) {
+    const endpointAbortSignal = getEndpointAbortSignal(req);
     const processName = String(req.params.name);
     const request = parseBody(testProcessRequestSchema, req.body);
-    const process = await this.processRepository.tryGetByName(processName);
+    const process = await this.processRepository.tryGetByName(endpointAbortSignal, processName);
     if (!process) {
       throw new EndpointError('Process not found', 404);
     }

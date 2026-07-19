@@ -15,7 +15,7 @@ export class SandboxInstanceManager {
   public async getOrCreate(abortSignal: AbortSignal, sandboxName: string): Promise<SandboxInstance> {
     let instance = this.instances.get(sandboxName);
     if (!instance) {
-      const sandbox = await this.sandboxRepository.tryGet(sandboxName);
+      const sandbox = await this.sandboxRepository.tryGet(abortSignal, sandboxName);
       if (!sandbox) {
         throw new Error(`Cannot find sandbox: ${sandboxName}`);
       }
