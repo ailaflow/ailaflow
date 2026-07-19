@@ -8,6 +8,8 @@ import { LoginEndpoint } from './api/auth/login-endpoint';
 import { Router } from './api/router';
 import { UserRepository } from './repositories/user-repository/user-repository';
 import { SqliteUserRepository } from './repositories/user-repository/sqlite-user-repository';
+import { UserAttributesRepository } from './repositories/user-attributes-repository/user-attributes-repository';
+import { SqliteUserAttributesRepository } from './repositories/user-attributes-repository/sqlite-user-attributes-repository';
 import { PasswordHasher } from './repositories/user-repository/password-hasher';
 import { SqliteAuthTokenRepository } from './repositories/auth-token-repository/sqlite-auth-token-repository';
 import { AuthTokenRepository } from './repositories/auth-token-repository/auth-token-repository';
@@ -54,6 +56,7 @@ export class Server {
 
     const serverPaths = new ServerPaths();
     let userRepository: UserRepository;
+    let userAttributesRepository: UserAttributesRepository;
     let authTokenRepository: AuthTokenRepository;
     let processRepository: ProcessRepository;
     let sandboxRepository: SandboxRepository;
@@ -64,6 +67,7 @@ export class Server {
     const sqliteDatabases = new SqliteDatabases(serverPaths);
 
     userRepository = new SqliteUserRepository(sqliteDatabases);
+    userAttributesRepository = new SqliteUserAttributesRepository(sqliteDatabases);
     authTokenRepository = new SqliteAuthTokenRepository(sqliteDatabases);
     processRepository = new SqliteProcessRepository(sqliteDatabases);
     sandboxRepository = new SqliteSandboxRepository(sqliteDatabases);
@@ -73,6 +77,7 @@ export class Server {
 
     await Promise.all([
       userRepository.setup(abortSignal),
+      userAttributesRepository.setup(abortSignal),
       authTokenRepository.setup(abortSignal),
       processRepository.setup(abortSignal),
       sandboxRepository.setup(abortSignal)
@@ -106,7 +111,7 @@ export class Server {
     setupServer(app, chatSessionResolver);
 
     const endpoints = [
-      new InstallEndpoint(userRepository, passwordHasher),
+      new InstallEndpoint(userRepository, userAttributesRepository, passwordHasher),
       new LoginEndpoint(userRepository, authTokenRepository, passwordHasher),
       new RefreshAuthTokenEndpoint(authTokenRepository),
       new GetProcessesEndpoint(processListQuerier),
@@ -117,8 +122,8 @@ export class Server {
       new GetSandboxEndpoint(sandboxRepository),
       new UpsertSandboxEndpoint(sandboxRepository),
       new GetUsersEndpoint(userListQuerier),
-      new GetUserEndpoint(userRepository),
-      new UpdateUserEndpoint(userRepository, passwordHasher)
+      new GetUserEndpoint(userRepository, userAttributesRepository),
+      new UpdateUserEndpoint(userRepository, userAttributesRepository, passwordHasher)
     ];
     const router = new Router(app, endpoints, authMiddleware);
 

@@ -1,6 +1,6 @@
 import { randomUUID } from 'crypto';
 import { PasswordHasher } from './password-hasher';
-import { UserAttributes, UserValidator } from '@aila/model';
+import { UserValidator } from '@aila/model';
 import { UserRepositoryError } from './user-repository';
 
 export class User {
@@ -9,15 +9,14 @@ export class User {
     if (nameError) {
       throw new UserRepositoryError(nameError);
     }
-    return new User(randomUUID(), name, await hasher.hash(password), isAdmin, {});
+    return new User(randomUUID(), name, await hasher.hash(password), isAdmin);
   }
 
   public constructor(
     public readonly id: string,
     public name: string,
     public passwordHash: string,
-    public isAdmin: boolean,
-    public attributes: UserAttributes
+    public isAdmin: boolean
   ) {}
 
   public async comparePassword(password: string, hasher: PasswordHasher): Promise<boolean> {
@@ -38,13 +37,5 @@ export class User {
 
   public setIsAdmin(isAdmin: boolean) {
     this.isAdmin = isAdmin;
-  }
-
-  public setAttributes(attributes: UserAttributes) {
-    const error = UserValidator.validateAttributeNames(attributes);
-    if (error) {
-      throw new UserRepositoryError(error);
-    }
-    this.attributes = attributes;
   }
 }

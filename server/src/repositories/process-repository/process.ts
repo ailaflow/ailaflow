@@ -1,6 +1,7 @@
 import { ProcessDefinition, ProcessRootValidator, ProcessStepValidator, UpdateProcessRequest } from '@aila/model';
 import { randomUUID } from 'crypto';
 import { DefinitionWalker } from 'sequential-workflow-model';
+import { ProcessRepositoryError } from './process-repository';
 import z from 'zod/v4';
 
 function validateProcessDefinition(
@@ -9,14 +10,14 @@ function validateProcessDefinition(
   stepValidator: ProcessStepValidator
 ): number {
   if (!rootValidator.validate(definition)) {
-    throw new Error('Validation failed for root');
+    throw new ProcessRepositoryError('Validation failed for root');
   }
 
   const walker = new DefinitionWalker();
   let nSteps = 0;
   walker.forEach(definition, (step, _, sequence) => {
     if (!stepValidator.validateStep(step, sequence, definition)) {
-      throw new Error(`Validation failed for step: ${step.id}`);
+      throw new ProcessRepositoryError(`Validation failed for step: ${step.id}`);
     }
     nSteps++;
   });
