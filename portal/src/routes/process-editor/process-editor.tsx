@@ -8,16 +8,16 @@ import { PortalErrorView } from '../../views/portal/portal-error-view';
 import { useAiStore } from '../common/admin-portal';
 
 export function ProcessEditor() {
-  const { processId } = useParams();
+  const { processName } = useParams();
   const apiClient = useApiClient();
 
   const { data, isLoading, finishSignal, error } = useLoader(
     abortSignal =>
       Promise.all([
-        processId ? apiClient.process.getProcess(abortSignal, processId) : Promise.resolve(null),
+        processName ? apiClient.process.getProcess(abortSignal, processName) : Promise.resolve(null),
         apiClient.sandbox.getSandboxes(abortSignal)
       ]),
-    [processId]
+    [processName]
   );
 
   useAiStore('processEditor', store => {
@@ -37,7 +37,7 @@ export function ProcessEditor() {
   }
 
   return (
-    <ProcessEditorContext key={processId ?? '_new'} process={data[0]?.process} sandboxes={data[1].sandboxes}>
+    <ProcessEditorContext key={processName ?? '_new'} process={data[0]?.process} sandboxes={data[1].sandboxes}>
       <ProcessEditorContent />
     </ProcessEditorContext>
   );

@@ -1,5 +1,4 @@
-import { ProcessDefinition, ProcessRootValidator, ProcessStepValidator, ProcessValidator, UpdateProcessRequest } from '@aila/model';
-import { randomUUID } from 'crypto';
+import { ProcessDefinition, ProcessRootValidator, ProcessStepValidator, ProcessValidator, SaveProcessRequest } from '@aila/model';
 import { DefinitionWalker } from 'sequential-workflow-model';
 import { ProcessRepositoryError } from './process-repository';
 import z from 'zod/v4';
@@ -48,18 +47,13 @@ function validateUserAccessExpression(userAccessExpression: string) {
 export type VariableValidatorMap = Map<string, z.ZodType>;
 
 export class Process {
-  public static create(
-    data: Omit<UpdateProcessRequest, 'id'>,
-    rootValidator: ProcessRootValidator,
-    stepValidator: ProcessStepValidator
-  ): Process {
+  public static create(data: SaveProcessRequest, rootValidator: ProcessRootValidator, stepValidator: ProcessStepValidator): Process {
     const nSteps = validateProcessDefinition(data.definition, rootValidator, stepValidator);
     validateName(data.name);
     validateDescription(data.description);
     validateUserAccessExpression(data.userAccessExpression);
 
     return new Process(
-      randomUUID(),
       data.name,
       data.description,
       data.userAccessExpression,
@@ -73,8 +67,7 @@ export class Process {
   private vvmCache: VariableValidatorMap | null = null;
 
   public constructor(
-    public readonly id: string,
-    public name: string,
+    public readonly name: string,
     public description: string,
     public userAccessExpression: string,
     public definition: ProcessDefinition,
@@ -83,16 +76,14 @@ export class Process {
     public nSteps: number
   ) {}
 
-  public async update(data: UpdateProcessRequest, rootValidator: ProcessRootValidator, stepValidator: ProcessStepValidator) {
-    if (data.id !== this.id) {
-      throw new Error('Process ID cannot be changed');
+  public async update(data: SaveProcessRequest, rootValidator: ProcessRootValidator, stepValidator: ProcessStepValidator) {
+    if (data.name !== this.name) {
+      throw new Error('Process name cannot be changed');
     }
     const nSteps = validateProcessDefinition(data.definition, rootValidator, stepValidator);
-    validateName(data.name);
     validateDescription(data.description);
     validateUserAccessExpression(data.userAccessExpression);
 
-    this.name = data.name;
     this.description = data.description;
     this.userAccessExpression = data.userAccessExpression;
     this.definition = data.definition;

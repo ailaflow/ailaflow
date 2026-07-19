@@ -12,16 +12,14 @@ export class SqliteUserListQuerier implements UserListQuerier {
 
   public async query(): Promise<UserLiteDto[]> {
     const statement = this.db.prepare(`
-      SELECT id, name, isAdmin
+      SELECT name, isAdmin
       FROM users
     `);
     const rows = statement.all() as {
-      id: string;
       name: string;
       isAdmin: number;
     }[];
     return rows.map(row => ({
-      id: row.id,
       name: row.name,
       isAdmin: row.isAdmin === 1
     }));

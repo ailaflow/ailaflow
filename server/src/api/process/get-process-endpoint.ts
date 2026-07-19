@@ -6,23 +6,22 @@ import { EndpointError } from '../endpoint-error';
 
 export class GetProcessEndpoint implements Endpoint {
   public readonly method = 'get';
-  public readonly path = '/api/processes/:id';
+  public readonly path = '/api/processes/:name';
   public readonly auth = true;
   public readonly admin = true;
 
   public constructor(private readonly repository: ProcessRepository) {}
 
   public async handle(req: Request): Promise<GetProcessResponse> {
-    const processId = String(req.params.id);
+    const processName = String(req.params.name);
 
-    const process = await this.repository.tryGetById(processId);
+    const process = await this.repository.tryGetByName(processName);
     if (!process) {
       throw new EndpointError('Process not found', 404);
     }
 
     return {
       process: {
-        id: process.id,
         name: process.name,
         description: process.description,
         userAccessExpression: process.userAccessExpression,

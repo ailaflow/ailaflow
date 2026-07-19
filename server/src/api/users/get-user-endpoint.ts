@@ -7,7 +7,7 @@ import { EndpointError } from '../endpoint-error';
 
 export class GetUserEndpoint implements Endpoint {
   public readonly method = 'get';
-  public readonly path = '/api/users/:id';
+  public readonly path = '/api/users/:name';
   public readonly auth = true;
   public readonly admin = true;
 
@@ -17,21 +17,20 @@ export class GetUserEndpoint implements Endpoint {
   ) {}
 
   public async handle(req: Request): Promise<GetUserResponse> {
-    const userId = String(req.params.id);
+    const userName = String(req.params.name);
 
-    const user = await this.userRepository.tryGetById(userId);
+    const user = await this.userRepository.tryGetUser(userName);
     if (!user) {
       throw new EndpointError('User not found', 404);
     }
 
-    const attributes = await this.userAttributesRepository.get(user.id);
+    const attributes = await this.userAttributesRepository.get(user.name);
 
     return {
       user: {
-        id: user.id,
         name: user.name,
         isAdmin: user.isAdmin,
-        attributes: attributes.getWithoutUserId()
+        attributes: attributes.getWithoutUserName()
       }
     };
   }

@@ -7,14 +7,14 @@ import { PortalLoadingView } from '../../views/portal/portal-loading-view';
 import { PortalErrorView } from '../../views/portal/portal-error-view';
 
 export function ProcessTester() {
-  const { processId } = useParams();
-  if (!processId) {
-    throw new Error('Process ID is required');
+  const { processName } = useParams();
+  if (!processName) {
+    throw new Error('Process name is required');
   }
   const apiClient = useApiClient();
   const navigate = useNavigate();
 
-  const { data, error, isLoading } = useLoader(abortSignal => apiClient.process.getProcess(abortSignal, processId), [processId]);
+  const { data, error, isLoading } = useLoader(abortSignal => apiClient.process.getProcess(abortSignal, processName), [processName]);
 
   if (isLoading) {
     return <PortalLoadingView />;
@@ -24,7 +24,7 @@ export function ProcessTester() {
   }
 
   function openEditor() {
-    navigate(`/admin/processes/${processId}`);
+    navigate(`/admin/processes/${processName}`);
   }
 
   return (

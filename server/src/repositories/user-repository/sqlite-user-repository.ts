@@ -1,5 +1,5 @@
 import { DatabaseSync } from 'node:sqlite';
-import { UserRepositoryError, UserRepository } from './user-repository';
+import { UserRepository, UserRepositoryError } from './user-repository';
 import { User } from './user';
 import { SqliteDatabases } from '../../core/sqlite-databases';
 
@@ -13,8 +13,7 @@ export class SqliteUserRepository implements UserRepository {
   public async setup() {
     this.db.exec(`
       CREATE TABLE IF NOT EXISTS users (
-        id TEXT PRIMARY KEY,
-        name TEXT NOT NULL UNIQUE,
+        name TEXT PRIMARY KEY,
         passwordHash TEXT NOT NULL,
         isAdmin INTEGER NOT NULL
       ) STRICT
@@ -23,14 +22,13 @@ export class SqliteUserRepository implements UserRepository {
 
   public async tryGetUser(userName: string): Promise<User | null> {
     const statement = this.db.prepare(`
-      SELECT id, name, passwordHash, isAdmin
+      SELECT name, passwordHash, isAdmin
       FROM users
       WHERE name = ?
       LIMIT 1
     `);
     const row = statement.get(userName) as
       | {
-          id: string;
           name: string;
           passwordHash: string;
           isAdmin: number;
@@ -39,37 +37,16 @@ export class SqliteUserRepository implements UserRepository {
     if (!row) {
       return null;
     }
-    return new User(row.id, row.name, row.passwordHash, row.isAdmin === 1);
-  }
-
-  public async tryGetById(id: string): Promise<User | null> {
-    const statement = this.db.prepare(`
-      SELECT id, name, passwordHash, isAdmin
-      FROM users
-      WHERE id = ?
-      LIMIT 1
-    `);
-    const row = statement.get(id) as
-      | {
-          id: string;
-          name: string;
-          passwordHash: string;
-          isAdmin: number;
-        }
-      | undefined;
-    if (!row) {
-      return null;
-    }
-    return new User(row.id, row.name, row.passwordHash, row.isAdmin === 1);
+    return new User(row.name, row.passwordHash, row.isAdmin === 1);
   }
 
   public async insert(user: User): Promise<void> {
     const statement = this.db.prepare(`
-      INSERT INTO users (id, name, passwordHash, isAdmin)
-      VALUES (?, ?, ?, ?)
+      INSERT INTO users (name, passwordHash, isAdmin)
+      VALUES (?, ?, ?)
     `);
     try {
-      statement.run(user.id, user.name, user.passwordHash, user.isAdmin ? 1 : 0);
+      statement.run(user.name, user.passwordHash, user.isAdmin ? 1 : 0);
     } catch (e) {
       if (isDuplicateUserNameSqliteError(e)) {
         throw new UserRepositoryError('A user name is already in use');
@@ -82,19 +59,11 @@ export class SqliteUserRepository implements UserRepository {
     const statement = this.db.prepare(`
       UPDATE users
       SET
-        name = ?,
         passwordHash = ?,
         isAdmin = ?
-      WHERE id = ?
+      WHERE name = ?
     `);
-    try {
-      statement.run(user.name, user.passwordHash, user.isAdmin ? 1 : 0, user.id);
-    } catch (e) {
-      if (isDuplicateUserNameSqliteError(e)) {
-        throw new UserRepositoryError('A user name is already in use');
-      }
-      throw e;
-    }
+    statement.run(user.passwordHash, user.isAdmin ? 1 : 0, user.name);
   }
 
   public async count(): Promise<number> {

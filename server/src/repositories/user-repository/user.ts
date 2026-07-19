@@ -1,4 +1,3 @@
-import { randomUUID } from 'crypto';
 import { PasswordHasher } from './password-hasher';
 import { UserValidator } from '@aila/model';
 import { UserRepositoryError } from './user-repository';
@@ -9,12 +8,11 @@ export class User {
     if (nameError) {
       throw new UserRepositoryError(nameError);
     }
-    return new User(randomUUID(), name, await hasher.hash(password), isAdmin);
+    return new User(name, await hasher.hash(password), isAdmin);
   }
 
   public constructor(
-    public readonly id: string,
-    public name: string,
+    public readonly name: string,
     public passwordHash: string,
     public isAdmin: boolean
   ) {}
@@ -25,14 +23,6 @@ export class User {
 
   public async setPassword(password: string, hasher: PasswordHasher) {
     this.passwordHash = await hasher.hash(password);
-  }
-
-  public setName(name: string) {
-    const error = UserValidator.validateName(name);
-    if (error) {
-      throw new UserRepositoryError(error);
-    }
-    this.name = name;
   }
 
   public setIsAdmin(isAdmin: boolean) {

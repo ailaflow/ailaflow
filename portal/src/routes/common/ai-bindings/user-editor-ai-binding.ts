@@ -4,20 +4,15 @@ import { route, routeStoreFactory, tool } from '@aibindkit/react';
 const userAttributeValue = z.union([z.string(), z.number(), z.boolean()]);
 
 const userEditorRoute = route('userEditor')
-  .paths(['/admin/users/:userId'])
+  .paths(['/admin/users/:userName'])
   .unavailable('You are not on a user editor page.')
   .params(
     z.object({
-      userId: z.string().describe('ID of the user to edit')
+      userName: z.string().describe('Name of the user to edit')
     })
   )
   .tools({
     getDetails: tool("Get the user's name, admin status, attributes, and unsaved-change status"),
-    setName: tool('Rename the user').input(
-      z.object({
-        name: z.string().describe('The new user name')
-      })
-    ),
     setIsAdmin: tool('Set whether the user is an administrator').input(
       z.object({
         isAdmin: z.boolean().describe('Whether the user should be an administrator')

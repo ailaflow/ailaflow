@@ -1,4 +1,4 @@
-import { UserAttributesValidator, UserValidator } from '@aila/model';
+import { UserAttributesValidator } from '@aila/model';
 import { toolError, toolSuccess } from '@aibindkit/react';
 import { useAiStore } from '../common/admin-portal';
 import { UserEditorState } from './user-editor-state';
@@ -16,14 +16,6 @@ export function useUserEditorAi(state: UserEditorState, save: () => Promise<void
             attributes: state.getAttributes(),
             hasUnsavedChanges: state.isDirty
           };
-        },
-        async setName(arg) {
-          const error = UserValidator.validateName(arg.name);
-          if (error) {
-            return toolError(error);
-          }
-          state.setName(arg.name);
-          return toolSuccess('User name updated');
         },
         async setIsAdmin(arg) {
           state.setIsAdmin(arg.isAdmin);
@@ -49,7 +41,6 @@ export function useUserEditorAi(state: UserEditorState, save: () => Promise<void
         },
         async getValidationErrors() {
           return {
-            nameError: state.nameError,
             attributeError: state.attributeError
           };
         },

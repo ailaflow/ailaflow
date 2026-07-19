@@ -27,7 +27,7 @@ export function ProcessEditorContent() {
   const canTest = Boolean(state.isValid && !state.isDirty);
 
   function openTester() {
-    navigate(`/admin/processes/${state.id}/test`);
+    navigate(`/admin/processes/${state.name}/test`);
   }
 
   async function save() {
@@ -37,8 +37,8 @@ export function ProcessEditorContent() {
 
     const timeout = AbortSignal.timeout(5_000);
     const hash = fnv1a(state.definition.value);
-    const response = await apiClient.process.updateProcess(timeout, {
-      id: state.id,
+    const response = await apiClient.process.saveProcess(timeout, {
+      insert: state.isNew,
       description: state.description,
       name: state.name,
       userAccessExpression: state.userAccessExpression,
@@ -46,10 +46,10 @@ export function ProcessEditorContent() {
       hash
     });
 
-    if (state.id) {
-      state.setIsDirty(false);
+    if (state.isNew) {
+      navigate(`/admin/processes/${response.name}`);
     } else {
-      navigate(`/admin/processes/${response.id}`);
+      state.setIsDirty(false);
     }
   }
 
@@ -66,6 +66,9 @@ export function ProcessEditorContent() {
           };
         },
         async setProcessName(arg) {
+          if (!state.isNew) {
+            return toolError('Saved process names cannot be changed');
+          }
           state.setName(arg.name, true);
           return toolSuccess('Process name updated');
         },
@@ -385,7 +388,7 @@ export function ProcessEditorContent() {
       icon="/"
       name={state.name}
       isNameValid={state.nameError === null}
-      isNameReadOnly={!isDesigner}
+      isNameReadOnly={!isDesigner || !state.isNew}
       onNameChange={name => state.setName(name, false)}
       detailsId="admin-process-editor-details"
       details={

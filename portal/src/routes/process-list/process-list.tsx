@@ -29,7 +29,6 @@ export function ProcessList() {
             return toolError(error);
           }
           return data.processes.map(process => ({
-            id: process.id,
             name: `\$${process.name}`,
             description: process.description,
             userAccessExpression: process.userAccessExpression
@@ -77,16 +76,16 @@ export function ProcessList() {
         }
       ]}
       rows={data.processes}
-      getRowKey={process => process.id}
+      getRowKey={process => process.name}
       emptyMessage="No processes found."
       actions={[
         {
           label: <SvgIcon name="pencil" className="h-4 w-4" />,
-          getTo: process => `/admin/processes/${process.id}`
+          getTo: process => `/admin/processes/${process.name}`
         },
         {
           label: 'Test',
-          getTo: process => `/admin/processes/${process.id}/test`
+          getTo: process => `/admin/processes/${process.name}/test`
         }
       ]}
     />

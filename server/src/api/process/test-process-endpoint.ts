@@ -9,7 +9,7 @@ import { parseBody } from '../parse-body';
 
 export class TestProcessEndpoint implements Endpoint {
   public readonly method = 'post';
-  public readonly path = '/api/processes/:id/test';
+  public readonly path = '/api/processes/:name/test';
   public readonly auth = true;
   public readonly admin = true;
 
@@ -19,9 +19,9 @@ export class TestProcessEndpoint implements Endpoint {
   ) {}
 
   public async handle(req: Request, res: Response) {
-    const processId = String(req.params.id);
+    const processName = String(req.params.name);
     const request = parseBody(testProcessRequestSchema, req.body);
-    const process = await this.processRepository.tryGetById(processId);
+    const process = await this.processRepository.tryGetByName(processName);
     if (!process) {
       throw new EndpointError('Process not found', 404);
     }

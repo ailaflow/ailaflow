@@ -3,17 +3,17 @@ import { Endpoint } from '../endpoint';
 import {
   ProcessRootValidator,
   ProcessStepValidator,
-  updateProcessRequestSchema,
-  UpdateProcessResponse,
+  saveProcessRequestSchema,
+  SaveProcessResponse,
   VariableCachedValidator
 } from '@aila/model';
-import { ProcessRepository } from '../../repositories/process-repository/process-repository';
+import { ProcessRepository, ProcessRepositoryError } from '../../repositories/process-repository/process-repository';
 import { EndpointError } from '../endpoint-error';
 import { SandboxListQuerier } from '../../queriers/sandbox-list/sandbox-list-querier';
 import { parseBody } from '../parse-body';
 import { Process } from '../../repositories/process-repository/process';
 
-export class UpdateProcessEndpoint implements Endpoint {
+export class SaveProcessEndpoint implements Endpoint {
   public readonly method = 'post';
   public readonly path = '/api/process';
   public readonly auth = true;
@@ -24,27 +24,35 @@ export class UpdateProcessEndpoint implements Endpoint {
     private readonly sandboxListQuerier: SandboxListQuerier
   ) {}
 
-  public async handle(req: Request): Promise<UpdateProcessResponse> {
-    const request = parseBody(updateProcessRequestSchema, req.body);
+  public async handle(req: Request): Promise<SaveProcessResponse> {
+    const request = parseBody(saveProcessRequestSchema, req.body);
 
     const { rootValidator, stepValidator } = await this.getValidators();
 
-    let process: Process;
-    if (request.id) {
-      const existingProcess = await this.processRepository.tryGetById(request.id);
-      if (!existingProcess) {
-        throw new EndpointError('Process not found', 404);
+    try {
+      let process = await this.processRepository.tryGetByName(request.name);
+      if (request.insert) {
+        if (process) {
+          throw new EndpointError('Process already exists', 400);
+        }
+        process = Process.create(request, rootValidator, stepValidator);
+        await this.processRepository.insert(process);
+      } else {
+        if (!process) {
+          throw new EndpointError('Process not found', 404);
+        }
+        await process.update(request, rootValidator, stepValidator);
+        await this.processRepository.update(process);
       }
-      process = existingProcess;
-      await process.update(request, rootValidator, stepValidator);
-      await this.processRepository.update(process);
-    } else {
-      process = Process.create(request, rootValidator, stepValidator);
-      await this.processRepository.insert(process);
+    } catch (e) {
+      if (e instanceof ProcessRepositoryError) {
+        throw new EndpointError(e.message, 400);
+      }
+      throw e;
     }
 
     return {
-      id: process.id
+      name: request.name
     };
   }
 

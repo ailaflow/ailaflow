@@ -22,7 +22,6 @@ export function UserList() {
             return toolError(loader.error);
           }
           return loader.data.users.map(user => ({
-            id: user.id,
             name: user.name,
             isAdmin: user.isAdmin
           }));
@@ -57,13 +56,13 @@ export function UserList() {
         }
       ]}
       rows={loader.data.users}
-      getRowKey={user => user.id}
+      getRowKey={user => user.name}
       emptyMessage="No users found."
       actions={[
         {
           label: <SvgIcon name="pencil" className="h-4 w-4" />,
           ariaLabel: 'Edit user',
-          getTo: user => `/admin/users/${user.id}`
+          getTo: user => `/admin/users/${user.name}`
         }
       ]}
     />

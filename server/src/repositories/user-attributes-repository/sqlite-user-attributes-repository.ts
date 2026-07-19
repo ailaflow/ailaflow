@@ -20,17 +20,17 @@ export class SqliteUserAttributesRepository implements UserAttributesRepository 
     `);
     this.db.exec(`
       CREATE TABLE IF NOT EXISTS user_attributes (
-        user_id TEXT NOT NULL,
+        user_name TEXT NOT NULL,
         attribute_name TEXT NOT NULL,
         attribute_type INTEGER NOT NULL,
         value_string TEXT,
         value_integer INTEGER,
         value_boolean INTEGER,
 
-        PRIMARY KEY (user_id, attribute_name),
+        PRIMARY KEY (user_name, attribute_name),
 
-        FOREIGN KEY (user_id)
-          REFERENCES users(id)
+        FOREIGN KEY (user_name)
+          REFERENCES users(name)
           ON DELETE CASCADE,
 
         CHECK (
@@ -85,13 +85,13 @@ export class SqliteUserAttributesRepository implements UserAttributesRepository 
     `);
   }
 
-  public async get(userId: string): Promise<UserAttributes> {
+  public async get(userName: string): Promise<UserAttributes> {
     const statement = this.db.prepare(`
       SELECT attribute_name, attribute_type, value_string, value_integer, value_boolean
       FROM user_attributes
-      WHERE user_id = ?
+      WHERE user_name = ?
     `);
-    const rows = statement.all(userId) as {
+    const rows = statement.all(userName) as {
       attribute_name: string;
       attribute_type: UserAttributeValueType;
       value_string: string | null;
@@ -113,27 +113,27 @@ export class SqliteUserAttributesRepository implements UserAttributesRepository 
         }
       })
     );
-    return new UserAttributes(userId, attributes);
+    return new UserAttributes(userName, attributes);
   }
 
   public async replace(attributes: UserAttributes): Promise<void> {
     const deleteAttributesStatement = this.db.prepare(`
       DELETE FROM user_attributes
-      WHERE user_id = ?
+      WHERE user_name = ?
     `);
     const insertAttributeStatement = this.db.prepare(`
-      INSERT INTO user_attributes (user_id, attribute_name, attribute_type, value_string, value_integer, value_boolean)
+      INSERT INTO user_attributes (user_name, attribute_name, attribute_type, value_string, value_integer, value_boolean)
       VALUES (?, ?, ?, ?, ?, ?)
     `);
 
     try {
       this.db.exec(`BEGIN`);
-      deleteAttributesStatement.run(attributes.userId);
+      deleteAttributesStatement.run(attributes.userName);
       for (const [name, value] of Object.entries(attributes.attributes)) {
         const attribute = serializeAttributeValue(value);
         this.ensureDefinition(name, attribute.type);
         insertAttributeStatement.run(
-          attributes.userId,
+          attributes.userName,
           name,
           attribute.type,
           attribute.valueString,

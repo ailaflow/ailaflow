@@ -9,6 +9,6 @@ export class UserAttributesRepositoryError extends Error {
 }
 
 export interface UserAttributesRepository extends Repository {
-  get(userId: string): Promise<UserAttributes>;
+  get(userName: string): Promise<UserAttributes>;
   replace(attributes: UserAttributes): Promise<void>;
 }

@@ -1,10 +1,9 @@
 import {
-  UpdateUserRequest,
+  SaveUserRequest,
   UserAttributesValidator,
   UserAttributeValue,
   UserAttributeValueType,
-  UserDto,
-  UserValidator
+  UserDto
 } from '@aila/model';
 import { useMemo, useState } from 'react';
 import { UserAttributeEditorRow } from '../../views/user-editor/user-editor-view';
@@ -18,10 +17,8 @@ export interface UserEditorData {
 }
 
 export interface UserEditorState extends UserEditorData {
-  nameError: string | null;
   attributeError: string | null;
   canSave: boolean;
-  setName(name: string): void;
   setPassword(password: string): void;
   setIsAdmin(isAdmin: boolean): void;
   addAttribute(): void;
@@ -31,14 +28,14 @@ export interface UserEditorState extends UserEditorData {
   setAttribute(name: string, value: UserAttributeValue): void;
   removeAttributeByName(name: string): void;
   markSaved(): void;
-  toUpdateRequest(id: string): UpdateUserRequest;
+  toSaveRequest(): SaveUserRequest;
 }
 
 export function useUserEditorState(user: UserDto): UserEditorState {
   const [data, setData] = useState<UserEditorData>(() => createData(user));
   const validation = useMemo(() => validateState(data), [data]);
-  const { nameError, attributeError } = validation;
-  const canSave = data.isDirty && nameError === null && attributeError === null;
+  const { attributeError } = validation;
+  const canSave = data.isDirty && attributeError === null;
 
   function update(delta: Partial<UserEditorData> | ((data: UserEditorData) => Partial<UserEditorData>)) {
     setData(data => ({
@@ -50,10 +47,8 @@ export function useUserEditorState(user: UserDto): UserEditorState {
 
   return {
     ...data,
-    nameError,
     attributeError,
     canSave,
-    setName: name => update({ name }),
     setPassword: password => update({ password }),
     setIsAdmin: isAdmin => update({ isAdmin }),
     addAttribute: () =>
@@ -89,8 +84,8 @@ export function useUserEditorState(user: UserDto): UserEditorState {
         password: '',
         isDirty: false
       })),
-    toUpdateRequest: id => ({
-      id,
+    toSaveRequest: () => ({
+      insert: false,
       name: data.name,
       password: data.password || undefined,
       isAdmin: data.isAdmin,
@@ -138,37 +133,29 @@ function toAttributeRow(id: number, name: string, value: UserAttributeValue): Us
   };
 }
 
-function validateState(state: UserEditorData): { nameError: string | null; attributeError: string | null } {
-  const nameError = UserValidator.validateName(state.name);
-  if (nameError) {
-    return { nameError, attributeError: null };
-  }
-
+function validateState(state: UserEditorData): { attributeError: string | null } {
   const names = new Set<string>();
   for (const attribute of state.attributes) {
     const attributeNameError = UserAttributesValidator.validateName(attribute.name);
     if (attributeNameError) {
       return {
-        nameError: null,
         attributeError: `Attribute name "${attribute.name}" is invalid: ${attributeNameError}`
       };
     }
     if (names.has(attribute.name)) {
       return {
-        nameError: null,
         attributeError: `Attribute name "${attribute.name}" is duplicated.`
       };
     }
     names.add(attribute.name);
     if (attribute.type === UserAttributeValueType.INTEGER && !Number.isInteger(Number(attribute.value))) {
       return {
-        nameError: null,
         attributeError: `Attribute "${attribute.name}" must be an integer.`
       };
     }
   }
 
-  return { nameError: null, attributeError: null };
+  return { attributeError: null };
 }
 
 function rowsToAttributes(rows: UserAttributeEditorRow[]): Record<string, UserAttributeValue> {

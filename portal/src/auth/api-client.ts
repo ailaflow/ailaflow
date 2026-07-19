@@ -14,11 +14,11 @@ import type {
   RefreshTokenResponse,
   TestProcessRequest,
   TestProcessUpdate,
-  UpdateUserRequest,
-  UpdateUserResponse,
-  UpdateProcessRequest,
-  UpdateProcessResponse,
-  UpsertSandboxRequest
+  SaveProcessRequest,
+  SaveProcessResponse,
+  UpsertSandboxRequest,
+  SaveUserRequest,
+  SaveUserResponse
 } from '@aila/model';
 
 export class ApiClient {
@@ -76,7 +76,7 @@ export class AuthApiClient {
 export class ProcessApiClient {
   public constructor(private readonly client: HttpClient) {}
 
-  public async updateProcess(abortSignal: AbortSignal, request: UpdateProcessRequest): Promise<UpdateProcessResponse> {
+  public async saveProcess(abortSignal: AbortSignal, request: SaveProcessRequest): Promise<SaveProcessResponse> {
     return this.client.json(abortSignal, 'POST', '/api/process', request);
   }
 
@@ -84,17 +84,17 @@ export class ProcessApiClient {
     return this.client.json(abortSignal, 'GET', '/api/processes');
   }
 
-  public async getProcess(abortSignal: AbortSignal, id: string): Promise<GetProcessResponse> {
-    return this.client.json(abortSignal, 'GET', `/api/processes/${id}`);
+  public async getProcess(abortSignal: AbortSignal, name: string): Promise<GetProcessResponse> {
+    return this.client.json(abortSignal, 'GET', `/api/processes/${encodeURIComponent(name)}`);
   }
 
   public async testProcess(
     abortSignal: AbortSignal,
     listener: HttpClientSseListener<TestProcessUpdate>,
-    id: string,
+    name: string,
     request: TestProcessRequest
   ) {
-    return this.client.sse(abortSignal, listener, 'POST', `/api/processes/${id}/test`, request);
+    return this.client.sse(abortSignal, listener, 'POST', `/api/processes/${encodeURIComponent(name)}/test`, request);
   }
 }
 
@@ -121,11 +121,11 @@ export class UserApiClient {
     return this.client.json(abortSignal, 'GET', '/api/users');
   }
 
-  public async getUser(abortSignal: AbortSignal, id: string): Promise<GetUserResponse> {
-    return this.client.json(abortSignal, 'GET', `/api/users/${id}`);
+  public async getUser(abortSignal: AbortSignal, name: string): Promise<GetUserResponse> {
+    return this.client.json(abortSignal, 'GET', `/api/users/${encodeURIComponent(name)}`);
   }
 
-  public async updateUser(abortSignal: AbortSignal, request: UpdateUserRequest): Promise<UpdateUserResponse> {
+  public async saveUser(abortSignal: AbortSignal, request: SaveUserRequest): Promise<SaveUserResponse> {
     return this.client.json(abortSignal, 'POST', '/api/user', request);
   }
 }

@@ -38,7 +38,7 @@ export const routes = [
         element: <ProcessList />
       },
       {
-        path: '/admin/processes/:processId',
+        path: '/admin/processes/:processName',
         element: <ProcessEditor />
       },
       {
@@ -46,7 +46,7 @@ export const routes = [
         element: <ProcessEditor />
       },
       {
-        path: '/admin/processes/:processId/test',
+        path: '/admin/processes/:processName/test',
         element: <ProcessTester />
       },
       {
@@ -66,7 +66,7 @@ export const routes = [
         element: <UserList />
       },
       {
-        path: '/admin/users/:userId',
+        path: '/admin/users/:userName',
         element: <UserEditorPage />
       }
     ]

@@ -17,7 +17,7 @@ import { RefreshAuthTokenEndpoint } from './api/auth/refresh-auth-token-endpoint
 import { AuthMiddleware } from './api/auth/auth-middleware';
 import { InstallEndpoint } from './api/install/install-endpoint';
 import { GetProcessesEndpoint } from './api/process/get-processes-endpoint';
-import { UpdateProcessEndpoint } from './api/process/update-process-endpoint';
+import { SaveProcessEndpoint } from './api/process/save-process-endpoint';
 import { ProcessRepository } from './repositories/process-repository/process-repository';
 import { SqliteDatabases } from './core/sqlite-databases';
 import { SqliteProcessRepository } from './repositories/process-repository/sqlite-process-repository';
@@ -37,7 +37,7 @@ import { UserListQuerier } from './queriers/user-list/user-list-querier';
 import { SqliteUserListQuerier } from './queriers/user-list/sqlite-user-list-querier';
 import { GetUsersEndpoint } from './api/users/get-users-endpoint';
 import { GetUserEndpoint } from './api/users/get-user-endpoint';
-import { UpdateUserEndpoint } from './api/users/update-user-endpoint';
+import { SaveUserEndpoint } from './api/users/save-user-endpoint';
 import { ProcessExecutor } from './process-executor/process-executor';
 import { ProcessExecutionStore } from './process-executor/process-execution-store';
 import { SandboxRpcHandlerProvider } from './sandbox/sandbox-rpc-handler-provider';
@@ -116,14 +116,14 @@ export class Server {
       new RefreshAuthTokenEndpoint(authTokenRepository),
       new GetProcessesEndpoint(processListQuerier),
       new GetProcessEndpoint(processRepository),
-      new UpdateProcessEndpoint(processRepository, sandboxListQuerier),
+      new SaveProcessEndpoint(processRepository, sandboxListQuerier),
       new TestProcessEndpoint(processRepository, workflowMachineFactory),
       new GetSandboxesEndpoint(sandboxListQuerier),
       new GetSandboxEndpoint(sandboxRepository),
       new UpsertSandboxEndpoint(sandboxRepository),
       new GetUsersEndpoint(userListQuerier),
       new GetUserEndpoint(userRepository, userAttributesRepository),
-      new UpdateUserEndpoint(userRepository, userAttributesRepository, passwordHasher)
+      new SaveUserEndpoint(userRepository, userAttributesRepository, passwordHasher)
     ];
     const router = new Router(app, endpoints, authMiddleware);
 

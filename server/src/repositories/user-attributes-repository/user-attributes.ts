@@ -20,15 +20,15 @@ export class UserAttributes {
       [USER_NAME_ATTRIBUTE_NAME]: user.name,
       [ALL_ATTRIBUTE_NAME]: true
     };
-    return new UserAttributes(user.id, finalAttributes);
+    return new UserAttributes(user.name, finalAttributes);
   }
 
   public constructor(
-    public readonly userId: string,
+    public readonly userName: string,
     public readonly attributes: Attributes
   ) {}
 
-  public getWithoutUserId(): Attributes {
+  public getWithoutUserName(): Attributes {
     const attrs = { ...this.attributes };
     delete attrs[USER_NAME_ATTRIBUTE_NAME];
     delete attrs[ALL_ATTRIBUTE_NAME];

@@ -31,7 +31,7 @@ export function ProcessTesterContent(props: ProcessTesterContentProps) {
               setUpdates(prev => [...prev, { type: 'Connection closed' } as TestProcessUpdate]);
             }
           },
-          props.process.id,
+          props.process.name,
           { input: formData! }
         );
       } catch (e) {

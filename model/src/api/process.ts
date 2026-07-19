@@ -4,7 +4,6 @@ import { processDefinitionSchema } from '../process';
 // getProcesses
 
 const processLiteDtoSchema = z.object({
-  id: z.string(),
   name: z.string(),
   description: z.string(),
   userAccessExpression: z.string(),
@@ -21,7 +20,6 @@ export type GetProcessesResponse = z.infer<typeof getProcessesResponseSchema>;
 // getProcess
 
 const processDtoSchema = z.object({
-  id: z.string(),
   name: z.string(),
   description: z.string(),
   userAccessExpression: z.string(),
@@ -35,22 +33,22 @@ export const getProcessResponseSchema = z.object({
 export type ProcessDto = z.infer<typeof processDtoSchema>;
 export type GetProcessResponse = z.infer<typeof getProcessResponseSchema>;
 
-// updateProcess
+// saveProcess
 
-export const updateProcessRequestSchema = z.object({
-  id: z.string().optional(),
+export const saveProcessRequestSchema = z.object({
+  insert: z.boolean(),
   name: z.string(),
   description: z.string(),
   userAccessExpression: z.string(),
   definition: processDefinitionSchema,
   hash: z.string()
 });
-export const updateProcessResponseSchema = z.object({
-  id: z.string()
+export const saveProcessResponseSchema = z.object({
+  name: z.string()
 });
 
-export type UpdateProcessRequest = z.infer<typeof updateProcessRequestSchema>;
-export type UpdateProcessResponse = z.infer<typeof updateProcessResponseSchema>;
+export type SaveProcessRequest = z.infer<typeof saveProcessRequestSchema>;
+export type SaveProcessResponse = z.infer<typeof saveProcessResponseSchema>;
 
 // testProcess
 

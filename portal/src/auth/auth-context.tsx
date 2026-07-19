@@ -4,7 +4,6 @@ import { ApiClient } from './api-client';
 const authContext = createContext<AuthState | null>(null);
 
 export interface AuthSession {
-  userId: string;
   userName: string;
   authToken: string;
   isAdmin: boolean;

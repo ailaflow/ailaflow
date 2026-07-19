@@ -1,5 +1,5 @@
 import { ProcessDefinition } from '@aila/model';
-import { ProcessRepositoryError, ProcessRepository } from './process-repository';
+import { ProcessRepository, ProcessRepositoryError } from './process-repository';
 import { Process } from './process';
 import { SqliteDatabases } from '../../core/sqlite-databases';
 import { DatabaseSync } from 'node:sqlite';
@@ -14,8 +14,7 @@ export class SqliteProcessRepository implements ProcessRepository {
   public async setup() {
     this.db.exec(`
       CREATE TABLE IF NOT EXISTS processes (
-        id TEXT PRIMARY KEY,
-        name TEXT NOT NULL UNIQUE,
+        name TEXT PRIMARY KEY,
         description TEXT NOT NULL,
         userAccessExpression TEXT NOT NULL,
         nStartInputs INTEGER NOT NULL,
@@ -24,17 +23,15 @@ export class SqliteProcessRepository implements ProcessRepository {
         definitionHash TEXT NOT NULL
       ) STRICT
     `);
-    this.migrateUserAccessExpressionColumn();
   }
 
   public async insert(process: Process): Promise<void> {
     const statement = this.db.prepare(`
-      INSERT INTO processes (id, name, description, userAccessExpression, nStartInputs, nSteps, serializedDefinition, definitionHash)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO processes (name, description, userAccessExpression, nStartInputs, nSteps, serializedDefinition, definitionHash)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
     `);
     try {
       statement.run(
-        process.id,
         process.name,
         process.description,
         process.userAccessExpression,
@@ -55,44 +52,34 @@ export class SqliteProcessRepository implements ProcessRepository {
     const statement = this.db.prepare(`
       UPDATE processes
       SET
-        name = ?,
         description = ?,
         userAccessExpression = ?,
         nStartInputs = ?,
         nSteps = ?,
         serializedDefinition = ?,
         definitionHash = ?
-      WHERE id = ?
+      WHERE name = ?
     `);
-    try {
-      statement.run(
-        process.name,
-        process.description,
-        process.userAccessExpression,
-        process.nStartInputs,
-        process.nSteps,
-        JSON.stringify(process.definition),
-        process.hash,
-        process.id
-      );
-    } catch (e) {
-      if (isDuplicateProcessNameSqliteError(e)) {
-        throw new ProcessRepositoryError('A process name is already in use');
-      }
-      throw e;
-    }
+    statement.run(
+      process.description,
+      process.userAccessExpression,
+      process.nStartInputs,
+      process.nSteps,
+      JSON.stringify(process.definition),
+      process.hash,
+      process.name
+    );
   }
 
-  public async tryGetById(id: string): Promise<Process | null> {
+  public async tryGetByName(name: string): Promise<Process | null> {
     const statement = this.db.prepare(`
-      SELECT id, name, description, userAccessExpression, nStartInputs, nSteps, serializedDefinition, definitionHash
+      SELECT name, description, userAccessExpression, nStartInputs, nSteps, serializedDefinition, definitionHash
       FROM processes
-      WHERE id = ?
+      WHERE name = ?
       LIMIT 1
     `);
-    const row = statement.get(id) as
+    const row = statement.get(name) as
       | {
-          id: string;
           name: string;
           description: string;
           userAccessExpression: string;
@@ -105,7 +92,6 @@ export class SqliteProcessRepository implements ProcessRepository {
 
     return row
       ? new Process(
-          row.id,
           row.name,
           row.description,
           row.userAccessExpression,
@@ -115,19 +101,6 @@ export class SqliteProcessRepository implements ProcessRepository {
           row.nSteps
         )
       : null;
-  }
-
-  private migrateUserAccessExpressionColumn() {
-    const columns = this.db.prepare(`PRAGMA table_info(processes)`).all() as { name: string }[];
-    const columnNames = new Set(columns.map(column => column.name));
-
-    if (!columnNames.has('userAccessExpression')) {
-      this.db.exec(`ALTER TABLE processes ADD COLUMN userAccessExpression TEXT NOT NULL DEFAULT ''`);
-    }
-
-    if (columnNames.has('userList')) {
-      this.db.exec(`UPDATE processes SET userAccessExpression = userList WHERE userAccessExpression = ''`);
-    }
   }
 }
 

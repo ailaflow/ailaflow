@@ -6,16 +6,16 @@ import { PortalLoadingView } from '../../views/portal/portal-loading-view';
 import { UserEditor } from './user-editor';
 
 export function UserEditorPage() {
-  const { userId } = useParams();
+  const { userName } = useParams();
   const apiClient = useApiClient();
   const loader = useLoader(
     abortSignal => {
-      if (!userId) {
-        throw new Error('User id is required');
+      if (!userName) {
+        throw new Error('User name is required');
       }
-      return apiClient.user.getUser(abortSignal, userId);
+      return apiClient.user.getUser(abortSignal, userName);
     },
-    [apiClient, userId]
+    [apiClient, userName]
   );
 
   if (loader.isLoading) {

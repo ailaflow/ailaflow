@@ -14,9 +14,9 @@ export function UserEditor(props: { user: UserDto }) {
 
   async function save() {
     const abortSignal = AbortSignal.timeout(5_000);
-    const response = await apiClient.user.updateUser(abortSignal, state.toUpdateRequest(props.user.id));
+    const response = await apiClient.user.saveUser(abortSignal, state.toSaveRequest());
     state.markSaved();
-    navigate(`/admin/users/${response.id}`);
+    navigate(`/admin/users/${response.name}`);
   }
 
   useUserEditorAi(state, save);
@@ -26,11 +26,10 @@ export function UserEditor(props: { user: UserDto }) {
     <ResourceEditorView
       icon="@"
       name={state.name}
-      isNameReadOnly={false}
-      isNameValid={state.nameError === null}
+      isNameReadOnly={true}
+      isNameValid={true}
       canSave={state.canSave}
       onSave={save}
-      onNameChange={state.setName}
       canSwitch={false}
       switchLabel=""
     >

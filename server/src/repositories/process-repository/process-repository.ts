@@ -11,5 +11,5 @@ export class ProcessRepositoryError extends Error {
 export interface ProcessRepository extends Repository {
   insert(process: Process): Promise<void>;
   update(process: Process): Promise<void>;
-  tryGetById(id: string): Promise<Process | null>;
+  tryGetByName(name: string): Promise<Process | null>;
 }

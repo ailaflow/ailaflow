@@ -36,7 +36,7 @@ export interface ProcessEditorData {
   sandboxNames: string[];
 
   isDirty: boolean;
-  id?: string;
+  isNew: boolean;
   name: string;
   nameError: string | null;
   description: string;
@@ -94,7 +94,7 @@ function createData(props: Omit<ProcessEditorContextProps, 'children'>): Process
     walker: new DefinitionWalker(),
     sandboxNames,
 
-    id: props.process?.id,
+    isNew: !props.process,
     name,
     nameError: ProcessValidator.validateName(name),
     description,

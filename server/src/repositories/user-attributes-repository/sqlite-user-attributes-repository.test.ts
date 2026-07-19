@@ -14,8 +14,8 @@ test('user attributes keep one value type per attribute name across users', asyn
 
   const userRepository = new SqliteUserRepository(dbs);
   await userRepository.setup();
-  const user1 = new User('user-1', 'user-1', 'hash', false);
-  const user2 = new User('user-2', 'user-2', 'hash', false);
+  const user1 = new User('user_1', 'hash', false);
+  const user2 = new User('user_2', 'hash', false);
   await userRepository.insert(user1);
   await userRepository.insert(user2);
 
@@ -25,9 +25,9 @@ test('user attributes keep one value type per attribute name across users', asyn
   await repository.replace(UserAttributes.create(user1, { age: 10 }));
   await repository.replace(UserAttributes.create(user2, { age: 20 }));
 
-  const attributes = await repository.get('user-1');
-  assert.equal(attributes.attributes.$user_id, 'user-1');
-  assert.deepEqual(attributes.getWithoutUserId(), { age: 10 });
+  const attributes = await repository.get('user_1');
+  assert.equal(attributes.attributes.$user_name, 'user_1');
+  assert.deepEqual(attributes.getWithoutUserName(), { age: 10 });
 
   await assert.rejects(() => repository.replace(UserAttributes.create(user2, { age: '20' })), UserAttributesRepositoryError);
 

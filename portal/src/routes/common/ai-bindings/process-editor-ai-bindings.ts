@@ -7,17 +7,17 @@ import { route, routeStoreFactory, tool } from '@aibindkit/react';
 
 const processEditorRoute = route('processEditor')
   .unavailable('You are not on a process editor page.')
-  .paths(['/admin/processes/:processId', '/admin/create-process'])
+  .paths(['/admin/processes/:processName', '/admin/create-process'])
   .params(
     z.object({
-      processId: z.string().describe('ID of the process to edit')
+      processName: z.string().describe('Name of the process to edit')
     })
   )
   .tools({
     getProcessNameAndDescription: tool('Get the process name and description'),
-    setProcessName: tool('Rename the process').input(
+    setProcessName: tool('Set the new process name before it is saved').input(
       z.object({
-        name: z.string().describe('The new name of the process')
+        name: z.string().describe('The process name')
       })
     ),
     setProcessDescription: tool('Update the process description').input(
