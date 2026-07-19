@@ -14,7 +14,7 @@ export interface ResourceEditorViewProps {
   onSave?: () => Promise<void>;
   canSwitch: boolean;
   onSwitch?: () => void;
-  switchLabel: string;
+  switchLabel?: string;
   children: React.ReactNode;
 }
 

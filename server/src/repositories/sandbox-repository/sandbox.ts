@@ -1,8 +1,9 @@
 import { SandboxValidator, UpsertSandboxRequest } from '@aila/model';
 import { SandboxRepositoryError } from './sandbox-repository';
+import { fnv1a } from '@aibindkit/core';
 
 export class Sandbox {
-  public static async create(data: UpsertSandboxRequest): Promise<Sandbox> {
+  public static create(data: UpsertSandboxRequest): Sandbox {
     const nameError = SandboxValidator.validateName(data.name);
     if (nameError) {
       throw new SandboxRepositoryError(nameError);
@@ -12,15 +13,19 @@ export class Sandbox {
       throw new SandboxRepositoryError(descriptionError);
     }
 
-    return new Sandbox(data.name, data.isEnabled, data.description, data.configuration, data.secrets, data.hash);
+    const hash = fnv1a({
+      secrets: data.secrets,
+      configuration: data.configuration
+    });
+    return new Sandbox(data.name, data.isEnabled, data.description, data.configuration, data.secrets, hash);
   }
 
   public constructor(
     public readonly name: string,
-    public isEnabled: boolean,
-    public description: string,
-    public configuration: string,
-    public secrets: Record<string, string>,
-    public hash: string
+    public readonly isEnabled: boolean,
+    public readonly description: string,
+    public readonly configuration: string,
+    public readonly secrets: Record<string, string>,
+    public readonly hash: string
   ) {}
 }

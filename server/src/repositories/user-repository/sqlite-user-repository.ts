@@ -7,7 +7,7 @@ export class SqliteUserRepository implements UserRepository {
   private readonly db: DatabaseSync;
 
   public constructor(dbs: SqliteDatabases) {
-    this.db = dbs.userDb;
+    this.db = dbs.modelDb;
   }
 
   public async setup() {

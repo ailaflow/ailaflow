@@ -7,7 +7,7 @@ import { useUserEditorAi } from './user-editor-ai';
 import { useUserEditorState } from './user-editor-state';
 import { useUnsavedChangesController } from '../common/admin-portal';
 
-export function UserEditor(props: { user: UserDto }) {
+export function UserEditor(props: { user?: UserDto }) {
   const apiClient = useApiClient();
   const navigate = useNavigate();
   const state = useUserEditorState(props.user);
@@ -15,8 +15,11 @@ export function UserEditor(props: { user: UserDto }) {
   async function save() {
     const abortSignal = AbortSignal.timeout(5_000);
     const response = await apiClient.user.saveUser(abortSignal, state.toSaveRequest());
-    state.markSaved();
-    navigate(`/admin/users/${response.name}`);
+    if (state.isNew) {
+      navigate(`/admin/users/${response.name}`);
+    } else {
+      state.markSaved();
+    }
   }
 
   useUserEditorAi(state, save);
@@ -26,16 +29,18 @@ export function UserEditor(props: { user: UserDto }) {
     <ResourceEditorView
       icon="@"
       name={state.name}
-      isNameReadOnly={true}
-      isNameValid={true}
+      isNameReadOnly={!state.isNew}
+      isNameValid={state.nameError === null}
+      onNameChange={state.setName}
       canSave={state.canSave}
       onSave={save}
       canSwitch={false}
-      switchLabel=""
     >
       <UserEditorView
+        isNew={state.isNew}
         isAdmin={state.isAdmin}
         password={state.password}
+        passwordError={state.passwordError}
         attributes={state.attributes}
         attributeError={state.attributeError}
         onIsAdminChange={state.setIsAdmin}

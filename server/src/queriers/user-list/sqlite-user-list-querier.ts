@@ -7,7 +7,7 @@ export class SqliteUserListQuerier implements UserListQuerier {
   private readonly db: DatabaseSync;
 
   public constructor(dbs: SqliteDatabases) {
-    this.db = dbs.userDb;
+    this.db = dbs.modelDb;
   }
 
   public async query(): Promise<UserLiteDto[]> {

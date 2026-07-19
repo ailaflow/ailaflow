@@ -10,7 +10,7 @@ import { UserAttributes } from './user-attributes';
 
 test('user attributes keep one value type per attribute name across users', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
-  const dbs = { userDb: db } as SqliteDatabases;
+  const dbs = { modelDb: db } as SqliteDatabases;
 
   const userRepository = new SqliteUserRepository(dbs);
   await userRepository.setup();

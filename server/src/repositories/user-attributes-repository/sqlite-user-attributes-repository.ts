@@ -8,7 +8,7 @@ export class SqliteUserAttributesRepository implements UserAttributesRepository 
   private readonly db: DatabaseSync;
 
   public constructor(dbs: SqliteDatabases) {
-    this.db = dbs.userDb;
+    this.db = dbs.modelDb;
   }
 
   public async setup(_abortSignal: AbortSignal) {

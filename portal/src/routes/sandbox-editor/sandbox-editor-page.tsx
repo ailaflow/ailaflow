@@ -3,14 +3,14 @@ import { useParams } from 'react-router-dom';
 import { useApiClient } from '../../auth/auth-context';
 import { PortalErrorView } from '../../views/portal/portal-error-view';
 import { PortalLoadingView } from '../../views/portal/portal-loading-view';
-import { UserEditor } from './user-editor';
+import { SandboxEditor } from './sandbox-editor';
 
-export function UserEditorPage() {
-  const { userName } = useParams();
+export function SandboxEditorPage() {
+  const { name } = useParams();
   const apiClient = useApiClient();
   const loader = useLoader(
-    abortSignal => (userName ? apiClient.user.getUser(abortSignal, userName) : Promise.resolve(null)),
-    [apiClient, userName]
+    abortSignal => (name ? apiClient.sandbox.getSandbox(abortSignal, name) : Promise.resolve(null)),
+    [apiClient, name]
   );
 
   if (loader.isLoading) {
@@ -20,5 +20,5 @@ export function UserEditorPage() {
     return <PortalErrorView error={loader.error} />;
   }
 
-  return <UserEditor user={loader.data?.user} />;
+  return <SandboxEditor sandbox={loader.data?.sandbox} />;
 }

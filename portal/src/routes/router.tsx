@@ -7,7 +7,7 @@ import { ProcessList } from './process-list/process-list';
 import { ProcessEditor } from './process-editor/process-editor';
 import { ProcessTester } from './process-tester/process-tester';
 import { SandboxList } from './sandbox-list/sandbox-list';
-import { SandboxEditor } from './sandbox-editor/sandbox-editor';
+import { SandboxEditorPage } from './sandbox-editor/sandbox-editor-page';
 import { AdminPortal } from './common/admin-portal';
 import { MyChat } from './my-chat/my-chat';
 import { UserList } from './user-list/user-list';
@@ -55,15 +55,19 @@ export const routes = [
       },
       {
         path: '/admin/create-sandbox',
-        element: <SandboxEditor />
+        element: <SandboxEditorPage />
       },
       {
         path: '/admin/sandboxes/:name',
-        element: <SandboxEditor />
+        element: <SandboxEditorPage />
       },
       {
         path: '/admin/users',
         element: <UserList />
+      },
+      {
+        path: '/admin/create-user',
+        element: <UserEditorPage />
       },
       {
         path: '/admin/users/:userName',

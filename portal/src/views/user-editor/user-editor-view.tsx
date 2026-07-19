@@ -8,8 +8,10 @@ export interface UserAttributeEditorRow {
 }
 
 export interface UserEditorViewProps {
+  isNew: boolean;
   isAdmin: boolean;
   password: string;
+  passwordError: string | null;
   attributes: UserAttributeEditorRow[];
   attributeError: string | null;
   onIsAdminChange(isAdmin: boolean): void;
@@ -35,13 +37,17 @@ export function UserEditorView(props: UserEditorViewProps) {
             Admin
           </label>
           <label className="block max-w-sm">
-            <span className="mb-1 block text-sm font-medium text-slate-700">New password</span>
+            <span className="mb-1 block text-sm font-medium text-slate-700">{props.isNew ? 'Password' : 'New password'}</span>
             <input
               type="password"
               value={props.password}
               onChange={e => props.onPasswordChange(e.target.value)}
-              className="h-9 w-full rounded-md border border-slate-300 px-2 text-sm outline-none focus:border-slate-500"
+              aria-invalid={props.passwordError !== null}
+              className={`h-9 w-full rounded-md border px-2 text-sm outline-none focus:border-slate-500 ${
+                props.passwordError ? 'border-red-300 bg-red-50/30' : 'border-slate-300'
+              }`}
             />
+            {props.passwordError ? <span className="mt-1 block text-sm text-red-700">{props.passwordError}</span> : null}
           </label>
         </section>
 

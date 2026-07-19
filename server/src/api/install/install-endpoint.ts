@@ -7,6 +7,8 @@ import { PasswordHasher } from '../../repositories/user-repository/password-hash
 import { parseBody } from '../parse-body';
 import { UserAttributesRepository } from '../../repositories/user-attributes-repository/user-attributes-repository';
 import { UserAttributes } from '../../repositories/user-attributes-repository/user-attributes';
+import { Sandbox } from '../../repositories/sandbox-repository/sandbox';
+import { SandboxRepository } from '../../repositories/sandbox-repository/sandbox-repository';
 
 export class InstallEndpoint implements Endpoint {
   public readonly method = 'post';
@@ -15,6 +17,7 @@ export class InstallEndpoint implements Endpoint {
   public constructor(
     private readonly userRepository: UserRepository,
     private readonly userAttributesRepository: UserAttributesRepository,
+    private readonly sandboxRepository: SandboxRepository,
     private readonly passwordHasher: PasswordHasher
   ) {}
 
@@ -29,9 +32,17 @@ export class InstallEndpoint implements Endpoint {
 
     const user = await User.create(request.rootUserName, request.rootPassword, true, this.passwordHasher);
     const attributes = UserAttributes.create(user, {});
+    const defaultSandbox = Sandbox.create({
+      name: 'default',
+      description: 'Default sandbox',
+      configuration: '',
+      isEnabled: true,
+      secrets: {}
+    });
 
     await this.userRepository.insert(user);
     await this.userAttributesRepository.replace(attributes);
+    await this.sandboxRepository.upsert(defaultSandbox);
 
     return {};
   }

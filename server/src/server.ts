@@ -111,7 +111,7 @@ export class Server {
     setupServer(app, chatSessionResolver);
 
     const endpoints = [
-      new InstallEndpoint(userRepository, userAttributesRepository, passwordHasher),
+      new InstallEndpoint(userRepository, userAttributesRepository, sandboxRepository, passwordHasher),
       new LoginEndpoint(userRepository, authTokenRepository, passwordHasher),
       new RefreshAuthTokenEndpoint(authTokenRepository),
       new GetProcessesEndpoint(processListQuerier),

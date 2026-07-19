@@ -15,7 +15,7 @@ export class UpsertSandboxEndpoint implements Endpoint {
 
   public async handle(req: Request) {
     const request = parseBody(upsertSandboxRequestSchema, req.body);
-    const sandbox = await Sandbox.create(request);
+    const sandbox = Sandbox.create(request);
 
     await this.sandboxRepository.upsert(sandbox);
 

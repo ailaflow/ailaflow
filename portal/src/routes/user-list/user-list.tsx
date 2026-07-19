@@ -1,4 +1,5 @@
-import { useLoader, toolError, toolWait } from '@aibindkit/react';
+import { useLoader, toolError, toolSuccess, toolWait } from '@aibindkit/react';
+import { useNavigate } from 'react-router';
 import { useApiClient } from '../../auth/auth-context';
 import { PortalErrorView } from '../../views/portal/portal-error-view';
 import { PortalLoadingView } from '../../views/portal/portal-loading-view';
@@ -8,7 +9,12 @@ import { SvgIcon } from '../../views/common/svg-icons';
 
 export function UserList() {
   const apiClient = useApiClient();
+  const navigate = useNavigate();
   const loader = useLoader(abortSignal => apiClient.user.getUsers(abortSignal), [apiClient]);
+
+  function createNew() {
+    return navigate('/admin/create-user');
+  }
 
   useAiStore(
     'userList',
@@ -25,6 +31,10 @@ export function UserList() {
             name: user.name,
             isAdmin: user.isAdmin
           }));
+        },
+        createNew: async () => {
+          await createNew();
+          return toolSuccess('Redirected to the user creation form.');
         }
       }),
     [loader]
@@ -40,6 +50,8 @@ export function UserList() {
   return (
     <ResourceListView
       title="Users"
+      createNewLabel="Create new"
+      onCreateNewClicked={createNew}
       columns={[
         {
           id: 'name',

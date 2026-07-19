@@ -1,10 +1,4 @@
-import {
-  SaveUserRequest,
-  UserAttributesValidator,
-  UserAttributeValue,
-  UserAttributeValueType,
-  UserDto
-} from '@aila/model';
+import { SaveUserRequest, UserAttributesValidator, UserAttributeValue, UserAttributeValueType, UserValidator, UserDto } from '@aila/model';
 import { useMemo, useState } from 'react';
 import { UserAttributeEditorRow } from '../../views/user-editor/user-editor-view';
 
@@ -14,11 +8,15 @@ export interface UserEditorData {
   isAdmin: boolean;
   attributes: UserAttributeEditorRow[];
   isDirty: boolean;
+  isNew: boolean;
 }
 
 export interface UserEditorState extends UserEditorData {
+  nameError: string | null;
+  passwordError: string | null;
   attributeError: string | null;
   canSave: boolean;
+  setName(name: string): void;
   setPassword(password: string): void;
   setIsAdmin(isAdmin: boolean): void;
   addAttribute(): void;
@@ -31,11 +29,11 @@ export interface UserEditorState extends UserEditorData {
   toSaveRequest(): SaveUserRequest;
 }
 
-export function useUserEditorState(user: UserDto): UserEditorState {
+export function useUserEditorState(user?: UserDto): UserEditorState {
   const [data, setData] = useState<UserEditorData>(() => createData(user));
   const validation = useMemo(() => validateState(data), [data]);
-  const { attributeError } = validation;
-  const canSave = data.isDirty && attributeError === null;
+  const { nameError, passwordError, attributeError } = validation;
+  const canSave = data.isDirty && nameError === null && passwordError === null && attributeError === null;
 
   function update(delta: Partial<UserEditorData> | ((data: UserEditorData) => Partial<UserEditorData>)) {
     setData(data => ({
@@ -47,8 +45,11 @@ export function useUserEditorState(user: UserDto): UserEditorState {
 
   return {
     ...data,
+    nameError,
+    passwordError,
     attributeError,
     canSave,
+    setName: name => update({ name }),
     setPassword: password => update({ password }),
     setIsAdmin: isAdmin => update({ isAdmin }),
     addAttribute: () =>
@@ -85,7 +86,7 @@ export function useUserEditorState(user: UserDto): UserEditorState {
         isDirty: false
       })),
     toSaveRequest: () => ({
-      insert: false,
+      insert: data.isNew,
       name: data.name,
       password: data.password || undefined,
       isAdmin: data.isAdmin,
@@ -98,13 +99,14 @@ function nextAttributeId(attributes: UserAttributeEditorRow[]): number {
   return attributes.reduce((id, attribute) => Math.max(id, attribute.id + 1), 0);
 }
 
-function createData(user: UserDto): UserEditorData {
+function createData(user?: UserDto): UserEditorData {
   return {
-    name: user.name,
+    name: user?.name ?? '',
     password: '',
-    isAdmin: user.isAdmin,
-    attributes: Object.entries(user.attributes).map(([name, value], id) => toAttributeRow(id, name, value)),
-    isDirty: false
+    isAdmin: user?.isAdmin ?? false,
+    attributes: Object.entries(user?.attributes ?? {}).map(([name, value], id) => toAttributeRow(id, name, value)),
+    isDirty: !user,
+    isNew: !user
   };
 }
 
@@ -133,29 +135,37 @@ function toAttributeRow(id: number, name: string, value: UserAttributeValue): Us
   };
 }
 
-function validateState(state: UserEditorData): { attributeError: string | null } {
+function validateState(state: UserEditorData): { nameError: string | null; passwordError: string | null; attributeError: string | null } {
+  const nameError = UserValidator.validateName(state.name);
+  const passwordError = state.isNew && state.password.length === 0 ? 'Password is required to create a user.' : null;
   const names = new Set<string>();
   for (const attribute of state.attributes) {
     const attributeNameError = UserAttributesValidator.validateName(attribute.name);
     if (attributeNameError) {
       return {
+        nameError,
+        passwordError,
         attributeError: `Attribute name "${attribute.name}" is invalid: ${attributeNameError}`
       };
     }
     if (names.has(attribute.name)) {
       return {
+        nameError,
+        passwordError,
         attributeError: `Attribute name "${attribute.name}" is duplicated.`
       };
     }
     names.add(attribute.name);
     if (attribute.type === UserAttributeValueType.INTEGER && !Number.isInteger(Number(attribute.value))) {
       return {
+        nameError,
+        passwordError,
         attributeError: `Attribute "${attribute.name}" must be an integer.`
       };
     }
   }
 
-  return { attributeError: null };
+  return { nameError, passwordError, attributeError: null };
 }
 
 function rowsToAttributes(rows: UserAttributeEditorRow[]): Record<string, UserAttributeValue> {
