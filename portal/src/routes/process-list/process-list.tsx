@@ -32,7 +32,7 @@ export function ProcessList() {
             id: process.id,
             name: `\$${process.name}`,
             description: process.description,
-            userList: process.userList
+            userAccessExpression: process.userAccessExpression
           }));
         },
         createNew: async () => {
@@ -70,10 +70,10 @@ export function ProcessList() {
           getValue: process => process.description
         },
         {
-          id: 'userList',
-          title: 'User list',
+          id: 'userAccessExpression',
+          title: 'User access',
           width: '16%',
-          getValue: process => process.userList
+          getValue: process => process.userAccessExpression.trim() || 'all'
         }
       ]}
       rows={data.processes}

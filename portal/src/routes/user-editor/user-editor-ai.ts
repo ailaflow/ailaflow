@@ -1,4 +1,4 @@
-import { UserValidator } from '@aila/model';
+import { UserAttributesValidator, UserValidator } from '@aila/model';
 import { toolError, toolSuccess } from '@aibindkit/react';
 import { useAiStore } from '../common/admin-portal';
 import { UserEditorState } from './user-editor-state';
@@ -33,7 +33,7 @@ export function useUserEditorAi(state: UserEditorState, save: () => Promise<void
           return state.getAttributes();
         },
         async setAttribute(arg) {
-          const error = UserValidator.validateAttributeName(arg.name);
+          const error = UserAttributesValidator.validateName(arg.name);
           if (error) {
             return toolError(error);
           }

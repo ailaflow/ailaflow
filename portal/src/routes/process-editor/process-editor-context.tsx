@@ -41,6 +41,8 @@ export interface ProcessEditorData {
   nameError: string | null;
   description: string;
   descriptionError: string | null;
+  userAccessExpression: string;
+  userAccessExpressionError: string | null;
   definition: WrappedDefinition<ProcessDefinition>;
   selectedStepId: string | null;
 }
@@ -50,6 +52,7 @@ export interface ProcessEditorState extends ProcessEditorData {
   setIsDirty(isDirty: boolean): void;
   setName(name: string, throwIfInvalid: boolean): void;
   setDescription(description: string, throwIfInvalid: boolean): void;
+  setUserAccessExpression(userAccessExpression: string, throwIfInvalid: boolean): void;
   setDefinition(definition: WrappedDefinition, markDirty: boolean): void;
   getStep<S extends Step>(id: string, requiredType?: S['type']): S;
   notifyDefinitionChange(): void;
@@ -80,6 +83,7 @@ function createData(props: Omit<ProcessEditorContextProps, 'children'>): Process
   const definition = wrapDefinition<ProcessDefinition>(props.process ? props.process.definition : DesignerUtils.createEmptyDefinition());
   const name = props.process?.name ?? 'new_process';
   const description = props.process?.description ?? '';
+  const userAccessExpression = props.process?.userAccessExpression ?? '';
   const controller = SequentialWorkflowDesignerController.create();
 
   return {
@@ -95,6 +99,8 @@ function createData(props: Omit<ProcessEditorContextProps, 'children'>): Process
     nameError: ProcessValidator.validateName(name),
     description,
     descriptionError: ProcessValidator.validateDescription(description),
+    userAccessExpression,
+    userAccessExpressionError: null,
     selectedStepId: null,
     definition,
     isDirty: props.process ? false : true
@@ -115,7 +121,11 @@ export function ProcessEditorContext(props: ProcessEditorContextProps) {
   const [data, update] = useReducer(reduceState, undefined, () => createData(props));
 
   const state = useMemo<ProcessEditorState>(() => {
-    const isValid = data.nameError === null && data.descriptionError === null && data.definition.isValid !== false;
+    const isValid =
+      data.nameError === null &&
+      data.descriptionError === null &&
+      data.userAccessExpressionError === null &&
+      data.definition.isValid !== false;
 
     function setIsDirty(isDirty: boolean) {
       update({
@@ -143,6 +153,18 @@ export function ProcessEditorContext(props: ProcessEditorContextProps) {
       update({
         description,
         descriptionError,
+        isDirty: true
+      });
+    }
+
+    function setUserAccessExpression(userAccessExpression: string, throwIfInvalid: boolean) {
+      const userAccessExpressionError = ProcessValidator.validateUserAccessExpression(userAccessExpression);
+      if (userAccessExpressionError && throwIfInvalid) {
+        throw new Error(`Invalid user access expression: ${userAccessExpressionError}`);
+      }
+      update({
+        userAccessExpression,
+        userAccessExpressionError,
         isDirty: true
       });
     }
@@ -233,6 +255,7 @@ export function ProcessEditorContext(props: ProcessEditorContextProps) {
       setIsDirty,
       setName,
       setDescription,
+      setUserAccessExpression,
       setDefinition,
       notifyDefinitionChange,
       getStep,

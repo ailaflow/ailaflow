@@ -41,7 +41,7 @@ export function ProcessEditorContent() {
       id: state.id,
       description: state.description,
       name: state.name,
-      userList: '',
+      userAccessExpression: state.userAccessExpression,
       definition: state.definition.value,
       hash
     });
@@ -394,7 +394,10 @@ export function ProcessEditorContent() {
             id="admin-process-editor-details"
             description={state.description}
             descriptionError={state.descriptionError}
+            userAccessExpression={state.userAccessExpression}
+            userAccessExpressionError={state.userAccessExpressionError}
             onDescriptionChange={description => state.setDescription(description, false)}
+            onUserAccessExpressionChange={userAccessExpression => state.setUserAccessExpression(userAccessExpression, false)}
           />
         ) : undefined
       }

@@ -1,4 +1,11 @@
-import { UpdateUserRequest, UserAttributeValue, UserAttributeValueType, UserDto, UserValidator } from '@aila/model';
+import {
+  UpdateUserRequest,
+  UserAttributesValidator,
+  UserAttributeValue,
+  UserAttributeValueType,
+  UserDto,
+  UserValidator
+} from '@aila/model';
 import { useMemo, useState } from 'react';
 import { UserAttributeEditorRow } from '../../views/user-editor/user-editor-view';
 
@@ -139,7 +146,7 @@ function validateState(state: UserEditorData): { nameError: string | null; attri
 
   const names = new Set<string>();
   for (const attribute of state.attributes) {
-    const attributeNameError = UserValidator.validateAttributeName(attribute.name);
+    const attributeNameError = UserAttributesValidator.validateName(attribute.name);
     if (attributeNameError) {
       return {
         nameError: null,

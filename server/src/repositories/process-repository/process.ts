@@ -1,4 +1,4 @@
-import { ProcessDefinition, ProcessRootValidator, ProcessStepValidator, UpdateProcessRequest } from '@aila/model';
+import { ProcessDefinition, ProcessRootValidator, ProcessStepValidator, ProcessValidator, UpdateProcessRequest } from '@aila/model';
 import { randomUUID } from 'crypto';
 import { DefinitionWalker } from 'sequential-workflow-model';
 import { ProcessRepositoryError } from './process-repository';
@@ -24,21 +24,45 @@ function validateProcessDefinition(
   return nSteps;
 }
 
+function validateName(name: string) {
+  const error = ProcessValidator.validateName(name);
+  if (error) {
+    throw new ProcessRepositoryError(error);
+  }
+}
+
+function validateDescription(description: string) {
+  const error = ProcessValidator.validateDescription(description);
+  if (error) {
+    throw new ProcessRepositoryError(error);
+  }
+}
+
+function validateUserAccessExpression(userAccessExpression: string) {
+  const error = ProcessValidator.validateUserAccessExpression(userAccessExpression);
+  if (error) {
+    throw new ProcessRepositoryError(error);
+  }
+}
+
 export type VariableValidatorMap = Map<string, z.ZodType>;
 
 export class Process {
-  public static async create(
+  public static create(
     data: Omit<UpdateProcessRequest, 'id'>,
     rootValidator: ProcessRootValidator,
     stepValidator: ProcessStepValidator
-  ): Promise<Process> {
+  ): Process {
     const nSteps = validateProcessDefinition(data.definition, rootValidator, stepValidator);
+    validateName(data.name);
+    validateDescription(data.description);
+    validateUserAccessExpression(data.userAccessExpression);
 
     return new Process(
       randomUUID(),
       data.name,
       data.description,
-      data.userList,
+      data.userAccessExpression,
       data.definition,
       data.hash,
       data.definition.properties.startVariableNames.length,
@@ -52,7 +76,7 @@ export class Process {
     public readonly id: string,
     public name: string,
     public description: string,
-    public userList: string,
+    public userAccessExpression: string,
     public definition: ProcessDefinition,
     public hash: string,
     public nStartInputs: number,
@@ -64,10 +88,13 @@ export class Process {
       throw new Error('Process ID cannot be changed');
     }
     const nSteps = validateProcessDefinition(data.definition, rootValidator, stepValidator);
+    validateName(data.name);
+    validateDescription(data.description);
+    validateUserAccessExpression(data.userAccessExpression);
 
     this.name = data.name;
     this.description = data.description;
-    this.userList = data.userList;
+    this.userAccessExpression = data.userAccessExpression;
     this.definition = data.definition;
     this.vvmCache = null;
     this.hash = data.hash;

@@ -39,7 +39,7 @@ export class UpdateProcessEndpoint implements Endpoint {
       await process.update(request, rootValidator, stepValidator);
       await this.processRepository.update(process);
     } else {
-      process = await Process.create(request, rootValidator, stepValidator);
+      process = Process.create(request, rootValidator, stepValidator);
       await this.processRepository.insert(process);
     }
 

@@ -1,23 +1,24 @@
-import { UserAttributes as Attributes, UserValidator } from '@aila/model';
+import { ALL_ATTRIBUTE_NAME, UserAttributes as Attributes, USER_NAME_ATTRIBUTE_NAME, UserAttributesValidator } from '@aila/model';
 import { UserAttributesRepositoryError } from './user-attributes-repository';
 import { User } from '../user-repository/user';
 
-const USER_ID_KEY = '$user_id';
-
 export class UserAttributes {
   public static create(user: User, attributes: Attributes): UserAttributes {
-    if (attributes[USER_ID_KEY]) {
-      throw new Error(`Attribute name "${USER_ID_KEY}" is reserved`);
+    for (const name of [USER_NAME_ATTRIBUTE_NAME, ALL_ATTRIBUTE_NAME]) {
+      if (attributes[name]) {
+        throw new Error(`Attribute name "${name}" is reserved`);
+      }
     }
 
-    const error = UserValidator.validateAttributeNames(attributes);
+    const error = UserAttributesValidator.validateNames(attributes);
     if (error) {
       throw new UserAttributesRepositoryError(error);
     }
 
     const finalAttributes = {
       ...attributes,
-      [USER_ID_KEY]: user.id
+      [USER_NAME_ATTRIBUTE_NAME]: user.name,
+      [ALL_ATTRIBUTE_NAME]: true
     };
     return new UserAttributes(user.id, finalAttributes);
   }
@@ -29,7 +30,8 @@ export class UserAttributes {
 
   public getWithoutUserId(): Attributes {
     const attrs = { ...this.attributes };
-    delete attrs[USER_ID_KEY];
+    delete attrs[USER_NAME_ATTRIBUTE_NAME];
+    delete attrs[ALL_ATTRIBUTE_NAME];
     return attrs;
   }
 }

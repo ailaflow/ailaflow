@@ -17,18 +17,19 @@ export class SqliteProcessRepository implements ProcessRepository {
         id TEXT PRIMARY KEY,
         name TEXT NOT NULL UNIQUE,
         description TEXT NOT NULL,
-        userList TEXT NOT NULL,
+        userAccessExpression TEXT NOT NULL,
         nStartInputs INTEGER NOT NULL,
         nSteps INTEGER NOT NULL,
         serializedDefinition TEXT NOT NULL,
         definitionHash TEXT NOT NULL
       ) STRICT
     `);
+    this.migrateUserAccessExpressionColumn();
   }
 
   public async insert(process: Process): Promise<void> {
     const statement = this.db.prepare(`
-      INSERT INTO processes (id, name, description, userList, nStartInputs, nSteps, serializedDefinition, definitionHash)
+      INSERT INTO processes (id, name, description, userAccessExpression, nStartInputs, nSteps, serializedDefinition, definitionHash)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `);
     try {
@@ -36,7 +37,7 @@ export class SqliteProcessRepository implements ProcessRepository {
         process.id,
         process.name,
         process.description,
-        process.userList,
+        process.userAccessExpression,
         process.nStartInputs,
         process.nSteps,
         JSON.stringify(process.definition),
@@ -56,7 +57,7 @@ export class SqliteProcessRepository implements ProcessRepository {
       SET
         name = ?,
         description = ?,
-        userList = ?,
+        userAccessExpression = ?,
         nStartInputs = ?,
         nSteps = ?,
         serializedDefinition = ?,
@@ -67,7 +68,7 @@ export class SqliteProcessRepository implements ProcessRepository {
       statement.run(
         process.name,
         process.description,
-        process.userList,
+        process.userAccessExpression,
         process.nStartInputs,
         process.nSteps,
         JSON.stringify(process.definition),
@@ -84,7 +85,7 @@ export class SqliteProcessRepository implements ProcessRepository {
 
   public async tryGetById(id: string): Promise<Process | null> {
     const statement = this.db.prepare(`
-      SELECT id, name, description, userList, nStartInputs, nSteps, serializedDefinition, definitionHash
+      SELECT id, name, description, userAccessExpression, nStartInputs, nSteps, serializedDefinition, definitionHash
       FROM processes
       WHERE id = ?
       LIMIT 1
@@ -94,7 +95,7 @@ export class SqliteProcessRepository implements ProcessRepository {
           id: string;
           name: string;
           description: string;
-          userList: string;
+          userAccessExpression: string;
           nStartInputs: number;
           nSteps: number;
           serializedDefinition: string;
@@ -107,13 +108,26 @@ export class SqliteProcessRepository implements ProcessRepository {
           row.id,
           row.name,
           row.description,
-          row.userList,
+          row.userAccessExpression,
           JSON.parse(row.serializedDefinition) as ProcessDefinition,
           row.definitionHash,
           row.nStartInputs,
           row.nSteps
         )
       : null;
+  }
+
+  private migrateUserAccessExpressionColumn() {
+    const columns = this.db.prepare(`PRAGMA table_info(processes)`).all() as { name: string }[];
+    const columnNames = new Set(columns.map(column => column.name));
+
+    if (!columnNames.has('userAccessExpression')) {
+      this.db.exec(`ALTER TABLE processes ADD COLUMN userAccessExpression TEXT NOT NULL DEFAULT ''`);
+    }
+
+    if (columnNames.has('userList')) {
+      this.db.exec(`UPDATE processes SET userAccessExpression = userList WHERE userAccessExpression = ''`);
+    }
   }
 }
 

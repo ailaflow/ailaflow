@@ -7,7 +7,7 @@ const processLiteDtoSchema = z.object({
   id: z.string(),
   name: z.string(),
   description: z.string(),
-  userList: z.string(),
+  userAccessExpression: z.string(),
   nStartInputs: z.number()
 });
 
@@ -24,7 +24,7 @@ const processDtoSchema = z.object({
   id: z.string(),
   name: z.string(),
   description: z.string(),
-  userList: z.string(),
+  userAccessExpression: z.string(),
   definition: processDefinitionSchema
 });
 
@@ -41,7 +41,7 @@ export const updateProcessRequestSchema = z.object({
   id: z.string().optional(),
   name: z.string(),
   description: z.string(),
-  userList: z.string(),
+  userAccessExpression: z.string(),
   definition: processDefinitionSchema,
   hash: z.string()
 });
