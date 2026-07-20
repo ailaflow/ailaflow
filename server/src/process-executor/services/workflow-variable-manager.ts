@@ -27,6 +27,14 @@ export class WorkflowVariableManager {
     return variable.value;
   }
 
+  public getMultiple(names: string[]): ProcessExecutionVariableValues {
+    const result: ProcessExecutionVariableValues = {};
+    for (const name of names) {
+      result[name] = this.get(name);
+    }
+    return result;
+  }
+
   public set(name: string, value: unknown): void {
     if (value === undefined) {
       throw new Error('Invalid variable value');

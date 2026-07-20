@@ -62,8 +62,27 @@ export const taskStepSchema = stepSchema.extend({
 
 export type TaskStep = z.infer<typeof taskStepSchema>;
 
+// return step
+
+export const returnStepPropertiesSchema = z.object({
+  outputVariableNames: z.array(z.string())
+});
+
+export const returnStepSchema = stepSchema.extend({
+  type: z.literal('return'),
+  properties: returnStepPropertiesSchema
+});
+
+export type ReturnStep = z.infer<typeof returnStepSchema>;
+
 // union of all step types
 
-export const anyStepSchema = z.discriminatedUnion('type', [scriptStepSchema, agentStepSchema, notificationStepSchema, taskStepSchema]);
+export const anyStepSchema = z.discriminatedUnion('type', [
+  scriptStepSchema,
+  agentStepSchema,
+  notificationStepSchema,
+  taskStepSchema,
+  returnStepSchema
+]);
 
 export const sequenceSchema = z.array(anyStepSchema);

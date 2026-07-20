@@ -5,6 +5,7 @@ import { WorkflowVariableManager } from './services/workflow-variable-manager';
 
 export interface WorkflowMachineGlobalState {
   interruptedError?: InterruptedError;
+  outputVariableNames?: string[];
 
   // Services
   $logger: WorkflowLogger;

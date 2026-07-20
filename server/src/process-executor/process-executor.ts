@@ -38,7 +38,7 @@ export class ProcessExecutor {
 
     const execution = new ProcessExecution(interpreter, $logger, $variables);
     this.processExecutionStore.set(executionId, execution);
-    execution.onDone.subscribe(() => this.processExecutionStore.delete(executionId));
+    execution.onDone.subscribe(_result => this.processExecutionStore.delete(executionId));
     return execution;
   }
 }

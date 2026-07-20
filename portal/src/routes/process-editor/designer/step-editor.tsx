@@ -5,6 +5,7 @@ import { NotificationStepEditor } from './notification-step-editor';
 import { TaskStepEditor } from './task-step-editor';
 import { Fragment } from 'react';
 import { ProcessEditorState } from '../process-editor-context';
+import { ReturnStepEditor } from './return-step-editor';
 
 export interface StepEditorProps {
   editorState: ProcessEditorState;
@@ -24,6 +25,9 @@ export function StepEditor(props: StepEditorProps) {
   }
   if (type === 'task') {
     return <TaskStepEditor editorState={props.editorState} />;
+  }
+  if (type === 'return') {
+    return <ReturnStepEditor editorState={props.editorState} />;
   }
   return <Fragment />;
 }

@@ -3,6 +3,7 @@ import { WorkflowLog, WorkflowLogger } from './services/workflow-logger';
 import { WorkflowMachineGlobalState } from './workflow-machine-global-state';
 import { SimpleEvent } from '@aibindkit/core';
 import { WorkflowVariableManager } from './services/workflow-variable-manager';
+import { InterruptedErrorCode } from './errors/interrupted-error';
 
 export type ProcessExecutionVariableValues = Record<string, unknown>;
 
@@ -41,6 +42,10 @@ export class ProcessExecution {
     }
     if (snapshot.isInterrupted()) {
       if (snapshot.globalState.interruptedError) {
+        if (snapshot.globalState.interruptedError.code === InterruptedErrorCode.RETURN && snapshot.globalState.outputVariableNames) {
+          return { output: this.variableManager.getMultiple(snapshot.globalState.outputVariableNames) };
+        }
+
         return {
           error: snapshot.globalState.interruptedError.message,
           interruptedCode: snapshot.globalState.interruptedError.code
@@ -52,7 +57,7 @@ export class ProcessExecution {
     }
     if (snapshot.isFinished()) {
       return {
-        output: this.variableManager.dump()
+        output: {}
       };
     }
     return {

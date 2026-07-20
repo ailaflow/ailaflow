@@ -1,5 +1,5 @@
 import { ToolboxConfiguration } from 'sequential-workflow-designer';
-import { ScriptStep, AgentStep, TaskStep, NotificationStep, FileContent, FormDefinition, ScriptDefinition } from '@aila/model';
+import { ScriptStep, AgentStep, TaskStep, NotificationStep, FileContent, FormDefinition, ScriptDefinition, ReturnStep } from '@aila/model';
 import { fnv1a } from '@aibindkit/core';
 
 export function createEmptyFormDefinition(): FormDefinition {
@@ -95,11 +95,20 @@ const notificationStep: Omit<NotificationStep, 'id'> = {
   }
 };
 
+const returnStep: Omit<ReturnStep, 'id'> = {
+  type: 'return',
+  name: 'Return',
+  componentType: 'task',
+  properties: {
+    outputVariableNames: []
+  }
+};
+
 export const toolboxConfiguration: ToolboxConfiguration = {
   groups: [
     {
       name: 'Steps',
-      steps: [scriptStep, agentStep, taskStep, notificationStep]
+      steps: [scriptStep, agentStep, taskStep, notificationStep, returnStep]
     }
   ]
 };
