@@ -18,7 +18,8 @@ import type {
   SaveProcessResponse,
   UpsertSandboxRequest,
   SaveUserRequest,
-  SaveUserResponse
+  SaveUserResponse,
+  GetMyProcessesResponse
 } from '@aila/model';
 
 export class ApiClient {
@@ -29,6 +30,7 @@ export class ApiClient {
   public readonly process: ProcessApiClient;
   public readonly sandbox: SandboxApiClient;
   public readonly user: UserApiClient;
+  public readonly myProcess: MyProcessApiClient;
 
   public constructor(authToken: string | null) {
     this.client = new HttpClient(createHeaders(authToken));
@@ -38,6 +40,7 @@ export class ApiClient {
     this.process = new ProcessApiClient(this.client);
     this.sandbox = new SandboxApiClient(this.client);
     this.user = new UserApiClient(this.client);
+    this.myProcess = new MyProcessApiClient(this.client);
   }
 
   public get onUnauthorized() {
@@ -127,5 +130,13 @@ export class UserApiClient {
 
   public async saveUser(abortSignal: AbortSignal, request: SaveUserRequest): Promise<SaveUserResponse> {
     return this.client.json(abortSignal, 'POST', '/api/user', request);
+  }
+}
+
+export class MyProcessApiClient {
+  public constructor(private readonly client: HttpClient) {}
+
+  public async getMyProcesses(abortSignal: AbortSignal): Promise<GetMyProcessesResponse> {
+    return this.client.json(abortSignal, 'GET', '/api/my-processes');
   }
 }

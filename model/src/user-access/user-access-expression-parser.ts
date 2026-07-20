@@ -1,12 +1,5 @@
 import { ALL_ATTRIBUTE_NAME, USER_NAME_ATTRIBUTE_NAME, UserAttributeValueType } from '../user/user-attributes';
 
-export enum UserAccessExpressionKind {
-  COMPARISON = 1,
-  AND = 2,
-  OR = 3,
-  NOT = 4
-}
-
 export enum UserAccessComparisonOperator {
   EQ = 1,
   NEQ = 2,
@@ -16,29 +9,19 @@ export enum UserAccessComparisonOperator {
   LTE = 6
 }
 
-export interface UserAccessComparisonExpression {
-  kind: UserAccessExpressionKind.COMPARISON;
+export interface UserAccessCondition {
   operator: UserAccessComparisonOperator;
   attributeName: string;
   attributeType: UserAttributeValueType;
   value: string | number | boolean;
 }
 
-export interface UserAccessLogicalExpression {
-  kind: UserAccessExpressionKind.AND | UserAccessExpressionKind.OR;
-  args: UserAccessExpression[];
+export interface UserAccessGroup {
+  conditions: UserAccessCondition[];
 }
 
-export interface UserAccessNotExpression {
-  kind: UserAccessExpressionKind.NOT;
-  arg: UserAccessExpression;
-}
-
-export type UserAccessExpression = UserAccessComparisonExpression | UserAccessLogicalExpression | UserAccessNotExpression;
-
-enum ParserContext {
-  ROOT = 1,
-  SELECTOR = 2
+export interface UserAccessExpression {
+  groups: UserAccessGroup[];
 }
 
 interface ParsedLiteral {
@@ -58,14 +41,21 @@ export class UserAccessExpressionParserError extends Error {
 }
 
 export class UserAccessExpressionParser {
-  public parse(source: string): UserAccessExpression {
+  public static parse(source: string): UserAccessExpression {
     if (source.trim().length === 0) {
       return {
-        kind: UserAccessExpressionKind.COMPARISON,
-        operator: UserAccessComparisonOperator.EQ,
-        attributeName: ALL_ATTRIBUTE_NAME,
-        attributeType: UserAttributeValueType.BOOLEAN,
-        value: true
+        groups: [
+          {
+            conditions: [
+              {
+                operator: UserAccessComparisonOperator.EQ,
+                attributeName: ALL_ATTRIBUTE_NAME,
+                attributeType: UserAttributeValueType.BOOLEAN,
+                value: true
+              }
+            ]
+          }
+        ]
       };
     }
     return new ParserSession(source).parse();
@@ -78,7 +68,11 @@ class ParserSession {
   public constructor(private readonly source: string) {}
 
   public parse(): UserAccessExpression {
-    const expression = this.parseOr(ParserContext.ROOT);
+    const groups: UserAccessGroup[] = [this.parseGroup()];
+
+    while (this.consumeKeyword('or')) {
+      groups.push(this.parseGroup());
+    }
 
     this.skipWhitespace();
 
@@ -86,88 +80,83 @@ class ParserSession {
       this.fail('Unexpected token after expression');
     }
 
-    return expression;
+    return { groups };
   }
 
-  private parseOr(context: ParserContext): UserAccessExpression {
-    const args: UserAccessExpression[] = [this.parseAnd(context)];
-
-    while (this.consumeKeyword('or')) {
-      args.push(this.parseAnd(context));
-    }
-
-    if (args.length === 1) {
-      return args[0];
-    }
-
-    return {
-      kind: UserAccessExpressionKind.OR,
-      args
-    };
-  }
-
-  private parseAnd(context: ParserContext): UserAccessExpression {
-    const args: UserAccessExpression[] = [this.parseUnary(context)];
+  private parseGroup(): UserAccessGroup {
+    const conditions: UserAccessCondition[] = this.parseTerm();
 
     while (this.consumeKeyword('and')) {
-      args.push(this.parseUnary(context));
+      conditions.push(...this.parseTerm());
     }
 
-    if (args.length === 1) {
-      return args[0];
-    }
-
-    return {
-      kind: UserAccessExpressionKind.AND,
-      args
-    };
+    return { conditions };
   }
 
-  private parseUnary(context: ParserContext): UserAccessExpression {
-    if (this.consumeKeyword('not')) {
-      return {
-        kind: UserAccessExpressionKind.NOT,
-        arg: this.parseUnary(context)
-      };
-    }
-
-    return this.parsePrimary(context);
-  }
-
-  private parsePrimary(context: ParserContext): UserAccessExpression {
+  private parseTerm(): UserAccessCondition[] {
     this.skipWhitespace();
 
-    if (this.consumeCharacter('(')) {
-      const expression = this.parseOr(context);
-
-      this.expectCharacter(')', 'Expected ")"');
-
-      return expression;
+    if (this.consumeKeyword('not')) {
+      this.failAt('NOT is not supported in access expressions', this.position - 'not'.length);
     }
 
-    if (context === ParserContext.ROOT) {
-      if (this.consumeRaw('@{')) {
-        const expression = this.parseOr(ParserContext.SELECTOR);
+    if (this.peek() === '(' || this.peek() === ')') {
+      this.fail('Parentheses are not supported in access expressions');
+    }
 
-        this.expectCharacter('}', 'Expected "}" after selector');
+    if (this.consumeRaw('@{')) {
+      return this.parseSelector();
+    }
 
-        return expression;
-      }
+    if (this.source.startsWith('@{', this.position)) {
+      this.fail('Nested selectors are not allowed');
+    }
 
-      if (this.peek() === '@') {
-        return this.parseUserName();
-      }
-
-      if (this.peek() === '.') {
-        this.fail('Attribute comparisons must be placed inside "@{...}"');
-      }
-
-      this.fail('Expected a user reference, selector, "not", or parentheses');
+    if (this.peek() === '@') {
+      return [this.parseUserName()];
     }
 
     if (this.peek() === '.') {
-      return this.parseComparison();
+      this.fail('Attribute comparisons must be placed inside "@{...}"');
     }
+
+    this.fail('Expected a user reference or selector');
+  }
+
+  private parseSelector(): UserAccessCondition[] {
+    const conditions: UserAccessCondition[] = [this.parseComparison()];
+
+    while (this.consumeKeyword('and')) {
+      conditions.push(this.parseComparison());
+    }
+
+    this.skipWhitespace();
+
+    const orPosition = this.position;
+    if (this.consumeKeyword('or')) {
+      this.failAt('OR is not allowed inside selectors; split alternatives into root groups', orPosition);
+    }
+
+    this.expectCharacter('}', 'Expected "}" after selector');
+
+    return conditions;
+  }
+
+  private parseUserName(): UserAccessCondition {
+    this.position++;
+
+    const username = this.readName('Username');
+
+    return {
+      operator: UserAccessComparisonOperator.EQ,
+      attributeName: USER_NAME_ATTRIBUTE_NAME,
+      attributeType: UserAttributeValueType.STRING,
+      value: username
+    };
+  }
+
+  private parseComparison(): UserAccessCondition {
+    this.skipWhitespace();
 
     if (this.source.startsWith('@{', this.position)) {
       this.fail('Nested selectors are not allowed');
@@ -177,24 +166,10 @@ class ParserSession {
       this.fail('User references are not allowed inside selectors');
     }
 
-    this.fail('Expected an attribute comparison');
-  }
+    if (this.peek() !== '.') {
+      this.fail('Expected an attribute comparison');
+    }
 
-  private parseUserName(): UserAccessComparisonExpression {
-    this.position++;
-
-    const username = this.readName('Username');
-
-    return {
-      kind: UserAccessExpressionKind.COMPARISON,
-      operator: UserAccessComparisonOperator.EQ,
-      attributeName: USER_NAME_ATTRIBUTE_NAME,
-      attributeType: UserAttributeValueType.STRING,
-      value: username
-    };
-  }
-
-  private parseComparison(): UserAccessComparisonExpression {
     this.position++;
 
     const attributeName = this.readName('Attribute name');
@@ -210,7 +185,6 @@ class ParserSession {
     }
 
     return {
-      kind: UserAccessExpressionKind.COMPARISON,
       operator,
       attributeName,
       attributeType: literal.attributeType,

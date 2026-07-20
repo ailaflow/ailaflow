@@ -10,6 +10,7 @@ import { SandboxList } from './sandbox-list/sandbox-list';
 import { SandboxEditorPage } from './sandbox-editor/sandbox-editor-page';
 import { AdminPortal } from './common/admin-portal';
 import { MyChat } from './my-chat/my-chat';
+import { MyProcessList } from './my-process-list/my-process-list';
 import { UserList } from './user-list/user-list';
 import { UserEditorPage } from './user-editor/user-editor-page';
 
@@ -29,6 +30,10 @@ export const routes = [
   {
     path: '/my-chat',
     element: <AuthGate route={<MyChat />} />
+  },
+  {
+    path: '/my-processes',
+    element: <AuthGate route={<MyProcessList />} />
   },
   {
     element: <AuthGate route={<AdminPortal />} />,

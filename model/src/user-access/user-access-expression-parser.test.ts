@@ -2,19 +2,14 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
   UserAccessComparisonOperator,
-  UserAccessExpressionKind,
   UserAccessExpressionParser,
   UserAccessExpressionParserError
 } from './user-access-expression-parser';
 import { ALL_ATTRIBUTE_NAME, USER_NAME_ATTRIBUTE_NAME, UserAttributeValueType } from '../user/user-attributes';
 
-function createParser(): UserAccessExpressionParser {
-  return new UserAccessExpressionParser();
-}
-
 function assertParserError(source: string, expectedMessage: RegExp): void {
   assert.throws(
-    () => createParser().parse(source),
+    () => UserAccessExpressionParser.parse(source),
     error => {
       assert.ok(error instanceof UserAccessExpressionParserError);
       assert.match(error.message, expectedMessage);
@@ -24,145 +19,149 @@ function assertParserError(source: string, expectedMessage: RegExp): void {
 }
 
 test('empty expression selects all users', () => {
-  const expression = createParser().parse('');
+  const expression = UserAccessExpressionParser.parse('');
 
   assert.deepEqual(expression, {
-    kind: UserAccessExpressionKind.COMPARISON,
-    operator: UserAccessComparisonOperator.EQ,
-    attributeName: ALL_ATTRIBUTE_NAME,
-    attributeType: UserAttributeValueType.BOOLEAN,
-    value: true
+    groups: [
+      {
+        conditions: [
+          {
+            operator: UserAccessComparisonOperator.EQ,
+            attributeName: ALL_ATTRIBUTE_NAME,
+            attributeType: UserAttributeValueType.BOOLEAN,
+            value: true
+          }
+        ]
+      }
+    ]
   });
 });
 
 test('whitespace-only expression selects all users', () => {
-  const expression = createParser().parse(' \n\t  ');
+  const expression = UserAccessExpressionParser.parse(' \n\t  ');
 
   assert.deepEqual(expression, {
-    kind: UserAccessExpressionKind.COMPARISON,
-    operator: UserAccessComparisonOperator.EQ,
-    attributeName: ALL_ATTRIBUTE_NAME,
-    attributeType: UserAttributeValueType.BOOLEAN,
-    value: true
+    groups: [
+      {
+        conditions: [
+          {
+            operator: UserAccessComparisonOperator.EQ,
+            attributeName: ALL_ATTRIBUTE_NAME,
+            attributeType: UserAttributeValueType.BOOLEAN,
+            value: true
+          }
+        ]
+      }
+    ]
   });
 });
 
 test('user reference is converted to the virtual user name attribute', () => {
-  const expression = createParser().parse('@alice');
+  const expression = UserAccessExpressionParser.parse('@alice');
 
   assert.deepEqual(expression, {
-    kind: UserAccessExpressionKind.COMPARISON,
-    operator: UserAccessComparisonOperator.EQ,
-    attributeName: USER_NAME_ATTRIBUTE_NAME,
-    attributeType: UserAttributeValueType.STRING,
-    value: 'alice'
+    groups: [
+      {
+        conditions: [
+          {
+            operator: UserAccessComparisonOperator.EQ,
+            attributeName: USER_NAME_ATTRIBUTE_NAME,
+            attributeType: UserAttributeValueType.STRING,
+            value: 'alice'
+          }
+        ]
+      }
+    ]
   });
 });
 
 test('leading and trailing whitespace is ignored', () => {
-  const expression = createParser().parse('    @alice   ');
+  const expression = UserAccessExpressionParser.parse('    @alice   ');
 
   assert.deepEqual(expression, {
-    kind: UserAccessExpressionKind.COMPARISON,
-    operator: UserAccessComparisonOperator.EQ,
-    attributeName: USER_NAME_ATTRIBUTE_NAME,
-    attributeType: UserAttributeValueType.STRING,
-    value: 'alice'
+    groups: [
+      {
+        conditions: [
+          {
+            operator: UserAccessComparisonOperator.EQ,
+            attributeName: USER_NAME_ATTRIBUTE_NAME,
+            attributeType: UserAttributeValueType.STRING,
+            value: 'alice'
+          }
+        ]
+      }
+    ]
   });
 });
 
-test('multiple user references joined with OR are parsed', () => {
-  const expression = createParser().parse('@alice or @bob');
+test('multiple user references joined with OR are parsed as separate groups', () => {
+  const expression = UserAccessExpressionParser.parse('@alice or @bob');
 
   assert.deepEqual(expression, {
-    kind: UserAccessExpressionKind.OR,
-    args: [
+    groups: [
       {
-        kind: UserAccessExpressionKind.COMPARISON,
-        operator: UserAccessComparisonOperator.EQ,
-        attributeName: USER_NAME_ATTRIBUTE_NAME,
-        attributeType: UserAttributeValueType.STRING,
-        value: 'alice'
+        conditions: [
+          {
+            operator: UserAccessComparisonOperator.EQ,
+            attributeName: USER_NAME_ATTRIBUTE_NAME,
+            attributeType: UserAttributeValueType.STRING,
+            value: 'alice'
+          }
+        ]
       },
       {
-        kind: UserAccessExpressionKind.COMPARISON,
-        operator: UserAccessComparisonOperator.EQ,
-        attributeName: USER_NAME_ATTRIBUTE_NAME,
-        attributeType: UserAttributeValueType.STRING,
-        value: 'bob'
+        conditions: [
+          {
+            operator: UserAccessComparisonOperator.EQ,
+            attributeName: USER_NAME_ATTRIBUTE_NAME,
+            attributeType: UserAttributeValueType.STRING,
+            value: 'bob'
+          }
+        ]
       }
     ]
   });
 });
 
 test('integer comparison is parsed', () => {
-  const expression = createParser().parse('@{   .score == 1 }');
+  const expression = UserAccessExpressionParser.parse('@{   .score == 1 }');
 
   assert.deepEqual(expression, {
-    kind: UserAccessExpressionKind.COMPARISON,
-    operator: UserAccessComparisonOperator.EQ,
-    attributeName: 'score',
-    attributeType: UserAttributeValueType.INTEGER,
-    value: 1
-  });
-});
-
-test('string, integer and boolean comparisons are parsed', () => {
-  const expression = createParser().parse('@{.department = "sales" and .age >= 18 and .active = true}');
-
-  assert.deepEqual(expression, {
-    kind: UserAccessExpressionKind.AND,
-    args: [
+    groups: [
       {
-        kind: UserAccessExpressionKind.COMPARISON,
-        operator: UserAccessComparisonOperator.EQ,
-        attributeName: 'department',
-        attributeType: UserAttributeValueType.STRING,
-        value: 'sales'
-      },
-      {
-        kind: UserAccessExpressionKind.COMPARISON,
-        operator: UserAccessComparisonOperator.GTE,
-        attributeName: 'age',
-        attributeType: UserAttributeValueType.INTEGER,
-        value: 18
-      },
-      {
-        kind: UserAccessExpressionKind.COMPARISON,
-        operator: UserAccessComparisonOperator.EQ,
-        attributeName: 'active',
-        attributeType: UserAttributeValueType.BOOLEAN,
-        value: true
+        conditions: [
+          {
+            operator: UserAccessComparisonOperator.EQ,
+            attributeName: 'score',
+            attributeType: UserAttributeValueType.INTEGER,
+            value: 1
+          }
+        ]
       }
     ]
   });
 });
 
-test('AND has higher precedence than OR', () => {
-  const expression = createParser().parse('@alice or @bob and @{.active = true}');
+test('string, integer and boolean comparisons are parsed into one AND group', () => {
+  const expression = UserAccessExpressionParser.parse('@{.department = "sales" and .age >= 18 and .active = true}');
 
   assert.deepEqual(expression, {
-    kind: UserAccessExpressionKind.OR,
-    args: [
+    groups: [
       {
-        kind: UserAccessExpressionKind.COMPARISON,
-        operator: UserAccessComparisonOperator.EQ,
-        attributeName: USER_NAME_ATTRIBUTE_NAME,
-        attributeType: UserAttributeValueType.STRING,
-        value: 'alice'
-      },
-      {
-        kind: UserAccessExpressionKind.AND,
-        args: [
+        conditions: [
           {
-            kind: UserAccessExpressionKind.COMPARISON,
             operator: UserAccessComparisonOperator.EQ,
-            attributeName: USER_NAME_ATTRIBUTE_NAME,
+            attributeName: 'department',
             attributeType: UserAttributeValueType.STRING,
-            value: 'bob'
+            value: 'sales'
           },
           {
-            kind: UserAccessExpressionKind.COMPARISON,
+            operator: UserAccessComparisonOperator.GTE,
+            attributeName: 'age',
+            attributeType: UserAttributeValueType.INTEGER,
+            value: 18
+          },
+          {
             operator: UserAccessComparisonOperator.EQ,
             attributeName: 'active',
             attributeType: UserAttributeValueType.BOOLEAN,
@@ -174,71 +173,93 @@ test('AND has higher precedence than OR', () => {
   });
 });
 
-test('parentheses override operator precedence', () => {
-  const expression = createParser().parse('(@alice or @bob) and @{.active = true}');
+test('root OR separates AND groups', () => {
+  const expression = UserAccessExpressionParser.parse('@alice or @bob and @{.active = true}');
 
   assert.deepEqual(expression, {
-    kind: UserAccessExpressionKind.AND,
-    args: [
+    groups: [
       {
-        kind: UserAccessExpressionKind.OR,
-        args: [
+        conditions: [
           {
-            kind: UserAccessExpressionKind.COMPARISON,
+            operator: UserAccessComparisonOperator.EQ,
+            attributeName: USER_NAME_ATTRIBUTE_NAME,
+            attributeType: UserAttributeValueType.STRING,
+            value: 'alice'
+          }
+        ]
+      },
+      {
+        conditions: [
+          {
+            operator: UserAccessComparisonOperator.EQ,
+            attributeName: USER_NAME_ATTRIBUTE_NAME,
+            attributeType: UserAttributeValueType.STRING,
+            value: 'bob'
+          },
+          {
+            operator: UserAccessComparisonOperator.EQ,
+            attributeName: 'active',
+            attributeType: UserAttributeValueType.BOOLEAN,
+            value: true
+          }
+        ]
+      }
+    ]
+  });
+});
+
+test('selectors are flattened into the current group', () => {
+  const expression = UserAccessExpressionParser.parse('@alice and @{.active = true and .age >= 18}');
+
+  assert.deepEqual(expression, {
+    groups: [
+      {
+        conditions: [
+          {
             operator: UserAccessComparisonOperator.EQ,
             attributeName: USER_NAME_ATTRIBUTE_NAME,
             attributeType: UserAttributeValueType.STRING,
             value: 'alice'
           },
           {
-            kind: UserAccessExpressionKind.COMPARISON,
             operator: UserAccessComparisonOperator.EQ,
-            attributeName: USER_NAME_ATTRIBUTE_NAME,
-            attributeType: UserAttributeValueType.STRING,
-            value: 'bob'
+            attributeName: 'active',
+            attributeType: UserAttributeValueType.BOOLEAN,
+            value: true
+          },
+          {
+            operator: UserAccessComparisonOperator.GTE,
+            attributeName: 'age',
+            attributeType: UserAttributeValueType.INTEGER,
+            value: 18
           }
         ]
-      },
-      {
-        kind: UserAccessExpressionKind.COMPARISON,
-        operator: UserAccessComparisonOperator.EQ,
-        attributeName: 'active',
-        attributeType: UserAttributeValueType.BOOLEAN,
-        value: true
       }
     ]
   });
 });
 
-test('NOT expression is parsed', () => {
-  const expression = createParser().parse('not @{.active = false}');
-
-  assert.deepEqual(expression, {
-    kind: UserAccessExpressionKind.NOT,
-    arg: {
-      kind: UserAccessExpressionKind.COMPARISON,
-      operator: UserAccessComparisonOperator.EQ,
-      attributeName: 'active',
-      attributeType: UserAttributeValueType.BOOLEAN,
-      value: false
-    }
-  });
-});
-
 test('excess whitespace inside a selector is ignored', () => {
-  const expression = createParser().parse('@{   .department   ==   "sales"   }');
+  const expression = UserAccessExpressionParser.parse('@{   .department   ==   "sales"   }');
 
   assert.deepEqual(expression, {
-    kind: UserAccessExpressionKind.COMPARISON,
-    operator: UserAccessComparisonOperator.EQ,
-    attributeName: 'department',
-    attributeType: UserAttributeValueType.STRING,
-    value: 'sales'
+    groups: [
+      {
+        conditions: [
+          {
+            operator: UserAccessComparisonOperator.EQ,
+            attributeName: 'department',
+            attributeType: UserAttributeValueType.STRING,
+            value: 'sales'
+          }
+        ]
+      }
+    ]
   });
 });
 
 test('multiline expressions are parsed', () => {
-  const expression = createParser().parse(`
+  const expression = UserAccessExpressionParser.parse(`
     @{
       .active = true
       and
@@ -247,59 +268,81 @@ test('multiline expressions are parsed', () => {
   `);
 
   assert.deepEqual(expression, {
-    kind: UserAccessExpressionKind.AND,
-    args: [
+    groups: [
       {
-        kind: UserAccessExpressionKind.COMPARISON,
-        operator: UserAccessComparisonOperator.EQ,
-        attributeName: 'active',
-        attributeType: UserAttributeValueType.BOOLEAN,
-        value: true
-      },
-      {
-        kind: UserAccessExpressionKind.COMPARISON,
-        operator: UserAccessComparisonOperator.GTE,
-        attributeName: 'age',
-        attributeType: UserAttributeValueType.INTEGER,
-        value: 18
+        conditions: [
+          {
+            operator: UserAccessComparisonOperator.EQ,
+            attributeName: 'active',
+            attributeType: UserAttributeValueType.BOOLEAN,
+            value: true
+          },
+          {
+            operator: UserAccessComparisonOperator.GTE,
+            attributeName: 'age',
+            attributeType: UserAttributeValueType.INTEGER,
+            value: 18
+          }
+        ]
       }
     ]
   });
 });
 
 test('negative integer comparison is parsed', () => {
-  const expression = createParser().parse('@{.temperature < -10}');
+  const expression = UserAccessExpressionParser.parse('@{.temperature < -10}');
 
   assert.deepEqual(expression, {
-    kind: UserAccessExpressionKind.COMPARISON,
-    operator: UserAccessComparisonOperator.LT,
-    attributeName: 'temperature',
-    attributeType: UserAttributeValueType.INTEGER,
-    value: -10
+    groups: [
+      {
+        conditions: [
+          {
+            operator: UserAccessComparisonOperator.LT,
+            attributeName: 'temperature',
+            attributeType: UserAttributeValueType.INTEGER,
+            value: -10
+          }
+        ]
+      }
+    ]
   });
 });
 
 test('escaped string value is parsed', () => {
-  const expression = createParser().parse('@{.message = "hello\\nworld"}');
+  const expression = UserAccessExpressionParser.parse('@{.message = "hello\\nworld"}');
 
   assert.deepEqual(expression, {
-    kind: UserAccessExpressionKind.COMPARISON,
-    operator: UserAccessComparisonOperator.EQ,
-    attributeName: 'message',
-    attributeType: UserAttributeValueType.STRING,
-    value: 'hello\nworld'
+    groups: [
+      {
+        conditions: [
+          {
+            operator: UserAccessComparisonOperator.EQ,
+            attributeName: 'message',
+            attributeType: UserAttributeValueType.STRING,
+            value: 'hello\nworld'
+          }
+        ]
+      }
+    ]
   });
 });
 
 test('any valid username is accepted without resolution', () => {
-  const expression = createParser().parse('@unknown');
+  const expression = UserAccessExpressionParser.parse('@unknown');
 
   assert.deepEqual(expression, {
-    kind: UserAccessExpressionKind.COMPARISON,
-    operator: UserAccessComparisonOperator.EQ,
-    attributeName: USER_NAME_ATTRIBUTE_NAME,
-    attributeType: UserAttributeValueType.STRING,
-    value: 'unknown'
+    groups: [
+      {
+        conditions: [
+          {
+            operator: UserAccessComparisonOperator.EQ,
+            attributeName: USER_NAME_ATTRIBUTE_NAME,
+            attributeType: UserAttributeValueType.STRING,
+            value: 'unknown'
+          }
+        ]
+      }
+    ]
   });
 });
 
@@ -313,6 +356,18 @@ test('ordering operators are rejected for string values', () => {
 
 test('ordering operators are rejected for boolean values', () => {
   assertParserError('@{.active >= true}', /String and boolean attributes support only "=" and "!="/);
+});
+
+test('NOT expression is rejected', () => {
+  assertParserError('not @{.active = false}', /NOT is not supported/);
+});
+
+test('parentheses are rejected', () => {
+  assertParserError('(@alice or @bob) and @{.active = true}', /Parentheses are not supported/);
+});
+
+test('OR inside a selector is rejected', () => {
+  assertParserError('@{.department = "sales" or .department = "support"}', /OR is not allowed inside selectors/);
 });
 
 test('attribute comparison outside a selector is rejected', () => {

@@ -13,6 +13,7 @@ import { SandboxListQuerier } from '../../queriers/sandbox-list/sandbox-list-que
 import { parseBody } from '../framework/parse-body';
 import { Process } from '../../repositories/process-repository/process';
 import { getEndpointAbortSignal } from '../framework/endpoint-abort-signal';
+import { ResourceAccess, ResourceAccessRepository } from '../../repositories/resource-access-repository/resource-access-repository';
 
 export class SaveProcessEndpoint implements Endpoint {
   public readonly method = 'post';
@@ -22,6 +23,7 @@ export class SaveProcessEndpoint implements Endpoint {
 
   public constructor(
     private readonly processRepository: ProcessRepository,
+    private readonly resourceAccessRepository: ResourceAccessRepository,
     private readonly sandboxListQuerier: SandboxListQuerier
   ) {}
 
@@ -30,6 +32,9 @@ export class SaveProcessEndpoint implements Endpoint {
     const request = parseBody(saveProcessRequestSchema, req.body);
 
     const { rootValidator, stepValidator } = await this.getValidators(abortSignal);
+
+    const resourceId = `process:${request.name};`;
+    const resourceAccess = ResourceAccess.createFromAccessExpression(resourceId, request.userAccessExpression);
 
     try {
       let process = await this.processRepository.tryGetByName(abortSignal, request.name);
@@ -45,6 +50,7 @@ export class SaveProcessEndpoint implements Endpoint {
         }
         await process.update(request, rootValidator, stepValidator);
         await this.processRepository.update(abortSignal, process);
+        await this.resourceAccessRepository.replace(abortSignal, resourceAccess);
       }
     } catch (e) {
       if (e instanceof ProcessRepositoryError) {

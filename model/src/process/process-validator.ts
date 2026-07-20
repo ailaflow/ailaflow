@@ -6,9 +6,8 @@ export class ProcessValidator {
   public static readonly validateDescription = ResourceValidator.validateDescription;
 
   public static validateUserAccessExpression(expression: string): string | null {
-    const parser = new UserAccessExpressionParser();
     try {
-      parser.parse(expression);
+      UserAccessExpressionParser.parse(expression);
     } catch (e) {
       if (e instanceof UserAccessExpressionParserError) {
         return e.message;

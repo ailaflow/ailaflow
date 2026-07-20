@@ -23,8 +23,11 @@ import { SqliteDatabases } from './core/sqlite-databases';
 import { SqliteProcessRepository } from './repositories/process-repository/sqlite-process-repository';
 import { ProcessListQuerier } from './queriers/process-list/process-list-querier';
 import { SqliteProcessListQuerier } from './queriers/process-list/sqlite-process-list-querier';
+import { MyProcessListQuerier } from './queriers/my-process-list/my-process-list-querier';
+import { SqliteMyProcessListQuerier } from './queriers/my-process-list/sqlite-my-process-list-querier';
 import { GetProcessEndpoint } from './api/process/get-process-endpoint';
 import { TestProcessEndpoint } from './api/process/test-process-endpoint';
+import { GetMyProcessesEndpoint } from './api/my-process/get-my-processes-endpoint';
 import { UserToolSetProvider } from './chat-session/user-tools/user-tool-set-provider';
 import { SandboxRepository } from './repositories/sandbox-repository/sandbox-repository';
 import { SqliteSandboxRepository } from './repositories/sandbox-repository/sqlite-sandbox-repository';
@@ -44,6 +47,8 @@ import { SandboxRpcHandlerProvider } from './sandbox/sandbox-rpc-handler-provide
 import { ReadVariableRpcHandler } from './process-executor/rpc-handlers/read-variable-rpc-handler';
 import { WriteVariableRpcHandler } from './process-executor/rpc-handlers/write-variable-rpc-handler';
 import { AilaChatSessionResolver } from './chat-session/aila-chat-session-resolver';
+import { ResourceAccessRepository } from './repositories/resource-access-repository/resource-access-repository';
+import { SqliteResourceAccessRepository } from './repositories/resource-access-repository/sqlite-resource-access-repository';
 
 const PORT = process.env.PORT || 2048;
 
@@ -57,10 +62,12 @@ export class Server {
     const serverPaths = new ServerPaths();
     let userRepository: UserRepository;
     let userAttributesRepository: UserAttributesRepository;
+    let resourceAccessRepository: ResourceAccessRepository;
     let authTokenRepository: AuthTokenRepository;
     let processRepository: ProcessRepository;
     let sandboxRepository: SandboxRepository;
     let processListQuerier: ProcessListQuerier;
+    let myProcessListQuerier: MyProcessListQuerier;
     let sandboxListQuerier: SandboxListQuerier;
     let userListQuerier: UserListQuerier;
 
@@ -68,16 +75,19 @@ export class Server {
 
     userRepository = new SqliteUserRepository(sqliteDatabases);
     userAttributesRepository = new SqliteUserAttributesRepository(sqliteDatabases);
+    resourceAccessRepository = new SqliteResourceAccessRepository(sqliteDatabases);
     authTokenRepository = new SqliteAuthTokenRepository(sqliteDatabases);
     processRepository = new SqliteProcessRepository(sqliteDatabases);
     sandboxRepository = new SqliteSandboxRepository(sqliteDatabases);
     processListQuerier = new SqliteProcessListQuerier(sqliteDatabases);
+    myProcessListQuerier = new SqliteMyProcessListQuerier(sqliteDatabases);
     sandboxListQuerier = new SqliteSandboxListQuerier(sqliteDatabases);
     userListQuerier = new SqliteUserListQuerier(sqliteDatabases);
 
     await Promise.all([
       userRepository.setup(abortSignal),
       userAttributesRepository.setup(abortSignal),
+      resourceAccessRepository.setup(abortSignal),
       authTokenRepository.setup(abortSignal),
       processRepository.setup(abortSignal),
       sandboxRepository.setup(abortSignal)
@@ -109,9 +119,10 @@ export class Server {
       new InstallEndpoint(userRepository, userAttributesRepository, sandboxRepository, passwordHasher),
       new LoginEndpoint(userRepository, authTokenRepository, passwordHasher),
       new RefreshAuthTokenEndpoint(authTokenRepository),
+      new GetMyProcessesEndpoint(myProcessListQuerier),
       new GetProcessesEndpoint(processListQuerier),
       new GetProcessEndpoint(processRepository),
-      new SaveProcessEndpoint(processRepository, sandboxListQuerier),
+      new SaveProcessEndpoint(processRepository, resourceAccessRepository, sandboxListQuerier),
       new TestProcessEndpoint(processRepository, workflowMachineFactory),
       new GetSandboxesEndpoint(sandboxListQuerier),
       new GetSandboxEndpoint(sandboxRepository),
