@@ -9,6 +9,7 @@ export class ToolMessage implements Message {
   public constructor(
     public readonly id: number,
     private readonly calls: ToolCall[],
+    private readonly sessionId: string,
     private readonly toolSet: ToolSet
   ) {}
 
@@ -22,7 +23,7 @@ export class ToolMessage implements Message {
         let content: string;
         if (tool) {
           try {
-            content = await tool.execute(abortSignal, call);
+            content = await tool.execute(abortSignal, call, this.sessionId);
           } catch (e) {
             content = JSON.stringify({
               error: `Tool execution failed: ${(e as Error).message ?? e}`

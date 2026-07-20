@@ -49,6 +49,7 @@ import { WriteVariableRpcHandler } from './process-executor/rpc-handlers/write-v
 import { AilaChatSessionResolver } from './chat-session/aila-chat-session-resolver';
 import { ResourceAccessRepository } from './repositories/resource-access-repository/resource-access-repository';
 import { SqliteResourceAccessRepository } from './repositories/resource-access-repository/sqlite-resource-access-repository';
+import { MyProcessesTool } from './chat-session/user-tools/my-processes-tool';
 
 const PORT = process.env.PORT || 2048;
 
@@ -109,7 +110,7 @@ export class Server {
       baseUrl: process.env.AI_PROVIDER_BASE_URL!,
       apiKey: process.env.AI_PROVIDER_API_KEY!
     });
-    const userToolSetProvider = new UserToolSetProvider();
+    const userToolSetProvider = new UserToolSetProvider([new MyProcessesTool(myProcessListQuerier)]);
     const authMiddleware = new AuthMiddleware(authTokenRepository);
     const sessionResolver = new AilaChatSessionResolver(llmClient, userToolSetProvider, serverPaths);
 

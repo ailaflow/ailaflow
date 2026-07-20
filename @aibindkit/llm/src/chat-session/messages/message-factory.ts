@@ -24,7 +24,7 @@ export class MessageFactory {
     return new AiMessage(id, this.llmClient, this.toolSet);
   }
 
-  public createTool(id: number, calls: ToolCall[]): ToolMessage {
-    return new ToolMessage(id, calls, this.toolSet);
+  public createTool(id: number, calls: ToolCall[], sessionId: string): ToolMessage {
+    return new ToolMessage(id, calls, sessionId, this.toolSet);
   }
 }

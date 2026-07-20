@@ -1,6 +1,10 @@
-import { CurrentTimeTool, Tool } from '@aibindkit/llm';
+import { fnv1a } from '@aibindkit/core';
+import { Tool } from '@aibindkit/llm';
 
 export class UserToolSetProvider {
-  public readonly hash = '0x0';
-  public readonly tools: Tool[] = [new CurrentTimeTool()];
+  public readonly hash: string;
+
+  public constructor(public readonly tools: Tool[]) {
+    this.hash = fnv1a(tools);
+  }
 }

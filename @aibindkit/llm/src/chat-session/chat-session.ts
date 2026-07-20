@@ -38,8 +38,8 @@ export class ChatSession {
     private readonly messageFactory: MessageFactory
   ) {}
 
-  public setSystemMessage(text: string) {
-    this.systemMessage = text;
+  public setSystemMessage(systemMessage: string) {
+    this.systemMessage = systemMessage;
   }
 
   public queueUserMessage(content: string): number {
@@ -49,14 +49,14 @@ export class ChatSession {
     }
 
     if (this.systemMessage && this.stack.isEmpty() && this.queue.isEmpty()) {
-      const id = this.nextId();
-      this.queue.push(this.messageFactory.createSystem(id, this.systemMessage));
+      const sid = this.nextId();
+      this.queue.push(this.messageFactory.createSystem(sid, this.systemMessage));
     }
 
-    const id = this.nextId();
-    this.queue.push(this.messageFactory.createUser(id, content));
+    const uid = this.nextId();
+    this.queue.push(this.messageFactory.createUser(uid, content));
     this.tryNext();
-    return id;
+    return uid;
   }
 
   public tryInterrupt(): boolean {
@@ -158,7 +158,8 @@ export class ChatSession {
     this.stack.complete(message, result.completedMessages);
 
     if (result.toolCalls) {
-      const toolMessage = this.messageFactory.createTool(this.nextId(), result.toolCalls);
+      const tid = this.nextId();
+      const toolMessage = this.messageFactory.createTool(tid, result.toolCalls, this.id);
       this.queue.pushAfterType(toolMessage, MessageType.TOOL);
     }
 
