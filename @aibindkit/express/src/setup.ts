@@ -1,4 +1,4 @@
-import type { Express, Request, Response } from 'express';
+import type { Express, RequestHandler } from 'express';
 import { ChatSessionFactory, FrontendToolBus, FrontendToolFactory } from '@aibindkit/llm';
 import type { ChatSessionResolver } from './chat-session-resolver';
 import { ChatSessionProvider } from './chat-session-provider';
@@ -9,11 +9,16 @@ import { SendFrontendToolResultEndpoint } from './endpoints/send-frontend-tool-r
 import { InterruptChatEndpoint } from './endpoints/interrupt-chat-endpoint';
 import { RestartChatEndpoint } from './endpoints/restart-chat-endpoint';
 
-export function setupServer(app: Express, sessionResolver: ChatSessionResolver) {
+export interface AiBindKitServerConfiguration {
+  sessionResolver: ChatSessionResolver;
+  middleware?: RequestHandler;
+}
+
+export function setupServer(app: Express, config: AiBindKitServerConfiguration) {
   const frontendToolBus = new FrontendToolBus();
   const frontendToolFactory = new FrontendToolFactory(frontendToolBus);
   const chatSessionFactory = new ChatSessionFactory();
-  const chatSessionProvider = new ChatSessionProvider(sessionResolver, chatSessionFactory, frontendToolFactory);
+  const chatSessionProvider = new ChatSessionProvider(config.sessionResolver, chatSessionFactory, frontendToolFactory);
 
   const endpoints: Endpoint[] = [
     new RestoreChatEndpoint(chatSessionProvider),
@@ -24,7 +29,7 @@ export function setupServer(app: Express, sessionResolver: ChatSessionResolver) 
   ];
 
   for (const endpoint of endpoints) {
-    app[endpoint.method](endpoint.path, async (req: Request, res: Response) => {
+    const handler: RequestHandler = async (req, res) => {
       try {
         const jsonOrVoid = await endpoint.handle(req, res);
         if (jsonOrVoid) {
@@ -35,6 +40,12 @@ export function setupServer(app: Express, sessionResolver: ChatSessionResolver) 
         console.error(`Error occurred while handling ${endpoint.path}: ${error.message}`);
         res.status(500).json({ error: 'Internal Server Error' });
       }
-    });
+    };
+
+    if (config.middleware) {
+      app[endpoint.method](endpoint.path, config.middleware, handler);
+    } else {
+      app[endpoint.method](endpoint.path, handler);
+    }
   }
 }

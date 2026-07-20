@@ -111,9 +111,12 @@ export class Server {
     });
     const userToolSetProvider = new UserToolSetProvider();
     const authMiddleware = new AuthMiddleware(authTokenRepository);
-    const chatSessionResolver = new AilaChatSessionResolver(llmClient, userToolSetProvider, serverPaths);
+    const sessionResolver = new AilaChatSessionResolver(llmClient, userToolSetProvider, serverPaths);
 
-    setupServer(app, chatSessionResolver);
+    setupServer(app, {
+      sessionResolver,
+      middleware: authMiddleware.user
+    });
 
     const endpoints = [
       new InstallEndpoint(userRepository, userAttributesRepository, sandboxRepository, passwordHasher),

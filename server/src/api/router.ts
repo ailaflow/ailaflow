@@ -17,13 +17,6 @@ export class Router {
     for (const endpoint of this.endpoints) {
       const handler = async (req: Request, res: Response) => {
         try {
-          if (endpoint.auth) {
-            const admin = endpoint.admin ?? false;
-            if (await this.authMiddleware.handle(admin, req, res)) {
-              return;
-            }
-          }
-
           const jsonOrVoid = await endpoint.handle(req, res);
           if (jsonOrVoid) {
             res.json(jsonOrVoid).end();
@@ -40,7 +33,8 @@ export class Router {
         }
       };
 
-      this.app[endpoint.method](endpoint.path, handler);
+      const middleware = endpoint.admin ? this.authMiddleware.admin : this.authMiddleware.user;
+      this.app[endpoint.method](endpoint.path, middleware, handler);
       this.logger.log(`Registered endpoint: ${endpoint.method.toUpperCase()} ${endpoint.path}`);
     }
   }
