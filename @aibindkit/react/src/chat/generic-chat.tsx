@@ -9,7 +9,7 @@ import {
   fnv1a,
   MessageType
 } from '@aibindkit/core';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { GenericChatView } from './generic-chat-view';
 
 export interface GenericChatProps {
@@ -33,7 +33,7 @@ export function GenericChat(props: GenericChatProps) {
 
   const [connectionError, setConnectionError] = useState<string | null>(null);
   const [reconnectKey, setReconnectKey] = useState(0);
-  const [chatSessionId, setChatSessionId] = useState<string | null>(null);
+  const sessionId = useRef<string | null>(null);
   const [updates, setUpdates] = useState<MessageChatUpdate[]>([]);
   const [isWorking, setIsWorking] = useState(false);
   const [message, setMessage] = useState('');
@@ -46,6 +46,9 @@ export function GenericChat(props: GenericChatProps) {
     }
 
     async function resolveToolCalls(toolCalls: ToolCall[]) {
+      if (!sessionId.current) {
+        throw new Error('Session ID is not set');
+      }
       const resolvedIds = new Set<string>();
       try {
         const toReturn: SendFrontendToolResultRequest[] = [];
@@ -53,6 +56,7 @@ export function GenericChat(props: GenericChatProps) {
           const result = await props.onFrontendToolCalls(abortController.signal, toolCall);
           if (result !== null) {
             toReturn.push({
+              sessionId: sessionId.current,
               callId: toolCall.id,
               result: JSON.stringify(result)
             });
@@ -71,6 +75,7 @@ export function GenericChat(props: GenericChatProps) {
           }
           try {
             await props.transport.sendFrontendToolResult(abortController.signal, {
+              sessionId: sessionId.current,
               callId: toolCall.id,
               result: `Error executing tool call: ${error}`
             });
@@ -84,7 +89,7 @@ export function GenericChat(props: GenericChatProps) {
     const listener: ChatTransportListener = {
       onMessage(update) {
         if (update.hello) {
-          setChatSessionId(update.hello.chatSessionId);
+          sessionId.current = update.hello.sessionId;
         }
         if (update.messages) {
           const messages = update.messages.filter(m => canInclude(m));
@@ -130,34 +135,34 @@ export function GenericChat(props: GenericChatProps) {
   }, [request, reconnectKey, props.transport, props.skipSystemPrompt]);
 
   async function onSendMessage() {
-    if (!chatSessionId || !message) {
+    if (!sessionId.current || !message) {
       return;
     }
     const abortSignal = AbortSignal.timeout(3_000);
     await props.transport.sendChatMessage(abortSignal, {
-      chatSessionId,
+      sessionId: sessionId.current,
       message
     });
     setMessage('');
   }
 
   async function onStopClicked() {
-    if (!chatSessionId || !isWorking) {
+    if (!sessionId.current || !isWorking) {
       return;
     }
     const abortSignal = AbortSignal.timeout(3_000);
     await props.transport.interruptChat(abortSignal, {
-      chatSessionId
+      sessionId: sessionId.current
     });
   }
 
   async function onStartNewConversation() {
-    if (!chatSessionId) {
+    if (!sessionId.current) {
       return;
     }
     const abortSignal = AbortSignal.timeout(3_000);
     await props.transport.restartChat(abortSignal, {
-      chatSessionId
+      sessionId: sessionId.current
     });
     setUpdates([]);
     setIsWorking(false);
@@ -165,13 +170,13 @@ export function GenericChat(props: GenericChatProps) {
 
   function onReconnectClicked() {
     setConnectionError(null);
-    setChatSessionId(null);
     setReconnectKey(k => k + 1);
+    sessionId.current = null;
   }
 
   return (
     <GenericChatView
-      isLoading={chatSessionId === null}
+      isLoading={sessionId === null}
       isWorking={isWorking}
       updates={updates}
       message={message}

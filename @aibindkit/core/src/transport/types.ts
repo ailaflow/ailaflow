@@ -20,7 +20,7 @@ export interface MessageChatUpdate {
 }
 
 export interface HelloChatUpdate {
-  chatSessionId: string;
+  sessionId: string;
 }
 
 export interface ChatUpdate {
@@ -33,7 +33,7 @@ export interface ChatUpdate {
 // sendChatMessage
 
 export const sendChatMessageRequestSchema = z.object({
-  chatSessionId: z.string().min(1),
+  sessionId: z.string().min(1),
   message: z.string().min(1)
 });
 export const sendChatMessageResponseSchema = z.object({
@@ -46,6 +46,7 @@ export type SendChatMessageResponse = z.infer<typeof sendChatMessageResponseSche
 // sendFrontendToolResult
 
 export const sendFrontendToolResultRequestSchema = z.object({
+  sessionId: z.string().min(1),
   callId: z.string().min(1),
   result: z.string()
 });
@@ -55,14 +56,14 @@ export type SendFrontendToolResultRequest = z.infer<typeof sendFrontendToolResul
 // interruptChat
 
 export const interruptChatRequestSchema = z.object({
-  chatSessionId: z.string().min(1)
+  sessionId: z.string().min(1)
 });
 export type InterruptChatRequest = z.infer<typeof interruptChatRequestSchema>;
 
 // restartChat
 
 export const restartChatRequestSchema = z.object({
-  chatSessionId: z.string().min(1)
+  sessionId: z.string().min(1)
 });
 export type RestartChatRequest = z.infer<typeof restartChatRequestSchema>;
 

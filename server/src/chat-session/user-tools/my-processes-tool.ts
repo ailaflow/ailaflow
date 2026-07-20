@@ -1,4 +1,4 @@
-import type { ToolCall, ToolDescriptor } from '@aibindkit/core';
+import type { ToolDescriptor } from '@aibindkit/core';
 import { Tool } from '@aibindkit/llm';
 import { MyProcessListQuerier } from '../../queriers/my-process-list/my-process-list-querier';
 
@@ -13,7 +13,7 @@ export class MyProcessesTool implements Tool {
 
   public constructor(private readonly querier: MyProcessListQuerier) {}
 
-  public async execute(abortSignal: AbortSignal, _: ToolCall, sessionId: string) {
+  public async execute(abortSignal: AbortSignal, sessionId: string) {
     // TODO
     const userId = sessionId.split(':')[0];
 

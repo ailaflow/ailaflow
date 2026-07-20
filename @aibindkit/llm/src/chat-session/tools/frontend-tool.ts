@@ -8,8 +8,8 @@ export class FrontendTool implements Tool {
     public readonly bus: FrontendToolBus
   ) {}
 
-  public async execute(abortSignal: AbortSignal, call: ToolCall): Promise<string> {
+  public async execute(abortSignal: AbortSignal, sessionId: string, call: ToolCall): Promise<string> {
     const signal = AbortSignal.any([abortSignal, AbortSignal.timeout(10_000)]);
-    return this.bus.waitForResult(signal, call.id);
+    return this.bus.waitForResult(signal, sessionId, call.id);
   }
 }

@@ -23,7 +23,7 @@ export class ToolMessage implements Message {
         let content: string;
         if (tool) {
           try {
-            content = await tool.execute(abortSignal, call, this.sessionId);
+            content = await tool.execute(abortSignal, this.sessionId, call);
           } catch (e) {
             content = JSON.stringify({
               error: `Tool execution failed: ${(e as Error).message ?? e}`
