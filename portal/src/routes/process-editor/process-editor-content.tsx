@@ -8,7 +8,7 @@ import { FormEditorOverlay } from './overlays/form-editor-overlay';
 import { ScriptEditorOverlay, ScriptEditorOverlayState } from './overlays/script-editor-overlay';
 import { ResourceSimpleDetailsView } from '../../views/resource-editor/resource-simple-details-view';
 import { fnv1a } from '@aibindkit/core';
-import { anyStepSchema, ScriptStep } from '@aila/model';
+import { anyStepSchema, ProcessRootVariableValidator, ScriptStep, VariableDefinition } from '@aila/model';
 import { toolError, toolSuccess } from '@aibindkit/react';
 import { createEmptyFormDefinition, toolboxConfiguration } from './designer-configuration';
 import { BranchedStep, ObjectCloner, Sequence, SequentialStep, Step, Uid } from 'sequential-workflow-designer';
@@ -67,14 +67,14 @@ export function ProcessEditorContent() {
         },
         async setProcessName(arg) {
           if (!state.isNew) {
-            return toolError('Saved process names cannot be changed');
+            return toolError('The name of a saved process cannot be changed');
           }
           state.setName(arg.name, true);
-          return toolSuccess('Process name updated');
+          return toolSuccess('Process name was updated');
         },
         async setProcessDescription(arg) {
           state.setDescription(arg.name, true);
-          return toolSuccess('Process description updated');
+          return toolSuccess('Process description was updated');
         },
         async getAvailableNewStepTypes() {
           return toolboxConfiguration.groups
@@ -109,7 +109,7 @@ export function ProcessEditorContent() {
           }
           found.parentSequence.splice(found.index, 1);
           state.notifyDefinitionChange();
-          return toolSuccess('Workflow step deleted');
+          return toolSuccess('Workflow step was deleted');
         },
         async renameWorkflowStep(arg) {
           const step = state.walker.findById(state.definition.value, arg.stepId);
@@ -118,9 +118,9 @@ export function ProcessEditorContent() {
           }
           step.name = arg.newName;
           state.notifyDefinitionChange();
-          return toolSuccess('Workflow step renamed');
+          return toolSuccess('Workflow step was renamed');
         },
-        async createWorkflowStep(arg) {
+        async createWorkflowStepDraft(arg) {
           const template = toolboxConfiguration.groups.flatMap(group => group.steps).find(step => step.type === arg.type);
           if (!template) {
             return toolError('No available workflow step type matches the provided type');
@@ -142,7 +142,7 @@ export function ProcessEditorContent() {
           found.parentSequence.splice(arg.placement === 'before' ? found.index : found.index + 1, 0, arg.step);
 
           state.notifyDefinitionChange();
-          return toolSuccess('Workflow step inserted');
+          return toolSuccess('Workflow step was inserted');
         },
         async replaceWorkflowStep(arg) {
           const parseResult = anyStepSchema.safeParse(arg.step);
@@ -156,12 +156,12 @@ export function ProcessEditorContent() {
           found.parentSequence[found.index] = arg.step;
 
           state.notifyDefinitionChange();
-          return toolSuccess('Workflow step replaced');
+          return toolSuccess('Workflow step was replaced');
         },
         async appendWorkflowStep(arg) {
           const parseResult = anyStepSchema.safeParse(arg.step);
           if (!parseResult.success) {
-            return toolError(`Invalid step JSON: ${parseResult.error.message}; no step was replaced`);
+            return toolError(`Invalid step JSON: ${parseResult.error.message}; no step was added`);
           }
           let sequence: Sequence;
           if (!arg.targetStepId) {
@@ -169,13 +169,13 @@ export function ProcessEditorContent() {
           } else {
             const found = state.walker.findParentSequence(state.definition.value, arg.step.id);
             if (!found) {
-              return toolError(`Cannot find the target step; no step was added`);
+              return toolError('Cannot find the target step; no step was added');
             }
             sequence = getStepSequence(found.step, arg.branchName);
           }
           sequence.push(arg.step);
           state.notifyDefinitionChange();
-          return toolSuccess('Step was added');
+          return toolSuccess('Workflow step was added');
         },
         async hasUnsavedChanges() {
           return {
@@ -187,7 +187,7 @@ export function ProcessEditorContent() {
             return toolError('All changes are already saved');
           }
           await save();
-          return toolSuccess('All changes are saved');
+          return toolSuccess('All changes were saved');
         },
 
         // root
@@ -201,9 +201,9 @@ export function ProcessEditorContent() {
           }));
         },
         async getRootVariableSchema(arg) {
-          const variable = state.definition.value.properties.variables.find(v => v.name === arg.variableName);
+          const variable = state.definition.value.properties.variables.find(v => v.name === arg.name);
           if (!variable) {
-            return toolError(`Cannot find \$${arg.variableName} variable`);
+            return toolError(`Cannot find the \$${arg.name} variable`);
           }
           return {
             schema: variable.schema.schema
@@ -217,14 +217,14 @@ export function ProcessEditorContent() {
         async setRootStartFormEnabled(arg) {
           state.definition.value.properties.startForm = arg.isEnabled ? createEmptyFormDefinition() : undefined;
           state.notifyDefinitionChange();
-          return toolSuccess(`Process start form ${arg.isEnabled ? 'enabled' : 'disabled'}`);
+          return toolSuccess(`Process start form was ${arg.isEnabled ? 'enabled' : 'disabled'}`);
         },
         async openRootStartFormEditorOverlay() {
           if (!state.definition.value.properties.startForm) {
             return toolError('Enable the process start form before opening its editor overlay');
           }
           state.openOverlay(ProcessEditorOverlayType.FORM_EDITOR, DefinitionPath.createRootPath('properties.startForm'));
-          return toolSuccess('Process start form editor overlay opened');
+          return toolSuccess('Process start form editor overlay was opened');
         },
         async getRootStartVariables() {
           return {
@@ -235,12 +235,49 @@ export function ProcessEditorContent() {
           for (const name of arg.variableNames) {
             const variable = state.definition.value.properties.variables.find(v => v.name === name);
             if (!variable) {
-              return toolError(`Cannot find \$${name} variable; process start variable names were not updated`);
+              return toolError(`Cannot find the \$${name} variable; process start variable names were not updated`);
             }
           }
           state.definition.value.properties.startVariableNames = arg.variableNames;
           state.notifyDefinitionChange();
-          return toolSuccess('Process start variable names updated');
+          return toolSuccess('Process start variable names were updated');
+        },
+        async setRootVariable(arg) {
+          const nameError = ProcessRootVariableValidator.validateName(arg.name);
+          if (nameError) {
+            return toolError(`Invalid name: ${nameError}; the variable was not set`);
+          }
+          const schemaError = ProcessRootVariableValidator.validateSchema(arg.schema);
+          if (schemaError) {
+            return toolError(`Invalid schema: ${schemaError}; the variable was not set`);
+          }
+
+          const variables = state.definition.value.properties.variables;
+          const variable: VariableDefinition = {
+            name: arg.name,
+            description: arg.description,
+            schema: {
+              hash: fnv1a(arg.schema),
+              schema: arg.schema
+            }
+          };
+          const index = variables.findIndex(v => v.name === arg.name);
+          if (index < 0) {
+            variables.push(variable);
+          } else {
+            variables[index] = variable;
+          }
+          state.notifyDefinitionChange();
+          return toolSuccess('Variable was set');
+        },
+        async deleteRootVariable(arg) {
+          const index = state.definition.value.properties.variables.findIndex(v => v.name === arg.name);
+          if (index < 0) {
+            return toolError(`Cannot find the \$${arg.name} variable`);
+          }
+          state.definition.value.properties.variables.splice(index, 1);
+          state.notifyDefinitionChange();
+          return toolSuccess('Variable was deleted');
         },
 
         // steps
@@ -249,7 +286,7 @@ export function ProcessEditorContent() {
           const step = state.getStep<ScriptStep>(arg.stepId, 'script');
           const path = DefinitionPath.createStepPath(step.id, 'properties.script');
           state.openOverlay(ProcessEditorOverlayType.SCRIPT_EDITOR, path);
-          return toolSuccess('Script editor overlay opened');
+          return toolSuccess('Script editor overlay was opened');
         },
         async scriptStep_getSandboxName(arg) {
           const step = state.getStep<ScriptStep>(arg.stepId, 'script');
@@ -264,7 +301,7 @@ export function ProcessEditorContent() {
           const step = state.getStep<ScriptStep>(arg.stepId, 'script');
           step.properties.script.sandboxName = arg.sandboxName;
           state.notifyDefinitionChange();
-          return toolSuccess('Sandbox name updated');
+          return toolSuccess('Sandbox name was updated');
         },
 
         // overlay
@@ -291,7 +328,7 @@ export function ProcessEditorContent() {
             return toolError('No overlay is currently open');
           }
           state.closeOverlay();
-          return toolSuccess('Overlay closed');
+          return toolSuccess('Overlay was closed');
         },
 
         // form editor
@@ -313,7 +350,7 @@ export function ProcessEditorContent() {
           const data = FormEditorOverlayUtils.getData(state);
           data.form[arg.part] = arg.content;
           state.notifyDefinitionChange();
-          return toolSuccess('Content updated');
+          return toolSuccess('Content was updated');
         },
         async formEditor_getInputJsonExample(arg) {
           const data = FormEditorOverlayUtils.getData(state);
@@ -322,7 +359,7 @@ export function ProcessEditorContent() {
             return toolError('Cannot find the input variable attached to this form');
           }
           if (!example.exampleValue) {
-            return toolError(`Example value is not set for \$${arg.variableName}`);
+            return toolError(`No example value is set for \$${arg.variableName}`);
           }
           return {
             content: example.exampleValue
@@ -332,16 +369,16 @@ export function ProcessEditorContent() {
           const data = FormEditorOverlayUtils.getData(state);
           const result = FormEditorOverlayUtils.setInputJsonExample(state, data, arg.variableName, arg.content);
           if (result === 'notInputVariable') {
-            return toolError(`The \$${arg.variableName} is not defined as the input variable for this form`);
+            return toolError(`The \$${arg.variableName} variable is not defined as an input variable for this form`);
           }
           if (result === 'undefinedVariable') {
-            return toolError('Cannot find variable');
+            return toolError('Cannot find the variable');
           }
           if (result === 'invalidContent') {
             return toolError('The example value does not match the variable schema');
           }
           state.notifyDefinitionChange();
-          return toolSuccess('Example updated');
+          return toolSuccess('Example was updated');
         },
 
         // scriptEditor
@@ -373,11 +410,11 @@ export function ProcessEditorContent() {
             return toolError('File already exists');
           }
           state.notifyDefinitionChange();
-          return toolSuccess('File content updated');
+          return toolSuccess('File content was updated');
         },
         async scriptEditor_deleteFile(arg) {
           const data = ScriptEditorOverlayUtils.getData(state);
-          return ScriptEditorOverlayUtils.deleteFile(data, arg.filePath) ? toolSuccess('File deleted') : toolError('File not found');
+          return ScriptEditorOverlayUtils.deleteFile(data, arg.filePath) ? toolSuccess('File was deleted') : toolError('File not found');
         }
       }),
     [state]
@@ -433,5 +470,5 @@ function getStepSequence(step: Step, branchName?: string) {
   if (s.sequence && Array.isArray(s.sequence)) {
     return s.sequence;
   }
-  throw new Error('Cannot find sequence in the target step');
+  throw new Error('Cannot find a sequence in the target step');
 }

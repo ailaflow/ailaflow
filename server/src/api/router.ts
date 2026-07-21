@@ -33,8 +33,12 @@ export class Router {
         }
       };
 
-      const middleware = endpoint.admin ? this.authMiddleware.admin : this.authMiddleware.user;
-      this.app[endpoint.method](endpoint.path, middleware, handler);
+      if (endpoint.admin || endpoint.auth) {
+        const middleware = endpoint.admin ? this.authMiddleware.admin : this.authMiddleware.user;
+        this.app[endpoint.method](endpoint.path, middleware, handler);
+      } else {
+        this.app[endpoint.method](endpoint.path, handler);
+      }
       this.logger.log(`Registered endpoint: ${endpoint.method.toUpperCase()} ${endpoint.path}`);
     }
   }

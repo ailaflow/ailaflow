@@ -14,6 +14,7 @@ import { parseBody } from '../framework/parse-body';
 import { Process } from '../../repositories/process-repository/process';
 import { getEndpointAbortSignal } from '../framework/endpoint-abort-signal';
 import { ResourceAccess, ResourceAccessRepository } from '../../repositories/resource-access-repository/resource-access-repository';
+import { ProcessResourceId } from '../../repositories/process-repository/process-resource-id';
 
 export class SaveProcessEndpoint implements Endpoint {
   public readonly method = 'post';
@@ -33,7 +34,7 @@ export class SaveProcessEndpoint implements Endpoint {
 
     const { rootValidator, stepValidator } = await this.getValidators(abortSignal);
 
-    const resourceId = `process:${request.name};`;
+    const resourceId = ProcessResourceId.create(request.name);
     const resourceAccess = ResourceAccess.createFromAccessExpression(resourceId, request.userAccessExpression);
 
     try {

@@ -1,5 +1,6 @@
 import z from 'zod/v4';
 import { route, routeStoreFactory, tool } from '@aibindkit/react';
+import { jsonSchema } from '@aila/model';
 
 // Conventions:
 // - don't add a dot `.` at the end of the description to reduce amount of tokens.
@@ -47,16 +48,16 @@ const processEditorRoute = route('processEditor')
     getWorkflow: tool(
       'Read workflow topology as JSON: step IDs, names, and order; omits `properties`, use `readWorkflowStep` for full step JSON'
     ),
-    createWorkflowStep: tool(
-      'Create JSON for a new workflow step only. This does NOT add, insert, append, or save the step in the workflow. To add the step, pass the returned JSON to `processEditor_insertWorkflowStep` or `processEditor_appendWorkflowStep`.'
+    createWorkflowStepDraft: tool(
+      'Builds a draft JSON object for a new workflow step. This tool does not modify the workflow: it does not add, insert, append, save, or select the step. The returned JSON is only a template. To actually add it to the workflow, call `processEditor_insertWorkflowStep` or `processEditor_appendWorkflowStep` with the returned JSON.'
     ).input(
       z.object({
-        type: z.string().describe('Type of workflow step to create'),
-        name: z.string().describe('Name of the workflow step to create')
+        type: z.string().describe('Type of workflow step draft to create'),
+        name: z.string().describe('Name to use in the workflow step draft')
       })
     ),
     insertWorkflowStep: tool(
-      'Insert step JSON before or after a target step; create new JSON with `createWorkflowStep`, or read then delete an existing step before moving it'
+      'Insert step JSON before or after a target step; create new JSON with `createWorkflowStepDraft`, or read then delete an existing step before moving it'
     ).input(
       z.object({
         step: z.any().describe('Valid JSON for the step to insert'),
@@ -101,7 +102,21 @@ const processEditorRoute = route('processEditor')
     getRootVariables: tool('List process variables with their names and JSON schemas'),
     getRootVariableSchema: tool('Get the JSON schema for a specific process variable').input(
       z.object({
-        variableName: z.string().min(1).describe('The name of the variable')
+        name: z.string().min(1).describe('The name of the variable')
+      })
+    ),
+    setRootVariable: tool(
+      'Sets a process variable. The variable must have a name and a valid JSON schema. If it does not exist, it is created. If it already exists, it is overwritten.'
+    ).input(
+      z.object({
+        name: z.string().min(1).describe('The name of the variable'),
+        description: z.string().min(1).describe('The description of the variable'),
+        schema: jsonSchema
+      })
+    ),
+    deleteRootVariable: tool('Deletes a process variable by name').input(
+      z.object({
+        name: z.string().min(1).describe('The name of the variable')
       })
     ),
 

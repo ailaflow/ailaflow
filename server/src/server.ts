@@ -25,6 +25,8 @@ import { ProcessListQuerier } from './queriers/process-list/process-list-querier
 import { SqliteProcessListQuerier } from './queriers/process-list/sqlite-process-list-querier';
 import { MyProcessListQuerier } from './queriers/my-process-list/my-process-list-querier';
 import { SqliteMyProcessListQuerier } from './queriers/my-process-list/sqlite-my-process-list-querier';
+import { MyProcessAccessQuerier } from './queriers/my-process/my-process-access-querier';
+import { SqliteMyProcessAccessQuerier } from './queriers/my-process/sqlite-my-process-access-querier';
 import { GetProcessEndpoint } from './api/process/get-process-endpoint';
 import { TestProcessEndpoint } from './api/process/test-process-endpoint';
 import { GetMyProcessesEndpoint } from './api/my-process/get-my-processes-endpoint';
@@ -50,6 +52,7 @@ import { AilaChatSessionResolver } from './chat-session/aila-chat-session-resolv
 import { ResourceAccessRepository } from './repositories/resource-access-repository/resource-access-repository';
 import { SqliteResourceAccessRepository } from './repositories/resource-access-repository/sqlite-resource-access-repository';
 import { MyProcessesTool } from './chat-session/user-tools/my-processes-tool';
+import { StartMyProcessTool } from './chat-session/user-tools/start-my-process-tool';
 
 const PORT = process.env.PORT || 2048;
 
@@ -69,6 +72,7 @@ export class Server {
     let sandboxRepository: SandboxRepository;
     let processListQuerier: ProcessListQuerier;
     let myProcessListQuerier: MyProcessListQuerier;
+    let myProcessAccessQuerier: MyProcessAccessQuerier;
     let sandboxListQuerier: SandboxListQuerier;
     let userListQuerier: UserListQuerier;
 
@@ -82,6 +86,7 @@ export class Server {
     sandboxRepository = new SqliteSandboxRepository(sqliteDatabases);
     processListQuerier = new SqliteProcessListQuerier(sqliteDatabases);
     myProcessListQuerier = new SqliteMyProcessListQuerier(sqliteDatabases);
+    myProcessAccessQuerier = new SqliteMyProcessAccessQuerier(sqliteDatabases);
     sandboxListQuerier = new SqliteSandboxListQuerier(sqliteDatabases);
     userListQuerier = new SqliteUserListQuerier(sqliteDatabases);
 
@@ -102,7 +107,7 @@ export class Server {
 
     const sandboxInstanceManager = new SandboxInstanceManager(serverPaths, sandboxRepository, rpcHandler);
 
-    const workflowMachineFactory = new ProcessExecutor(sandboxInstanceManager, processExecutionStore);
+    const processExecutor = new ProcessExecutor(sandboxInstanceManager, processExecutionStore);
 
     const passwordHasher = new PasswordHasher();
 
@@ -110,7 +115,10 @@ export class Server {
       baseUrl: process.env.AI_PROVIDER_BASE_URL!,
       apiKey: process.env.AI_PROVIDER_API_KEY!
     });
-    const userToolSetProvider = new UserToolSetProvider([new MyProcessesTool(myProcessListQuerier)]);
+    const userToolSetProvider = new UserToolSetProvider([
+      new MyProcessesTool(myProcessListQuerier),
+      new StartMyProcessTool(myProcessAccessQuerier, processRepository, processExecutor)
+    ]);
     const authMiddleware = new AuthMiddleware(authTokenRepository);
     const sessionResolver = new AilaChatSessionResolver(llmClient, userToolSetProvider, serverPaths);
 
@@ -127,7 +135,7 @@ export class Server {
       new GetProcessesEndpoint(processListQuerier),
       new GetProcessEndpoint(processRepository),
       new SaveProcessEndpoint(processRepository, resourceAccessRepository, sandboxListQuerier),
-      new TestProcessEndpoint(processRepository, workflowMachineFactory),
+      new TestProcessEndpoint(processRepository, processExecutor),
       new GetSandboxesEndpoint(sandboxListQuerier),
       new GetSandboxEndpoint(sandboxRepository),
       new UpsertSandboxEndpoint(sandboxRepository),

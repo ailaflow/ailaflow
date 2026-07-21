@@ -9,11 +9,13 @@ export type ProcessExecutionVariableValues = Record<string, unknown>;
 
 export type ProcessExecutionResult =
   | {
+      success: false;
       error: string;
       stepId?: string | null;
       interruptedCode?: number;
     }
   | {
+      success: true;
       output: ProcessExecutionVariableValues;
     };
 
@@ -32,35 +34,41 @@ export class ProcessExecution {
     if (snapshot.isFailed()) {
       if (snapshot.unhandledError) {
         return {
+          success: false,
           error: snapshot.unhandledError.message,
           stepId: snapshot.unhandledError.stepId
         };
       }
       return {
+        success: false,
         error: 'Unknown unhandled error'
       };
     }
     if (snapshot.isInterrupted()) {
       if (snapshot.globalState.interruptedError) {
         if (snapshot.globalState.interruptedError.code === InterruptedErrorCode.RETURN && snapshot.globalState.outputVariableNames) {
-          return { output: this.variableManager.getMultiple(snapshot.globalState.outputVariableNames) };
+          return { success: true, output: this.variableManager.getMultiple(snapshot.globalState.outputVariableNames) };
         }
 
         return {
+          success: false,
           error: snapshot.globalState.interruptedError.message,
           interruptedCode: snapshot.globalState.interruptedError.code
         };
       }
       return {
+        success: false,
         error: 'Unknown interrupted error'
       };
     }
     if (snapshot.isFinished()) {
       return {
+        success: true,
         output: {}
       };
     }
     return {
+      success: false,
       error: 'Maximum allowed time exceeded'
     };
   }

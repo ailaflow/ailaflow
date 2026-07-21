@@ -1,8 +1,8 @@
 import { Definition } from 'sequential-workflow-model';
 import { ProcessDefinition } from './process-definition';
-import z from 'zod';
 import { VariableCachedValidator } from './variable-cached-validator';
 import { FormDefinitionValidator } from './form-definition-validator';
+import { ProcessRootVariableValidator } from './process-root-variable-validator';
 
 export class ProcessRootValidator {
   public constructor(private readonly variableValidator: VariableCachedValidator) {}
@@ -13,19 +13,18 @@ export class ProcessRootValidator {
 
     for (let i = 0; i < definition.properties.variables.length; i++) {
       const variable = definition.properties.variables[i];
-      if (variable.name.length < 3 || variable.name.length > 20) {
-        errors[`variables.${i}.name`] = 'Variable name must be between 3 and 20 characters long.';
-      } else if (!/^[a-z][a-z0-9_]*$/.test(variable.name)) {
-        errors[`variables.${i}.name`] = 'Variable name contains invalid characters.';
+      const variableError = ProcessRootVariableValidator.validateName(variable.name);
+      if (variableError) {
+        errors[`variables.${i}.name`] = variableError;
       } else if (usedVariableNames.includes(variable.name)) {
-        errors[`variables.${i}.name`] = 'Variable name must be unique.';
+        errors[`variables.${i}.name`] = 'Variable names must be unique';
       } else {
         usedVariableNames.push(variable.name);
       }
-      try {
-        z.fromJSONSchema(variable.schema.schema);
-      } catch (e) {
-        errors[`variables.${i}.schema`] = `Invalid schema: ${(e as Error)?.message ?? e}.`;
+
+      const schemaError = ProcessRootVariableValidator.validateSchema(variable.schema);
+      if (schemaError) {
+        errors[`variables.${i}.schema`] = `Invalid schema: ${schemaError}`;
       }
     }
 

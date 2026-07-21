@@ -4,6 +4,7 @@ export * from './form-definition';
 export * from './process-validator';
 export * from './process-definition';
 export * from './process-root-validator';
+export * from './process-root-variable-validator';
 export * from './process-step-validator';
 export * from './process-steps';
 export * from './variable-cached-validator';

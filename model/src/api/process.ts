@@ -1,5 +1,5 @@
 import z from 'zod/v4';
-import { processDefinitionSchema } from '../process';
+import { jsonSchema, processDefinitionSchema } from '../process';
 
 // getProcesses
 
@@ -7,7 +7,7 @@ const processLiteDtoSchema = z.object({
   name: z.string(),
   description: z.string(),
   userAccessExpression: z.string(),
-  nStartInputs: z.number()
+  startVariablesSchemas: jsonSchema
 });
 
 export const getProcessesResponseSchema = z.object({

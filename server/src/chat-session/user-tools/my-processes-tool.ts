@@ -1,23 +1,15 @@
-import type { ToolDescriptor } from '@aibindkit/core';
-import { Tool } from '@aibindkit/llm';
+import { ToolContext, ZodTool } from '@aibindkit/llm';
 import { MyProcessListQuerier } from '../../queriers/my-process-list/my-process-list-querier';
 
-export class MyProcessesTool implements Tool {
-  public readonly descriptor: ToolDescriptor = {
-    type: 'function',
-    function: {
-      name: 'get_my_processes',
-      description: 'Returns a list of processes that the user can run'
-    }
-  };
+export class MyProcessesTool extends ZodTool {
+  public constructor(private readonly querier: MyProcessListQuerier) {
+    super('get_my_processes', 'Returns a list of supported processes');
+  }
 
-  public constructor(private readonly querier: MyProcessListQuerier) {}
-
-  public async execute(abortSignal: AbortSignal, sessionId: string) {
+  public async handle(abortSignal: AbortSignal, { sessionId }: ToolContext) {
     // TODO
-    const userId = sessionId.split(':')[0];
+    const userName = sessionId.split(':')[0];
 
-    const processes = await this.querier.query(abortSignal, userId);
-    return JSON.stringify(processes);
+    return await this.querier.query(abortSignal, userName);
   }
 }

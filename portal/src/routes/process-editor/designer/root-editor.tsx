@@ -27,7 +27,7 @@ export function RootEditor(props: RootEditorProps) {
   }
 
   function addVariable() {
-    const schema: JsonSchema['schema'] = {
+    const schema: JsonSchema = {
       type: 'string'
     };
     setVariables([

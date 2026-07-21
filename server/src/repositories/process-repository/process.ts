@@ -1,4 +1,11 @@
-import { ProcessDefinition, ProcessRootValidator, ProcessStepValidator, ProcessValidator, SaveProcessRequest } from '@aila/model';
+import {
+  JsonSchema,
+  ProcessDefinition,
+  ProcessRootValidator,
+  ProcessStepValidator,
+  ProcessValidator,
+  SaveProcessRequest
+} from '@aila/model';
 import { DefinitionWalker } from 'sequential-workflow-model';
 import { ProcessRepositoryError } from './process-repository';
 import z from 'zod/v4';
@@ -44,24 +51,30 @@ function validateUserAccessExpression(userAccessExpression: string) {
   }
 }
 
+function extractStartVariableSchemas(definition: ProcessDefinition): Record<string, JsonSchema> | null {
+  const schemas: Record<string, JsonSchema> = {};
+  let count = 0;
+  for (const v of definition.properties.variables) {
+    if (definition.properties.startVariableNames.includes(v.name)) {
+      schemas[v.name] = v.schema.schema;
+      count++;
+    }
+  }
+  return count > 0 ? schemas : null;
+}
+
 export type VariableValidatorMap = Map<string, z.ZodType>;
 
 export class Process {
   public static create(data: SaveProcessRequest, rootValidator: ProcessRootValidator, stepValidator: ProcessStepValidator): Process {
-    const nSteps = validateProcessDefinition(data.definition, rootValidator, stepValidator);
     validateName(data.name);
     validateDescription(data.description);
     validateUserAccessExpression(data.userAccessExpression);
 
-    return new Process(
-      data.name,
-      data.description,
-      data.userAccessExpression,
-      data.definition,
-      data.hash,
-      data.definition.properties.startVariableNames.length,
-      nSteps
-    );
+    const nSteps = validateProcessDefinition(data.definition, rootValidator, stepValidator);
+    const startVariableSchemas = extractStartVariableSchemas(data.definition);
+
+    return new Process(data.name, data.description, data.userAccessExpression, data.definition, data.hash, startVariableSchemas, nSteps);
   }
 
   private vvmCache: VariableValidatorMap | null = null;
@@ -72,7 +85,7 @@ export class Process {
     public userAccessExpression: string,
     public definition: ProcessDefinition,
     public hash: string,
-    public nStartInputs: number,
+    public startVariablesSchemas: Record<string, JsonSchema> | null,
     public nSteps: number
   ) {}
 
@@ -89,7 +102,7 @@ export class Process {
     this.definition = data.definition;
     this.vvmCache = null;
     this.hash = data.hash;
-    this.nStartInputs = data.definition.properties.startVariableNames.length;
+    this.startVariablesSchemas = extractStartVariableSchemas(data.definition);
     this.nSteps = nSteps;
   }
 

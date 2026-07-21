@@ -4,6 +4,7 @@ import { Message, MessageCompletionResult } from './messages/message';
 import { MessageFactory } from './messages/message-factory';
 import { SessionStack } from './session-stack';
 import { ChatSessionQueue } from './chat-session-queue';
+import { ToolContext } from './tools';
 
 export interface MessageUpdate {
   id: number;
@@ -31,6 +32,11 @@ export class ChatSession {
   private readonly stack = new SessionStack();
   private readonly queue = new ChatSessionQueue();
   private systemMessage?: string;
+
+  private readonly toolContext: ToolContext = {
+    sessionId: this.id,
+    sessionToken: this.token
+  };
 
   public constructor(
     public readonly id: string,
@@ -160,7 +166,7 @@ export class ChatSession {
 
     if (result.toolCalls) {
       const tid = this.nextId();
-      const toolMessage = this.messageFactory.createTool(tid, result.toolCalls, this.id);
+      const toolMessage = this.messageFactory.createTool(tid, this.toolContext, result.toolCalls);
       this.queue.pushAfterType(toolMessage, MessageType.TOOL);
     }
 

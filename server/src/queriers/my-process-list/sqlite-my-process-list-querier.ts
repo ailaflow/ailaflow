@@ -17,12 +17,22 @@ export class SqliteMyProcessListQuerier implements MyProcessListQuerier {
   public async query(_: AbortSignal, userName: string): Promise<MyProcessLiteDto[]> {
     const statement = this.db.prepare(`
       WITH ${this.resourceAccessQueryBuilder.buildAccessibleResourcesCte()}
-      SELECT p.name, p.description, p.nStartInputs
+      SELECT p.name, p.description, p.startVariablesSchemas
       FROM processes p
       JOIN accessible_resources ar
         ON ar.resource_id = 'process:' || p.name
       ORDER BY p.name
     `);
-    return statement.all(userName) as MyProcessLiteDto[];
+    const rows = statement.all(userName) as {
+      name: string;
+      description: string;
+      startVariablesSchemas: string;
+    }[];
+
+    return rows.map(row => ({
+      name: row.name,
+      description: row.description,
+      startVariablesSchemas: JSON.parse(row.startVariablesSchemas)
+    }));
   }
 }

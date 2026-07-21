@@ -1,4 +1,4 @@
-import { ProcessDefinition } from '@aila/model';
+import { JsonSchema, ProcessDefinition } from '@aila/model';
 import { ProcessRepository, ProcessRepositoryError } from './process-repository';
 import { Process } from './process';
 import { SqliteDatabases } from '../../core/sqlite-databases';
@@ -17,8 +17,8 @@ export class SqliteProcessRepository implements ProcessRepository {
         name TEXT PRIMARY KEY,
         description TEXT NOT NULL,
         userAccessExpression TEXT NOT NULL,
-        nStartInputs INTEGER NOT NULL,
         nSteps INTEGER NOT NULL,
+        startVariablesSchemas TEXT NOT NULL,
         serializedDefinition TEXT NOT NULL,
         definitionHash TEXT NOT NULL
       ) STRICT
@@ -27,7 +27,7 @@ export class SqliteProcessRepository implements ProcessRepository {
 
   public async insert(_: AbortSignal, process: Process): Promise<void> {
     const statement = this.db.prepare(`
-      INSERT INTO processes (name, description, userAccessExpression, nStartInputs, nSteps, serializedDefinition, definitionHash)
+      INSERT INTO processes (name, description, userAccessExpression, nSteps, startVariablesSchemas, serializedDefinition, definitionHash)
       VALUES (?, ?, ?, ?, ?, ?, ?)
     `);
     try {
@@ -35,8 +35,8 @@ export class SqliteProcessRepository implements ProcessRepository {
         process.name,
         process.description,
         process.userAccessExpression,
-        process.nStartInputs,
         process.nSteps,
+        serializeStartVariablesSchemas(process.startVariablesSchemas),
         JSON.stringify(process.definition),
         process.hash
       );
@@ -54,8 +54,8 @@ export class SqliteProcessRepository implements ProcessRepository {
       SET
         description = ?,
         userAccessExpression = ?,
-        nStartInputs = ?,
         nSteps = ?,
+        startVariablesSchemas = ?,
         serializedDefinition = ?,
         definitionHash = ?
       WHERE name = ?
@@ -63,8 +63,8 @@ export class SqliteProcessRepository implements ProcessRepository {
     statement.run(
       process.description,
       process.userAccessExpression,
-      process.nStartInputs,
       process.nSteps,
+      serializeStartVariablesSchemas(process.startVariablesSchemas),
       JSON.stringify(process.definition),
       process.hash,
       process.name
@@ -73,7 +73,7 @@ export class SqliteProcessRepository implements ProcessRepository {
 
   public async tryGetByName(_: AbortSignal, name: string): Promise<Process | null> {
     const statement = this.db.prepare(`
-      SELECT name, description, userAccessExpression, nStartInputs, nSteps, serializedDefinition, definitionHash
+      SELECT name, description, userAccessExpression, nSteps, startVariablesSchemas, serializedDefinition, definitionHash
       FROM processes
       WHERE name = ?
       LIMIT 1
@@ -83,8 +83,8 @@ export class SqliteProcessRepository implements ProcessRepository {
           name: string;
           description: string;
           userAccessExpression: string;
-          nStartInputs: number;
           nSteps: number;
+          startVariablesSchemas: string;
           serializedDefinition: string;
           definitionHash: string;
         }
@@ -97,11 +97,15 @@ export class SqliteProcessRepository implements ProcessRepository {
           row.userAccessExpression,
           JSON.parse(row.serializedDefinition) as ProcessDefinition,
           row.definitionHash,
-          row.nStartInputs,
+          JSON.parse(row.startVariablesSchemas) as Record<string, JsonSchema>,
           row.nSteps
         )
       : null;
   }
+}
+
+function serializeStartVariablesSchemas(startVariablesSchemas: Record<string, JsonSchema> | null): string {
+  return JSON.stringify(startVariablesSchemas ?? {});
 }
 
 function isDuplicateProcessNameSqliteError(error: unknown): boolean {

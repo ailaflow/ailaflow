@@ -5,6 +5,7 @@ import { AiMessage } from './ai-message';
 import { SystemMessage } from './system-message';
 import { ToolMessage } from './tool-message';
 import { UserMessage } from './user-message';
+import { ToolContext } from '../tools';
 
 export class MessageFactory {
   public constructor(
@@ -24,7 +25,7 @@ export class MessageFactory {
     return new AiMessage(id, this.llmClient, this.toolSet);
   }
 
-  public createTool(id: number, calls: ToolCall[], sessionId: string): ToolMessage {
-    return new ToolMessage(id, calls, sessionId, this.toolSet);
+  public createTool(id: number, context: ToolContext, calls: ToolCall[]): ToolMessage {
+    return new ToolMessage(id, context, calls, this.toolSet);
   }
 }
