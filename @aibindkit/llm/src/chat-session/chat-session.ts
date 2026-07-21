@@ -34,6 +34,7 @@ export class ChatSession {
 
   public constructor(
     public readonly id: string,
+    public readonly token: string,
     public readonly hash: string,
     private readonly messageFactory: MessageFactory
   ) {}

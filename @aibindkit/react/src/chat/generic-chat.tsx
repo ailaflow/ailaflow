@@ -33,7 +33,7 @@ export function GenericChat(props: GenericChatProps) {
 
   const [connectionError, setConnectionError] = useState<string | null>(null);
   const [reconnectKey, setReconnectKey] = useState(0);
-  const sessionId = useRef<string | null>(null);
+  const sessionToken = useRef<string | null>(null);
   const [updates, setUpdates] = useState<MessageChatUpdate[]>([]);
   const [isWorking, setIsWorking] = useState(false);
   const [message, setMessage] = useState('');
@@ -46,8 +46,8 @@ export function GenericChat(props: GenericChatProps) {
     }
 
     async function resolveToolCalls(toolCalls: ToolCall[]) {
-      if (!sessionId.current) {
-        throw new Error('Session ID is not set');
+      if (!sessionToken.current) {
+        throw new Error('Session token is not set');
       }
       const resolvedIds = new Set<string>();
       try {
@@ -56,7 +56,7 @@ export function GenericChat(props: GenericChatProps) {
           const result = await props.onFrontendToolCalls(abortController.signal, toolCall);
           if (result !== null) {
             toReturn.push({
-              sessionId: sessionId.current,
+              sessionToken: sessionToken.current,
               callId: toolCall.id,
               result: JSON.stringify(result)
             });
@@ -75,7 +75,7 @@ export function GenericChat(props: GenericChatProps) {
           }
           try {
             await props.transport.sendFrontendToolResult(abortController.signal, {
-              sessionId: sessionId.current,
+              sessionToken: sessionToken.current,
               callId: toolCall.id,
               result: `Error executing tool call: ${error}`
             });
@@ -89,7 +89,7 @@ export function GenericChat(props: GenericChatProps) {
     const listener: ChatTransportListener = {
       onMessage(update) {
         if (update.hello) {
-          sessionId.current = update.hello.sessionId;
+          sessionToken.current = update.hello.sessionToken;
         }
         if (update.messages) {
           const messages = update.messages.filter(m => canInclude(m));
@@ -135,34 +135,34 @@ export function GenericChat(props: GenericChatProps) {
   }, [request, reconnectKey, props.transport, props.skipSystemPrompt]);
 
   async function onSendMessage() {
-    if (!sessionId.current || !message) {
+    if (!sessionToken.current || !message) {
       return;
     }
     const abortSignal = AbortSignal.timeout(3_000);
     await props.transport.sendChatMessage(abortSignal, {
-      sessionId: sessionId.current,
+      sessionToken: sessionToken.current,
       message
     });
     setMessage('');
   }
 
   async function onStopClicked() {
-    if (!sessionId.current || !isWorking) {
+    if (!sessionToken.current || !isWorking) {
       return;
     }
     const abortSignal = AbortSignal.timeout(3_000);
     await props.transport.interruptChat(abortSignal, {
-      sessionId: sessionId.current
+      sessionToken: sessionToken.current
     });
   }
 
   async function onStartNewConversation() {
-    if (!sessionId.current) {
+    if (!sessionToken.current) {
       return;
     }
     const abortSignal = AbortSignal.timeout(3_000);
     await props.transport.restartChat(abortSignal, {
-      sessionId: sessionId.current
+      sessionToken: sessionToken.current
     });
     setUpdates([]);
     setIsWorking(false);
@@ -171,12 +171,12 @@ export function GenericChat(props: GenericChatProps) {
   function onReconnectClicked() {
     setConnectionError(null);
     setReconnectKey(k => k + 1);
-    sessionId.current = null;
+    sessionToken.current = null;
   }
 
   return (
     <GenericChatView
-      isLoading={sessionId === null}
+      isLoading={sessionToken === null}
       isWorking={isWorking}
       updates={updates}
       message={message}

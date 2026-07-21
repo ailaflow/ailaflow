@@ -17,7 +17,7 @@ export class SendChatMessageEndpoint implements Endpoint {
       return;
     }
 
-    const chatSession = this.chatSessionProvider.tryGet(request.sessionId);
+    const chatSession = this.chatSessionProvider.tryGet(request.sessionToken);
     if (!chatSession) {
       res.status(404).json({ error: 'Chat session not found' }).end();
       return;

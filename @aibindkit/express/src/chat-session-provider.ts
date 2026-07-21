@@ -12,8 +12,8 @@ export class ChatSessionProvider {
     private readonly frontendToolFactory: FrontendToolFactory
   ) {}
 
-  public tryGet(sessionId: string): ChatSession | undefined {
-    return this.sessions.get(sessionId);
+  public tryGet(token: string): ChatSession | undefined {
+    return this.sessions.get(token);
   }
 
   public getOrCreate(httpRequest: Request, restoreRequest: RestoreChatRequest): ChatSession {
@@ -34,7 +34,7 @@ export class ChatSessionProvider {
     }
 
     session = this.chatSessionFactory.create(resolved.sessionId, hash, resolved.llmClient, toolSet);
-    this.sessions.set(resolved.sessionId, session);
+    this.sessions.set(session.token, session);
     resolved.initialize(session);
     return session;
   }

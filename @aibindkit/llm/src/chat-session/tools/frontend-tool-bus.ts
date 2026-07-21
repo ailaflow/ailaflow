@@ -1,14 +1,14 @@
 export class FrontendToolBus {
   private readonly pendingResults: Map<string, (result: string) => void> = new Map();
 
-  public waitForResult(abortSignal: AbortSignal, sessionId: string, callId: string): Promise<string> {
+  public waitForResult(abortSignal: AbortSignal, sessionToken: string, callId: string): Promise<string> {
     return new Promise((resolve, reject) => {
       if (abortSignal.aborted) {
         reject(new Error('Operation aborted'));
         return;
       }
 
-      const key = this.getKey(sessionId, callId);
+      const key = this.getKey(sessionToken, callId);
 
       abortSignal.addEventListener('abort', () => {
         this.pendingResults.delete(key);
@@ -22,8 +22,8 @@ export class FrontendToolBus {
     });
   }
 
-  public sendResult(sessionId: string, callId: string, result: string): boolean {
-    const key = this.getKey(sessionId, callId);
+  public sendResult(sessionToken: string, callId: string, result: string): boolean {
+    const key = this.getKey(sessionToken, callId);
     const resolve = this.pendingResults.get(key);
     if (!resolve) {
       return false;
@@ -33,7 +33,7 @@ export class FrontendToolBus {
     return true;
   }
 
-  private getKey(sessionId: string, callId: string): string {
-    return `${sessionId}:${callId}`;
+  private getKey(sessionToken: string, callId: string): string {
+    return `${sessionToken}:${callId}`;
   }
 }

@@ -16,7 +16,7 @@ export class SendFrontendToolResultEndpoint implements Endpoint {
       return;
     }
 
-    if (!this.bus.sendResult(request.sessionId, request.callId, request.result)) {
+    if (!this.bus.sendResult(request.sessionToken, request.callId, request.result)) {
       res.status(404).json({ error: 'Call ID not found' }).end();
       return;
     }

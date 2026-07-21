@@ -43,7 +43,7 @@ export class RestoreChatEndpoint implements Endpoint {
 
     sseResponse.send({
       hello: {
-        sessionId: chatSession.id
+        sessionToken: chatSession.token
       },
       messages: chatSession.getAll()
     });
