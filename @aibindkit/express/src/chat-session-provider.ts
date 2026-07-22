@@ -18,7 +18,7 @@ export class ChatSessionProvider {
   }
 
   public getOrCreate(httpRequest: Request, restoreRequest: RestoreChatRequest): ChatSession {
-    const resolved = this.sessionResolver.resolve(httpRequest, restoreRequest.channel);
+    const resolved = this.sessionResolver.resolve(httpRequest, restoreRequest.params);
     const hash = resolved.backendToolsHash.concat(restoreRequest.frontendToolsHash);
 
     let session = this.sessionsById.get(resolved.sessionId);

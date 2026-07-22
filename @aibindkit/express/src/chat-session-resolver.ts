@@ -21,5 +21,5 @@ export interface ResolvedChatSession {
 }
 
 export interface ChatSessionResolver {
-  resolve(httpRequest: Request, channel: Record<string, unknown>): ResolvedChatSession;
+  resolve(httpRequest: Request, params: Record<string, unknown>): ResolvedChatSession;
 }

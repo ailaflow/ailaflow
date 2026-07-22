@@ -1,32 +1,18 @@
 import { WorkflowMachineInterpreter } from 'sequential-workflow-machine';
-import { WorkflowLog, WorkflowLogger } from './services/workflow-logger';
+import { ProcessLogger } from './services/process-logger';
 import { WorkflowMachineGlobalState } from './workflow-machine-global-state';
 import { SimpleEvent } from '@aibindkit/core';
-import { WorkflowVariableManager } from './services/workflow-variable-manager';
-import { InterruptedErrorCode } from './errors/interrupted-error';
-
-export type ProcessExecutionVariableValues = Record<string, unknown>;
-
-export type ProcessExecutionResult =
-  | {
-      success: false;
-      error: string;
-      stepId?: string | null;
-      interruptedCode?: number;
-    }
-  | {
-      success: true;
-      output: ProcessExecutionVariableValues;
-    };
+import { ProcessVariableManager } from './services/process-variable-manager';
+import { ProcessExecutionResult, ProcessLog } from '@aila/model';
 
 export class ProcessExecution {
-  public readonly onDone = new SimpleEvent<ProcessExecutionResult>();
-  public readonly onLog = new SimpleEvent<WorkflowLog>();
+  public readonly onFinished = new SimpleEvent<ProcessExecutionResult>();
+  public readonly onLog = new SimpleEvent<ProcessLog>();
 
   public constructor(
     private readonly interpreter: WorkflowMachineInterpreter<WorkflowMachineGlobalState>,
-    private readonly workflowLogger: WorkflowLogger,
-    private readonly variableManager: WorkflowVariableManager
+    private readonly logger: ProcessLogger,
+    private readonly variableManager: ProcessVariableManager
   ) {}
 
   private resolveResult(): ProcessExecutionResult {
@@ -45,15 +31,11 @@ export class ProcessExecution {
       };
     }
     if (snapshot.isInterrupted()) {
-      if (snapshot.globalState.interruptedError) {
-        if (snapshot.globalState.interruptedError.code === InterruptedErrorCode.RETURN && snapshot.globalState.outputVariableNames) {
-          return { success: true, output: this.variableManager.getMultiple(snapshot.globalState.outputVariableNames) };
-        }
-
+      if (snapshot.globalState.result) {
         return {
-          success: false,
-          error: snapshot.globalState.interruptedError.message,
-          interruptedCode: snapshot.globalState.interruptedError.code
+          success: true,
+          output: this.variableManager.getMultiple(snapshot.globalState.result.outputVariableNames),
+          stepId: snapshot.globalState.result.stepId
         };
       }
       return {
@@ -82,10 +64,10 @@ export class ProcessExecution {
 
     this.interpreter.onDone(() => {
       const result = this.resolveResult();
-      this.onDone.emit(result);
+      this.onFinished.emit(result);
     });
 
-    this.workflowLogger.onLog.subscribe(this.onLog.emit);
+    this.logger.onLog.subscribe(this.onLog.emit);
     this.interpreter.start();
   }
 

@@ -39,13 +39,8 @@ export class TestProcessEndpoint implements Endpoint {
     execution.onLog.subscribe(log => {
       sseResponse.send({ log });
     });
-    execution.onDone.subscribe(result => {
-      sseResponse.send({
-        log: {
-          level: 'done',
-          message: JSON.stringify(result)
-        }
-      });
+    execution.onFinished.subscribe(result => {
+      sseResponse.send({ result });
       res.end();
     });
     execution.run(abortController.signal);

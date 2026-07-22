@@ -15,7 +15,7 @@ import { GenericChatView } from './generic-chat-view';
 export interface GenericChatProps {
   transport: ChatTransport;
   frontendTools: ToolDescriptor[];
-  channel: Record<string, unknown>;
+  params: Record<string, unknown>;
   skipSystemPrompt?: boolean;
   onFrontendToolCalls(abortSignal: AbortSignal, toolCalls: ToolCall): Promise<object | null>;
 }
@@ -24,11 +24,11 @@ export function GenericChat(props: GenericChatProps) {
   const request = useMemo(
     () =>
       ({
-        channel: props.channel,
+        params: props.params,
         frontendTools: props.frontendTools,
         frontendToolsHash: fnv1a(props.frontendTools)
       }) satisfies RestoreChatRequest,
-    [props.channel, props.frontendTools]
+    [props.params, props.frontendTools]
   );
 
   const [connectionError, setConnectionError] = useState<string | null>(null);

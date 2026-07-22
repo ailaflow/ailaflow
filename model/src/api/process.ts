@@ -1,5 +1,5 @@
 import z from 'zod/v4';
-import { jsonSchema, processDefinitionSchema } from '../process';
+import { jsonSchema, processDefinitionSchema, ProcessExecutionResult, ProcessLog } from '../process';
 
 // getProcesses
 
@@ -59,8 +59,6 @@ export const testProcessRequestSchema = z.object({
 export type TestProcessRequest = z.infer<typeof testProcessRequestSchema>;
 
 export interface TestProcessUpdate {
-  log?: {
-    level: string;
-    message: string;
-  };
+  log?: ProcessLog;
+  result?: ProcessExecutionResult;
 }

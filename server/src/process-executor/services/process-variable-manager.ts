@@ -1,13 +1,13 @@
-import { ProcessExecutionVariableValues } from '../process-execution';
 import z from 'zod/v4';
 import { VariableValidatorMap } from '../../repositories/process-repository/process';
+import { ProcessExecutionVariableValues } from '@aila/model';
 
 interface Variable {
   zod: z.ZodType;
   value: unknown | null;
 }
 
-export class WorkflowVariableManager {
+export class ProcessVariableManager {
   private readonly variables = new Map<string, Variable>();
 
   public constructor(input: ProcessExecutionVariableValues, variableValidatorMap: VariableValidatorMap) {

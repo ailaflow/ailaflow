@@ -5,7 +5,7 @@ import { Dashboard } from './dashboard/dashboard';
 import { Install } from './install/install';
 import { ProcessList } from './process-list/process-list';
 import { ProcessEditorPage } from './process-editor/process-editor-page';
-import { ProcessTester } from './process-tester/process-tester';
+import { ProcessTesterPage } from './process-tester/process-tester-page';
 import { SandboxList } from './sandbox-list/sandbox-list';
 import { SandboxEditorPage } from './sandbox-editor/sandbox-editor-page';
 import { AdminPortal } from './common/admin-portal';
@@ -71,7 +71,7 @@ export const routes = [
       },
       {
         path: '/admin/processes/:processName/test',
-        element: <ProcessTester />
+        element: <ProcessTesterPage />
       },
       {
         path: '/admin/tables',

@@ -1,7 +1,7 @@
 import { scriptDefinitionSchema } from './script-definition';
 import z from 'zod/v4';
 import { formDefinitionSchema } from './form-definition';
-import { stepSchema } from './designer-model';
+import { baseStepSchema } from './base-step-model';
 
 // script step
 
@@ -9,7 +9,7 @@ export const scriptStepPropertiesSchema = z.object({
   script: scriptDefinitionSchema
 });
 
-export const scriptStepSchema = stepSchema
+export const scriptStepSchema = baseStepSchema
   .extend({
     type: z.literal('script'),
     properties: scriptStepPropertiesSchema
@@ -24,7 +24,7 @@ export const agentStepPropertiesSchema = z.object({
   prompt: z.string()
 });
 
-export const agentStepSchema = stepSchema.extend({
+export const agentStepSchema = baseStepSchema.extend({
   type: z.literal('agent'),
   properties: agentStepPropertiesSchema
 });
@@ -37,7 +37,7 @@ export const notificationStepPropertiesSchema = z.object({
   userList: z.string()
 });
 
-export const notificationStepSchema = stepSchema.extend({
+export const notificationStepSchema = baseStepSchema.extend({
   type: z.literal('notification'),
   properties: notificationStepPropertiesSchema
 });
@@ -55,7 +55,7 @@ export const taskStepPropertiesSchema = z.object({
   form: formDefinitionSchema
 });
 
-export const taskStepSchema = stepSchema.extend({
+export const taskStepSchema = baseStepSchema.extend({
   type: z.literal('task'),
   properties: taskStepPropertiesSchema
 });
@@ -69,7 +69,7 @@ export const returnStepPropertiesSchema = z.object({
   outputForm: formDefinitionSchema.optional()
 });
 
-export const returnStepSchema = stepSchema.extend({
+export const returnStepSchema = baseStepSchema.extend({
   type: z.literal('return'),
   properties: returnStepPropertiesSchema
 });

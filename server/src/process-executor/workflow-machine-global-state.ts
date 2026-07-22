@@ -1,14 +1,15 @@
-import { InterruptedError } from './errors/interrupted-error';
-import { WorkflowLogger } from './services/workflow-logger';
-import { WorkflowScriptExecutor } from './services/workflow-script-executor';
-import { WorkflowVariableManager } from './services/workflow-variable-manager';
+import { ProcessLogger } from './services/process-logger';
+import { ProcessScriptExecutor } from './services/process-script-executor';
+import { ProcessVariableManager } from './services/process-variable-manager';
 
 export interface WorkflowMachineGlobalState {
-  interruptedError?: InterruptedError;
-  outputVariableNames?: string[];
+  result?: {
+    outputVariableNames: string[];
+    stepId: string;
+  };
 
   // Services
-  $logger: WorkflowLogger;
-  $variables: WorkflowVariableManager;
-  $scriptExecutor: WorkflowScriptExecutor;
+  $logger: ProcessLogger;
+  $variables: ProcessVariableManager;
+  $scriptExecutor: ProcessScriptExecutor;
 }

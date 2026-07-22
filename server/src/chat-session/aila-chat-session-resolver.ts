@@ -20,10 +20,10 @@ export class AilaChatSessionResolver implements ChatSessionResolver {
     this.adminSystemPrompt = readFileSync(`${path}/admin-prompt.md`, 'utf-8');
   }
 
-  public resolve(httpRequest: Request, channel: Record<string, unknown>): ResolvedChatSession {
+  public resolve(httpRequest: Request, params: Record<string, unknown>): ResolvedChatSession {
     const authToken = getAuthToken(httpRequest);
 
-    if (channel.admin === true) {
+    if (params.admin === true) {
       return {
         sessionId: this.createSessionId(authToken.userName, 'admin'),
         backendTools: [],
@@ -35,9 +35,9 @@ export class AilaChatSessionResolver implements ChatSessionResolver {
       };
     }
 
-    if (typeof channel.name === 'string') {
+    if (typeof params.name === 'string') {
       return {
-        sessionId: this.createSessionId(authToken.userName, `channel:${channel.name}`),
+        sessionId: this.createSessionId(authToken.userName, `channel:${params.name}`),
         backendTools: this.userToolSetProvider.tools,
         backendToolsHash: this.userToolSetProvider.hash,
         llmClient: this.llmClient,

@@ -8,7 +8,7 @@ export function MyChat() {
 
   const details = useMemo(
     () => ({
-      channel: {
+      params: {
         name: 'Main'
       },
       frontendTools: [],
@@ -21,7 +21,7 @@ export function MyChat() {
     <Portal>
       <GenericChat
         transport={api.chat}
-        channel={details.channel}
+        params={details.params}
         frontendTools={details.frontendTools}
         onFrontendToolCalls={details.onFrontendToolCalls}
         skipSystemPrompt={true}

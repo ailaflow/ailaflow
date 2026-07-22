@@ -3,7 +3,7 @@ import { MyProcessAccessQuerier } from '../../queriers/my-process/my-process-acc
 import z from 'zod/v4';
 import { ProcessRepository } from '../../repositories/process-repository/process-repository';
 import { ProcessExecutor } from '../../process-executor/process-executor';
-import { ProcessExecutionVariableValues } from '../../process-executor/process-execution';
+import { ProcessExecutionVariableValues } from '@aila/model';
 
 const inputSchema = z.object({
   name: z.string(),
@@ -62,7 +62,7 @@ export class StartMyProcessTool extends ZodTool<Arg> {
     const execution = this.processExecutor.initialize(process, input);
 
     return new Promise<object>((resolve, reject) => {
-      execution.onDone.subscribe(result => {
+      execution.onFinished.subscribe(result => {
         if (result.success) {
           resolve(result.output);
         } else {
