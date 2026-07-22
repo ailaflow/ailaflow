@@ -11,8 +11,15 @@ import { SandboxEditorPage } from './sandbox-editor/sandbox-editor-page';
 import { AdminPortal } from './common/admin-portal';
 import { MyChat } from './my-chat/my-chat';
 import { MyProcessList } from './my-process-list/my-process-list';
+import { MyNotificationsPage } from './my-notifications/my-notifications-page';
+import { MyTasksPage } from './my-tasks/my-tasks-page';
+import { MyViewsPage } from './my-views/my-views-page';
 import { UserList } from './user-list/user-list';
 import { UserEditorPage } from './user-editor/user-editor-page';
+import { TableListPage } from './table-list/table-list-page';
+import { ViewListPage } from './view-list/view-list-page';
+import { LogsPage } from './logs/logs-page';
+import { ConfigurationPage } from './configuration/configuration-page';
 
 export const routes = [
   {
@@ -32,8 +39,20 @@ export const routes = [
     element: <AuthGate route={<MyChat />} />
   },
   {
+    path: '/my-tasks',
+    element: <AuthGate route={<MyTasksPage />} />
+  },
+  {
+    path: '/my-notifications',
+    element: <AuthGate route={<MyNotificationsPage />} />
+  },
+  {
     path: '/my-processes',
     element: <AuthGate route={<MyProcessList />} />
+  },
+  {
+    path: '/my-views',
+    element: <AuthGate route={<MyViewsPage />} />
   },
   {
     element: <AuthGate route={<AdminPortal />} />,
@@ -53,6 +72,10 @@ export const routes = [
       {
         path: '/admin/processes/:processName/test',
         element: <ProcessTester />
+      },
+      {
+        path: '/admin/tables',
+        element: <TableListPage />
       },
       {
         path: '/admin/sandboxes',
@@ -77,6 +100,18 @@ export const routes = [
       {
         path: '/admin/users/:userName',
         element: <UserEditorPage />
+      },
+      {
+        path: '/admin/views',
+        element: <ViewListPage />
+      },
+      {
+        path: '/admin/logs',
+        element: <LogsPage />
+      },
+      {
+        path: '/admin/configuration',
+        element: <ConfigurationPage />
       }
     ]
   }
