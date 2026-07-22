@@ -1,60 +1,16 @@
-import { ProcessEditorOverlayType, useProcessEditor } from './process-editor-context';
-import { SchemaEditorOverlay } from './overlays/schema-editor-overlay';
-import { Designer } from './designer';
-import { useApiClient } from '../../auth/auth-context';
-import { ResourceEditorView } from '../../views/resource-editor/resource-editor-view';
-import { useNavigate } from 'react-router-dom';
-import { FormEditorOverlay } from './overlays/form-editor-overlay';
-import { ScriptEditorOverlay, ScriptEditorOverlayState } from './overlays/script-editor-overlay';
-import { ResourceSimpleDetailsView } from '../../views/resource-editor/resource-simple-details-view';
-import { fnv1a } from '@aibindkit/core';
-import { anyStepSchema, ProcessRootVariableValidator, ScriptStep, VariableDefinition } from '@aila/model';
 import { toolError, toolSuccess } from '@aibindkit/react';
+import { useAiStore } from '../common/admin-portal';
+import { ProcessEditorOverlayType, ProcessEditorState } from './process-editor-context';
 import { createEmptyFormDefinition, toolboxConfiguration } from './designer-configuration';
-import { BranchedStep, ObjectCloner, Sequence, SequentialStep, Step, Uid } from 'sequential-workflow-designer';
+import { ObjectCloner, Sequence, Step, Uid } from 'sequential-workflow-designer';
+import { anyStepSchema, ProcessRootVariableValidator, ScriptStep, VariableDefinition } from '@aila/model';
+import { DesignerUtils } from './designer-utils';
 import { DefinitionPath } from '../../core/definition-path';
-import { useAiStore, useUnsavedChangesController } from '../common/admin-portal';
 import { FormEditorOverlayUtils } from './overlays/form-editor-overlay-utils';
 import { ScriptEditorOverlayUtils } from './overlays/script-editor-overlay-utils';
+import { ScriptEditorOverlayState } from './overlays/script-editor-overlay';
 
-export function ProcessEditorContent() {
-  const state = useProcessEditor();
-  const apiClient = useApiClient();
-  const navigate = useNavigate();
-
-  const isDesigner = !state.overlay;
-  const canSave = Boolean(state.isValid && state.isDirty);
-  const canTest = Boolean(state.isValid && !state.isDirty);
-
-  function openTester() {
-    navigate(`/admin/processes/${state.name}/test`);
-  }
-
-  async function save() {
-    if (!canSave) {
-      return;
-    }
-
-    const timeout = AbortSignal.timeout(5_000);
-    const hash = fnv1a(state.definition.value);
-    const response = await apiClient.process.saveProcess(timeout, {
-      insert: state.isNew,
-      description: state.description,
-      name: state.name,
-      userAccessExpression: state.userAccessExpression,
-      definition: state.definition.value,
-      hash
-    });
-
-    if (state.isNew) {
-      navigate(`/admin/processes/${response.name}`);
-    } else {
-      state.setIsDirty(false);
-    }
-  }
-
-  useUnsavedChangesController(state.isDirty);
-
+export function useProcessEditorAi(state: ProcessEditorState, save: () => Promise<void>) {
   useAiStore(
     'processEditor',
     store =>
@@ -171,7 +127,7 @@ export function ProcessEditorContent() {
             if (!found) {
               return toolError('Cannot find the target step; no step was added');
             }
-            sequence = getStepSequence(found.step, arg.branchName);
+            sequence = DesignerUtils.getStepSequence(found.step, arg.branchName);
           }
           sequence.push(arg.step);
           state.notifyDefinitionChange();
@@ -257,7 +213,7 @@ export function ProcessEditorContent() {
             name: arg.name,
             description: arg.description,
             schema: {
-              hash: fnv1a(arg.schema),
+              hash: '~', // Will be updated on save
               schema: arg.schema
             }
           };
@@ -414,61 +370,13 @@ export function ProcessEditorContent() {
         },
         async scriptEditor_deleteFile(arg) {
           const data = ScriptEditorOverlayUtils.getData(state);
-          return ScriptEditorOverlayUtils.deleteFile(data, arg.filePath) ? toolSuccess('File was deleted') : toolError('File not found');
+          if (!ScriptEditorOverlayUtils.deleteFile(data, arg.filePath)) {
+            return toolError('File not found');
+          }
+          state.notifyDefinitionChange();
+          return toolSuccess('File was deleted');
         }
       }),
     [state]
   );
-
-  return (
-    <ResourceEditorView
-      icon="/"
-      name={state.name}
-      isNameValid={state.nameError === null}
-      isNameReadOnly={!isDesigner || !state.isNew}
-      onNameChange={name => state.setName(name, false)}
-      detailsId="admin-process-editor-details"
-      details={
-        isDesigner ? (
-          <ResourceSimpleDetailsView
-            id="admin-process-editor-details"
-            description={state.description}
-            descriptionError={state.descriptionError}
-            userAccessExpression={state.userAccessExpression}
-            userAccessExpressionError={state.userAccessExpressionError}
-            onDescriptionChange={description => state.setDescription(description, false)}
-            onUserAccessExpressionChange={userAccessExpression => state.setUserAccessExpression(userAccessExpression, false)}
-          />
-        ) : undefined
-      }
-      areDetailsVisible={isDesigner}
-      canSave={canSave}
-      onSave={isDesigner ? save : undefined}
-      switchLabel="Test"
-      canSwitch={canTest}
-      onSwitch={isDesigner ? openTester : undefined}
-    >
-      {isDesigner && <Designer />}
-      {state.overlay?.type === ProcessEditorOverlayType.SCHEMA_EDITOR && <SchemaEditorOverlay />}
-      {state.overlay?.type === ProcessEditorOverlayType.FORM_EDITOR && <FormEditorOverlay />}
-      {state.overlay?.type === ProcessEditorOverlayType.SCRIPT_EDITOR && <ScriptEditorOverlay />}
-    </ResourceEditorView>
-  );
-}
-
-function getStepSequence(step: Step, branchName?: string) {
-  if (branchName) {
-    const b = step as BranchedStep;
-    if (typeof b.branches === 'object') {
-      const bb = b.branches[branchName];
-      if (bb && Array.isArray(bb)) {
-        return b.branches[branchName];
-      }
-    }
-  }
-  const s = step as SequentialStep;
-  if (s.sequence && Array.isArray(s.sequence)) {
-    return s.sequence;
-  }
-  throw new Error('Cannot find a sequence in the target step');
 }

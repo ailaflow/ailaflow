@@ -1,4 +1,4 @@
-import { ScriptDefinition } from '@aila/model';
+import type { FileContent, ScriptDefinition } from '@aila/model';
 import { ProcessEditorOverlayType, ProcessEditorState } from '../process-editor-context';
 
 export interface ScriptEditorOverlayData {
@@ -16,8 +16,16 @@ export class ScriptEditorOverlayUtils {
   }
 
   public static getFileContent(data: ScriptEditorOverlayData, filePath: string): string | null {
-    const content = data.script.contents.find(c => c.path === filePath);
+    const content = ScriptEditorOverlayUtils.getFile(data, filePath);
     return content ? content.content : null;
+  }
+
+  public static getFile(data: ScriptEditorOverlayData, filePath: string): FileContent | undefined {
+    return data.script.contents.find(c => c.path === filePath);
+  }
+
+  public static getFilePaths(data: ScriptEditorOverlayData): string[] {
+    return data.script.contents.map(c => c.path);
   }
 
   public static setFileContent(
@@ -41,6 +49,7 @@ export class ScriptEditorOverlayUtils {
         content: '',
         modifiedAt: 0
       };
+      data.script.contents.push(c);
     } else {
       throw new Error('Unsupported mode');
     }

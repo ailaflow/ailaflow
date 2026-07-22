@@ -80,7 +80,7 @@ function createData(props: Omit<ProcessEditorContextProps, 'children'>): Process
   const rootValidator = new ProcessRootValidator(variableValidator);
   const stepValidator = new ProcessStepValidator(sandboxNames, variableValidator);
 
-  const definition = wrapDefinition<ProcessDefinition>(props.process ? props.process.definition : DesignerUtils.createEmptyDefinition());
+  const definition = wrapDefinition<ProcessDefinition>(props.process ? props.process.definition : DesignerUtils.createBlankDefinition());
   const name = props.process?.name ?? 'new_process';
   const description = props.process?.description ?? '';
   const userAccessExpression = props.process?.userAccessExpression ?? '';

@@ -36,7 +36,7 @@ export function SchemaEditorOverlay() {
       const s = JSON.parse(schema.schema);
       newSchema = {
         schema: s,
-        hash: fnv1a(s)
+        hash: '~' // Will be updated on save
       };
     } catch (e) {
       return;

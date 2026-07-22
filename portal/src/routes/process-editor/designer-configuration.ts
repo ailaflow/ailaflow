@@ -1,6 +1,5 @@
 import { ToolboxConfiguration } from 'sequential-workflow-designer';
 import { ScriptStep, AgentStep, TaskStep, NotificationStep, FileContent, FormDefinition, ScriptDefinition, ReturnStep } from '@aila/model';
-import { fnv1a } from '@aibindkit/core';
 
 export function createEmptyFormDefinition(): FormDefinition {
   return {
@@ -49,7 +48,7 @@ function createEmptyScriptDefinition(): ScriptDefinition {
   ];
   return {
     sandboxName: 'default',
-    hash: fnv1a(contents),
+    hash: `~`, // Will be updated on save
     contents
   };
 }

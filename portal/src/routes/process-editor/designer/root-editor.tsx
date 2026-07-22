@@ -37,7 +37,7 @@ export function RootEditor(props: RootEditorProps) {
         description: '',
         schema: {
           schema,
-          hash: fnv1a(schema)
+          hash: '~' // Will be updated on save
         }
       }
     ]);

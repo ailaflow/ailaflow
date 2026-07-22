@@ -1,12 +1,11 @@
 import { useProcessEditor } from '../process-editor-context';
 import { ProcessSubEditorView } from '../../../views/process-editor/process-sub-editor-view';
-import type { FileContent, ScriptDefinition } from '@aila/model';
-import { useState } from 'react';
+import { useEffect } from 'react';
 import { wrapDefinition } from 'sequential-workflow-designer-react';
 import { ScriptSubEditorView } from '../../../views/process-editor/script-sub-editor/script-sub-editor';
+import type { FileContent } from '@aila/model';
 import { FolderTreeItem, FolderTreeView } from '../../../views/process-editor/script-sub-editor/folder-tree-view';
 import { FileContentEditorView } from '../../../views/process-editor/script-sub-editor/file-content-editor-view';
-import { fnv1a } from '@aibindkit/core';
 import { ScriptEditorOverlayUtils } from './script-editor-overlay-utils';
 
 export interface ScriptEditorOverlayState {
@@ -16,36 +15,37 @@ export interface ScriptEditorOverlayState {
 export function ScriptEditorOverlay() {
   const state = useProcessEditor();
 
-  const [folderItems, setFolderItems] = useState<FolderTreeItem[]>(() => {
-    const { script } = ScriptEditorOverlayUtils.getData(state);
-    return createFolderTree(script.contents);
-  });
-  const { selectedFilePath } = state.getOverlayState<ScriptEditorOverlayState>(() => ({ selectedFilePath: getFirstFilePath(folderItems) }));
-  const selectedFile = selectedFilePath ? findFile(folderItems, selectedFilePath) : undefined;
+  const data = ScriptEditorOverlayUtils.getData(state);
+  const folderItems = createFolderTree(data.script.contents);
+  const { selectedFilePath } = state.getOverlayState<ScriptEditorOverlayState>(() => ({
+    selectedFilePath: getFirstFilePath(folderItems)
+  }));
+  const selectedFile = selectedFilePath ? ScriptEditorOverlayUtils.getFile(data, selectedFilePath) : undefined;
 
   function setSelectedFilePath(path: string | undefined) {
     state.setOverlayState({ selectedFilePath: path });
   }
+
+  useEffect(() => {
+    const nextSelectedFilePath = selectedFilePath && selectedFile ? selectedFilePath : getFirstFilePath(folderItems);
+    if (nextSelectedFilePath !== selectedFilePath) {
+      setSelectedFilePath(nextSelectedFilePath);
+    }
+  });
 
   function addFile() {
     const path = window.prompt('File name');
     if (!path?.trim()) {
       return;
     }
-    if (findFile(folderItems, path)) {
+    if (ScriptEditorOverlayUtils.getFile(data, path)) {
       window.alert(`File "${path}" already exists.`);
       return;
     }
 
-    const file: FileContent = {
-      path,
-      mimeType: ScriptEditorOverlayUtils.resolveMimeType(path),
-      content: '',
-      modifiedAt: Date.now()
-    };
-
+    ScriptEditorOverlayUtils.setFileContent(data, path, '', 'create');
     setSelectedFilePath(path);
-    setFolderItems(current => addFileToTree(current, file));
+    state.notifyDefinitionChange();
   }
 
   function removeFile(path: string) {
@@ -53,11 +53,15 @@ export function ScriptEditorOverlay() {
       return;
     }
 
-    const nextFolderItems = removeFileFromTree(folderItems, path);
-    const nextSelectedPath = path === selectedFilePath ? getFirstFilePath(nextFolderItems) : selectedFilePath;
+    if (!ScriptEditorOverlayUtils.deleteFile(data, path)) {
+      return;
+    }
 
-    setSelectedFilePath(nextSelectedPath);
-    setFolderItems(nextFolderItems);
+    if (path === selectedFilePath) {
+      const nextFolderItems = createFolderTree(data.script.contents);
+      setSelectedFilePath(getFirstFilePath(nextFolderItems));
+    }
+    state.notifyDefinitionChange();
   }
 
   function updateSelectedFileContent(content: string) {
@@ -65,29 +69,11 @@ export function ScriptEditorOverlay() {
       return;
     }
 
-    setFolderItems(current =>
-      updateFolderTree(current, item =>
-        item.path === selectedFilePath
-          ? {
-              ...item,
-              content,
-              modifiedAt: Date.now(),
-              isDirty: true
-            }
-          : item
-      )
-    );
+    ScriptEditorOverlayUtils.setFileContent(data, selectedFilePath, content, 'edit');
+    state.notifyDefinitionChange();
   }
 
   function ok() {
-    const { script: currentScript } = ScriptEditorOverlayUtils.getData(state);
-    const contents = flattenFolderTree(folderItems);
-    const script: ScriptDefinition = {
-      sandboxName: currentScript.sandboxName,
-      contents,
-      hash: fnv1a(contents)
-    };
-    Object.assign(currentScript, script);
     state.setDefinition(wrapDefinition(state.definition.value), true);
     state.closeOverlay();
   }
@@ -146,80 +132,6 @@ function createFolderTree(contents: FileContent[]): FolderTreeItem[] {
   return sortFolderTree(root.children);
 }
 
-function addFileToTree(items: FolderTreeItem[], file: FileContent): FolderTreeItem[] {
-  const parts = file.path.split('/').filter(Boolean);
-  return sortFolderTree(addFileToTreeItems(items, parts, file));
-}
-
-function addFileToTreeItems(items: FolderTreeItem[], parts: string[], file: FileContent, parentPath = ''): FolderTreeItem[] {
-  const [name, ...rest] = parts;
-  if (!name) {
-    return items;
-  }
-
-  const path = parentPath ? `${parentPath}/${name}` : name;
-
-  if (rest.length === 0) {
-    return [
-      ...items,
-      {
-        name,
-        path,
-        type: 'file',
-        mimeType: file.mimeType,
-        content: file.content,
-        modifiedAt: file.modifiedAt,
-        isDirty: true
-      }
-    ];
-  }
-
-  const existingFolder = items.find((item): item is FolderNode => item.type === 'folder' && item.path === path);
-  if (existingFolder) {
-    return items.map(item =>
-      item === existingFolder
-        ? {
-            ...item,
-            children: addFileToTreeItems(item.children, rest, file, path)
-          }
-        : item
-    );
-  }
-
-  return [
-    ...items,
-    {
-      name,
-      path,
-      type: 'folder',
-      children: addFileToTreeItems([], rest, file, path)
-    }
-  ];
-}
-
-function removeFileFromTree(items: FolderTreeItem[], path: string): FolderTreeItem[] {
-  const nextItems: FolderTreeItem[] = [];
-
-  for (const item of items) {
-    if (item.type === 'file') {
-      if (item.path !== path) {
-        nextItems.push(item);
-      }
-      continue;
-    }
-
-    const children = removeFileFromTree(item.children, path);
-    if (children.length > 0) {
-      nextItems.push({
-        ...item,
-        children
-      });
-    }
-  }
-
-  return nextItems.sort(compareFolderTreeItems);
-}
-
 function sortFolderTree(items: FolderTreeItem[]): FolderTreeItem[] {
   return items
     .sort(compareFolderTreeItems)
@@ -236,33 +148,6 @@ function compareFolderTreeItems(a: FolderTreeItem, b: FolderTreeItem) {
   return a.name.localeCompare(b.name);
 }
 
-function updateFolderTree(items: FolderTreeItem[], updateFile: (item: FileNode) => FileNode): FolderTreeItem[] {
-  return items.map(item => {
-    if (item.type === 'file') {
-      return updateFile(item);
-    }
-    return {
-      ...item,
-      children: updateFolderTree(item.children, updateFile)
-    };
-  });
-}
-
-function findFile(items: FolderTreeItem[], path: string): FileNode | undefined {
-  let found: FileNode | undefined;
-  walkFiles(items, file => {
-    if (file.path === path) {
-      found = file;
-      return false;
-    }
-    return true;
-  });
-  return found;
-}
-
-type FolderNode = Extract<FolderTreeItem, { type: 'folder' }>;
-type FileNode = Extract<FolderTreeItem, { type: 'file' }>;
-
 function getFirstFilePath(items: FolderTreeItem[]): string | undefined {
   let path: string | undefined;
   walkFiles(items, file => {
@@ -270,20 +155,6 @@ function getFirstFilePath(items: FolderTreeItem[]): string | undefined {
     return false;
   });
   return path;
-}
-
-function flattenFolderTree(items: FolderTreeItem[]): FileContent[] {
-  const contents: FileContent[] = [];
-  walkFiles(items, file => {
-    contents.push({
-      path: file.path,
-      mimeType: file.mimeType,
-      content: file.content,
-      modifiedAt: file.modifiedAt
-    });
-    return true;
-  });
-  return contents;
 }
 
 function walkFiles(items: FolderTreeItem[], visit: (file: FileNode) => boolean): boolean {
@@ -298,3 +169,6 @@ function walkFiles(items: FolderTreeItem[], visit: (file: FileNode) => boolean):
   }
   return true;
 }
+
+type FolderNode = Extract<FolderTreeItem, { type: 'folder' }>;
+type FileNode = Extract<FolderTreeItem, { type: 'file' }>;

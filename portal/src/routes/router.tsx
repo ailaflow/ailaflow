@@ -4,7 +4,7 @@ import { AuthGate } from './common/auth-gate';
 import { Dashboard } from './dashboard/dashboard';
 import { Install } from './install/install';
 import { ProcessList } from './process-list/process-list';
-import { ProcessEditor } from './process-editor/process-editor';
+import { ProcessEditorPage } from './process-editor/process-editor-page';
 import { ProcessTester } from './process-tester/process-tester';
 import { SandboxList } from './sandbox-list/sandbox-list';
 import { SandboxEditorPage } from './sandbox-editor/sandbox-editor-page';
@@ -63,11 +63,11 @@ export const routes = [
       },
       {
         path: '/admin/processes/:processName',
-        element: <ProcessEditor />
+        element: <ProcessEditorPage />
       },
       {
         path: '/admin/create-process',
-        element: <ProcessEditor />
+        element: <ProcessEditorPage />
       },
       {
         path: '/admin/processes/:processName/test',
