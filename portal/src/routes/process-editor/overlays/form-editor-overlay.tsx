@@ -1,5 +1,5 @@
 import type { FormDefinition, FormInputExample } from '@aila/model';
-import { FormDefinitionValidator } from '@aila/model';
+import { FormDefinitionValidator, VariableCachedValidator } from '@aila/model';
 import { useMemo, useState } from 'react';
 import { wrapDefinition } from 'sequential-workflow-designer-react';
 import { ProcessSubEditorView } from '../../../views/process-editor/process-sub-editor-view';
@@ -7,12 +7,14 @@ import { FormEditorTab, FormSubEditorView } from '../../../views/process-editor/
 import { ProcessEditorOverlayType } from '../process-editor-context';
 import { useProcessEditor } from '../process-editor-context';
 import { FormEditorOverlayUtils } from './form-editor-overlay-utils';
+import { FormAdapter } from '../../form-renderer/form-adapter';
 
 export function FormEditorOverlay() {
   const state = useProcessEditor();
+  const variableValidator = useMemo(() => new VariableCachedValidator(), []);
 
   const formState = useMemo(() => {
-    const { form, inputVariableNames } = FormEditorOverlayUtils.getData(state);
+    const { form, inputVariableNames, outputVariableNames } = FormEditorOverlayUtils.getData(state);
     const normalizedForm = {
       ...form,
       inputExamples: inputVariableNames.map(variableName => {
@@ -22,9 +24,32 @@ export function FormEditorOverlay() {
     return {
       form: normalizedForm,
       inputVariableNames,
+      outputVariableNames,
       errors: FormDefinitionValidator.validate(normalizedForm, inputVariableNames, state.definition.value, state.variableValidator)
     };
   }, [state.overlay, state.definition, state.variableValidator]);
+
+  const formAdapter = useMemo<FormAdapter>(
+    () => ({
+      allowedToReadVariableNames: null,
+      outputVariableNames: formState.outputVariableNames,
+
+      async readVariable(_: AbortSignal, name: string) {
+        const example = formState.form.inputExamples.find(example => example.variableName === name);
+        if (!example || !example.exampleValue) {
+          throw new Error(`Not found example value for variable \$${name}`);
+        }
+        return JSON.parse(example.exampleValue);
+      },
+      async submit() {
+        throw new Error('This is preview only');
+      },
+      assertVariableValue(name: string, value: unknown) {
+        variableValidator.assertValidVariableValue(name, value, state.definition.value);
+      }
+    }),
+    [formState.inputVariableNames, state.definition, variableValidator]
+  );
 
   const [selectedTab, setSelectedTab] = useState<FormEditorTab>(formState.inputVariableNames.length > 0 ? 'Example Inputs' : 'HTML');
   const selectedVisibleTab = selectedTab === 'Example Inputs' && formState.inputVariableNames.length === 0 ? 'HTML' : selectedTab;
@@ -69,6 +94,7 @@ export function FormEditorOverlay() {
         inputExamples={formState.form.inputExamples}
         errors={formState.errors}
         form={formState.form}
+        formAdapter={formAdapter}
         onSelectTab={setSelectedTab}
         onSetInputExampleValue={setInputExampleValue}
         onHtmlChange={html => setForm({ ...formState.form, html })}

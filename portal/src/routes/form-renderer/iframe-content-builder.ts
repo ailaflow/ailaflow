@@ -15,7 +15,7 @@ body {
 
 const frameworkScript = `
 (function () {
-  let lastId = 1024;
+  let lastId = 0;
 
   function request(type, payload) {
     return new Promise((resolve, reject) => {
@@ -48,8 +48,16 @@ const frameworkScript = `
     });
   }
 
+  function normalizeVariableName(name) {
+    if (name.startsWith('$')) {
+      return name.substring(1);
+    }
+    return name;
+  }
+
   window.aila = {
     submitForm: (data) => request('submitForm', data),
+    readVariable: (name) => request('readVariable', { name: normalizeVariableName(name) }),
   };
 }());
 `;

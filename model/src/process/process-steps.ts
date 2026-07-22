@@ -65,7 +65,8 @@ export type TaskStep = z.infer<typeof taskStepSchema>;
 // return step
 
 export const returnStepPropertiesSchema = z.object({
-  outputVariableNames: z.array(z.string())
+  outputVariableNames: z.array(z.string()),
+  outputForm: formDefinitionSchema.optional()
 });
 
 export const returnStepSchema = stepSchema.extend({

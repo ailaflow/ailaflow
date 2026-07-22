@@ -3,7 +3,7 @@ import { useAiStore } from '../common/admin-portal';
 import { ProcessEditorOverlayType, ProcessEditorState } from './process-editor-context';
 import { createEmptyFormDefinition, toolboxConfiguration } from './designer-configuration';
 import { ObjectCloner, Sequence, Step, Uid } from 'sequential-workflow-designer';
-import { anyStepSchema, ProcessRootVariableValidator, ScriptStep, VariableDefinition } from '@aila/model';
+import { anyStepSchema, ProcessRootVariableValidator, ReturnStep, ScriptStep, VariableDefinition } from '@aila/model';
 import { DesignerUtils } from './designer-utils';
 import { DefinitionPath } from '../../core/definition-path';
 import { FormEditorOverlayUtils } from './overlays/form-editor-overlay-utils';
@@ -258,6 +258,40 @@ export function useProcessEditorAi(state: ProcessEditorState, save: () => Promis
           step.properties.script.sandboxName = arg.sandboxName;
           state.notifyDefinitionChange();
           return toolSuccess('Sandbox name was updated');
+        },
+
+        async returnStep_isOutputFormEnabled(arg) {
+          const step = state.getStep<ReturnStep>(arg.stepId, 'return');
+          return {
+            isEnabled: Boolean(step.properties.outputForm)
+          };
+        },
+        async returnStep_setOutputFormEnabled(arg) {
+          const step = state.getStep<ReturnStep>(arg.stepId, 'return');
+          step.properties.outputForm = arg.isEnabled ? createEmptyFormDefinition() : undefined;
+          state.notifyDefinitionChange();
+          return toolSuccess(`Return step output form was ${arg.isEnabled ? 'enabled' : 'disabled'}`);
+        },
+        async returnStep_openOutputFormEditorOverlay(arg) {
+          const step = state.getStep<ReturnStep>(arg.stepId, 'return');
+          if (!step.properties.outputForm) {
+            return toolError('Enable the return step output form before opening its editor overlay');
+          }
+          const path = DefinitionPath.createStepPath(step.id, 'properties.outputForm');
+          state.openOverlay(ProcessEditorOverlayType.FORM_EDITOR, path);
+          return toolSuccess('The form editor overlay is opened');
+        },
+        async returnStep_getOutputVariables(arg) {
+          const step = state.getStep<ReturnStep>(arg.stepId, 'return');
+          return {
+            variableNames: step.properties.outputVariableNames
+          };
+        },
+        async returnStep_setOutputVariables(arg) {
+          const step = state.getStep<ReturnStep>(arg.stepId, 'return');
+          step.properties.outputVariableNames = arg.variableNames;
+          state.notifyDefinitionChange();
+          return toolSuccess('Output variable names were updated');
         },
 
         // overlay

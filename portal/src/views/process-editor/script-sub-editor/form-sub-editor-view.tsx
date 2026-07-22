@@ -1,5 +1,6 @@
 import type { FormDefinition, FormInputExample } from '@aila/model';
 import { IframeForm } from '../../../routes/form-renderer/iframe-form';
+import { FormAdapter } from '../../../routes/form-renderer/form-adapter';
 
 export const formEditorTabs = ['Example Inputs', 'HTML', 'CSS', 'JS', 'Preview'] as const;
 export type FormEditorTab = (typeof formEditorTabs)[number];
@@ -10,6 +11,7 @@ export interface FormSubEditorViewProps {
   inputExamples: FormInputExample[];
   errors: Record<string, string>;
   form: FormDefinition;
+  formAdapter: FormAdapter;
   onSelectTab: (tab: FormEditorTab) => void;
   onSetInputExampleValue: (index: number, exampleValue: string) => void;
   onHtmlChange: (value: string) => void;
@@ -59,7 +61,7 @@ export function FormSubEditorView(props: FormSubEditorViewProps) {
         {props.selectedTab === 'HTML' && <CodeEditor label="HTML" value={props.form.html} onChange={props.onHtmlChange} />}
         {props.selectedTab === 'CSS' && <CodeEditor label="CSS" value={props.form.css} onChange={props.onCssChange} />}
         {props.selectedTab === 'JS' && <CodeEditor label="JavaScript" value={props.form.js} onChange={props.onJsChange} />}
-        {props.selectedTab === 'Preview' && <IframeForm form={props.form} onSubmit={() => {}} />}
+        {props.selectedTab === 'Preview' && <IframeForm form={props.form} adapter={props.formAdapter} />}
       </div>
     </div>
   );

@@ -135,6 +135,30 @@ const processEditorRoute = route('processEditor')
       })
     ),
 
+    returnStep_isOutputFormEnabled: tool('Check whether the output form is enabled'),
+    returnStep_setOutputFormEnabled: tool('Enable or disable the output form').input(
+      z.object({
+        stepId: z.string().describe('The ID of the script step to update'),
+        isEnabled: z.boolean().describe('Whether the output form should be enabled')
+      })
+    ),
+    returnStep_openOutputFormEditorOverlay: tool('Open the form editor overlay for a specific return step').input(
+      z.object({
+        stepId: z.string().describe('The ID of the return step to edit')
+      })
+    ),
+    returnStep_getOutputVariables: tool('Get the list of output variable names for a specific return step').input(
+      z.object({
+        stepId: z.string().describe('The ID of the return step to read')
+      })
+    ),
+    returnStep_setOutputVariables: tool('Set the list of output variable names for a specific return step').input(
+      z.object({
+        stepId: z.string().describe('The ID of the return step to update'),
+        variableNames: z.array(z.string()).describe('The new list of output variable names for the return step')
+      })
+    ),
+
     // overlay
 
     getCurrentOverlay: tool('Return the currently open overlay'),

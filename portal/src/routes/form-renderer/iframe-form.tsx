@@ -2,10 +2,11 @@ import { FormDefinition } from '@aila/model';
 import { useEffect, useMemo, useState } from 'react';
 import { IframeContentBuilder } from './iframe-content-builder';
 import { IframeFormView } from '../../views/form-renderer/iframe-form-view';
+import { FormAdapter } from './form-adapter';
 
 export interface IframeFormProps {
   form: FormDefinition;
-  onSubmit(data: Record<string, unknown>): void;
+  adapter: FormAdapter;
 }
 
 interface RequestMessage {
@@ -21,9 +22,9 @@ interface ResponseMessage {
   error?: string;
 }
 
-export function IframeForm(props: IframeFormProps) {
+export function IframeForm({ form, adapter }: IframeFormProps) {
   const [iframe, setIframe] = useState<HTMLIFrameElement | null>(null);
-  const content = useMemo(() => IframeContentBuilder.build(props.form), [props.form]);
+  const content = useMemo(() => IframeContentBuilder.build(form), [form]);
 
   useEffect(() => {
     if (!iframe) {
@@ -34,13 +35,14 @@ export function IframeForm(props: IframeFormProps) {
       iframe.contentWindow?.postMessage(message, '*');
     };
 
-    const handleSubmitForm = (message: RequestMessage) => {
+    const handle = async (message: RequestMessage, handler: (abortSignal: AbortSignal) => Promise<unknown>) => {
       try {
-        props.onSubmit(message.payload);
+        const abortSignal = AbortSignal.timeout(5_000);
+        const payload = await handler(abortSignal);
         sendResponse({
           id: message.id,
           type: message.type,
-          payload: true
+          payload
         });
       } catch (e) {
         const error = (e as Error)?.message ?? String(e);
@@ -52,30 +54,46 @@ export function IframeForm(props: IframeFormProps) {
       }
     };
 
+    const submitForm = async (payload: Record<string, unknown>) => {
+      for (const name of adapter.outputVariableNames) {
+        const value = payload[name];
+        if (!value) {
+          throw new Error(`Output variable ${name} is required but not provided.`);
+        }
+        adapter.assertVariableValue(name, value);
+      }
+      const abortSignal = AbortSignal.timeout(5_000);
+      await adapter.submit(abortSignal, payload);
+    };
+
+    const readVariable = async (abortSignal: AbortSignal, payload: Record<string, unknown>) => {
+      let name = payload.name as string;
+      return adapter.readVariable(abortSignal, name);
+    };
+
     const onMessage = (event: MessageEvent) => {
       if (event.source !== iframe.contentWindow) {
         return;
       }
       const message = event.data as RequestMessage;
-      if (message.type && message.id && message.payload) {
+      if (!message || !message.id || !message.payload) {
+        return;
+      }
+      handle(message, async abortSignal => {
         switch (message.type) {
           case 'submitForm':
-            handleSubmitForm(message);
-            break;
+            return submitForm(message.payload);
+          case 'readVariable':
+            return readVariable(abortSignal, message.payload);
           default:
-            sendResponse({
-              id: message.id,
-              type: message.type,
-              error: 'Unknown message type'
-            });
-            break;
+            throw new Error('Unknown message type');
         }
-      }
+      });
     };
 
     window.addEventListener('message', onMessage);
     return () => window.removeEventListener('message', onMessage);
-  }, [iframe]);
+  }, [iframe, adapter]);
 
   return <IframeFormView setIframe={setIframe} content={content} />;
 }

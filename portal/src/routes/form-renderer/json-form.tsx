@@ -1,19 +1,16 @@
-import { ProcessDefinition, VariableCachedValidator } from '@aila/model';
 import { useMemo, useState } from 'react';
 import { JsonFormView } from '../../views/form-renderer/json-form-view';
+import { FormAdapter } from './form-adapter';
 
 export interface JsonFormProps {
-  variableValidator: VariableCachedValidator;
-  definition: ProcessDefinition;
-  outputVariableNames: string[];
-  onSubmit: (output: Record<string, unknown>) => void;
+  adapter: FormAdapter;
 }
 
-export function JsonForm(props: JsonFormProps) {
+export function JsonForm({ adapter }: JsonFormProps) {
   const [values, setValues] = useState<Record<string, string>>({});
   const errors = useMemo<Record<string, string>>(() => {
     const result: Record<string, string> = {};
-    for (const name of props.outputVariableNames) {
+    for (const name of adapter.outputVariableNames) {
       try {
         const value = values[name];
         if (!value) {
@@ -21,22 +18,23 @@ export function JsonForm(props: JsonFormProps) {
           continue;
         }
         const json = JSON.parse(value);
-        props.variableValidator.assertValidVariableValue(name, json, props.definition);
+        adapter.assertVariableValue(name, json);
       } catch (e) {
         const error = (e as Error)?.message ?? String(e);
         result[name] = error;
       }
     }
     return result;
-  }, [props.definition, props.outputVariableNames, props.variableValidator, values]);
+  }, [adapter]);
 
-  function onSubmit() {
+  async function onSubmit() {
     const output: Record<string, unknown> = {};
-    for (const name of props.outputVariableNames) {
+    for (const name of adapter.outputVariableNames) {
       const value = values[name] ?? '';
       output[name] = JSON.parse(value);
     }
-    props.onSubmit(output);
+    const abortSignal = AbortSignal.timeout(5_000);
+    await adapter.submit(abortSignal, output);
   }
 
   function onValueChanged(name: string, value: string) {
@@ -48,7 +46,7 @@ export function JsonForm(props: JsonFormProps) {
 
   return (
     <JsonFormView
-      variableNames={props.outputVariableNames}
+      variableNames={adapter.outputVariableNames}
       values={values}
       errors={errors}
       onValueChanged={onValueChanged}
