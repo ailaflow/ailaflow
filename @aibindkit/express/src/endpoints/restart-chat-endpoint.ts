@@ -1,13 +1,13 @@
 import type { Request, Response } from 'express';
 import { restartChatRequestSchema } from '@aibindkit/core';
 import type { Endpoint } from './endpoint';
-import { ChatSessionProvider } from '../chat-session-provider';
+import { ChatSessionStore } from '../chat-session-store';
 
 export class RestartChatEndpoint implements Endpoint {
   public readonly method = 'post';
   public readonly path = '/api/chat/restart';
 
-  public constructor(private readonly chatSessionProvider: ChatSessionProvider) {}
+  public constructor(private readonly sessionStore: ChatSessionStore) {}
 
   public handle(req: Request, res: Response) {
     const { data: request, error } = restartChatRequestSchema.safeParse(req.body);
@@ -16,7 +16,7 @@ export class RestartChatEndpoint implements Endpoint {
       return;
     }
 
-    const chatSession = this.chatSessionProvider.tryGetByToken(request.sessionToken);
+    const chatSession = this.sessionStore.tryGetByToken(request.sessionToken);
     if (!chatSession) {
       res.status(404).json({ error: 'Chat session not found' }).end();
       return;

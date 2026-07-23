@@ -10,6 +10,7 @@ export class ProcessExecution {
   public readonly onLog = new SimpleEvent<ProcessLog>();
 
   public constructor(
+    public readonly id: string,
     private readonly interpreter: WorkflowMachineInterpreter<WorkflowMachineGlobalState>,
     private readonly logger: ProcessLogger,
     private readonly variableManager: ProcessVariableManager

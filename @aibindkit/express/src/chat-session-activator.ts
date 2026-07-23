@@ -2,26 +2,21 @@ import type { Request } from 'express';
 import type { RestoreChatRequest } from '@aibindkit/core';
 import { ChatSession, ChatSessionFactory, FrontendToolFactory, ToolSet } from '@aibindkit/llm';
 import type { ChatSessionResolver } from './chat-session-resolver';
+import { ChatSessionStore } from './chat-session-store';
 
-export class ChatSessionProvider {
-  private readonly sessionsById = new Map<string, ChatSession>();
-  private readonly sessionsByToken = new Map<string, ChatSession>();
-
+export class ChatSessionActivator {
   public constructor(
+    private readonly sessionStore: ChatSessionStore,
     private readonly sessionResolver: ChatSessionResolver,
     private readonly chatSessionFactory: ChatSessionFactory,
     private readonly frontendToolFactory: FrontendToolFactory
   ) {}
 
-  public tryGetByToken(token: string): ChatSession | undefined {
-    return this.sessionsByToken.get(token);
-  }
-
-  public getOrCreate(httpRequest: Request, restoreRequest: RestoreChatRequest): ChatSession {
+  public getOrActivate(httpRequest: Request, restoreRequest: RestoreChatRequest): ChatSession {
     const resolved = this.sessionResolver.resolve(httpRequest, restoreRequest.params);
     const hash = resolved.backendToolsHash.concat(restoreRequest.frontendToolsHash);
 
-    let session = this.sessionsById.get(resolved.sessionId);
+    let session = this.sessionStore.tryGetById(resolved.sessionId);
     if (session && session.hash === hash) {
       return session;
     }
@@ -35,9 +30,8 @@ export class ChatSessionProvider {
     }
 
     session = this.chatSessionFactory.create(resolved.sessionId, hash, resolved.llmClient, toolSet);
-    this.sessionsById.set(session.id, session);
-    this.sessionsByToken.set(session.token, session);
-    resolved.initialize(session);
+    this.sessionStore.set(session);
+    resolved.activate(session);
     return session;
   }
 }

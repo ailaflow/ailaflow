@@ -2,13 +2,13 @@ import type { Request, Response } from 'express';
 import type { SendChatMessageResponse } from '@aibindkit/core';
 import { sendChatMessageRequestSchema } from '@aibindkit/core';
 import { Endpoint } from './endpoint';
-import { ChatSessionProvider } from '../chat-session-provider';
+import { ChatSessionStore } from '../chat-session-store';
 
 export class SendChatMessageEndpoint implements Endpoint {
   public readonly method = 'post';
   public readonly path = '/api/chat/message';
 
-  public constructor(private readonly chatSessionProvider: ChatSessionProvider) {}
+  public constructor(private readonly sessionStore: ChatSessionStore) {}
 
   public handle(req: Request, res: Response): SendChatMessageResponse | void {
     const { data: request, error } = sendChatMessageRequestSchema.safeParse(req.body);
@@ -17,7 +17,7 @@ export class SendChatMessageEndpoint implements Endpoint {
       return;
     }
 
-    const chatSession = this.chatSessionProvider.tryGetByToken(request.sessionToken);
+    const chatSession = this.sessionStore.tryGetByToken(request.sessionToken);
     if (!chatSession) {
       res.status(404).json({ error: 'Chat session not found' }).end();
       return;

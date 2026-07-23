@@ -17,7 +17,7 @@ export interface ResolvedChatSession {
   backendTools: Tool[];
   backendToolsHash: string;
   llmClient: LlmClient;
-  initialize(session: ChatSession): void;
+  activate(session: ChatSession): void;
 }
 
 export interface ChatSessionResolver {

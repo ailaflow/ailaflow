@@ -3,7 +3,7 @@ import { ServerPaths } from './core/server-paths';
 import express from 'express';
 import { SandboxInstanceManager } from './sandbox/sandbox-instance-manager';
 import { OpenaiLlmClient } from '@aibindkit/llm';
-import { setupServer } from '@aibindkit/express';
+import { DefaultChatSessionStore, setupServer } from '@aibindkit/express';
 import { LoginEndpoint } from './api/auth/login-endpoint';
 import { Router } from './api/router';
 import { UserRepository } from './repositories/user-repository/user-repository';
@@ -48,11 +48,15 @@ import { ProcessExecutionStore } from './process-executor/process-execution-stor
 import { SandboxRpcHandlerProvider } from './sandbox/sandbox-rpc-handler-provider';
 import { ReadVariableRpcHandler } from './process-executor/rpc-handlers/read-variable-rpc-handler';
 import { WriteVariableRpcHandler } from './process-executor/rpc-handlers/write-variable-rpc-handler';
-import { AilaChatSessionResolver } from './chat-session/aila-chat-session-resolver';
+import { ChatSessionResolver } from './chat-session/chat-session-resolver';
 import { ResourceAccessRepository } from './repositories/resource-access-repository/resource-access-repository';
 import { SqliteResourceAccessRepository } from './repositories/resource-access-repository/sqlite-resource-access-repository';
 import { MyProcessesTool } from './chat-session/user-tools/my-processes-tool';
 import { StartMyProcessTool } from './chat-session/user-tools/start-my-process-tool';
+import { LazyProcessExecutor } from './process-executor/lazy-process-executor';
+import { EventBus } from './events/event-bus';
+import { LazyProcessFinishedEventHandler } from './events/handlers/lazy-process-finished-event-handler';
+import { ChatSessionIdProvider } from './chat-session/chat-session-id-provider';
 
 const PORT = process.env.PORT || 2048;
 
@@ -105,9 +109,16 @@ export class Server {
       new WriteVariableRpcHandler(processExecutionStore)
     ]);
 
+    const sessionIdProvider = new ChatSessionIdProvider();
+    const chatSessionStore = new DefaultChatSessionStore();
+
+    const eventBus = new EventBus();
+    eventBus.registerHandler(new LazyProcessFinishedEventHandler(sessionIdProvider, chatSessionStore));
+
     const sandboxInstanceManager = new SandboxInstanceManager(serverPaths, sandboxRepository, rpcHandler);
 
     const processExecutor = new ProcessExecutor(sandboxInstanceManager, processExecutionStore);
+    const lazyProcessExecutor = new LazyProcessExecutor(processExecutor, eventBus);
 
     const passwordHasher = new PasswordHasher();
 
@@ -117,13 +128,15 @@ export class Server {
     });
     const userToolSetProvider = new UserToolSetProvider([
       new MyProcessesTool(myProcessListQuerier),
-      new StartMyProcessTool(myProcessAccessQuerier, processRepository, processExecutor)
+      new StartMyProcessTool(myProcessAccessQuerier, processRepository, lazyProcessExecutor)
     ]);
+
     const authMiddleware = new AuthMiddleware(authTokenRepository);
-    const sessionResolver = new AilaChatSessionResolver(llmClient, userToolSetProvider, serverPaths);
+    const sessionResolver = new ChatSessionResolver(llmClient, sessionIdProvider, userToolSetProvider, serverPaths);
 
     setupServer(app, {
       sessionResolver,
+      sessionStore: chatSessionStore,
       middleware: authMiddleware.user
     });
 

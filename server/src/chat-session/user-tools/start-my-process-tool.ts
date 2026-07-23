@@ -1,9 +1,11 @@
 import { ToolContext, ZodTool } from '@aibindkit/llm';
 import { MyProcessAccessQuerier } from '../../queriers/my-process/my-process-access-querier';
-import z from 'zod/v4';
 import { ProcessRepository } from '../../repositories/process-repository/process-repository';
-import { ProcessExecutor } from '../../process-executor/process-executor';
 import { ProcessExecutionVariableValues } from '@aila/model';
+import { LazyProcessExecutor } from '../../process-executor/lazy-process-executor';
+import z from 'zod/v4';
+
+const FAST_TIMEOUT = 3_000;
 
 const inputSchema = z.object({
   name: z.string(),
@@ -16,7 +18,7 @@ export class StartMyProcessTool extends ZodTool<Arg> {
   public constructor(
     private readonly accessQuerier: MyProcessAccessQuerier,
     private readonly processRepository: ProcessRepository,
-    private readonly processExecutor: ProcessExecutor
+    private readonly lazyProcessExecutor: LazyProcessExecutor
   ) {
     super('start_my_process', 'Starts a new process', inputSchema);
   }
@@ -59,17 +61,17 @@ export class StartMyProcessTool extends ZodTool<Arg> {
     }
 
     const abortController = new AbortController();
-    const execution = this.processExecutor.initialize(process, input);
+    const result = await this.lazyProcessExecutor.execute(abortController.signal, FAST_TIMEOUT, userName, process, input);
 
-    return new Promise<object>((resolve, reject) => {
-      execution.onFinished.subscribe(result => {
-        if (result.success) {
-          resolve(result.output);
-        } else {
-          reject(new Error(result.error));
-        }
-      });
-      execution.run(abortController.signal);
-    });
+    if (result.finished) {
+      return result.result.success
+        ? result.result.output
+        : {
+            error: result.result.error
+          };
+    }
+    return {
+      success: `Process "${arg.name}" started successfully. It is running in the background, and you will be notified when it finishes, execution id: ${result.executionId}`
+    };
   }
 }
