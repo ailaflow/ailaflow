@@ -5,7 +5,7 @@ import { useMemo } from 'react';
 
 export function AdminPortalChat() {
   const api = useApiClient();
-  const { toolDescriptors, handleToolCall } = useAiEnvironment();
+  const { toolDescriptors, frontEndToolCallsHandler } = useAiEnvironment();
   const params = useMemo(() => ({ admin: true }), []);
   const session = useSession();
 
@@ -20,5 +20,7 @@ export function AdminPortalChat() {
     []
   );
 
-  return <GenericChat transport={api.chat} params={params} frontendTools={toolDescriptors} onFrontendToolCalls={handleToolCall} />;
+  return (
+    <GenericChat transport={api.chat} params={params} frontendTools={toolDescriptors} frontEndToolCallsHandler={frontEndToolCallsHandler} />
+  );
 }

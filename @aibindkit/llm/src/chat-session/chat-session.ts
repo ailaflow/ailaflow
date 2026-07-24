@@ -1,4 +1,4 @@
-import type { CompletedMessage } from '@aibindkit/core';
+import type { MessageChatUpdate } from '@aibindkit/core';
 import { MessageType, SimpleEvent } from '@aibindkit/core';
 import { Message, MessageCompletionResult } from './messages/message';
 import { MessageFactory } from './messages/message-factory';
@@ -6,20 +6,13 @@ import { SessionStack } from './session-stack';
 import { ChatSessionQueue } from './chat-session-queue';
 import { ToolContext } from './tools';
 
-export interface MessageUpdate {
-  id: number;
-  type: MessageType;
-  isInterrupted?: true;
-  failReason?: string;
-  completedMessages?: CompletedMessage[];
-}
-
 export interface ChatSessionUpdate {
   isWorking: boolean;
-  update: MessageUpdate;
+  update: MessageChatUpdate;
 }
 
 export class ChatSession {
+  public readonly onMessageStarted = new SimpleEvent<ChatSessionUpdate>();
   public readonly onMessageCompleted = new SimpleEvent<ChatSessionUpdate>();
   public readonly onMessageFailed = new SimpleEvent<ChatSessionUpdate>();
   public readonly onReset = new SimpleEvent<void>();
@@ -85,9 +78,9 @@ export class ChatSession {
     this.onReset.emit();
   }
 
-  public getAll(): MessageUpdate[] {
+  public getAll(): MessageChatUpdate[] {
     const all = this.stack.all();
-    const result: MessageUpdate[] = [];
+    const result: MessageChatUpdate[] = [];
     for (const item of all) {
       result.push({
         id: item.message.id,
@@ -129,6 +122,14 @@ export class ChatSession {
   }
 
   private async next(message: Message) {
+    this.onMessageStarted.emit({
+      isWorking: true,
+      update: {
+        id: message.id,
+        type: message.type
+      }
+    });
+
     const interruptSignal = this.interruptAbortController.signal;
     let result: MessageCompletionResult;
     try {

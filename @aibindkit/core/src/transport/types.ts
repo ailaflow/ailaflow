@@ -25,9 +25,10 @@ export interface HelloChatUpdate {
 
 export interface ChatUpdate {
   hello?: HelloChatUpdate;
-  messages?: MessageChatUpdate[];
+  restoredMessages?: MessageChatUpdate[];
   currentMessage?: MessageChatUpdate;
   isWorking?: boolean;
+  isReset?: true;
 }
 
 // sendChatMessage

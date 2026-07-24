@@ -61,7 +61,7 @@ export class ToolCallHandler<Stores extends Record<string, AiBindingsStore>> {
     }
   }
 
-  public readonly handleToolCall = async (abortSignal: AbortSignal, toolCall: ToolCall): Promise<object | null> => {
+  public readonly frontEndToolCallsHandler = async (abortSignal: AbortSignal, toolCall: ToolCall): Promise<object | null> => {
     const arg = JSON.parse(toolCall.function.arguments);
 
     if (toolCall.function.name === 'navigation_getCurrentPage') {
@@ -75,7 +75,9 @@ export class ToolCallHandler<Stores extends Record<string, AiBindingsStore>> {
     if (fn) {
       return this.runFn(abortSignal, fn, arg);
     }
-    return toolError('No handler is registered for the requested function');
+
+    // We don't support the requested tool call.
+    return null;
   };
 
   private async getCurrentPage() {

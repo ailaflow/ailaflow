@@ -1,36 +1,127 @@
+interface ReadyResult {
+  result: string;
+  consume: () => void;
+}
+
 export class FrontendToolBus {
+  private readonly readyResults: Map<string, ReadyResult> = new Map();
   private readonly pendingResults: Map<string, (result: string) => void> = new Map();
 
-  public waitForResult(abortSignal: AbortSignal, sessionToken: string, callId: string): Promise<string> {
-    return new Promise((resolve, reject) => {
-      if (abortSignal.aborted) {
-        reject(new Error('Operation aborted'));
+  // waitForResult
+
+  public async waitForResult(abortSignal: AbortSignal, sessionToken: string, callId: string): Promise<string> {
+    const key = this.getKey(sessionToken, callId);
+    return this.tryGetReadyResult(key) ?? this.waitForPendingResult(abortSignal, key);
+  }
+
+  private tryGetReadyResult(key: string): Promise<string> | null {
+    const ready = this.readyResults.get(key);
+    if (ready) {
+      ready.consume();
+      return Promise.resolve(ready.result);
+    }
+    return null;
+  }
+
+  private waitForPendingResult(abortSignal: AbortSignal, key: string): Promise<string> {
+    return new Promise<string>((resolve, reject) => {
+      if (this.pendingResults.has(key)) {
+        reject(new Error('Result already being waited for'));
         return;
       }
 
-      const key = this.getKey(sessionToken, callId);
-
-      abortSignal.addEventListener('abort', () => {
+      const abort = () => {
         this.pendingResults.delete(key);
         reject(new Error('Operation aborted'));
-      });
+      };
+
+      if (abortSignal.aborted) {
+        abort();
+        return;
+      }
+
+      abortSignal.addEventListener('abort', abort, { once: true });
 
       this.pendingResults.set(key, result => {
         this.pendingResults.delete(key);
+        abortSignal.removeEventListener('abort', abort);
         resolve(result);
       });
     });
   }
 
-  public sendResult(sessionToken: string, callId: string, result: string): boolean {
+  // sendResult
+
+  public async sendResult(
+    abortSignal: AbortSignal,
+    maxWaitTime: number,
+    sessionToken: string,
+    callId: string,
+    result: string
+  ): Promise<boolean> {
     const key = this.getKey(sessionToken, callId);
+    return this.trySendPendingResult(key, result) ?? this.sendReadyResult(abortSignal, maxWaitTime, key, result);
+  }
+
+  private trySendPendingResult(key: string, result: string): true | null {
     const resolve = this.pendingResults.get(key);
-    if (!resolve) {
-      return false;
+    if (resolve) {
+      resolve(result);
+      return true;
+    }
+    return null;
+  }
+
+  private sendReadyResult(abortSignal: AbortSignal, maxWaitTime: number, key: string, result: string): Promise<boolean> {
+    if (this.readyResults.has(key)) {
+      throw new Error('Result already sent for this call');
     }
 
-    resolve(result);
-    return true;
+    const remove = () => this.readyResults.delete(key);
+
+    let consumed = false;
+    let finish: (() => void) | null = null;
+    const ready: ReadyResult = {
+      result,
+      consume: () => {
+        consumed = true;
+        remove();
+        finish?.();
+      }
+    };
+    this.readyResults.set(key, ready);
+
+    return new Promise((resolve, reject) => {
+      const abort = () => {
+        remove();
+        reject(new Error('Operation aborted'));
+      };
+
+      if (abortSignal.aborted) {
+        abort();
+        return;
+      }
+      if (consumed) {
+        resolve(true);
+        return;
+      }
+
+      const to = setTimeout(() => {
+        abortSignal.removeEventListener('abort', abort);
+        if (!consumed) {
+          remove();
+          resolve(false);
+        }
+      }, maxWaitTime);
+
+      finish = () => {
+        abortSignal.removeEventListener('abort', abort);
+        clearTimeout(to);
+        resolve(true);
+      };
+
+      abortSignal.addEventListener('abort', abort, { once: true });
+    });
   }
 
   private getKey(sessionToken: string, callId: string): string {

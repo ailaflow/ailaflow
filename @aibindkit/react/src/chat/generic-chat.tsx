@@ -3,21 +3,31 @@ import {
   type ToolDescriptor,
   type MessageChatUpdate,
   type RestoreChatRequest,
-  type SendFrontendToolResultRequest,
   type ToolCall,
   type ChatTransportListener,
   fnv1a,
-  MessageType
+  MessageType,
+  ChatUpdate
 } from '@aibindkit/core';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { GenericChatView } from './generic-chat-view';
+import { ChatToolCallsHandler, FrontEndToolCallsHandler } from './chat-tool-calls-handler';
 
 export interface GenericChatProps {
   transport: ChatTransport;
   frontendTools: ToolDescriptor[];
   params: Record<string, unknown>;
   skipSystemPrompt?: boolean;
-  onFrontendToolCalls(abortSignal: AbortSignal, toolCalls: ToolCall): Promise<object | null>;
+  frontEndToolCallsHandler: FrontEndToolCallsHandler;
+}
+
+interface GenericChatState {
+  skipSystemPrompt: boolean;
+  lastUpdate: ChatUpdate | null;
+  isLoading: boolean;
+  isWorking: boolean;
+  connectionError: string | null;
+  messages: (MessageChatUpdate & { type: MessageType })[];
 }
 
 export function GenericChat(props: GenericChatProps) {
@@ -30,103 +40,136 @@ export function GenericChat(props: GenericChatProps) {
       }) satisfies RestoreChatRequest,
     [props.params, props.frontendTools]
   );
-
-  const [connectionError, setConnectionError] = useState<string | null>(null);
-  const [reconnectKey, setReconnectKey] = useState(0);
   const sessionToken = useRef<string | null>(null);
-  const [updates, setUpdates] = useState<MessageChatUpdate[]>([]);
-  const [isWorking, setIsWorking] = useState(false);
+
+  const lastHandledToolCallId = useRef<number>(-1);
+  const pendingToolAbortControllers = useRef(new Set<AbortController>());
+
+  const toolCallsHandler = useMemo<ChatToolCallsHandler>(
+    () => new ChatToolCallsHandler(props.transport, props.frontEndToolCallsHandler),
+    [props.transport, props.frontEndToolCallsHandler]
+  );
+
+  const [reconnectKey, setReconnectKey] = useState(0);
   const [message, setMessage] = useState('');
+  const [state, dispatch] = useReducer(
+    (currentState: GenericChatState, update: ChatUpdate & { isLoading?: boolean; connectionError?: string | null }): GenericChatState => {
+      const canInclude = (m: MessageChatUpdate) => !currentState.skipSystemPrompt || m.type !== MessageType.SYSTEM;
+      const state: GenericChatState = { ...currentState };
+      state.lastUpdate = update;
+      if (update.hello) {
+        state.isLoading = false;
+      }
+      if (update.isReset) {
+        state.messages = [];
+      }
+      if (update.restoredMessages) {
+        state.messages = update.restoredMessages.filter(canInclude);
+      }
+      if (update.currentMessage && canInclude(update.currentMessage)) {
+        const id = update.currentMessage.id;
+        let finalMessage: MessageChatUpdate;
+        const index = state.messages.findIndex(m => m.id === id);
+        if (index >= 0) {
+          finalMessage = { ...state.messages[index], ...update.currentMessage };
+          state.messages = [...state.messages];
+          state.messages[index] = finalMessage;
+        } else {
+          finalMessage = update.currentMessage;
+          state.messages = [...state.messages, finalMessage];
+        }
+      }
+      if (update.isLoading !== undefined) {
+        state.isLoading = update.isLoading;
+      }
+      if (update.isWorking !== undefined) {
+        state.isWorking = update.isWorking;
+      }
+      if (update.connectionError !== undefined) {
+        state.connectionError = update.connectionError;
+      }
+      return state;
+    },
+    undefined,
+    () => ({
+      skipSystemPrompt: props.skipSystemPrompt ?? false,
+      lastUpdate: null,
+      isLoading: false,
+      isWorking: false,
+      lastToolMessageId: null,
+      tools: null,
+      connectionError: null,
+      messages: []
+    })
+  );
+
+  useEffect(() => {
+    if (!sessionToken.current) {
+      return;
+    }
+    if (state.lastUpdate?.isReset) {
+      lastHandledToolCallId.current = -1;
+      return;
+    }
+    if (state.lastUpdate?.restoredMessages) {
+      const restoredMessageIds = state.lastUpdate.restoredMessages.map(m => m.id);
+      lastHandledToolCallId.current = Math.max(-1, ...restoredMessageIds);
+    }
+
+    const pendingCalls: ToolCall[] = [];
+    for (const message of state.messages) {
+      if (message.id > lastHandledToolCallId.current) {
+        const calls = tryGetToolCalls(message);
+        if (calls) {
+          pendingCalls.push(...calls);
+          lastHandledToolCallId.current = message.id;
+        }
+      }
+    }
+    if (pendingCalls.length > 0) {
+      const abortController = new AbortController();
+      pendingToolAbortControllers.current.add(abortController);
+      toolCallsHandler
+        .handle(abortController.signal, pendingCalls, sessionToken.current)
+        .finally(() => pendingToolAbortControllers.current.delete(abortController));
+    }
+  }, [state.lastUpdate && state.messages, toolCallsHandler]);
+
+  useEffect(
+    () => () => {
+      // We abort any pending tool calls when the component is unmounted.
+      for (const controller of pendingToolAbortControllers.current) {
+        controller.abort();
+      }
+    },
+    []
+  );
 
   useEffect(() => {
     const abortController = new AbortController();
-
-    function canInclude(update: MessageChatUpdate) {
-      return !props.skipSystemPrompt || update.type !== MessageType.SYSTEM;
-    }
-
-    async function resolveToolCalls(toolCalls: ToolCall[]) {
-      if (!sessionToken.current) {
-        throw new Error('Session token is not set');
-      }
-      const resolvedIds = new Set<string>();
-      try {
-        const toReturn: SendFrontendToolResultRequest[] = [];
-        for (const toolCall of toolCalls) {
-          const result = await props.onFrontendToolCalls(abortController.signal, toolCall);
-          if (result !== null) {
-            toReturn.push({
-              sessionToken: sessionToken.current,
-              callId: toolCall.id,
-              result: JSON.stringify(result)
-            });
-          }
-        }
-
-        for (const r of toReturn) {
-          await props.transport.sendFrontendToolResult(abortController.signal, r);
-          resolvedIds.add(r.callId);
-        }
-      } catch (e) {
-        const error = (e as Error)?.message ?? String(e);
-        for (const toolCall of toolCalls) {
-          if (resolvedIds.has(toolCall.id)) {
-            continue;
-          }
-          try {
-            await props.transport.sendFrontendToolResult(abortController.signal, {
-              sessionToken: sessionToken.current,
-              callId: toolCall.id,
-              result: `Error executing tool call: ${error}`
-            });
-          } catch (e) {
-            console.warn(e);
-          }
-        }
-      }
-    }
 
     const listener: ChatTransportListener = {
       onMessage(update) {
         if (update.hello) {
           sessionToken.current = update.hello.sessionToken;
         }
-        if (update.messages) {
-          const messages = update.messages.filter(m => canInclude(m));
-          setUpdates(u => [...u, ...messages]);
-        }
-        if (update.currentMessage && canInclude(update.currentMessage)) {
-          const currentMessage = update.currentMessage;
-          setUpdates(u => {
-            const index = u.findIndex(m => m.id === currentMessage.id);
-            if (index >= 0) {
-              u[index] = currentMessage;
-              return [...u];
-            }
-
-            const toolCalls = tryGetToolCalls(currentMessage);
-            if (toolCalls) {
-              void resolveToolCalls(toolCalls);
-            }
-            return [...u, currentMessage];
-          });
-        }
-        if (update.isWorking !== undefined) {
-          setIsWorking(update.isWorking);
-        }
+        dispatch(update);
       },
       onClose(e) {
-        const error = e?.message ?? 'Connection closed';
-        setConnectionError(error);
+        if (!abortController.signal.aborted) {
+          const connectionError = e?.message ?? 'Connection closed';
+          dispatch({ isLoading: false, connectionError });
+        }
       }
     };
 
     async function connect() {
+      dispatch({ isLoading: true });
       try {
         await props.transport.restoreChat(abortController.signal, listener, request);
       } catch (e) {
-        const error = (e as Error)?.message ?? String(e);
-        setConnectionError(error);
+        const connectionError = (e as Error)?.message ?? String(e);
+        dispatch({ isLoading: false, connectionError });
       }
     }
 
@@ -135,52 +178,47 @@ export function GenericChat(props: GenericChatProps) {
   }, [request, reconnectKey, props.transport, props.skipSystemPrompt]);
 
   async function onSendMessage() {
-    if (!sessionToken.current || !message) {
-      return;
+    if (sessionToken.current && message.length > 0) {
+      const abortSignal = AbortSignal.timeout(3_000);
+      await props.transport.sendChatMessage(abortSignal, {
+        sessionToken: sessionToken.current,
+        message
+      });
+      setMessage('');
     }
-    const abortSignal = AbortSignal.timeout(3_000);
-    await props.transport.sendChatMessage(abortSignal, {
-      sessionToken: sessionToken.current,
-      message
-    });
-    setMessage('');
   }
 
   async function onStopClicked() {
-    if (!sessionToken.current || !isWorking) {
-      return;
+    if (sessionToken.current && state.isWorking) {
+      const abortSignal = AbortSignal.timeout(3_000);
+      await props.transport.interruptChat(abortSignal, {
+        sessionToken: sessionToken.current
+      });
     }
-    const abortSignal = AbortSignal.timeout(3_000);
-    await props.transport.interruptChat(abortSignal, {
-      sessionToken: sessionToken.current
-    });
   }
 
   async function onStartNewConversation() {
-    if (!sessionToken.current) {
-      return;
+    if (sessionToken.current) {
+      const abortSignal = AbortSignal.timeout(3_000);
+      await props.transport.restartChat(abortSignal, {
+        sessionToken: sessionToken.current
+      });
     }
-    const abortSignal = AbortSignal.timeout(3_000);
-    await props.transport.restartChat(abortSignal, {
-      sessionToken: sessionToken.current
-    });
-    setUpdates([]);
-    setIsWorking(false);
   }
 
   function onReconnectClicked() {
-    setConnectionError(null);
+    dispatch({ isLoading: true, connectionError: null });
     setReconnectKey(k => k + 1);
     sessionToken.current = null;
   }
 
   return (
     <GenericChatView
-      isLoading={sessionToken === null}
-      isWorking={isWorking}
-      updates={updates}
+      isLoading={state.isLoading}
+      isWorking={state.isWorking}
+      connectionError={state.connectionError}
+      messages={state.messages}
       message={message}
-      connectionError={connectionError}
       onReconnectClicked={onReconnectClicked}
       onMessageChanged={setMessage}
       onSendMessage={onSendMessage}

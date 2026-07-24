@@ -38,21 +38,23 @@ export class RestoreChatEndpoint implements Endpoint {
     }
 
     function onReset() {
-      sseResponse.send({ messages: [] });
+      sseResponse.send({ isReset: true });
     }
 
     sseResponse.send({
       hello: {
         sessionToken: chatSession.token
       },
-      messages: chatSession.getAll()
+      restoredMessages: chatSession.getAll()
     });
 
+    chatSession.onMessageStarted.subscribe(onMessageCompletedOrFailed);
     chatSession.onMessageCompleted.subscribe(onMessageCompletedOrFailed);
     chatSession.onMessageFailed.subscribe(onMessageCompletedOrFailed);
     chatSession.onReset.subscribe(onReset);
 
     sseResponse.onClose(() => {
+      chatSession.onMessageStarted.unsubscribe(onMessageCompletedOrFailed);
       chatSession.onMessageCompleted.unsubscribe(onMessageCompletedOrFailed);
       chatSession.onMessageFailed.unsubscribe(onMessageCompletedOrFailed);
       chatSession.onReset.unsubscribe(onReset);

@@ -1,12 +1,12 @@
 import type { ToolCall, CompletedMessage, MessageChatUpdate } from '@aibindkit/core';
-import { useLayoutEffect, useRef } from 'react';
+import { Fragment, useLayoutEffect, useRef } from 'react';
 import { GenericChatComposerView } from './generic-chat-composer-view';
 import { SvgIcon } from './svg-icon';
 
 export interface GenericChatViewProps {
   isLoading: boolean;
   isWorking: boolean;
-  updates: MessageChatUpdate[];
+  messages: MessageChatUpdate[];
   message: string;
   connectionError: string | null;
   onReconnectClicked: () => void;
@@ -24,15 +24,18 @@ export function GenericChatView(props: GenericChatViewProps) {
     if (messages) {
       messages.scrollTop = messages.scrollHeight;
     }
-  }, [props.updates]);
+  }, [props.messages]);
 
   return (
     <section className="abk-chat">
       <ul ref={messagesRef} className="abk-chat-messages">
-        {props.updates.length === 0 && (props.isLoading ? <LoadingChatView /> : <EmptyChatView />)}
-        {props.updates.map(update => (
-          <GenericChatUpdateView key={update.id} update={update} />
-        ))}
+        {props.isLoading ? (
+          <LoadingChatView />
+        ) : props.messages.length === 0 ? (
+          <EmptyChatView />
+        ) : (
+          props.messages.map(update => <GenericChatUpdateView key={update.id} update={update} />)
+        )}
       </ul>
 
       {props.connectionError && <ConnectionErrorBar error={props.connectionError} onReconnectClicked={props.onReconnectClicked} />}
@@ -96,7 +99,7 @@ function GenericChatUpdateView(props: { update: MessageChatUpdate }) {
       </li>
     );
   }
-  return <li className="abk-chat-failure">Invalid update</li>;
+  return <Fragment />;
 }
 
 function GenericChatMessageView(props: { message: CompletedMessage }) {
@@ -210,10 +213,6 @@ function ToolCallsView(props: { toolCalls: ToolCall[] }) {
       ))}
     </div>
   );
-}
-
-function arr<T>(i: T | T[]): T[] {
-  return Array.isArray(i) ? i : [i];
 }
 
 function getToolCalls(message: CompletedMessage) {

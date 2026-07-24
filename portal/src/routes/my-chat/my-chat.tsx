@@ -1,4 +1,4 @@
-import { GenericChat, toolError } from '@aibindkit/react';
+import { GenericChat } from '@aibindkit/react';
 import { Portal } from '../common/portal';
 import { useApiClient } from '../../auth/auth-context';
 import { useMemo } from 'react';
@@ -12,7 +12,7 @@ export function MyChat() {
         name: 'Main'
       },
       frontendTools: [],
-      onFrontendToolCalls: async () => toolError('Not supported')
+      frontEndToolCallsHandler: async () => null
     }),
     []
   );
@@ -23,7 +23,7 @@ export function MyChat() {
         transport={api.chat}
         params={details.params}
         frontendTools={details.frontendTools}
-        onFrontendToolCalls={details.onFrontendToolCalls}
+        frontEndToolCallsHandler={details.frontEndToolCallsHandler}
         skipSystemPrompt={true}
       />
     </Portal>
