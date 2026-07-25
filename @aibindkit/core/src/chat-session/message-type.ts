@@ -1,8 +1,8 @@
 export enum MessageType {
-  AI,
-  TOOL,
-  USER,
-  SYSTEM
+  AI = 1,
+  TOOL = 2,
+  USER = 3,
+  SYSTEM = 4
 }
 
 export function strMessageType(type: MessageType): string {

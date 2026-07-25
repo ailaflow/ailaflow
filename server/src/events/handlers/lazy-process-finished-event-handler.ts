@@ -27,6 +27,8 @@ export class LazyProcessFinishedEventHandler implements EventHandler<LazyProcess
     } else {
       message += ` with an error: ${event.result.error}`;
     }
-    session.queueUserMessage(message);
+    session.queueUserMessage(message, {
+      internal: true
+    });
   }
 }

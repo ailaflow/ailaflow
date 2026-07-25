@@ -1,10 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {
-  UserAccessComparisonOperator,
-  UserAccessExpressionParser,
-  UserAccessExpressionParserError
-} from './user-access-expression-parser';
+import { UserAccessComparisonOperator, UserAccessExpressionParser, UserAccessExpressionParserError } from './user-access-expression-parser';
 import { ALL_ATTRIBUTE_NAME, USER_NAME_ATTRIBUTE_NAME, UserAttributeValueType } from '../user/user-attributes';
 
 function assertParserError(source: string, expectedMessage: RegExp): void {

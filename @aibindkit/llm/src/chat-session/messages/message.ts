@@ -1,4 +1,4 @@
-import type { ToolCall } from '@aibindkit/core';
+import type { MessageMetadata, ToolCall } from '@aibindkit/core';
 import type { CompletedMessage } from '@aibindkit/core';
 import { MessageType } from '@aibindkit/core';
 import { SessionStack } from '../session-stack';
@@ -12,6 +12,7 @@ export interface MessageCompletionResult {
 export interface Message {
   id: number;
   type: MessageType;
+  metadata?: MessageMetadata;
   complete(abortSignal: AbortSignal, stack: SessionStack): Promise<MessageCompletionResult>;
   interrupt?(): CompletedMessage;
   fail?(reason: string): CompletedMessage;

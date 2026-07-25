@@ -1,4 +1,4 @@
-import type { CompletedMessage } from '@aibindkit/core';
+import type { CompletedMessage, MessageMetadata } from '@aibindkit/core';
 import { MessageType } from '@aibindkit/core';
 import { Message, MessageCompletionResult } from './message';
 
@@ -7,7 +7,8 @@ export class UserMessage implements Message {
 
   public constructor(
     public readonly id: number,
-    public readonly text: string
+    public readonly text: string,
+    public readonly metadata?: MessageMetadata
   ) {}
 
   public async complete(): Promise<MessageCompletionResult> {

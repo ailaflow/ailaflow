@@ -1,4 +1,4 @@
-import type { MessageChatUpdate } from '@aibindkit/core';
+import type { MessageChatUpdate, MessageMetadata } from '@aibindkit/core';
 import { MessageType, SimpleEvent } from '@aibindkit/core';
 import { Message, MessageCompletionResult } from './messages/message';
 import { MessageFactory } from './messages/message-factory';
@@ -42,21 +42,23 @@ export class ChatSession {
     this.systemMessage = systemMessage;
   }
 
-  public queueUserMessage(content: string): number {
+  public queueUserMessage(content: string, metadata?: MessageMetadata): number {
     if (this.isInterrupted) {
       this.isInterrupted = false;
       this.interruptAbortController = new AbortController();
     }
 
     if (this.systemMessage && this.stack.isEmpty() && this.queue.isEmpty()) {
-      const sid = this.nextId();
-      this.queue.push(this.messageFactory.createSystem(sid, this.systemMessage));
+      const systemMessageId = this.nextId();
+      const systemMessage = this.messageFactory.createSystem(systemMessageId, this.systemMessage);
+      this.queue.push(systemMessage);
     }
 
-    const uid = this.nextId();
-    this.queue.push(this.messageFactory.createUser(uid, content));
+    const userMessageId = this.nextId();
+    const userMessage = this.messageFactory.createUser(userMessageId, content, metadata);
+    this.queue.push(userMessage);
     this.tryNext();
-    return uid;
+    return userMessageId;
   }
 
   public tryInterrupt(): boolean {
@@ -85,6 +87,7 @@ export class ChatSession {
       result.push({
         id: item.message.id,
         type: item.message.type,
+        metadata: item.message.metadata,
         isInterrupted: item.isInterrupted,
         failReason: item.failReason,
         completedMessages: item.completedMessages
@@ -122,11 +125,13 @@ export class ChatSession {
   }
 
   private async next(message: Message) {
+    let lastMetadata = message.metadata;
     this.onMessageStarted.emit({
       isWorking: true,
       update: {
         id: message.id,
-        type: message.type
+        type: message.type,
+        metadata: lastMetadata
       }
     });
 
@@ -151,7 +156,6 @@ export class ChatSession {
         isWorking: false,
         update: {
           id: message.id,
-          type: message.type,
           isInterrupted: isInterrupted ? true : undefined,
           failReason: isInterrupted ? undefined : failReason
         }
@@ -172,13 +176,16 @@ export class ChatSession {
     }
 
     const hasNext = this.tryNext();
+    const completeUpdate: MessageChatUpdate = {
+      id: message.id,
+      completedMessages: result.completedMessages
+    };
+    if (lastMetadata !== message.metadata) {
+      completeUpdate.metadata = message.metadata;
+    }
     this.onMessageCompleted.emit({
       isWorking: hasNext === true,
-      update: {
-        id: message.id,
-        type: message.type,
-        completedMessages: result.completedMessages
-      }
+      update: completeUpdate
     });
   }
 
