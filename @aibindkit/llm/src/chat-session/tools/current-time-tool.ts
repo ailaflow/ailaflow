@@ -1,5 +1,5 @@
 import type { ToolDescriptor } from '@aibindkit/core';
-import { Tool } from './tool';
+import { Tool, ToolExecutionResult } from './tool';
 
 export class CurrentTimeTool implements Tool {
   public readonly descriptor: ToolDescriptor = {
@@ -10,7 +10,9 @@ export class CurrentTimeTool implements Tool {
     }
   };
 
-  public async execute(): Promise<string> {
-    return new Date().toISOString();
+  public async execute(): Promise<ToolExecutionResult> {
+    return {
+      content: new Date().toISOString()
+    };
   }
 }

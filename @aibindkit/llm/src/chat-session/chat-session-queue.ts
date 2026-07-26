@@ -1,4 +1,4 @@
-import { MessageType } from '@aibindkit/core';
+import { ChatMessageType } from '@aibindkit/core';
 import { Message } from './messages/message';
 
 export class ChatSessionQueue {
@@ -8,7 +8,7 @@ export class ChatSessionQueue {
     this.queue.push(message);
   }
 
-  public pushAfterType(message: Message, type: MessageType) {
+  public pushAfterType(message: Message, type: ChatMessageType) {
     let index = 0;
     for (let i = 0; i < this.queue.length; i++) {
       if (this.queue[i].type === type) {

@@ -1,22 +1,20 @@
-import type { CompletedMessage } from '@aibindkit/core';
+import type { ChatMessage, CompletedChatMessage, LlmMessage } from '@aibindkit/core';
 import { Message } from './messages/message';
-import { ChatSessionItem } from './chat-session-item';
 
 export class ChatSessionStack {
-  private readonly stack: ChatSessionItem[] = [];
-  private readonly map = new Map<number, ChatSessionItem>();
+  private readonly stack: ChatMessage[] = [];
+  private readonly map = new Map<number, ChatMessage>();
 
-  public push(message: Message): void {
-    const item: ChatSessionItem = {
+  public push(message: Message) {
+    const m: ChatMessage = {
       id: message.id,
-      type: message.type,
-      metadata: message.metadata
+      type: message.type
     };
-    this.stack.push(item);
-    this.map.set(message.id, item);
+    this.stack.push(m);
+    this.map.set(message.id, m);
   }
 
-  public complete(message: Message, completedMessages: CompletedMessage[]) {
+  public complete(message: Message, completedMessages: CompletedChatMessage[]) {
     const item = this.map.get(message.id);
     if (!item) {
       throw new Error('Cannot find message');
@@ -46,12 +44,12 @@ export class ChatSessionStack {
     }
   }
 
-  public tryGetLast(): ChatSessionItem | null {
+  public tryGetLast(): ChatMessage | null {
     return this.stack.length > 0 ? this.stack[this.stack.length - 1] : null;
   }
 
-  public getCompletedMessagesBeforeLast(): CompletedMessage[] {
-    const result: CompletedMessage[] = [];
+  public getCompletedLlmMessagesBeforeLast(): LlmMessage[] {
+    const result: LlmMessage[] = [];
     for (let i = 0; i < this.stack.length - 1; i++) {
       const item = this.stack[i];
       if (!item.completedMessages) {
@@ -60,12 +58,14 @@ export class ChatSessionStack {
         }
         throw new Error(`Message ${i} is not completed`);
       }
-      result.push(...item.completedMessages);
+      for (const c of item.completedMessages) {
+        result.push(c.message);
+      }
     }
     return result;
   }
 
-  public all(): ReadonlyArray<ChatSessionItem> {
+  public all(): ReadonlyArray<ChatMessage> {
     return this.stack;
   }
 
@@ -73,7 +73,7 @@ export class ChatSessionStack {
     return this.stack.length === 0;
   }
 
-  public load(items: ReadonlyArray<ChatSessionItem>, start: number, end: number) {
+  public load(items: ReadonlyArray<ChatMessage>, start: number, end: number) {
     for (let i = start; i < end; i++) {
       const item = items[i];
       this.stack.push(item);

@@ -59,6 +59,7 @@ import { LazyProcessFinishedEventHandler } from './events/handlers/lazy-process-
 import { ChatSessionStorage } from './chat-session/chat-session-storage';
 import { ChatSessionRepository } from './repositories/chat-session-repository/chat-session-repository';
 import { SqliteChatSessionRepository } from './repositories/chat-session-repository/sqlite-chat-session-repository';
+import { OpenMyProcessStartFormTool } from './chat-session/user-tools/open-my-process-start-form-tool';
 
 const PORT = process.env.PORT || 2048;
 
@@ -133,7 +134,8 @@ export class Server {
     });
     const userToolSetProvider = new UserToolSetProvider([
       new MyProcessesTool(myProcessListQuerier),
-      new StartMyProcessTool(myProcessAccessQuerier, processRepository, lazyProcessExecutor)
+      new StartMyProcessTool(myProcessAccessQuerier, processRepository, lazyProcessExecutor),
+      new OpenMyProcessStartFormTool(myProcessAccessQuerier, processRepository)
     ]);
 
     const authMiddleware = new AuthMiddleware(authTokenRepository);

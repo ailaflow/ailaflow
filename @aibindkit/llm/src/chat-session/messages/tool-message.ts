@@ -1,11 +1,10 @@
-import type { ToolCall, ToolResponse } from '@aibindkit/core';
-import { MessageType } from '@aibindkit/core';
+import { ChatMessageMetadata, ChatMessageType, type CompletedChatMessage, type ToolCall } from '@aibindkit/core';
 import { ToolSet } from '../tools/tool-set';
 import { Message, MessageCompletionResult } from './message';
 import { ToolContext } from '../tools';
 
 export class ToolMessage implements Message {
-  public readonly type = MessageType.TOOL;
+  public readonly type = ChatMessageType.TOOL;
 
   public constructor(
     public readonly id: number,
@@ -16,15 +15,18 @@ export class ToolMessage implements Message {
 
   public async complete(abortSignal: AbortSignal): Promise<MessageCompletionResult> {
     const completedMessages = await Promise.all(
-      this.calls.map<Promise<ToolResponse>>(async call => {
+      this.calls.map<Promise<CompletedChatMessage>>(async call => {
         if (call.type !== 'function') {
           throw new Error('Invalid tool call type');
         }
         const tool = this.toolSet.tryGetTool(call.function.name);
         let content: string;
+        let metadata: ChatMessageMetadata | undefined;
         if (tool) {
           try {
-            content = await tool.execute(abortSignal, this.context, call);
+            const result = await tool.execute(abortSignal, this.context, call);
+            content = result.content;
+            metadata = result.metadata;
           } catch (e) {
             content = JSON.stringify({
               error: `Tool execution failed: ${(e as Error).message ?? e}`
@@ -36,14 +38,15 @@ export class ToolMessage implements Message {
           });
         }
         return {
-          role: 'tool',
-          tool_call_id: call.id,
-          content
+          message: {
+            role: 'tool',
+            tool_call_id: call.id,
+            content
+          },
+          metadata
         };
       })
     );
-    return {
-      completedMessages
-    };
+    return { completedMessages };
   }
 }

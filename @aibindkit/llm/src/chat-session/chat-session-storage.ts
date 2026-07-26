@@ -1,6 +1,6 @@
-import { ChatSessionItem } from './chat-session-item';
+import { ChatMessage } from '@aibindkit/core';
 
 export interface ChatSessionStorage {
-  save(abortSignal: AbortSignal, sessionId: string, items: ReadonlyArray<ChatSessionItem>): Promise<void>;
-  tryGet(abortSignal: AbortSignal, sessionId: string): Promise<ChatSessionItem[] | null>;
+  save(abortSignal: AbortSignal, sessionId: string, items: ReadonlyArray<ChatMessage>): Promise<void>;
+  tryGet(abortSignal: AbortSignal, sessionId: string): Promise<ChatMessage[] | null>;
 }

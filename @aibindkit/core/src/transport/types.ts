@@ -1,6 +1,7 @@
 import z from 'zod/v4';
-import type { CompletedMessage, MessageMetadata, MessageType } from '../chat-session';
 import type { ToolDescriptor } from '../tools';
+import { ChatMessage } from '../chat-session/chat-message';
+import { ChatMessageType } from '../chat-session';
 
 // restoreChat
 
@@ -11,23 +12,14 @@ export const restoreChatRequestSchema = z.object({
 });
 export type RestoreChatRequest = z.infer<typeof restoreChatRequestSchema>;
 
-export interface MessageChatUpdate {
-  id: number;
-  type?: MessageType;
-  metadata?: MessageMetadata;
-  isInterrupted?: boolean;
-  failReason?: string;
-  completedMessages?: CompletedMessage[];
-}
-
-export interface HelloChatUpdate {
-  sessionToken: string;
-}
+export type ChatMessageUpdate = Omit<ChatMessage, 'type'> & {
+  type?: ChatMessageType;
+};
 
 export interface ChatUpdate {
-  hello?: HelloChatUpdate;
-  restoredMessages?: MessageChatUpdate[];
-  currentMessage?: MessageChatUpdate;
+  sessionToken?: string;
+  restoredMessages?: ChatMessageUpdate[];
+  currentMessage?: ChatMessageUpdate;
   isWorking?: boolean;
   isReset?: true;
 }

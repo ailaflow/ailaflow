@@ -1,36 +1,35 @@
 import {
   type ChatTransport,
   type ToolDescriptor,
-  type MessageChatUpdate,
+  type ChatMessageUpdate,
   type RestoreChatRequest,
   type ToolCall,
   type ChatTransportListener,
   fnv1a,
-  MessageType,
   ChatUpdate,
-  MessageMetadata
+  ChatMessageType
 } from '@aibindkit/core';
 import { useEffect, useMemo, useReducer, useRef, useState } from 'react';
-import { GenericChatView } from './generic-chat-view';
+import { ChatMessageFilter, ChatView } from './chat-view';
 import { ChatToolCallsHandler, FrontEndToolCallsHandler } from './chat-tool-calls-handler';
 
-export interface GenericChatProps {
+export interface ChatProps {
   transport: ChatTransport;
   frontendTools: ToolDescriptor[];
   params: Record<string, unknown>;
-  messageFilter?: (type: MessageType, metadata?: MessageMetadata) => boolean;
+  messageFilter?: ChatMessageFilter;
   frontEndToolCallsHandler: FrontEndToolCallsHandler;
 }
 
-interface GenericChatState {
+interface ChatState {
   lastUpdate: ChatUpdate | null;
   isLoading: boolean;
   isWorking: boolean;
   connectionError: string | null;
-  messages: MessageChatUpdate[];
+  messages: ChatMessageUpdate[];
 }
 
-export function GenericChat(props: GenericChatProps) {
+export function Chat(props: ChatProps) {
   const request = useMemo(
     () =>
       ({
@@ -41,7 +40,6 @@ export function GenericChat(props: GenericChatProps) {
     [props.params, props.frontendTools]
   );
   const sessionTokenRef = useRef<string | null>(null);
-  const messageFilter = useMemo(() => props.messageFilter ?? defaultMessageFilter, [props.messageFilter]);
 
   const lastHandledToolCallId = useRef<number>(-1);
   const pendingToolAbortControllers = useRef(new Set<AbortController>());
@@ -54,10 +52,10 @@ export function GenericChat(props: GenericChatProps) {
   const [reconnectKey, setReconnectKey] = useState(0);
   const [message, setMessage] = useState('');
   const [state, dispatch] = useReducer(
-    (currentState: GenericChatState, update: ChatUpdate & { isLoading?: boolean; connectionError?: string | null }): GenericChatState => {
-      const state: GenericChatState = { ...currentState };
+    (currentState: ChatState, update: ChatUpdate & { isLoading?: boolean; connectionError?: string | null }): ChatState => {
+      const state: ChatState = { ...currentState };
       state.lastUpdate = update;
-      if (update.hello) {
+      if (update.sessionToken) {
         state.isLoading = false;
       }
       if (update.isReset) {
@@ -68,7 +66,7 @@ export function GenericChat(props: GenericChatProps) {
       }
       if (update.currentMessage) {
         const id = update.currentMessage.id;
-        let finalMessage: MessageChatUpdate;
+        let finalMessage: ChatMessageUpdate;
         const index = state.messages.findIndex(m => m.id === id);
         if (index >= 0) {
           finalMessage = { ...state.messages[index], ...update.currentMessage };
@@ -101,10 +99,6 @@ export function GenericChat(props: GenericChatProps) {
       messages: []
     })
   );
-
-  const messages = useMemo(() => {
-    return state.messages.filter(m => m.type && messageFilter(m.type, m.metadata));
-  }, [state.messages, messageFilter]);
 
   useEffect(() => {
     if (!sessionTokenRef.current) {
@@ -153,8 +147,8 @@ export function GenericChat(props: GenericChatProps) {
 
     const listener: ChatTransportListener = {
       onMessage(update) {
-        if (update.hello) {
-          sessionTokenRef.current = update.hello.sessionToken;
+        if (update.sessionToken) {
+          sessionTokenRef.current = update.sessionToken;
         }
         dispatch(update);
       },
@@ -216,12 +210,13 @@ export function GenericChat(props: GenericChatProps) {
   }
 
   return (
-    <GenericChatView
+    <ChatView
       isLoading={state.isLoading}
       isWorking={state.isWorking}
       connectionError={state.connectionError}
-      messages={messages}
+      messages={state.messages}
       message={message}
+      messageFilter={props.messageFilter ?? defaultMessageFilter}
       onReconnectClicked={onReconnectClicked}
       onMessageChanged={setMessage}
       onSendMessage={onSendMessage}
@@ -231,16 +226,16 @@ export function GenericChat(props: GenericChatProps) {
   );
 }
 
-function defaultMessageFilter(type: MessageType): boolean {
-  return type !== MessageType.SYSTEM;
+function defaultMessageFilter(type: ChatMessageType): boolean {
+  return type !== ChatMessageType.SYSTEM;
 }
 
-function tryGetToolCalls(update: MessageChatUpdate): ToolCall[] | null {
-  if (update.type === MessageType.AI && update.completedMessages) {
+function tryGetToolCalls(update: ChatMessageUpdate): ToolCall[] | null {
+  if (update.type === ChatMessageType.AI && update.completedMessages) {
     const result: ToolCall[] = [];
     for (const cm of update.completedMessages) {
-      if (cm.role === 'assistant') {
-        const calls = (cm.tool_calls ?? []).filter(t => t.type === 'function');
+      if (cm.message.role === 'assistant') {
+        const calls = (cm.message.tool_calls ?? []).filter(t => t.type === 'function');
         result.push(...calls);
       }
     }

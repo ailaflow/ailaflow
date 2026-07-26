@@ -1,18 +1,17 @@
-import type { CompletedMessage, MessageMetadata } from '@aibindkit/core';
-import { MessageType } from '@aibindkit/core';
+import { ChatMessageMetadata, ChatMessageType, type LlmMessage } from '@aibindkit/core';
 import { Message, MessageCompletionResult } from './message';
 
 export class UserMessage implements Message {
-  public readonly type = MessageType.USER;
+  public readonly type = ChatMessageType.USER;
 
   public constructor(
     public readonly id: number,
     public readonly text: string,
-    public readonly metadata?: MessageMetadata
+    public readonly metadata?: ChatMessageMetadata
   ) {}
 
   public complete(): MessageCompletionResult {
-    const completedMessage: CompletedMessage = {
+    const message: LlmMessage = {
       role: 'user',
       content: [
         {
@@ -21,6 +20,6 @@ export class UserMessage implements Message {
         }
       ]
     };
-    return { completedMessages: [completedMessage] };
+    return { completedMessages: [{ message, metadata: this.metadata }] };
   }
 }

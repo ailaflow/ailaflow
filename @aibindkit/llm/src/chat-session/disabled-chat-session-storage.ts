@@ -1,4 +1,4 @@
-import { ChatSessionItem } from './chat-session-item';
+import { ChatMessage } from '@aibindkit/core';
 import { ChatSessionStorage } from './chat-session-storage';
 
 export class DisabledChatSessionStorage implements ChatSessionStorage {
@@ -6,7 +6,7 @@ export class DisabledChatSessionStorage implements ChatSessionStorage {
     // Nothing.
   }
 
-  public async tryGet(): Promise<ChatSessionItem[] | null> {
+  public async tryGet(): Promise<ChatMessage[] | null> {
     return null;
   }
 }

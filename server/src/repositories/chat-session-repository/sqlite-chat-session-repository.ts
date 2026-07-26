@@ -1,7 +1,7 @@
 import { DatabaseSync } from 'node:sqlite';
 import { SqliteDatabases } from '../../core/sqlite-databases';
 import { ChatSessionRepository } from './chat-session-repository';
-import { ChatSessionItem } from '@aibindkit/llm';
+import { ChatMessage } from '@aibindkit/core';
 
 export class SqliteChatSessionRepository implements ChatSessionRepository {
   private readonly db: DatabaseSync;
@@ -14,30 +14,30 @@ export class SqliteChatSessionRepository implements ChatSessionRepository {
     this.db.exec(`
       CREATE TABLE IF NOT EXISTS chat_sessions (
         sessionId TEXT PRIMARY KEY,
-        serializedItems TEXT NOT NULL
+        messages TEXT NOT NULL
       ) STRICT
     `);
   }
 
-  public async upsert(_: AbortSignal, sessionId: string, items: ReadonlyArray<ChatSessionItem>): Promise<void> {
+  public async upsert(_: AbortSignal, sessionId: string, messages: ReadonlyArray<ChatMessage>): Promise<void> {
     const statement = this.db.prepare(`
-      INSERT INTO chat_sessions (sessionId, serializedItems)
+      INSERT INTO chat_sessions (sessionId, messages)
       VALUES (?, ?)
       ON CONFLICT(sessionId) DO UPDATE SET
-        serializedItems = excluded.serializedItems
+        messages = excluded.messages
     `);
-    statement.run(sessionId, JSON.stringify(items));
+    statement.run(sessionId, JSON.stringify(messages));
   }
 
-  public async tryGet(_: AbortSignal, sessionId: string): Promise<ChatSessionItem[] | null> {
+  public async tryGet(_: AbortSignal, sessionId: string): Promise<ChatMessage[] | null> {
     const statement = this.db.prepare(`
-      SELECT serializedItems
+      SELECT messages
       FROM chat_sessions
       WHERE sessionId = ?
       LIMIT 1
     `);
-    const row = statement.get(sessionId) as { serializedItems: string } | undefined;
+    const row = statement.get(sessionId) as { messages: string } | undefined;
 
-    return row ? (JSON.parse(row.serializedItems) as ChatSessionItem[]) : null;
+    return row ? (JSON.parse(row.messages) as ChatMessage[]) : null;
   }
 }

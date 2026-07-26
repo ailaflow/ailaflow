@@ -1,4 +1,4 @@
-import { ToolContext, ZodTool } from '@aibindkit/llm';
+import { ToolContext, ZodTool, ZodToolExecutionResult } from '@aibindkit/llm';
 import { MyProcessListQuerier } from '../../queriers/my-process-list/my-process-list-querier';
 import { ChatSessionId } from '../chat-session-id';
 
@@ -7,8 +7,10 @@ export class MyProcessesTool extends ZodTool {
     super('get_my_processes', 'Returns a list of supported processes');
   }
 
-  public async handle(abortSignal: AbortSignal, { sessionId }: ToolContext) {
+  public async handle(abortSignal: AbortSignal, { sessionId }: ToolContext): Promise<ZodToolExecutionResult> {
     const { userName } = ChatSessionId.decode(sessionId);
-    return await this.querier.query(abortSignal, userName);
+    return {
+      content: await this.querier.query(abortSignal, userName)
+    };
   }
 }

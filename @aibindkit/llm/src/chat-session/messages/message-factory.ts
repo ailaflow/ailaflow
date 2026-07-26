@@ -1,4 +1,4 @@
-import type { MessageMetadata, ToolCall } from '@aibindkit/core';
+import type { ChatMessageMetadata, ToolCall } from '@aibindkit/core';
 import { LlmClient } from '../../client/llm-client';
 import { ToolSet } from '../tools/tool-set';
 import { AiMessage } from './ai-message';
@@ -17,7 +17,7 @@ export class MessageFactory {
     return new SystemMessage(id, content);
   }
 
-  public createUser(id: number, content: string, metadata?: MessageMetadata): UserMessage {
+  public createUser(id: number, content: string, metadata?: ChatMessageMetadata): UserMessage {
     return new UserMessage(id, content, metadata);
   }
 

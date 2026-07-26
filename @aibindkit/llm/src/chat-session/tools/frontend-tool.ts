@@ -1,5 +1,5 @@
 import type { ToolCall, ToolDescriptor } from '@aibindkit/core';
-import { Tool, ToolContext } from './tool';
+import { Tool, ToolContext, ToolExecutionResult } from './tool';
 import { FrontendToolBus } from './frontend-tool-bus';
 
 export class FrontendTool implements Tool {
@@ -8,8 +8,11 @@ export class FrontendTool implements Tool {
     public readonly bus: FrontendToolBus
   ) {}
 
-  public async execute(abortSignal: AbortSignal, context: ToolContext, call: ToolCall): Promise<string> {
+  public async execute(abortSignal: AbortSignal, context: ToolContext, call: ToolCall): Promise<ToolExecutionResult> {
     const signal = AbortSignal.any([abortSignal, AbortSignal.timeout(10_000)]);
-    return this.bus.waitForResult(signal, context.sessionToken, call.id);
+    const result = await this.bus.waitForResult(signal, context.sessionToken, call.id);
+    return {
+      content: result
+    };
   }
 }

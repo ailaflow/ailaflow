@@ -1,6 +1,6 @@
 import type { Request } from 'express';
-import type { RestoreChatRequest } from '@aibindkit/core';
-import { ChatSession, ChatSessionFactory, ChatSessionItem, ChatSessionStorage, FrontendToolFactory, ToolSet } from '@aibindkit/llm';
+import type { ChatMessage, RestoreChatRequest } from '@aibindkit/core';
+import { ChatSession, ChatSessionFactory, ChatSessionStorage, FrontendToolFactory, ToolSet } from '@aibindkit/llm';
 import type { ChatSessionResolver } from './chat-session-resolver';
 import { LiveChatSessionStore } from './live-chat-session-store';
 
@@ -18,12 +18,12 @@ export class ChatSessionActivator {
     const toolsHash = resolved.backendToolsHash.concat(restoreRequest.frontendToolsHash);
 
     let session = this.liveSessionStore.tryGetById(resolved.sessionId);
-    let items: ReadonlyArray<ChatSessionItem> | null = null;
+    let messages: ReadonlyArray<ChatMessage> | null = null;
     if (session) {
       if (session.toolsHash === toolsHash) {
         return session;
       }
-      items = session.dump();
+      messages = session.dump();
     }
 
     const toolSet = new ToolSet();
@@ -34,16 +34,16 @@ export class ChatSessionActivator {
       toolSet.addTool(tool);
     }
 
-    if (!items) {
-      items = await this.sessionStorage.tryGet(abortSignal, resolved.sessionId);
+    if (!messages) {
+      messages = await this.sessionStorage.tryGet(abortSignal, resolved.sessionId);
     }
 
     session = this.chatSessionFactory.create(resolved.sessionId, toolsHash, resolved.llmClient, toolSet);
     if (resolved.systemPrompt) {
       session.setSystemMessage(resolved.systemPrompt);
     }
-    if (items) {
-      session.load(items);
+    if (messages) {
+      session.load(messages);
     }
 
     this.liveSessionStore.set(session);

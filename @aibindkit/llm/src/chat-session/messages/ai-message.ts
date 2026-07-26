@@ -2,11 +2,10 @@ import { Message, MessageCompletionResult } from './message';
 import { ToolSet } from '../tools/tool-set';
 import { ChatSessionStack } from '../chat-session-stack';
 import { LlmClient } from '../../client/llm-client';
-import type { CompletedMessage, ToolCall } from '@aibindkit/core';
-import { MessageType } from '@aibindkit/core';
+import { ChatMessageType, CompletedChatMessage, type ToolCall } from '@aibindkit/core';
 
 export class AiMessage implements Message {
-  public readonly type = MessageType.AI;
+  public readonly type = ChatMessageType.AI;
 
   public constructor(
     public readonly id: number,
@@ -15,37 +14,45 @@ export class AiMessage implements Message {
   ) {}
 
   public async complete(abortSignal: AbortSignal, stack: ChatSessionStack): Promise<MessageCompletionResult> {
-    const completedMessages = stack.getCompletedMessagesBeforeLast();
+    const llmMessages = stack.getCompletedLlmMessagesBeforeLast();
     const toolDescriptors = this.toolSet.getDescriptorsOrUndefined();
 
-    const { completedMessage, totalTokens } = await this.llmClient.complete(abortSignal, completedMessages, toolDescriptors);
+    const { message, totalTokens } = await this.llmClient.complete(abortSignal, llmMessages, toolDescriptors);
 
     let toolCalls: ToolCall[] | undefined;
-    if (completedMessage.role === 'assistant') {
-      toolCalls = completedMessage.tool_calls?.filter(c => c.type === 'function');
+    if (message.role === 'assistant') {
+      toolCalls = message.tool_calls?.filter(c => c.type === 'function');
       if (!toolCalls?.length) {
         toolCalls = undefined;
       }
     }
 
     return {
-      completedMessages: [completedMessage],
+      completedMessages: [
+        {
+          message
+        }
+      ],
       toolCalls,
       totalTokens
     };
   }
 
-  public fail(reason: string): CompletedMessage {
+  public fail(reason: string): CompletedChatMessage {
     return {
-      role: 'user',
-      content: `The request to AI server failed with reason: ${reason}`
+      message: {
+        role: 'user',
+        content: `The request to AI server failed with reason: ${reason}`
+      }
     };
   }
 
-  public interrupt(): CompletedMessage {
+  public interrupt(): CompletedChatMessage {
     return {
-      role: 'user',
-      content: 'The request to AI server was interrupted by the user.'
+      message: {
+        role: 'user',
+        content: 'The request to AI server was interrupted by the user.'
+      }
     };
   }
 }

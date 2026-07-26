@@ -1,9 +1,8 @@
-import type { CompletedMessage } from '@aibindkit/core';
-import { MessageType } from '@aibindkit/core';
+import { ChatMessageType, LlmMessage } from '@aibindkit/core';
 import { Message, MessageCompletionResult } from './message';
 
 export class SystemMessage implements Message {
-  public readonly type = MessageType.SYSTEM;
+  public readonly type = ChatMessageType.SYSTEM;
 
   public constructor(
     public readonly id: number,
@@ -11,7 +10,7 @@ export class SystemMessage implements Message {
   ) {}
 
   public complete(): MessageCompletionResult {
-    const completedMessage: CompletedMessage = {
+    const message: LlmMessage = {
       role: 'system',
       content: [
         {
@@ -20,6 +19,6 @@ export class SystemMessage implements Message {
         }
       ]
     };
-    return { completedMessages: [completedMessage] };
+    return { completedMessages: [{ message }] };
   }
 }

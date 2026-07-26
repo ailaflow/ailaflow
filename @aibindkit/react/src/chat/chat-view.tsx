@@ -1,14 +1,17 @@
-import type { ToolCall, CompletedMessage, MessageChatUpdate } from '@aibindkit/core';
+import type { ChatMessageMetadata, ChatMessageType, ChatMessageUpdate, CompletedChatMessage, LlmMessage, ToolCall } from '@aibindkit/core';
 import { Fragment, useLayoutEffect, useRef } from 'react';
-import { GenericChatComposerView } from './generic-chat-composer-view';
+import { ChatComposerView } from './chat-composer-view';
 import { SvgIcon } from './svg-icon';
 
-export interface GenericChatViewProps {
+export type ChatMessageFilter = (type: ChatMessageType, metadata?: ChatMessageMetadata) => boolean;
+
+export interface ChatViewProps {
   isLoading: boolean;
   isWorking: boolean;
-  messages: MessageChatUpdate[];
+  messages: ChatMessageUpdate[];
   message: string;
   connectionError: string | null;
+  messageFilter: ChatMessageFilter;
   onReconnectClicked: () => void;
   onMessageChanged: (message: string) => void;
   onSendMessage: () => void;
@@ -16,7 +19,7 @@ export interface GenericChatViewProps {
   onStartNewConversation: () => void;
 }
 
-export function GenericChatView(props: GenericChatViewProps) {
+export function ChatView(props: ChatViewProps) {
   const messagesRef = useRef<HTMLUListElement>(null);
 
   useLayoutEffect(() => {
@@ -34,13 +37,13 @@ export function GenericChatView(props: GenericChatViewProps) {
         ) : props.messages.length === 0 ? (
           <EmptyChatView />
         ) : (
-          props.messages.map(update => <GenericChatUpdateView key={update.id} update={update} />)
+          props.messages.map(update => <ChatUpdateView key={update.id} update={update} messageFilter={props.messageFilter} />)
         )}
       </ul>
 
       {props.connectionError && <ConnectionErrorBar error={props.connectionError} onReconnectClicked={props.onReconnectClicked} />}
 
-      <GenericChatComposerView
+      <ChatComposerView
         isWorking={props.isWorking}
         message={props.message}
         onMessageChanged={props.onMessageChanged}
@@ -83,33 +86,36 @@ function ChatStatusView(props: { title: string; text: string }) {
   );
 }
 
-function GenericChatUpdateView(props: { update: MessageChatUpdate }) {
+function ChatUpdateView(props: { update: ChatMessageUpdate; messageFilter: ChatMessageFilter }) {
   if (props.update.failReason) {
     return <li className="abk-chat-failure">Failed: {props.update.failReason}</li>;
   }
   if (props.update.isInterrupted) {
     return <li className="abk-chat-failure">Interrupted</li>;
   }
-  if (props.update.completedMessages) {
+  if (props.update.type && props.update.completedMessages) {
+    const type = props.update.type;
     return (
       <li data-id={props.update.id} className="abk-chat-update">
-        {props.update.completedMessages.map((message, index) => {
-          return <GenericChatMessageView key={index} message={message} />;
-        })}
+        {props.update.completedMessages
+          .filter(m => props.messageFilter(type, m.metadata))
+          .map((message, index) => {
+            return <ChatMessageView key={index} message={message} />;
+          })}
       </li>
     );
   }
   return <Fragment />;
 }
 
-function GenericChatMessageView(props: { message: CompletedMessage }) {
-  if (props.message.role === 'user') {
-    return <UserMessageView content={getContent(props.message)} />;
+function ChatMessageView(props: { message: CompletedChatMessage }) {
+  if (props.message.message.role === 'user') {
+    return <UserMessageView content={getContent(props.message.message)} />;
   }
-  if (props.message.role === 'assistant') {
+  if (props.message.message.role === 'assistant') {
     return <AssistantMessageView message={props.message} />;
   }
-  if (props.message.role === 'tool') {
+  if (props.message.message.role === 'tool') {
     return <ToolMessageView message={props.message} />;
   }
   return <SystemMessageView message={props.message} />;
@@ -126,9 +132,9 @@ function UserMessageView(props: { content: string | null }) {
   );
 }
 
-function AssistantMessageView(props: { message: CompletedMessage }) {
+function AssistantMessageView(props: { message: CompletedChatMessage }) {
   const toolCalls = getToolCalls(props.message);
-  const content = getContent(props.message);
+  const content = getContent(props.message.message);
 
   return (
     <div className="abk-chat-row abk-chat-row-assistant">
@@ -141,19 +147,19 @@ function AssistantMessageView(props: { message: CompletedMessage }) {
   );
 }
 
-function SystemMessageView(props: { message: CompletedMessage }) {
+function SystemMessageView(props: { message: CompletedChatMessage }) {
   return (
     <div className="abk-chat-row abk-chat-row-system">
       <article className="abk-chat-bubble abk-chat-bubble-system">
-        <div className="abk-chat-label">{props.message.role}</div>
-        <MessageContentView content={getContent(props.message)} />
+        <div className="abk-chat-label">{props.message.message.role}</div>
+        <MessageContentView content={getContent(props.message.message)} />
       </article>
     </div>
   );
 }
 
-function ToolMessageView(props: { message: CompletedMessage }) {
-  const content = getContent(props.message);
+function ToolMessageView(props: { message: CompletedChatMessage }) {
+  const content = getContent(props.message.message);
   const label = getToolResponseLabel(content);
 
   return (
@@ -215,9 +221,9 @@ function ToolCallsView(props: { toolCalls: ToolCall[] }) {
   );
 }
 
-function getToolCalls(message: CompletedMessage) {
-  if (message.role === 'assistant' && message.tool_calls) {
-    return message.tool_calls.filter(c => c.type === 'function');
+function getToolCalls(message: CompletedChatMessage) {
+  if (message.message.role === 'assistant' && message.message.tool_calls) {
+    return message.message.tool_calls.filter(c => c.type === 'function');
   }
   return null;
 }
@@ -284,7 +290,7 @@ function limitText(value: string, maxLength: number) {
   return `${text.slice(0, maxLength - 1)}...`;
 }
 
-function getContent(message: CompletedMessage): string | null {
+function getContent(message: LlmMessage): string | null {
   if (typeof message.content === 'string') {
     return message.content;
   }

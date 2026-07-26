@@ -1,3 +1,3 @@
-export * from './generic-chat';
-export * from './generic-chat-view';
-export * from './generic-chat-composer-view';
+export * from './chat';
+export * from './chat-view';
+export * from './chat-composer-view';

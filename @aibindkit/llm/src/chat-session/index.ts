@@ -1,5 +1,4 @@
 export * from './chat-session';
-export * from './chat-session-item';
 export * from './chat-session-factory';
 export * from './messages';
 export * from './chat-session-storage';

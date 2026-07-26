@@ -1,16 +1,15 @@
-import type { MessageChatUpdate, MessageMetadata } from '@aibindkit/core';
-import { MessageType, SimpleEvent } from '@aibindkit/core';
+import type { ChatMessageUpdate, ChatMessageMetadata, ChatMessage } from '@aibindkit/core';
+import { ChatMessageType, SimpleEvent } from '@aibindkit/core';
 import { Message, MessageCompletionResult } from './messages/message';
 import { MessageFactory } from './messages/message-factory';
 import { ChatSessionStack } from './chat-session-stack';
 import { ChatSessionQueue } from './chat-session-queue';
 import { ToolContext } from './tools';
 import { ChatSessionStorage } from './chat-session-storage';
-import { ChatSessionItem } from './chat-session-item';
 
 export interface ChatSessionUpdate {
   isWorking: boolean;
-  update: MessageChatUpdate;
+  update: ChatMessageUpdate;
 }
 
 export class ChatSession {
@@ -46,7 +45,7 @@ export class ChatSession {
     this.systemMessage = systemMessage;
   }
 
-  public queueUserMessage(content: string, metadata?: MessageMetadata): number {
+  public queueUserMessage(content: string, metadata?: ChatMessageMetadata): number {
     if (this.isInterrupted) {
       this.isInterrupted = false;
       this.interruptAbortController = new AbortController();
@@ -85,14 +84,13 @@ export class ChatSession {
     void this.save();
   }
 
-  public getAll(): MessageChatUpdate[] {
+  public getAll(): ChatMessage[] {
     const all = this.stack.all();
-    const result: MessageChatUpdate[] = [];
+    const result: ChatMessage[] = [];
     for (const item of all) {
       result.push({
         id: item.id,
         type: item.type,
-        metadata: item.metadata,
         isInterrupted: item.isInterrupted,
         failReason: item.failReason,
         completedMessages: item.completedMessages
@@ -101,7 +99,7 @@ export class ChatSession {
     return result;
   }
 
-  public load(items: ReadonlyArray<ChatSessionItem>) {
+  public load(items: ReadonlyArray<ChatMessage>) {
     if (items.length === 0) {
       throw new Error('Cannot load an empty session');
     }
@@ -109,7 +107,7 @@ export class ChatSession {
     this.stack.clear();
     let start = 0;
     if (this.systemMessage) {
-      const index = items.findIndex(item => item.type === MessageType.SYSTEM);
+      const index = items.findIndex(item => item.type === ChatMessageType.SYSTEM);
       if (index === 0) {
         const systemMessageId = items[0].id;
         const systemMessage = this.messageFactory.createSystem(systemMessageId, this.systemMessage);
@@ -123,7 +121,7 @@ export class ChatSession {
     this.lastId = items[items.length - 1].id;
   }
 
-  public dump(): ReadonlyArray<ChatSessionItem> {
+  public dump(): ReadonlyArray<ChatMessage> {
     return this.stack.all();
   }
 
@@ -147,14 +145,14 @@ export class ChatSession {
 
     const last = this.stack.tryGetLast();
     let message: Message;
-    if (last && last.type === MessageType.TOOL) {
+    if (last && last.type === ChatMessageType.TOOL) {
       message = this.messageFactory.createAi(this.nextId());
     } else {
       const nextMessage = this.queue.shift();
       if (nextMessage) {
         message = nextMessage;
       } else {
-        const isLastAi = last?.type === MessageType.AI;
+        const isLastAi = last?.type === ChatMessageType.AI;
         if (isLastAi) {
           return false;
         }
@@ -171,13 +169,11 @@ export class ChatSession {
   private async next(message: Message) {
     void this.save();
 
-    let lastMetadata = message.metadata;
     this.onMessageStarted.emit({
       isWorking: true,
       update: {
         id: message.id,
-        type: message.type,
-        metadata: lastMetadata
+        type: message.type
       }
     });
 
@@ -221,20 +217,16 @@ export class ChatSession {
     if (result.toolCalls) {
       const tid = this.nextId();
       const toolMessage = this.messageFactory.createTool(tid, this.toolContext, result.toolCalls);
-      this.queue.pushAfterType(toolMessage, MessageType.TOOL);
+      this.queue.pushAfterType(toolMessage, ChatMessageType.TOOL);
     }
 
     const hasNext = this.tryNext();
-    const completeUpdate: MessageChatUpdate = {
-      id: message.id,
-      completedMessages: result.completedMessages
-    };
-    if (lastMetadata !== message.metadata) {
-      completeUpdate.metadata = message.metadata;
-    }
     this.onMessageCompleted.emit({
       isWorking: hasNext === true,
-      update: completeUpdate
+      update: {
+        id: message.id,
+        completedMessages: result.completedMessages
+      }
     });
   }
 

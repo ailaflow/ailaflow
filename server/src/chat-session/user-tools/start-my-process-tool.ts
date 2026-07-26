@@ -1,4 +1,4 @@
-import { ToolContext, ZodTool } from '@aibindkit/llm';
+import { ToolContext, ZodTool, ZodToolExecutionResult } from '@aibindkit/llm';
 import { MyProcessAccessQuerier } from '../../queriers/my-process/my-process-access-querier';
 import { ProcessRepository } from '../../repositories/process-repository/process-repository';
 import { ProcessExecutionVariableValues } from '@aila/model';
@@ -24,21 +24,21 @@ export class StartMyProcessTool extends ZodTool<Arg> {
     super('start_my_process', 'Starts a new process', inputSchema);
   }
 
-  protected async handle(abortSignal: AbortSignal, { sessionId }: ToolContext, arg: Arg) {
+  protected async handle(abortSignal: AbortSignal, { sessionId }: ToolContext, arg: Arg): Promise<ZodToolExecutionResult> {
     const { userName } = ChatSessionId.decode(sessionId);
 
     const hasAccess = await this.accessQuerier.hasAccess(abortSignal, userName, arg.name);
     if (!hasAccess) {
       return {
-        error: `Cannot find the "${arg.name}" process, or you do not have access to it`
+        content: {
+          error: `Cannot find the "${arg.name}" process, or you do not have access to it`
+        }
       };
     }
 
     const process = await this.processRepository.tryGetByName(abortSignal, arg.name);
     if (!process) {
-      return {
-        error: `Cannot find the "${arg.name}" process`
-      };
+      throw new Error(`Cannot find the "${arg.name}" process, even though access was granted`);
     }
 
     const input: ProcessExecutionVariableValues = {};
@@ -54,7 +54,9 @@ export class StartMyProcessTool extends ZodTool<Arg> {
         const { error, data } = validator.safeParse(startValue);
         if (error) {
           return {
-            error: `Variable value \$${name} does not meet the required schema: ${error}`
+            content: {
+              error: `Variable value \$${name} does not meet the required schema: ${error}`
+            }
           };
         }
         input[name] = data;
@@ -65,14 +67,18 @@ export class StartMyProcessTool extends ZodTool<Arg> {
     const result = await this.lazyProcessExecutor.execute(abortController.signal, FAST_TIMEOUT, userName, process, input);
 
     if (result.finished) {
-      return result.result.success
-        ? result.result.output
-        : {
-            error: result.result.error
-          };
+      return {
+        content: result.result.success
+          ? result.result.output
+          : {
+              error: result.result.error
+            }
+      };
     }
     return {
-      success: `Process "${arg.name}" started successfully. It is running in the background, and you will be notified when it finishes, execution id: ${result.executionId}`
+      content: {
+        success: `Process "${arg.name}" started successfully. It is running in the background, and you will be notified when it finishes, execution id: ${result.executionId}`
+      }
     };
   }
 }

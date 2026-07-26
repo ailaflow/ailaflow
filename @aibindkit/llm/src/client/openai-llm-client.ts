@@ -1,7 +1,6 @@
 import OpenAI from 'openai';
-import { CompleteResult, LlmClient } from './llm-client';
-import type { ToolDescriptor } from '@aibindkit/core';
-import type { CompletedMessage } from '@aibindkit/core';
+import { LlmCompleteResult, LlmClient } from './llm-client';
+import type { LlmMessage, ToolDescriptor } from '@aibindkit/core';
 
 export class OpenaiLlmClient implements LlmClient {
   private readonly openai: OpenAI;
@@ -15,15 +14,15 @@ export class OpenaiLlmClient implements LlmClient {
 
   public async complete(
     abortSignal: AbortSignal,
-    completedMessages: CompletedMessage[],
+    messages: LlmMessage[],
     toolDescriptors: ToolDescriptor[] | undefined
-  ): Promise<CompleteResult> {
+  ): Promise<LlmCompleteResult> {
     const response = await this.openai.chat.completions.create(
       {
         tools: toolDescriptors,
         model: 'openai/gpt-oss-120b',
         stream: false,
-        messages: completedMessages
+        messages
       },
       {
         signal: abortSignal
@@ -35,8 +34,8 @@ export class OpenaiLlmClient implements LlmClient {
       throw new Error('No choices returned from AI API');
     }
 
-    const completedMessage: CompletedMessage = choice.message;
+    const message: LlmMessage = choice.message;
 
-    return { completedMessage, totalTokens: response.usage?.total_tokens };
+    return { message, totalTokens: response.usage?.total_tokens };
   }
 }

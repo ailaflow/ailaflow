@@ -1,6 +1,7 @@
-import { ChatSessionStorage as Interface, ChatSessionItem } from '@aibindkit/llm';
+import { ChatSessionStorage as Interface } from '@aibindkit/llm';
 import { ChatSessionRepository } from '../repositories/chat-session-repository/chat-session-repository';
 import { Logger } from '../core/logger';
+import { ChatMessage } from '@aibindkit/core';
 
 export class ChatSessionStorage implements Interface {
   private readonly timeouts = new Map<string, ReturnType<typeof setTimeout>>();
@@ -8,7 +9,7 @@ export class ChatSessionStorage implements Interface {
 
   public constructor(private readonly repository: ChatSessionRepository) {}
 
-  public save(abortSignal: AbortSignal, sessionId: string, items: ReadonlyArray<ChatSessionItem>): Promise<void> {
+  public save(abortSignal: AbortSignal, sessionId: string, items: ReadonlyArray<ChatMessage>): Promise<void> {
     this.timeouts.set(
       sessionId,
       setTimeout(async () => {
@@ -23,7 +24,7 @@ export class ChatSessionStorage implements Interface {
     return Promise.resolve();
   }
 
-  public tryGet(abortSignal: AbortSignal, sessionId: string): Promise<ChatSessionItem[] | null> {
+  public tryGet(abortSignal: AbortSignal, sessionId: string): Promise<ChatMessage[] | null> {
     return this.repository.tryGet(abortSignal, sessionId);
   }
 }

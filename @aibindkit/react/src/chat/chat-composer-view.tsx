@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { KeyboardEvent } from 'react';
 import { SvgIcon } from './svg-icon';
 
-export interface GenericChatComposerViewProps {
+export interface ChatComposerViewProps {
   isWorking: boolean;
   message: string;
   onMessageChanged: (message: string) => void;
@@ -11,7 +11,7 @@ export interface GenericChatComposerViewProps {
   onStartNewConversation: () => void;
 }
 
-export function GenericChatComposerView(props: GenericChatComposerViewProps) {
+export function ChatComposerView(props: ChatComposerViewProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 

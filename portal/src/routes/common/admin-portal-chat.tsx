@@ -1,4 +1,4 @@
-import { GenericChat } from '@aibindkit/react';
+import { Chat } from '@aibindkit/react';
 import { useAiEnvironment, useAiStore } from './admin-portal';
 import { useApiClient, useSession } from '../../auth/auth-context';
 import { useMemo } from 'react';
@@ -20,7 +20,5 @@ export function AdminPortalChat() {
     []
   );
 
-  return (
-    <GenericChat transport={api.chat} params={params} frontendTools={toolDescriptors} frontEndToolCallsHandler={frontEndToolCallsHandler} />
-  );
+  return <Chat transport={api.chat} params={params} frontendTools={toolDescriptors} frontEndToolCallsHandler={frontEndToolCallsHandler} />;
 }
