@@ -4,6 +4,7 @@ import { ChatComposerView } from './chat-composer-view';
 import { SvgIcon } from './svg-icon';
 
 export type ChatMessageFilter = (type: ChatMessageType, metadata?: ChatMessageMetadata) => boolean;
+export type ChatMessageRenderer = (metadata: ChatMessageMetadata) => React.ReactNode | null;
 
 export interface ChatViewProps {
   isLoading: boolean;
@@ -12,6 +13,7 @@ export interface ChatViewProps {
   message: string;
   connectionError: string | null;
   messageFilter: ChatMessageFilter;
+  metadataRenderer?: ChatMessageRenderer;
   onReconnectClicked: () => void;
   onMessageChanged: (message: string) => void;
   onSendMessage: () => void;
@@ -37,7 +39,9 @@ export function ChatView(props: ChatViewProps) {
         ) : props.messages.length === 0 ? (
           <EmptyChatView />
         ) : (
-          props.messages.map(update => <ChatUpdateView key={update.id} update={update} messageFilter={props.messageFilter} />)
+          props.messages.map(update => (
+            <ChatUpdateView key={update.id} update={update} metadataRenderer={props.metadataRenderer} messageFilter={props.messageFilter} />
+          ))
         )}
       </ul>
 
@@ -86,7 +90,7 @@ function ChatStatusView(props: { title: string; text: string }) {
   );
 }
 
-function ChatUpdateView(props: { update: ChatMessageUpdate; messageFilter: ChatMessageFilter }) {
+function ChatUpdateView(props: { update: ChatMessageUpdate; metadataRenderer?: ChatMessageRenderer; messageFilter: ChatMessageFilter }) {
   if (props.update.failReason) {
     return <li className="abk-chat-failure">Failed: {props.update.failReason}</li>;
   }
@@ -97,15 +101,30 @@ function ChatUpdateView(props: { update: ChatMessageUpdate; messageFilter: ChatM
     const type = props.update.type;
     return (
       <li data-id={props.update.id} className="abk-chat-update">
-        {props.update.completedMessages
-          .filter(m => props.messageFilter(type, m.metadata))
-          .map((message, index) => {
+        {props.update.completedMessages.map((message, index) => {
+          const isMessageVisible = props.messageFilter(type, message.metadata);
+          const metadataNode = message.metadata ? props.metadataRenderer?.(message.metadata) : null;
+
+          if (metadataNode && isMessageVisible) {
+            return (
+              <Fragment key={index}>
+                <ChatMessageView message={message} />
+                {metadataNode}
+              </Fragment>
+            );
+          }
+          if (metadataNode) {
+            return <Fragment key={index}>{metadataNode}</Fragment>;
+          }
+          if (isMessageVisible) {
             return <ChatMessageView key={index} message={message} />;
-          })}
+          }
+          return null;
+        })}
       </li>
     );
   }
-  return <Fragment />;
+  return null;
 }
 
 function ChatMessageView(props: { message: CompletedChatMessage }) {

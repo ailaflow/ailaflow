@@ -10,13 +10,14 @@ import {
   ChatMessageType
 } from '@aibindkit/core';
 import { useEffect, useMemo, useReducer, useRef, useState } from 'react';
-import { ChatMessageFilter, ChatView } from './chat-view';
+import { ChatMessageFilter, ChatMessageRenderer, ChatView } from './chat-view';
 import { ChatToolCallsHandler, FrontEndToolCallsHandler } from './chat-tool-calls-handler';
 
 export interface ChatProps {
   transport: ChatTransport;
   frontendTools: ToolDescriptor[];
   params: Record<string, unknown>;
+  metadataRenderer?: ChatMessageRenderer;
   messageFilter?: ChatMessageFilter;
   frontEndToolCallsHandler: FrontEndToolCallsHandler;
 }
@@ -216,6 +217,7 @@ export function Chat(props: ChatProps) {
       connectionError={state.connectionError}
       messages={state.messages}
       message={message}
+      metadataRenderer={props.metadataRenderer}
       messageFilter={props.messageFilter ?? defaultMessageFilter}
       onReconnectClicked={onReconnectClicked}
       onMessageChanged={setMessage}
