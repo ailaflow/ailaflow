@@ -21,7 +21,7 @@ export function MyChat() {
   const details = useMemo(
     () => ({
       params: {
-        name: 'Main'
+        name: 'main'
       },
       frontendTools: [],
       frontEndToolCallsHandler: async () => null

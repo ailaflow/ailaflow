@@ -5,7 +5,7 @@ import { getAuthToken } from '../api/auth/auth-middleware';
 import { ServerPaths } from '../core/server-paths';
 import { UserToolSetProvider } from './user-tools/user-tool-set-provider';
 import { Request } from 'express';
-import { ChatSessionIdProvider } from './chat-session-id-provider';
+import { ChatSessionId } from './chat-session-id';
 
 export class ChatSessionResolver implements BaseChatSessionResolver {
   private readonly userSystemPrompt: string;
@@ -13,7 +13,6 @@ export class ChatSessionResolver implements BaseChatSessionResolver {
 
   public constructor(
     private readonly llmClient: LlmClient,
-    private readonly sessionIdProvider: ChatSessionIdProvider,
     private readonly userToolSetProvider: UserToolSetProvider,
     serverPaths: ServerPaths
   ) {
@@ -26,24 +25,23 @@ export class ChatSessionResolver implements BaseChatSessionResolver {
     const authToken = getAuthToken(httpRequest);
     if (params.admin === true) {
       return {
-        sessionId: this.sessionIdProvider.getAdmin(authToken.userName),
+        sessionId: ChatSessionId.createAdmin(authToken.userName).serialize(),
         backendTools: [],
         backendToolsHash: '',
         llmClient: this.llmClient,
         systemPrompt: this.adminSystemPrompt
       };
     }
-
     if (typeof params.name === 'string') {
+      // TODO: support user-defined channels
       return {
-        sessionId: this.sessionIdProvider.getUserDefaultChannel(authToken.userName), // TODO
+        sessionId: ChatSessionId.createUserMainChannel(authToken.userName).serialize(),
         backendTools: this.userToolSetProvider.tools,
         backendToolsHash: this.userToolSetProvider.hash,
         llmClient: this.llmClient,
         systemPrompt: this.userSystemPrompt
       };
     }
-
     throw new ChatSessionInitializerError('Unsupported chat session channel');
   }
 }

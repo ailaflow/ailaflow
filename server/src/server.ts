@@ -56,7 +56,6 @@ import { StartMyProcessTool } from './chat-session/user-tools/start-my-process-t
 import { LazyProcessExecutor } from './process-executor/lazy-process-executor';
 import { EventBus } from './events/event-bus';
 import { LazyProcessFinishedEventHandler } from './events/handlers/lazy-process-finished-event-handler';
-import { ChatSessionIdProvider } from './chat-session/chat-session-id-provider';
 import { ChatSessionStorage } from './chat-session/chat-session-storage';
 import { ChatSessionRepository } from './repositories/chat-session-repository/chat-session-repository';
 import { SqliteChatSessionRepository } from './repositories/chat-session-repository/sqlite-chat-session-repository';
@@ -115,12 +114,11 @@ export class Server {
       new WriteVariableRpcHandler(processExecutionStore)
     ]);
 
-    const sessionIdProvider = new ChatSessionIdProvider();
     const sessionStorage = new ChatSessionStorage(chatSessionRepository);
     const liveSessionStore = new LiveChatSessionStore();
 
     const eventBus = new EventBus();
-    eventBus.registerHandler(new LazyProcessFinishedEventHandler(sessionIdProvider, liveSessionStore));
+    eventBus.registerHandler(new LazyProcessFinishedEventHandler(liveSessionStore));
 
     const sandboxInstanceManager = new SandboxInstanceManager(serverPaths, sandboxRepository, rpcHandler);
 
@@ -139,7 +137,7 @@ export class Server {
     ]);
 
     const authMiddleware = new AuthMiddleware(authTokenRepository);
-    const sessionResolver = new ChatSessionResolver(llmClient, sessionIdProvider, userToolSetProvider, serverPaths);
+    const sessionResolver = new ChatSessionResolver(llmClient, userToolSetProvider, serverPaths);
 
     setupServer(app, {
       sessionResolver,
