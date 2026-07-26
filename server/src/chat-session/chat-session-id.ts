@@ -11,9 +11,9 @@ export class ChatSessionId {
     return new ChatSessionId(userName, 'channel:main');
   }
 
-  public static parse(sessionId: string): ChatSessionId {
-    const parts = sessionId.split(':');
-    return new ChatSessionId(parts[0], parts[0]);
+  public static decode(sessionId: string): ChatSessionId {
+    const parts = sessionId.split(':', 2);
+    return new ChatSessionId(parts[0], parts[1]);
   }
 
   public constructor(
@@ -21,7 +21,7 @@ export class ChatSessionId {
     public readonly v: string
   ) {}
 
-  public serialize(): string {
+  public encode(): string {
     return `${this.userName}:${this.v}`;
   }
 }

@@ -1,5 +1,6 @@
 import { ToolContext, ZodTool } from '@aibindkit/llm';
 import { MyProcessListQuerier } from '../../queriers/my-process-list/my-process-list-querier';
+import { ChatSessionId } from '../chat-session-id';
 
 export class MyProcessesTool extends ZodTool {
   public constructor(private readonly querier: MyProcessListQuerier) {
@@ -7,9 +8,7 @@ export class MyProcessesTool extends ZodTool {
   }
 
   public async handle(abortSignal: AbortSignal, { sessionId }: ToolContext) {
-    // TODO
-    const userName = sessionId.split(':')[0];
-
+    const { userName } = ChatSessionId.decode(sessionId);
     return await this.querier.query(abortSignal, userName);
   }
 }

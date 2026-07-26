@@ -25,7 +25,7 @@ export class ChatSessionResolver implements BaseChatSessionResolver {
     const authToken = getAuthToken(httpRequest);
     if (params.admin === true) {
       return {
-        sessionId: ChatSessionId.createAdmin(authToken.userName).serialize(),
+        sessionId: ChatSessionId.createAdmin(authToken.userName).encode(),
         backendTools: [],
         backendToolsHash: '',
         llmClient: this.llmClient,
@@ -35,7 +35,7 @@ export class ChatSessionResolver implements BaseChatSessionResolver {
     if (typeof params.name === 'string') {
       // TODO: support user-defined channels
       return {
-        sessionId: ChatSessionId.createUserMainChannel(authToken.userName).serialize(),
+        sessionId: ChatSessionId.createUserMainChannel(authToken.userName).encode(),
         backendTools: this.userToolSetProvider.tools,
         backendToolsHash: this.userToolSetProvider.hash,
         llmClient: this.llmClient,

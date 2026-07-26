@@ -4,6 +4,7 @@ import { ProcessRepository } from '../../repositories/process-repository/process
 import { ProcessExecutionVariableValues } from '@aila/model';
 import { LazyProcessExecutor } from '../../process-executor/lazy-process-executor';
 import z from 'zod/v4';
+import { ChatSessionId } from '../chat-session-id';
 
 const FAST_TIMEOUT = 3_000;
 
@@ -24,7 +25,7 @@ export class StartMyProcessTool extends ZodTool<Arg> {
   }
 
   protected async handle(abortSignal: AbortSignal, { sessionId }: ToolContext, arg: Arg) {
-    const userName = sessionId.split(':')[0];
+    const { userName } = ChatSessionId.decode(sessionId);
 
     const hasAccess = await this.accessQuerier.hasAccess(abortSignal, userName, arg.name);
     if (!hasAccess) {

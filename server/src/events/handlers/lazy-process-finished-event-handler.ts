@@ -11,7 +11,7 @@ export class LazyProcessFinishedEventHandler implements EventHandler<LazyProcess
   public constructor(private readonly liveSessionStore: LiveChatSessionStore) {}
 
   public async handle(event: LazyProcessFinishedEvent) {
-    const sessionId = ChatSessionId.createUserMainChannel(event.userName).serialize();
+    const sessionId = ChatSessionId.createUserMainChannel(event.userName).encode();
     const session = this.liveSessionStore.tryGetById(sessionId);
     if (!session) {
       this.logger.log(`Cannot find session: ${sessionId}`);
