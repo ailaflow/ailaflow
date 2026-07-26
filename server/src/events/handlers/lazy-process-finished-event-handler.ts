@@ -1,4 +1,4 @@
-import { ChatSessionStore } from '@aibindkit/express';
+import { LiveChatSessionStore } from '@aibindkit/express';
 import { ChatSessionIdProvider } from '../../chat-session/chat-session-id-provider';
 import { EventHandler } from '../event-handler';
 import { LazyProcessFinishedEvent } from './lazy-process-finished-event';
@@ -10,12 +10,12 @@ export class LazyProcessFinishedEventHandler implements EventHandler<LazyProcess
 
   public constructor(
     private readonly sessionIdProvider: ChatSessionIdProvider,
-    private readonly sessionStore: ChatSessionStore
+    private readonly liveSessionStore: LiveChatSessionStore
   ) {}
 
   public async handle(event: LazyProcessFinishedEvent) {
     const sessionId = this.sessionIdProvider.getUserDefaultChannel(event.userName);
-    const session = this.sessionStore.tryGetById(sessionId);
+    const session = this.liveSessionStore.tryGetById(sessionId);
     if (!session) {
       this.logger.log(`Cannot find session: ${sessionId}`);
       return;

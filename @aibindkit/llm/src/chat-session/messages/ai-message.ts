@@ -1,6 +1,6 @@
 import { Message, MessageCompletionResult } from './message';
 import { ToolSet } from '../tools/tool-set';
-import { SessionStack } from '../session-stack';
+import { ChatSessionStack } from '../chat-session-stack';
 import { LlmClient } from '../../client/llm-client';
 import type { CompletedMessage, ToolCall } from '@aibindkit/core';
 import { MessageType } from '@aibindkit/core';
@@ -14,7 +14,7 @@ export class AiMessage implements Message {
     private readonly toolSet: ToolSet
   ) {}
 
-  public async complete(abortSignal: AbortSignal, stack: SessionStack): Promise<MessageCompletionResult> {
+  public async complete(abortSignal: AbortSignal, stack: ChatSessionStack): Promise<MessageCompletionResult> {
     const completedMessages = stack.getCompletedMessagesBeforeLast();
     const toolDescriptors = this.toolSet.getDescriptorsOrUndefined();
 

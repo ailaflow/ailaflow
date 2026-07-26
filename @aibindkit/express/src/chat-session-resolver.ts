@@ -1,5 +1,5 @@
 import type { Request } from 'express';
-import type { ChatSession, LlmClient, Tool } from '@aibindkit/llm';
+import type { LlmClient, Tool } from '@aibindkit/llm';
 
 export class ChatSessionInitializerError extends Error {
   public static is(error: unknown): error is ChatSessionInitializerError {
@@ -17,7 +17,7 @@ export interface ResolvedChatSession {
   backendTools: Tool[];
   backendToolsHash: string;
   llmClient: LlmClient;
-  activate(session: ChatSession): void;
+  systemPrompt?: string;
 }
 
 export interface ChatSessionResolver {

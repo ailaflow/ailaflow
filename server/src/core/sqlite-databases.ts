@@ -1,28 +1,33 @@
 import { DatabaseSync } from 'node:sqlite';
 import { ServerPaths } from './server-paths';
-import path from 'path';
+import { join } from 'path';
 
 export class SqliteDatabases {
   public readonly authTokenDb: DatabaseSync;
   public readonly modelDb: DatabaseSync;
+  public readonly chatSessionDb: DatabaseSync;
+  private readonly dbs: DatabaseSync[] = [];
 
   public constructor(serverPaths: ServerPaths) {
     const dataFolderPath = serverPaths.getDatabaseFolderPath();
 
-    this.authTokenDb = new DatabaseSync(path.join(dataFolderPath, 'authToken.db'), {
-      open: true
-    });
-    this.modelDb = new DatabaseSync(path.join(dataFolderPath, 'model.db'), {
-      open: true
-    });
+    this.authTokenDb = this.create(join(dataFolderPath, 'authToken.db'));
+    this.modelDb = this.create(join(dataFolderPath, 'model.db'));
+    this.chatSessionDb = this.create(join(dataFolderPath, 'chatSession.db'));
+  }
 
-    for (const db of [this.authTokenDb, this.modelDb]) {
-      db.exec(`PRAGMA foreign_keys = ON`);
-    }
+  private create(filePath: string): DatabaseSync {
+    const db = new DatabaseSync(filePath, {
+      open: true
+    });
+    db.exec(`PRAGMA foreign_keys = ON`);
+    this.dbs.push(db);
+    return db;
   }
 
   public dispose() {
-    this.authTokenDb.close();
-    this.modelDb.close();
+    for (const db of this.dbs) {
+      db.close();
+    }
   }
 }

@@ -1,13 +1,13 @@
 import type { Request, Response } from 'express';
 import { interruptChatRequestSchema } from '@aibindkit/core';
 import type { Endpoint } from './endpoint';
-import { ChatSessionStore } from '../chat-session-store';
+import { LiveChatSessionStore } from '../live-chat-session-store';
 
 export class InterruptChatEndpoint implements Endpoint {
   public readonly method = 'post';
   public readonly path = '/api/chat/interrupt';
 
-  public constructor(private readonly sessionStore: ChatSessionStore) {}
+  public constructor(private readonly liveChatSessionStore: LiveChatSessionStore) {}
 
   public handle(req: Request, res: Response) {
     const { data: request, error } = interruptChatRequestSchema.safeParse(req.body);
@@ -16,7 +16,7 @@ export class InterruptChatEndpoint implements Endpoint {
       return;
     }
 
-    const chatSession = this.sessionStore.tryGetByToken(request.sessionToken);
+    const chatSession = this.liveChatSessionStore.tryGetByToken(request.sessionToken);
     if (!chatSession) {
       res.status(404).json({ error: 'Chat session not found' }).end();
       return;

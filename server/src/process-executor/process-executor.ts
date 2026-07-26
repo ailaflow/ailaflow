@@ -6,7 +6,7 @@ import { activitySet } from './activities/activity-set';
 import { ProcessLogger } from './services/process-logger';
 import { ProcessVariableManager } from './services/process-variable-manager';
 import { ProcessScriptExecutor } from './services/process-script-executor';
-import { randomUUID } from 'crypto';
+import { randomBytes } from 'crypto';
 import { ProcessExecutionStore } from './process-execution-store';
 import { ProcessExecutionVariableValues } from '@aila/model';
 
@@ -19,7 +19,7 @@ export class ProcessExecutor {
   ) {}
 
   public initialize(process: Process, input: ProcessExecutionVariableValues): ProcessExecution {
-    const executionId = randomUUID();
+    const executionId = randomBytes(24).toString('hex');
 
     const machine = this.builder.build(process.definition);
 

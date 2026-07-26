@@ -10,7 +10,7 @@ export class SystemMessage implements Message {
     public readonly content: string
   ) {}
 
-  public async complete(): Promise<MessageCompletionResult> {
+  public complete(): MessageCompletionResult {
     const completedMessage: CompletedMessage = {
       role: 'system',
       content: [

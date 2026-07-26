@@ -1,5 +1,5 @@
 import { ChatSessionInitializerError, ChatSessionResolver as BaseChatSessionResolver, ResolvedChatSession } from '@aibindkit/express';
-import { ChatSession, LlmClient } from '@aibindkit/llm';
+import { LlmClient } from '@aibindkit/llm';
 import { readFileSync } from 'fs';
 import { getAuthToken } from '../api/auth/auth-middleware';
 import { ServerPaths } from '../core/server-paths';
@@ -30,9 +30,7 @@ export class ChatSessionResolver implements BaseChatSessionResolver {
         backendTools: [],
         backendToolsHash: '',
         llmClient: this.llmClient,
-        activate: (session: ChatSession) => {
-          session.setSystemMessage(this.adminSystemPrompt);
-        }
+        systemPrompt: this.adminSystemPrompt
       };
     }
 
@@ -42,9 +40,7 @@ export class ChatSessionResolver implements BaseChatSessionResolver {
         backendTools: this.userToolSetProvider.tools,
         backendToolsHash: this.userToolSetProvider.hash,
         llmClient: this.llmClient,
-        activate: (session: ChatSession) => {
-          session.setSystemMessage(this.userSystemPrompt);
-        }
+        systemPrompt: this.userSystemPrompt
       };
     }
 

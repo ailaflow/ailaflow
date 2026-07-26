@@ -2,9 +2,11 @@ import type { MessageChatUpdate, MessageMetadata } from '@aibindkit/core';
 import { MessageType, SimpleEvent } from '@aibindkit/core';
 import { Message, MessageCompletionResult } from './messages/message';
 import { MessageFactory } from './messages/message-factory';
-import { SessionStack } from './session-stack';
+import { ChatSessionStack } from './chat-session-stack';
 import { ChatSessionQueue } from './chat-session-queue';
 import { ToolContext } from './tools';
+import { ChatSessionStorage } from './chat-session-storage';
+import { ChatSessionItem } from './chat-session-item';
 
 export interface ChatSessionUpdate {
   isWorking: boolean;
@@ -16,13 +18,14 @@ export class ChatSession {
   public readonly onMessageCompleted = new SimpleEvent<ChatSessionUpdate>();
   public readonly onMessageFailed = new SimpleEvent<ChatSessionUpdate>();
   public readonly onReset = new SimpleEvent<void>();
+  public readonly onStackStoreError = new SimpleEvent<Error>();
 
   private interruptAbortController = new AbortController();
   private isWorking = false;
   private isInterrupted = false;
   private lastId = 0;
 
-  private readonly stack = new SessionStack();
+  private readonly stack = new ChatSessionStack();
   private readonly queue = new ChatSessionQueue();
   private systemMessage?: string;
 
@@ -34,7 +37,8 @@ export class ChatSession {
   public constructor(
     public readonly id: string,
     public readonly token: string,
-    public readonly hash: string,
+    public readonly toolsHash: string,
+    private readonly storage: ChatSessionStorage,
     private readonly messageFactory: MessageFactory
   ) {}
 
@@ -78,6 +82,7 @@ export class ChatSession {
     this.queue.clear();
     this.stack.clear();
     this.onReset.emit();
+    void this.save();
   }
 
   public getAll(): MessageChatUpdate[] {
@@ -85,15 +90,54 @@ export class ChatSession {
     const result: MessageChatUpdate[] = [];
     for (const item of all) {
       result.push({
-        id: item.message.id,
-        type: item.message.type,
-        metadata: item.message.metadata,
+        id: item.id,
+        type: item.type,
+        metadata: item.metadata,
         isInterrupted: item.isInterrupted,
         failReason: item.failReason,
         completedMessages: item.completedMessages
       });
     }
     return result;
+  }
+
+  public load(items: ReadonlyArray<ChatSessionItem>) {
+    if (items.length === 0) {
+      throw new Error('Cannot load an empty session');
+    }
+
+    this.stack.clear();
+    let start = 0;
+    if (this.systemMessage) {
+      const index = items.findIndex(item => item.type === MessageType.SYSTEM);
+      if (index === 0) {
+        const systemMessageId = items[0].id;
+        const systemMessage = this.messageFactory.createSystem(systemMessageId, this.systemMessage);
+        this.stack.push(systemMessage);
+        const result = systemMessage.complete();
+        this.stack.complete(systemMessage, result.completedMessages);
+        start = 1;
+      }
+    }
+    this.stack.load(items, start, items.length);
+    this.lastId = items[items.length - 1].id;
+  }
+
+  public dump(): ReadonlyArray<ChatSessionItem> {
+    return this.stack.all();
+  }
+
+  /**
+   * The save operation is best-effort, and errors are emitted via the onStackStoreError event.
+   */
+  private async save() {
+    try {
+      const abortSignal = AbortSignal.timeout(3_000);
+      await this.storage.save(abortSignal, this.id, this.dump());
+    } catch (e) {
+      const error = e instanceof Error ? e : new Error(String(e));
+      this.onStackStoreError.emit(error);
+    }
   }
 
   private tryNext() {
@@ -103,14 +147,14 @@ export class ChatSession {
 
     const last = this.stack.tryGetLast();
     let message: Message;
-    if (last && last.message.type === MessageType.TOOL) {
+    if (last && last.type === MessageType.TOOL) {
       message = this.messageFactory.createAi(this.nextId());
     } else {
       const nextMessage = this.queue.shift();
       if (nextMessage) {
         message = nextMessage;
       } else {
-        const isLastAi = last?.message.type === MessageType.AI;
+        const isLastAi = last?.type === MessageType.AI;
         if (isLastAi) {
           return false;
         }
@@ -125,6 +169,8 @@ export class ChatSession {
   }
 
   private async next(message: Message) {
+    void this.save();
+
     let lastMetadata = message.metadata;
     this.onMessageStarted.emit({
       isWorking: true,
@@ -149,6 +195,8 @@ export class ChatSession {
       } else {
         this.stack.fail(message, failReason);
       }
+      void this.save();
+
       // TODO: we should probably restore user messages in UI here, that a user won't lose their input if the session fails.
       this.queue.clear();
 
@@ -168,6 +216,7 @@ export class ChatSession {
     }
 
     this.stack.complete(message, result.completedMessages);
+    void this.save();
 
     if (result.toolCalls) {
       const tid = this.nextId();

@@ -11,7 +11,7 @@ export class UserMessage implements Message {
     public readonly metadata?: MessageMetadata
   ) {}
 
-  public async complete(): Promise<MessageCompletionResult> {
+  public complete(): MessageCompletionResult {
     const completedMessage: CompletedMessage = {
       role: 'user',
       content: [

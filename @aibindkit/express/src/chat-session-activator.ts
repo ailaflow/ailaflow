@@ -1,24 +1,29 @@
 import type { Request } from 'express';
 import type { RestoreChatRequest } from '@aibindkit/core';
-import { ChatSession, ChatSessionFactory, FrontendToolFactory, ToolSet } from '@aibindkit/llm';
+import { ChatSession, ChatSessionFactory, ChatSessionItem, ChatSessionStorage, FrontendToolFactory, ToolSet } from '@aibindkit/llm';
 import type { ChatSessionResolver } from './chat-session-resolver';
-import { ChatSessionStore } from './chat-session-store';
+import { LiveChatSessionStore } from './live-chat-session-store';
 
 export class ChatSessionActivator {
   public constructor(
-    private readonly sessionStore: ChatSessionStore,
+    private readonly liveSessionStore: LiveChatSessionStore,
     private readonly sessionResolver: ChatSessionResolver,
+    private readonly sessionStorage: ChatSessionStorage,
     private readonly chatSessionFactory: ChatSessionFactory,
     private readonly frontendToolFactory: FrontendToolFactory
   ) {}
 
-  public getOrActivate(httpRequest: Request, restoreRequest: RestoreChatRequest): ChatSession {
+  public async getOrActivate(abortSignal: AbortSignal, httpRequest: Request, restoreRequest: RestoreChatRequest): Promise<ChatSession> {
     const resolved = this.sessionResolver.resolve(httpRequest, restoreRequest.params);
-    const hash = resolved.backendToolsHash.concat(restoreRequest.frontendToolsHash);
+    const toolsHash = resolved.backendToolsHash.concat(restoreRequest.frontendToolsHash);
 
-    let session = this.sessionStore.tryGetById(resolved.sessionId);
-    if (session && session.hash === hash) {
-      return session;
+    let session = this.liveSessionStore.tryGetById(resolved.sessionId);
+    let items: ReadonlyArray<ChatSessionItem> | null = null;
+    if (session) {
+      if (session.toolsHash === toolsHash) {
+        return session;
+      }
+      items = session.dump();
     }
 
     const toolSet = new ToolSet();
@@ -29,9 +34,19 @@ export class ChatSessionActivator {
       toolSet.addTool(tool);
     }
 
-    session = this.chatSessionFactory.create(resolved.sessionId, hash, resolved.llmClient, toolSet);
-    this.sessionStore.set(session);
-    resolved.activate(session);
+    if (!items) {
+      items = await this.sessionStorage.tryGet(abortSignal, resolved.sessionId);
+    }
+
+    session = this.chatSessionFactory.create(resolved.sessionId, toolsHash, resolved.llmClient, toolSet);
+    if (resolved.systemPrompt) {
+      session.setSystemMessage(resolved.systemPrompt);
+    }
+    if (items) {
+      session.load(items);
+    }
+
+    this.liveSessionStore.set(session);
     return session;
   }
 }

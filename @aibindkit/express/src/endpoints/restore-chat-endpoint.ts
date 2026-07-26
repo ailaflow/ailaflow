@@ -13,16 +13,17 @@ export class RestoreChatEndpoint implements Endpoint {
 
   public constructor(private readonly activator: ChatSessionActivator) {}
 
-  public handle(req: Request, res: Response) {
+  public async handle(req: Request, res: Response) {
     const { data: request, error } = restoreChatRequestSchema.safeParse(req.body);
     if (error) {
       res.status(400).json({ error: 'Invalid request body' }).end();
       return;
     }
 
+    const abortSignal = AbortSignal.timeout(3_000);
     let chatSession: ChatSession;
     try {
-      chatSession = this.activator.getOrActivate(req, request);
+      chatSession = await this.activator.getOrActivate(abortSignal, req, request);
     } catch (e) {
       if (ChatSessionInitializerError.is(e)) {
         res.status(400).json({ error: e.message }).end();

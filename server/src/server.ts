@@ -3,7 +3,7 @@ import { ServerPaths } from './core/server-paths';
 import express from 'express';
 import { SandboxInstanceManager } from './sandbox/sandbox-instance-manager';
 import { OpenaiLlmClient } from '@aibindkit/llm';
-import { DefaultChatSessionStore, setupServer } from '@aibindkit/express';
+import { LiveChatSessionStore, setupServer } from '@aibindkit/express';
 import { LoginEndpoint } from './api/auth/login-endpoint';
 import { Router } from './api/router';
 import { UserRepository } from './repositories/user-repository/user-repository';
@@ -57,6 +57,9 @@ import { LazyProcessExecutor } from './process-executor/lazy-process-executor';
 import { EventBus } from './events/event-bus';
 import { LazyProcessFinishedEventHandler } from './events/handlers/lazy-process-finished-event-handler';
 import { ChatSessionIdProvider } from './chat-session/chat-session-id-provider';
+import { ChatSessionStorage } from './chat-session/chat-session-storage';
+import { ChatSessionRepository } from './repositories/chat-session-repository/chat-session-repository';
+import { SqliteChatSessionRepository } from './repositories/chat-session-repository/sqlite-chat-session-repository';
 
 const PORT = process.env.PORT || 2048;
 
@@ -74,6 +77,7 @@ export class Server {
     let authTokenRepository: AuthTokenRepository;
     let processRepository: ProcessRepository;
     let sandboxRepository: SandboxRepository;
+    let chatSessionRepository: ChatSessionRepository;
     let processListQuerier: ProcessListQuerier;
     let myProcessListQuerier: MyProcessListQuerier;
     let myProcessAccessQuerier: MyProcessAccessQuerier;
@@ -88,6 +92,7 @@ export class Server {
     authTokenRepository = new SqliteAuthTokenRepository(sqliteDatabases);
     processRepository = new SqliteProcessRepository(sqliteDatabases);
     sandboxRepository = new SqliteSandboxRepository(sqliteDatabases);
+    chatSessionRepository = new SqliteChatSessionRepository(sqliteDatabases);
     processListQuerier = new SqliteProcessListQuerier(sqliteDatabases);
     myProcessListQuerier = new SqliteMyProcessListQuerier(sqliteDatabases);
     myProcessAccessQuerier = new SqliteMyProcessAccessQuerier(sqliteDatabases);
@@ -100,7 +105,8 @@ export class Server {
       resourceAccessRepository.setup(abortSignal),
       authTokenRepository.setup(abortSignal),
       processRepository.setup(abortSignal),
-      sandboxRepository.setup(abortSignal)
+      sandboxRepository.setup(abortSignal),
+      chatSessionRepository.setup(abortSignal)
     ]);
 
     const processExecutionStore = new ProcessExecutionStore();
@@ -110,10 +116,11 @@ export class Server {
     ]);
 
     const sessionIdProvider = new ChatSessionIdProvider();
-    const chatSessionStore = new DefaultChatSessionStore();
+    const sessionStorage = new ChatSessionStorage(chatSessionRepository);
+    const liveSessionStore = new LiveChatSessionStore();
 
     const eventBus = new EventBus();
-    eventBus.registerHandler(new LazyProcessFinishedEventHandler(sessionIdProvider, chatSessionStore));
+    eventBus.registerHandler(new LazyProcessFinishedEventHandler(sessionIdProvider, liveSessionStore));
 
     const sandboxInstanceManager = new SandboxInstanceManager(serverPaths, sandboxRepository, rpcHandler);
 
@@ -136,7 +143,8 @@ export class Server {
 
     setupServer(app, {
       sessionResolver,
-      sessionStore: chatSessionStore,
+      liveSessionStore,
+      sessionStorage,
       middleware: authMiddleware.user
     });
 

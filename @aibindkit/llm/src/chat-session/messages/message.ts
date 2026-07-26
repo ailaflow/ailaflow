@@ -1,7 +1,7 @@
 import type { MessageMetadata, ToolCall } from '@aibindkit/core';
 import type { CompletedMessage } from '@aibindkit/core';
 import { MessageType } from '@aibindkit/core';
-import { SessionStack } from '../session-stack';
+import { ChatSessionStack } from '../chat-session-stack';
 
 export interface MessageCompletionResult {
   completedMessages: CompletedMessage[];
@@ -13,7 +13,7 @@ export interface Message {
   id: number;
   type: MessageType;
   metadata?: MessageMetadata;
-  complete(abortSignal: AbortSignal, stack: SessionStack): Promise<MessageCompletionResult>;
+  complete(abortSignal: AbortSignal, stack: ChatSessionStack): MessageCompletionResult | Promise<MessageCompletionResult>;
   interrupt?(): CompletedMessage;
   fail?(reason: string): CompletedMessage;
 }

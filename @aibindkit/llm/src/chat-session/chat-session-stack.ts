@@ -1,27 +1,23 @@
 import type { CompletedMessage } from '@aibindkit/core';
 import { Message } from './messages/message';
+import { ChatSessionItem } from './chat-session-item';
 
-export interface SessionStackItem {
-  message: Message;
-  completedMessages?: CompletedMessage[];
-  failReason?: string;
-  isInterrupted?: true;
-}
-
-export class SessionStack {
-  private readonly stack: SessionStackItem[] = [];
-  private readonly map = new Map<Message, SessionStackItem>();
+export class ChatSessionStack {
+  private readonly stack: ChatSessionItem[] = [];
+  private readonly map = new Map<number, ChatSessionItem>();
 
   public push(message: Message): void {
-    const item: SessionStackItem = {
-      message
+    const item: ChatSessionItem = {
+      id: message.id,
+      type: message.type,
+      metadata: message.metadata
     };
     this.stack.push(item);
-    this.map.set(message, item);
+    this.map.set(message.id, item);
   }
 
   public complete(message: Message, completedMessages: CompletedMessage[]) {
-    const item = this.map.get(message);
+    const item = this.map.get(message.id);
     if (!item) {
       throw new Error('Cannot find message');
     }
@@ -29,7 +25,7 @@ export class SessionStack {
   }
 
   public fail(message: Message, reason: string) {
-    const item = this.map.get(message);
+    const item = this.map.get(message.id);
     if (!item) {
       throw new Error('Cannot find message');
     }
@@ -40,7 +36,7 @@ export class SessionStack {
   }
 
   public interrupt(message: Message) {
-    const item = this.map.get(message);
+    const item = this.map.get(message.id);
     if (!item) {
       throw new Error('Cannot find message');
     }
@@ -50,7 +46,7 @@ export class SessionStack {
     }
   }
 
-  public tryGetLast(): SessionStackItem | null {
+  public tryGetLast(): ChatSessionItem | null {
     return this.stack.length > 0 ? this.stack[this.stack.length - 1] : null;
   }
 
@@ -69,12 +65,20 @@ export class SessionStack {
     return result;
   }
 
-  public all(): ReadonlyArray<SessionStackItem> {
+  public all(): ReadonlyArray<ChatSessionItem> {
     return this.stack;
   }
 
   public isEmpty(): boolean {
     return this.stack.length === 0;
+  }
+
+  public load(items: ReadonlyArray<ChatSessionItem>, start: number, end: number) {
+    for (let i = start; i < end; i++) {
+      const item = items[i];
+      this.stack.push(item);
+      this.map.set(item.id, item);
+    }
   }
 
   public clear() {

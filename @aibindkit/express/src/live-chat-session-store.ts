@@ -1,7 +1,6 @@
 import { ChatSession } from '@aibindkit/llm';
-import { ChatSessionStore } from './chat-session-store';
 
-export class DefaultChatSessionStore implements ChatSessionStore {
+export class LiveChatSessionStore {
   private readonly sessionsById = new Map<string, ChatSession>();
   private readonly sessionsByToken = new Map<string, ChatSession>();
 
@@ -18,7 +17,7 @@ export class DefaultChatSessionStore implements ChatSessionStore {
     this.sessionsByToken.set(session.token, session);
   }
 
-  public tryDelete(session: ChatSession) {
+  public tryDelete(session: ChatSession): boolean {
     const i = this.sessionsById.delete(session.id);
     const t = this.sessionsByToken.delete(session.token);
     return i || t;
