@@ -48,6 +48,20 @@ export class ChatSessionStack {
     return this.stack.length > 0 ? this.stack[this.stack.length - 1] : null;
   }
 
+  public trySetMetadata(id: number, completedMessageIndex: number, key: string, value: unknown): ChatMessage | null {
+    const message = this.map.get(id);
+    if (message && message.completedMessages && message.completedMessages.length > completedMessageIndex) {
+      let metadata = message.completedMessages[completedMessageIndex].metadata;
+      if (!metadata) {
+        metadata = {};
+        message.completedMessages[completedMessageIndex].metadata = metadata;
+      }
+      metadata[key] = value;
+      return message;
+    }
+    return null;
+  }
+
   public getCompletedLlmMessagesBeforeLast(): LlmMessage[] {
     const result: LlmMessage[] = [];
     for (let i = 0; i < this.stack.length - 1; i++) {

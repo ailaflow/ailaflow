@@ -12,21 +12,21 @@ export class SqliteProcessListQuerier implements ProcessListQuerier {
 
   public async query(_: AbortSignal): Promise<ProcessLiteDto[]> {
     const statement = this.db.prepare(`
-      SELECT name, description, userAccessExpression, startVariablesSchemas
+      SELECT name, description, userAccessExpression, startVariableSchemas
       FROM processes
     `);
     const rows = statement.all() as {
       name: string;
       description: string;
       userAccessExpression: string;
-      startVariablesSchemas: string;
+      startVariableSchemas: string;
     }[];
 
     return rows.map(row => ({
       name: row.name,
       description: row.description,
       userAccessExpression: row.userAccessExpression,
-      startVariablesSchemas: JSON.parse(row.startVariablesSchemas)
+      startVariableSchemas: JSON.parse(row.startVariableSchemas)
     }));
   }
 }

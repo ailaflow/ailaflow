@@ -8,7 +8,7 @@ import { ToolContext } from './tools';
 import { ChatSessionStorage } from './chat-session-storage';
 
 export interface ChatSessionUpdate {
-  isWorking: boolean;
+  isWorking?: boolean;
   update: ChatMessageUpdate;
 }
 
@@ -43,6 +43,20 @@ export class ChatSession {
 
   public setSystemMessage(systemMessage: string) {
     this.systemMessage = systemMessage;
+  }
+
+  public setMetadata(id: number, completedMessageIndex: number, key: string, value: unknown) {
+    const message = this.stack.trySetMetadata(id, completedMessageIndex, key, value);
+    if (!message) {
+      throw new Error(`Cannot find message with id ${id} at completed message index ${completedMessageIndex}.`);
+    }
+    this.onMessageCompleted.emit({
+      update: {
+        id,
+        completedMessages: message.completedMessages
+      }
+    });
+    void this.save();
   }
 
   public queueUserMessage(content: string, metadata?: ChatMessageMetadata): number {

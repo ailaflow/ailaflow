@@ -60,6 +60,9 @@ import { ChatSessionStorage } from './chat-session/chat-session-storage';
 import { ChatSessionRepository } from './repositories/chat-session-repository/chat-session-repository';
 import { SqliteChatSessionRepository } from './repositories/chat-session-repository/sqlite-chat-session-repository';
 import { OpenMyProcessStartFormTool } from './chat-session/user-tools/open-my-process-start-form-tool';
+import { GetMyProcessStartFormEndpoint } from './api/my-process/get-my-process-start-form-endpoint';
+import { MyProcessProvider } from './my-process/my-process-provider';
+import { StartMyProcessEndpoint } from './api/my-process/start-my-process-endpoint';
 
 const PORT = process.env.PORT || 2048;
 
@@ -127,6 +130,7 @@ export class Server {
     const lazyProcessExecutor = new LazyProcessExecutor(processExecutor, eventBus);
 
     const passwordHasher = new PasswordHasher();
+    const myProcessProvider = new MyProcessProvider(myProcessAccessQuerier, processRepository);
 
     const llmClient = new OpenaiLlmClient({
       baseUrl: process.env.AI_PROVIDER_BASE_URL!,
@@ -134,8 +138,8 @@ export class Server {
     });
     const userToolSetProvider = new UserToolSetProvider([
       new MyProcessesTool(myProcessListQuerier),
-      new StartMyProcessTool(myProcessAccessQuerier, processRepository, lazyProcessExecutor),
-      new OpenMyProcessStartFormTool(myProcessAccessQuerier, processRepository)
+      new StartMyProcessTool(myProcessProvider, lazyProcessExecutor),
+      new OpenMyProcessStartFormTool(myProcessProvider)
     ]);
 
     const authMiddleware = new AuthMiddleware(authTokenRepository);
@@ -153,6 +157,8 @@ export class Server {
       new LoginEndpoint(userRepository, authTokenRepository, passwordHasher),
       new RefreshAuthTokenEndpoint(authTokenRepository),
       new GetMyProcessesEndpoint(myProcessListQuerier),
+      new GetMyProcessStartFormEndpoint(myProcessProvider),
+      new StartMyProcessEndpoint(myProcessProvider, lazyProcessExecutor, liveSessionStore),
       new GetProcessesEndpoint(processListQuerier),
       new GetProcessEndpoint(processRepository),
       new SaveProcessEndpoint(processRepository, resourceAccessRepository, sandboxListQuerier),

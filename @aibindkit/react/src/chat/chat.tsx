@@ -17,14 +17,14 @@ export interface ChatProps {
   transport: ChatTransport;
   frontendTools: ToolDescriptor[];
   params: Record<string, unknown>;
-  metadataRenderer?: ChatMessageRenderer;
+  messageRenderer?: ChatMessageRenderer;
   messageFilter?: ChatMessageFilter;
   frontEndToolCallsHandler: FrontEndToolCallsHandler;
 }
 
 interface ChatState {
+  sessionToken: string | null;
   lastUpdate: ChatUpdate | null;
-  isLoading: boolean;
   isWorking: boolean;
   connectionError: string | null;
   messages: ChatMessageUpdate[];
@@ -40,7 +40,6 @@ export function Chat(props: ChatProps) {
       }) satisfies RestoreChatRequest,
     [props.params, props.frontendTools]
   );
-  const sessionTokenRef = useRef<string | null>(null);
 
   const lastHandledToolCallId = useRef<number>(-1);
   const pendingToolAbortControllers = useRef(new Set<AbortController>());
@@ -53,11 +52,14 @@ export function Chat(props: ChatProps) {
   const [reconnectKey, setReconnectKey] = useState(0);
   const [message, setMessage] = useState('');
   const [state, dispatch] = useReducer(
-    (currentState: ChatState, update: ChatUpdate & { isLoading?: boolean; connectionError?: string | null }): ChatState => {
+    (currentState: ChatState, update: ChatUpdate & { deleteSessionToken?: true; connectionError?: string | null }): ChatState => {
       const state: ChatState = { ...currentState };
       state.lastUpdate = update;
       if (update.sessionToken) {
-        state.isLoading = false;
+        state.sessionToken = update.sessionToken;
+      }
+      if (update.deleteSessionToken) {
+        state.sessionToken = null;
       }
       if (update.isReset) {
         state.messages = [];
@@ -78,9 +80,6 @@ export function Chat(props: ChatProps) {
           state.messages = [...state.messages, finalMessage];
         }
       }
-      if (update.isLoading !== undefined) {
-        state.isLoading = update.isLoading;
-      }
       if (update.isWorking !== undefined) {
         state.isWorking = update.isWorking;
       }
@@ -91,8 +90,8 @@ export function Chat(props: ChatProps) {
     },
     undefined,
     () => ({
+      sessionToken: null,
       lastUpdate: null,
-      isLoading: false,
       isWorking: false,
       lastToolMessageId: null,
       tools: null,
@@ -102,7 +101,7 @@ export function Chat(props: ChatProps) {
   );
 
   useEffect(() => {
-    if (!sessionTokenRef.current) {
+    if (!state.sessionToken) {
       return;
     }
     if (state.lastUpdate?.isReset) {
@@ -128,10 +127,10 @@ export function Chat(props: ChatProps) {
       const abortController = new AbortController();
       pendingToolAbortControllers.current.add(abortController);
       toolCallsHandler
-        .handle(abortController.signal, pendingCalls, sessionTokenRef.current)
+        .handle(abortController.signal, pendingCalls, state.sessionToken)
         .finally(() => pendingToolAbortControllers.current.delete(abortController));
     }
-  }, [state.lastUpdate && state.messages, toolCallsHandler]);
+  }, [state.sessionToken, state.lastUpdate && state.messages, toolCallsHandler]);
 
   useEffect(
     () => () => {
@@ -148,26 +147,25 @@ export function Chat(props: ChatProps) {
 
     const listener: ChatTransportListener = {
       onMessage(update) {
-        if (update.sessionToken) {
-          sessionTokenRef.current = update.sessionToken;
-        }
         dispatch(update);
       },
       onClose(e) {
         if (!abortController.signal.aborted) {
           const connectionError = e?.message ?? 'Connection closed';
-          dispatch({ isLoading: false, connectionError });
+          dispatch({ deleteSessionToken: true, connectionError });
         }
       }
     };
 
     async function connect() {
-      dispatch({ isLoading: true });
+      dispatch({ deleteSessionToken: true });
       try {
         await props.transport.restoreChat(abortController.signal, listener, request);
       } catch (e) {
-        const connectionError = (e as Error)?.message ?? String(e);
-        dispatch({ isLoading: false, connectionError });
+        if (!abortController.signal.aborted) {
+          const connectionError = (e as Error)?.message ?? String(e);
+          dispatch({ deleteSessionToken: true, connectionError });
+        }
       }
     }
 
@@ -176,10 +174,10 @@ export function Chat(props: ChatProps) {
   }, [request, reconnectKey, props.transport]);
 
   async function onSendMessage() {
-    if (sessionTokenRef.current && message.length > 0) {
+    if (state.sessionToken && message.length > 0) {
       const abortSignal = AbortSignal.timeout(3_000);
       await props.transport.sendChatMessage(abortSignal, {
-        sessionToken: sessionTokenRef.current,
+        sessionToken: state.sessionToken,
         message
       });
       setMessage('');
@@ -187,37 +185,36 @@ export function Chat(props: ChatProps) {
   }
 
   async function onStopClicked() {
-    if (sessionTokenRef.current && state.isWorking) {
+    if (state.sessionToken && state.isWorking) {
       const abortSignal = AbortSignal.timeout(3_000);
       await props.transport.interruptChat(abortSignal, {
-        sessionToken: sessionTokenRef.current
+        sessionToken: state.sessionToken
       });
     }
   }
 
   async function onStartNewConversation() {
-    if (sessionTokenRef.current) {
+    if (state.sessionToken) {
       const abortSignal = AbortSignal.timeout(3_000);
       await props.transport.restartChat(abortSignal, {
-        sessionToken: sessionTokenRef.current
+        sessionToken: state.sessionToken
       });
     }
   }
 
   function onReconnectClicked() {
-    dispatch({ isLoading: true, connectionError: null });
+    dispatch({ deleteSessionToken: true, connectionError: null });
     setReconnectKey(k => k + 1);
-    sessionTokenRef.current = null;
   }
 
   return (
     <ChatView
-      isLoading={state.isLoading}
       isWorking={state.isWorking}
+      sessionToken={state.sessionToken}
       connectionError={state.connectionError}
       messages={state.messages}
       message={message}
-      metadataRenderer={props.metadataRenderer}
+      messageRenderer={props.messageRenderer}
       messageFilter={props.messageFilter ?? defaultMessageFilter}
       onReconnectClicked={onReconnectClicked}
       onMessageChanged={setMessage}

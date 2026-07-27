@@ -42,7 +42,7 @@ export class ChatSessionActivator {
     if (resolved.systemPrompt) {
       session.setSystemMessage(resolved.systemPrompt);
     }
-    if (messages) {
+    if (messages && messages.length > 0) {
       session.load(messages);
     }
 

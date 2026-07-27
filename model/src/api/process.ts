@@ -7,7 +7,7 @@ const processLiteDtoSchema = z.object({
   name: z.string(),
   description: z.string(),
   userAccessExpression: z.string(),
-  startVariablesSchemas: jsonSchema
+  startVariableSchemas: jsonSchema
 });
 
 export const getProcessesResponseSchema = z.object({

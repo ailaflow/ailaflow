@@ -17,7 +17,7 @@ export class SqliteMyProcessListQuerier implements MyProcessListQuerier {
   public async query(_: AbortSignal, userName: string): Promise<MyProcessLiteDto[]> {
     const statement = this.db.prepare(`
       WITH ${this.resourceAccessQueryBuilder.buildAccessibleResourcesCte()}
-      SELECT p.name, p.description, p.startVariablesSchemas
+      SELECT p.name, p.description, p.startVariableSchemas
       FROM processes p
       JOIN accessible_resources ar
         ON ar.resource_id = 'process:' || p.name
@@ -26,13 +26,13 @@ export class SqliteMyProcessListQuerier implements MyProcessListQuerier {
     const rows = statement.all(userName) as {
       name: string;
       description: string;
-      startVariablesSchemas: string;
+      startVariableSchemas: string;
     }[];
 
     return rows.map(row => ({
       name: row.name,
       description: row.description,
-      startVariablesSchemas: JSON.parse(row.startVariablesSchemas)
+      startVariableSchemas: JSON.parse(row.startVariableSchemas)
     }));
   }
 }

@@ -85,7 +85,7 @@ export class Process {
     public userAccessExpression: string,
     public definition: ProcessDefinition,
     public hash: string,
-    public startVariablesSchemas: Record<string, JsonSchema> | null,
+    public startVariableSchemas: Record<string, JsonSchema> | null,
     public nSteps: number
   ) {}
 
@@ -102,7 +102,7 @@ export class Process {
     this.definition = data.definition;
     this.vvmCache = null;
     this.hash = data.hash;
-    this.startVariablesSchemas = extractStartVariableSchemas(data.definition);
+    this.startVariableSchemas = extractStartVariableSchemas(data.definition);
     this.nSteps = nSteps;
   }
 

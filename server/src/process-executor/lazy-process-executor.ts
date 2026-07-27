@@ -22,7 +22,7 @@ export class LazyProcessExecutor {
 
   public execute(
     abortSignal: AbortSignal,
-    fastTimeout: number,
+    fastTimeout: number | null,
     userName: string,
     process: Process,
     input: ProcessExecutionVariableValues
@@ -31,28 +31,47 @@ export class LazyProcessExecutor {
 
     return new Promise(resolve => {
       let released = false;
-      const to = setTimeout(() => {
-        if (!released) {
-          released = true;
-          resolve({
-            finished: false,
-            executionId: execution.id
-          });
-        }
-      }, fastTimeout);
+      let to: ReturnType<typeof setTimeout> | null = null;
 
-      execution.onFinished.subscribe(result => {
+      const onFinished = (result: ProcessExecutionResult) => {
         if (released) {
-          clearTimeout(to);
+          if (to) {
+            clearTimeout(to);
+            to = null;
+          }
           const event = new LazyProcessFinishedEvent(userName, execution.id, process.name, result);
           this.eventBus.publish(event);
+          released = true;
           return;
         }
         resolve({
           finished: true,
           result
         });
-      });
+      };
+
+      const resolveUnfinished = () => {
+        execution.onFinished.unsubscribe(onFinished);
+        resolve({
+          finished: false,
+          executionId: execution.id
+        });
+      };
+
+      execution.onFinished.subscribe(onFinished);
+
+      if (fastTimeout === null) {
+        released = true;
+        setTimeout(resolveUnfinished);
+      } else {
+        to = setTimeout(() => {
+          if (!released) {
+            released = true;
+            resolveUnfinished();
+          }
+        }, fastTimeout);
+      }
+
       execution.run(abortSignal);
     });
   }

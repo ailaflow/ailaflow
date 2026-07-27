@@ -19,7 +19,10 @@ import type {
   UpsertSandboxRequest,
   SaveUserRequest,
   SaveUserResponse,
-  GetMyProcessesResponse
+  GetMyProcessesResponse,
+  GetMyProcessStartFormResponse,
+  StartMyProcessRequest,
+  StartMyProcessResponse
 } from '@aila/model';
 
 export class ApiClient {
@@ -88,7 +91,7 @@ export class ProcessApiClient {
   }
 
   public async getProcess(abortSignal: AbortSignal, name: string): Promise<GetProcessResponse> {
-    return this.client.json(abortSignal, 'GET', `/api/processes/${encodeURIComponent(name)}`);
+    return this.client.json(abortSignal, 'GET', `/api/processes/${name}`);
   }
 
   public async testProcess(
@@ -97,7 +100,7 @@ export class ProcessApiClient {
     name: string,
     request: TestProcessRequest
   ) {
-    return this.client.sse(abortSignal, listener, 'POST', `/api/processes/${encodeURIComponent(name)}/test`, request);
+    return this.client.sse(abortSignal, listener, 'POST', `/api/processes/${name}/test`, request);
   }
 }
 
@@ -138,5 +141,13 @@ export class MyProcessApiClient {
 
   public async getMyProcesses(abortSignal: AbortSignal): Promise<GetMyProcessesResponse> {
     return this.client.json(abortSignal, 'GET', '/api/my-processes');
+  }
+
+  public getMyProcessStartForm(abortSignal: AbortSignal, name: string): Promise<GetMyProcessStartFormResponse> {
+    return this.client.json(abortSignal, 'GET', `/api/my-processes/${name}/start-form`);
+  }
+
+  public startMyProcess(abortSignal: AbortSignal, name: string, request: StartMyProcessRequest): Promise<StartMyProcessResponse> {
+    return this.client.json(abortSignal, 'POST', `/api/my-processes/${name}/start`, request);
   }
 }

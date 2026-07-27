@@ -1,10 +1,9 @@
 import { ToolContext, ZodTool, ZodToolExecutionResult } from '@aibindkit/llm';
-import { MyProcessAccessQuerier } from '../../queriers/my-process/my-process-access-querier';
-import { ProcessRepository } from '../../repositories/process-repository/process-repository';
 import { ProcessExecutionVariableValues } from '@aila/model';
 import { LazyProcessExecutor } from '../../process-executor/lazy-process-executor';
 import z from 'zod/v4';
 import { ChatSessionId } from '../chat-session-id';
+import { MyProcessProvider } from '../../my-process/my-process-provider';
 
 const FAST_TIMEOUT = 3_000;
 
@@ -17,8 +16,7 @@ type Arg = z.infer<typeof inputSchema>;
 
 export class StartMyProcessTool extends ZodTool<Arg> {
   public constructor(
-    private readonly accessQuerier: MyProcessAccessQuerier,
-    private readonly processRepository: ProcessRepository,
+    private readonly myProcessProvider: MyProcessProvider,
     private readonly lazyProcessExecutor: LazyProcessExecutor
   ) {
     super('start_my_process', 'Starts a new process', inputSchema);
@@ -27,8 +25,8 @@ export class StartMyProcessTool extends ZodTool<Arg> {
   protected async handle(abortSignal: AbortSignal, { sessionId }: ToolContext, arg: Arg): Promise<ZodToolExecutionResult> {
     const { userName } = ChatSessionId.decode(sessionId);
 
-    const hasAccess = await this.accessQuerier.hasAccess(abortSignal, userName, arg.name);
-    if (!hasAccess) {
+    const process = await this.myProcessProvider.tryGet(abortSignal, userName, arg.name);
+    if (!process) {
       return {
         content: {
           error: `Cannot find the "${arg.name}" process, or you do not have access to it`
@@ -36,16 +34,11 @@ export class StartMyProcessTool extends ZodTool<Arg> {
       };
     }
 
-    const process = await this.processRepository.tryGetByName(abortSignal, arg.name);
-    if (!process) {
-      throw new Error(`Cannot find the "${arg.name}" process, even though access was granted`);
-    }
-
     const input: ProcessExecutionVariableValues = {};
 
-    if (process.startVariablesSchemas) {
+    if (process.startVariableSchemas) {
       const validatorMap = process.getVariableValidatorMap();
-      for (const name of Object.keys(process.startVariablesSchemas)) {
+      for (const name of Object.keys(process.startVariableSchemas)) {
         const validator = validatorMap.get(name);
         if (!validator) {
           throw new Error('Cannot find validator');
