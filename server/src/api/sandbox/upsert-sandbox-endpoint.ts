@@ -1,7 +1,7 @@
 import { Request } from 'express';
 import { upsertSandboxRequestSchema } from '@aila/model';
-import { SandboxRepository } from '../../repositories/sandbox-repository/sandbox-repository';
-import { Sandbox } from '../../repositories/sandbox-repository/sandbox';
+import { SandboxRepository } from '../../repositories/sandbox/sandbox-repository';
+import { Sandbox } from '../../repositories/sandbox/sandbox';
 import { Endpoint } from '../framework/endpoint';
 import { parseBody } from '../framework/parse-body';
 import { getEndpointAbortSignal } from '../framework/endpoint-abort-signal';

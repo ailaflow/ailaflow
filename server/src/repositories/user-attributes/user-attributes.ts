@@ -1,6 +1,6 @@
 import { ALL_ATTRIBUTE_NAME, UserAttributes as Attributes, USER_NAME_ATTRIBUTE_NAME, UserAttributesValidator } from '@aila/model';
 import { UserAttributesRepositoryError } from './user-attributes-repository';
-import { User } from '../user-repository/user';
+import { User } from '../user/user';
 
 export class UserAttributes {
   public static create(user: User, attributes: Attributes): UserAttributes {

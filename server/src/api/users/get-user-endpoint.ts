@@ -1,7 +1,7 @@
 import { GetUserResponse } from '@aila/model';
 import { Request } from 'express';
-import { UserRepository } from '../../repositories/user-repository/user-repository';
-import { UserAttributesRepository } from '../../repositories/user-attributes-repository/user-attributes-repository';
+import { UserRepository } from '../../repositories/user/user-repository';
+import { UserAttributesRepository } from '../../repositories/user-attributes/user-attributes-repository';
 import { Endpoint } from '../framework/endpoint';
 import { EndpointError } from '../framework/endpoint-error';
 import { getEndpointAbortSignal } from '../framework/endpoint-abort-signal';

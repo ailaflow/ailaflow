@@ -1,4 +1,4 @@
-import { Process } from '../repositories/process-repository/process';
+import { Process } from '../repositories/process/process';
 import { SandboxHostPaths } from './sandbox-host-paths';
 import { SandboxRuntime } from './sandbox-runtime';
 import { HttpSseHandler } from '../core/http-client';

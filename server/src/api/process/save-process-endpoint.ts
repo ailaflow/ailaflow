@@ -7,14 +7,14 @@ import {
   SaveProcessResponse,
   VariableCachedValidator
 } from '@aila/model';
-import { ProcessRepository, ProcessRepositoryError } from '../../repositories/process-repository/process-repository';
+import { ProcessRepository, ProcessRepositoryError } from '../../repositories/process/process-repository';
 import { EndpointError } from '../framework/endpoint-error';
 import { SandboxListQuerier } from '../../queriers/sandbox-list/sandbox-list-querier';
 import { parseBody } from '../framework/parse-body';
-import { Process } from '../../repositories/process-repository/process';
+import { Process } from '../../repositories/process/process';
 import { getEndpointAbortSignal } from '../framework/endpoint-abort-signal';
-import { ResourceAccess, ResourceAccessRepository } from '../../repositories/resource-access-repository/resource-access-repository';
-import { ProcessResourceId } from '../../repositories/process-repository/process-resource-id';
+import { ResourceAccess, ResourceAccessRepository } from '../../repositories/resource-access/resource-access-repository';
+import { ProcessResourceId } from '../../repositories/process/process-resource-id';
 
 export class SaveProcessEndpoint implements Endpoint {
   public readonly method = 'post';

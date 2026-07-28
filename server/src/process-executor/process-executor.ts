@@ -1,5 +1,5 @@
 import { createWorkflowMachineBuilder } from 'sequential-workflow-machine';
-import { Process } from '../repositories/process-repository/process';
+import { Process } from '../repositories/process/process';
 import { SandboxInstanceManager } from '../sandbox/sandbox-instance-manager';
 import { ProcessExecution } from './process-execution';
 import { activitySet } from './activities/activity-set';

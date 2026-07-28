@@ -1,7 +1,7 @@
 import { Request } from 'express';
 import { Endpoint } from '../framework/endpoint';
 import { refreshTokenRequestSchema, RefreshTokenResponse } from '@aila/model';
-import { AuthToken, AuthTokenRepository } from '../../repositories/auth-token-repository/auth-token-repository';
+import { AuthToken, AuthTokenRepository } from '../../repositories/auth-token/auth-token-repository';
 import { EndpointError } from '../framework/endpoint-error';
 import { Logger } from '../../core/logger';
 import { parseBody } from '../framework/parse-body';

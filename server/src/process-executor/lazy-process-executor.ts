@@ -1,5 +1,5 @@
 import { ProcessExecutionResult, ProcessExecutionVariableValues } from '@aila/model';
-import { Process } from '../repositories/process-repository/process';
+import { Process } from '../repositories/process/process';
 import { ProcessExecutor } from './process-executor';
 import { EventBus } from '../events/event-bus';
 import { LazyProcessFinishedEvent } from '../events/handlers/lazy-process-finished-event';

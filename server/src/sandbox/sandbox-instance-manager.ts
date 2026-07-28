@@ -1,5 +1,5 @@
 import { ServerPaths } from '../core/server-paths';
-import { SandboxRepository } from '../repositories/sandbox-repository/sandbox-repository';
+import { SandboxRepository } from '../repositories/sandbox/sandbox-repository';
 import { SandboxInstance } from './sandbox-instance';
 import { SandboxRpcHandlerProvider } from './sandbox-rpc-handler-provider';
 

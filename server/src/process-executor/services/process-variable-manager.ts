@@ -1,5 +1,5 @@
 import z from 'zod/v4';
-import { VariableValidatorMap } from '../../repositories/process-repository/process';
+import { VariableValidatorMap } from '../../repositories/process/process';
 import { ProcessExecutionVariableValues } from '@aila/model';
 
 interface Variable {

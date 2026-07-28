@@ -1,9 +1,9 @@
 import { Request } from 'express';
 import { Endpoint } from '../framework/endpoint';
-import { UserRepository } from '../../repositories/user-repository/user-repository';
+import { UserRepository } from '../../repositories/user/user-repository';
 import { loginRequestSchema, LoginResponse } from '@aila/model';
-import { PasswordHasher } from '../../repositories/user-repository/password-hasher';
-import { AuthToken, AuthTokenRepository } from '../../repositories/auth-token-repository/auth-token-repository';
+import { PasswordHasher } from '../../repositories/user/password-hasher';
+import { AuthToken, AuthTokenRepository } from '../../repositories/auth-token/auth-token-repository';
 import { EndpointError } from '../framework/endpoint-error';
 import { parseBody } from '../framework/parse-body';
 import { getEndpointAbortSignal } from '../framework/endpoint-abort-signal';

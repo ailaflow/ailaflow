@@ -1,6 +1,6 @@
 import { ScriptDefinition } from '@aila/model';
 import { SandboxInstanceManager } from '../../sandbox/sandbox-instance-manager';
-import { Process } from '../../repositories/process-repository/process';
+import { Process } from '../../repositories/process/process';
 import { ProcessLogger } from './process-logger';
 import { HttpSseHandler } from '../../core/http-client';
 import { ExecuteCommandUpdate } from '../../sandbox/bridge-client';

@@ -2,7 +2,7 @@ import { testProcessRequestSchema, TestProcessUpdate } from '@aila/model';
 import { SseResponse } from '../../utilities/sse-response';
 import { Endpoint } from '../framework/endpoint';
 import { Request, Response } from 'express';
-import { ProcessRepository } from '../../repositories/process-repository/process-repository';
+import { ProcessRepository } from '../../repositories/process/process-repository';
 import { EndpointError } from '../framework/endpoint-error';
 import { ProcessExecutor } from '../../process-executor/process-executor';
 import { parseBody } from '../framework/parse-body';

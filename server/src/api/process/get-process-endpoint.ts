@@ -1,5 +1,5 @@
 import { Request } from 'express';
-import { ProcessRepository } from '../../repositories/process-repository/process-repository';
+import { ProcessRepository } from '../../repositories/process/process-repository';
 import { Endpoint } from '../framework/endpoint';
 import { GetProcessResponse } from '@aila/model';
 import { EndpointError } from '../framework/endpoint-error';

@@ -1,5 +1,5 @@
 import { ChatSessionStorage as Interface } from '@aibindkit/llm';
-import { ChatSessionRepository } from '../repositories/chat-session-repository/chat-session-repository';
+import { ChatSessionRepository } from '../repositories/chat-session/chat-session-repository';
 import { Logger } from '../core/logger';
 import { ChatMessage } from '@aibindkit/core';
 

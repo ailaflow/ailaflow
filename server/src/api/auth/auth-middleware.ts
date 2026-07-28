@@ -1,5 +1,5 @@
 import { NextFunction, Request, RequestHandler, Response } from 'express';
-import { AuthToken, AuthTokenRepository } from '../../repositories/auth-token-repository/auth-token-repository';
+import { AuthToken, AuthTokenRepository } from '../../repositories/auth-token/auth-token-repository';
 import { Logger } from '../../core/logger';
 
 export interface AuthenticatedRequest extends Request {

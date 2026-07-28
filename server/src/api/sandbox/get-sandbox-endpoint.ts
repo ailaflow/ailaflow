@@ -1,6 +1,6 @@
 import { Request } from 'express';
 import { GetSandboxResponse } from '@aila/model';
-import { SandboxRepository } from '../../repositories/sandbox-repository/sandbox-repository';
+import { SandboxRepository } from '../../repositories/sandbox/sandbox-repository';
 import { Endpoint } from '../framework/endpoint';
 import { EndpointError } from '../framework/endpoint-error';
 import { getEndpointAbortSignal } from '../framework/endpoint-abort-signal';

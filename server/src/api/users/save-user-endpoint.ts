@@ -2,15 +2,15 @@ import { saveUserRequestSchema, SaveUserResponse } from '@aila/model';
 import { Request } from 'express';
 import { Endpoint } from '../framework/endpoint';
 import { parseBody } from '../framework/parse-body';
-import { UserRepository, UserRepositoryError } from '../../repositories/user-repository/user-repository';
+import { UserRepository, UserRepositoryError } from '../../repositories/user/user-repository';
 import {
   UserAttributesRepository,
   UserAttributesRepositoryError
-} from '../../repositories/user-attributes-repository/user-attributes-repository';
-import { UserAttributes } from '../../repositories/user-attributes-repository/user-attributes';
-import { PasswordHasher } from '../../repositories/user-repository/password-hasher';
+} from '../../repositories/user-attributes/user-attributes-repository';
+import { UserAttributes } from '../../repositories/user-attributes/user-attributes';
+import { PasswordHasher } from '../../repositories/user/password-hasher';
 import { EndpointError } from '../framework/endpoint-error';
-import { User } from '../../repositories/user-repository/user';
+import { User } from '../../repositories/user/user';
 import { getEndpointAbortSignal } from '../framework/endpoint-abort-signal';
 
 export class SaveUserEndpoint implements Endpoint {

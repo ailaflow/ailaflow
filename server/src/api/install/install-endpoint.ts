@@ -1,14 +1,14 @@
 import { Request } from 'express';
 import { Endpoint } from '../framework/endpoint';
-import { UserRepository } from '../../repositories/user-repository/user-repository';
-import { User } from '../../repositories/user-repository/user';
+import { UserRepository } from '../../repositories/user/user-repository';
+import { User } from '../../repositories/user/user';
 import { installRequestSchema, InstallResponse } from '@aila/model';
-import { PasswordHasher } from '../../repositories/user-repository/password-hasher';
+import { PasswordHasher } from '../../repositories/user/password-hasher';
 import { parseBody } from '../framework/parse-body';
-import { UserAttributesRepository } from '../../repositories/user-attributes-repository/user-attributes-repository';
-import { UserAttributes } from '../../repositories/user-attributes-repository/user-attributes';
-import { Sandbox } from '../../repositories/sandbox-repository/sandbox';
-import { SandboxRepository } from '../../repositories/sandbox-repository/sandbox-repository';
+import { UserAttributesRepository } from '../../repositories/user-attributes/user-attributes-repository';
+import { UserAttributes } from '../../repositories/user-attributes/user-attributes';
+import { Sandbox } from '../../repositories/sandbox/sandbox';
+import { SandboxRepository } from '../../repositories/sandbox/sandbox-repository';
 import { getEndpointAbortSignal } from '../framework/endpoint-abort-signal';
 
 export class InstallEndpoint implements Endpoint {

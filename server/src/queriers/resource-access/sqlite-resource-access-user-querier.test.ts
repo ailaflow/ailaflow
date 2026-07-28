@@ -2,12 +2,12 @@ import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
 import test from 'node:test';
 import { SqliteDatabases } from '../../core/sqlite-databases';
-import { ResourceAccess } from '../../repositories/resource-access-repository/resource-access-repository';
-import { SqliteResourceAccessRepository } from '../../repositories/resource-access-repository/sqlite-resource-access-repository';
-import { UserAttributes } from '../../repositories/user-attributes-repository/user-attributes';
-import { SqliteUserAttributesRepository } from '../../repositories/user-attributes-repository/sqlite-user-attributes-repository';
-import { User } from '../../repositories/user-repository/user';
-import { SqliteUserRepository } from '../../repositories/user-repository/sqlite-user-repository';
+import { ResourceAccess } from '../../repositories/resource-access/resource-access-repository';
+import { SqliteResourceAccessRepository } from '../../repositories/resource-access/sqlite-resource-access-repository';
+import { UserAttributes } from '../../repositories/user-attributes/user-attributes';
+import { SqliteUserAttributesRepository } from '../../repositories/user-attributes/sqlite-user-attributes-repository';
+import { User } from '../../repositories/user/user';
+import { SqliteUserRepository } from '../../repositories/user/sqlite-user-repository';
 import { SqliteResourceAccessUserQuerier } from './sqlite-resource-access-user-querier';
 
 test('queries user names assigned to a resource by access rules', async () => {

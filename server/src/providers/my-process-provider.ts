@@ -1,6 +1,6 @@
 import { MyProcessAccessQuerier } from '../queriers/my-process/my-process-access-querier';
-import { Process } from '../repositories/process-repository/process';
-import { ProcessRepository } from '../repositories/process-repository/process-repository';
+import { Process } from '../repositories/process/process';
+import { ProcessRepository } from '../repositories/process/process-repository';
 
 export class MyProcessProvider {
   public constructor(

@@ -4,8 +4,8 @@ import test from 'node:test';
 import { UserAttributesRepositoryError } from './user-attributes-repository';
 import { SqliteUserAttributesRepository } from './sqlite-user-attributes-repository';
 import { SqliteDatabases } from '../../core/sqlite-databases';
-import { SqliteUserRepository } from '../user-repository/sqlite-user-repository';
-import { User } from '../user-repository/user';
+import { SqliteUserRepository } from '../user/sqlite-user-repository';
+import { User } from '../user/user';
 import { UserAttributes } from './user-attributes';
 
 test('user attributes keep one value type per attribute name across users', async () => {
