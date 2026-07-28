@@ -11,11 +11,11 @@ import { ProcessEditorOverlayType } from '../process-editor-context';
 
 export function TaskStepEditor(props: StepEditorProps) {
   const { id, name, step, properties, definition, setName, setProperty } = useStepEditor<TaskStep, ProcessDefinition>();
-  const errors = props.editorState.stepValidator.validate(step, definition);
+  const errors = props.state.stepValidator.validate(step, definition);
 
   function editForm() {
     const path = DefinitionPath.createStepPath(id, `properties.form`);
-    props.editorState.openOverlay(ProcessEditorOverlayType.FORM_EDITOR, path);
+    props.state.openOverlay(ProcessEditorOverlayType.FORM_EDITOR, path);
   }
 
   return (
@@ -41,6 +41,13 @@ export function TaskStepEditor(props: StepEditorProps) {
         onChange={n => setProperty('outputVariableNames', n)}
         error={errors['properties.outputVariableNames']}
       />
+
+      <StringEditorPropertyView
+        label="User Expression"
+        value={properties.userExpression}
+        onValueChanged={v => setProperty('userExpression', v)}
+        error={errors['properties.userExpression']}
+      ></StringEditorPropertyView>
     </DesignerEditorView>
   );
 }

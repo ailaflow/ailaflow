@@ -1,6 +1,7 @@
 import {
   JsonSchema,
   ProcessDefinition,
+  ProcessExecutionVariableValues,
   ProcessRootValidator,
   ProcessStepValidator,
   ProcessValidator,
@@ -111,5 +112,27 @@ export class Process {
       this.vvmCache = new Map(this.definition.properties.variables.map(v => [v.name, z.fromJSONSchema(v.schema.schema)]));
     }
     return this.vvmCache;
+  }
+
+  public validateStartValues(values: ProcessExecutionVariableValues): string | null {
+    const passedVariableNames = Object.keys(values);
+    if (!this.startVariableSchemas) {
+      if (passedVariableNames.length > 0) {
+        return 'Process does not have start variables';
+      }
+      return null;
+    }
+    const map = this.getVariableValidatorMap();
+    for (const name of passedVariableNames) {
+      const validator = map.get(name);
+      if (!validator) {
+        return `Variable \$${name} is not a start variable`;
+      }
+      const { error } = validator.safeParse(values[name]);
+      if (error) {
+        return `Variable value \$${name} does not meet the required schema: ${error}`;
+      }
+    }
+    return null;
   }
 }

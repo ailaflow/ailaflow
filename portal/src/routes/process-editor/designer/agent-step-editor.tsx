@@ -6,7 +6,7 @@ import { AgentStep, ProcessDefinition } from '@aila/model';
 
 export function AgentStepEditor(props: StepEditorProps) {
   const { name, step, setName, definition } = useStepEditor<AgentStep, ProcessDefinition>();
-  const errors = props.editorState.stepValidator.validate(step, definition);
+  const errors = props.state.stepValidator.validate(step, definition);
 
   return (
     <DesignerEditorView>

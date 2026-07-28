@@ -411,6 +411,6 @@ export function useProcessEditorAi(state: ProcessEditorState, save: () => Promis
           return toolSuccess('File was deleted');
         }
       }),
-    [state]
+    [state, save]
   );
 }

@@ -1,5 +1,4 @@
 import { JsonSchema, ProcessDefinition, VariableDefinition } from '@aila/model';
-import { fnv1a } from '@aibindkit/core';
 import { useRootEditor } from 'sequential-workflow-designer-react';
 import { ProcessEditorOverlayType, ProcessEditorState } from '../process-editor-context';
 import { DesignerEditorView } from '../../../views/process-editor/designer-editors/designer-editor-view';
@@ -14,12 +13,12 @@ import { VariableSelectorPropertyView } from '../../../views/process-editor/desi
 import { createEmptyFormDefinition } from '../designer-configuration';
 
 export interface RootEditorProps {
-  editorState: ProcessEditorState;
+  state: ProcessEditorState;
 }
 
 export function RootEditor(props: RootEditorProps) {
   const { properties, definition, setProperty } = useRootEditor<ProcessDefinition>();
-  const errors = props.editorState.rootValidator.validate(definition);
+  const errors = props.state.rootValidator.validate(definition);
   const variables = properties.variables || [];
 
   function setVariables(nextVariables: VariableDefinition[]) {
@@ -53,7 +52,7 @@ export function RootEditor(props: RootEditorProps) {
 
   function editVariableSchema(index: number) {
     const path = DefinitionPath.createRootPath(`properties.variables.${index}.schema`);
-    props.editorState.openOverlay(ProcessEditorOverlayType.SCHEMA_EDITOR, path);
+    props.state.openOverlay(ProcessEditorOverlayType.SCHEMA_EDITOR, path);
   }
 
   function addStartForm() {
@@ -62,7 +61,7 @@ export function RootEditor(props: RootEditorProps) {
 
   function editStartFrom() {
     const path = DefinitionPath.createRootPath(`properties.startForm`);
-    props.editorState.openOverlay(ProcessEditorOverlayType.FORM_EDITOR, path);
+    props.state.openOverlay(ProcessEditorOverlayType.FORM_EDITOR, path);
   }
 
   function removeStartForm() {

@@ -3,6 +3,7 @@ import { ReturnStep, ScriptStep, TaskStep } from './process-steps';
 import { VariableCachedValidator } from './variable-cached-validator';
 import { FormDefinitionValidator } from './form-definition-validator';
 import { ProcessDefinition } from './process-definition';
+import { UserAccessExpressionParser } from '../user-access';
 
 export class ProcessStepValidator {
   public constructor(
@@ -52,12 +53,27 @@ export class ProcessStepValidator {
       errors,
       'properties.inputVariableNames'
     );
-    this.variableValidator.setErrorIfAnyVariableIsMissing(
+    const hasMissingVariables = this.variableValidator.setErrorIfAnyVariableIsMissing(
       step.properties.outputVariableNames,
       definition,
       errors,
       'properties.outputVariableNames'
     );
+
+    if (!hasMissingVariables) {
+      for (const name of step.properties.outputVariableNames) {
+        const variable = this.variableValidator.tryGet(name, definition);
+        if (variable && variable.schema.schema.type !== 'array') {
+          errors['properties.outputVariableNames'] = `Variable \$${name} must be of type array.`;
+          break;
+        }
+      }
+    }
+
+    const userExpressionError = UserAccessExpressionParser.validate(step.properties.userExpression);
+    if (userExpressionError) {
+      errors['properties.userExpression'] = userExpressionError;
+    }
   }
 
   private validateReturn(step: ReturnStep, definition: ProcessDefinition, errors: Record<string, string>) {

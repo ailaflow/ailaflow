@@ -14,6 +14,7 @@ import { SequentialWorkflowDesignerController, wrapDefinition, WrappedDefinition
 import { DefinitionWalker, Step } from 'sequential-workflow-model';
 import { DefinitionPath, DefinitionPathValue } from '../../core/definition-path';
 import { DesignerUtils } from './designer-utils';
+import { ObjectCloner } from 'sequential-workflow-designer';
 
 export enum ProcessEditorOverlayType {
   SCHEMA_EDITOR = 'schemaEditor',
@@ -180,12 +181,15 @@ export function ProcessEditorContext(props: ProcessEditorContextProps) {
     }
 
     function notifyDefinitionChange() {
-      if (data.controller.isReady()) {
-        data.controller.updateRootComponent();
-        data.controller.updateBadges();
-      }
+      // TODO: the designer should support also controller.updateEditor() that would refresh the content of the editor.
+      // if (data.controller.isReady()) {
+      //   data.controller.updateRootComponent();
+      //   data.controller.updateBadges();
+      // }
+      // Then we don't need to clone the definition.
+      const definition = ObjectCloner.deepClone(data.definition.value);
       update({
-        definition: wrapDefinition(data.definition.value),
+        definition: wrapDefinition(definition),
         isDirty: true
       });
     }

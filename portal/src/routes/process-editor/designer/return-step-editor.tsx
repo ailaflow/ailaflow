@@ -15,7 +15,7 @@ import { createEmptyFormDefinition } from '../designer-configuration';
 
 export function ReturnStepEditor(props: StepEditorProps) {
   const { name, step, properties, definition, setName, setProperty } = useStepEditor<ReturnStep, ProcessDefinition>();
-  const errors = props.editorState.stepValidator.validate(step, definition);
+  const errors = props.state.stepValidator.validate(step, definition);
 
   function addOutputForm() {
     setProperty('outputForm', createEmptyFormDefinition());
@@ -23,7 +23,7 @@ export function ReturnStepEditor(props: StepEditorProps) {
 
   function editOutputFrom() {
     const path = DefinitionPath.createStepPath(step.id, `properties.outputForm`);
-    props.editorState.openOverlay(ProcessEditorOverlayType.FORM_EDITOR, path);
+    props.state.openOverlay(ProcessEditorOverlayType.FORM_EDITOR, path);
   }
 
   function removeOutputForm() {

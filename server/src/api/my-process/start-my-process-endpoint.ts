@@ -31,12 +31,15 @@ export class StartMyProcessEndpoint implements Endpoint {
       throw new EndpointError('Process not found', 404);
     }
 
+    const startValuesError = process.validateStartValues(request.startValues);
+    if (startValuesError) {
+      throw new EndpointError(startValuesError, 400);
+    }
+
     const chatSession = this.liveSessionStore.tryGetByToken(request.chatSession.token);
     if (!chatSession) {
       throw new EndpointError('Chat session not found', 404);
     }
-
-    // TODO: validation
 
     const result = await this.lazyProcessExecutor.execute(abortSignal, null, authToken.userName, process, request.startValues);
     if (result.finished) {

@@ -1,5 +1,6 @@
 import z from 'zod/v4';
 import { ProcessDefinition } from './process-definition';
+import { VariableDefinition } from './variable-definition';
 
 interface CachedZod {
   hash: string;
@@ -9,40 +10,55 @@ interface CachedZod {
 export class VariableCachedValidator {
   private readonly cache = new Map<string, CachedZod>();
 
-  private resolve(name: string, definition: ProcessDefinition): z.ZodType | null {
+  public tryGet(name: string, definition: ProcessDefinition): VariableDefinition | null {
     for (const variable of definition.properties.variables) {
       if (variable.name === name) {
-        let zod = this.cache.get(name);
-        if (!zod || zod.hash !== variable.schema.hash) {
-          zod = { hash: variable.schema.hash, zod: z.fromJSONSchema(variable.schema.schema) };
-          this.cache.set(name, zod);
-        }
-        return zod.zod;
+        return variable;
       }
     }
     return null;
   }
 
+  private tryGetZod(name: string, definition: ProcessDefinition): z.ZodType | null {
+    const variable = this.tryGet(name, definition);
+    if (!variable) {
+      return null;
+    }
+    const cache = this.cache.get(name);
+    if (cache && cache.hash === variable.schema.hash) {
+      return cache.zod;
+    }
+    const zod = { hash: variable.schema.hash, zod: z.fromJSONSchema(variable.schema.schema) };
+    this.cache.set(name, zod);
+    return zod.zod;
+  }
+
   public validateVariableExists(name: string, definition: ProcessDefinition): string | null {
-    const zod = this.resolve(name, definition);
+    const zod = this.tryGetZod(name, definition);
     if (!zod) {
       return `Variable \$${name} does not exist.`;
     }
     return null;
   }
 
-  public setErrorIfAnyVariableIsMissing(names: string[], definition: ProcessDefinition, errors: Record<string, string>, key: string) {
+  public setErrorIfAnyVariableIsMissing(
+    names: string[],
+    definition: ProcessDefinition,
+    errors: Record<string, string>,
+    key: string
+  ): boolean {
     for (const name of names) {
       const error = this.validateVariableExists(name, definition);
       if (error) {
         errors[key] = error;
-        break;
+        return true;
       }
     }
+    return false;
   }
 
   public validateVariableValue(name: string, value: unknown, definition: ProcessDefinition): string | null {
-    const zod = this.resolve(name, definition);
+    const zod = this.tryGetZod(name, definition);
     if (!zod) {
       return `Variable \$${name} does not exist.`;
     }

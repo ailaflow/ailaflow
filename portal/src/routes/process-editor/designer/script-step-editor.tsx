@@ -11,11 +11,11 @@ import { ProcessEditorOverlayType } from '../process-editor-context';
 
 export function ScriptStepEditor(props: StepEditorProps) {
   const { id, name, step, properties, definition, setName, setProperty } = useStepEditor<ScriptStep, ProcessDefinition>();
-  const errors = props.editorState.stepValidator.validate(step, definition);
+  const errors = props.state.stepValidator.validate(step, definition);
 
   function editScript() {
     const path = DefinitionPath.createStepPath(id, 'properties.script');
-    props.editorState.openOverlay(ProcessEditorOverlayType.SCRIPT_EDITOR, path);
+    props.state.openOverlay(ProcessEditorOverlayType.SCRIPT_EDITOR, path);
   }
 
   return (
@@ -32,7 +32,7 @@ export function ScriptStepEditor(props: StepEditorProps) {
       <SelectEditorPropertyView
         label="Sandbox"
         value={properties.script.sandboxName}
-        options={props.editorState.sandboxNames.map(sandboxName => ({
+        options={props.state.sandboxNames.map(sandboxName => ({
           label: `+${sandboxName}`,
           value: sandboxName
         }))}

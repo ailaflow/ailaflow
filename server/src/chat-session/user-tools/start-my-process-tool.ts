@@ -34,30 +34,17 @@ export class StartMyProcessTool extends ZodTool<Arg> {
       };
     }
 
-    const input: ProcessExecutionVariableValues = {};
-
-    if (process.startVariableSchemas) {
-      const validatorMap = process.getVariableValidatorMap();
-      for (const name of Object.keys(process.startVariableSchemas)) {
-        const validator = validatorMap.get(name);
-        if (!validator) {
-          throw new Error('Cannot find validator');
+    const startValuesError = process.validateStartValues(arg.startValues);
+    if (startValuesError) {
+      return {
+        content: {
+          error: startValuesError
         }
-        const startValue = arg.startValues[name];
-        const { error, data } = validator.safeParse(startValue);
-        if (error) {
-          return {
-            content: {
-              error: `Variable value \$${name} does not meet the required schema: ${error}`
-            }
-          };
-        }
-        input[name] = data;
-      }
+      };
     }
 
     const abortController = new AbortController();
-    const result = await this.lazyProcessExecutor.execute(abortController.signal, FAST_TIMEOUT, userName, process, input);
+    const result = await this.lazyProcessExecutor.execute(abortController.signal, FAST_TIMEOUT, userName, process, arg.startValues);
 
     if (result.finished) {
       return {

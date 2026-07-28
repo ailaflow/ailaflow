@@ -23,8 +23,8 @@ export function Designer() {
       onDefinitionChange={setDefinition}
       selectedStepId={state.selectedStepId}
       onSelectedStepIdChanged={state.setSelectedStepId}
-      rootEditor={<RootEditor editorState={state} />}
-      stepEditor={<StepEditor editorState={state} />}
+      rootEditor={<RootEditor state={state} />}
+      stepEditor={<StepEditor state={state} />}
       stepsConfiguration={{}}
       validatorConfiguration={{
         root: state.rootValidator.validateRoot,

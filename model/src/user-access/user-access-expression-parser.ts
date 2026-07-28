@@ -41,8 +41,8 @@ export class UserAccessExpressionParserError extends Error {
 }
 
 export class UserAccessExpressionParser {
-  public static parse(source: string): UserAccessExpression {
-    if (source.trim().length === 0) {
+  public static parse(expression: string): UserAccessExpression {
+    if (expression.trim().length === 0) {
       return {
         groups: [
           {
@@ -58,7 +58,19 @@ export class UserAccessExpressionParser {
         ]
       };
     }
-    return new ParserSession(source).parse();
+    return new ParserSession(expression).parse();
+  }
+
+  public static validate(expression: string): string | null {
+    try {
+      UserAccessExpressionParser.parse(expression);
+    } catch (e) {
+      if (e instanceof UserAccessExpressionParserError) {
+        return e.message;
+      }
+      throw e;
+    }
+    return null;
   }
 }
 

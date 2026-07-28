@@ -6,7 +6,7 @@ import { NotificationStep, ProcessDefinition } from '@aila/model';
 
 export function NotificationStepEditor(props: StepEditorProps) {
   const { name, step, definition, setName } = useStepEditor<NotificationStep, ProcessDefinition>();
-  const errors = props.editorState.stepValidator.validate(step, definition);
+  const errors = props.state.stepValidator.validate(step, definition);
 
   return (
     <DesignerEditorView>

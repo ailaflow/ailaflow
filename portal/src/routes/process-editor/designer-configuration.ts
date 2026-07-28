@@ -78,9 +78,7 @@ const taskStep: Omit<TaskStep, 'id'> = {
   properties: {
     inputVariableNames: [],
     outputVariableNames: [],
-    user: '',
-    deadlineMinutes: 60,
-    stopProcessOnDeadline: false,
+    userExpression: '',
     form: createEmptyFormDefinition()
   }
 };

@@ -8,26 +8,26 @@ import { ProcessEditorState } from '../process-editor-context';
 import { ReturnStepEditor } from './return-step-editor';
 
 export interface StepEditorProps {
-  editorState: ProcessEditorState;
+  state: ProcessEditorState;
 }
 
 export function StepEditor(props: StepEditorProps) {
   const { type } = useStepEditor();
 
   if (type === 'script') {
-    return <ScriptStepEditor editorState={props.editorState} />;
+    return <ScriptStepEditor state={props.state} />;
   }
   if (type === 'agent') {
-    return <AgentStepEditor editorState={props.editorState} />;
+    return <AgentStepEditor state={props.state} />;
   }
   if (type === 'notification') {
-    return <NotificationStepEditor editorState={props.editorState} />;
+    return <NotificationStepEditor state={props.state} />;
   }
   if (type === 'task') {
-    return <TaskStepEditor editorState={props.editorState} />;
+    return <TaskStepEditor state={props.state} />;
   }
   if (type === 'return') {
-    return <ReturnStepEditor editorState={props.editorState} />;
+    return <ReturnStepEditor state={props.state} />;
   }
   return <Fragment />;
 }

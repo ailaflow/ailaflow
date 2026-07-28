@@ -49,9 +49,7 @@ export type NotificationStep = z.infer<typeof notificationStepSchema>;
 export const taskStepPropertiesSchema = z.object({
   inputVariableNames: z.array(z.string()),
   outputVariableNames: z.array(z.string()),
-  user: z.string(),
-  deadlineMinutes: z.number(),
-  stopProcessOnDeadline: z.boolean(),
+  userExpression: z.string(),
   form: formDefinitionSchema
 });
 
