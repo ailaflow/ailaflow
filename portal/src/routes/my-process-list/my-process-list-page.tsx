@@ -5,7 +5,7 @@ import { PortalLoadingView } from '../../views/portal/portal-loading-view';
 import { ResourceListView } from '../../views/resource-list/resource-list-view';
 import { Portal } from '../common/portal';
 
-export function MyProcessList() {
+export function MyProcessListPage() {
   const apiClient = useApiClient();
   const { data, isLoading, error } = useLoader(abortSignal => apiClient.myProcess.getMyProcesses(abortSignal), [apiClient]);
 

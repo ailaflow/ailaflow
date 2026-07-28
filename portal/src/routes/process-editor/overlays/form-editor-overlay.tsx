@@ -2,8 +2,8 @@ import type { FormDefinition, FormInputExample } from '@aila/model';
 import { FormDefinitionValidator, VariableCachedValidator } from '@aila/model';
 import { useMemo, useState } from 'react';
 import { wrapDefinition } from 'sequential-workflow-designer-react';
-import { ProcessSubEditorView } from '../../../views/process-editor/process-sub-editor-view';
-import { FormEditorTab, FormSubEditorView } from '../../../views/process-editor/script-sub-editor/form-sub-editor-view';
+import { ProcessOverlayView } from '../../../views/process-editor/process-overlay-view';
+import { FormEditorTab, FormOverlayView } from '../../../views/process-editor/script-overlay/form-overlay-view';
 import { ProcessEditorOverlayType } from '../process-editor-context';
 import { useProcessEditor } from '../process-editor-context';
 import { FormEditorOverlayUtils } from './form-editor-overlay-utils';
@@ -27,7 +27,7 @@ export function FormEditorOverlay() {
       outputVariableNames,
       errors: FormDefinitionValidator.validate(normalizedForm, inputVariableNames, state.definition.value, state.variableValidator)
     };
-  }, [state.overlay, state.definition, state.variableValidator]);
+  }, [state]);
 
   const formAdapter = useMemo<FormAdapter>(
     () => ({
@@ -48,7 +48,7 @@ export function FormEditorOverlay() {
         variableValidator.assertValidVariableValue(name, value, state.definition.value);
       }
     }),
-    [formState.inputVariableNames, state.definition, variableValidator]
+    [state, formState, variableValidator]
   );
 
   const [selectedTab, setSelectedTab] = useState<FormEditorTab>(formState.inputVariableNames.length > 0 ? 'Example Inputs' : 'HTML');
@@ -87,8 +87,13 @@ export function FormEditorOverlay() {
   }
 
   return (
-    <ProcessSubEditorView title="Form Editor" canOk={Object.keys(formState.errors).length === 0} onCancel={state.closeOverlay} onOk={ok}>
-      <FormSubEditorView
+    <ProcessOverlayView
+      title="Form Editor"
+      canOk={state.isDirty && Object.keys(formState.errors).length === 0}
+      onCancel={state.closeOverlay}
+      onOk={ok}
+    >
+      <FormOverlayView
         selectedTab={selectedVisibleTab}
         showExampleInputs={formState.inputVariableNames.length > 0}
         inputExamples={formState.form.inputExamples}
@@ -101,6 +106,6 @@ export function FormEditorOverlay() {
         onCssChange={css => setForm({ ...formState.form, css })}
         onJsChange={js => setForm({ ...formState.form, js })}
       />
-    </ProcessSubEditorView>
+    </ProcessOverlayView>
   );
 }

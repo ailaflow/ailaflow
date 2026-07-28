@@ -1,6 +1,6 @@
 import { Portal } from '../common/portal';
 
-export function Dashboard() {
+export function DashboardPage() {
   return (
     <Portal>
       <div>Dashboard</div>

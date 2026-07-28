@@ -26,6 +26,12 @@ const processEditorRoute = route('processEditor')
         name: z.string().describe('The new process description')
       })
     ),
+    getProcessUserAccessExpression: tool('Get the process user access expression'),
+    setProcessUserAccessExpression: tool('Update the process user access expression').input(
+      z.object({
+        userAccessExpression: z.string().describe('The new process user access expression')
+      })
+    ),
 
     getAvailableNewStepTypes: tool('List step types that can be added to the workflow'),
     getSelectedStepId: tool('Get the ID of the currently selected workflow step by the user'),
@@ -132,6 +138,45 @@ const processEditorRoute = route('processEditor')
       z.object({
         stepId: z.string().describe('The ID of the script step to update'),
         sandboxName: z.string().describe('The new sandbox configuration for the script step')
+      })
+    ),
+
+    taskStep_openFormEditorOverlay: tool('Open the form editor overlay for a specific task step').input(
+      z.object({
+        stepId: z.string().describe('The ID of the task step to edit')
+      })
+    ),
+    taskStep_getInputVariables: tool('Get the list of input variable names for a specific task step').input(
+      z.object({
+        stepId: z.string().describe('The ID of the task step to read')
+      })
+    ),
+    taskStep_setInputVariables: tool('Set the list of input variable names for a specific task step').input(
+      z.object({
+        stepId: z.string().describe('The ID of the task step to update'),
+        variableNames: z.array(z.string()).describe('The new list of input variable names for the task step')
+      })
+    ),
+    taskStep_getOutputVariables: tool('Get the list of output variable names for a specific task step').input(
+      z.object({
+        stepId: z.string().describe('The ID of the task step to read')
+      })
+    ),
+    taskStep_setOutputVariables: tool('Set the list of output variable names for a specific task step').input(
+      z.object({
+        stepId: z.string().describe('The ID of the task step to update'),
+        variableNames: z.array(z.string()).describe('The new list of output variable names for the task step')
+      })
+    ),
+    taskStep_getUserExpression: tool('Get the user expression for a specific task step').input(
+      z.object({
+        stepId: z.string().describe('The ID of the task step to read')
+      })
+    ),
+    taskStep_setUserExpression: tool('Set the user expression for a specific task step').input(
+      z.object({
+        stepId: z.string().describe('The ID of the task step to update'),
+        userExpression: z.string().describe('The new user expression for the task step')
       })
     ),
 

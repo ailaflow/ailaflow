@@ -1,20 +1,20 @@
 import { RouterProvider, createBrowserRouter } from 'react-router-dom';
-import { Login } from './login/login';
+import { LoginPage } from './login/login-page';
 import { AuthGate } from './common/auth-gate';
-import { Dashboard } from './dashboard/dashboard';
-import { Install } from './install/install';
-import { ProcessList } from './process-list/process-list';
+import { DashboardPage } from './dashboard/dashboard-page';
+import { InstallPage } from './install/install-page';
+import { ProcessListPage } from './process-list/process-list-page';
 import { ProcessEditorPage } from './process-editor/process-editor-page';
 import { ProcessTesterPage } from './process-tester/process-tester-page';
-import { SandboxList } from './sandbox-list/sandbox-list';
+import { SandboxListPage } from './sandbox-list/sandbox-list-page';
 import { SandboxEditorPage } from './sandbox-editor/sandbox-editor-page';
 import { AdminPortal } from './common/admin-portal';
-import { MyChat } from './my-chat/my-chat';
-import { MyProcessList } from './my-process-list/my-process-list';
+import { MyChatPage } from './my-chat/my-chat-page';
+import { MyProcessListPage } from './my-process-list/my-process-list-page';
 import { MyNotificationsPage } from './my-notifications/my-notifications-page';
 import { MyTasksPage } from './my-tasks/my-tasks-page';
 import { MyViewsPage } from './my-views/my-views-page';
-import { UserList } from './user-list/user-list';
+import { UserListPage } from './user-list/user-list-page';
 import { UserEditorPage } from './user-editor/user-editor-page';
 import { TableListPage } from './table-list/table-list-page';
 import { ViewListPage } from './view-list/view-list-page';
@@ -24,19 +24,19 @@ import { ConfigurationPage } from './configuration/configuration-page';
 export const routes = [
   {
     path: '/login',
-    element: <Login />
+    element: <LoginPage />
   },
   {
     path: '/install',
-    element: <Install />
+    element: <InstallPage />
   },
   {
     path: '/',
-    element: <AuthGate route={<Dashboard />} />
+    element: <AuthGate route={<DashboardPage />} />
   },
   {
     path: '/my-chat',
-    element: <AuthGate route={<MyChat />} />
+    element: <AuthGate route={<MyChatPage />} />
   },
   {
     path: '/my-tasks',
@@ -48,7 +48,7 @@ export const routes = [
   },
   {
     path: '/my-processes',
-    element: <AuthGate route={<MyProcessList />} />
+    element: <AuthGate route={<MyProcessListPage />} />
   },
   {
     path: '/my-views',
@@ -59,7 +59,7 @@ export const routes = [
     children: [
       {
         path: '/admin/processes',
-        element: <ProcessList />
+        element: <ProcessListPage />
       },
       {
         path: '/admin/processes/:processName',
@@ -79,7 +79,7 @@ export const routes = [
       },
       {
         path: '/admin/sandboxes',
-        element: <SandboxList />
+        element: <SandboxListPage />
       },
       {
         path: '/admin/create-sandbox',
@@ -91,7 +91,7 @@ export const routes = [
       },
       {
         path: '/admin/users',
-        element: <UserList />
+        element: <UserListPage />
       },
       {
         path: '/admin/create-user',

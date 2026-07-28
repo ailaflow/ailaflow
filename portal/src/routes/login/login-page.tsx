@@ -6,7 +6,7 @@ import { LoginResponse } from '@aila/model';
 import { LoginView } from '../../views/centered-form/login-view';
 import { CenteredFormLayout } from '../../views/centered-form/centered-form-layout';
 
-export function Login() {
+export function LoginPage() {
   const { apiClient, setSession } = useAuthState();
   const navigate = useNavigate();
   const [userName, setUserName] = useState('');

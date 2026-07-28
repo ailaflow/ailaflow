@@ -6,7 +6,7 @@ import { useApiClient } from '../../auth/auth-context';
 import { CenteredFormLayout } from '../../views/centered-form/centered-form-layout';
 import { InstallView } from '../../views/centered-form/install-view';
 
-export function Install() {
+export function InstallPage() {
   const apiClient = useApiClient();
   const navigate = useNavigate();
   const [rootUserName, setRootUserName] = useState('');

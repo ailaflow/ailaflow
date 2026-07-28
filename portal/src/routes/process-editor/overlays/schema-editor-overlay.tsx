@@ -2,8 +2,7 @@ import { JsonSchema } from '@aila/model';
 import { ProcessEditorOverlayType, useProcessEditor } from '../process-editor-context';
 import { wrapDefinition } from 'sequential-workflow-designer-react';
 import { useState } from 'react';
-import { ProcessSubEditorView } from '../../../views/process-editor/process-sub-editor-view';
-import { fnv1a } from '@aibindkit/core';
+import { ProcessOverlayView } from '../../../views/process-editor/process-overlay-view';
 
 export function SchemaEditorOverlay() {
   const state = useProcessEditor();
@@ -49,12 +48,12 @@ export function SchemaEditorOverlay() {
   }
 
   return (
-    <ProcessSubEditorView title={`Schema`} canOk={schema.isValid} onCancel={state.closeOverlay} onOk={ok}>
+    <ProcessOverlayView title={`Schema`} canOk={state.isDirty && schema.isValid} onCancel={state.closeOverlay} onOk={ok}>
       <textarea
         value={schema.schema}
         onChange={e => setSchema2(e.target.value)}
         className="h-full w-full resize-none rounded-md border border-slate-300 bg-white p-3 font-mono text-sm leading-5 text-slate-800 outline-none transition-colors placeholder:text-slate-400 focus:border-slate-400"
       />
-    </ProcessSubEditorView>
+    </ProcessOverlayView>
   );
 }

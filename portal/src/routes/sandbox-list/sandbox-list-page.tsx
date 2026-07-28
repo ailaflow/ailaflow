@@ -9,7 +9,7 @@ import { toolSuccess } from '@aibindkit/react';
 import { useCallback } from 'react';
 import { useAiStore } from '../common/admin-portal';
 
-export function SandboxList() {
+export function SandboxListPage() {
   const apiClient = useApiClient();
   const navigate = useNavigate();
   const { data, isLoading, finishSignal, error } = useLoader(abortSignal => apiClient.sandbox.getSandboxes(abortSignal), [apiClient]);

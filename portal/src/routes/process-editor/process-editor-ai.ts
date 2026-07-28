@@ -3,7 +3,15 @@ import { useAiStore } from '../common/admin-portal';
 import { ProcessEditorOverlayType, ProcessEditorState } from './process-editor-context';
 import { createEmptyFormDefinition, toolboxConfiguration } from './designer-configuration';
 import { ObjectCloner, Sequence, Step, Uid } from 'sequential-workflow-designer';
-import { anyStepSchema, ProcessRootVariableValidator, ReturnStep, ScriptStep, VariableDefinition } from '@aila/model';
+import {
+  anyStepSchema,
+  ProcessRootVariableValidator,
+  ReturnStep,
+  ScriptStep,
+  TaskStep,
+  UserAccessExpressionParser,
+  VariableDefinition
+} from '@aila/model';
 import { DesignerUtils } from './designer-utils';
 import { DefinitionPath } from '../../core/definition-path';
 import { FormEditorOverlayUtils } from './overlays/form-editor-overlay-utils';
@@ -31,6 +39,15 @@ export function useProcessEditorAi(state: ProcessEditorState, save: () => Promis
         async setProcessDescription(arg) {
           state.setDescription(arg.name, true);
           return toolSuccess('Process description was updated');
+        },
+        async getProcessUserAccessExpression() {
+          return {
+            userAccessExpression: state.userAccessExpression
+          };
+        },
+        async setProcessUserAccessExpression(arg) {
+          state.setUserAccessExpression(arg.userAccessExpression, true);
+          return toolSuccess('Process user access expression was updated');
         },
         async getAvailableNewStepTypes() {
           return toolboxConfiguration.groups
@@ -260,6 +277,53 @@ export function useProcessEditorAi(state: ProcessEditorState, save: () => Promis
           return toolSuccess('Sandbox name was updated');
         },
 
+        async taskStep_openFormEditorOverlay(arg) {
+          const step = state.getStep<TaskStep>(arg.stepId, 'task');
+          const path = DefinitionPath.createStepPath(step.id, 'properties.form');
+          state.openOverlay(ProcessEditorOverlayType.FORM_EDITOR, path);
+          return toolSuccess('Task step form editor overlay was opened');
+        },
+        async taskStep_getInputVariables(arg) {
+          const step = state.getStep<TaskStep>(arg.stepId, 'task');
+          return {
+            variableNames: step.properties.inputVariableNames
+          };
+        },
+        async taskStep_setInputVariables(arg) {
+          const step = state.getStep<TaskStep>(arg.stepId, 'task');
+          step.properties.inputVariableNames = arg.variableNames;
+          state.notifyDefinitionChange();
+          return toolSuccess('Input variable names were updated');
+        },
+        async taskStep_getOutputVariables(arg) {
+          const step = state.getStep<TaskStep>(arg.stepId, 'task');
+          return {
+            variableNames: step.properties.outputVariableNames
+          };
+        },
+        async taskStep_setOutputVariables(arg) {
+          const step = state.getStep<TaskStep>(arg.stepId, 'task');
+          step.properties.outputVariableNames = arg.variableNames;
+          state.notifyDefinitionChange();
+          return toolSuccess('Output variable names were updated');
+        },
+        async taskStep_getUserExpression(arg) {
+          const step = state.getStep<TaskStep>(arg.stepId, 'task');
+          return {
+            userExpression: step.properties.userExpression
+          };
+        },
+        async taskStep_setUserExpression(arg) {
+          const step = state.getStep<TaskStep>(arg.stepId, 'task');
+          const error = UserAccessExpressionParser.validate(arg.userExpression);
+          if (error) {
+            return toolError(`${error}; the user expression was not updated`);
+          }
+          step.properties.userExpression = arg.userExpression;
+          state.notifyDefinitionChange();
+          return toolSuccess('User expression was updated');
+        },
+
         async returnStep_isOutputFormEnabled(arg) {
           const step = state.getStep<ReturnStep>(arg.stepId, 'return');
           return {
@@ -387,7 +451,7 @@ export function useProcessEditorAi(state: ProcessEditorState, save: () => Promis
         },
         async scriptEditor_getContent(arg) {
           const data = ScriptEditorOverlayUtils.getData(state);
-          const content = ScriptEditorOverlayUtils.getFileContent(data, arg.filePath);
+          const content = ScriptEditorOverlayUtils.tryGetFileContent(data, arg.filePath);
           return content === null ? toolError('File not found') : { content };
         },
         async scriptEditor_setContent(arg) {

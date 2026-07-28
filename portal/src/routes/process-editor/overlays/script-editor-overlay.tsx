@@ -1,11 +1,11 @@
 import { useProcessEditor } from '../process-editor-context';
-import { ProcessSubEditorView } from '../../../views/process-editor/process-sub-editor-view';
+import { ProcessOverlayView } from '../../../views/process-editor/process-overlay-view';
 import { useEffect } from 'react';
 import { wrapDefinition } from 'sequential-workflow-designer-react';
-import { ScriptSubEditorView } from '../../../views/process-editor/script-sub-editor/script-sub-editor';
+import { ScriptOverlayView } from '../../../views/process-editor/script-overlay/script-overlay-view';
 import type { FileContent } from '@aila/model';
-import { FolderTreeItem, FolderTreeView } from '../../../views/process-editor/script-sub-editor/folder-tree-view';
-import { FileContentEditorView } from '../../../views/process-editor/script-sub-editor/file-content-editor-view';
+import { FolderTreeItem, FolderTreeView } from '../../../views/process-editor/script-overlay/folder-tree-view';
+import { FileContentEditorView } from '../../../views/process-editor/script-overlay/file-content-editor-view';
 import { ScriptEditorOverlayUtils } from './script-editor-overlay-utils';
 
 export interface ScriptEditorOverlayState {
@@ -79,8 +79,8 @@ export function ScriptEditorOverlay() {
   }
 
   return (
-    <ProcessSubEditorView title="Script Editor" canOk={true} onCancel={state.closeOverlay} onOk={ok}>
-      <ScriptSubEditorView>
+    <ProcessOverlayView title="Script Editor" canOk={state.isDirty} onCancel={state.closeOverlay} onOk={ok}>
+      <ScriptOverlayView>
         <FolderTreeView
           items={folderItems}
           currentlyOpenPath={selectedFilePath}
@@ -89,8 +89,8 @@ export function ScriptEditorOverlay() {
           onSelectFile={setSelectedFilePath}
         />
         <FileContentEditorView path={selectedFilePath} content={selectedFile?.content ?? ''} onContentChange={updateSelectedFileContent} />
-      </ScriptSubEditorView>
-    </ProcessSubEditorView>
+      </ScriptOverlayView>
+    </ProcessOverlayView>
   );
 }
 

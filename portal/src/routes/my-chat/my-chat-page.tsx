@@ -42,7 +42,7 @@ function messageFilter(type: ChatMessageType, metadata?: ChatMessageMetadata) {
   return true;
 }
 
-export function MyChat() {
+export function MyChatPage() {
   const api = useApiClient();
 
   const details = useMemo(

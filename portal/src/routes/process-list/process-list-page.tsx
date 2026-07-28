@@ -8,7 +8,7 @@ import { toolError, toolSuccess, toolWait } from '@aibindkit/react';
 import { useNavigate } from 'react-router';
 import { useAiStore } from '../common/admin-portal';
 
-export function ProcessList() {
+export function ProcessListPage() {
   const apiClient = useApiClient();
   const navigate = useNavigate();
   const { data, isLoading, finishSignal, error } = useLoader(abortSignal => apiClient.process.getProcesses(abortSignal), [apiClient]);

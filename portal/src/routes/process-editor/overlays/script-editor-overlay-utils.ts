@@ -15,7 +15,7 @@ export class ScriptEditorOverlayUtils {
     };
   }
 
-  public static getFileContent(data: ScriptEditorOverlayData, filePath: string): string | null {
+  public static tryGetFileContent(data: ScriptEditorOverlayData, filePath: string): string | null {
     const content = ScriptEditorOverlayUtils.getFile(data, filePath);
     return content ? content.content : null;
   }

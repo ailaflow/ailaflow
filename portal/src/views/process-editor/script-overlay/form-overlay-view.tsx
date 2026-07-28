@@ -5,7 +5,7 @@ import { FormAdapter } from '../../../routes/form-renderer/form-adapter';
 export const formEditorTabs = ['Example Inputs', 'HTML', 'CSS', 'JS', 'Preview'] as const;
 export type FormEditorTab = (typeof formEditorTabs)[number];
 
-export interface FormSubEditorViewProps {
+export interface FormOverlayViewProps {
   selectedTab: FormEditorTab;
   showExampleInputs: boolean;
   inputExamples: FormInputExample[];
@@ -19,7 +19,7 @@ export interface FormSubEditorViewProps {
   onJsChange: (value: string) => void;
 }
 
-export function FormSubEditorView(props: FormSubEditorViewProps) {
+export function FormOverlayView(props: FormOverlayViewProps) {
   return (
     <div className="flex h-full min-h-0 flex-col bg-white">
       <div

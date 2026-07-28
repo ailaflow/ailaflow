@@ -7,7 +7,7 @@ import { ResourceListView } from '../../views/resource-list/resource-list-view';
 import { useAiStore } from '../common/admin-portal';
 import { SvgIcon } from '../../views/common/svg-icons';
 
-export function UserList() {
+export function UserListPage() {
   const apiClient = useApiClient();
   const navigate = useNavigate();
   const loader = useLoader(abortSignal => apiClient.user.getUsers(abortSignal), [apiClient]);
