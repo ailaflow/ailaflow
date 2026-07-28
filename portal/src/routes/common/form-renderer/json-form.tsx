@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { JsonFormView } from '../../views/form-renderer/json-form-view';
+import { JsonFormView } from '../../../views/form-renderer/json-form-view';
 import { FormAdapter } from './form-adapter';
 
 export interface JsonFormProps {

@@ -1,8 +1,9 @@
 import { useLoader } from '@aibindkit/react';
 import { useApiClient } from '../../auth/auth-context';
-import { FormRenderer } from '../form-renderer/form-renderer';
-import { FormAdapter } from '../form-renderer/form-adapter';
+import { FormRenderer } from '../common/form-renderer/form-renderer';
+import { FormAdapter } from '../common/form-renderer/form-adapter';
 import { useMemo } from 'react';
+import { FormMessageView } from '../../views/my-chat/form-message-view';
 
 export interface FormMessageProps {
   processName: string;
@@ -42,29 +43,18 @@ export function FormMessage(props: FormMessageProps) {
   );
 
   if (isLoading) {
-    return <CardView title="Form">Loading...</CardView>;
+    return <FormMessageView title="Form">Loading...</FormMessageView>;
   }
   if (error) {
-    return <CardView title="Form">Error: {error.message}</CardView>;
+    return <FormMessageView title="Form">Error: {error.message}</FormMessageView>;
   }
   if (props.finished) {
-    return <CardView title="Form">Finished</CardView>;
+    return <FormMessageView title="Form">Finished</FormMessageView>;
   }
 
   return (
-    <CardView title="Form">
+    <FormMessageView title="Form">
       <FormRenderer form={data.form} adapter={formAdapter} />
-    </CardView>
-  );
-}
-
-function CardView(props: { title: string; children: React.ReactNode }) {
-  return (
-    <div className="mt-2 flex justify-start">
-      <article className="max-w-[88%] rounded-md border border-orange-200 bg-orange-50 px-3 py-2 text-slate-800 shadow-sm">
-        <div className="mb-1 text-[11px] font-semibold uppercase leading-tight text-orange-700">{props.title}</div>
-        <div className="overflow-hidden">{props.children}</div>
-      </article>
-    </div>
+    </FormMessageView>
   );
 }

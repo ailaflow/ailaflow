@@ -9,8 +9,8 @@ import {
 } from '@aila/model';
 import { useApiClient } from '../../auth/auth-context';
 import { useEffect, useMemo, useState } from 'react';
-import { FormRenderer } from '../form-renderer/form-renderer';
-import { FormAdapter } from '../form-renderer/form-adapter';
+import { FormRenderer } from '../common/form-renderer/form-renderer';
+import { FormAdapter } from '../common/form-renderer/form-adapter';
 import { DefinitionWalker } from 'sequential-workflow-model';
 
 export interface ProcessTesterProps {

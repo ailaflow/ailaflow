@@ -1,6 +1,6 @@
 import type { FormDefinition, FormInputExample } from '@aila/model';
-import { IframeForm } from '../../../routes/form-renderer/iframe-form';
-import { FormAdapter } from '../../../routes/form-renderer/form-adapter';
+import { IframeForm } from '../../../routes/common/form-renderer/iframe-form';
+import { FormAdapter } from '../../../routes/common/form-renderer/form-adapter';
 
 export const formEditorTabs = ['Example Inputs', 'HTML', 'CSS', 'JS', 'Preview'] as const;
 export type FormEditorTab = (typeof formEditorTabs)[number];

@@ -7,7 +7,7 @@ import { FormEditorTab, FormOverlayView } from '../../../views/process-editor/sc
 import { ProcessEditorOverlayType } from '../process-editor-context';
 import { useProcessEditor } from '../process-editor-context';
 import { FormEditorOverlayUtils } from './form-editor-overlay-utils';
-import { FormAdapter } from '../../form-renderer/form-adapter';
+import { FormAdapter } from '../../common/form-renderer/form-adapter';
 
 export function FormEditorOverlay() {
   const state = useProcessEditor();
