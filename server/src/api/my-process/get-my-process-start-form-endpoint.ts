@@ -4,7 +4,7 @@ import { getEndpointAbortSignal } from '../framework/endpoint-abort-signal';
 import { getAuthToken } from '../auth/auth-middleware';
 import { Request } from 'express';
 import { EndpointError } from '../framework/endpoint-error';
-import { MyProcessProvider } from '../../my-process/my-process-provider';
+import { MyProcessProvider } from '../../providers/my-process-provider';
 
 export class GetMyProcessStartFormEndpoint implements Endpoint {
   public readonly method = 'get';

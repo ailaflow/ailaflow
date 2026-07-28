@@ -61,7 +61,7 @@ import { ChatSessionRepository } from './repositories/chat-session-repository/ch
 import { SqliteChatSessionRepository } from './repositories/chat-session-repository/sqlite-chat-session-repository';
 import { OpenMyProcessStartFormTool } from './chat-session/user-tools/open-my-process-start-form-tool';
 import { GetMyProcessStartFormEndpoint } from './api/my-process/get-my-process-start-form-endpoint';
-import { MyProcessProvider } from './my-process/my-process-provider';
+import { MyProcessProvider } from './providers/my-process-provider';
 import { StartMyProcessEndpoint } from './api/my-process/start-my-process-endpoint';
 
 const PORT = process.env.PORT || 2048;

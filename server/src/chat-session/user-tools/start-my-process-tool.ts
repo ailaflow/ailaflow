@@ -1,9 +1,8 @@
 import { ToolContext, ZodTool, ZodToolExecutionResult } from '@aibindkit/llm';
-import { ProcessExecutionVariableValues } from '@aila/model';
 import { LazyProcessExecutor } from '../../process-executor/lazy-process-executor';
 import z from 'zod/v4';
 import { ChatSessionId } from '../chat-session-id';
-import { MyProcessProvider } from '../../my-process/my-process-provider';
+import { MyProcessProvider } from '../../providers/my-process-provider';
 
 const FAST_TIMEOUT = 3_000;
 

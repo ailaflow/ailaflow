@@ -1,5 +1,5 @@
 import { Request } from 'express';
-import { MyProcessProvider } from '../../my-process/my-process-provider';
+import { MyProcessProvider } from '../../providers/my-process-provider';
 import { getAuthToken } from '../auth/auth-middleware';
 import { Endpoint } from '../framework/endpoint';
 import { getEndpointAbortSignal } from '../framework/endpoint-abort-signal';
