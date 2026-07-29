@@ -59,6 +59,10 @@ import { LazyProcessFinishedEventHandler } from './events/handlers/lazy-process-
 import { ChatSessionStorage } from './chat-session/chat-session-storage';
 import { ChatSessionRepository } from './repositories/chat-session/chat-session-repository';
 import { SqliteChatSessionRepository } from './repositories/chat-session/sqlite-chat-session-repository';
+import {
+  PersistentExecutionRepository,
+  SqlitePersistentExecutionRepository
+} from './repositories/persistent-execution/persistent-execution-repository';
 import { OpenMyProcessStartFormTool } from './chat-session/user-tools/open-my-process-start-form-tool';
 import { GetMyProcessStartFormEndpoint } from './api/my-process/get-my-process-start-form-endpoint';
 import { MyProcessProvider } from './providers/my-process-provider';
@@ -91,6 +95,7 @@ export class Server {
     let processRepository: ProcessRepository;
     let sandboxRepository: SandboxRepository;
     let chatSessionRepository: ChatSessionRepository;
+    let persistentExecutionRepository: PersistentExecutionRepository;
     let taskRepository: TaskRepository;
     let assignedTaskRepository: AssignedTaskRepository;
 
@@ -111,6 +116,7 @@ export class Server {
     processRepository = new SqliteProcessRepository(sqliteDatabases);
     sandboxRepository = new SqliteSandboxRepository(sqliteDatabases);
     chatSessionRepository = new SqliteChatSessionRepository(sqliteDatabases);
+    persistentExecutionRepository = new SqlitePersistentExecutionRepository(sqliteDatabases);
     taskRepository = new SqliteTaskRepository(sqliteDatabases);
     assignedTaskRepository = new SqliteAssignedTaskRepository(sqliteDatabases);
 
@@ -130,6 +136,7 @@ export class Server {
       processRepository.setup(abortSignal),
       sandboxRepository.setup(abortSignal),
       chatSessionRepository.setup(abortSignal),
+      persistentExecutionRepository.setup(abortSignal),
       taskRepository.setup(abortSignal),
       assignedTaskRepository.setup(abortSignal)
     ]);
