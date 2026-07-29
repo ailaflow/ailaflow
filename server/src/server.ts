@@ -63,6 +63,16 @@ import { OpenMyProcessStartFormTool } from './chat-session/user-tools/open-my-pr
 import { GetMyProcessStartFormEndpoint } from './api/my-process/get-my-process-start-form-endpoint';
 import { MyProcessProvider } from './providers/my-process-provider';
 import { StartMyProcessEndpoint } from './api/my-process/start-my-process-endpoint';
+import { TaskRepository } from './repositories/task/task-repository';
+import { AssignedTaskRepository } from './repositories/task/assigned-task-repository';
+import { SqliteTaskRepository } from './repositories/task/sqlite-task-repository';
+import { SqliteAssignedTaskRepository } from './repositories/task/sqlite-assigned-task-repository';
+import { TaskManager } from './process-executor/services/task-manager';
+import { UserAccessExpressionUserQuerier } from './queriers/user-access-expression/user-access-expression-user-querier';
+import { SqliteUserAccessExpressionUserQuerier } from './queriers/user-access-expression/sqlite-user-access-expression-user-querier';
+import { MyTaskListQuerier } from './queriers/my-task-list/my-task-list-querier';
+import { SqliteMyTaskListQuerier } from './queriers/my-task-list/sqlite-my-task-list-querier';
+import { GetMyTasksEndpoint } from './api/my-task/get-my-tasks-endpoint';
 
 const PORT = process.env.PORT || 2048;
 
@@ -81,11 +91,16 @@ export class Server {
     let processRepository: ProcessRepository;
     let sandboxRepository: SandboxRepository;
     let chatSessionRepository: ChatSessionRepository;
+    let taskRepository: TaskRepository;
+    let assignedTaskRepository: AssignedTaskRepository;
+
     let processListQuerier: ProcessListQuerier;
     let myProcessListQuerier: MyProcessListQuerier;
     let myProcessAccessQuerier: MyProcessAccessQuerier;
     let sandboxListQuerier: SandboxListQuerier;
     let userListQuerier: UserListQuerier;
+    let userAccessExpressionUserQuerier: UserAccessExpressionUserQuerier;
+    let myTaskListQuerier: MyTaskListQuerier;
 
     const sqliteDatabases = new SqliteDatabases(serverPaths);
 
@@ -96,11 +111,16 @@ export class Server {
     processRepository = new SqliteProcessRepository(sqliteDatabases);
     sandboxRepository = new SqliteSandboxRepository(sqliteDatabases);
     chatSessionRepository = new SqliteChatSessionRepository(sqliteDatabases);
+    taskRepository = new SqliteTaskRepository(sqliteDatabases);
+    assignedTaskRepository = new SqliteAssignedTaskRepository(sqliteDatabases);
+
     processListQuerier = new SqliteProcessListQuerier(sqliteDatabases);
     myProcessListQuerier = new SqliteMyProcessListQuerier(sqliteDatabases);
     myProcessAccessQuerier = new SqliteMyProcessAccessQuerier(sqliteDatabases);
     sandboxListQuerier = new SqliteSandboxListQuerier(sqliteDatabases);
     userListQuerier = new SqliteUserListQuerier(sqliteDatabases);
+    userAccessExpressionUserQuerier = new SqliteUserAccessExpressionUserQuerier(sqliteDatabases);
+    myTaskListQuerier = new SqliteMyTaskListQuerier(sqliteDatabases);
 
     await Promise.all([
       userRepository.setup(abortSignal),
@@ -109,7 +129,9 @@ export class Server {
       authTokenRepository.setup(abortSignal),
       processRepository.setup(abortSignal),
       sandboxRepository.setup(abortSignal),
-      chatSessionRepository.setup(abortSignal)
+      chatSessionRepository.setup(abortSignal),
+      taskRepository.setup(abortSignal),
+      assignedTaskRepository.setup(abortSignal)
     ]);
 
     const processExecutionStore = new ProcessExecutionStore();
@@ -126,7 +148,9 @@ export class Server {
 
     const sandboxInstanceManager = new SandboxInstanceManager(serverPaths, sandboxRepository, rpcHandler);
 
-    const processExecutor = new ProcessExecutor(sandboxInstanceManager, processExecutionStore);
+    const taskManager = new TaskManager(taskRepository, assignedTaskRepository, userAccessExpressionUserQuerier);
+
+    const processExecutor = new ProcessExecutor(sandboxInstanceManager, processExecutionStore, taskManager);
     const lazyProcessExecutor = new LazyProcessExecutor(processExecutor, eventBus);
 
     const passwordHasher = new PasswordHasher();
@@ -157,6 +181,7 @@ export class Server {
       new LoginEndpoint(userRepository, authTokenRepository, passwordHasher),
       new RefreshAuthTokenEndpoint(authTokenRepository),
       new GetMyProcessesEndpoint(myProcessListQuerier),
+      new GetMyTasksEndpoint(myTaskListQuerier),
       new GetMyProcessStartFormEndpoint(myProcessProvider),
       new StartMyProcessEndpoint(myProcessProvider, lazyProcessExecutor, liveSessionStore),
       new GetProcessesEndpoint(processListQuerier),

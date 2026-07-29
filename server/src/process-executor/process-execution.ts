@@ -6,6 +6,7 @@ import { ProcessVariableManager } from './services/process-variable-manager';
 import { ProcessExecutionResult, ProcessLog } from '@aila/model';
 
 export class ProcessExecution {
+  public readonly onCurrentStepChanged = new SimpleEvent<string | null>();
   public readonly onFinished = new SimpleEvent<ProcessExecutionResult>();
   public readonly onLog = new SimpleEvent<ProcessLog>();
 
@@ -60,6 +61,9 @@ export class ProcessExecution {
     this.interpreter.onChange(() => {
       if (abortSignal.aborted) {
         this.interpreter.tryStop();
+      } else {
+        const snapshot = this.interpreter.getSnapshot();
+        this.onCurrentStepChanged.emit(snapshot.tryGetCurrentStepId());
       }
     });
 

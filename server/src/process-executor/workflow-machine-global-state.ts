@@ -1,6 +1,7 @@
 import { ProcessLogger } from './services/process-logger';
 import { ProcessScriptExecutor } from './services/process-script-executor';
 import { ProcessVariableManager } from './services/process-variable-manager';
+import { TaskManager } from './services/task-manager';
 
 export interface WorkflowMachineGlobalState {
   result?: {
@@ -8,8 +9,9 @@ export interface WorkflowMachineGlobalState {
     stepId: string;
   };
 
-  // Services
+  executionId: string;
   $logger: ProcessLogger;
   $variables: ProcessVariableManager;
   $scriptExecutor: ProcessScriptExecutor;
+  $taskManager: TaskManager;
 }

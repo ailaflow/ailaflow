@@ -2,6 +2,7 @@ import { HttpClient, SseTransport } from '@aibindkit/react';
 import { AuthApiClient } from './auth-api-client';
 import { InstallApiClient } from './install-api-client';
 import { MyProcessApiClient } from './my-process-api-client';
+import { MyTaskApiClient } from './my-task-api-client';
 import { ProcessApiClient } from './process-api-client';
 import { SandboxApiClient } from './sandbox-api-client';
 import { UserApiClient } from './user-api-client';
@@ -15,6 +16,7 @@ export class ApiClient {
   public readonly sandbox: SandboxApiClient;
   public readonly user: UserApiClient;
   public readonly myProcess: MyProcessApiClient;
+  public readonly myTask: MyTaskApiClient;
 
   public constructor(authToken: string | null) {
     this.client = new HttpClient(this.createHeaders(authToken));
@@ -25,6 +27,7 @@ export class ApiClient {
     this.sandbox = new SandboxApiClient(this.client);
     this.user = new UserApiClient(this.client);
     this.myProcess = new MyProcessApiClient(this.client);
+    this.myTask = new MyTaskApiClient(this.client);
   }
 
   public get onUnauthorized() {

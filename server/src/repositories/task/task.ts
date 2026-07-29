@@ -8,10 +8,10 @@ export class Task {
     inputVariableNames: string[],
     outputVariableNames: string[],
     form: FormDefinition | null,
-    deadline: number | null,
-    createdAt: number
+    deadline: number | null
   ) {
     const id = randomBytes(24).toString('hex');
+    const createdAt = Date.now();
     return new Task(id, title, executionId, inputVariableNames, outputVariableNames, form, deadline, createdAt);
   }
 

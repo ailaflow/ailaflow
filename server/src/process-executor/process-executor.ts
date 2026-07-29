@@ -9,13 +9,17 @@ import { ProcessScriptExecutor } from './services/process-script-executor';
 import { randomBytes } from 'crypto';
 import { ProcessExecutionStore } from './process-execution-store';
 import { ProcessExecutionVariableValues } from '@aila/model';
+import { TaskManager } from './services/task-manager';
+import { Logger } from '../core/logger';
 
 export class ProcessExecutor {
+  private readonly logger = new Logger(ProcessExecutor.name);
   private readonly builder = createWorkflowMachineBuilder(activitySet);
 
   public constructor(
     private readonly sandboxInstanceManager: SandboxInstanceManager,
-    private readonly processExecutionStore: ProcessExecutionStore
+    private readonly processExecutionStore: ProcessExecutionStore,
+    private readonly taskManager: TaskManager
   ) {}
 
   public initialize(process: Process, input: ProcessExecutionVariableValues): ProcessExecution {
@@ -30,16 +34,23 @@ export class ProcessExecutor {
     const interpreter = machine.create({
       init: () => {
         return {
+          executionId,
           $logger,
           $variables,
-          $scriptExecutor
+          $scriptExecutor,
+          $taskManager: this.taskManager
         };
       }
     });
 
     const execution = new ProcessExecution(executionId, interpreter, $logger, $variables);
     this.processExecutionStore.set(executionId, execution);
-    execution.onFinished.subscribe(() => this.processExecutionStore.delete(executionId));
+    execution.onFinished.subscribe(result => {
+      if (!result.success) {
+        this.logger.error(`Process execution ${executionId} failed: ${result.error}`);
+      }
+      this.processExecutionStore.delete(executionId);
+    });
     return execution;
   }
 }

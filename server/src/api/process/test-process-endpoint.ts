@@ -1,4 +1,4 @@
-import { testProcessRequestSchema, TestProcessUpdate } from '@aila/model';
+import { ProcessLogLevel, testProcessRequestSchema, TestProcessUpdate } from '@aila/model';
 import { SseResponse } from '../../utilities/sse-response';
 import { Endpoint } from '../framework/endpoint';
 import { Request, Response } from 'express';
@@ -36,6 +36,10 @@ export class TestProcessEndpoint implements Endpoint {
     const sseResponse = new SseResponse<TestProcessUpdate>(res);
     sseResponse.onClose(() => abortController.abort());
 
+    execution.onCurrentStepChanged.subscribe(stepId => {
+      // TODO
+      sseResponse.send({ log: [Date.now(), ProcessLogLevel.INFO, `Current step: ${stepId}`] });
+    });
     execution.onLog.subscribe(log => {
       sseResponse.send({ log });
     });

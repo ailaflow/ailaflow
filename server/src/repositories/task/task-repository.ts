@@ -9,5 +9,5 @@ export class TaskRepositoryError extends Error {
 }
 
 export interface TaskRepository extends Repository {
-  upsert(abortSignal: AbortSignal, task: Task): Promise<void>;
+  insert(abortSignal: AbortSignal, task: Task): Promise<void>;
 }

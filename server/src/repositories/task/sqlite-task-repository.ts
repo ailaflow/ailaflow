@@ -30,7 +30,7 @@ export class SqliteTaskRepository implements TaskRepository {
     `);
   }
 
-  public async upsert(_: AbortSignal, task: Task): Promise<void> {
+  public async insert(_: AbortSignal, task: Task): Promise<void> {
     const statement = this.db.prepare(`
       INSERT INTO tasks (
         id,
@@ -43,14 +43,6 @@ export class SqliteTaskRepository implements TaskRepository {
         createdAt
       )
       VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-      ON CONFLICT(id) DO UPDATE SET
-        title = excluded.title,
-        executionId = excluded.executionId,
-        inputVariableNames = excluded.inputVariableNames,
-        outputVariableNames = excluded.outputVariableNames,
-        form = excluded.form,
-        deadline = excluded.deadline,
-        createdAt = excluded.createdAt
     `);
     statement.run(
       task.id,
