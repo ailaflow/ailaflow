@@ -3,7 +3,7 @@ import { ProcessScriptExecutor } from './services/process-script-executor';
 import { ProcessVariableManager } from './services/process-variable-manager';
 import { TaskManager } from './services/task-manager';
 
-export interface WorkflowMachineGlobalState {
+export interface ProcessExecutionGlobalState {
   result?: {
     outputVariableNames: string[];
     stepId: string;

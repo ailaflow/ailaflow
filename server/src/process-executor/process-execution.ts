@@ -1,6 +1,6 @@
 import { WorkflowMachineInterpreter } from 'sequential-workflow-machine';
 import { ProcessLogger } from './services/process-logger';
-import { WorkflowMachineGlobalState } from './workflow-machine-global-state';
+import { ProcessExecutionGlobalState } from './process-execution-global-state';
 import { SimpleEvent } from '@aibindkit/core';
 import { ProcessVariableManager } from './services/process-variable-manager';
 import { ProcessExecutionResult, ProcessLog } from '@aila/model';
@@ -12,7 +12,7 @@ export class ProcessExecution {
 
   public constructor(
     public readonly id: string,
-    private readonly interpreter: WorkflowMachineInterpreter<WorkflowMachineGlobalState>,
+    private readonly interpreter: WorkflowMachineInterpreter<ProcessExecutionGlobalState>,
     private readonly logger: ProcessLogger,
     private readonly variableManager: ProcessVariableManager
   ) {}

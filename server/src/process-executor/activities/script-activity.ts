@@ -1,10 +1,10 @@
 import { ScriptStep } from '@aila/model';
 import { createAtomActivity } from 'sequential-workflow-machine';
-import { WorkflowMachineGlobalState } from '../workflow-machine-global-state';
+import { ProcessExecutionGlobalState } from '../process-execution-global-state';
 
-export const scriptStepActivity = createAtomActivity<ScriptStep, WorkflowMachineGlobalState>('script', {
+export const scriptStepActivity = createAtomActivity<ScriptStep, ProcessExecutionGlobalState>('script', {
   init: () => ({}),
-  handler: async (step: ScriptStep, { $scriptExecutor }: WorkflowMachineGlobalState) => {
+  handler: async (step: ScriptStep, { $scriptExecutor }: ProcessExecutionGlobalState) => {
     const abortSignal = AbortSignal.timeout(10_000);
     await $scriptExecutor.execute(abortSignal, step.id, step.properties.script);
   }
