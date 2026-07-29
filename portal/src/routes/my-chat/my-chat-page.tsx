@@ -4,8 +4,9 @@ import { useApiClient } from '../../auth/auth-context';
 import { useMemo } from 'react';
 import { ChatMessageType } from '@aibindkit/core';
 import { ChatMessageMetadata } from '@aibindkit/core';
-import { FormMessage } from './form-message';
+import { StartFormMessage } from './start-form-message';
 import { CompletedChatMessage } from '@aibindkit/core';
+import { TaskFormMessage } from './task-form-message';
 
 function messageRenderer(
   id: number,
@@ -14,17 +15,33 @@ function messageRenderer(
   completedMessageIndex: number,
   sessionToken: string
 ) {
+  const finished = completedMessage.metadata?.['finished'] === true;
   const startForm = completedMessage.metadata?.['startForm'] as {
     processName: string;
   };
-  const finished = completedMessage.metadata?.['finished'] as true | undefined;
   if (typeof startForm === 'object' && startForm) {
     return (
-      <FormMessage
+      <StartFormMessage
         processName={startForm.processName}
         completedMessageIndex={completedMessageIndex}
         messageId={id}
         sessionToken={sessionToken}
+        finished={finished}
+      />
+    );
+  }
+
+  const taskForm = completedMessage.metadata?.['taskForm'] as {
+    taskId: string;
+    executionId: string;
+  };
+  if (typeof taskForm === 'object' && taskForm) {
+    return (
+      <TaskFormMessage
+        taskId={taskForm.taskId}
+        executionId={taskForm.executionId}
+        messageId={id}
+        completedMessageIndex={completedMessageIndex}
         finished={finished}
       />
     );

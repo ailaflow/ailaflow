@@ -2,7 +2,7 @@ import { MyProcessAccessQuerier } from '../queriers/my-process/my-process-access
 import { Process } from '../repositories/process/process';
 import { ProcessRepository } from '../repositories/process/process-repository';
 
-export class MyProcessProvider {
+export class UserProcessProvider {
   public constructor(
     private readonly accessQuerier: MyProcessAccessQuerier,
     private readonly processRepository: ProcessRepository

@@ -2,7 +2,7 @@ import { ToolContext, ZodTool, ZodToolExecutionResult } from '@aibindkit/llm';
 import { LazyProcessExecutor } from '../../process-executor/lazy-process-executor';
 import z from 'zod/v4';
 import { ChatSessionId } from '../chat-session-id';
-import { MyProcessProvider } from '../../providers/my-process-provider';
+import { UserProcessProvider } from '../../providers/user-process-provider';
 
 const FAST_TIMEOUT = 3_000;
 
@@ -15,7 +15,7 @@ type Arg = z.infer<typeof inputSchema>;
 
 export class StartMyProcessTool extends ZodTool<Arg> {
   public constructor(
-    private readonly myProcessProvider: MyProcessProvider,
+    private readonly userProcessProvider: UserProcessProvider,
     private readonly lazyProcessExecutor: LazyProcessExecutor
   ) {
     super('start_my_process', 'Starts a new process', inputSchema);
@@ -24,7 +24,7 @@ export class StartMyProcessTool extends ZodTool<Arg> {
   protected async handle(abortSignal: AbortSignal, { sessionId }: ToolContext, arg: Arg): Promise<ZodToolExecutionResult> {
     const { userName } = ChatSessionId.decode(sessionId);
 
-    const process = await this.myProcessProvider.tryGet(abortSignal, userName, arg.name);
+    const process = await this.userProcessProvider.tryGet(abortSignal, userName, arg.name);
     if (!process) {
       return {
         content: {

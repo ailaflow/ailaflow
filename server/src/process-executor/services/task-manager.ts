@@ -4,12 +4,14 @@ import { TaskRepository } from '../../repositories/task/task-repository';
 import { UserAccessExpressionUserQuerier } from '../../queriers/user-access-expression/user-access-expression-user-querier';
 import { AssignedTask } from '../../repositories/task/assigned-task';
 import { Task } from '../../repositories/task/task';
+import { UserChatSessionProvider } from '../../providers/user-chat-session-provider';
 
 export class TaskManager {
   public constructor(
     private readonly taskRepository: TaskRepository,
     private readonly assignedTaskRepository: AssignedTaskRepository,
-    private readonly userAccessExpressionUserQuerier: UserAccessExpressionUserQuerier
+    private readonly userAccessExpressionUserQuerier: UserAccessExpressionUserQuerier,
+    private readonly userChatSessionProvider: UserChatSessionProvider
   ) {}
 
   public async create(abortSignal: AbortSignal, executionId: string, step: TaskStep) {
@@ -25,7 +27,7 @@ export class TaskManager {
       null
     );
 
-    const assignedTasks = new Array(userNames.length);
+    const assignedTasks = new Array<AssignedTask>(userNames.length);
     for (let i = 0; i < userNames.length; i++) {
       assignedTasks[i] = AssignedTask.create(task.id, userNames[i]);
     }
@@ -33,6 +35,17 @@ export class TaskManager {
     await this.taskRepository.insert(abortSignal, task);
     await this.assignedTaskRepository.upsertMultiple(abortSignal, assignedTasks);
 
-    return assignedTasks;
+    for (const userName of userNames) {
+      const session = this.userChatSessionProvider.tryGetMainChannel(userName);
+      if (session) {
+        session.queueUserMessage(`You have a new task assigned: "${step.name}", title: "${task.title}"`, {
+          internal: true,
+          taskForm: {
+            taskId: task.id,
+            executionId: task.executionId
+          }
+        });
+      }
+    }
   }
 }

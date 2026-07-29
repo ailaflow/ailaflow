@@ -1,20 +1,18 @@
-import { LiveChatSessionStore } from '@aibindkit/express';
 import { EventHandler } from '../event-handler';
 import { LazyProcessFinishedEvent } from './lazy-process-finished-event';
 import { Logger } from '../../core/logger';
-import { ChatSessionId } from '../../chat-session/chat-session-id';
+import { UserChatSessionProvider } from '../../providers/user-chat-session-provider';
 
 export class LazyProcessFinishedEventHandler implements EventHandler<LazyProcessFinishedEvent> {
   public readonly name = LazyProcessFinishedEvent.name;
   private readonly logger = new Logger(LazyProcessFinishedEventHandler.name);
 
-  public constructor(private readonly liveSessionStore: LiveChatSessionStore) {}
+  public constructor(private readonly userChatSessionProvider: UserChatSessionProvider) {}
 
   public async handle(event: LazyProcessFinishedEvent) {
-    const sessionId = ChatSessionId.createUserMainChannel(event.userName).encode();
-    const session = this.liveSessionStore.tryGetById(sessionId);
+    const session = this.userChatSessionProvider.tryGetMainChannel(event.userName);
     if (!session) {
-      this.logger.log(`Cannot find session: ${sessionId}`);
+      this.logger.log(`Cannot find main chat session for user: ${event.userName}`);
       return;
     }
 

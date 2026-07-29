@@ -1,5 +1,5 @@
 import { TaskStep } from '@aila/model';
-import { createSignalActivity } from 'sequential-workflow-machine';
+import { createSignalActivity, SignalPayload } from 'sequential-workflow-machine';
 import { ProcessExecutionGlobalState } from '../process-execution-global-state';
 
 export const taskStepActivity = createSignalActivity<TaskStep, ProcessExecutionGlobalState>('task', {
@@ -8,7 +8,15 @@ export const taskStepActivity = createSignalActivity<TaskStep, ProcessExecutionG
     const abortSignal = AbortSignal.timeout(5_000);
     await globalState.$taskManager.create(abortSignal, globalState.executionId, step);
   },
-  afterSignal: async () => {
-    throw new Error('Not implemented');
+  afterSignal: async (step: TaskStep, globalState: ProcessExecutionGlobalState, _: object, payload: SignalPayload) => {
+    for (const name of step.properties.outputVariableNames) {
+      if (!payload[name]) {
+        throw new Error(`Missing task output variable: ${name}`);
+      }
+    }
+    for (const name of step.properties.outputVariableNames) {
+      const value = payload[name];
+      globalState.$variables.set(name, value);
+    }
   }
 });

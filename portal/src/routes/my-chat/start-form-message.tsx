@@ -5,15 +5,15 @@ import { FormAdapter } from '../common/form-renderer/form-adapter';
 import { useMemo } from 'react';
 import { FormMessageView } from '../../views/my-chat/form-message-view';
 
-export interface FormMessageProps {
+export interface StartFormMessageProps {
   processName: string;
   sessionToken: string;
   messageId: number;
   completedMessageIndex: number;
-  finished: true | undefined;
+  finished: boolean;
 }
 
-export function FormMessage(props: FormMessageProps) {
+export function StartFormMessage(props: StartFormMessageProps) {
   const apiClient = useApiClient();
   const { data, error, isLoading } = useLoader(
     abortSignal => apiClient.myProcess.getMyProcessStartForm(abortSignal, props.processName),

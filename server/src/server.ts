@@ -60,12 +60,12 @@ import { ChatSessionStorage } from './chat-session/chat-session-storage';
 import { ChatSessionRepository } from './repositories/chat-session/chat-session-repository';
 import { SqliteChatSessionRepository } from './repositories/chat-session/sqlite-chat-session-repository';
 import {
-  PersistentExecutionRepository,
-  SqlitePersistentExecutionRepository
-} from './repositories/persistent-execution/persistent-execution-repository';
+  PersistedExecutionRepository,
+  SqlitePersistedExecutionRepository
+} from './repositories/persisted-execution/persisted-execution-repository';
 import { OpenMyProcessStartFormTool } from './chat-session/user-tools/open-my-process-start-form-tool';
 import { GetMyProcessStartFormEndpoint } from './api/my-process/get-my-process-start-form-endpoint';
-import { MyProcessProvider } from './providers/my-process-provider';
+import { UserProcessProvider } from './providers/user-process-provider';
 import { StartMyProcessEndpoint } from './api/my-process/start-my-process-endpoint';
 import { TaskRepository } from './repositories/task/task-repository';
 import { AssignedTaskRepository } from './repositories/task/assigned-task-repository';
@@ -77,6 +77,8 @@ import { SqliteUserAccessExpressionUserQuerier } from './queriers/user-access-ex
 import { MyTaskListQuerier } from './queriers/my-task-list/my-task-list-querier';
 import { SqliteMyTaskListQuerier } from './queriers/my-task-list/sqlite-my-task-list-querier';
 import { GetMyTasksEndpoint } from './api/my-task/get-my-tasks-endpoint';
+import { ProcessExecutionPersister } from './process-executor/process-execution-persister';
+import { UserChatSessionProvider } from './providers/user-chat-session-provider';
 
 const PORT = process.env.PORT || 2048;
 
@@ -95,7 +97,7 @@ export class Server {
     let processRepository: ProcessRepository;
     let sandboxRepository: SandboxRepository;
     let chatSessionRepository: ChatSessionRepository;
-    let persistentExecutionRepository: PersistentExecutionRepository;
+    let persistedExecutionRepository: PersistedExecutionRepository;
     let taskRepository: TaskRepository;
     let assignedTaskRepository: AssignedTaskRepository;
 
@@ -116,7 +118,7 @@ export class Server {
     processRepository = new SqliteProcessRepository(sqliteDatabases);
     sandboxRepository = new SqliteSandboxRepository(sqliteDatabases);
     chatSessionRepository = new SqliteChatSessionRepository(sqliteDatabases);
-    persistentExecutionRepository = new SqlitePersistentExecutionRepository(sqliteDatabases);
+    persistedExecutionRepository = new SqlitePersistedExecutionRepository(sqliteDatabases);
     taskRepository = new SqliteTaskRepository(sqliteDatabases);
     assignedTaskRepository = new SqliteAssignedTaskRepository(sqliteDatabases);
 
@@ -136,7 +138,7 @@ export class Server {
       processRepository.setup(abortSignal),
       sandboxRepository.setup(abortSignal),
       chatSessionRepository.setup(abortSignal),
-      persistentExecutionRepository.setup(abortSignal),
+      persistedExecutionRepository.setup(abortSignal),
       taskRepository.setup(abortSignal),
       assignedTaskRepository.setup(abortSignal)
     ]);
@@ -149,19 +151,21 @@ export class Server {
 
     const sessionStorage = new ChatSessionStorage(chatSessionRepository);
     const liveSessionStore = new LiveChatSessionStore();
+    const userChatSessionProvider = new UserChatSessionProvider(liveSessionStore);
 
     const eventBus = new EventBus();
-    eventBus.registerHandler(new LazyProcessFinishedEventHandler(liveSessionStore));
+    eventBus.registerHandler(new LazyProcessFinishedEventHandler(userChatSessionProvider));
 
     const sandboxInstanceManager = new SandboxInstanceManager(serverPaths, sandboxRepository, rpcHandler);
 
-    const taskManager = new TaskManager(taskRepository, assignedTaskRepository, userAccessExpressionUserQuerier);
+    const taskManager = new TaskManager(taskRepository, assignedTaskRepository, userAccessExpressionUserQuerier, userChatSessionProvider);
 
-    const processExecutor = new ProcessExecutor(sandboxInstanceManager, processExecutionStore, taskManager);
+    const processExecutionPersister = new ProcessExecutionPersister(persistedExecutionRepository);
+    const processExecutor = new ProcessExecutor(sandboxInstanceManager, processExecutionStore, taskManager, processExecutionPersister);
     const lazyProcessExecutor = new LazyProcessExecutor(processExecutor, eventBus);
 
     const passwordHasher = new PasswordHasher();
-    const myProcessProvider = new MyProcessProvider(myProcessAccessQuerier, processRepository);
+    const userProcessProvider = new UserProcessProvider(myProcessAccessQuerier, processRepository);
 
     const llmClient = new OpenaiLlmClient({
       baseUrl: process.env.AI_PROVIDER_BASE_URL!,
@@ -169,8 +173,8 @@ export class Server {
     });
     const userToolSetProvider = new UserToolSetProvider([
       new MyProcessesTool(myProcessListQuerier),
-      new StartMyProcessTool(myProcessProvider, lazyProcessExecutor),
-      new OpenMyProcessStartFormTool(myProcessProvider)
+      new StartMyProcessTool(userProcessProvider, lazyProcessExecutor),
+      new OpenMyProcessStartFormTool(userProcessProvider)
     ]);
 
     const authMiddleware = new AuthMiddleware(authTokenRepository);
@@ -189,8 +193,8 @@ export class Server {
       new RefreshAuthTokenEndpoint(authTokenRepository),
       new GetMyProcessesEndpoint(myProcessListQuerier),
       new GetMyTasksEndpoint(myTaskListQuerier),
-      new GetMyProcessStartFormEndpoint(myProcessProvider),
-      new StartMyProcessEndpoint(myProcessProvider, lazyProcessExecutor, liveSessionStore),
+      new GetMyProcessStartFormEndpoint(userProcessProvider),
+      new StartMyProcessEndpoint(userProcessProvider, lazyProcessExecutor, liveSessionStore),
       new GetProcessesEndpoint(processListQuerier),
       new GetProcessEndpoint(processRepository),
       new SaveProcessEndpoint(processRepository, resourceAccessRepository, sandboxListQuerier),

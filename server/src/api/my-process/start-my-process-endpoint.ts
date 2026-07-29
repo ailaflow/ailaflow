@@ -1,5 +1,5 @@
 import { Request } from 'express';
-import { MyProcessProvider } from '../../providers/my-process-provider';
+import { UserProcessProvider } from '../../providers/user-process-provider';
 import { getAuthToken } from '../auth/auth-middleware';
 import { Endpoint } from '../framework/endpoint';
 import { getEndpointAbortSignal } from '../framework/endpoint-abort-signal';
@@ -15,7 +15,7 @@ export class StartMyProcessEndpoint implements Endpoint {
   public readonly auth = true;
 
   public constructor(
-    private readonly myProcessProvider: MyProcessProvider,
+    private readonly userProcessProvider: UserProcessProvider,
     private readonly lazyProcessExecutor: LazyProcessExecutor,
     private readonly liveSessionStore: LiveChatSessionStore
   ) {}
@@ -26,7 +26,7 @@ export class StartMyProcessEndpoint implements Endpoint {
     const request = parseBody(startMyProcessRequestSchema, req.body);
 
     const processName = String(req.params.name);
-    const process = await this.myProcessProvider.tryGet(abortSignal, authToken.userName, processName);
+    const process = await this.userProcessProvider.tryGet(abortSignal, authToken.userName, processName);
     if (!process) {
       throw new EndpointError('Process not found', 404);
     }

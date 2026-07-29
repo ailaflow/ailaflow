@@ -1,20 +1,39 @@
-import { WorkflowMachineInterpreter } from 'sequential-workflow-machine';
+import {
+  SerializedWorkflowMachineSnapshot,
+  SignalPayload,
+  WorkflowMachineInterpreter,
+  signalSignalActivity
+} from 'sequential-workflow-machine';
 import { ProcessLogger } from './services/process-logger';
 import { ProcessExecutionGlobalState } from './process-execution-global-state';
 import { SimpleEvent } from '@aibindkit/core';
 import { ProcessVariableManager } from './services/process-variable-manager';
 import { ProcessExecutionResult, ProcessLog } from '@aila/model';
+import { ProcessExecutionPersister } from './process-execution-persister';
+import type { Process } from '../repositories/process/process';
+
+const WAIT_FOR_SIGNAL_STATE = 'WAIT_FOR_SIGNAL';
+
+type ProcessExecutionSnapshot = ReturnType<WorkflowMachineInterpreter<ProcessExecutionGlobalState>['getSnapshot']>;
+
+export interface ProcessExecutionRunOptions {
+  signalOnFirstWait?: SignalPayload;
+}
 
 export class ProcessExecution {
   public readonly onCurrentStepChanged = new SimpleEvent<string | null>();
   public readonly onFinished = new SimpleEvent<ProcessExecutionResult>();
+  public readonly onPaused = new SimpleEvent<void>();
   public readonly onLog = new SimpleEvent<ProcessLog>();
+  private paused = false;
 
   public constructor(
     public readonly id: string,
+    private readonly process: Process,
     private readonly interpreter: WorkflowMachineInterpreter<ProcessExecutionGlobalState>,
     private readonly logger: ProcessLogger,
-    private readonly variableManager: ProcessVariableManager
+    private readonly variableManager: ProcessVariableManager,
+    private readonly processExecutionPersister: ProcessExecutionPersister
   ) {}
 
   private resolveResult(): ProcessExecutionResult {
@@ -57,17 +76,59 @@ export class ProcessExecution {
     };
   }
 
-  public run(abortSignal: AbortSignal) {
+  private isWaitingForSignal(snapshot: ProcessExecutionSnapshot): boolean {
+    return snapshot.getStatePaths().some(path => path.includes(WAIT_FOR_SIGNAL_STATE));
+  }
+
+  private async pause(
+    currentStepId: string | null,
+    serializedSnapshot: SerializedWorkflowMachineSnapshot<ProcessExecutionGlobalState>
+  ): Promise<void> {
+    if (this.paused) {
+      return;
+    }
+    this.paused = true;
+    try {
+      await this.processExecutionPersister.persist(this.process, this.id, serializedSnapshot);
+      this.onPaused.emit();
+    } catch (e) {
+      this.onFinished.emit({
+        success: false,
+        error: `Could not persist paused execution: ${(e as Error).message}`,
+        stepId: currentStepId
+      });
+    } finally {
+      this.interpreter.tryStop();
+    }
+  }
+
+  public run(abortSignal: AbortSignal, options: ProcessExecutionRunOptions = {}) {
+    let signalOnFirstWait = options.signalOnFirstWait;
+
     this.interpreter.onChange(() => {
       if (abortSignal.aborted) {
         this.interpreter.tryStop();
       } else {
         const snapshot = this.interpreter.getSnapshot();
-        this.onCurrentStepChanged.emit(snapshot.tryGetCurrentStepId());
+        const currentStepId = snapshot.tryGetCurrentStepId();
+        this.onCurrentStepChanged.emit(currentStepId);
+
+        if (this.isWaitingForSignal(snapshot)) {
+          if (signalOnFirstWait) {
+            const payload = signalOnFirstWait;
+            signalOnFirstWait = undefined;
+            signalSignalActivity(this.interpreter, payload);
+            return;
+          }
+          void this.pause(currentStepId, this.interpreter.serializeSnapshot());
+        }
       }
     });
 
     this.interpreter.onDone(() => {
+      if (this.paused) {
+        return;
+      }
       const result = this.resolveResult();
       this.onFinished.emit(result);
     });
