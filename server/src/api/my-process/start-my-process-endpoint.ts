@@ -31,7 +31,7 @@ export class StartMyProcessEndpoint implements Endpoint {
       throw new EndpointError('Process not found', 404);
     }
 
-    const startValuesError = process.validateStartValues(request.startValues);
+    const startValuesError = process.variables.validateStartValues(request.startValues);
     if (startValuesError) {
       throw new EndpointError(startValuesError, 400);
     }

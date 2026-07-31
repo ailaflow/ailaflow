@@ -9,6 +9,7 @@ import { ProcessLogger } from './services/process-logger';
 import { ProcessVariableManager } from './services/process-variable-manager';
 import { Process } from '../repositories/process/process';
 import { ProcessExecutionPersister } from './process-execution-persister';
+import { ProcessVariables } from '../repositories/process/process-variables';
 
 test('process execution signals the first wait and pauses on a later wait', async () => {
   const activitySet = createActivitySet<ProcessExecutionGlobalState>([
@@ -39,7 +40,7 @@ test('process execution signals the first wait and pauses on a later wait', asyn
   };
   const machine = createWorkflowMachineBuilder(activitySet).build(definition);
   const $logger = new ProcessLogger();
-  const $variables = new ProcessVariableManager({} as ProcessExecutionVariableValues, new Map());
+  const $variables = new ProcessVariableManager({} as ProcessExecutionVariableValues, new ProcessVariables([], []));
   const interpreter = machine.create({
     init: () =>
       new ProcessExecutionGlobalState(
@@ -90,7 +91,7 @@ test('process execution fails when pause persistence fails', async () => {
     properties: {}
   });
   const $logger = new ProcessLogger();
-  const $variables = new ProcessVariableManager({} as ProcessExecutionVariableValues, new Map());
+  const $variables = new ProcessVariableManager({} as ProcessExecutionVariableValues, new ProcessVariables([], []));
   const interpreter = machine.create({
     init: () =>
       new ProcessExecutionGlobalState(

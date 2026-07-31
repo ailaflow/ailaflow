@@ -1,10 +1,11 @@
-import { TaskStep, UserAccessExpressionParser } from '@aila/model';
+import { JsonSchema, TaskStep, UserAccessExpressionParser } from '@aila/model';
 import { AssignedTaskRepository } from '../../repositories/task/assigned-task-repository';
 import { TaskRepository } from '../../repositories/task/task-repository';
 import { UserAccessExpressionUserQuerier } from '../../queriers/user-access-expression/user-access-expression-user-querier';
 import { AssignedTask } from '../../repositories/task/assigned-task';
 import { Task } from '../../repositories/task/task';
 import { UserChatSessionProvider } from '../../providers/user-chat-session-provider';
+import { ProcessVariableManager } from './process-variable-manager';
 
 export class TaskManager {
   public constructor(
@@ -14,15 +15,20 @@ export class TaskManager {
     private readonly userChatSessionProvider: UserChatSessionProvider
   ) {}
 
-  public async create(abortSignal: AbortSignal, executionId: string, step: TaskStep) {
+  public async create(abortSignal: AbortSignal, executionId: string, step: TaskStep, variableManager: ProcessVariableManager) {
     const expression = UserAccessExpressionParser.parse(step.properties.userExpression);
     const userNames = await this.userAccessExpressionUserQuerier.queryUserNames(abortSignal, expression);
+
+    const outputVariableSchemas: Record<string, JsonSchema> = {};
+    for (const name of step.properties.outputVariableNames) {
+      outputVariableSchemas[name] = variableManager.getSchema(name);
+    }
 
     const task = Task.create(
       step.name,
       executionId,
       step.properties.inputVariableNames,
-      step.properties.outputVariableNames,
+      step.properties.outputVariableNames.length > 0 ? outputVariableSchemas : null,
       step.properties.form,
       null
     );

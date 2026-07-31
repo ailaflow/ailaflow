@@ -4,7 +4,7 @@ import { FormAdapter } from './form-adapter';
 import { FormDefinition } from '@aila/model';
 
 export interface FormRendererProps {
-  form?: FormDefinition;
+  form: FormDefinition | null | undefined;
   adapter: FormAdapter;
 }
 

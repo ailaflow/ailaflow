@@ -19,7 +19,7 @@ export type GetMyProcessesResponse = z.infer<typeof getMyProcessesResponseSchema
 // getMyProcessStartForm
 
 export const getMyProcessStartFormResponseSchema = z.object({
-  form: formDefinitionSchema,
+  form: formDefinitionSchema.nullable(),
   startVariableSchemas: jsonSchema.nullable()
 });
 

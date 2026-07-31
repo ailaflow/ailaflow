@@ -24,7 +24,7 @@ export class ProcessExecutionGlobalState {
     services: ProcessExecutionGlobalStateServices
   ): ProcessExecutionGlobalState {
     const $logger = new ProcessLogger();
-    const $variables = new ProcessVariableManager(variableValues, process.getVariableValidatorMap());
+    const $variables = new ProcessVariableManager(variableValues, process.variables);
     const $scriptExecutor = new ProcessScriptExecutor(executionId, process, $logger, services.sandboxInstanceManager);
 
     return new ProcessExecutionGlobalState(executionId, $logger, $variables, $scriptExecutor, services.taskManager);

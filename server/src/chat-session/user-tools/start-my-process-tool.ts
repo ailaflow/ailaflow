@@ -33,7 +33,7 @@ export class StartMyProcessTool extends ZodTool<Arg> {
       };
     }
 
-    const startValuesError = process.validateStartValues(arg.startValues);
+    const startValuesError = process.variables.validateStartValues(arg.startValues);
     if (startValuesError) {
       return {
         content: {

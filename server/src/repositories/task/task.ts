@@ -1,4 +1,4 @@
-import { FormDefinition } from '@aila/model';
+import { FormDefinition, JsonSchema } from '@aila/model';
 import { randomBytes } from 'crypto';
 
 export class Task {
@@ -6,13 +6,13 @@ export class Task {
     title: string,
     executionId: string,
     inputVariableNames: string[],
-    outputVariableNames: string[],
+    outputVariableSchemas: Record<string, JsonSchema> | null,
     form: FormDefinition | null,
     deadline: number | null
   ) {
     const id = randomBytes(24).toString('hex');
     const createdAt = Date.now();
-    return new Task(id, title, executionId, inputVariableNames, outputVariableNames, form, deadline, createdAt);
+    return new Task(id, title, executionId, inputVariableNames, outputVariableSchemas, form, deadline, createdAt);
   }
 
   public constructor(
@@ -20,7 +20,7 @@ export class Task {
     public readonly title: string,
     public readonly executionId: string,
     public readonly inputVariableNames: string[],
-    public readonly outputVariableNames: string[],
+    public readonly outputVariableSchemas: Record<string, JsonSchema> | null,
     public readonly form: FormDefinition | null,
     public readonly deadline: number | null,
     public readonly createdAt: number

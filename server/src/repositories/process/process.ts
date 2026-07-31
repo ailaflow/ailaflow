@@ -1,15 +1,14 @@
 import {
   JsonSchema,
   ProcessDefinition,
-  ProcessExecutionVariableValues,
   ProcessRootValidator,
   ProcessStepValidator,
   ProcessValidator,
   SaveProcessRequest
 } from '@aila/model';
+import { ProcessVariables } from './process-variables';
 import { DefinitionWalker } from 'sequential-workflow-model';
 import { ProcessRepositoryError } from './process-repository';
-import z from 'zod/v4';
 
 function validateProcessDefinition(
   definition: ProcessDefinition,
@@ -64,8 +63,6 @@ function extractStartVariableSchemas(definition: ProcessDefinition): Record<stri
   return count > 0 ? schemas : null;
 }
 
-export type VariableValidatorMap = Map<string, z.ZodType>;
-
 export class Process {
   public static create(data: SaveProcessRequest, rootValidator: ProcessRootValidator, stepValidator: ProcessStepValidator): Process {
     validateName(data.name);
@@ -78,7 +75,7 @@ export class Process {
     return new Process(data.name, data.description, data.userAccessExpression, data.definition, data.hash, startVariableSchemas, nSteps);
   }
 
-  private vvmCache: VariableValidatorMap | null = null;
+  private variablesCache: ProcessVariables | null = null;
 
   public constructor(
     public readonly name: string,
@@ -101,38 +98,16 @@ export class Process {
     this.description = data.description;
     this.userAccessExpression = data.userAccessExpression;
     this.definition = data.definition;
-    this.vvmCache = null;
+    this.variablesCache = null;
     this.hash = data.hash;
     this.startVariableSchemas = extractStartVariableSchemas(data.definition);
     this.nSteps = nSteps;
   }
 
-  public getVariableValidatorMap(): VariableValidatorMap {
-    if (!this.vvmCache) {
-      this.vvmCache = new Map(this.definition.properties.variables.map(v => [v.name, z.fromJSONSchema(v.schema.schema)]));
-    }
-    return this.vvmCache;
-  }
-
-  public validateStartValues(values: ProcessExecutionVariableValues): string | null {
-    const passedVariableNames = Object.keys(values);
-    if (!this.startVariableSchemas) {
-      if (passedVariableNames.length > 0) {
-        return 'Process does not have start variables';
-      }
-      return null;
-    }
-    const map = this.getVariableValidatorMap();
-    for (const name of passedVariableNames) {
-      const validator = map.get(name);
-      if (!validator) {
-        return `Variable \$${name} is not a start variable`;
-      }
-      const { error } = validator.safeParse(values[name]);
-      if (error) {
-        return `Variable value \$${name} does not meet the required schema: ${error}`;
-      }
-    }
-    return null;
+  public get variables(): ProcessVariables {
+    return (
+      this.variablesCache ??
+      (this.variablesCache = new ProcessVariables(this.definition.properties.startVariableNames, this.definition.properties.variables))
+    );
   }
 }

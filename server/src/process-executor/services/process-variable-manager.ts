@@ -1,30 +1,27 @@
-import z from 'zod/v4';
-import { VariableValidatorMap } from '../../repositories/process/process';
-import { ProcessExecutionVariableValues } from '@aila/model';
-
-interface Variable {
-  zod: z.ZodType;
-  value: unknown | null;
-}
+import { JsonSchema, ProcessExecutionVariableValues } from '@aila/model';
+import { ProcessVariables } from '../../repositories/process/process-variables';
 
 export class ProcessVariableManager {
-  private readonly variables = new Map<string, Variable>();
+  private readonly values = new Map<string, unknown | null>();
 
-  public constructor(input: ProcessExecutionVariableValues, variableValidatorMap: VariableValidatorMap) {
-    for (const [name, zod] of variableValidatorMap.entries()) {
-      this.variables.set(name, {
-        zod,
-        value: input[name] ?? null
-      });
+  public constructor(
+    input: ProcessExecutionVariableValues,
+    private readonly variables: ProcessVariables
+  ) {
+    for (const name of variables.names) {
+      this.values.set(name, input[name] ?? null);
     }
   }
 
   public get(name: string): unknown | null {
-    const variable = this.variables.get(name);
-    if (!variable) {
+    if (!this.values.has(name)) {
       throw new Error(`Variable \$${name} does not exist`);
     }
-    return variable.value;
+    return this.values.get(name) ?? null;
+  }
+
+  public getSchema(name: string): JsonSchema {
+    return this.variables.getSchema(name);
   }
 
   public getMultiple(names: string[]): ProcessExecutionVariableValues {
@@ -39,21 +36,19 @@ export class ProcessVariableManager {
     if (value === undefined) {
       throw new Error('Invalid variable value');
     }
-    const variable = this.variables.get(name);
-    if (!variable) {
+    if (!this.values.has(name)) {
       throw new Error(`Variable \$${name} does not exist`);
     }
-    try {
-      variable.zod.parse(value);
-    } catch (e) {
-      throw new Error(`Value for variable \$${name} does not meet the variable schema: ${(e as Error).message}`);
+    const error = this.variables.validateValue(name, value);
+    if (error) {
+      throw new Error(error);
     }
-    variable.value = value;
+    this.values.set(name, value);
   }
 
   public dump(): ProcessExecutionVariableValues {
     const output: ProcessExecutionVariableValues = {};
-    for (const name of this.variables.keys()) {
+    for (const name of this.values.keys()) {
       output[name] = this.get(name);
     }
     return output;

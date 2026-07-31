@@ -77,6 +77,7 @@ import { SqliteUserAccessExpressionUserQuerier } from './queriers/user-access-ex
 import { MyTaskListQuerier } from './queriers/my-task-list/my-task-list-querier';
 import { SqliteMyTaskListQuerier } from './queriers/my-task-list/sqlite-my-task-list-querier';
 import { GetMyTasksEndpoint } from './api/my-task/get-my-tasks-endpoint';
+import { GetMyTaskFormEndpoint } from './api/my-task/get-my-task-form-endpoint';
 import { ProcessExecutionPersister } from './process-executor/process-execution-persister';
 import { UserChatSessionProvider } from './providers/user-chat-session-provider';
 
@@ -193,6 +194,7 @@ export class Server {
       new RefreshAuthTokenEndpoint(authTokenRepository),
       new GetMyProcessesEndpoint(myProcessListQuerier),
       new GetMyTasksEndpoint(myTaskListQuerier),
+      new GetMyTaskFormEndpoint(taskRepository, assignedTaskRepository),
       new GetMyProcessStartFormEndpoint(userProcessProvider),
       new StartMyProcessEndpoint(userProcessProvider, lazyProcessExecutor, liveSessionStore),
       new GetProcessesEndpoint(processListQuerier),
