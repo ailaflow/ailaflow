@@ -48,7 +48,7 @@ export type SubmitMyTaskResponse = z.infer<typeof submitMyTaskResponseSchema>;
 // getTaskVariableValue
 
 export const getTaskVariableValueRequestSchema = z.object({
-  executionId: z.string(),
+  taskId: z.string(),
   variableName: z.string()
 });
 

@@ -25,4 +25,8 @@ export class Task {
     public readonly deadline: number | null,
     public readonly createdAt: number
   ) {}
+
+  public canReadInputVariable(variableName: string): boolean {
+    return this.inputVariableNames.includes(variableName);
+  }
 }

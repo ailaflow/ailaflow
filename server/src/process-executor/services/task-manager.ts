@@ -44,11 +44,10 @@ export class TaskManager {
     for (const userName of userNames) {
       const session = this.userChatSessionProvider.tryGetMainChannel(userName);
       if (session) {
-        session.queueUserMessage(`You have a new task assigned: "${step.name}", title: "${task.title}"`, {
+        session.queueUserMessage(`>>>>>>>>\nYou have a new task assigned: "${step.name}", title: "${task.title}"\n<<<<<<<<`, {
           internal: true,
           taskForm: {
-            taskId: task.id,
-            executionId: task.executionId
+            taskId: task.id
           }
         });
       }

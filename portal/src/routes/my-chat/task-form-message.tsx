@@ -8,7 +8,6 @@ import { useLoader } from '@aibindkit/react';
 export interface TaskFormMessageProps {
   taskId: string;
   sessionToken: string;
-  executionId: string;
   messageId: number;
   completedMessageIndex: number;
   finished: boolean;
@@ -26,7 +25,7 @@ export function TaskFormMessage(props: TaskFormMessageProps) {
       allowedToReadVariableNames: data?.inputVariableNames ?? [],
       async readVariable(abortSignal: AbortSignal, variableName: string) {
         const response = await apiClient.myTask.getTaskVariableValue(abortSignal, {
-          executionId: props.executionId,
+          taskId: props.taskId,
           variableName
         });
         return response.value;

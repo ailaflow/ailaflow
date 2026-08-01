@@ -1,7 +1,6 @@
 import { GetMyTaskFormResponse } from '@aila/model';
 import { Request } from 'express';
-import { AssignedTaskRepository } from '../../repositories/task/assigned-task-repository';
-import { TaskRepository } from '../../repositories/task/task-repository';
+import { UserAssignedTaskProvider } from '../../providers/user-assigned-task-provider';
 import { getAuthToken } from '../auth/auth-middleware';
 import { Endpoint } from '../framework/endpoint';
 import { getEndpointAbortSignal } from '../framework/endpoint-abort-signal';
@@ -12,25 +11,18 @@ export class GetMyTaskFormEndpoint implements Endpoint {
   public readonly path = '/api/my-tasks/:id/form';
   public readonly auth = true;
 
-  public constructor(
-    private readonly taskRepository: TaskRepository,
-    private readonly assignedTaskRepository: AssignedTaskRepository
-  ) {}
+  public constructor(private readonly userAssignedTaskProvider: UserAssignedTaskProvider) {}
 
   public async handle(req: Request): Promise<GetMyTaskFormResponse> {
     const abortSignal = getEndpointAbortSignal(req);
     const authToken = getAuthToken(req);
     const taskId = String(req.params.id);
 
-    const assignedTask = await this.assignedTaskRepository.tryGet(abortSignal, taskId, authToken.userName);
-    if (!assignedTask) {
+    const userAssignedTask = await this.userAssignedTaskProvider.tryGet(abortSignal, authToken.userName, taskId);
+    if (!userAssignedTask) {
       throw new EndpointError('Task not found', 404);
     }
-
-    const task = await this.taskRepository.tryGet(abortSignal, taskId);
-    if (!task) {
-      throw new Error('Task not found but assignment exists');
-    }
+    const { task } = userAssignedTask;
 
     return {
       form: task.form,

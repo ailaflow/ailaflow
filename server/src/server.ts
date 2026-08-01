@@ -83,6 +83,7 @@ import { SubmitMyTaskEndpoint } from './api/my-task/submit-my-task-endpoint';
 import { ProcessExecutionPersister } from './process-executor/process-execution-persister';
 import { UserChatSessionProvider } from './providers/user-chat-session-provider';
 import { ProcessExecutionResumer } from './process-executor/process-execution-resumer';
+import { UserAssignedTaskProvider } from './providers/user-assigned-task-provider';
 
 const PORT = process.env.PORT || 2048;
 
@@ -171,6 +172,7 @@ export class Server {
 
     const passwordHasher = new PasswordHasher();
     const userProcessProvider = new UserProcessProvider(myProcessAccessQuerier, processRepository);
+    const userAssignedTaskProvider = new UserAssignedTaskProvider(taskRepository, assignedTaskRepository);
 
     const llmClient = new OpenaiLlmClient({
       baseUrl: process.env.AI_PROVIDER_BASE_URL!,
@@ -198,9 +200,9 @@ export class Server {
       new RefreshAuthTokenEndpoint(authTokenRepository),
       new GetMyProcessesEndpoint(myProcessListQuerier),
       new GetMyTasksEndpoint(myTaskListQuerier),
-      new GetMyTaskFormEndpoint(taskRepository, assignedTaskRepository),
-      new GetTaskVariableValueEndpoint(persistedExecutionRepository),
-      new SubmitMyTaskEndpoint(processExecutionResumer, taskRepository, assignedTaskRepository, liveSessionStore),
+      new GetMyTaskFormEndpoint(userAssignedTaskProvider),
+      new GetTaskVariableValueEndpoint(userAssignedTaskProvider, persistedExecutionRepository),
+      new SubmitMyTaskEndpoint(processExecutionResumer, userAssignedTaskProvider, assignedTaskRepository, liveSessionStore),
       new GetMyProcessStartFormEndpoint(userProcessProvider),
       new StartMyProcessEndpoint(userProcessProvider, lazyProcessExecutor, liveSessionStore),
       new GetProcessesEndpoint(processListQuerier),

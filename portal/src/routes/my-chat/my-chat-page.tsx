@@ -33,14 +33,12 @@ function messageRenderer(
 
   const taskForm = completedMessage.metadata?.['taskForm'] as {
     taskId: string;
-    executionId: string;
   };
   if (typeof taskForm === 'object' && taskForm) {
     return (
       <TaskFormMessage
         taskId={taskForm.taskId}
         sessionToken={sessionToken}
-        executionId={taskForm.executionId}
         messageId={id}
         completedMessageIndex={completedMessageIndex}
         finished={finished}

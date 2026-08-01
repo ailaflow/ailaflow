@@ -16,13 +16,14 @@ export class LazyProcessFinishedEventHandler implements EventHandler<LazyProcess
       return;
     }
 
-    let message = `Process "${event.processName}" finished the execution ${event.executionId},`;
+    let m = `>>>>>>>>\nProcess "${event.processName}" finished the execution ${event.executionId}`;
     if (event.result.success) {
-      message += ` successfully, output: ${JSON.stringify(event.result.output)}`;
+      m += ` successfully, output: ${JSON.stringify(event.result.output)}`;
     } else {
-      message += ` with an error: ${event.result.error}`;
+      m += ` with an error: ${event.result.error}`;
     }
-    session.queueUserMessage(message, {
+    m += `\n<<<<<<<<`;
+    session.queueUserMessage(m, {
       internal: true
     });
   }

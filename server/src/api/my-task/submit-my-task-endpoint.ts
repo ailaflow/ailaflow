@@ -4,10 +4,10 @@ import { getEndpointAbortSignal } from '../framework/endpoint-abort-signal';
 import { parseBody } from '../framework/parse-body';
 import { submitMyTaskRequestSchema, SubmitMyTaskResponse } from '@aila/model';
 import { ProcessExecutionResumer } from '../../process-executor/process-execution-resumer';
-import { TaskRepository } from '../../repositories/task/task-repository';
 import { EndpointError } from '../framework/endpoint-error';
 import { LiveChatSessionStore } from '@aibindkit/express';
 import { AssignedTaskRepository } from '../../repositories/task/assigned-task-repository';
+import { UserAssignedTaskProvider } from '../../providers/user-assigned-task-provider';
 import { getAuthToken } from '../auth/auth-middleware';
 
 export class SubmitMyTaskEndpoint implements Endpoint {
@@ -17,7 +17,7 @@ export class SubmitMyTaskEndpoint implements Endpoint {
 
   public constructor(
     private readonly resumer: ProcessExecutionResumer,
-    private readonly taskRepository: TaskRepository,
+    private readonly userAssignedTaskProvider: UserAssignedTaskProvider,
     private readonly assignedTaskRepository: AssignedTaskRepository,
     private readonly liveSessionStore: LiveChatSessionStore
   ) {}
@@ -27,15 +27,11 @@ export class SubmitMyTaskEndpoint implements Endpoint {
     const { userName } = getAuthToken(req);
     const request = parseBody(submitMyTaskRequestSchema, req.body);
 
-    const assignedTask = await this.assignedTaskRepository.tryGet(abortSignal, request.taskId, userName);
-    if (!assignedTask) {
-      throw new EndpointError('Assigned task not found', 404);
+    const userAssignedTask = await this.userAssignedTaskProvider.tryGet(abortSignal, userName, request.taskId);
+    if (!userAssignedTask) {
+      throw new EndpointError('Task not found', 404);
     }
-
-    const task = await this.taskRepository.tryGet(abortSignal, request.taskId);
-    if (!task) {
-      throw new Error('Task not found but assignment exists');
-    }
+    const { assignedTask, task } = userAssignedTask;
 
     const chatSession = this.liveSessionStore.tryGetByToken(request.chatSession.token);
     if (!chatSession) {
