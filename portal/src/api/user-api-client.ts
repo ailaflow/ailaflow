@@ -4,15 +4,15 @@ import type { GetUserResponse, GetUsersResponse, SaveUserRequest, SaveUserRespon
 export class UserApiClient {
   public constructor(private readonly client: HttpClient) {}
 
-  public async getUsers(abortSignal: AbortSignal): Promise<GetUsersResponse> {
+  public getUsers(abortSignal: AbortSignal): Promise<GetUsersResponse> {
     return this.client.json(abortSignal, 'GET', '/api/users');
   }
 
-  public async getUser(abortSignal: AbortSignal, name: string): Promise<GetUserResponse> {
+  public getUser(abortSignal: AbortSignal, name: string): Promise<GetUserResponse> {
     return this.client.json(abortSignal, 'GET', `/api/users/${encodeURIComponent(name)}`);
   }
 
-  public async saveUser(abortSignal: AbortSignal, request: SaveUserRequest): Promise<SaveUserResponse> {
+  public saveUser(abortSignal: AbortSignal, request: SaveUserRequest): Promise<SaveUserResponse> {
     return this.client.json(abortSignal, 'POST', '/api/user', request);
   }
 }

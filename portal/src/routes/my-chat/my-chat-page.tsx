@@ -39,6 +39,7 @@ function messageRenderer(
     return (
       <TaskFormMessage
         taskId={taskForm.taskId}
+        sessionToken={sessionToken}
         executionId={taskForm.executionId}
         messageId={id}
         completedMessageIndex={completedMessageIndex}

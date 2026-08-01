@@ -71,6 +71,7 @@ export class IframeContentBuilder {
     <title>Aila Form</title>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script>${frameworkScript}<\/script>
     <style>
       ${frameworkCss}
       ${form.css}
@@ -79,7 +80,6 @@ export class IframeContentBuilder {
 
   <body>
     ${form.html}
-    <script>${frameworkScript}<\/script>
     <script>${form.js}<\/script>
   </body>
 </html>

@@ -78,8 +78,11 @@ import { MyTaskListQuerier } from './queriers/my-task-list/my-task-list-querier'
 import { SqliteMyTaskListQuerier } from './queriers/my-task-list/sqlite-my-task-list-querier';
 import { GetMyTasksEndpoint } from './api/my-task/get-my-tasks-endpoint';
 import { GetMyTaskFormEndpoint } from './api/my-task/get-my-task-form-endpoint';
+import { GetTaskVariableValueEndpoint } from './api/my-task/get-task-variable-value-endpoint';
+import { SubmitMyTaskEndpoint } from './api/my-task/submit-my-task-endpoint';
 import { ProcessExecutionPersister } from './process-executor/process-execution-persister';
 import { UserChatSessionProvider } from './providers/user-chat-session-provider';
+import { ProcessExecutionResumer } from './process-executor/process-execution-resumer';
 
 const PORT = process.env.PORT || 2048;
 
@@ -164,6 +167,7 @@ export class Server {
     const processExecutionPersister = new ProcessExecutionPersister(persistedExecutionRepository);
     const processExecutor = new ProcessExecutor(sandboxInstanceManager, processExecutionStore, taskManager, processExecutionPersister);
     const lazyProcessExecutor = new LazyProcessExecutor(processExecutor, eventBus);
+    const processExecutionResumer = new ProcessExecutionResumer(processRepository, persistedExecutionRepository, processExecutor);
 
     const passwordHasher = new PasswordHasher();
     const userProcessProvider = new UserProcessProvider(myProcessAccessQuerier, processRepository);
@@ -195,6 +199,8 @@ export class Server {
       new GetMyProcessesEndpoint(myProcessListQuerier),
       new GetMyTasksEndpoint(myTaskListQuerier),
       new GetMyTaskFormEndpoint(taskRepository, assignedTaskRepository),
+      new GetTaskVariableValueEndpoint(persistedExecutionRepository),
+      new SubmitMyTaskEndpoint(processExecutionResumer, taskRepository, assignedTaskRepository, liveSessionStore),
       new GetMyProcessStartFormEndpoint(userProcessProvider),
       new StartMyProcessEndpoint(userProcessProvider, lazyProcessExecutor, liveSessionStore),
       new GetProcessesEndpoint(processListQuerier),

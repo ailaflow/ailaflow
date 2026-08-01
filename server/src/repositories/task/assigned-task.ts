@@ -9,7 +9,7 @@ export class AssignedTask {
     public completedAt: number | null
   ) {}
 
-  public complete(completedAt: number) {
-    this.completedAt = completedAt;
+  public complete() {
+    this.completedAt = Date.now();
   }
 }
