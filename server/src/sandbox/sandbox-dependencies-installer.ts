@@ -27,7 +27,7 @@ export class SandboxDependenciesInstaller {
     );
 
     if (result.code !== 0) {
-      throw new Error(`Failed to install dependencies: ${result.stderr}`);
+      throw new Error(`Failed to install dependencies: ${result.stdout} ${result.stderr}`);
     }
 
     const endTime = Date.now();

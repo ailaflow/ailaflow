@@ -25,7 +25,7 @@ export function JsonForm({ adapter }: JsonFormProps) {
       }
     }
     return result;
-  }, [adapter]);
+  }, [adapter, values]);
 
   async function onSubmit() {
     const output: Record<string, unknown> = {};

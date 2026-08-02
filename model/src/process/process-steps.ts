@@ -12,6 +12,7 @@ export const scriptStepPropertiesSchema = z.object({
 export const scriptStepSchema = baseStepSchema
   .extend({
     type: z.literal('script'),
+    componentType: z.literal('task'),
     properties: scriptStepPropertiesSchema
   })
   .describe('A script step.');
@@ -26,6 +27,7 @@ export const agentStepPropertiesSchema = z.object({
 
 export const agentStepSchema = baseStepSchema.extend({
   type: z.literal('agent'),
+  componentType: z.literal('task'),
   properties: agentStepPropertiesSchema
 });
 
@@ -39,6 +41,7 @@ export const notificationStepPropertiesSchema = z.object({
 
 export const notificationStepSchema = baseStepSchema.extend({
   type: z.literal('notification'),
+  componentType: z.literal('task'),
   properties: notificationStepPropertiesSchema
 });
 
@@ -55,6 +58,7 @@ export const taskStepPropertiesSchema = z.object({
 
 export const taskStepSchema = baseStepSchema.extend({
   type: z.literal('task'),
+  componentType: z.literal('task'),
   properties: taskStepPropertiesSchema
 });
 
@@ -69,6 +73,7 @@ export const returnStepPropertiesSchema = z.object({
 
 export const returnStepSchema = baseStepSchema.extend({
   type: z.literal('return'),
+  componentType: z.literal('task'),
   properties: returnStepPropertiesSchema
 });
 

@@ -4,6 +4,7 @@ import { VariableCachedValidator } from './variable-cached-validator';
 import { FormDefinitionValidator } from './form-definition-validator';
 import { ProcessDefinition } from './process-definition';
 import { UserAccessExpressionParser } from '../user-access';
+import { ScriptDefinitionValidator } from './script-definition-validator';
 
 export class ProcessStepValidator {
   public constructor(
@@ -31,8 +32,9 @@ export class ProcessStepValidator {
   }
 
   private validateScript(step: ScriptStep, errors: Record<string, string>) {
-    if (!step.properties.script.contents.find(content => content.path === 'package.json')) {
-      errors['properties.script'] = 'Script must contain a package.json file.';
+    const scriptError = ScriptDefinitionValidator.validate(step.properties.script);
+    if (scriptError) {
+      errors['properties.script'] = scriptError;
     }
     if (!this.sandboxNames.includes(step.properties.script.sandboxName)) {
       errors['properties.script.sandboxName'] = 'No sandbox with the specified name exists.';
