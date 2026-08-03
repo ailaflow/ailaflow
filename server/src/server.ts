@@ -84,6 +84,7 @@ import { ProcessExecutionPersister } from './process-executor/process-execution-
 import { UserChatSessionProvider } from './providers/user-chat-session-provider';
 import { ProcessExecutionResumer } from './process-executor/process-execution-resumer';
 import { UserAssignedTaskProvider } from './providers/user-assigned-task-provider';
+import { Notifier } from './process-executor/services/notifier';
 
 const PORT = process.env.PORT || 2048;
 
@@ -164,9 +165,16 @@ export class Server {
     const sandboxInstanceManager = new SandboxInstanceManager(serverPaths, sandboxRepository, rpcHandler);
 
     const taskManager = new TaskManager(taskRepository, assignedTaskRepository, userAccessExpressionUserQuerier, userChatSessionProvider);
+    const notifier = new Notifier(userAccessExpressionUserQuerier, userChatSessionProvider);
 
     const processExecutionPersister = new ProcessExecutionPersister(persistedExecutionRepository);
-    const processExecutor = new ProcessExecutor(sandboxInstanceManager, processExecutionStore, taskManager, processExecutionPersister);
+    const processExecutor = new ProcessExecutor(
+      sandboxInstanceManager,
+      processExecutionStore,
+      taskManager,
+      processExecutionPersister,
+      notifier
+    );
     const lazyProcessExecutor = new LazyProcessExecutor(processExecutor, eventBus);
     const processExecutionResumer = new ProcessExecutionResumer(processRepository, persistedExecutionRepository, processExecutor);
 

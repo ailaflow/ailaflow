@@ -5,12 +5,26 @@ import { StringEditorPropertyView } from '../../../views/process-editor/designer
 import { NotificationStep, ProcessDefinition } from '@aila/model';
 
 export function NotificationStepEditor(props: StepEditorProps) {
-  const { name, step, definition, setName } = useStepEditor<NotificationStep, ProcessDefinition>();
+  const { name, step, definition, properties, setName, setProperty } = useStepEditor<NotificationStep, ProcessDefinition>();
   const errors = props.state.stepValidator.validate(step, definition);
 
   return (
     <DesignerEditorView>
-      <StringEditorPropertyView label="Name" value={name} onValueChanged={setName} error={errors['name']}></StringEditorPropertyView>
+      <StringEditorPropertyView label="Name" value={name} onValueChanged={setName} error={errors['name']} />
+
+      <StringEditorPropertyView
+        label="User Expression"
+        value={properties.userExpression}
+        onValueChanged={v => setProperty('userExpression', v)}
+        error={errors['properties.userExpression']}
+      />
+
+      <StringEditorPropertyView
+        label="Name"
+        value={properties.notification}
+        onValueChanged={v => setProperty('notification', v)}
+        error={errors['properties.notification']}
+      />
     </DesignerEditorView>
   );
 }

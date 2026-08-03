@@ -88,7 +88,8 @@ const notificationStep: Omit<NotificationStep, 'id'> = {
   name: 'Notification',
   componentType: 'task',
   properties: {
-    userList: ''
+    userExpression: '',
+    notification: 'Put your notification message here'
   }
 };
 

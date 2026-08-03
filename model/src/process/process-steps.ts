@@ -36,7 +36,8 @@ export type AgentStep = z.infer<typeof agentStepSchema>;
 // notification step
 
 export const notificationStepPropertiesSchema = z.object({
-  userList: z.string()
+  userExpression: z.string(),
+  notification: z.string()
 });
 
 export const notificationStepSchema = baseStepSchema.extend({

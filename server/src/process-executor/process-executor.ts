@@ -11,6 +11,7 @@ import { Logger } from '../core/logger';
 import { ProcessExecutionSnapshotTransformer } from './process-execution-snapshot-transformer';
 import { ProcessExecutionGlobalState, SerializedProcessExecutionGlobalState } from './process-execution-global-state';
 import { ProcessExecutionPersister } from './process-execution-persister';
+import { Notifier } from './services/notifier';
 
 export class ProcessExecutor {
   private readonly logger = new Logger(ProcessExecutor.name);
@@ -20,7 +21,8 @@ export class ProcessExecutor {
     private readonly sandboxInstanceManager: SandboxInstanceManager,
     private readonly processExecutionStore: ProcessExecutionStore,
     private readonly taskManager: TaskManager,
-    private readonly processExecutionPersister: ProcessExecutionPersister
+    private readonly processExecutionPersister: ProcessExecutionPersister,
+    private readonly notifier: Notifier
   ) {}
 
   public initialize(process: Process, input: ProcessExecutionVariableValues): ProcessExecution {
@@ -29,7 +31,8 @@ export class ProcessExecutor {
     const machine = this.builder.build(process.definition);
     const globalState = ProcessExecutionGlobalState.create(executionId, input, process, {
       sandboxInstanceManager: this.sandboxInstanceManager,
-      taskManager: this.taskManager
+      taskManager: this.taskManager,
+      notifier: this.notifier
     });
 
     const interpreter = machine.create({
@@ -42,7 +45,8 @@ export class ProcessExecutor {
   public restore(process: Process, snapshot: SerializedWorkflowMachineSnapshot<SerializedProcessExecutionGlobalState>): ProcessExecution {
     const restoredSnapshot = ProcessExecutionSnapshotTransformer.deserialize(snapshot, process, {
       sandboxInstanceManager: this.sandboxInstanceManager,
-      taskManager: this.taskManager
+      taskManager: this.taskManager,
+      notifier: this.notifier
     });
     const machine = this.builder.build(process.definition);
     const interpreter = machine.deserializeSnapshot(restoredSnapshot);

@@ -1,5 +1,5 @@
 import { Definition, Sequence, Step } from 'sequential-workflow-model';
-import { ReturnStep, ScriptStep, TaskStep } from './process-steps';
+import { NotificationStep, ReturnStep, ScriptStep, TaskStep } from './process-steps';
 import { VariableCachedValidator } from './variable-cached-validator';
 import { FormDefinitionValidator } from './form-definition-validator';
 import { ProcessDefinition } from './process-definition';
@@ -23,6 +23,9 @@ export class ProcessStepValidator {
         break;
       case 'task':
         this.validateTask(step as TaskStep, definition, errors);
+        break;
+      case 'notification':
+        this.validateNotification(step as NotificationStep, errors);
         break;
       case 'return':
         this.validateReturn(step as ReturnStep, definition, errors);
@@ -75,6 +78,17 @@ export class ProcessStepValidator {
     const userExpressionError = UserAccessExpressionParser.validate(step.properties.userExpression);
     if (userExpressionError) {
       errors['properties.userExpression'] = userExpressionError;
+    }
+  }
+
+  private validateNotification(step: NotificationStep, errors: Record<string, string>) {
+    const userExpressionError = UserAccessExpressionParser.validate(step.properties.userExpression);
+    if (userExpressionError) {
+      errors['properties.userExpression'] = userExpressionError;
+    }
+
+    if (step.properties.notification.length < 1) {
+      errors['properties.notification'] = 'Notification must not be empty.';
     }
   }
 

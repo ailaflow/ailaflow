@@ -8,6 +8,7 @@ import { ProcessExecutionGlobalState } from './process-execution-global-state';
 import { ProcessLogger } from './services/process-logger';
 import { ProcessScriptExecutor } from './services/process-script-executor';
 import { ProcessExecutionSnapshotTransformer } from './process-execution-snapshot-transformer';
+import { Notifier } from './services/notifier';
 
 test('process execution global state serializes variables and recreates runtime services', () => {
   const process = createTestProcess();
@@ -26,7 +27,8 @@ test('process execution global state serializes variables and recreates runtime 
 
   const deserialized = ProcessExecutionGlobalState.deserialize(serialized, process, {
     sandboxInstanceManager: {} as SandboxInstanceManager,
-    taskManager: {} as TaskManager
+    taskManager: {} as TaskManager,
+    notifier: {} as Notifier
   });
 
   assert.equal(deserialized.executionId, 'execution_1');
@@ -66,7 +68,8 @@ test('process execution snapshot transformer converts current and history global
 
   const deserialized = ProcessExecutionSnapshotTransformer.deserialize(serialized, process, {
     sandboxInstanceManager: {} as SandboxInstanceManager,
-    taskManager: {} as TaskManager
+    taskManager: {} as TaskManager,
+    notifier: {} as Notifier
   });
 
   assert.equal(deserialized.context.globalState.$variables.get('answer'), 123);
@@ -105,6 +108,7 @@ function createTestProcess(): Process {
 function createGlobalState(process: Process, values: Record<string, unknown>): ProcessExecutionGlobalState {
   return ProcessExecutionGlobalState.create('execution_1', values, process, {
     sandboxInstanceManager: {} as SandboxInstanceManager,
-    taskManager: {} as TaskManager
+    taskManager: {} as TaskManager,
+    notifier: {} as Notifier
   });
 }
