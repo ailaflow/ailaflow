@@ -13,7 +13,6 @@ import { MyChatPage } from './my-chat/my-chat-page';
 import { MyProcessListPage } from './my-process-list/my-process-list-page';
 import { MyNotificationsPage } from './my-notifications/my-notifications-page';
 import { MyTasksPage } from './my-tasks/my-tasks-page';
-import { MyViewsPage } from './my-views/my-views-page';
 import { UserListPage } from './user-list/user-list-page';
 import { UserEditorPage } from './user-editor/user-editor-page';
 import { TableListPage } from './table-list/table-list-page';
@@ -49,10 +48,6 @@ export const routes = [
   {
     path: '/my-processes',
     element: <AuthGate route={<MyProcessListPage />} />
-  },
-  {
-    path: '/my-views',
-    element: <AuthGate route={<MyViewsPage />} />
   },
   {
     element: <AuthGate route={<AdminPortal />} />,

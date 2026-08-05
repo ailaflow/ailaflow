@@ -6,7 +6,6 @@ const userItems: MenuItem[] = [
   { icon: 'T', label: 'My tasks', action: 'link', href: '/my-tasks' },
   { icon: 'N', label: 'My notifications', action: 'link', href: '/my-notifications' },
   { icon: 'P', label: 'My processes', action: 'link', href: '/my-processes' },
-  { icon: 'V', label: 'My views', action: 'link', href: '/my-views' },
   { icon: 'X', label: 'Log out', action: 'command', command: 'logout' }
 ];
 

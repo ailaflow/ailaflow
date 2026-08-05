@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { ResourceIcon } from '../common/resource-icon';
 
 export type LinkMenuItem = {
   icon: string;
@@ -23,9 +24,7 @@ function MenuItemView(props: { item: MenuItem; onCommand(command: string): void;
   const { item } = props;
   const content = (
     <>
-      <span className="inline-flex h-4 w-4 items-center justify-center rounded border border-slate-300 text-[10px] font-semibold text-slate-600">
-        {item.icon}
-      </span>
+      <ResourceIcon>{item.icon}</ResourceIcon>
       <span className="truncate">{item.label}</span>
     </>
   );
