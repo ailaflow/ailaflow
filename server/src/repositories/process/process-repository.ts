@@ -11,5 +11,6 @@ export class ProcessRepositoryError extends Error {
 export interface ProcessRepository extends Repository {
   insert(abortSignal: AbortSignal, process: Process): Promise<void>;
   update(abortSignal: AbortSignal, process: Process): Promise<void>;
+  delete(abortSignal: AbortSignal, name: string): Promise<boolean>;
   tryGetByName(abortSignal: AbortSignal, name: string): Promise<Process | null>;
 }

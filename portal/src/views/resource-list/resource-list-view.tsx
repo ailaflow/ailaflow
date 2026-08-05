@@ -12,9 +12,11 @@ export interface ResourceListColumn<T> {
 }
 
 export interface ResourceListAction<T> {
-  label: string | ReactNode;
-  ariaLabel?: string;
-  getTo(item: T): string;
+  label: ReactNode | ((item: T) => ReactNode);
+  ariaLabel?: string | ((item: T) => string);
+  getTo?(item: T): string;
+  onClick?(item: T): void | Promise<void>;
+  danger?: boolean;
 }
 
 export interface ResourceListViewProps<T> {
@@ -96,16 +98,31 @@ export function ResourceListView<T>(props: ResourceListViewProps<T>) {
                         {props.actions && props.actions.length > 0 ? (
                           <td className="px-3 py-3">
                             <div className="flex flex-nowrap justify-end gap-2">
-                              {props.actions.map((action, i) => (
-                                <Link
-                                  key={i}
-                                  aria-label={action.ariaLabel}
-                                  className="inline-flex h-8 shrink-0 items-center justify-center rounded-md border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 hover:text-slate-900"
-                                  to={action.getTo(row)}
-                                >
-                                  {action.label}
-                                </Link>
-                              ))}
+                              {props.actions.map((action, i) => {
+                                const label = typeof action.label === 'function' ? action.label(row) : action.label;
+                                const ariaLabel = typeof action.ariaLabel === 'function' ? action.ariaLabel(row) : action.ariaLabel;
+                                const className = `inline-flex h-8 shrink-0 items-center justify-center rounded-md border bg-white px-3 text-sm font-medium transition-colors ${
+                                  action.danger
+                                    ? 'border-red-200 text-red-700 hover:bg-red-50 hover:text-red-800'
+                                    : 'border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-slate-900'
+                                }`;
+
+                                return action.getTo ? (
+                                  <Link key={i} aria-label={ariaLabel} className={className} to={action.getTo(row)}>
+                                    {label}
+                                  </Link>
+                                ) : (
+                                  <button
+                                    key={i}
+                                    type="button"
+                                    aria-label={ariaLabel}
+                                    className={className}
+                                    onClick={() => void action.onClick?.(row)}
+                                  >
+                                    {label}
+                                  </button>
+                                );
+                              })}
                             </div>
                           </td>
                         ) : null}

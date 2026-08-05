@@ -1,5 +1,6 @@
 import { HttpClient, HttpClientSseListener } from '@aibindkit/react';
 import type {
+  DeleteProcessResponse,
   GetProcessResponse,
   GetProcessesRequest,
   GetProcessesResponse,
@@ -25,7 +26,11 @@ export class ProcessApiClient {
   }
 
   public getProcess(abortSignal: AbortSignal, name: string): Promise<GetProcessResponse> {
-    return this.client.json(abortSignal, 'GET', `/api/processes/${name}`);
+    return this.client.json(abortSignal, 'GET', `/api/processes/${encodeURIComponent(name)}`);
+  }
+
+  public deleteProcess(abortSignal: AbortSignal, name: string): Promise<DeleteProcessResponse> {
+    return this.client.json(abortSignal, 'DELETE', `/api/processes/${encodeURIComponent(name)}`);
   }
 
   public testProcess(
@@ -34,6 +39,6 @@ export class ProcessApiClient {
     name: string,
     request: TestProcessRequest
   ) {
-    return this.client.sse(abortSignal, listener, 'POST', `/api/processes/${name}/test`, request);
+    return this.client.sse(abortSignal, listener, 'POST', `/api/processes/${encodeURIComponent(name)}/test`, request);
   }
 }

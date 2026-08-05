@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 
 export interface Endpoint {
-  method: 'get' | 'post';
+  method: 'delete' | 'get' | 'post';
   path: string;
   auth?: true;
   admin?: true;

@@ -28,6 +28,7 @@ import { SqliteMyProcessListQuerier } from './queriers/my-process-list/sqlite-my
 import { MyProcessAccessQuerier } from './queriers/my-process/my-process-access-querier';
 import { SqliteMyProcessAccessQuerier } from './queriers/my-process/sqlite-my-process-access-querier';
 import { GetProcessEndpoint } from './api/process/get-process-endpoint';
+import { DeleteProcessEndpoint } from './api/process/delete-process-endpoint';
 import { TestProcessEndpoint } from './api/process/test-process-endpoint';
 import { GetMyProcessesEndpoint } from './api/my-process/get-my-processes-endpoint';
 import { UserToolSetProvider } from './chat-session/user-tools/user-tool-set-provider';
@@ -226,6 +227,7 @@ export class Server {
       new StartMyProcessEndpoint(userProcessProvider, lazyProcessExecutor, liveSessionStore),
       new GetProcessesEndpoint(processListQuerier),
       new GetProcessEndpoint(processRepository),
+      new DeleteProcessEndpoint(processRepository),
       new SaveProcessEndpoint(processRepository, resourceAccessRepository, sandboxListQuerier),
       new TestProcessEndpoint(processRepository, processExecutor),
       new GetSandboxesEndpoint(sandboxListQuerier),

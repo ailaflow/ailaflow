@@ -45,6 +45,7 @@ export class SaveProcessEndpoint implements Endpoint {
         }
         process = Process.create(request, rootValidator, stepValidator);
         await this.processRepository.insert(abortSignal, process);
+        await this.resourceAccessRepository.replace(abortSignal, resourceAccess);
       } else {
         if (!process) {
           throw new EndpointError('Process not found', 404);

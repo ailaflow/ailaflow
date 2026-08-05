@@ -3,6 +3,7 @@ import { ProcessRepository, ProcessRepositoryError } from './process-repository'
 import { Process } from './process';
 import { SqliteDatabases } from '../../core/sqlite-databases';
 import { DatabaseSync } from 'node:sqlite';
+import { ProcessResourceId } from './process-resource-id';
 
 export class SqliteProcessRepository implements ProcessRepository {
   private readonly db: DatabaseSync;
@@ -69,6 +70,30 @@ export class SqliteProcessRepository implements ProcessRepository {
       process.hash,
       process.name
     );
+  }
+
+  public async delete(abortSignal: AbortSignal, name: string): Promise<boolean> {
+    abortSignal.throwIfAborted();
+
+    const deleteAccessStatement = this.db.prepare(`
+      DELETE FROM resource_access_rule_groups
+      WHERE resource_id = ?
+    `);
+    const deleteProcessStatement = this.db.prepare(`
+      DELETE FROM processes
+      WHERE name = ?
+    `);
+
+    try {
+      this.db.exec(`BEGIN`);
+      deleteAccessStatement.run(ProcessResourceId.create(name));
+      const deleted = deleteProcessStatement.run(name).changes > 0;
+      this.db.exec(`COMMIT`);
+      return deleted;
+    } catch (e) {
+      this.db.exec(`ROLLBACK`);
+      throw e;
+    }
   }
 
   public async tryGetByName(_: AbortSignal, name: string): Promise<Process | null> {

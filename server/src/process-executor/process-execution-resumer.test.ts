@@ -14,6 +14,7 @@ test('process execution resumer fails when the process hash changed', async () =
       setup: async () => undefined,
       insert: async () => undefined,
       update: async () => undefined,
+      delete: async () => false,
       tryGetByName: async () => createTestProcess('new_hash')
     } as ProcessRepository,
     {

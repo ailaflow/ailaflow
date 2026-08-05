@@ -8,6 +8,7 @@ import { PortalErrorView } from '../../views/portal/portal-error-view';
 import { toolError, toolSuccess, toolWait } from '@aibindkit/react';
 import { useNavigate, useSearchParams } from 'react-router';
 import { useAiStore } from '../common/admin-portal';
+import { useState } from 'react';
 
 const PAGE_SIZE = 20;
 
@@ -15,10 +16,11 @@ export function ProcessListPage() {
   const apiClient = useApiClient();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const [reloadToken, setReloadToken] = useState(0);
   const page = Number(searchParams.get('page') ?? 1);
   const { data, isLoading, finishSignal, error } = useLoader(
     abortSignal => apiClient.process.getProcesses(abortSignal, { page, pageSize: PAGE_SIZE }),
-    [apiClient, page]
+    [apiClient, page, reloadToken]
   );
 
   function createNew() {
@@ -31,6 +33,20 @@ export function ProcessListPage() {
       next.set('page', String(value));
       return next;
     });
+  }
+
+  async function deleteProcess(name: string): Promise<void> {
+    if (!window.confirm(`Delete process "${name}"? This cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      await apiClient.process.deleteProcess(AbortSignal.timeout(5_000), name);
+      changePage(1);
+      setReloadToken(current => current + 1);
+    } catch (e) {
+      window.alert(`Failed to delete process "${name}": ${e instanceof Error ? e.message : String(e)}`);
+    }
   }
 
   useAiStore(
@@ -102,11 +118,18 @@ export function ProcessListPage() {
       actions={[
         {
           label: <SvgIcon name="pencil" className="h-4 w-4" />,
-          getTo: process => `/admin/processes/${process.name}`
+          ariaLabel: process => `Edit process ${process.name}`,
+          getTo: process => `/admin/processes/${encodeURIComponent(process.name)}`
         },
         {
           label: 'Test',
-          getTo: process => `/admin/processes/${process.name}/test`
+          getTo: process => `/admin/processes/${encodeURIComponent(process.name)}/test`
+        },
+        {
+          label: 'Delete',
+          ariaLabel: process => `Delete process ${process.name}`,
+          danger: true,
+          onClick: process => deleteProcess(process.name)
         }
       ]}
     />

@@ -54,6 +54,14 @@ export const saveProcessResponseSchema = z.object({
 export type SaveProcessRequest = z.infer<typeof saveProcessRequestSchema>;
 export type SaveProcessResponse = z.infer<typeof saveProcessResponseSchema>;
 
+// deleteProcess
+
+export const deleteProcessResponseSchema = z.object({
+  name: z.string()
+});
+
+export type DeleteProcessResponse = z.infer<typeof deleteProcessResponseSchema>;
+
 // testProcess
 
 export const testProcessRequestSchema = z.object({
