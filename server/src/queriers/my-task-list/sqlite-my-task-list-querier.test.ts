@@ -41,26 +41,58 @@ test('queries tasks assigned to the current user', async () => {
     AssignedTask.create('task_5', 'alice')
   ]);
 
-  assert.deepEqual(await querier.query(abortSignal, 'alice'), [
-    {
-      id: 'task_1',
-      title: 'Open outdated',
-      isOutdated: true
-    },
-    {
-      id: 'task_2',
-      title: 'Open current'
-    },
-    {
-      id: 'task_3',
-      title: 'Completed outdated',
-      completedAt: 4500
-    },
-    {
-      id: 'task_5',
-      title: 'No deadline'
-    }
-  ]);
+  assert.deepEqual(await querier.query(abortSignal, 'alice', false, 1, 2), {
+    tasks: [
+      {
+        id: 'task_1',
+        title: 'Open outdated',
+        isOutdated: true
+      },
+      {
+        id: 'task_2',
+        title: 'Open current'
+      }
+    ],
+    totalCount: 4,
+    page: 1,
+    pageSize: 2
+  });
+  assert.deepEqual(await querier.query(abortSignal, 'alice', false, 2, 2), {
+    tasks: [
+      {
+        id: 'task_3',
+        title: 'Completed outdated',
+        completedAt: 4500
+      },
+      {
+        id: 'task_5',
+        title: 'No deadline'
+      }
+    ],
+    totalCount: 4,
+    page: 2,
+    pageSize: 2
+  });
+  assert.deepEqual(await querier.query(abortSignal, 'alice', true, 1, 20), {
+    tasks: [
+      {
+        id: 'task_1',
+        title: 'Open outdated',
+        isOutdated: true
+      },
+      {
+        id: 'task_2',
+        title: 'Open current'
+      },
+      {
+        id: 'task_5',
+        title: 'No deadline'
+      }
+    ],
+    totalCount: 3,
+    page: 1,
+    pageSize: 20
+  });
 
   db.close();
 });

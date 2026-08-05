@@ -4,6 +4,7 @@ import { useApiClient } from '../../auth/auth-context';
 import { PortalErrorView } from '../../views/portal/portal-error-view';
 import { PortalLoadingView } from '../../views/portal/portal-loading-view';
 import { ResourceListView } from '../../views/resource-list/resource-list-view';
+import { ResourceHeaderButtonView } from '../../views/resource-list/resource-header-button-view';
 import { useAiStore } from '../common/admin-portal';
 import { SvgIcon } from '../../views/common/svg-icons';
 
@@ -50,8 +51,7 @@ export function UserListPage() {
   return (
     <ResourceListView
       title="Users"
-      createNewLabel="Create new"
-      onCreateNewClicked={createNew}
+      headerActions={<ResourceHeaderButtonView onClick={createNew}>Create new</ResourceHeaderButtonView>}
       columns={[
         {
           id: 'name',

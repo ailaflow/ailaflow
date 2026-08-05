@@ -1,6 +1,7 @@
 import { useApiClient } from '../../auth/auth-context';
 import { useLoader } from '@aibindkit/react';
 import { ResourceListView } from '../../views/resource-list/resource-list-view';
+import { ResourceHeaderButtonView } from '../../views/resource-list/resource-header-button-view';
 import { SvgIcon } from '../../views/common/svg-icons';
 import { PortalLoadingView } from '../../views/portal/portal-loading-view';
 import { PortalErrorView } from '../../views/portal/portal-error-view';
@@ -53,8 +54,7 @@ export function SandboxListPage() {
   return (
     <ResourceListView
       title="Sandboxes"
-      createNewLabel="Create new"
-      onCreateNewClicked={createNew}
+      headerActions={<ResourceHeaderButtonView onClick={createNew}>Create new</ResourceHeaderButtonView>}
       columns={[
         {
           id: 'name',

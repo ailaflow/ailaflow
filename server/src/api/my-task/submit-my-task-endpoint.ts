@@ -1,7 +1,7 @@
 import { Request } from 'express';
 import { Endpoint } from '../framework/endpoint';
 import { getEndpointAbortSignal } from '../framework/endpoint-abort-signal';
-import { parseBody } from '../framework/parse-body';
+import { parseBody } from '../framework/parse-request';
 import { submitMyTaskRequestSchema, SubmitMyTaskResponse } from '@aila/model';
 import { ProcessExecutionResumer } from '../../process-executor/process-execution-resumer';
 import { EndpointError } from '../framework/endpoint-error';

@@ -3,7 +3,7 @@ import { UserProcessProvider } from '../../providers/user-process-provider';
 import { getAuthToken } from '../auth/auth-middleware';
 import { Endpoint } from '../framework/endpoint';
 import { getEndpointAbortSignal } from '../framework/endpoint-abort-signal';
-import { parseBody } from '../framework/parse-body';
+import { parseBody } from '../framework/parse-request';
 import { startMyProcessRequestSchema, StartMyProcessResponse } from '@aila/model';
 import { LazyProcessExecutor } from '../../process-executor/lazy-process-executor';
 import { EndpointError } from '../framework/endpoint-error';

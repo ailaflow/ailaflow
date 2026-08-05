@@ -1,6 +1,7 @@
 import { HttpClient } from '@aibindkit/react';
 import type {
   GetMyTaskFormResponse,
+  GetMyTasksRequest,
   GetMyTasksResponse,
   GetTaskVariableValueRequest,
   GetTaskVariableValueResponse,
@@ -11,8 +12,13 @@ import type {
 export class MyTaskApiClient {
   public constructor(private readonly client: HttpClient) {}
 
-  public getMyTasks(abortSignal: AbortSignal): Promise<GetMyTasksResponse> {
-    return this.client.json(abortSignal, 'GET', '/api/my-tasks');
+  public getMyTasks(abortSignal: AbortSignal, request: GetMyTasksRequest): Promise<GetMyTasksResponse> {
+    const query = new URLSearchParams({
+      onlyOpen: request.onlyOpen ? '1' : '0',
+      page: String(request.page),
+      pageSize: String(request.pageSize)
+    });
+    return this.client.json(abortSignal, 'GET', `/api/my-tasks?${query}`);
   }
 
   public getMyTaskForm(abortSignal: AbortSignal, id: string): Promise<GetMyTaskFormResponse> {

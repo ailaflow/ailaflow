@@ -1,11 +1,21 @@
 import { HttpClient } from '@aibindkit/react';
-import type { GetMyProcessesResponse, GetMyProcessStartFormResponse, StartMyProcessRequest, StartMyProcessResponse } from '@aila/model';
+import type {
+  GetMyProcessesRequest,
+  GetMyProcessesResponse,
+  GetMyProcessStartFormResponse,
+  StartMyProcessRequest,
+  StartMyProcessResponse
+} from '@aila/model';
 
 export class MyProcessApiClient {
   public constructor(private readonly client: HttpClient) {}
 
-  public getMyProcesses(abortSignal: AbortSignal): Promise<GetMyProcessesResponse> {
-    return this.client.json(abortSignal, 'GET', '/api/my-processes');
+  public getMyProcesses(abortSignal: AbortSignal, request: GetMyProcessesRequest): Promise<GetMyProcessesResponse> {
+    const query = new URLSearchParams({
+      page: String(request.page),
+      pageSize: String(request.pageSize)
+    });
+    return this.client.json(abortSignal, 'GET', `/api/my-processes?${query}`);
   }
 
   public getMyProcessStartForm(abortSignal: AbortSignal, name: string): Promise<GetMyProcessStartFormResponse> {

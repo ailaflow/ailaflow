@@ -1,5 +1,5 @@
-import { ProcessLiteDto } from '@aila/model';
+import { GetProcessesResponse } from '@aila/model';
 
 export interface ProcessListQuerier {
-  query(abortSignal: AbortSignal): Promise<ProcessLiteDto[]>;
+  query(abortSignal: AbortSignal, page: number, pageSize: number): Promise<GetProcessesResponse>;
 }

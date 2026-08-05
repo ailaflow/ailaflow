@@ -10,7 +10,7 @@ import {
 import { ProcessRepository, ProcessRepositoryError } from '../../repositories/process/process-repository';
 import { EndpointError } from '../framework/endpoint-error';
 import { SandboxListQuerier } from '../../queriers/sandbox-list/sandbox-list-querier';
-import { parseBody } from '../framework/parse-body';
+import { parseBody } from '../framework/parse-request';
 import { Process } from '../../repositories/process/process';
 import { getEndpointAbortSignal } from '../framework/endpoint-abort-signal';
 import { ResourceAccess, ResourceAccessRepository } from '../../repositories/resource-access/resource-access-repository';

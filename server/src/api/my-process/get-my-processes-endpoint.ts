@@ -1,9 +1,10 @@
-import { GetMyProcessesResponse } from '@aila/model';
+import { GetMyProcessesResponse, getMyProcessesRequestSchema } from '@aila/model';
 import { Request } from 'express';
 import { getAuthToken } from '../auth/auth-middleware';
 import { Endpoint } from '../framework/endpoint';
 import { getEndpointAbortSignal } from '../framework/endpoint-abort-signal';
 import { MyProcessListQuerier } from '../../queriers/my-process-list/my-process-list-querier';
+import { parseQuery } from '../framework/parse-request';
 
 export class GetMyProcessesEndpoint implements Endpoint {
   public readonly method = 'get';
@@ -15,9 +16,7 @@ export class GetMyProcessesEndpoint implements Endpoint {
   public async handle(req: Request): Promise<GetMyProcessesResponse> {
     const abortSignal = getEndpointAbortSignal(req);
     const authToken = getAuthToken(req);
-
-    return {
-      processes: await this.querier.query(abortSignal, authToken.userName)
-    };
+    const { page, pageSize } = parseQuery(getMyProcessesRequestSchema, req.query);
+    return this.querier.query(abortSignal, authToken.userName, page, pageSize);
   }
 }

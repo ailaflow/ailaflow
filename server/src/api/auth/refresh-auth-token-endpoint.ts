@@ -4,7 +4,7 @@ import { refreshTokenRequestSchema, RefreshTokenResponse } from '@aila/model';
 import { AuthToken, AuthTokenRepository } from '../../repositories/auth-token/auth-token-repository';
 import { EndpointError } from '../framework/endpoint-error';
 import { Logger } from '../../core/logger';
-import { parseBody } from '../framework/parse-body';
+import { parseBody } from '../framework/parse-request';
 import { getEndpointAbortSignal } from '../framework/endpoint-abort-signal';
 
 export class RefreshAuthTokenEndpoint implements Endpoint {

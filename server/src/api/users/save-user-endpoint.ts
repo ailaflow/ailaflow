@@ -1,7 +1,7 @@
 import { saveUserRequestSchema, SaveUserResponse } from '@aila/model';
 import { Request } from 'express';
 import { Endpoint } from '../framework/endpoint';
-import { parseBody } from '../framework/parse-body';
+import { parseBody } from '../framework/parse-request';
 import { UserRepository, UserRepositoryError } from '../../repositories/user/user-repository';
 import {
   UserAttributesRepository,

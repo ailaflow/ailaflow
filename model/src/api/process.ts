@@ -1,5 +1,6 @@
 import z from 'zod/v4';
 import { jsonSchema, processDefinitionSchema, ProcessExecutionResult, ProcessLog } from '../process';
+import { paginationRequestSchema, paginationResponseSchema } from './pagination';
 
 // getProcesses
 
@@ -10,11 +11,14 @@ const processLiteDtoSchema = z.object({
   startVariableSchemas: jsonSchema
 });
 
-export const getProcessesResponseSchema = z.object({
+export const getProcessesRequestSchema = paginationRequestSchema;
+
+export const getProcessesResponseSchema = paginationResponseSchema.extend({
   processes: z.array(processLiteDtoSchema)
 });
 
 export type ProcessLiteDto = z.infer<typeof processLiteDtoSchema>;
+export type GetProcessesRequest = z.infer<typeof getProcessesRequestSchema>;
 export type GetProcessesResponse = z.infer<typeof getProcessesResponseSchema>;
 
 // getProcess

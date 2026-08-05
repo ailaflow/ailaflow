@@ -5,7 +5,7 @@ import { PersistedExecutionRepository } from '../../repositories/persisted-execu
 import { UserAssignedTaskProvider } from '../../providers/user-assigned-task-provider';
 import { getEndpointAbortSignal } from '../framework/endpoint-abort-signal';
 import { EndpointError } from '../framework/endpoint-error';
-import { parseBody } from '../framework/parse-body';
+import { parseBody } from '../framework/parse-request';
 import { getAuthToken } from '../auth/auth-middleware';
 
 export class GetTaskVariableValueEndpoint implements Endpoint {

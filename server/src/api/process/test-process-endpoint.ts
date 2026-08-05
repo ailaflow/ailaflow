@@ -5,7 +5,7 @@ import { Request, Response } from 'express';
 import { ProcessRepository } from '../../repositories/process/process-repository';
 import { EndpointError } from '../framework/endpoint-error';
 import { ProcessExecutor } from '../../process-executor/process-executor';
-import { parseBody } from '../framework/parse-body';
+import { parseBody } from '../framework/parse-request';
 import { getEndpointAbortSignal } from '../framework/endpoint-abort-signal';
 
 export class TestProcessEndpoint implements Endpoint {

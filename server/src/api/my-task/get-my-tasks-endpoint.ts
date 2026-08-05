@@ -1,9 +1,10 @@
-import { GetMyTasksResponse } from '@aila/model';
+import { GetMyTasksResponse, getMyTasksRequestSchema } from '@aila/model';
 import { Request } from 'express';
 import { MyTaskListQuerier } from '../../queriers/my-task-list/my-task-list-querier';
 import { getAuthToken } from '../auth/auth-middleware';
 import { Endpoint } from '../framework/endpoint';
 import { getEndpointAbortSignal } from '../framework/endpoint-abort-signal';
+import { parseQuery } from '../framework/parse-request';
 
 export class GetMyTasksEndpoint implements Endpoint {
   public readonly method = 'get';
@@ -15,9 +16,8 @@ export class GetMyTasksEndpoint implements Endpoint {
   public async handle(req: Request): Promise<GetMyTasksResponse> {
     const abortSignal = getEndpointAbortSignal(req);
     const authToken = getAuthToken(req);
+    const { onlyOpen, page, pageSize } = parseQuery(getMyTasksRequestSchema, req.query);
 
-    return {
-      tasks: await this.querier.query(abortSignal, authToken.userName)
-    };
+    return this.querier.query(abortSignal, authToken.userName, onlyOpen, page, pageSize);
   }
 }

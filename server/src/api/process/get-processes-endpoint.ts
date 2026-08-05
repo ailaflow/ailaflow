@@ -1,8 +1,9 @@
 import { ProcessListQuerier } from '../../queriers/process-list/process-list-querier';
 import { Endpoint } from '../framework/endpoint';
-import { GetProcessesResponse } from '@aila/model';
+import { GetProcessesResponse, getProcessesRequestSchema } from '@aila/model';
 import { Request } from 'express';
 import { getEndpointAbortSignal } from '../framework/endpoint-abort-signal';
+import { parseQuery } from '../framework/parse-request';
 
 export class GetProcessesEndpoint implements Endpoint {
   public readonly method = 'get';
@@ -14,8 +15,7 @@ export class GetProcessesEndpoint implements Endpoint {
 
   public async handle(req: Request): Promise<GetProcessesResponse> {
     const abortSignal = getEndpointAbortSignal(req);
-    return {
-      processes: await this.querier.query(abortSignal)
-    };
+    const { page, pageSize } = parseQuery(getProcessesRequestSchema, req.query);
+    return this.querier.query(abortSignal, page, pageSize);
   }
 }

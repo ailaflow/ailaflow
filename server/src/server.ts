@@ -85,6 +85,11 @@ import { UserChatSessionProvider } from './providers/user-chat-session-provider'
 import { ProcessExecutionResumer } from './process-executor/process-execution-resumer';
 import { UserAssignedTaskProvider } from './providers/user-assigned-task-provider';
 import { Notifier } from './process-executor/services/notifier';
+import { NotificationRepository } from './repositories/notification/notification-repository';
+import { SqliteNotificationRepository } from './repositories/notification/sqlite-notification-repository';
+import { MyNotificationListQuerier } from './queriers/my-notification-list/my-notification-list-querier';
+import { SqliteMyNotificationListQuerier } from './queriers/my-notification-list/sqlite-my-notification-list-querier';
+import { GetMyNotificationsEndpoint } from './api/my-notification/get-my-notifications-endpoint';
 
 const PORT = process.env.PORT || 2048;
 
@@ -106,6 +111,7 @@ export class Server {
     let persistedExecutionRepository: PersistedExecutionRepository;
     let taskRepository: TaskRepository;
     let assignedTaskRepository: AssignedTaskRepository;
+    let notificationRepository: NotificationRepository;
 
     let processListQuerier: ProcessListQuerier;
     let myProcessListQuerier: MyProcessListQuerier;
@@ -114,6 +120,7 @@ export class Server {
     let userListQuerier: UserListQuerier;
     let userAccessExpressionUserQuerier: UserAccessExpressionUserQuerier;
     let myTaskListQuerier: MyTaskListQuerier;
+    let myNotificationListQuerier: MyNotificationListQuerier;
 
     const sqliteDatabases = new SqliteDatabases(serverPaths);
 
@@ -127,6 +134,7 @@ export class Server {
     persistedExecutionRepository = new SqlitePersistedExecutionRepository(sqliteDatabases);
     taskRepository = new SqliteTaskRepository(sqliteDatabases);
     assignedTaskRepository = new SqliteAssignedTaskRepository(sqliteDatabases);
+    notificationRepository = new SqliteNotificationRepository(sqliteDatabases);
 
     processListQuerier = new SqliteProcessListQuerier(sqliteDatabases);
     myProcessListQuerier = new SqliteMyProcessListQuerier(sqliteDatabases);
@@ -135,6 +143,7 @@ export class Server {
     userListQuerier = new SqliteUserListQuerier(sqliteDatabases);
     userAccessExpressionUserQuerier = new SqliteUserAccessExpressionUserQuerier(sqliteDatabases);
     myTaskListQuerier = new SqliteMyTaskListQuerier(sqliteDatabases);
+    myNotificationListQuerier = new SqliteMyNotificationListQuerier(sqliteDatabases);
 
     await Promise.all([
       userRepository.setup(abortSignal),
@@ -146,7 +155,8 @@ export class Server {
       chatSessionRepository.setup(abortSignal),
       persistedExecutionRepository.setup(abortSignal),
       taskRepository.setup(abortSignal),
-      assignedTaskRepository.setup(abortSignal)
+      assignedTaskRepository.setup(abortSignal),
+      notificationRepository.setup(abortSignal)
     ]);
 
     const processExecutionStore = new ProcessExecutionStore();
@@ -165,7 +175,7 @@ export class Server {
     const sandboxInstanceManager = new SandboxInstanceManager(serverPaths, sandboxRepository, rpcHandler);
 
     const taskManager = new TaskManager(taskRepository, assignedTaskRepository, userAccessExpressionUserQuerier, userChatSessionProvider);
-    const notifier = new Notifier(userAccessExpressionUserQuerier, userChatSessionProvider);
+    const notifier = new Notifier(userAccessExpressionUserQuerier, userChatSessionProvider, notificationRepository);
 
     const processExecutionPersister = new ProcessExecutionPersister(persistedExecutionRepository);
     const processExecutor = new ProcessExecutor(
@@ -206,6 +216,7 @@ export class Server {
       new InstallEndpoint(userRepository, userAttributesRepository, sandboxRepository, passwordHasher),
       new LoginEndpoint(userRepository, authTokenRepository, passwordHasher),
       new RefreshAuthTokenEndpoint(authTokenRepository),
+      new GetMyNotificationsEndpoint(myNotificationListQuerier),
       new GetMyProcessesEndpoint(myProcessListQuerier),
       new GetMyTasksEndpoint(myTaskListQuerier),
       new GetMyTaskFormEndpoint(userAssignedTaskProvider),

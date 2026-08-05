@@ -1,5 +1,5 @@
 import { DatabaseSync } from 'node:sqlite';
-import { MyTaskLiteDto } from '@aila/model';
+import { GetMyTasksResponse } from '@aila/model';
 import { SqliteDatabases } from '../../core/sqlite-databases';
 import { MyTaskListQuerier } from './my-task-list-querier';
 
@@ -13,7 +13,16 @@ export class SqliteMyTaskListQuerier implements MyTaskListQuerier {
     this.db = dbs.modelDb;
   }
 
-  public async query(_: AbortSignal, userName: string): Promise<MyTaskLiteDto[]> {
+  public async query(_: AbortSignal, userName: string, onlyOpen: boolean, page: number, pageSize: number): Promise<GetMyTasksResponse> {
+    const statusCondition = onlyOpen ? 'AND at.completedAt IS NULL' : '';
+    const countStatement = this.db.prepare(`
+      SELECT COUNT(*) AS totalCount
+      FROM assigned_tasks at
+      WHERE at.userName = ?
+      ${statusCondition}
+    `);
+    const { totalCount } = countStatement.get(userName) as { totalCount: number };
+
     const statement = this.db.prepare(`
       SELECT
         t.id,
@@ -25,9 +34,11 @@ export class SqliteMyTaskListQuerier implements MyTaskListQuerier {
       JOIN tasks t
         ON t.id = at.taskId
       WHERE at.userName = ?
+      ${statusCondition}
       ORDER BY t.createdAt, t.id
+      LIMIT ? OFFSET ?
     `);
-    const rows = statement.all(userName) as {
+    const rows = statement.all(userName, pageSize, (page - 1) * pageSize) as {
       id: string;
       title: string;
       deadline: number | null;
@@ -36,11 +47,16 @@ export class SqliteMyTaskListQuerier implements MyTaskListQuerier {
     }[];
     const now = this.now();
 
-    return rows.map(row => ({
-      id: row.id,
-      title: row.title,
-      ...(row.completedAt === null ? {} : { completedAt: row.completedAt }),
-      ...(row.completedAt === null && row.deadline !== null && now > row.deadline ? { isOutdated: true } : {})
-    }));
+    return {
+      tasks: rows.map(row => ({
+        id: row.id,
+        title: row.title,
+        ...(row.completedAt === null ? {} : { completedAt: row.completedAt }),
+        ...(row.completedAt === null && row.deadline !== null && now > row.deadline ? { isOutdated: true } : {})
+      })),
+      totalCount,
+      page,
+      pageSize
+    };
   }
 }

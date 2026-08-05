@@ -1,6 +1,7 @@
 import { HttpClient, HttpClientSseListener } from '@aibindkit/react';
 import type {
   GetProcessResponse,
+  GetProcessesRequest,
   GetProcessesResponse,
   SaveProcessRequest,
   SaveProcessResponse,
@@ -15,8 +16,12 @@ export class ProcessApiClient {
     return this.client.json(abortSignal, 'POST', '/api/process', request);
   }
 
-  public getProcesses(abortSignal: AbortSignal): Promise<GetProcessesResponse> {
-    return this.client.json(abortSignal, 'GET', '/api/processes');
+  public getProcesses(abortSignal: AbortSignal, request: GetProcessesRequest): Promise<GetProcessesResponse> {
+    const query = new URLSearchParams({
+      page: String(request.page),
+      pageSize: String(request.pageSize)
+    });
+    return this.client.json(abortSignal, 'GET', `/api/processes?${query}`);
   }
 
   public getProcess(abortSignal: AbortSignal, name: string): Promise<GetProcessResponse> {

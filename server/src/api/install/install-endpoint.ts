@@ -4,7 +4,7 @@ import { UserRepository } from '../../repositories/user/user-repository';
 import { User } from '../../repositories/user/user';
 import { installRequestSchema, InstallResponse } from '@aila/model';
 import { PasswordHasher } from '../../repositories/user/password-hasher';
-import { parseBody } from '../framework/parse-body';
+import { parseBody } from '../framework/parse-request';
 import { UserAttributesRepository } from '../../repositories/user-attributes/user-attributes-repository';
 import { UserAttributes } from '../../repositories/user-attributes/user-attributes';
 import { Sandbox } from '../../repositories/sandbox/sandbox';

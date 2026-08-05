@@ -1,5 +1,6 @@
 import z from 'zod/v4';
 import { formDefinitionSchema, jsonSchema } from '../process';
+import { paginationRequestSchema, paginationResponseSchema } from './pagination';
 
 // getMyTasks
 
@@ -9,11 +10,16 @@ const myTaskLiteDtoSchema = z.object({
   completedAt: z.number().optional(),
   isOutdated: z.boolean().optional()
 });
-export const getMyTasksResponseSchema = z.object({
+export const getMyTasksRequestSchema = paginationRequestSchema.extend({
+  onlyOpen: z.coerce.number().int().min(0).max(1).transform(Boolean).default(true)
+});
+
+export const getMyTasksResponseSchema = paginationResponseSchema.extend({
   tasks: z.array(myTaskLiteDtoSchema)
 });
 
 export type MyTaskLiteDto = z.infer<typeof myTaskLiteDtoSchema>;
+export type GetMyTasksRequest = z.infer<typeof getMyTasksRequestSchema>;
 export type GetMyTasksResponse = z.infer<typeof getMyTasksResponseSchema>;
 
 // getMyTaskForm
