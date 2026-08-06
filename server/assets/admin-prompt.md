@@ -109,23 +109,27 @@ Each script contains a `package.json` file where NPM dependencies can be defined
 
 Aila installs all dependencies automatically using PNPM to save disk space in sandboxes.
 
-Inside a script, it is possible to use the predefined Aila scripting framework. All supported methods can be imported with:
+#### Script API
 
-`const aila = require('@aila/bridge-lib');`
+Import with `const aila = require('@aila/bridge-lib');`. Component prefixes are optional: `$name` equals `name`, and `#customers` equals `customers`. Async functions accept an optional final RPC configuration, for example `{ timeout: 30_000 }`.
 
-The framework supports multiple features:
+##### Process variables
 
-- `const value = await aila.readVariable("$name");`
+Variables exist only during the current execution and values must match their JSON Schemas.
 
-  Reads the value of a process variable. If the variable is not set, the method returns `null`.
+- `await aila.readVariable("$name")` — returns the value, or `null` if unset; fails if the variable does not exist or RPC fails.
+- `await aila.writeVariable("$name", value)` — writes a value; fails if the variable does not exist, the value is invalid, or RPC fails.
 
-- `await aila.writeVariable("$name", VALUE);`
+##### Tables
 
-  Writes a value to a process variable. The written value should match the JSON Schema defined for that variable.
+Tables are admin-created, persistent across executions, and store JSON-compatible values under string primary keys.
 
-- `aila.log("Foo");`
+- `await aila.tryReadTable("#customers", "customer_1")` — returns the stored value, or `null` if no row exists; fails if the table does not exist or RPC fails.
+- `await aila.writeTable("#customers", "customer_1", value)` — inserts or updates the row; fails if the table does not exist, serialization fails, or RPC fails.
 
-  Writes a log entry to the dedicated Aila logger. These logs are visible in Aila debug mode.
+##### Logging
+
+- `aila.log("Foo")` — writes to the Aila logger, visible in debug mode.
 
 ### Forms
 

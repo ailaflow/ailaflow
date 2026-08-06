@@ -32,9 +32,9 @@ export function ScriptStepEditor(props: StepEditorProps) {
       <SelectEditorPropertyView
         label="Sandbox"
         value={properties.script.sandboxName}
-        options={props.state.sandboxNames.map(sandboxName => ({
-          label: `+${sandboxName}`,
-          value: sandboxName
+        options={props.state.sandboxes.map(sandbox => ({
+          label: `+${sandbox.name}`,
+          value: sandbox.name
         }))}
         error={errors['properties.sandboxName']}
         onValueChanged={sandboxName => setProperty('script', { ...properties.script, sandboxName })}

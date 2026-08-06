@@ -101,6 +101,8 @@ import { GetTablesEndpoint } from './api/table/get-tables-endpoint';
 import { GetTableEndpoint } from './api/table/get-table-endpoint';
 import { SaveTableEndpoint } from './api/table/save-table-endpoint';
 import { DeleteTableEndpoint } from './api/table/delete-table-endpoint';
+import { WriteTableRpcHandler } from './process-executor/rpc-handlers/write-table-rpc-handler';
+import { TryReadTableRpcHandler } from './process-executor/rpc-handlers/try-read-table-rpc-handler';
 
 const PORT = process.env.PORT || 2048;
 
@@ -180,7 +182,9 @@ export class Server {
     const processExecutionStore = new ProcessExecutionStore();
     const rpcHandler = new SandboxRpcHandlerProvider([
       new ReadVariableRpcHandler(processExecutionStore),
-      new WriteVariableRpcHandler(processExecutionStore)
+      new WriteVariableRpcHandler(processExecutionStore),
+      new WriteTableRpcHandler(tableDataRepository),
+      new TryReadTableRpcHandler(tableDataRepository)
     ]);
 
     const sessionStorage = new ChatSessionStorage(chatSessionRepository);

@@ -8,7 +8,7 @@ import { rpc, RpcConfig } from './core';
  * @throws If the variable does not exist or if the RPC call fails.
  */
 export function readVariable<T = any>(name: string, rpcConfig?: RpcConfig): Promise<T | null> {
-  name = normalizeVariableName(name);
+  name = normalizeName(name, '$');
   return rpc<T>('readVariable', { name }, rpcConfig);
 }
 
@@ -20,8 +20,34 @@ export function readVariable<T = any>(name: string, rpcConfig?: RpcConfig): Prom
  * @throws If the variable does not exist or if the RPC call fails.
  */
 export async function writeVariable(name: string, value: unknown, rpcConfig?: RpcConfig): Promise<void> {
-  name = normalizeVariableName(name);
+  name = normalizeName(name, '$');
   return rpc<void>('writeVariable', { name, value }, rpcConfig);
+}
+
+/**
+ * Tries to read a value from a table by its primary key.
+ * @param name The name of the table to read from.
+ * @param pk The primary key of the row to read.
+ * @param rpcConfig Optional configuration for the RPC call.
+ * @returns The stored value or `null` if the row is not found.
+ * @throws If the table does not exist or if the RPC call fails.
+ */
+export async function tryReadTable(name: string, pk: string, rpcConfig?: RpcConfig): Promise<unknown | null> {
+  name = normalizeName(name, '#');
+  return rpc<unknown>('tryReadTable', { name, pk }, rpcConfig);
+}
+
+/**
+ * Writes a value to a table row, inserting or updating it by primary key.
+ * @param name The name of the table to write to.
+ * @param pk The primary key of the row to write.
+ * @param value The value to write.
+ * @param rpcConfig Optional configuration for the RPC call.
+ * @throws If the table does not exist or if the RPC call fails.
+ */
+export async function writeTable(name: string, pk: string, value: unknown, rpcConfig?: RpcConfig): Promise<void> {
+  name = normalizeName(name, '#');
+  return rpc<void>('writeTable', { name, pk, value }, rpcConfig);
 }
 
 /**
@@ -33,8 +59,8 @@ export function log(...texts: unknown[]) {
   process.stdout.write(items.join(' ') + '\n');
 }
 
-function normalizeVariableName(name: string): string {
-  if (name.startsWith('$')) {
+function normalizeName(name: string, prefix: string): string {
+  if (name.startsWith(prefix)) {
     return name.substring(1);
   }
   return name;

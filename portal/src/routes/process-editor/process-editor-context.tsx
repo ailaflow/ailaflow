@@ -34,7 +34,7 @@ export interface ProcessEditorData {
   rootValidator: ProcessRootValidator;
   stepValidator: ProcessStepValidator;
   walker: DefinitionWalker;
-  sandboxNames: string[];
+  sandboxes: SandboxLiteDto[];
 
   isDirty: boolean;
   isNew: boolean;
@@ -88,12 +88,13 @@ function createData(props: Omit<ProcessEditorContextProps, 'children'>): Process
   const controller = SequentialWorkflowDesignerController.create();
 
   return {
+    sandboxes: props.sandboxes,
+
     controller,
     variableValidator,
     rootValidator,
     stepValidator,
     walker: new DefinitionWalker(),
-    sandboxNames,
 
     isNew: !props.process,
     name,

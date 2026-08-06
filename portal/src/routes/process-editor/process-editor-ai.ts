@@ -49,6 +49,21 @@ export function useProcessEditorAi(state: ProcessEditorState, save: () => Promis
           state.setUserAccessExpression(arg.userAccessExpression, true);
           return toolSuccess('Process user access expression was updated');
         },
+        async hasUnsavedChanges() {
+          return {
+            hasUnsavedChanges: state.isDirty
+          };
+        },
+        async save() {
+          if (!state.isDirty) {
+            return toolError('All changes are already saved');
+          }
+          await save();
+          return toolSuccess('All changes were saved');
+        },
+
+        // workflow
+
         async getAvailableNewStepTypes() {
           return toolboxConfiguration.groups
             .flatMap(group => group.steps)
@@ -149,18 +164,6 @@ export function useProcessEditorAi(state: ProcessEditorState, save: () => Promis
           sequence.push(arg.step);
           state.notifyDefinitionChange();
           return toolSuccess('Workflow step was added');
-        },
-        async hasUnsavedChanges() {
-          return {
-            hasUnsavedChanges: state.isDirty
-          };
-        },
-        async save() {
-          if (!state.isDirty) {
-            return toolError('All changes are already saved');
-          }
-          await save();
-          return toolSuccess('All changes were saved');
         },
 
         // root
@@ -268,7 +271,7 @@ export function useProcessEditorAi(state: ProcessEditorState, save: () => Promis
           };
         },
         async scriptStep_setSandboxName(arg) {
-          if (!state.sandboxNames.includes(arg.sandboxName)) {
+          if (!state.sandboxes.find(s => s.name === arg.sandboxName)) {
             return toolError(`Sandbox name "${arg.sandboxName}" is not available`);
           }
           const step = state.getStep<ScriptStep>(arg.stepId, 'script');

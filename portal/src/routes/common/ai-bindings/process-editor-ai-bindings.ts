@@ -32,6 +32,10 @@ const processEditorRoute = route('processEditor')
         userAccessExpression: z.string().describe('The new process user access expression')
       })
     ),
+    hasUnsavedChanges: tool('Checks if there is any unsaved change'),
+    save: tool('Save all changes'),
+
+    // workflow
 
     getAvailableNewStepTypes: tool('List step types that can be added to the workflow'),
     getSelectedStepId: tool('Get the ID of the currently selected workflow step by the user'),
@@ -86,9 +90,6 @@ const processEditorRoute = route('processEditor')
         branchName: z.string().optional().describe('Branch name to append to when the target step contains multiple branches.')
       })
     ),
-
-    hasUnsavedChanges: tool('Checks if there is any unsaved change'),
-    save: tool('Save all changes'),
 
     // root
 
