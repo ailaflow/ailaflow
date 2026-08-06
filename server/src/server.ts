@@ -103,6 +103,9 @@ import { SaveTableEndpoint } from './api/table/save-table-endpoint';
 import { DeleteTableEndpoint } from './api/table/delete-table-endpoint';
 import { WriteTableRpcHandler } from './process-executor/rpc-handlers/write-table-rpc-handler';
 import { TryReadTableRpcHandler } from './process-executor/rpc-handlers/try-read-table-rpc-handler';
+import { TableDataListQuerier } from './queriers/table-data-list/table-data-list-querier';
+import { SqliteTableDataListQuerier } from './queriers/table-data-list/sqlite-table-data-list-querier';
+import { GetTableDataEndpoint } from './api/table/get-table-data-endpoint';
 
 const PORT = process.env.PORT || 2048;
 
@@ -137,6 +140,7 @@ export class Server {
     let myTaskListQuerier: MyTaskListQuerier;
     let myNotificationListQuerier: MyNotificationListQuerier;
     let tableListQuerier: TableListQuerier;
+    let tableDataListQuerier: TableDataListQuerier;
 
     const sqliteDatabases = new SqliteDatabases(serverPaths);
 
@@ -163,6 +167,7 @@ export class Server {
     myTaskListQuerier = new SqliteMyTaskListQuerier(sqliteDatabases);
     myNotificationListQuerier = new SqliteMyNotificationListQuerier(sqliteDatabases);
     tableListQuerier = new SqliteTableListQuerier(sqliteDatabases);
+    tableDataListQuerier = new SqliteTableDataListQuerier(sqliteDatabases);
 
     await Promise.all([
       userRepository.setup(abortSignal),
@@ -253,6 +258,7 @@ export class Server {
       new TestProcessEndpoint(processRepository, processExecutor),
       new GetTablesEndpoint(tableListQuerier),
       new GetTableEndpoint(tableRepository),
+      new GetTableDataEndpoint(tableDataListQuerier),
       new SaveTableEndpoint(tableRepository),
       new DeleteTableEndpoint(tableRepository),
       new GetSandboxesEndpoint(sandboxListQuerier),

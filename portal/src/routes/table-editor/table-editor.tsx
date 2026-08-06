@@ -6,6 +6,7 @@ import { ResourceSimpleDetailsView } from '../../views/resource-editor/resource-
 import { useUnsavedChangesController } from '../common/admin-portal';
 import { useTableEditorAi } from './table-editor-ai';
 import { useTableEditorState } from './table-editor-state';
+import { TableDataGrid } from './table-data-grid';
 
 export function TableEditor(props: { table?: TableDto }) {
   const apiClient = useApiClient();
@@ -47,7 +48,7 @@ export function TableEditor(props: { table?: TableDto }) {
       areDetailsVisible={true}
       canSwitch={false}
     >
-      {null}
+      {!state.isNew && <TableDataGrid tableName={state.name} />}
     </ResourceEditorView>
   );
 }

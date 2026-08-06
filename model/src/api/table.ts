@@ -32,6 +32,24 @@ export const getTableResponseSchema = z.object({
 export type TableDto = z.infer<typeof tableDtoSchema>;
 export type GetTableResponse = z.infer<typeof getTableResponseSchema>;
 
+// getTableData
+
+const tableDataDtoSchema = z.object({
+  pk: z.string(),
+  data: z.unknown(),
+  updatedAt: z.number()
+});
+
+export const getTableDataRequestSchema = paginationRequestSchema;
+
+export const getTableDataResponseSchema = paginationResponseSchema.extend({
+  rows: z.array(tableDataDtoSchema)
+});
+
+export type TableDataDto = z.infer<typeof tableDataDtoSchema>;
+export type GetTableDataRequest = z.infer<typeof getTableDataRequestSchema>;
+export type GetTableDataResponse = z.infer<typeof getTableDataResponseSchema>;
+
 // saveTable
 
 export const saveTableRequestSchema = z.object({
