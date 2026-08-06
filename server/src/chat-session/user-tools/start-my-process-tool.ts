@@ -48,7 +48,9 @@ export class StartMyProcessTool extends ZodTool<Arg> {
     if (result.finished) {
       return {
         content: result.result.success
-          ? result.result.output
+          ? {
+              outputValues: result.result.output
+            }
           : {
               error: result.result.error
             }

@@ -5,7 +5,10 @@ import { SqliteDatabases } from '../../core/sqlite-databases';
 import { SqliteTableDataRepository } from '../../repositories/table/sqlite-table-data-repository';
 import { SqliteTableRepository } from '../../repositories/table/sqlite-table-repository';
 import { TableDataRepositoryError } from '../../repositories/table/table-data-repository';
+import { TableData } from '../../repositories/table/table-data';
 import { Table } from '../../repositories/table/table';
+import { SqliteTableDataListQuerier } from '../../queriers/table-data-list/sqlite-table-data-list-querier';
+import { ReadTablePageRpcHandler } from './read-table-page-rpc-handler';
 import { TryReadTableRpcHandler } from './try-read-table-rpc-handler';
 import { WriteTableRpcHandler } from './write-table-rpc-handler';
 
@@ -47,6 +50,38 @@ test('writes and reads table data through RPC handlers', async () => {
     value: ['updated']
   });
   assert.deepEqual(await readHandler.handle(abortSignal, 'sandbox', 'execution', { name: 'customers', pk: 'customer_1' }), ['updated']);
+
+  db.close();
+});
+
+test('reads paginated table values through an RPC handler', async () => {
+  const db = new DatabaseSync(':memory:', { open: true });
+  const dbs = { modelDb: db } as SqliteDatabases;
+  const abortSignal = new AbortController().signal;
+  const tableRepository = new SqliteTableRepository(dbs);
+  const tableDataRepository = new SqliteTableDataRepository(dbs);
+  const handler = new ReadTablePageRpcHandler(new SqliteTableDataListQuerier(dbs));
+  await tableRepository.setup(abortSignal);
+  await tableRepository.insert(abortSignal, new Table('customers', 'Customer records'));
+  await tableDataRepository.upsert(abortSignal, new TableData('customers', 'charlie', 'Charlie', 3000));
+  await tableDataRepository.upsert(abortSignal, new TableData('customers', 'alpha', { name: 'Alice' }, 1000));
+  await tableDataRepository.upsert(abortSignal, new TableData('customers', 'bravo', { name: 'Bob' }, 2000));
+
+  assert.deepEqual(await handler.handle(abortSignal, 'sandbox', 'execution', { name: 'customers', page: 1, pageSize: 2 }), {
+    rows: [
+      { pk: 'alpha', data: { name: 'Alice' }, updatedAt: 1000 },
+      { pk: 'bravo', data: { name: 'Bob' }, updatedAt: 2000 }
+    ],
+    page: 1,
+    hasMore: true
+  });
+  assert.deepEqual(await handler.handle(abortSignal, 'sandbox', 'execution', { name: 'customers', page: 2, pageSize: 2 }), {
+    rows: [{ pk: 'charlie', data: 'Charlie', updatedAt: 3000 }],
+    page: 2,
+    hasMore: false
+  });
+  await assert.rejects(() => handler.handle(abortSignal, 'sandbox', 'execution', { name: 'customers', page: 0, pageSize: 2 }));
+  await assert.rejects(() => handler.handle(abortSignal, 'sandbox', 'execution', { name: 'customers', page: 1, pageSize: 101 }));
 
   db.close();
 });

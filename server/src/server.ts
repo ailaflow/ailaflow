@@ -106,6 +106,7 @@ import { TryReadTableRpcHandler } from './process-executor/rpc-handlers/try-read
 import { TableDataListQuerier } from './queriers/table-data-list/table-data-list-querier';
 import { SqliteTableDataListQuerier } from './queriers/table-data-list/sqlite-table-data-list-querier';
 import { GetTableDataEndpoint } from './api/table/get-table-data-endpoint';
+import { ReadTablePageRpcHandler } from './process-executor/rpc-handlers/read-table-page-rpc-handler';
 
 const PORT = process.env.PORT || 2048;
 
@@ -188,6 +189,7 @@ export class Server {
     const rpcHandler = new SandboxRpcHandlerProvider([
       new ReadVariableRpcHandler(processExecutionStore),
       new WriteVariableRpcHandler(processExecutionStore),
+      new ReadTablePageRpcHandler(tableDataListQuerier),
       new WriteTableRpcHandler(tableDataRepository),
       new TryReadTableRpcHandler(tableDataRepository)
     ]);

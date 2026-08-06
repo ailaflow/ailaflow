@@ -125,6 +125,7 @@ Variables exist only during the current execution and values must match their JS
 Tables are admin-created, persistent across executions, and store JSON-compatible values under string primary keys.
 
 - `await aila.tryReadTable("#customers", "customer_1")` — returns the stored value, or `null` if no row exists; fails if the table does not exist or RPC fails.
+- `await aila.readTablePage("#customers", page?, pageSize?)` — returns `{ rows: [{ pk, data, updatedAt }], page, hasMore }`, ordered by primary key; `updatedAt` is a Unix timestamp in milliseconds; defaults to page 1 and 100 rows (maximum 100); fails if pagination is invalid, the table does not exist, or RPC fails.
 - `await aila.writeTable("#customers", "customer_1", value)` — inserts or updates the row; fails if the table does not exist, serialization fails, or RPC fails.
 
 ##### Logging

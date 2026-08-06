@@ -1,5 +1,21 @@
 import { rpc, RpcConfig } from './core';
 
+export interface TablePage<Data> {
+  /** Rows ordered by primary key. */
+  rows: {
+    /** The row's primary key. */
+    pk: string;
+    /** The stored value. */
+    data: Data;
+    /** The Unix timestamp in milliseconds of the last update. */
+    updatedAt: number;
+  }[];
+  /** The one-based page number. */
+  page: number;
+  /** Whether another page is available. */
+  hasMore: boolean;
+}
+
 /**
  * Reads a variable from the currently executing process.
  * @param name The name of the variable to read.
@@ -35,6 +51,25 @@ export async function writeVariable(name: string, value: unknown, rpcConfig?: Rp
 export async function tryReadTable(name: string, pk: string, rpcConfig?: RpcConfig): Promise<unknown | null> {
   name = normalizeName(name, '#');
   return rpc<unknown>('tryReadTable', { name, pk }, rpcConfig);
+}
+
+/**
+ * Reads one page of rows from a table, ordered by primary key.
+ * @param name The name of the table to read from.
+ * @param page The one-based page number. Defaults to `1`.
+ * @param pageSize The number of rows to read, from 1 to 100. Defaults to `100`.
+ * @param rpcConfig Optional configuration for the RPC call.
+ * @returns The requested page, including each row's primary key, stored data, and last-update timestamp.
+ * @throws If pagination is invalid, the table does not exist, or the RPC call fails.
+ */
+export async function readTablePage<Data = unknown>(
+  name: string,
+  page = 1,
+  pageSize = 100,
+  rpcConfig?: RpcConfig
+): Promise<TablePage<Data>> {
+  name = normalizeName(name, '#');
+  return rpc<TablePage<Data>>('readTablePage', { name, page, pageSize }, rpcConfig);
 }
 
 /**
