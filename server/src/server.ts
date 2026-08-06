@@ -95,6 +95,12 @@ import { TableRepository } from './repositories/table/table-repository';
 import { SqliteTableRepository } from './repositories/table/sqlite-table-repository';
 import { TableDataRepository } from './repositories/table/table-data-repository';
 import { SqliteTableDataRepository } from './repositories/table/sqlite-table-data-repository';
+import { TableListQuerier } from './queriers/table-list/table-list-querier';
+import { SqliteTableListQuerier } from './queriers/table-list/sqlite-table-list-querier';
+import { GetTablesEndpoint } from './api/table/get-tables-endpoint';
+import { GetTableEndpoint } from './api/table/get-table-endpoint';
+import { SaveTableEndpoint } from './api/table/save-table-endpoint';
+import { DeleteTableEndpoint } from './api/table/delete-table-endpoint';
 
 const PORT = process.env.PORT || 2048;
 
@@ -128,6 +134,7 @@ export class Server {
     let userAccessExpressionUserQuerier: UserAccessExpressionUserQuerier;
     let myTaskListQuerier: MyTaskListQuerier;
     let myNotificationListQuerier: MyNotificationListQuerier;
+    let tableListQuerier: TableListQuerier;
 
     const sqliteDatabases = new SqliteDatabases(serverPaths);
 
@@ -153,6 +160,7 @@ export class Server {
     userAccessExpressionUserQuerier = new SqliteUserAccessExpressionUserQuerier(sqliteDatabases);
     myTaskListQuerier = new SqliteMyTaskListQuerier(sqliteDatabases);
     myNotificationListQuerier = new SqliteMyNotificationListQuerier(sqliteDatabases);
+    tableListQuerier = new SqliteTableListQuerier(sqliteDatabases);
 
     await Promise.all([
       userRepository.setup(abortSignal),
@@ -239,6 +247,10 @@ export class Server {
       new DeleteProcessEndpoint(processRepository),
       new SaveProcessEndpoint(processRepository, resourceAccessRepository, sandboxListQuerier),
       new TestProcessEndpoint(processRepository, processExecutor),
+      new GetTablesEndpoint(tableListQuerier),
+      new GetTableEndpoint(tableRepository),
+      new SaveTableEndpoint(tableRepository),
+      new DeleteTableEndpoint(tableRepository),
       new GetSandboxesEndpoint(sandboxListQuerier),
       new GetSandboxEndpoint(sandboxRepository),
       new UpsertSandboxEndpoint(sandboxRepository),

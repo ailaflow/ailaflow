@@ -12,6 +12,8 @@ import { userEditorAiStoreFactory } from './ai-bindings/user-editor-ai-binding';
 import { routes } from '../router';
 import { useEffect, useMemo, useRef } from 'react';
 import { globalAiStoreFactory } from './ai-bindings/global-ai-bindings';
+import { tableListAiStoreFactory } from './ai-bindings/table-list-ai-bindings';
+import { tableEditorAiStoreFactory } from './ai-bindings/table-editor-ai-bindings';
 
 export const env = aiEnvironment({
   global: globalAiStoreFactory(),
@@ -20,7 +22,9 @@ export const env = aiEnvironment({
   processEditor: processEditorAiStoreFactory(),
   processList: processListAiStoreFactory(),
   userList: userListAiStoreFactory(),
-  userEditor: userEditorAiStoreFactory()
+  userEditor: userEditorAiStoreFactory(),
+  tableList: tableListAiStoreFactory(),
+  tableEditor: tableEditorAiStoreFactory()
 });
 export const useAiEnvironment = env.useAiEnvironment;
 export const useAiStore = env.useAiStore;

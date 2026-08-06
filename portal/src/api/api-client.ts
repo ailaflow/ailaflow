@@ -7,6 +7,7 @@ import { MyTaskApiClient } from './my-task-api-client';
 import { ProcessApiClient } from './process-api-client';
 import { SandboxApiClient } from './sandbox-api-client';
 import { UserApiClient } from './user-api-client';
+import { TableApiClient } from './table-api-client';
 
 export class ApiClient {
   private readonly client: HttpClient;
@@ -19,6 +20,7 @@ export class ApiClient {
   public readonly myProcess: MyProcessApiClient;
   public readonly myNotification: MyNotificationApiClient;
   public readonly myTask: MyTaskApiClient;
+  public readonly table: TableApiClient;
 
   public constructor(authToken: string | null) {
     this.client = new HttpClient(this.createHeaders(authToken));
@@ -31,6 +33,7 @@ export class ApiClient {
     this.myProcess = new MyProcessApiClient(this.client);
     this.myNotification = new MyNotificationApiClient(this.client);
     this.myTask = new MyTaskApiClient(this.client);
+    this.table = new TableApiClient(this.client);
   }
 
   public get onUnauthorized() {

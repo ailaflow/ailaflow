@@ -14,6 +14,7 @@ test('manages table definitions and their data tables', async () => {
   await repository.setup(abortSignal);
   await repository.insert(abortSignal, new Table('customers', 'Customer records'));
 
+  assert.deepEqual(await repository.tryGetByName(abortSignal, 'customers'), new Table('customers', 'Customer records'));
   assert.deepEqual(toPlainRows(db.prepare(`SELECT name, description FROM tables`)), [
     { name: 'customers', description: 'Customer records' }
   ]);
@@ -36,7 +37,9 @@ test('manages table definitions and their data tables', async () => {
     { name: 'customers', description: 'Updated description' }
   ]);
 
-  await repository.delete(abortSignal, 'customers');
+  assert.equal(await repository.delete(abortSignal, 'customers'), true);
+  assert.equal(await repository.delete(abortSignal, 'customers'), false);
+  assert.equal(await repository.tryGetByName(abortSignal, 'customers'), null);
   assert.deepEqual(toPlainRows(db.prepare(`SELECT name, description FROM tables`)), []);
   assert.equal(tableExists(db, 'data_customers'), false);
 

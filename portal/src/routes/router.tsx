@@ -16,6 +16,7 @@ import { MyTasksPage } from './my-tasks/my-tasks-page';
 import { UserListPage } from './user-list/user-list-page';
 import { UserEditorPage } from './user-editor/user-editor-page';
 import { TableListPage } from './table-list/table-list-page';
+import { TableEditorPage } from './table-editor/table-editor-page';
 import { ViewListPage } from './view-list/view-list-page';
 import { LogsPage } from './logs/logs-page';
 import { ConfigurationPage } from './configuration/configuration-page';
@@ -71,6 +72,14 @@ export const routes = [
       {
         path: '/admin/tables',
         element: <TableListPage />
+      },
+      {
+        path: '/admin/tables/:tableName',
+        element: <TableEditorPage />
+      },
+      {
+        path: '/admin/create-table',
+        element: <TableEditorPage />
       },
       {
         path: '/admin/sandboxes',
