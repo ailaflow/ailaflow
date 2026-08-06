@@ -91,6 +91,10 @@ import { SqliteNotificationRepository } from './repositories/notification/sqlite
 import { MyNotificationListQuerier } from './queriers/my-notification-list/my-notification-list-querier';
 import { SqliteMyNotificationListQuerier } from './queriers/my-notification-list/sqlite-my-notification-list-querier';
 import { GetMyNotificationsEndpoint } from './api/my-notification/get-my-notifications-endpoint';
+import { TableRepository } from './repositories/table/table-repository';
+import { SqliteTableRepository } from './repositories/table/sqlite-table-repository';
+import { TableDataRepository } from './repositories/table/table-data-repository';
+import { SqliteTableDataRepository } from './repositories/table/sqlite-table-data-repository';
 
 const PORT = process.env.PORT || 2048;
 
@@ -113,6 +117,8 @@ export class Server {
     let taskRepository: TaskRepository;
     let assignedTaskRepository: AssignedTaskRepository;
     let notificationRepository: NotificationRepository;
+    let tableRepository: TableRepository;
+    let tableDataRepository: TableDataRepository;
 
     let processListQuerier: ProcessListQuerier;
     let myProcessListQuerier: MyProcessListQuerier;
@@ -136,6 +142,8 @@ export class Server {
     taskRepository = new SqliteTaskRepository(sqliteDatabases);
     assignedTaskRepository = new SqliteAssignedTaskRepository(sqliteDatabases);
     notificationRepository = new SqliteNotificationRepository(sqliteDatabases);
+    tableRepository = new SqliteTableRepository(sqliteDatabases);
+    tableDataRepository = new SqliteTableDataRepository(sqliteDatabases);
 
     processListQuerier = new SqliteProcessListQuerier(sqliteDatabases);
     myProcessListQuerier = new SqliteMyProcessListQuerier(sqliteDatabases);
@@ -157,7 +165,8 @@ export class Server {
       persistedExecutionRepository.setup(abortSignal),
       taskRepository.setup(abortSignal),
       assignedTaskRepository.setup(abortSignal),
-      notificationRepository.setup(abortSignal)
+      notificationRepository.setup(abortSignal),
+      tableRepository.setup(abortSignal)
     ]);
 
     const processExecutionStore = new ProcessExecutionStore();
@@ -243,12 +252,14 @@ export class Server {
     app.listen(PORT, () => {
       logger.log(`Server is running on port ${PORT}`);
     });
-    return new Server(sandboxInstanceManager, sqliteDatabases);
+    return new Server(sandboxInstanceManager, sqliteDatabases, tableRepository, tableDataRepository);
   }
 
   public constructor(
     private readonly sandboxInstanceManager: SandboxInstanceManager,
-    private readonly sqliteDatabases: SqliteDatabases
+    private readonly sqliteDatabases: SqliteDatabases,
+    private readonly tableRepository: TableRepository,
+    private readonly tableDataRepository: TableDataRepository
   ) {}
 
   public async close() {

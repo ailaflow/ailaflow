@@ -1,0 +1,79 @@
+import assert from 'node:assert/strict';
+import { DatabaseSync } from 'node:sqlite';
+import test from 'node:test';
+import { SqliteDatabases } from '../../core/sqlite-databases';
+import { SqliteTableRepository } from './sqlite-table-repository';
+import { Table } from './table';
+
+test('manages table definitions and their data tables', async () => {
+  const db = new DatabaseSync(':memory:', { open: true });
+  const dbs = { modelDb: db } as SqliteDatabases;
+  const abortSignal = new AbortController().signal;
+  const repository = new SqliteTableRepository(dbs);
+
+  await repository.setup(abortSignal);
+  await repository.insert(abortSignal, new Table('customers', 'Customer records'));
+
+  assert.deepEqual(toPlainRows(db.prepare(`SELECT name, description FROM tables`)), [
+    { name: 'customers', description: 'Customer records' }
+  ]);
+  assert.deepEqual(
+    toPlainRows(db.prepare(`PRAGMA table_info(data_customers)`)).map(row => ({
+      name: row.name,
+      type: row.type,
+      notnull: row.notnull,
+      pk: row.pk
+    })),
+    [
+      { name: 'pk', type: 'TEXT', notnull: 1, pk: 1 },
+      { name: 'data', type: 'TEXT', notnull: 1, pk: 0 },
+      { name: 'updatedAt', type: 'INTEGER', notnull: 1, pk: 0 }
+    ]
+  );
+
+  await repository.update(abortSignal, new Table('customers', 'Updated description'));
+  assert.deepEqual(toPlainRows(db.prepare(`SELECT name, description FROM tables`)), [
+    { name: 'customers', description: 'Updated description' }
+  ]);
+
+  await repository.delete(abortSignal, 'customers');
+  assert.deepEqual(toPlainRows(db.prepare(`SELECT name, description FROM tables`)), []);
+  assert.equal(tableExists(db, 'data_customers'), false);
+
+  db.close();
+});
+
+test('rolls back a definition insert when its data table cannot be created', async () => {
+  const db = new DatabaseSync(':memory:', { open: true });
+  const dbs = { modelDb: db } as SqliteDatabases;
+  const abortSignal = new AbortController().signal;
+  const repository = new SqliteTableRepository(dbs);
+
+  await repository.setup(abortSignal);
+  db.exec(`CREATE TABLE data_customers (pk TEXT PRIMARY KEY)`);
+
+  await assert.rejects(() => repository.insert(abortSignal, new Table('customers', 'Customer records')));
+  assert.deepEqual(toPlainRows(db.prepare(`SELECT name, description FROM tables`)), []);
+
+  db.close();
+});
+
+function tableExists(db: DatabaseSync, name: string): boolean {
+  return Boolean(
+    db
+      .prepare(
+        `
+        SELECT name
+        FROM sqlite_master
+        WHERE type = 'table'
+          AND name = ?
+        LIMIT 1
+      `
+      )
+      .get(name)
+  );
+}
+
+function toPlainRows(statement: ReturnType<DatabaseSync['prepare']>): Record<string, unknown>[] {
+  return statement.all().map(row => ({ ...row }));
+}
