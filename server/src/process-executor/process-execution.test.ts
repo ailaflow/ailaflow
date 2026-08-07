@@ -56,7 +56,7 @@ test('process execution signals the first wait and pauses on a later wait', asyn
 
   const pausedStepId = await new Promise<string | null>((resolve, reject) => {
     const timeout = setTimeout(() => reject(new Error('Execution did not pause')), 250);
-    const execution = new ProcessExecution('execution_1', {} as Process, interpreter, $logger, $variables, {
+    const execution = new ProcessExecution('execution_1', 'user_1', {} as Process, interpreter, $logger, $variables, {
       persist: async () => {
         clearTimeout(timeout);
         resolve(interpreter.getSnapshot().tryGetCurrentStepId());
@@ -108,7 +108,7 @@ test('process execution fails when pause persistence fails', async () => {
 
   const result = await new Promise((resolve, reject) => {
     const timeout = setTimeout(() => reject(new Error('Execution did not fail')), 250);
-    const execution = new ProcessExecution('execution_1', {} as Process, interpreter, $logger, $variables, {
+    const execution = new ProcessExecution('execution_1', 'user_1', {} as Process, interpreter, $logger, $variables, {
       persist: async () => {
         throw new Error('Storage unavailable');
       }

@@ -11,10 +11,12 @@ export class ProcessExecutionPersister {
   public async persist(
     process: Process,
     executionId: string,
+    startedBy: string,
     serializedSnapshot: SerializedWorkflowMachineSnapshot<ProcessExecutionGlobalState>
   ): Promise<void> {
     const execution = PersistedExecution.create(
       executionId,
+      startedBy,
       process.name,
       process.hash,
       ProcessExecutionSnapshotTransformer.serialize(serializedSnapshot)

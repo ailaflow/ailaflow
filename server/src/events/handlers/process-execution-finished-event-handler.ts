@@ -1,18 +1,18 @@
 import { EventHandler } from '../event-handler';
-import { LazyProcessFinishedEvent } from './lazy-process-finished-event';
+import { ProcessExecutionFinishedEvent } from './process-execution-finished-event';
 import { Logger } from '../../core/logger';
 import { UserChatSessionProvider } from '../../providers/user-chat-session-provider';
 
-export class LazyProcessFinishedEventHandler implements EventHandler<LazyProcessFinishedEvent> {
-  public readonly name = LazyProcessFinishedEvent.name;
-  private readonly logger = new Logger(LazyProcessFinishedEventHandler.name);
+export class ProcessExecutionFinishedEventHandler implements EventHandler<ProcessExecutionFinishedEvent> {
+  public readonly name = ProcessExecutionFinishedEvent.name;
+  private readonly logger = new Logger(ProcessExecutionFinishedEventHandler.name);
 
   public constructor(private readonly userChatSessionProvider: UserChatSessionProvider) {}
 
-  public async handle(event: LazyProcessFinishedEvent) {
-    const session = this.userChatSessionProvider.tryGetMainChannel(event.userName);
+  public async handle(event: ProcessExecutionFinishedEvent) {
+    const session = this.userChatSessionProvider.tryGetMainChannel(event.startedBy);
     if (!session) {
-      this.logger.log(`Cannot find main chat session for user: ${event.userName}`);
+      this.logger.log(`Cannot find main chat session for user: ${event.startedBy}`);
       return;
     }
 

@@ -1,10 +1,7 @@
 import { SerializedWorkflowMachineSnapshot } from 'sequential-workflow-machine';
-import {
-  ProcessExecutionGlobalState,
-  ProcessExecutionGlobalStateServices,
-  SerializedProcessExecutionGlobalState
-} from './process-execution-global-state';
+import { ProcessExecutionGlobalState, SerializedProcessExecutionGlobalState } from './process-execution-global-state';
 import { Process } from '../repositories/process/process';
+import { ProcessExecutionServices } from './services/services';
 
 export class ProcessExecutionSnapshotTransformer {
   public static serialize(
@@ -25,7 +22,7 @@ export class ProcessExecutionSnapshotTransformer {
   public static deserialize(
     snapshot: SerializedWorkflowMachineSnapshot<SerializedProcessExecutionGlobalState>,
     process: Process,
-    services: ProcessExecutionGlobalStateServices
+    services: ProcessExecutionServices
   ): SerializedWorkflowMachineSnapshot<ProcessExecutionGlobalState> {
     const output = {
       ...snapshot,

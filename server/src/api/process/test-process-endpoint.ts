@@ -7,6 +7,7 @@ import { EndpointError } from '../framework/endpoint-error';
 import { ProcessExecutor } from '../../process-executor/process-executor';
 import { parseBody } from '../framework/parse-request';
 import { getEndpointAbortSignal } from '../framework/endpoint-abort-signal';
+import { getAuthToken } from '../auth/auth-middleware';
 
 export class TestProcessEndpoint implements Endpoint {
   public readonly method = 'post';
@@ -21,6 +22,7 @@ export class TestProcessEndpoint implements Endpoint {
 
   public async handle(req: Request, res: Response) {
     const endpointAbortSignal = getEndpointAbortSignal(req);
+    const { userName } = getAuthToken(req);
     const processName = String(req.params.name);
     const request = parseBody(testProcessRequestSchema, req.body);
     const process = await this.processRepository.tryGetByName(endpointAbortSignal, processName);
@@ -30,7 +32,7 @@ export class TestProcessEndpoint implements Endpoint {
 
     // We need to initialize the workflow machine before sending SSE headers.
     // If the workflow machine fails, the user will receive the expected HTTP 500 response.
-    const execution = this.processExecutor.initialize(process, request.input);
+    const execution = this.processExecutor.initialize(userName, process, request.input);
 
     const abortController = new AbortController();
     const sseResponse = new SseResponse<TestProcessUpdate>(res);

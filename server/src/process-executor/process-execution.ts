@@ -29,6 +29,7 @@ export class ProcessExecution {
 
   public constructor(
     public readonly id: string,
+    public readonly startedBy: string,
     private readonly process: Process,
     private readonly interpreter: WorkflowMachineInterpreter<ProcessExecutionGlobalState>,
     private readonly logger: ProcessLogger,
@@ -89,7 +90,7 @@ export class ProcessExecution {
     }
     this.paused = true;
     try {
-      await this.processExecutionPersister.persist(this.process, this.id, serializedSnapshot);
+      await this.processExecutionPersister.persist(this.process, this.id, this.startedBy, serializedSnapshot);
       this.onPaused.emit();
     } catch (e) {
       this.onFinished.emit({

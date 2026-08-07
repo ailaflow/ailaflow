@@ -2,7 +2,7 @@ import { ProcessExecutionResult, ProcessExecutionVariableValues } from '@aila/mo
 import { Process } from '../repositories/process/process';
 import { ProcessExecutor } from './process-executor';
 import { EventBus } from '../events/event-bus';
-import { LazyProcessFinishedEvent } from '../events/handlers/lazy-process-finished-event';
+import { ProcessExecutionFinishedEvent } from '../events/handlers/process-execution-finished-event';
 
 export type LazyProcessExecutorResult =
   | {
@@ -23,50 +23,67 @@ export class LazyProcessExecutor {
   public execute(
     abortSignal: AbortSignal,
     fastTimeout: number | null,
-    userName: string,
+    startedBy: string,
     process: Process,
     input: ProcessExecutionVariableValues
   ): Promise<LazyProcessExecutorResult> {
-    const execution = this.processExecutor.initialize(process, input);
+    const execution = this.processExecutor.initialize(startedBy, process, input);
 
     return new Promise(resolve => {
-      let released = false;
+      let isWaiting = true;
       let to: ReturnType<typeof setTimeout> | null = null;
 
+      const unbind = () => {
+        execution.onPaused.unsubscribe(onPaused);
+        execution.onFinished.unsubscribe(onFinished);
+      };
+
+      const onPaused = () => {
+        unbind();
+        if (isWaiting) {
+          resolve({
+            finished: false,
+            executionId: execution.id
+          });
+        }
+      };
+
       const onFinished = (result: ProcessExecutionResult) => {
-        if (released) {
+        unbind();
+
+        if (isWaiting) {
           if (to) {
             clearTimeout(to);
             to = null;
           }
-          const event = new LazyProcessFinishedEvent(userName, execution.id, process.name, result);
-          this.eventBus.publish(event);
-          released = true;
+          resolve({
+            finished: true,
+            result
+          });
           return;
         }
-        resolve({
-          finished: true,
-          result
-        });
+
+        const event = new ProcessExecutionFinishedEvent(execution.id, startedBy, process.name, result);
+        this.eventBus.publish(event);
       };
 
       const resolveUnfinished = () => {
-        execution.onFinished.unsubscribe(onFinished);
+        isWaiting = false;
         resolve({
           finished: false,
           executionId: execution.id
         });
       };
 
+      execution.onPaused.subscribe(onPaused);
       execution.onFinished.subscribe(onFinished);
 
       if (fastTimeout === null) {
-        released = true;
-        setTimeout(resolveUnfinished);
+        resolveUnfinished();
       } else {
         to = setTimeout(() => {
-          if (!released) {
-            released = true;
+          to = null;
+          if (isWaiting) {
             resolveUnfinished();
           }
         }, fastTimeout);

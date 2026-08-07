@@ -6,6 +6,7 @@ import { PersistedExecution } from '../repositories/persisted-execution/persiste
 import { PersistedExecutionRepository } from '../repositories/persisted-execution/persisted-execution-repository';
 import { ProcessExecutionResumeError, ProcessExecutionResumer } from './process-execution-resumer';
 import { ProcessExecutor } from './process-executor';
+import { EventBus } from '../events/event-bus';
 
 test('process execution resumer fails when the process hash changed', async () => {
   const abortSignal = new AbortController().signal;
@@ -24,6 +25,7 @@ test('process execution resumer fails when the process hash changed', async () =
       tryGet: async () =>
         new PersistedExecution(
           'execution_1',
+          'user_1',
           'process_1',
           'old_hash',
           {
@@ -40,7 +42,8 @@ test('process execution resumer fails when the process hash changed', async () =
           2000
         )
     } as PersistedExecutionRepository,
-    {} as ProcessExecutor
+    {} as ProcessExecutor,
+    new EventBus()
   );
 
   await assert.rejects(() => resumer.resume(abortSignal, 'execution_1', {}), ProcessExecutionResumeError);

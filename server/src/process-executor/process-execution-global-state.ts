@@ -1,21 +1,15 @@
 import { ProcessExecutionVariableValues } from '@aila/model';
 import { Process } from '../repositories/process/process';
-import { SandboxInstanceManager } from '../sandbox/sandbox-instance-manager';
 import { ProcessLogger } from './services/process-logger';
 import { ProcessScriptExecutor } from './services/process-script-executor';
 import { ProcessVariableManager } from './services/process-variable-manager';
 import { TaskManager } from './services/task-manager';
 import { Notifier } from './services/notifier';
+import { ProcessExecutionServices } from './services/services';
 
 export interface SerializedProcessExecutionGlobalState {
   executionId: string;
   variableValues: ProcessExecutionVariableValues;
-}
-
-export interface ProcessExecutionGlobalStateServices {
-  sandboxInstanceManager: SandboxInstanceManager;
-  taskManager: TaskManager;
-  notifier: Notifier;
 }
 
 export class ProcessExecutionGlobalState {
@@ -23,7 +17,7 @@ export class ProcessExecutionGlobalState {
     executionId: string,
     variableValues: ProcessExecutionVariableValues,
     process: Process,
-    services: ProcessExecutionGlobalStateServices
+    services: ProcessExecutionServices
   ): ProcessExecutionGlobalState {
     const $logger = new ProcessLogger();
     const $variables = new ProcessVariableManager(variableValues, process.variables);
@@ -35,7 +29,7 @@ export class ProcessExecutionGlobalState {
   public static deserialize(
     serialized: SerializedProcessExecutionGlobalState,
     process: Process,
-    services: ProcessExecutionGlobalStateServices
+    services: ProcessExecutionServices
   ): ProcessExecutionGlobalState {
     return this.create(serialized.executionId, serialized.variableValues, process, services);
   }

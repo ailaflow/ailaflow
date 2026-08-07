@@ -3,6 +3,8 @@ import { ProcessRepository } from '../repositories/process/process-repository';
 import { PersistedExecutionRepository } from '../repositories/persisted-execution/persisted-execution-repository';
 import { ProcessExecution } from './process-execution';
 import { ProcessExecutor } from './process-executor';
+import { EventBus } from '../events/event-bus';
+import { ProcessExecutionFinishedEvent } from '../events/handlers/process-execution-finished-event';
 
 export class ProcessExecutionResumeError extends Error {
   public constructor(message: string) {
@@ -15,7 +17,8 @@ export class ProcessExecutionResumer {
   public constructor(
     private readonly processRepository: ProcessRepository,
     private readonly persistedExecutionRepository: PersistedExecutionRepository,
-    private readonly processExecutor: ProcessExecutor
+    private readonly processExecutor: ProcessExecutor,
+    private readonly eventBus: EventBus
   ) {}
 
   public async resume(abortSignal: AbortSignal, executionId: string, payload: SignalPayload): Promise<ProcessExecution> {
@@ -32,7 +35,18 @@ export class ProcessExecutionResumer {
       throw new ProcessExecutionResumeError('Cannot resume execution because the process definition changed');
     }
 
-    const execution = this.processExecutor.restore(process, persistedExecution.state);
+    const execution = this.processExecutor.restore(
+      persistedExecution.executionId,
+      persistedExecution.startedBy,
+      process,
+      persistedExecution.state
+    );
+    execution.onFinished.subscribe(result => {
+      this.eventBus.publish(
+        new ProcessExecutionFinishedEvent(persistedExecution.executionId, execution.startedBy, persistedExecution.processName, result)
+      );
+    });
+
     await this.persistedExecutionRepository.delete(abortSignal, executionId);
     execution.run(abortSignal, {
       signalOnFirstWait: payload

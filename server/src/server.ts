@@ -56,7 +56,7 @@ import { MyProcessesTool } from './chat-session/user-tools/my-processes-tool';
 import { StartMyProcessTool } from './chat-session/user-tools/start-my-process-tool';
 import { LazyProcessExecutor } from './process-executor/lazy-process-executor';
 import { EventBus } from './events/event-bus';
-import { LazyProcessFinishedEventHandler } from './events/handlers/lazy-process-finished-event-handler';
+import { ProcessExecutionFinishedEventHandler } from './events/handlers/process-execution-finished-event-handler';
 import { ChatSessionStorage } from './chat-session/chat-session-storage';
 import { ChatSessionRepository } from './repositories/chat-session/chat-session-repository';
 import { SqliteChatSessionRepository } from './repositories/chat-session/sqlite-chat-session-repository';
@@ -107,6 +107,7 @@ import { TableDataListQuerier } from './queriers/table-data-list/table-data-list
 import { SqliteTableDataListQuerier } from './queriers/table-data-list/sqlite-table-data-list-querier';
 import { GetTableDataEndpoint } from './api/table/get-table-data-endpoint';
 import { ReadTablePageRpcHandler } from './process-executor/rpc-handlers/read-table-page-rpc-handler';
+import { ProcessExecutionServices } from './process-executor/services/services';
 
 const PORT = process.env.PORT || 2048;
 
@@ -199,7 +200,7 @@ export class Server {
     const userChatSessionProvider = new UserChatSessionProvider(liveSessionStore);
 
     const eventBus = new EventBus();
-    eventBus.registerHandler(new LazyProcessFinishedEventHandler(userChatSessionProvider));
+    eventBus.registerHandler(new ProcessExecutionFinishedEventHandler(userChatSessionProvider));
 
     const sandboxInstanceManager = new SandboxInstanceManager(serverPaths, sandboxRepository, rpcHandler);
 
@@ -207,15 +208,14 @@ export class Server {
     const notifier = new Notifier(userAccessExpressionUserQuerier, userChatSessionProvider, notificationRepository);
 
     const processExecutionPersister = new ProcessExecutionPersister(persistedExecutionRepository);
-    const processExecutor = new ProcessExecutor(
+    const processExecutionServices: ProcessExecutionServices = {
       sandboxInstanceManager,
-      processExecutionStore,
       taskManager,
-      processExecutionPersister,
       notifier
-    );
+    };
+    const processExecutor = new ProcessExecutor(processExecutionStore, processExecutionPersister, processExecutionServices);
     const lazyProcessExecutor = new LazyProcessExecutor(processExecutor, eventBus);
-    const processExecutionResumer = new ProcessExecutionResumer(processRepository, persistedExecutionRepository, processExecutor);
+    const processExecutionResumer = new ProcessExecutionResumer(processRepository, persistedExecutionRepository, processExecutor, eventBus);
 
     const passwordHasher = new PasswordHasher();
     const userProcessProvider = new UserProcessProvider(myProcessAccessQuerier, processRepository);
@@ -276,14 +276,12 @@ export class Server {
     app.listen(PORT, () => {
       logger.log(`Server is running on port ${PORT}`);
     });
-    return new Server(sandboxInstanceManager, sqliteDatabases, tableRepository, tableDataRepository);
+    return new Server(sandboxInstanceManager, sqliteDatabases);
   }
 
   public constructor(
     private readonly sandboxInstanceManager: SandboxInstanceManager,
-    private readonly sqliteDatabases: SqliteDatabases,
-    private readonly tableRepository: TableRepository,
-    private readonly tableDataRepository: TableDataRepository
+    private readonly sqliteDatabases: SqliteDatabases
   ) {}
 
   public async close() {
