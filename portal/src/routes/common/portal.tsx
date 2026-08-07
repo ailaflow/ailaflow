@@ -13,7 +13,6 @@ const adminItems: MenuItem[] = [
   { icon: '/', label: 'Processes', action: 'link', href: '/admin/processes' },
   { icon: '#', label: 'Tables', action: 'link', href: '/admin/tables' },
   { icon: '@', label: 'Users', action: 'link', href: '/admin/users' },
-  { icon: '*', label: 'Views', action: 'link', href: '/admin/views' },
   { icon: '*', label: 'Logs', action: 'link', href: '/admin/logs' },
   { icon: '*', label: 'Configuration', action: 'link', href: '/admin/configuration' },
   { icon: '+', label: 'Sandboxes', action: 'link', href: '/admin/sandboxes' }

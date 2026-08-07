@@ -17,7 +17,6 @@ import { UserListPage } from './user-list/user-list-page';
 import { UserEditorPage } from './user-editor/user-editor-page';
 import { TableListPage } from './table-list/table-list-page';
 import { TableEditorPage } from './table-editor/table-editor-page';
-import { ViewListPage } from './view-list/view-list-page';
 import { LogsPage } from './logs/logs-page';
 import { ConfigurationPage } from './configuration/configuration-page';
 
@@ -104,10 +103,6 @@ export const routes = [
       {
         path: '/admin/users/:userName',
         element: <UserEditorPage />
-      },
-      {
-        path: '/admin/views',
-        element: <ViewListPage />
       },
       {
         path: '/admin/logs',
