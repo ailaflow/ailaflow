@@ -3,6 +3,21 @@ import z from 'zod/v4';
 import { formDefinitionSchema } from './form-definition';
 import { baseStepSchema } from './base-step-model';
 
+// common
+
+const stringOrVariableSchema = z.discriminatedUnion('type', [
+  z.object({
+    type: z.literal('string'),
+    value: z.string()
+  }),
+  z.object({
+    type: z.literal('variable'),
+    name: z.string()
+  })
+]);
+
+export type StringOrVariable = z.infer<typeof stringOrVariableSchema>;
+
 // script step
 
 export const scriptStepPropertiesSchema = z.object({
@@ -36,7 +51,7 @@ export type AgentStep = z.infer<typeof agentStepSchema>;
 // notification step
 
 export const notificationStepPropertiesSchema = z.object({
-  userExpression: z.string(),
+  userExpression: stringOrVariableSchema,
   notification: z.string()
 });
 
@@ -53,7 +68,7 @@ export type NotificationStep = z.infer<typeof notificationStepSchema>;
 export const taskStepPropertiesSchema = z.object({
   inputVariableNames: z.array(z.string()),
   outputVariableNames: z.array(z.string()),
-  userExpression: z.string(),
+  userExpression: stringOrVariableSchema,
   form: formDefinitionSchema
 });
 

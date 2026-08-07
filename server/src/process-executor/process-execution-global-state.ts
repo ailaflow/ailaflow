@@ -6,6 +6,7 @@ import { ProcessVariableManager } from './services/process-variable-manager';
 import { TaskManager } from './services/task-manager';
 import { Notifier } from './services/notifier';
 import { ProcessExecutionServices } from './services/services';
+import { ProcessVariableEvaluator } from './services/process-value-evaluator';
 
 export interface SerializedProcessExecutionGlobalState {
   executionId: string;
@@ -21,9 +22,18 @@ export class ProcessExecutionGlobalState {
   ): ProcessExecutionGlobalState {
     const $logger = new ProcessLogger();
     const $variables = new ProcessVariableManager(variableValues, process.variables);
+    const $variableEvaluator = new ProcessVariableEvaluator($variables);
     const $scriptExecutor = new ProcessScriptExecutor(executionId, process, $logger, services.sandboxInstanceManager);
 
-    return new ProcessExecutionGlobalState(executionId, $logger, $variables, $scriptExecutor, services.taskManager, services.notifier);
+    return new ProcessExecutionGlobalState(
+      executionId,
+      $logger,
+      $variables,
+      $variableEvaluator,
+      $scriptExecutor,
+      services.taskManager,
+      services.notifier
+    );
   }
 
   public static deserialize(
@@ -43,6 +53,7 @@ export class ProcessExecutionGlobalState {
     public readonly executionId: string,
     public readonly $logger: ProcessLogger,
     public readonly $variables: ProcessVariableManager,
+    public readonly $variableEvaluator: ProcessVariableEvaluator,
     public readonly $scriptExecutor: ProcessScriptExecutor,
     public readonly $taskManager: TaskManager,
     public readonly $notifier: Notifier

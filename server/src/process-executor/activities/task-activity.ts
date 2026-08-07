@@ -6,7 +6,13 @@ export const taskStepActivity = createSignalActivity<TaskStep, ProcessExecutionG
   init: () => ({}),
   beforeSignal: async (step: TaskStep, globalState: ProcessExecutionGlobalState) => {
     const abortSignal = AbortSignal.timeout(5_000);
-    await globalState.$taskManager.create(abortSignal, globalState.executionId, step, globalState.$variables);
+    await globalState.$taskManager.create(
+      abortSignal,
+      globalState.executionId,
+      step,
+      globalState.$variableEvaluator,
+      globalState.$variables
+    );
   },
   afterSignal: async (step: TaskStep, globalState: ProcessExecutionGlobalState, _: object, payload: SignalPayload) => {
     for (const name of step.properties.outputVariableNames) {

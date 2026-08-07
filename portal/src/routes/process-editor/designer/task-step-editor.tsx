@@ -8,6 +8,7 @@ import { EnabledSubValuePreviewView } from '../../../views/process-editor/design
 import { DefinitionPath } from '../../../core/definition-path';
 import { VariableSelectorPropertyView } from '../../../views/process-editor/designer-editors/variable-selector-property-view';
 import { ProcessEditorOverlayType } from '../process-editor-context';
+import { StringOrVariablePropertyView } from '../../../views/process-editor/designer-editors/string-or-variable-property-view';
 
 export function TaskStepEditor(props: StepEditorProps) {
   const { id, name, step, properties, definition, setName, setProperty } = useStepEditor<TaskStep, ProcessDefinition>();
@@ -42,12 +43,13 @@ export function TaskStepEditor(props: StepEditorProps) {
         error={errors['properties.outputVariableNames']}
       />
 
-      <StringEditorPropertyView
+      <StringOrVariablePropertyView
         label="User Expression"
         value={properties.userExpression}
+        variableNames={definition.properties.variables.map(v => v.name)}
         onValueChanged={v => setProperty('userExpression', v)}
         error={errors['properties.userExpression']}
-      ></StringEditorPropertyView>
+      />
     </DesignerEditorView>
   );
 }

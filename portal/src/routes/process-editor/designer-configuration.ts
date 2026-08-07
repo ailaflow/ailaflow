@@ -78,7 +78,7 @@ const taskStep: Omit<TaskStep, 'id'> = {
   properties: {
     inputVariableNames: [],
     outputVariableNames: [],
-    userExpression: '',
+    userExpression: { type: 'string', value: '' },
     form: createEmptyFormDefinition()
   }
 };
@@ -88,7 +88,7 @@ const notificationStep: Omit<NotificationStep, 'id'> = {
   name: 'Notification',
   componentType: 'task',
   properties: {
-    userExpression: '',
+    userExpression: { type: 'string', value: '' },
     notification: 'Put your notification message here'
   }
 };

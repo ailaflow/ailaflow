@@ -13,11 +13,11 @@ export class ProcessVariableManager {
     }
   }
 
-  public get(name: string): unknown | null {
+  public get<T = unknown>(name: string): T | null {
     if (!this.values.has(name)) {
       throw new Error(`Variable \$${name} does not exist`);
     }
-    return this.values.get(name) ?? null;
+    return (this.values.get(name) as T) ?? null;
   }
 
   public getSchema(name: string): JsonSchema {

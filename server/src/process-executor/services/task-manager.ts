@@ -6,6 +6,7 @@ import { AssignedTask } from '../../repositories/task/assigned-task';
 import { Task } from '../../repositories/task/task';
 import { UserChatSessionProvider } from '../../providers/user-chat-session-provider';
 import { ProcessVariableManager } from './process-variable-manager';
+import { ProcessVariableEvaluator } from './process-value-evaluator';
 
 export class TaskManager {
   public constructor(
@@ -15,9 +16,17 @@ export class TaskManager {
     private readonly userChatSessionProvider: UserChatSessionProvider
   ) {}
 
-  public async create(abortSignal: AbortSignal, executionId: string, step: TaskStep, variableManager: ProcessVariableManager) {
-    const expression = UserAccessExpressionParser.parse(step.properties.userExpression);
-    const userNames = await this.userAccessExpressionUserQuerier.queryUserNames(abortSignal, expression);
+  public async create(
+    abortSignal: AbortSignal,
+    executionId: string,
+    step: TaskStep,
+    variableEvaluator: ProcessVariableEvaluator,
+    variableManager: ProcessVariableManager
+  ) {
+    const expression = variableEvaluator.evaluateStringOrVariable(step.properties.userExpression);
+
+    const parsedExpression = UserAccessExpressionParser.parse(expression);
+    const userNames = await this.userAccessExpressionUserQuerier.queryUserNames(abortSignal, parsedExpression);
 
     const outputVariableSchemas: Record<string, JsonSchema> = {};
     for (const name of step.properties.outputVariableNames) {

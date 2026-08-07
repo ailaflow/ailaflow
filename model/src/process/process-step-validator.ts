@@ -1,5 +1,5 @@
 import { Definition, Sequence, Step } from 'sequential-workflow-model';
-import { NotificationStep, ReturnStep, ScriptStep, TaskStep } from './process-steps';
+import { NotificationStep, ReturnStep, ScriptStep, StringOrVariable, TaskStep } from './process-steps';
 import { VariableCachedValidator } from './variable-cached-validator';
 import { FormDefinitionValidator } from './form-definition-validator';
 import { ProcessDefinition } from './process-definition';
@@ -25,7 +25,7 @@ export class ProcessStepValidator {
         this.validateTask(step as TaskStep, definition, errors);
         break;
       case 'notification':
-        this.validateNotification(step as NotificationStep, errors);
+        this.validateNotification(step as NotificationStep, definition, errors);
         break;
       case 'return':
         this.validateReturn(step as ReturnStep, definition, errors);
@@ -45,11 +45,11 @@ export class ProcessStepValidator {
   }
 
   private validateTask(step: TaskStep, definition: ProcessDefinition, errors: Record<string, string>) {
-    const e = Object.values(
+    const formErrors = Object.values(
       FormDefinitionValidator.validate(step.properties.form, step.properties.inputVariableNames, definition, this.variableValidator)
     );
-    if (e.length > 0) {
-      errors['properties.form'] = e[0];
+    if (formErrors.length > 0) {
+      errors['properties.form'] = formErrors[0];
     }
 
     this.variableValidator.setErrorIfAnyVariableIsMissing(
@@ -75,18 +75,17 @@ export class ProcessStepValidator {
       }
     }
 
-    const userExpressionError = UserAccessExpressionParser.validate(step.properties.userExpression);
-    if (userExpressionError) {
-      errors['properties.userExpression'] = userExpressionError;
+    const ueError = this.validateUserExpression(step.properties.userExpression, definition);
+    if (ueError) {
+      errors['properties.userExpression'] = ueError;
     }
   }
 
-  private validateNotification(step: NotificationStep, errors: Record<string, string>) {
-    const userExpressionError = UserAccessExpressionParser.validate(step.properties.userExpression);
-    if (userExpressionError) {
-      errors['properties.userExpression'] = userExpressionError;
+  private validateNotification(step: NotificationStep, definition: ProcessDefinition, errors: Record<string, string>) {
+    const ueError = this.validateUserExpression(step.properties.userExpression, definition);
+    if (ueError) {
+      errors['properties.userExpression'] = ueError;
     }
-
     if (step.properties.notification.length < 1) {
       errors['properties.notification'] = 'Notification must not be empty.';
     }
@@ -99,6 +98,22 @@ export class ProcessStepValidator {
       errors,
       'properties.outputVariableNames'
     );
+  }
+
+  private validateUserExpression(ue: StringOrVariable, definition: ProcessDefinition): string | null {
+    if (ue.type === 'variable') {
+      const variable = this.variableValidator.tryGet(ue.name, definition);
+      if (!variable) {
+        return `Variable \$${ue.name} does not exist`;
+      }
+      if (variable.schema.schema.type !== 'string') {
+        return `Variable \$${ue.name} must be of type string`;
+      }
+    }
+    if (ue.type === 'string') {
+      return UserAccessExpressionParser.validate(ue.value);
+    }
+    return null;
   }
 
   public readonly validateStep = (step: Step, _: Sequence, definition: Definition): boolean => {

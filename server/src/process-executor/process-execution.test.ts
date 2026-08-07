@@ -11,6 +11,7 @@ import { Process } from '../repositories/process/process';
 import { ProcessExecutionPersister } from './process-execution-persister';
 import { ProcessVariables } from '../repositories/process/process-variables';
 import { Notifier } from './services/notifier';
+import { ProcessVariableEvaluator } from './services/process-value-evaluator';
 
 test('process execution signals the first wait and pauses on a later wait', async () => {
   const activitySet = createActivitySet<ProcessExecutionGlobalState>([
@@ -48,6 +49,7 @@ test('process execution signals the first wait and pauses on a later wait', asyn
         'execution_1',
         $logger,
         $variables,
+        new ProcessVariableEvaluator($variables),
         {} as ProcessExecutionGlobalState['$scriptExecutor'],
         {} as ProcessExecutionGlobalState['$taskManager'],
         {} as Notifier
@@ -100,6 +102,7 @@ test('process execution fails when pause persistence fails', async () => {
         'execution_1',
         $logger,
         $variables,
+        new ProcessVariableEvaluator($variables),
         {} as ProcessExecutionGlobalState['$scriptExecutor'],
         {} as ProcessExecutionGlobalState['$taskManager'],
         {} as Notifier

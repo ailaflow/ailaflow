@@ -322,7 +322,7 @@ export function useProcessEditorAi(state: ProcessEditorState, save: () => Promis
           if (error) {
             return toolError(`${error}; the user expression was not updated`);
           }
-          step.properties.userExpression = arg.userExpression;
+          step.properties.userExpression = { type: 'string', value: arg.userExpression };
           state.notifyDefinitionChange();
           return toolSuccess('User expression was updated');
         },
