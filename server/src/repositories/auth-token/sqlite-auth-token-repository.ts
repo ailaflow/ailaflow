@@ -1,5 +1,6 @@
 import { DatabaseSync } from 'node:sqlite';
-import { AuthToken, AuthTokenRepository } from './auth-token-repository';
+import { AuthTokenRepository } from './auth-token-repository';
+import { AuthToken } from './auth-token';
 import { SqliteDatabases } from '../../core/sqlite-databases';
 
 export class SqliteAuthTokenRepository implements AuthTokenRepository {
@@ -52,6 +53,14 @@ export class SqliteAuthTokenRepository implements AuthTokenRepository {
       WHERE token = ?
     `);
     statement.run(token);
+  }
+
+  public async deleteOutdated(_: AbortSignal, now: number): Promise<void> {
+    const statement = this.db.prepare(`
+      DELETE FROM authTokens
+      WHERE expiresAt < ?
+    `);
+    statement.run(now);
   }
 
   public dispose() {

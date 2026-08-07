@@ -108,6 +108,8 @@ import { SqliteTableDataListQuerier } from './queriers/table-data-list/sqlite-ta
 import { GetTableDataEndpoint } from './api/table/get-table-data-endpoint';
 import { ReadTablePageRpcHandler } from './process-executor/rpc-handlers/read-table-page-rpc-handler';
 import { ProcessExecutionServices } from './process-executor/services/services';
+import { Cron } from './crons/cron';
+import { AuthTokenCleanupCron } from './crons/auth-token-cleanup-cron';
 
 const PORT = process.env.PORT || 2048;
 
@@ -234,6 +236,8 @@ export class Server {
     const authMiddleware = new AuthMiddleware(authTokenRepository);
     const sessionResolver = new ChatSessionResolver(llmClient, userToolSetProvider, serverPaths);
 
+    const crons: Cron[] = [new AuthTokenCleanupCron(authTokenRepository)];
+
     setupServer(app, {
       sessionResolver,
       liveSessionStore,
@@ -271,21 +275,29 @@ export class Server {
       new SaveUserEndpoint(userRepository, userAttributesRepository, passwordHasher)
     ];
     const router = new Router(app, endpoints, authMiddleware);
-
     router.setup();
+
+    for (const cron of crons) {
+      cron.start();
+    }
+
     app.listen(PORT, () => {
       logger.log(`Server is running on port ${PORT}`);
     });
-    return new Server(sandboxInstanceManager, sqliteDatabases);
+    return new Server(sandboxInstanceManager, sqliteDatabases, crons);
   }
 
   public constructor(
     private readonly sandboxInstanceManager: SandboxInstanceManager,
-    private readonly sqliteDatabases: SqliteDatabases
+    private readonly sqliteDatabases: SqliteDatabases,
+    private readonly crons: Cron[]
   ) {}
 
   public async close() {
     this.sandboxInstanceManager.stop();
     this.sqliteDatabases.dispose();
+    for (const cron of this.crons) {
+      cron.stop();
+    }
   }
 }

@@ -22,7 +22,7 @@ export function Portal(props: { children: React.ReactNode }) {
   const { session, setSession } = useAuthState();
 
   function onCommand(command: string) {
-    if (command === 'logout') {
+    if (command === 'logout' && window.confirm('Are you sure you want to log out?')) {
       setSession(null);
     }
   }
