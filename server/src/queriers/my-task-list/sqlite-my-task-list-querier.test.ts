@@ -36,7 +36,7 @@ test('queries tasks assigned to the current user', async () => {
   await assignedTaskRepository.upsertMultiple(abortSignal, [
     AssignedTask.create('task_1', 'alice'),
     AssignedTask.create('task_2', 'alice'),
-    new AssignedTask('task_3', 'alice', 4500),
+    new AssignedTask('task_3', 'alice', 4500, null),
     AssignedTask.create('task_4', 'bob'),
     AssignedTask.create('task_5', 'alice')
   ]);

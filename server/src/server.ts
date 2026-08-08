@@ -110,6 +110,8 @@ import { ReadTablePageRpcHandler } from './process-executor/rpc-handlers/read-ta
 import { ProcessExecutionServices } from './process-executor/services/services';
 import { Cron } from './crons/cron';
 import { AuthTokenCleanupCron } from './crons/auth-token-cleanup-cron';
+import { IncompleteAssignedTaskCountQuerier } from './queriers/task/incomplete-assigned-task-count-querier';
+import { SqliteIncompleteAssignedTaskCountQuerier } from './queriers/task/sqlite-incomplete-assigned-task-count-querier';
 
 const PORT = process.env.PORT || 2048;
 
@@ -145,6 +147,7 @@ export class Server {
     let myNotificationListQuerier: MyNotificationListQuerier;
     let tableListQuerier: TableListQuerier;
     let tableDataListQuerier: TableDataListQuerier;
+    let incompleteAssignedTaskCountQuerier: IncompleteAssignedTaskCountQuerier;
 
     const sqliteDatabases = new SqliteDatabases(serverPaths);
 
@@ -172,6 +175,7 @@ export class Server {
     myNotificationListQuerier = new SqliteMyNotificationListQuerier(sqliteDatabases);
     tableListQuerier = new SqliteTableListQuerier(sqliteDatabases);
     tableDataListQuerier = new SqliteTableDataListQuerier(sqliteDatabases);
+    incompleteAssignedTaskCountQuerier = new SqliteIncompleteAssignedTaskCountQuerier(sqliteDatabases);
 
     await Promise.all([
       userRepository.setup(abortSignal),
@@ -254,7 +258,13 @@ export class Server {
       new GetMyTasksEndpoint(myTaskListQuerier),
       new GetMyTaskFormEndpoint(userAssignedTaskProvider),
       new GetTaskVariableValueEndpoint(userAssignedTaskProvider, persistedExecutionRepository),
-      new SubmitMyTaskEndpoint(processExecutionResumer, userAssignedTaskProvider, assignedTaskRepository, liveSessionStore),
+      new SubmitMyTaskEndpoint(
+        processExecutionResumer,
+        userAssignedTaskProvider,
+        assignedTaskRepository,
+        liveSessionStore,
+        incompleteAssignedTaskCountQuerier
+      ),
       new GetMyProcessStartFormEndpoint(userProcessProvider),
       new StartMyProcessEndpoint(userProcessProvider, lazyProcessExecutor, liveSessionStore),
       new GetProcessesEndpoint(processListQuerier),
