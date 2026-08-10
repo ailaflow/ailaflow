@@ -86,8 +86,9 @@ export class ProcessStepValidator {
     if (ueError) {
       errors['properties.userExpression'] = ueError;
     }
-    if (step.properties.notification.length < 1) {
-      errors['properties.notification'] = 'Notification must not be empty.';
+    const notificationError = this.validateStringOrVariable(step.properties.notification, definition);
+    if (notificationError) {
+      errors['properties.notification'] = notificationError;
     }
   }
 
@@ -100,7 +101,11 @@ export class ProcessStepValidator {
     );
   }
 
-  private validateUserExpression(ue: StringOrVariable, definition: ProcessDefinition): string | null {
+  private validateStringOrVariable(
+    ue: StringOrVariable,
+    definition: ProcessDefinition,
+    stringValidator?: (value: string) => string | null
+  ): string | null {
     if (ue.type === 'variable') {
       const variable = this.variableValidator.tryGet(ue.name, definition);
       if (!variable) {
@@ -109,11 +114,19 @@ export class ProcessStepValidator {
       if (variable.schema.schema.type !== 'string') {
         return `Variable \$${ue.name} must be of type string`;
       }
+      return null;
     }
     if (ue.type === 'string') {
-      return UserAccessExpressionParser.validate(ue.value);
+      if (stringValidator) {
+        return stringValidator(ue.value);
+      }
+      return null;
     }
-    return null;
+    return 'Unsupported type';
+  }
+
+  private validateUserExpression(ue: StringOrVariable, definition: ProcessDefinition): string | null {
+    return this.validateStringOrVariable(ue, definition, value => UserAccessExpressionParser.validate(value));
   }
 
   public readonly validateStep = (step: Step, _: Sequence, definition: Definition): boolean => {

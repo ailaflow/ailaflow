@@ -20,17 +20,17 @@ export class ProcessExecutionGlobalState {
     process: Process,
     services: ProcessExecutionServices
   ): ProcessExecutionGlobalState {
-    const $logger = new ProcessLogger();
-    const $variables = new ProcessVariableManager(variableValues, process.variables);
-    const $variableEvaluator = new ProcessVariableEvaluator($variables);
-    const $scriptExecutor = new ProcessScriptExecutor(executionId, process, $logger, services.sandboxInstanceManager);
+    const logger = new ProcessLogger();
+    const variables = new ProcessVariableManager(variableValues, process.variables);
+    const variableEvaluator = new ProcessVariableEvaluator(variables);
+    const scriptExecutor = new ProcessScriptExecutor(executionId, process, logger, services.sandboxInstanceManager);
 
     return new ProcessExecutionGlobalState(
       executionId,
-      $logger,
-      $variables,
-      $variableEvaluator,
-      $scriptExecutor,
+      logger,
+      variables,
+      variableEvaluator,
+      scriptExecutor,
       services.taskManager,
       services.notifier
     );
@@ -51,18 +51,18 @@ export class ProcessExecutionGlobalState {
 
   public constructor(
     public readonly executionId: string,
-    public readonly $logger: ProcessLogger,
-    public readonly $variables: ProcessVariableManager,
-    public readonly $variableEvaluator: ProcessVariableEvaluator,
-    public readonly $scriptExecutor: ProcessScriptExecutor,
-    public readonly $taskManager: TaskManager,
-    public readonly $notifier: Notifier
+    public readonly logger: ProcessLogger,
+    public readonly variables: ProcessVariableManager,
+    public readonly variableEvaluator: ProcessVariableEvaluator,
+    public readonly scriptExecutor: ProcessScriptExecutor,
+    public readonly taskManager: TaskManager,
+    public readonly notifier: Notifier
   ) {}
 
   public serialize(): SerializedProcessExecutionGlobalState {
     return {
       executionId: this.executionId,
-      variableValues: this.$variables.dump()
+      variableValues: this.variables.dump()
     };
   }
 }

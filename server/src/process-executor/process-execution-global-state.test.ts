@@ -32,9 +32,9 @@ test('process execution global state serializes variables and recreates runtime 
   });
 
   assert.equal(deserialized.executionId, 'execution_1');
-  assert.equal(deserialized.$variables.get('answer'), 123);
-  assert.equal(deserialized.$logger instanceof ProcessLogger, true);
-  assert.equal(deserialized.$scriptExecutor instanceof ProcessScriptExecutor, true);
+  assert.equal(deserialized.variables.get('answer'), 123);
+  assert.equal(deserialized.logger instanceof ProcessLogger, true);
+  assert.equal(deserialized.scriptExecutor instanceof ProcessScriptExecutor, true);
 });
 
 test('process execution snapshot transformer converts current and history global state', () => {
@@ -72,8 +72,8 @@ test('process execution snapshot transformer converts current and history global
     notifier: {} as Notifier
   });
 
-  assert.equal(deserialized.context.globalState.$variables.get('answer'), 123);
-  assert.equal(deserialized.context.globalState.$logger instanceof ProcessLogger, true);
+  assert.equal(deserialized.context.globalState.variables.get('answer'), 123);
+  assert.equal(deserialized.context.globalState.logger instanceof ProcessLogger, true);
 });
 
 function createTestProcess(): Process {

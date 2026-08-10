@@ -24,9 +24,10 @@ export function NotificationStepEditor(props: StepEditorProps) {
         error={errors['properties.userExpression']}
       />
 
-      <StringEditorPropertyView
-        label="Name"
+      <StringOrVariablePropertyView
+        label="Notification"
         value={properties.notification}
+        variableNames={stringVariableNames}
         onValueChanged={v => setProperty('notification', v)}
         error={errors['properties.notification']}
       />

@@ -89,7 +89,7 @@ const notificationStep: Omit<NotificationStep, 'id'> = {
   componentType: 'task',
   properties: {
     userExpression: { type: 'string', value: '' },
-    notification: 'Put your notification message here'
+    notification: { type: 'string', value: 'Enter some notification here' }
   }
 };
 

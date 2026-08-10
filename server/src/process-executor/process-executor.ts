@@ -57,8 +57,8 @@ export class ProcessExecutor {
       startedBy,
       process,
       interpreter,
-      globalState.$logger,
-      globalState.$variables,
+      globalState.logger,
+      globalState.variables,
       this.processExecutionPersister
     );
     this.processExecutionStore.set(executionId, execution);
