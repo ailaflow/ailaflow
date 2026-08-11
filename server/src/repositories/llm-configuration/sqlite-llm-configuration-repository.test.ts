@@ -1,0 +1,88 @@
+import assert from 'node:assert/strict';
+import { DatabaseSync } from 'node:sqlite';
+import test from 'node:test';
+import { SqliteDatabases } from '../../core/sqlite-databases';
+import { LlmProviderConfiguration } from './llm-provider-configuration';
+import { LlmProviderType, LlmUseCase } from '@aila/model';
+import { LlmUseCaseConfiguration } from './llm-use-case-configuration';
+import { SqliteLlmConfigurationRepository } from './sqlite-llm-configuration-repository';
+
+test('domain validates provider and use-case invariants', () => {
+  assert.throws(
+    () =>
+      LlmProviderConfiguration.create({
+        name: 'Gateway',
+        type: LlmProviderType.OPENAI_COMPATIBLE,
+        baseUrl: null,
+        apiKey: 'secret',
+        models: []
+      }),
+    /Base URL is required/
+  );
+  assert.throws(() => LlmUseCaseConfiguration.create(LlmUseCase.ADMIN_CHAT, 'provider', null), /both be set or both be null/);
+});
+
+test('persists LLM providers and use-case configurations', async () => {
+  const db = new DatabaseSync(':memory:', { open: true });
+  db.exec(`PRAGMA foreign_keys = ON`);
+  const repository = new SqliteLlmConfigurationRepository({ modelDb: db } as SqliteDatabases);
+  const abortSignal = new AbortController().signal;
+  await repository.setup(abortSignal);
+
+  const provider = LlmProviderConfiguration.create({
+    name: 'Primary OpenAI',
+    type: LlmProviderType.OPENAI,
+    baseUrl: null,
+    apiKey: 'secret',
+    models: ['gpt-model']
+  });
+  await repository.insertProvider(abortSignal, provider);
+  await repository.saveUseCases(abortSignal, [new LlmUseCaseConfiguration(LlmUseCase.ADMIN_CHAT, provider.id, 'gpt-model')], []);
+
+  const configuration = await repository.get(abortSignal);
+  assert.equal(configuration.getProvider(provider.id).apiKey, 'secret');
+  assert.deepEqual(configuration.getProvider(provider.id).models, ['gpt-model']);
+  assert.equal(configuration.getUseCase(LlmUseCase.ADMIN_CHAT).model, 'gpt-model');
+
+  await assert.rejects(() => repository.deleteProvider(abortSignal, provider.id), /assigned to a use case/);
+  await repository.saveUseCases(abortSignal, [], [LlmUseCase.ADMIN_CHAT]);
+  assert.equal(await repository.deleteProvider(abortSignal, provider.id), true);
+  assert.equal((await repository.get(abortSignal)).providers.length, 0);
+  db.close();
+});
+
+test('updates provider data while retaining its stable ID', async () => {
+  const db = new DatabaseSync(':memory:', { open: true });
+  db.exec(`PRAGMA foreign_keys = ON`);
+  const repository = new SqliteLlmConfigurationRepository({ modelDb: db } as SqliteDatabases);
+  const abortSignal = new AbortController().signal;
+  await repository.setup(abortSignal);
+
+  const provider = LlmProviderConfiguration.create({
+    name: 'Gateway',
+    type: LlmProviderType.OPENAI_COMPATIBLE,
+    baseUrl: 'https://gateway.example/v1',
+    apiKey: 'old-secret',
+    models: ['old-model']
+  });
+  await repository.insertProvider(abortSignal, provider);
+  assert.throws(
+    () => provider.update({ name: 'Gateway 2', type: LlmProviderType.ANTHROPIC, baseUrl: null, models: ['new-model'] }),
+    /API key must be entered/
+  );
+  provider.update({
+    name: 'Gateway 2',
+    type: LlmProviderType.ANTHROPIC,
+    baseUrl: null,
+    apiKey: 'new-secret',
+    models: ['new-model']
+  });
+  await repository.updateProvider(abortSignal, provider);
+
+  const restored = await repository.tryGetProvider(abortSignal, provider.id);
+  assert.equal(restored?.name, 'Gateway 2');
+  assert.equal(restored?.type, LlmProviderType.ANTHROPIC);
+  assert.equal(restored?.apiKey, 'new-secret');
+  assert.deepEqual(restored?.models, ['new-model']);
+  db.close();
+});

@@ -2,7 +2,6 @@ import { Logger } from './core/logger';
 import { ServerPaths } from './core/server-paths';
 import express from 'express';
 import { SandboxInstanceManager } from './sandbox/sandbox-instance-manager';
-import { OpenaiLlmClient } from '@aibindkit/llm';
 import { LiveChatSessionStore, setupServer } from '@aibindkit/express';
 import { LoginEndpoint } from './api/auth/login-endpoint';
 import { Router } from './api/router';
@@ -56,7 +55,7 @@ import { MyProcessesTool } from './chat-session/user-tools/my-processes-tool';
 import { StartMyProcessTool } from './chat-session/user-tools/start-my-process-tool';
 import { LazyProcessExecutor } from './process-executor/lazy-process-executor';
 import { EventBus } from './events/event-bus';
-import { ProcessExecutionFinishedEventHandler } from './events/handlers/process-execution-finished-event-handler';
+import { ProcessExecutionFinishedEventHandler } from './events/process-execution/process-execution-finished-event-handler';
 import { ChatSessionStorage } from './chat-session/chat-session-storage';
 import { ChatSessionRepository } from './repositories/chat-session/chat-session-repository';
 import { SqliteChatSessionRepository } from './repositories/chat-session/sqlite-chat-session-repository';
@@ -112,6 +111,16 @@ import { Cron } from './crons/cron';
 import { AuthTokenCleanupCron } from './crons/auth-token-cleanup-cron';
 import { IncompleteAssignedTaskCountQuerier } from './queriers/task/incomplete-assigned-task-count-querier';
 import { SqliteIncompleteAssignedTaskCountQuerier } from './queriers/task/sqlite-incomplete-assigned-task-count-querier';
+import { LlmConfigurationRepository } from './repositories/llm-configuration/llm-configuration-repository';
+import { SqliteLlmConfigurationRepository } from './repositories/llm-configuration/sqlite-llm-configuration-repository';
+import { LlmClientFactory } from './llm/llm-client-factory';
+import { LlmClientProvider } from './llm/llm-client-provider';
+import { GetLlmConfigurationEndpoint } from './api/llm-configuration/get-llm-configuration-endpoint';
+import { SaveLlmProviderEndpoint } from './api/llm-configuration/save-llm-provider-endpoint';
+import { DeleteLlmProviderEndpoint } from './api/llm-configuration/delete-llm-provider-endpoint';
+import { SaveLlmUseCaseAssignmentsEndpoint } from './api/llm-configuration/save-llm-use-case-assignments-endpoint';
+import { FetchLlmProviderModelsEndpoint } from './api/llm-configuration/fetch-llm-provider-models-endpoint';
+import { LlmConfigurationChangedEventHandler } from './events/llm-configuration/llm-configuration-changed-event-handler';
 
 const PORT = process.env.PORT || 2048;
 
@@ -136,6 +145,7 @@ export class Server {
     let notificationRepository: NotificationRepository;
     let tableRepository: TableRepository;
     let tableDataRepository: TableDataRepository;
+    let llmConfigurationRepository: LlmConfigurationRepository;
 
     let processListQuerier: ProcessListQuerier;
     let myProcessListQuerier: MyProcessListQuerier;
@@ -164,6 +174,7 @@ export class Server {
     notificationRepository = new SqliteNotificationRepository(sqliteDatabases);
     tableRepository = new SqliteTableRepository(sqliteDatabases);
     tableDataRepository = new SqliteTableDataRepository(sqliteDatabases);
+    llmConfigurationRepository = new SqliteLlmConfigurationRepository(sqliteDatabases);
 
     processListQuerier = new SqliteProcessListQuerier(sqliteDatabases);
     myProcessListQuerier = new SqliteMyProcessListQuerier(sqliteDatabases);
@@ -189,7 +200,8 @@ export class Server {
       taskRepository.setup(abortSignal),
       assignedTaskRepository.setup(abortSignal),
       notificationRepository.setup(abortSignal),
-      tableRepository.setup(abortSignal)
+      tableRepository.setup(abortSignal),
+      llmConfigurationRepository.setup(abortSignal)
     ]);
 
     const processExecutionStore = new ProcessExecutionStore();
@@ -227,10 +239,9 @@ export class Server {
     const userProcessProvider = new UserProcessProvider(myProcessAccessQuerier, processRepository);
     const userAssignedTaskProvider = new UserAssignedTaskProvider(taskRepository, assignedTaskRepository);
 
-    const llmClient = new OpenaiLlmClient({
-      baseUrl: process.env.AI_PROVIDER_BASE_URL!,
-      apiKey: process.env.AI_PROVIDER_API_KEY!
-    });
+    const llmClientFactory = new LlmClientFactory();
+    const llmClientProvider = new LlmClientProvider(llmConfigurationRepository, llmClientFactory);
+    eventBus.registerHandler(new LlmConfigurationChangedEventHandler(llmClientProvider, liveSessionStore));
     const userToolSetProvider = new UserToolSetProvider([
       new MyProcessesTool(myProcessListQuerier),
       new StartMyProcessTool(userProcessProvider, lazyProcessExecutor),
@@ -238,7 +249,7 @@ export class Server {
     ]);
 
     const authMiddleware = new AuthMiddleware(authTokenRepository);
-    const sessionResolver = new ChatSessionResolver(llmClient, userToolSetProvider, serverPaths);
+    const sessionResolver = new ChatSessionResolver(llmClientProvider, userToolSetProvider, serverPaths);
 
     const crons: Cron[] = [new AuthTokenCleanupCron(authTokenRepository)];
 
@@ -253,6 +264,11 @@ export class Server {
       new InstallEndpoint(userRepository, userAttributesRepository, sandboxRepository, passwordHasher),
       new LoginEndpoint(userRepository, authTokenRepository, passwordHasher),
       new RefreshAuthTokenEndpoint(authTokenRepository),
+      new GetLlmConfigurationEndpoint(llmConfigurationRepository),
+      new SaveLlmProviderEndpoint(llmConfigurationRepository, eventBus),
+      new FetchLlmProviderModelsEndpoint(llmConfigurationRepository, llmClientFactory),
+      new DeleteLlmProviderEndpoint(llmConfigurationRepository, eventBus),
+      new SaveLlmUseCaseAssignmentsEndpoint(llmConfigurationRepository, eventBus),
       new GetMyNotificationsEndpoint(myNotificationListQuerier),
       new GetMyProcessesEndpoint(myProcessListQuerier),
       new GetMyTasksEndpoint(myTaskListQuerier),

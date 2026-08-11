@@ -1,6 +1,7 @@
 export * from './auth';
 export * from './sandbox';
 export * from './install';
+export * from './llm-configuration';
 export * from './my-notification';
 export * from './my-process';
 export * from './my-task';

@@ -1,7 +1,7 @@
 import { Message, MessageCompletionResult } from './message';
 import { ToolSet } from '../tools/tool-set';
 import { ChatSessionStack } from '../chat-session-stack';
-import { LlmClient } from '../../client/llm-client';
+import { LlmClient, LlmModelSettings } from '../../client/llm-client';
 import { ChatMessageType, CompletedChatMessage, type ToolCall } from '@aibindkit/core';
 
 export class AiMessage implements Message {
@@ -10,6 +10,7 @@ export class AiMessage implements Message {
   public constructor(
     public readonly id: number,
     private readonly llmClient: LlmClient,
+    private readonly llmModelSettings: LlmModelSettings,
     private readonly toolSet: ToolSet
   ) {}
 
@@ -17,7 +18,7 @@ export class AiMessage implements Message {
     const llmMessages = stack.getCompletedLlmMessagesBeforeLast();
     const toolDescriptors = this.toolSet.getDescriptorsOrUndefined();
 
-    const { message, totalTokens } = await this.llmClient.complete(abortSignal, llmMessages, toolDescriptors);
+    const { message, totalTokens } = await this.llmClient.complete(abortSignal, this.llmModelSettings, llmMessages, toolDescriptors);
 
     let toolCalls: ToolCall[] | undefined;
     if (message.role === 'assistant') {

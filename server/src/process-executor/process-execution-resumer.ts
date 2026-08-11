@@ -4,7 +4,7 @@ import { PersistedExecutionRepository } from '../repositories/persisted-executio
 import { ProcessExecution } from './process-execution';
 import { ProcessExecutor } from './process-executor';
 import { EventBus } from '../events/event-bus';
-import { ProcessExecutionFinishedEvent } from '../events/handlers/process-execution-finished-event';
+import { ProcessExecutionFinishedEvent } from '../events/process-execution/process-execution-finished-event';
 
 export class ProcessExecutionResumeError extends Error {
   public constructor(message: string) {

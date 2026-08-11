@@ -1,5 +1,5 @@
 import OpenAI from 'openai';
-import { LlmCompleteResult, LlmClient } from './llm-client';
+import { LlmCompleteResult, LlmClient, LlmModelSettings } from './llm-client';
 import type { LlmMessage, ToolDescriptor } from '@aibindkit/core';
 
 export class OpenaiLlmClient implements LlmClient {
@@ -14,13 +14,14 @@ export class OpenaiLlmClient implements LlmClient {
 
   public async complete(
     abortSignal: AbortSignal,
+    modelSettings: LlmModelSettings,
     messages: LlmMessage[],
     toolDescriptors: ToolDescriptor[] | undefined
   ): Promise<LlmCompleteResult> {
     const response = await this.openai.chat.completions.create(
       {
         tools: toolDescriptors,
-        model: 'openai/gpt-oss-120b',
+        model: modelSettings.name,
         stream: false,
         messages
       },
@@ -35,7 +36,11 @@ export class OpenaiLlmClient implements LlmClient {
     }
 
     const message: LlmMessage = choice.message;
-
     return { message, totalTokens: response.usage?.total_tokens };
+  }
+
+  public async getModels(abortSignal: AbortSignal): Promise<string[]> {
+    const response = await this.openai.models.list({ signal: abortSignal });
+    return response.data.map(model => model.id);
   }
 }

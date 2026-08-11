@@ -1,0 +1,39 @@
+import { LlmProviderConfiguration, LlmProviderConfigurationError } from './llm-provider-configuration';
+import { LlmUseCaseConfiguration } from './llm-use-case-configuration';
+import { LlmUseCase, strLlmUseCase } from '@aila/model';
+
+export interface ResolvedLlmUseCaseConfiguration {
+  provider: LlmProviderConfiguration;
+  model: string;
+}
+
+export class LlmConfiguration {
+  public constructor(
+    public readonly providers: ReadonlyArray<LlmProviderConfiguration>,
+    public readonly useCases: ReadonlyArray<LlmUseCaseConfiguration>
+  ) {}
+
+  public getProvider(id: string): LlmProviderConfiguration {
+    const provider = this.providers.find(item => item.id === id);
+    if (!provider) {
+      throw new LlmProviderConfigurationError('LLM provider not found');
+    }
+    return provider;
+  }
+
+  public getUseCase(useCase: LlmUseCase): ResolvedLlmUseCaseConfiguration {
+    const assignment = this.useCases.find(item => item.useCase === useCase);
+    if (!assignment) {
+      throw new LlmProviderConfigurationError(`LLM use case "${strLlmUseCase(useCase)}" is not configured`);
+    }
+    return this.resolveUseCase(assignment);
+  }
+
+  public resolveUseCase(assignment: LlmUseCaseConfiguration): ResolvedLlmUseCaseConfiguration {
+    const provider = this.getProvider(assignment.providerId);
+    if (!provider.models.includes(assignment.model)) {
+      throw new LlmProviderConfigurationError(`Model "${assignment.model}" is not available for provider "${provider.name}"`);
+    }
+    return { provider, model: assignment.model };
+  }
+}

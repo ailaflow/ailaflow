@@ -1,0 +1,63 @@
+import { LlmUseCase, saveLlmUseCaseAssignmentsRequestSchema } from '@aila/model';
+import { Request } from 'express';
+import { EventBus } from '../../events/event-bus';
+import { LlmConfigurationChangedEvent } from '../../events/llm-configuration/llm-configuration-changed-event';
+import {
+  LlmConfigurationRepository,
+  LlmConfigurationRepositoryError
+} from '../../repositories/llm-configuration/llm-configuration-repository';
+import { LlmProviderConfigurationError } from '../../repositories/llm-configuration/llm-provider-configuration';
+import { LlmUseCaseConfiguration } from '../../repositories/llm-configuration/llm-use-case-configuration';
+import { Endpoint } from '../framework/endpoint';
+import { getEndpointAbortSignal } from '../framework/endpoint-abort-signal';
+import { EndpointError } from '../framework/endpoint-error';
+import { parseBody } from '../framework/parse-request';
+
+export class SaveLlmUseCaseAssignmentsEndpoint implements Endpoint {
+  public readonly method = 'post';
+  public readonly path = '/api/llm-use-case-assignments';
+  public readonly auth = true;
+  public readonly admin = true;
+
+  public constructor(
+    private readonly repository: LlmConfigurationRepository,
+    private readonly eventBus: EventBus
+  ) {}
+
+  public async handle(req: Request): Promise<object> {
+    const abortSignal = getEndpointAbortSignal(req);
+    const request = parseBody(saveLlmUseCaseAssignmentsRequestSchema, req.body);
+    const seen = new Set<LlmUseCase>();
+    const assignments: LlmUseCaseConfiguration[] = [];
+    const removedUseCases: LlmUseCase[] = [];
+    for (const item of request.assignments) {
+      const useCase = item.useCase;
+      if (seen.has(useCase)) {
+        throw new EndpointError(`Duplicate LLM use case "${item.useCase}"`, 400);
+      }
+      seen.add(useCase);
+      const configuration = LlmUseCaseConfiguration.create(useCase, item.providerId, item.model);
+      if (configuration === null) {
+        removedUseCases.push(useCase);
+      } else {
+        assignments.push(configuration);
+      }
+    }
+    try {
+      const configuration = await this.repository.get(abortSignal);
+      for (const assignment of assignments) {
+        configuration.resolveUseCase(assignment);
+      }
+      await this.repository.saveUseCases(abortSignal, assignments, removedUseCases);
+      await this.eventBus.publish(new LlmConfigurationChangedEvent());
+      return {
+        success: true
+      };
+    } catch (error) {
+      if (error instanceof LlmProviderConfigurationError || error instanceof LlmConfigurationRepositoryError) {
+        throw new EndpointError(error.message, 400);
+      }
+      throw error;
+    }
+  }
+}

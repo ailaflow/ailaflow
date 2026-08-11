@@ -42,6 +42,10 @@ export class RestoreChatEndpoint implements Endpoint {
       sseResponse.send({ isReset: true });
     }
 
+    function onDestroyed() {
+      sseResponse.end();
+    }
+
     sseResponse.send({
       sessionToken: chatSession.token,
       restoredMessages: chatSession.getAll()
@@ -51,6 +55,7 @@ export class RestoreChatEndpoint implements Endpoint {
     chatSession.onMessageCompleted.subscribe(onMessageCompletedOrFailed);
     chatSession.onMessageFailed.subscribe(onMessageCompletedOrFailed);
     chatSession.onReset.subscribe(onReset);
+    chatSession.onDestroyed.subscribe(onDestroyed);
 
     sseResponse.onClose(() => {
       chatSession.onMessageStarted.unsubscribe(onMessageCompletedOrFailed);

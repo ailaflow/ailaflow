@@ -18,10 +18,12 @@ export class ChatSession {
   public readonly onMessageFailed = new SimpleEvent<ChatSessionUpdate>();
   public readonly onReset = new SimpleEvent<void>();
   public readonly onStackStoreError = new SimpleEvent<Error>();
+  public readonly onDestroyed = new SimpleEvent<void>();
 
   private interruptAbortController = new AbortController();
   private isWorking = false;
   private isInterrupted = false;
+  private isDestroyed = false;
   private lastId = 0;
 
   private readonly stack = new ChatSessionStack();
@@ -139,6 +141,15 @@ export class ChatSession {
     return this.stack.all();
   }
 
+  public destroy() {
+    if (this.isDestroyed) {
+      throw new Error('Session is already destroyed');
+    }
+    this.isDestroyed = true;
+    this.tryInterrupt();
+    this.onDestroyed.emit();
+  }
+
   /**
    * The save operation is best-effort, and errors are emitted via the onStackStoreError event.
    */
@@ -197,9 +208,12 @@ export class ChatSession {
       interruptSignal.throwIfAborted();
       result = await message.complete(interruptSignal, this.stack);
     } catch (e) {
+      if (this.isDestroyed) {
+        return;
+      }
+
       const failReason = (e as Error)?.message ?? String(e);
       const isInterrupted = interruptSignal.aborted;
-
       if (isInterrupted) {
         this.stack.interrupt(message);
       } else {

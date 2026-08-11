@@ -20,4 +20,8 @@ export class SseResponse<T> {
   public send(data: T) {
     this.res.write(`data: ${JSON.stringify(data)}\n\n`);
   }
+
+  public end() {
+    this.res.end();
+  }
 }

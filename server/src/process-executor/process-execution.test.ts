@@ -50,8 +50,8 @@ test('process execution signals the first wait and pauses on a later wait', asyn
         $logger,
         $variables,
         new ProcessVariableEvaluator($variables),
-        {} as ProcessExecutionGlobalState['$scriptExecutor'],
-        {} as ProcessExecutionGlobalState['$taskManager'],
+        {} as ProcessExecutionGlobalState['scriptExecutor'],
+        {} as ProcessExecutionGlobalState['taskManager'],
         {} as Notifier
       )
   });
@@ -103,8 +103,8 @@ test('process execution fails when pause persistence fails', async () => {
         $logger,
         $variables,
         new ProcessVariableEvaluator($variables),
-        {} as ProcessExecutionGlobalState['$scriptExecutor'],
-        {} as ProcessExecutionGlobalState['$taskManager'],
+        {} as ProcessExecutionGlobalState['scriptExecutor'],
+        {} as ProcessExecutionGlobalState['taskManager'],
         {} as Notifier
       )
   });

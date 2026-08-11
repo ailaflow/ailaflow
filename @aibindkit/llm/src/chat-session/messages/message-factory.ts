@@ -1,5 +1,5 @@
 import type { ChatMessageMetadata, ToolCall } from '@aibindkit/core';
-import { LlmClient } from '../../client/llm-client';
+import { LlmClient, LlmModelSettings } from '../../client/llm-client';
 import { ToolSet } from '../tools/tool-set';
 import { AiMessage } from './ai-message';
 import { SystemMessage } from './system-message';
@@ -10,6 +10,7 @@ import { ToolContext } from '../tools';
 export class MessageFactory {
   public constructor(
     private readonly llmClient: LlmClient,
+    private readonly llmModelSettings: LlmModelSettings,
     private readonly toolSet: ToolSet
   ) {}
 
@@ -22,7 +23,7 @@ export class MessageFactory {
   }
 
   public createAi(id: number): AiMessage {
-    return new AiMessage(id, this.llmClient, this.toolSet);
+    return new AiMessage(id, this.llmClient, this.llmModelSettings, this.toolSet);
   }
 
   public createTool(id: number, context: ToolContext, calls: ToolCall[]): ToolMessage {

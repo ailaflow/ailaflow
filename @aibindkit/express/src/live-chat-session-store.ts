@@ -22,4 +22,12 @@ export class LiveChatSessionStore {
     const t = this.sessionsByToken.delete(session.token);
     return i || t;
   }
+
+  public flushAll() {
+    for (const session of this.sessionsById.values()) {
+      session.destroy();
+    }
+    this.sessionsById.clear();
+    this.sessionsByToken.clear();
+  }
 }

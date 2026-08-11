@@ -1,18 +1,25 @@
-import { ChatSessionInitializerError, ChatSessionResolver as BaseChatSessionResolver, ResolvedChatSession } from '@aibindkit/express';
-import { LlmClient } from '@aibindkit/llm';
+import {
+  ChatSessionInitializerError,
+  ChatSessionResolver as BaseChatSessionResolver,
+  LlmClientWithSettings,
+  ResolvedChatSession
+} from '@aibindkit/express';
 import { readFileSync } from 'fs';
 import { getAuthToken } from '../api/auth/auth-middleware';
 import { ServerPaths } from '../core/server-paths';
 import { UserToolSetProvider } from './user-tools/user-tool-set-provider';
 import { Request } from 'express';
 import { ChatSessionId } from './chat-session-id';
+import { LlmClientProvider } from '../llm/llm-client-provider';
+import { LlmProviderConfigurationError } from '../repositories/llm-configuration/llm-provider-configuration';
+import { LlmUseCase } from '@aila/model';
 
 export class ChatSessionResolver implements BaseChatSessionResolver {
   private readonly userSystemPrompt: string;
   private readonly adminSystemPrompt: string;
 
   public constructor(
-    private readonly llmClient: LlmClient,
+    private readonly llmClientProvider: LlmClientProvider,
     private readonly userToolSetProvider: UserToolSetProvider,
     serverPaths: ServerPaths
   ) {
@@ -28,8 +35,8 @@ export class ChatSessionResolver implements BaseChatSessionResolver {
         sessionId: ChatSessionId.createAdmin(authToken.userName).encode(),
         backendTools: [],
         backendToolsHash: '',
-        llmClient: this.llmClient,
-        systemPrompt: this.adminSystemPrompt
+        systemPrompt: this.adminSystemPrompt,
+        getLlmClientWithSettings: abortSignal => this.getLlmClientWithSettings(abortSignal, LlmUseCase.ADMIN_CHAT)
       };
     }
     if (typeof params.name === 'string') {
@@ -38,10 +45,21 @@ export class ChatSessionResolver implements BaseChatSessionResolver {
         sessionId: ChatSessionId.createUserMainChannel(authToken.userName).encode(),
         backendTools: this.userToolSetProvider.tools,
         backendToolsHash: this.userToolSetProvider.hash,
-        llmClient: this.llmClient,
-        systemPrompt: this.userSystemPrompt
+        systemPrompt: this.userSystemPrompt,
+        getLlmClientWithSettings: abortSignal => this.getLlmClientWithSettings(abortSignal, LlmUseCase.USER_CHAT)
       };
     }
     throw new ChatSessionInitializerError('Unsupported chat session channel');
+  }
+
+  private async getLlmClientWithSettings(abortSignal: AbortSignal, useCase: LlmUseCase): Promise<LlmClientWithSettings> {
+    try {
+      return await this.llmClientProvider.get(abortSignal, useCase);
+    } catch (error) {
+      if (error instanceof LlmProviderConfigurationError) {
+        throw new ChatSessionInitializerError(error.message);
+      }
+      throw error;
+    }
   }
 }

@@ -26,6 +26,7 @@ export class ChatSessionActivator {
       messages = session.dump();
     }
 
+    const llm = await resolved.getLlmClientWithSettings(abortSignal);
     const toolSet = new ToolSet();
     for (const descriptor of restoreRequest.frontendTools) {
       toolSet.addTool(this.frontendToolFactory.create(descriptor));
@@ -38,7 +39,7 @@ export class ChatSessionActivator {
       messages = await this.sessionStorage.tryGet(abortSignal, resolved.sessionId);
     }
 
-    session = this.chatSessionFactory.create(resolved.sessionId, toolsHash, resolved.llmClient, toolSet);
+    session = this.chatSessionFactory.create(resolved.sessionId, toolsHash, llm.client, llm.modelSettings, toolSet);
     if (resolved.systemPrompt) {
       session.setSystemMessage(resolved.systemPrompt);
     }
