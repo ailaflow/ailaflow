@@ -1,5 +1,5 @@
 import { HttpClient } from '@aibindkit/react';
-import type { GetMyNotificationsRequest, GetMyNotificationsResponse } from '@aila/model';
+import type { DeleteMyNotificationResponse, GetMyNotificationsRequest, GetMyNotificationsResponse } from '@aila/model';
 
 export class MyNotificationApiClient {
   public constructor(private readonly client: HttpClient) {}
@@ -10,5 +10,9 @@ export class MyNotificationApiClient {
       pageSize: String(request.pageSize)
     });
     return this.client.json(abortSignal, 'GET', `/api/my-notifications?${query}`);
+  }
+
+  public deleteMyNotification(abortSignal: AbortSignal, id: string): Promise<DeleteMyNotificationResponse> {
+    return this.client.json(abortSignal, 'DELETE', `/api/my-notifications/${encodeURIComponent(id)}`);
   }
 }

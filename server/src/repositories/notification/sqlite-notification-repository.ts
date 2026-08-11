@@ -52,4 +52,9 @@ export class SqliteNotificationRepository implements NotificationRepository {
       throw e;
     }
   }
+
+  public async delete(_: AbortSignal, userName: string, id: string): Promise<boolean> {
+    const result = this.db.prepare(`DELETE FROM notifications WHERE userName = ? AND id = ?`).run(userName, id);
+    return result.changes > 0;
+  }
 }

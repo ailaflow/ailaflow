@@ -26,14 +26,15 @@ test('inserts notifications for users', async () => {
   ]);
   await notificationRepository.insertMultiple(abortSignal, []);
 
+  assert.equal(await notificationRepository.delete(abortSignal, 'alice', 'notification_2'), false);
+  assert.equal(await notificationRepository.delete(abortSignal, 'alice', 'notification_1'), true);
+  assert.equal(await notificationRepository.delete(abortSignal, 'alice', 'notification_1'), false);
+
   const rows = db
     .prepare(`SELECT id, userName, message, createdAt FROM notifications ORDER BY id`)
     .all()
     .map(row => ({ ...row }));
-  assert.deepEqual(rows, [
-    { id: 'notification_1', userName: 'alice', message: 'First', createdAt: 1000 },
-    { id: 'notification_2', userName: 'bob', message: 'Second', createdAt: 2000 }
-  ]);
+  assert.deepEqual(rows, [{ id: 'notification_2', userName: 'bob', message: 'Second', createdAt: 2000 }]);
 
   const indexes = db
     .prepare(

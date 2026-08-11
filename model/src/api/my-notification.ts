@@ -18,3 +18,11 @@ export const getMyNotificationsResponseSchema = paginationResponseSchema.extend(
 export type GetMyNotificationsRequest = z.infer<typeof getMyNotificationsRequestSchema>;
 export type MyNotificationDto = z.infer<typeof myNotificationDtoSchema>;
 export type GetMyNotificationsResponse = z.infer<typeof getMyNotificationsResponseSchema>;
+
+// deleteMyNotification
+
+export const deleteMyNotificationResponseSchema = z.object({
+  id: z.string()
+});
+
+export type DeleteMyNotificationResponse = z.infer<typeof deleteMyNotificationResponseSchema>;

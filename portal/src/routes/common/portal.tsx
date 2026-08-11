@@ -14,8 +14,8 @@ const adminItems: MenuItem[] = [
   { icon: '#', label: 'Tables', action: 'link', href: '/admin/tables' },
   { icon: '@', label: 'Users', action: 'link', href: '/admin/users' },
   { icon: '*', label: 'Logs', action: 'link', href: '/admin/logs' },
-  { icon: '*', label: 'Configuration', action: 'link', href: '/admin/configuration' },
-  { icon: '+', label: 'Sandboxes', action: 'link', href: '/admin/sandboxes' }
+  { icon: '+', label: 'Sandboxes', action: 'link', href: '/admin/sandboxes' },
+  { icon: '*', label: 'Configuration', action: 'link', href: '/admin/configuration' }
 ];
 
 export function Portal(props: { children: React.ReactNode }) {

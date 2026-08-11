@@ -91,6 +91,7 @@ import { SqliteNotificationRepository } from './repositories/notification/sqlite
 import { MyNotificationListQuerier } from './queriers/my-notification-list/my-notification-list-querier';
 import { SqliteMyNotificationListQuerier } from './queriers/my-notification-list/sqlite-my-notification-list-querier';
 import { GetMyNotificationsEndpoint } from './api/my-notification/get-my-notifications-endpoint';
+import { DeleteMyNotificationEndpoint } from './api/my-notification/delete-my-notification-endpoint';
 import { TableRepository } from './repositories/table/table-repository';
 import { SqliteTableRepository } from './repositories/table/sqlite-table-repository';
 import { TableDataRepository } from './repositories/table/table-data-repository';
@@ -273,6 +274,7 @@ export class Server {
       new DeleteLlmProviderEndpoint(llmConfigurationRepository, eventBus),
       new SaveLlmUseCaseAssignmentsEndpoint(llmConfigurationRepository, eventBus),
       new GetMyNotificationsEndpoint(myNotificationListQuerier),
+      new DeleteMyNotificationEndpoint(notificationRepository),
       new GetMyProcessesEndpoint(myProcessListQuerier),
       new GetMyTasksEndpoint(myTaskListQuerier),
       new GetMyTaskFormEndpoint(userAssignedTaskProvider),
