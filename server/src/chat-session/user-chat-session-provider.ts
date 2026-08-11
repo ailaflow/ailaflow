@@ -1,6 +1,6 @@
 import { LiveChatSessionStore } from '@aibindkit/express';
-import { ChatSessionId } from '../chat-session/chat-session-id';
 import { ChatSession } from '@aibindkit/llm';
+import { ChatSessionId } from './chat-session-id';
 
 export class UserChatSessionProvider {
   public constructor(private readonly liveSessionStore: LiveChatSessionStore) {}

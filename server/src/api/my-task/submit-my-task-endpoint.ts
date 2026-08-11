@@ -7,7 +7,7 @@ import { ProcessExecutionResumer } from '../../process-executor/process-executio
 import { EndpointError } from '../framework/endpoint-error';
 import { LiveChatSessionStore } from '@aibindkit/express';
 import { AssignedTaskRepository } from '../../repositories/task/assigned-task-repository';
-import { UserAssignedTaskProvider } from '../../providers/user-assigned-task-provider';
+import { UserAssignedTaskProvider } from '../../task/user-assigned-task-provider';
 import { getAuthToken } from '../auth/auth-middleware';
 import { IncompleteAssignedTaskCountQuerier } from '../../queriers/task/incomplete-assigned-task-count-querier';
 import { Task } from '../../repositories/task/task';

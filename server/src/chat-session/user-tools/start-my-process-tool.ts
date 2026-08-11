@@ -2,7 +2,7 @@ import { ToolContext, ZodTool, ZodToolExecutionResult } from '@aibindkit/llm';
 import { LazyProcessExecutor } from '../../process-executor/lazy-process-executor';
 import z from 'zod/v4';
 import { ChatSessionId } from '../chat-session-id';
-import { UserProcessProvider } from '../../providers/user-process-provider';
+import { UserProcessProvider } from '../../process/user-process-provider';
 
 const FAST_TIMEOUT = 3_000;
 

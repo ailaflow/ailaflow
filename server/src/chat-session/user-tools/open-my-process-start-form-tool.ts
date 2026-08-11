@@ -1,7 +1,7 @@
 import { ToolContext, ZodTool, ZodToolExecutionResult } from '@aibindkit/llm';
 import z from 'zod/v4';
 import { ChatSessionId } from '../chat-session-id';
-import { UserProcessProvider } from '../../providers/user-process-provider';
+import { UserProcessProvider } from '../../process/user-process-provider';
 
 const inputSchema = z.object({
   name: z.string()

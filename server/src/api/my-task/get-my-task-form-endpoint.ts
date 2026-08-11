@@ -1,6 +1,6 @@
 import { GetMyTaskFormResponse } from '@aila/model';
 import { Request } from 'express';
-import { UserAssignedTaskProvider } from '../../providers/user-assigned-task-provider';
+import { UserAssignedTaskProvider } from '../../task/user-assigned-task-provider';
 import { getAuthToken } from '../auth/auth-middleware';
 import { Endpoint } from '../framework/endpoint';
 import { getEndpointAbortSignal } from '../framework/endpoint-abort-signal';

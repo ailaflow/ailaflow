@@ -2,7 +2,7 @@ import { getTaskVariableValueRequestSchema, type GetTaskVariableValueResponse } 
 import { Endpoint } from '../framework/endpoint';
 import { Request } from 'express';
 import { PersistedExecutionRepository } from '../../repositories/persisted-execution/persisted-execution-repository';
-import { UserAssignedTaskProvider } from '../../providers/user-assigned-task-provider';
+import { UserAssignedTaskProvider } from '../../task/user-assigned-task-provider';
 import { getEndpointAbortSignal } from '../framework/endpoint-abort-signal';
 import { EndpointError } from '../framework/endpoint-error';
 import { parseBody } from '../framework/parse-request';

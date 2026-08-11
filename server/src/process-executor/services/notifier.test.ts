@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { UserChatSessionProvider } from '../../providers/user-chat-session-provider';
+import { UserChatSessionProvider } from '../../chat-session/user-chat-session-provider';
 import { UserAccessExpressionUserQuerier } from '../../queriers/user-access-expression/user-access-expression-user-querier';
 import { Notification } from '../../repositories/notification/notification';
 import { NotificationRepository } from '../../repositories/notification/notification-repository';

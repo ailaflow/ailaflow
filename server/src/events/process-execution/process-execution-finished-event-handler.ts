@@ -1,7 +1,7 @@
 import { EventHandler } from '../event-handler';
 import { ProcessExecutionFinishedEvent } from './process-execution-finished-event';
 import { Logger } from '../../core/logger';
-import { UserChatSessionProvider } from '../../providers/user-chat-session-provider';
+import { UserChatSessionProvider } from '../../chat-session/user-chat-session-provider';
 
 export class ProcessExecutionFinishedEventHandler implements EventHandler<ProcessExecutionFinishedEvent> {
   public readonly name = ProcessExecutionFinishedEvent.name;
