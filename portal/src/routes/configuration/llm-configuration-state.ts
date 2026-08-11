@@ -1,4 +1,4 @@
-import { LlmProviderType } from '@aila/model';
+import { ALL_LLM_USE_CASES, LlmProviderType, strLlmUseCase } from '@aila/model';
 import type {
   FetchLlmProviderModelsRequest,
   GetLlmConfigurationResponse,
@@ -33,12 +33,15 @@ export interface LlmConfigurationState {
 export function useLlmConfigurationState(initial: GetLlmConfigurationResponse): LlmConfigurationState {
   const [providers, setProviders] = useState(initial.providers);
   const [useCases, setUseCases] = useState<LlmUseCaseDraft[]>(() =>
-    initial.useCases.map(item => ({
-      useCase: item.useCase,
-      label: item.label,
-      providerId: item.assignment?.providerId ?? '',
-      model: item.assignment?.model ?? ''
-    }))
+    ALL_LLM_USE_CASES.map(useCase => {
+      const saved = initial.useCases.find(item => item.useCase === useCase);
+      return {
+        useCase,
+        label: strLlmUseCase(useCase),
+        providerId: saved?.providerId ?? '',
+        model: saved?.model ?? ''
+      };
+    })
   );
   const [savedUseCases, setSavedUseCases] = useState(() => serializeUseCases(useCases));
   const [providerDraft, setProviderDraft] = useState<LlmProviderDraft | null>(null);

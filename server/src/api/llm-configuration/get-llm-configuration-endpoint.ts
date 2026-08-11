@@ -1,4 +1,4 @@
-import { GetLlmConfigurationResponse, strLlmUseCase } from '@aila/model';
+import { GetLlmConfigurationResponse } from '@aila/model';
 import { Request } from 'express';
 import { LlmConfigurationRepository } from '../../repositories/llm-configuration/llm-configuration-repository';
 import { Endpoint } from '../framework/endpoint';
@@ -25,18 +25,11 @@ export class GetLlmConfigurationEndpoint implements Endpoint {
         hasApiKey: provider.apiKey.length > 0,
         models: provider.models
       })),
-      useCases: configuration.useCases.map(assignment => {
-        return {
-          useCase: assignment.useCase,
-          label: strLlmUseCase(assignment.useCase),
-          assignment: assignment
-            ? {
-                providerId: assignment.providerId,
-                model: assignment.model
-              }
-            : null
-        };
-      })
+      useCases: configuration.useCases.map(assignment => ({
+        useCase: assignment.useCase,
+        providerId: assignment.providerId,
+        model: assignment.model
+      }))
     };
   }
 }

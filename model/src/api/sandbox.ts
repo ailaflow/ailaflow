@@ -32,6 +32,16 @@ export const getSandboxResponseSchema = z.object({
 export type SandboxDto = z.infer<typeof sandboxDtoSchema>;
 export type GetSandboxResponse = z.infer<typeof getSandboxResponseSchema>;
 
+// diagnoseHost
+
+export const diagnoseHostResponseSchema = z.object({
+  dockerVersion: z.string().nullable(),
+  isAppFolderReadable: z.boolean(),
+  isDataFolderWritable: z.boolean()
+});
+
+export type DiagnoseHostResponse = z.infer<typeof diagnoseHostResponseSchema>;
+
 // upsertSandbox
 
 export const upsertSandboxRequestSchema = z.object({

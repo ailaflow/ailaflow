@@ -3,8 +3,22 @@ import { promisify } from 'util';
 
 const execFileAsync = promisify(execFile);
 
+export interface DockerInfo {
+  ClientInfo: {
+    Version: string;
+  };
+}
+
 export class Docker {
   public constructor(private readonly hostCwd: string) {}
+
+  public async info(): Promise<DockerInfo> {
+    const { stderr, stdout } = await this.execDocker(['info', '--format', '{{json .}}']);
+    if (stderr.includes('Cannot connect')) {
+      throw new Error('Docker is not running');
+    }
+    return JSON.parse(stdout);
+  }
 
   public async build(imageTag: string, dockerfilePath: string, envs: Record<string, string>) {
     const args = ['build', '-t', imageTag];

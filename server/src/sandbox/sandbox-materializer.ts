@@ -30,7 +30,7 @@ export class SandboxMaterializer {
     const dockerfileContent = DockerfileContent.build(sandbox.configuration);
     await fs.mkdir(this.paths.appFolderAbsolutePath, { recursive: true });
     await fs.mkdir(this.paths.dataFolderAbsolutePath, { recursive: true });
-    await fs.writeFile(this.paths.dockerfileAbsolitePath, dockerfileContent);
+    await fs.writeFile(this.paths.dockerfileAbsolutePath, dockerfileContent);
     await fs.writeFile(versionPath, sandbox.hash);
 
     abortSignal.throwIfAborted();

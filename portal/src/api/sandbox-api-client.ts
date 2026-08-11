@@ -1,5 +1,5 @@
 import { HttpClient } from '@aibindkit/react';
-import type { GetSandboxResponse, GetSandboxesResponse, UpsertSandboxRequest } from '@aila/model';
+import type { DiagnoseHostResponse, GetSandboxResponse, GetSandboxesResponse, UpsertSandboxRequest } from '@aila/model';
 
 export class SandboxApiClient {
   public constructor(private readonly client: HttpClient) {}
@@ -14,5 +14,9 @@ export class SandboxApiClient {
 
   public getSandbox(abortSignal: AbortSignal, name: string): Promise<GetSandboxResponse> {
     return this.client.json(abortSignal, 'GET', `/api/sandboxes/${encodeURIComponent(name)}`);
+  }
+
+  public diagnoseHost(abortSignal: AbortSignal): Promise<DiagnoseHostResponse> {
+    return this.client.json(abortSignal, 'GET', '/api/sandboxes/diagnose-host');
   }
 }

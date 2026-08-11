@@ -85,8 +85,11 @@ test('configures providers and use cases without exposing API keys', async () =>
     }
   ]);
   assert.equal('apiKey' in response.providers[0], false);
-  assert.equal(response.useCases.find(item => item.useCase === LlmUseCase.ADMIN_CHAT)?.assignment?.model, 'admin-model');
-  assert.equal(response.useCases.find(item => item.useCase === LlmUseCase.USER_CHAT)?.assignment, null);
+  assert.equal(response.useCases.find(item => item.useCase === LlmUseCase.ADMIN_CHAT)?.model, 'admin-model');
+  assert.equal(
+    response.useCases.find(item => item.useCase === LlmUseCase.USER_CHAT),
+    undefined
+  );
 
   assert.deepEqual(await fetchModels.handle(createRequest({ body: { id: providerId, type: LlmProviderType.OPENAI, baseUrl: null } })), {
     models: ['model-a', 'model-b']

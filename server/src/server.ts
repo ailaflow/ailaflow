@@ -38,6 +38,7 @@ import { SqliteSandboxListQuerier } from './queriers/sandbox-list/sqlite-sandbox
 import { GetSandboxesEndpoint } from './api/sandbox/get-sandboxes-endpoint';
 import { GetSandboxEndpoint } from './api/sandbox/get-sandbox-endpoint';
 import { UpsertSandboxEndpoint } from './api/sandbox/upsert-sandbox-endpoint';
+import { DiagnoseHostEndpoint } from './api/sandbox/diagnose-host-endpoint';
 import { UserListQuerier } from './queriers/user-list/user-list-querier';
 import { SqliteUserListQuerier } from './queriers/user-list/sqlite-user-list-querier';
 import { GetUsersEndpoint } from './api/users/get-users-endpoint';
@@ -121,6 +122,7 @@ import { DeleteLlmProviderEndpoint } from './api/llm-configuration/delete-llm-pr
 import { SaveLlmUseCaseAssignmentsEndpoint } from './api/llm-configuration/save-llm-use-case-assignments-endpoint';
 import { FetchLlmProviderModelsEndpoint } from './api/llm-configuration/fetch-llm-provider-models-endpoint';
 import { LlmConfigurationChangedEventHandler } from './events/llm-configuration/llm-configuration-changed-event-handler';
+import { SandboxHostDiagnostician } from './sandbox/sandbox-host-diagnostician';
 
 const PORT = process.env.PORT || 2048;
 
@@ -132,6 +134,7 @@ export class Server {
     app.use(express.json());
 
     const serverPaths = new ServerPaths();
+    const sandboxHostDiagnostician = new SandboxHostDiagnostician(serverPaths);
     let userRepository: UserRepository;
     let userAttributesRepository: UserAttributesRepository;
     let resourceAccessRepository: ResourceAccessRepository;
@@ -294,6 +297,7 @@ export class Server {
       new SaveTableEndpoint(tableRepository),
       new DeleteTableEndpoint(tableRepository),
       new GetSandboxesEndpoint(sandboxListQuerier),
+      new DiagnoseHostEndpoint(sandboxHostDiagnostician),
       new GetSandboxEndpoint(sandboxRepository),
       new UpsertSandboxEndpoint(sandboxRepository),
       new GetUsersEndpoint(userListQuerier),

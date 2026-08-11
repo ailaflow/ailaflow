@@ -24,15 +24,10 @@ export const llmProviderDtoSchema = z.object({
 });
 export type LlmProviderDto = z.infer<typeof llmProviderDtoSchema>;
 
-const llmUseCaseAssignmentDtoSchema = z.object({
-  providerId: z.string(),
-  model: z.string()
-});
-
 const llmUseCaseConfigurationDtoSchema = z.object({
   useCase: llmUseCaseSchema,
-  label: z.string(),
-  assignment: llmUseCaseAssignmentDtoSchema.nullable()
+  providerId: z.string(),
+  model: z.string()
 });
 
 export const getLlmConfigurationResponseSchema = z.object({
