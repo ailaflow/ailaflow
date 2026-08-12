@@ -312,9 +312,7 @@ export function useProcessEditorAi(state: ProcessEditorState, save: () => Promis
         },
         async taskStep_getUserExpression(arg) {
           const step = state.getStep<TaskStep>(arg.stepId, 'task');
-          return {
-            userExpression: step.properties.userExpression
-          };
+          return step.properties.userExpression;
         },
         async taskStep_setUserExpression(arg) {
           const step = state.getStep<TaskStep>(arg.stepId, 'task');
@@ -323,6 +321,16 @@ export function useProcessEditorAi(state: ProcessEditorState, save: () => Promis
             return toolError(`${error}; the user expression was not updated`);
           }
           step.properties.userExpression = { type: 'string', value: arg.userExpression };
+          state.notifyDefinitionChange();
+          return toolSuccess('User expression was updated');
+        },
+        async taskStep_setUserExpressionVariableName(arg) {
+          const step = state.getStep<TaskStep>(arg.stepId, 'task');
+          const error = state.variableValidator.validateVariableType(arg.variableName, 'string', state.definition.value);
+          if (error) {
+            return toolError(error);
+          }
+          step.properties.userExpression = { type: 'variable', name: arg.variableName };
           state.notifyDefinitionChange();
           return toolSuccess('User expression was updated');
         },

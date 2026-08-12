@@ -107,14 +107,7 @@ export class ProcessStepValidator {
     stringValidator?: (value: string) => string | null
   ): string | null {
     if (ue.type === 'variable') {
-      const variable = this.variableValidator.tryGet(ue.name, definition);
-      if (!variable) {
-        return `Variable \$${ue.name} does not exist`;
-      }
-      if (variable.schema.schema.type !== 'string') {
-        return `Variable \$${ue.name} must be of type string`;
-      }
-      return null;
+      return this.variableValidator.validateVariableType(ue.name, 'string', definition);
     }
     if (ue.type === 'string') {
       if (stringValidator) {

@@ -169,7 +169,9 @@ const processEditorRoute = route('processEditor')
         variableNames: z.array(z.string()).describe('The new list of output variable names for the task step')
       })
     ),
-    taskStep_getUserExpression: tool('Get the user expression for a specific task step').input(
+    taskStep_getUserExpression: tool(
+      'Get the user expression for a specific task step or a variable name that contains the user expression'
+    ).input(
       z.object({
         stepId: z.string().describe('The ID of the task step to read')
       })
@@ -178,6 +180,12 @@ const processEditorRoute = route('processEditor')
       z.object({
         stepId: z.string().describe('The ID of the task step to update'),
         userExpression: z.string().describe('The new user expression for the task step')
+      })
+    ),
+    taskStep_setUserExpressionVariableName: tool('Set the variable name that contains the user expression for a specific task step').input(
+      z.object({
+        stepId: z.string().describe('The ID of the task step to update'),
+        variableName: z.string().describe('The variable name that contains the user expression for the task step')
       })
     ),
 

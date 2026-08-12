@@ -2,6 +2,7 @@ import { useLoader } from '@aibindkit/react';
 import { useState } from 'react';
 import { useSearchParams } from 'react-router';
 import { useApiClient } from '../../auth/auth-context';
+import { SvgIcon } from '../../views/common/svg-icons';
 import { PortalErrorView } from '../../views/portal/portal-error-view';
 import { PortalLoadingView } from '../../views/portal/portal-loading-view';
 import { ResourceListView } from '../../views/resource-list/resource-list-view';
@@ -82,7 +83,7 @@ export function MyNotificationsPage() {
         }}
         actions={[
           {
-            label: 'Delete',
+            label: <SvgIcon name="x" className="h-4 w-4" />,
             ariaLabel: notification => `Delete notification ${notification.id}`,
             danger: true,
             onClick: notification => deleteNotification(notification.id)

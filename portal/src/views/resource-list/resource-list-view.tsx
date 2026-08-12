@@ -101,7 +101,7 @@ export function ResourceListView<T>(props: ResourceListViewProps<T>) {
                               {props.actions.map((action, i) => {
                                 const label = typeof action.label === 'function' ? action.label(row) : action.label;
                                 const ariaLabel = typeof action.ariaLabel === 'function' ? action.ariaLabel(row) : action.ariaLabel;
-                                const className = `inline-flex h-8 shrink-0 items-center justify-center rounded-md border bg-white px-3 text-sm font-medium transition-colors ${
+                                const className = `inline-flex h-8 shrink-0 cursor-pointer items-center justify-center rounded-md border bg-white px-3 text-sm font-medium transition-colors ${
                                   action.danger
                                     ? 'border-red-200 text-red-700 hover:bg-red-50 hover:text-red-800'
                                     : 'border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-slate-900'

@@ -111,7 +111,7 @@ export function TableListPage() {
           getTo: table => `/admin/tables/${encodeURIComponent(table.name)}`
         },
         {
-          label: 'Delete',
+          label: <SvgIcon name="x" className="h-4 w-4" />,
           ariaLabel: table => `Delete table ${table.name}`,
           danger: true,
           onClick: table => deleteTable(table.name)

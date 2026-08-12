@@ -104,7 +104,7 @@ function ProcessTesterStartForm(props: { definition: ProcessDefinition; onSubmit
         props.onSubmit(data);
       },
       assertVariableValue(name: string, value: unknown) {
-        variableValidator.assertValidVariableValue(name, value, props.definition);
+        variableValidator.assertVariableValueIsValid(name, value, props.definition);
       }
     }),
     [props.definition, variableValidator]

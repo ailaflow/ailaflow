@@ -24,7 +24,7 @@ export class FormDefinitionValidator {
           error = `Test value is not valid JSON`;
         }
       } else {
-        error = variableValidator.validateVariableExists(v.variableName, definition);
+        error = variableValidator.validateVariableReference(v.variableName, definition);
       }
       if (error) {
         errors[`inputExamples.${i}`] = error;

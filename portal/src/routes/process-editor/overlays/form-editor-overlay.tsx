@@ -45,7 +45,7 @@ export function FormEditorOverlay() {
         throw new Error('This is preview only');
       },
       assertVariableValue(name: string, value: unknown) {
-        variableValidator.assertValidVariableValue(name, value, state.definition.value);
+        variableValidator.assertVariableValueIsValid(name, value, state.definition.value);
       }
     }),
     [state, formState, variableValidator]

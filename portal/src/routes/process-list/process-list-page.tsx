@@ -117,16 +117,16 @@ export function ProcessListPage() {
       }}
       actions={[
         {
+          label: 'Test',
+          getTo: process => `/admin/processes/${encodeURIComponent(process.name)}/test`
+        },
+        {
           label: <SvgIcon name="pencil" className="h-4 w-4" />,
           ariaLabel: process => `Edit process ${process.name}`,
           getTo: process => `/admin/processes/${encodeURIComponent(process.name)}`
         },
         {
-          label: 'Test',
-          getTo: process => `/admin/processes/${encodeURIComponent(process.name)}/test`
-        },
-        {
-          label: 'Delete',
+          label: <SvgIcon name="x" className="h-4 w-4" />,
           ariaLabel: process => `Delete process ${process.name}`,
           danger: true,
           onClick: process => deleteProcess(process.name)

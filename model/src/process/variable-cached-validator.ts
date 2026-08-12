@@ -33,14 +33,6 @@ export class VariableCachedValidator {
     return zod.zod;
   }
 
-  public validateVariableExists(name: string, definition: ProcessDefinition): string | null {
-    const zod = this.tryGetZod(name, definition);
-    if (!zod) {
-      return `Variable \$${name} does not exist.`;
-    }
-    return null;
-  }
-
   public setErrorIfAnyVariableIsMissing(
     names: string[],
     definition: ProcessDefinition,
@@ -48,7 +40,7 @@ export class VariableCachedValidator {
     key: string
   ): boolean {
     for (const name of names) {
-      const error = this.validateVariableExists(name, definition);
+      const error = this.validateVariableReference(name, definition);
       if (error) {
         errors[key] = error;
         return true;
@@ -57,10 +49,29 @@ export class VariableCachedValidator {
     return false;
   }
 
+  public validateVariableReference(name: string, definition: ProcessDefinition): string | null {
+    const variable = this.tryGet(name, definition);
+    if (!variable) {
+      return `Variable \$${name} does not exist`;
+    }
+    return null;
+  }
+
+  public validateVariableType(name: string, type: string, definition: ProcessDefinition): string | null {
+    const variable = this.tryGet(name, definition);
+    if (!variable) {
+      return `Variable \$${name} does not exist`;
+    }
+    if (variable.schema.schema.type !== type) {
+      return `Variable \$${name} must be of type ${type}`;
+    }
+    return null;
+  }
+
   public validateVariableValue(name: string, value: unknown, definition: ProcessDefinition): string | null {
     const zod = this.tryGetZod(name, definition);
     if (!zod) {
-      return `Variable \$${name} does not exist.`;
+      return `Variable \$${name} does not exist`;
     }
     try {
       zod.parse(value);
@@ -70,7 +81,7 @@ export class VariableCachedValidator {
     return null;
   }
 
-  public assertValidVariableValue(name: string, value: unknown, definition: ProcessDefinition) {
+  public assertVariableValueIsValid(name: string, value: unknown, definition: ProcessDefinition) {
     const error = this.validateVariableValue(name, value, definition);
     if (error) {
       throw new Error(error);
