@@ -36,7 +36,10 @@ export class OpenaiLlmClient implements LlmClient {
     }
 
     const message: LlmMessage = choice.message;
-    return { message, totalTokens: response.usage?.total_tokens };
+    return {
+      message,
+      usage: response.usage
+    };
   }
 
   public async getModels(abortSignal: AbortSignal): Promise<string[]> {

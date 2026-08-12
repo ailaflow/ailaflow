@@ -1,9 +1,9 @@
-import type { ToolDescriptor } from '@aibindkit/core';
+import type { LlmCompletionUsage, ToolDescriptor } from '@aibindkit/core';
 import type { LlmMessage } from '@aibindkit/core';
 
 export interface LlmCompleteResult {
   message: LlmMessage;
-  totalTokens?: number;
+  usage?: LlmCompletionUsage;
 }
 
 export interface LlmModelSettings {

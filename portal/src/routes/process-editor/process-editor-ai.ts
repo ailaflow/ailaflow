@@ -5,6 +5,7 @@ import { createEmptyFormDefinition, toolboxConfiguration } from './designer-conf
 import { ObjectCloner, Sequence, Step, Uid } from 'sequential-workflow-designer';
 import {
   anyStepSchema,
+  NotificationStep,
   ProcessRootVariableValidator,
   ReturnStep,
   ScriptStep,
@@ -333,6 +334,51 @@ export function useProcessEditorAi(state: ProcessEditorState, save: () => Promis
           step.properties.userExpression = { type: 'variable', name: arg.variableName };
           state.notifyDefinitionChange();
           return toolSuccess('User expression was updated');
+        },
+
+        async notificationStep_getUserExpression(arg) {
+          const step = state.getStep<NotificationStep>(arg.stepId, 'notification');
+          return step.properties.userExpression;
+        },
+        async notificationStep_setUserExpression(arg) {
+          const step = state.getStep<NotificationStep>(arg.stepId, 'notification');
+          const error = UserAccessExpressionParser.validate(arg.userExpression);
+          if (error) {
+            return toolError(`${error}; the user expression was not updated`);
+          }
+          step.properties.userExpression = { type: 'string', value: arg.userExpression };
+          state.notifyDefinitionChange();
+          return toolSuccess('User expression was updated');
+        },
+        async notificationStep_setUserExpressionVariableName(arg) {
+          const step = state.getStep<NotificationStep>(arg.stepId, 'notification');
+          const error = state.variableValidator.validateVariableType(arg.variableName, 'string', state.definition.value);
+          if (error) {
+            return toolError(error);
+          }
+          step.properties.userExpression = { type: 'variable', name: arg.variableName };
+          state.notifyDefinitionChange();
+          return toolSuccess('User expression was updated');
+        },
+        async notificationStep_getNotification(arg) {
+          const step = state.getStep<NotificationStep>(arg.stepId, 'notification');
+          return step.properties.notification;
+        },
+        async notificationStep_setNotification(arg) {
+          const step = state.getStep<NotificationStep>(arg.stepId, 'notification');
+          step.properties.notification = { type: 'string', value: arg.notification };
+          state.notifyDefinitionChange();
+          return toolSuccess('Notification was updated');
+        },
+        async notificationStep_setNotificationVariableName(arg) {
+          const step = state.getStep<NotificationStep>(arg.stepId, 'notification');
+          const error = state.variableValidator.validateVariableType(arg.variableName, 'string', state.definition.value);
+          if (error) {
+            return toolError(error);
+          }
+          step.properties.notification = { type: 'variable', name: arg.variableName };
+          state.notifyDefinitionChange();
+          return toolSuccess('Notification was updated');
         },
 
         async returnStep_isOutputFormEnabled(arg) {

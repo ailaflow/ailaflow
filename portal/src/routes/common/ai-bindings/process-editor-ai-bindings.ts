@@ -189,6 +189,49 @@ const processEditorRoute = route('processEditor')
       })
     ),
 
+    notificationStep_getUserExpression: tool(
+      'Get the user expression for a specific notification step or a variable name that contains the user expression'
+    ).input(
+      z.object({
+        stepId: z.string().describe('The ID of the notification step to read')
+      })
+    ),
+    notificationStep_setUserExpression: tool('Set the user expression for a specific notification step').input(
+      z.object({
+        stepId: z.string().describe('The ID of the notification step to update'),
+        userExpression: z.string().describe('The new user expression for the notification step')
+      })
+    ),
+    notificationStep_setUserExpressionVariableName: tool(
+      'Set the variable name that contains the user expression for a specific notification step'
+    ).input(
+      z.object({
+        stepId: z.string().describe('The ID of the notification step to update'),
+        variableName: z.string().describe('The variable name that contains the user expression for the notification step')
+      })
+    ),
+    notificationStep_getNotification: tool(
+      'Get the notification for a specific notification step or a variable name that contains the notification'
+    ).input(
+      z.object({
+        stepId: z.string().describe('The ID of the notification step to read')
+      })
+    ),
+    notificationStep_setNotification: tool('Set the notification for a specific notification step').input(
+      z.object({
+        stepId: z.string().describe('The ID of the notification step to update'),
+        notification: z.string().describe('The new notification for the notification step')
+      })
+    ),
+    notificationStep_setNotificationVariableName: tool(
+      'Set the variable name that contains the notification for a specific notification step'
+    ).input(
+      z.object({
+        stepId: z.string().describe('The ID of the notification step to update'),
+        variableName: z.string().describe('The variable name that contains the notification for the notification step')
+      })
+    ),
+
     returnStep_isOutputFormEnabled: tool('Check whether the output form is enabled'),
     returnStep_setOutputFormEnabled: tool('Enable or disable the output form').input(
       z.object({

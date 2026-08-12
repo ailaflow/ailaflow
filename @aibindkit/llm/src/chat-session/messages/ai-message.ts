@@ -18,7 +18,7 @@ export class AiMessage implements Message {
     const llmMessages = stack.getCompletedLlmMessagesBeforeLast();
     const toolDescriptors = this.toolSet.getDescriptorsOrUndefined();
 
-    const { message, totalTokens } = await this.llmClient.complete(abortSignal, this.llmModelSettings, llmMessages, toolDescriptors);
+    const { message, usage } = await this.llmClient.complete(abortSignal, this.llmModelSettings, llmMessages, toolDescriptors);
 
     let toolCalls: ToolCall[] | undefined;
     if (message.role === 'assistant') {
@@ -35,7 +35,7 @@ export class AiMessage implements Message {
         }
       ],
       toolCalls,
-      totalTokens
+      usage
     };
   }
 

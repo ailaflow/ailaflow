@@ -247,6 +247,9 @@ export class ChatSession {
       const toolMessage = this.messageFactory.createTool(tid, this.toolContext, result.toolCalls);
       this.queue.pushAfterType(toolMessage, ChatMessageType.TOOL);
     }
+    if (result.usage) {
+      // console.log('usage', result.usage);
+    }
 
     const hasNext = this.tryNext();
     this.onMessageCompleted.emit({

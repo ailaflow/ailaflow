@@ -1,10 +1,10 @@
-import type { ChatMessageType, CompletedChatMessage, ToolCall } from '@aibindkit/core';
+import type { ChatMessageType, CompletedChatMessage, LlmCompletionUsage, ToolCall } from '@aibindkit/core';
 import { ChatSessionStack } from '../chat-session-stack';
 
 export interface MessageCompletionResult {
   completedMessages: CompletedChatMessage[];
   toolCalls?: ToolCall[];
-  totalTokens?: number;
+  usage?: LlmCompletionUsage;
 }
 
 export interface Message {

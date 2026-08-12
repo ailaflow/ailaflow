@@ -80,8 +80,7 @@ export class AnthropicLlmClient implements LlmClient {
         content: text || null,
         tool_calls: toolCalls?.length ? toolCalls : undefined,
         refusal: null
-      },
-      totalTokens: (data.usage?.input_tokens ?? 0) + (data.usage?.output_tokens ?? 0)
+      }
     };
   }
 
