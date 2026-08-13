@@ -125,6 +125,11 @@ import { FetchLlmProviderModelsEndpoint } from './api/llm-configuration/fetch-ll
 import { LlmConfigurationChangedEventHandler } from './events/llm-configuration/llm-configuration-changed-event-handler';
 import { SandboxHostDiagnostician } from './sandbox/sandbox-host-diagnostician';
 import { ChatAuthContextResolver } from './chat-session/chat-auth-context-resolver';
+import { TelegramConfigurationRepository } from './repositories/telegram-configuration/telegram-configuration-repository';
+import { SqliteTelegramConfigurationRepository } from './repositories/telegram-configuration/sqlite-telegram-configuration-repository';
+import { GetMyTelegramConfigurationEndpoint } from './api/telegram-configuration/get-my-telegram-configuration-endpoint';
+import { SaveMyTelegramBotEndpoint } from './api/telegram-configuration/save-my-telegram-bot-endpoint';
+import { DeleteMyTelegramBotEndpoint } from './api/telegram-configuration/delete-my-telegram-bot-endpoint';
 
 const PORT = process.env.PORT || 2048;
 
@@ -151,6 +156,7 @@ export class Server {
     let tableRepository: TableRepository;
     let tableDataRepository: TableDataRepository;
     let llmConfigurationRepository: LlmConfigurationRepository;
+    let telegramConfigurationRepository: TelegramConfigurationRepository;
 
     let processListQuerier: ProcessListQuerier;
     let myProcessListQuerier: MyProcessListQuerier;
@@ -180,6 +186,7 @@ export class Server {
     tableRepository = new SqliteTableRepository(sqliteDatabases);
     tableDataRepository = new SqliteTableDataRepository(sqliteDatabases);
     llmConfigurationRepository = new SqliteLlmConfigurationRepository(sqliteDatabases);
+    telegramConfigurationRepository = new SqliteTelegramConfigurationRepository(sqliteDatabases);
 
     processListQuerier = new SqliteProcessListQuerier(sqliteDatabases);
     myProcessListQuerier = new SqliteMyProcessListQuerier(sqliteDatabases);
@@ -206,7 +213,8 @@ export class Server {
       assignedTaskRepository.setup(abortSignal),
       notificationRepository.setup(abortSignal),
       tableRepository.setup(abortSignal),
-      llmConfigurationRepository.setup(abortSignal)
+      llmConfigurationRepository.setup(abortSignal),
+      telegramConfigurationRepository.setup(abortSignal)
     ]);
 
     const processExecutionStore = new ProcessExecutionStore();
@@ -277,6 +285,9 @@ export class Server {
       new FetchLlmProviderModelsEndpoint(llmConfigurationRepository, llmClientFactory),
       new DeleteLlmProviderEndpoint(llmConfigurationRepository, eventBus),
       new SaveLlmUseCaseAssignmentsEndpoint(llmConfigurationRepository, eventBus),
+      new GetMyTelegramConfigurationEndpoint(telegramConfigurationRepository),
+      new SaveMyTelegramBotEndpoint(telegramConfigurationRepository),
+      new DeleteMyTelegramBotEndpoint(telegramConfigurationRepository),
       new GetMyNotificationsEndpoint(myNotificationListQuerier),
       new DeleteMyNotificationEndpoint(notificationRepository),
       new GetMyProcessesEndpoint(myProcessListQuerier),
