@@ -47,7 +47,7 @@ export class ChatSession {
     this.systemMessage = systemMessage;
   }
 
-  public setMetadata(id: number, completedMessageIndex: number, key: string, value: unknown) {
+  public async setMetadata(id: number, completedMessageIndex: number, key: string, value: unknown) {
     const message = this.stack.trySetMetadata(id, completedMessageIndex, key, value);
     if (!message) {
       throw new Error(`Cannot find message with id ${id} at completed message index ${completedMessageIndex}.`);
@@ -58,7 +58,7 @@ export class ChatSession {
         completedMessages: message.completedMessages
       }
     });
-    void this.save();
+    await this.save();
   }
 
   public queueUserMessage(content: string, metadata?: ChatMessageMetadata): number {
@@ -92,12 +92,12 @@ export class ChatSession {
     return true;
   }
 
-  public reset() {
+  public async reset() {
     this.tryInterrupt();
     this.queue.clear();
     this.stack.clear();
     this.onReset.emit();
-    void this.save();
+    await this.save();
   }
 
   public getAll(): ChatMessage[] {
@@ -153,14 +153,18 @@ export class ChatSession {
   /**
    * The save operation is best-effort, and errors are emitted via the onStackStoreError event.
    */
-  private async save() {
+  private async trySave() {
     try {
-      const abortSignal = AbortSignal.timeout(3_000);
-      await this.storage.save(abortSignal, this.id, this.dump());
+      await this.save();
     } catch (e) {
       const error = e instanceof Error ? e : new Error(String(e));
       this.onStackStoreError.emit(error);
     }
+  }
+
+  private async save() {
+    const abortSignal = AbortSignal.timeout(3_000);
+    await this.storage.save(abortSignal, this.id, this.dump());
   }
 
   private tryNext() {
@@ -192,7 +196,7 @@ export class ChatSession {
   }
 
   private async next(message: Message) {
-    void this.save();
+    await this.trySave();
 
     this.onMessageStarted.emit({
       isWorking: true,
@@ -219,7 +223,7 @@ export class ChatSession {
       } else {
         this.stack.fail(message, failReason);
       }
-      void this.save();
+      await this.trySave();
 
       // TODO: we should probably restore user messages in UI here, that a user won't lose their input if the session fails.
       this.queue.clear();
@@ -240,7 +244,7 @@ export class ChatSession {
     }
 
     this.stack.complete(message, result.completedMessages);
-    void this.save();
+    await this.trySave();
 
     if (result.toolCalls) {
       const tid = this.nextId();

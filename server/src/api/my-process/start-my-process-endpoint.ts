@@ -46,7 +46,7 @@ export class StartMyProcessEndpoint implements Endpoint {
       throw new Error('Unexpected behavior');
     }
 
-    chatSession.setMetadata(request.chatSession.messageId, request.chatSession.completedMessageIndex, 'finished', true);
+    await chatSession.setMetadata(request.chatSession.messageId, request.chatSession.completedMessageIndex, 'finished', true);
 
     return {
       executionId: result.executionId

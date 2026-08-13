@@ -47,7 +47,7 @@ export class SubmitMyTaskEndpoint implements Endpoint {
     assignedTask.complete(request.outputValues);
     await this.assignedTaskRepository.upsert(abortSignal, assignedTask);
 
-    chatSession.setMetadata(request.chatSession.messageId, request.chatSession.completedMessageIndex, 'finished', true);
+    await chatSession.setMetadata(request.chatSession.messageId, request.chatSession.completedMessageIndex, 'finished', true);
 
     const count = await this.incompleteAssignedTaskCountQuerier.queryIncompleteAssignedTaskCount(abortSignal, task.id);
     if (count === 0) {

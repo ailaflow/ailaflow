@@ -9,7 +9,7 @@ export class RestartChatEndpoint implements Endpoint {
 
   public constructor(private readonly liveChatSessionStore: LiveChatSessionStore) {}
 
-  public handle(req: Request, res: Response) {
+  public async handle(req: Request, res: Response) {
     const { data: request, error } = restartChatRequestSchema.safeParse(req.body);
     if (error) {
       res.status(400).json({ error: 'Invalid request body' }).end();
@@ -22,7 +22,7 @@ export class RestartChatEndpoint implements Endpoint {
       return;
     }
 
-    chatSession.reset();
+    await chatSession.reset();
     return {
       ok: true
     };
