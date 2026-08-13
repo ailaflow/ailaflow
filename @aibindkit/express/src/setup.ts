@@ -9,28 +9,29 @@ import { SendFrontendToolResultEndpoint } from './endpoints/send-frontend-tool-r
 import { InterruptChatEndpoint } from './endpoints/interrupt-chat-endpoint';
 import { RestartChatEndpoint } from './endpoints/restart-chat-endpoint';
 import { LiveChatSessionStore } from './live-chat-session-store';
+import { ChatAuthContextResolver, DefaultChatAuthContextResolver } from './chat-auth-context-resolver';
+import { ChatSessionManager } from './chat-session-manager';
 
-export interface AiBindKitServerConfiguration {
+export interface ChatServerConfiguration {
   sessionResolver: ChatSessionResolver;
-  /**
-   * An optional live session store for active chat sessions.
-   */
-  liveSessionStore?: LiveChatSessionStore;
+  authContextResolver?: ChatAuthContextResolver;
   /**
    * An optional session storage for persisting chat sessions across server restarts.
    */
   sessionStorage?: ChatSessionStorage;
+  sessionManager?: ChatSessionManager;
   middleware?: RequestHandler;
 }
 
-export function setupServer(app: Express, config: AiBindKitServerConfiguration) {
+export function setupServer(app: Express, config: ChatServerConfiguration): void {
   const frontendToolBus = new FrontendToolBus();
   const frontendToolFactory = new FrontendToolFactory(frontendToolBus);
+  const authContextResolver = config.authContextResolver ?? new DefaultChatAuthContextResolver();
   const sessionStorage = config.sessionStorage ?? new DisabledChatSessionStorage();
   const sessionFactory = new ChatSessionFactory(sessionStorage);
-  const liveSessionStore = config.liveSessionStore ?? new LiveChatSessionStore();
-  const sessionActivator = new ChatSessionActivator(
-    liveSessionStore,
+  const liveChatSessionStore = new LiveChatSessionStore();
+  const chatSessionActivator = new ChatSessionActivator(
+    liveChatSessionStore,
     config.sessionResolver,
     sessionStorage,
     sessionFactory,
@@ -38,11 +39,11 @@ export function setupServer(app: Express, config: AiBindKitServerConfiguration) 
   );
 
   const endpoints: Endpoint[] = [
-    new RestoreChatEndpoint(sessionActivator),
-    new SendChatMessageEndpoint(liveSessionStore),
+    new RestoreChatEndpoint(authContextResolver, chatSessionActivator),
+    new SendChatMessageEndpoint(liveChatSessionStore),
     new SendFrontendToolResultEndpoint(frontendToolBus),
-    new InterruptChatEndpoint(liveSessionStore),
-    new RestartChatEndpoint(liveSessionStore)
+    new InterruptChatEndpoint(liveChatSessionStore),
+    new RestartChatEndpoint(liveChatSessionStore)
   ];
 
   for (const endpoint of endpoints) {
@@ -64,5 +65,12 @@ export function setupServer(app: Express, config: AiBindKitServerConfiguration) 
     } else {
       app[endpoint.method](endpoint.path, handler);
     }
+  }
+
+  if (config.sessionManager) {
+    config.sessionManager.initialize({
+      chatSessionActivator,
+      liveChatSessionStore
+    });
   }
 }

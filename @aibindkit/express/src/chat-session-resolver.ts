@@ -1,5 +1,5 @@
-import type { Request } from 'express';
 import type { LlmClient, LlmModelSettings, Tool } from '@aibindkit/llm';
+import { ChatAuthContext } from './chat-auth-context-resolver';
 
 export class ChatSessionInitializerError extends Error {
   public static is(error: unknown): error is ChatSessionInitializerError {
@@ -26,5 +26,5 @@ export interface ResolvedChatSession {
 }
 
 export interface ChatSessionResolver {
-  resolve(httpRequest: Request, params: Record<string, unknown>): ResolvedChatSession;
+  resolve(channelName: string, authContext: ChatAuthContext): ResolvedChatSession;
 }

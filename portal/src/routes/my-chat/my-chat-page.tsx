@@ -8,6 +8,8 @@ import { StartFormMessage } from './start-form-message';
 import { CompletedChatMessage } from '@aibindkit/core';
 import { TaskFormMessage } from './task-form-message';
 
+const CHANNEL_NAME = 'default';
+
 function messageRenderer(
   id: number,
   _: ChatMessageType,
@@ -63,9 +65,6 @@ export function MyChatPage() {
 
   const details = useMemo(
     () => ({
-      params: {
-        name: 'main'
-      },
       frontendTools: [],
       frontEndToolCallsHandler: async () => null
     }),
@@ -76,7 +75,7 @@ export function MyChatPage() {
     <Portal>
       <Chat
         transport={api.chat}
-        params={details.params}
+        channelName={CHANNEL_NAME}
         frontendTools={details.frontendTools}
         frontEndToolCallsHandler={details.frontEndToolCallsHandler}
         messageFilter={messageFilter}

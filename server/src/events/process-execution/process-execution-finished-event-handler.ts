@@ -1,20 +1,14 @@
 import { EventHandler } from '../event-handler';
 import { ProcessExecutionFinishedEvent } from './process-execution-finished-event';
-import { Logger } from '../../core/logger';
 import { UserChatSessionProvider } from '../../chat-session/user-chat-session-provider';
 
 export class ProcessExecutionFinishedEventHandler implements EventHandler<ProcessExecutionFinishedEvent> {
   public readonly name = ProcessExecutionFinishedEvent.name;
-  private readonly logger = new Logger(ProcessExecutionFinishedEventHandler.name);
 
   public constructor(private readonly userChatSessionProvider: UserChatSessionProvider) {}
 
   public async handle(event: ProcessExecutionFinishedEvent) {
-    const session = this.userChatSessionProvider.tryGetMainChannel(event.startedBy);
-    if (!session) {
-      this.logger.log(`Cannot find main chat session for user: ${event.startedBy}`);
-      return;
-    }
+    const session = await this.userChatSessionProvider.getDefault(AbortSignal.timeout(3_000), event.startedBy);
 
     let m = `>>>>>>>>\nProcess "${event.processName}" finished the execution ${event.executionId}`;
     if (event.result.success) {

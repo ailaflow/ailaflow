@@ -19,7 +19,7 @@ export class Notifier {
     await this.notificationRepository.insertMultiple(abortSignal, notifications);
 
     for (const n of notifications) {
-      const session = this.userChatSessionProvider.tryGetMainChannel(n.userName);
+      const session = await this.userChatSessionProvider.getDefault(abortSignal, n.userName);
       if (session) {
         session.queueUserMessage(`>>>>>>>>\nThe user has a new notification: "${n.message}"\n<<<<<<<<`, {
           internal: true

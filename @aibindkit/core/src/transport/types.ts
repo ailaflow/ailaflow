@@ -7,8 +7,8 @@ import { ChatMessageType } from '../chat-session';
 
 export const restoreChatRequestSchema = z.object({
   frontendTools: z.array(z.custom<ToolDescriptor>()),
-  frontendToolsHash: z.string().min(1),
-  params: z.record(z.string(), z.unknown())
+  frontendToolsHash: z.string(),
+  channelName: z.string()
 });
 export type RestoreChatRequest = z.infer<typeof restoreChatRequestSchema>;
 

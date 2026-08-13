@@ -1,12 +1,12 @@
 import { Chat } from '@aibindkit/react';
 import { useAiEnvironment, useAiStore } from './admin-portal';
 import { useApiClient, useSession } from '../../auth/auth-context';
-import { useMemo } from 'react';
+
+const CHANNEL_NAME = 'admin';
 
 export function AdminPortalChat() {
   const api = useApiClient();
   const { toolDescriptors, frontEndToolCallsHandler } = useAiEnvironment();
-  const params = useMemo(() => ({ admin: true }), []);
   const session = useSession();
 
   useAiStore(
@@ -34,5 +34,12 @@ export function AdminPortalChat() {
     []
   );
 
-  return <Chat transport={api.chat} params={params} frontendTools={toolDescriptors} frontEndToolCallsHandler={frontEndToolCallsHandler} />;
+  return (
+    <Chat
+      transport={api.chat}
+      channelName={CHANNEL_NAME}
+      frontendTools={toolDescriptors}
+      frontEndToolCallsHandler={frontEndToolCallsHandler}
+    />
+  );
 }

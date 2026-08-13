@@ -16,7 +16,7 @@ import { ChatToolCallsHandler, FrontEndToolCallsHandler } from './chat-tool-call
 export interface ChatProps {
   transport: ChatTransport;
   frontendTools: ToolDescriptor[];
-  params: Record<string, unknown>;
+  channelName: string;
   messageRenderer?: ChatMessageRenderer;
   messageFilter?: ChatMessageFilter;
   frontEndToolCallsHandler: FrontEndToolCallsHandler;
@@ -34,11 +34,11 @@ export function Chat(props: ChatProps) {
   const request = useMemo(
     () =>
       ({
-        params: props.params,
+        channelName: props.channelName,
         frontendTools: props.frontendTools,
         frontendToolsHash: fnv1a(props.frontendTools)
       }) satisfies RestoreChatRequest,
-    [props.params, props.frontendTools]
+    [props.channelName, props.frontendTools]
   );
 
   const lastHandledToolCallId = useRef<number>(-1);

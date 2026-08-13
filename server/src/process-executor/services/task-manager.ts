@@ -51,7 +51,7 @@ export class TaskManager {
     await this.assignedTaskRepository.upsertMultiple(abortSignal, assignedTasks);
 
     for (const userName of userNames) {
-      const session = this.userChatSessionProvider.tryGetMainChannel(userName);
+      const session = await this.userChatSessionProvider.getDefault(abortSignal, userName);
       if (session) {
         session.queueUserMessage(`>>>>>>>>\nYou have a new task assigned: "${step.name}", title: "${task.title}"\n<<<<<<<<`, {
           internal: true,

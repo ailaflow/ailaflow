@@ -1,12 +1,12 @@
-import { LiveChatSessionStore } from '@aibindkit/express';
+import { ChatSessionManager } from '@aibindkit/express';
 import { ChatSession } from '@aibindkit/llm';
-import { ChatSessionId } from './chat-session-id';
 
 export class UserChatSessionProvider {
-  public constructor(private readonly liveSessionStore: LiveChatSessionStore) {}
+  public constructor(private readonly chatSessionManager: ChatSessionManager) {}
 
-  public tryGetMainChannel(userName: string): ChatSession | undefined {
-    const sessionId = ChatSessionId.createUserMainChannel(userName).encode();
-    return this.liveSessionStore.tryGetById(sessionId);
+  public getDefault(abortSignal: AbortSignal, userName: string): Promise<ChatSession> {
+    return this.chatSessionManager.getOrActivate(abortSignal, 'default', {
+      userName
+    });
   }
 }

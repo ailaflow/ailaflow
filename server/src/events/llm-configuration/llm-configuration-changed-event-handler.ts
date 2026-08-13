@@ -1,4 +1,4 @@
-import { LiveChatSessionStore } from '@aibindkit/express';
+import { ChatSessionManager } from '@aibindkit/express';
 import { LlmClientProvider } from '../../llm/llm-client-provider';
 import { EventHandler } from '../event-handler';
 import { LlmConfigurationChangedEvent } from './llm-configuration-changed-event';
@@ -8,11 +8,11 @@ export class LlmConfigurationChangedEventHandler implements EventHandler<LlmConf
 
   public constructor(
     private readonly llmClientProvider: LlmClientProvider,
-    private readonly liveChatSessionStore: LiveChatSessionStore
+    private readonly chatSessionManager: ChatSessionManager
   ) {}
 
   public async handle() {
     this.llmClientProvider.flushAll();
-    this.liveChatSessionStore.flushAll();
+    this.chatSessionManager.flushAll();
   }
 }

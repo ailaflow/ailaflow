@@ -2,7 +2,7 @@ import { Logger } from './core/logger';
 import { ServerPaths } from './core/server-paths';
 import express from 'express';
 import { SandboxInstanceManager } from './sandbox/sandbox-instance-manager';
-import { LiveChatSessionStore, setupServer } from '@aibindkit/express';
+import { ChatSessionManager, setupServer } from '@aibindkit/express';
 import { LoginEndpoint } from './api/auth/login-endpoint';
 import { Router } from './api/router';
 import { UserRepository } from './repositories/user/user-repository';
@@ -124,6 +124,7 @@ import { SaveLlmUseCaseAssignmentsEndpoint } from './api/llm-configuration/save-
 import { FetchLlmProviderModelsEndpoint } from './api/llm-configuration/fetch-llm-provider-models-endpoint';
 import { LlmConfigurationChangedEventHandler } from './events/llm-configuration/llm-configuration-changed-event-handler';
 import { SandboxHostDiagnostician } from './sandbox/sandbox-host-diagnostician';
+import { ChatAuthContextResolver } from './chat-session/chat-auth-context-resolver';
 
 const PORT = process.env.PORT || 2048;
 
@@ -217,17 +218,21 @@ export class Server {
       new TryReadTableRpcHandler(tableDataRepository)
     ]);
 
+    const sessionManager = new ChatSessionManager();
     const sessionStorage = new ChatSessionStorage(chatSessionRepository);
-    const liveSessionStore = new LiveChatSessionStore();
-    const userChatSessionProvider = new UserChatSessionProvider(liveSessionStore);
-
-    const eventBus = new EventBus();
-    eventBus.registerHandler(new ProcessExecutionFinishedEventHandler(userChatSessionProvider));
+    const userChatSessionProvider = new UserChatSessionProvider(sessionManager);
 
     const sandboxInstanceManager = new SandboxInstanceManager(serverPaths, sandboxRepository, rpcHandler);
 
     const taskManager = new TaskManager(taskRepository, assignedTaskRepository, userAccessExpressionUserQuerier, userChatSessionProvider);
     const notifier = new Notifier(userAccessExpressionUserQuerier, userChatSessionProvider, notificationRepository);
+
+    const llmClientFactory = new LlmClientFactory();
+    const llmClientProvider = new LlmClientProvider(llmConfigurationRepository, llmClientFactory);
+
+    const eventBus = new EventBus();
+    eventBus.registerHandler(new ProcessExecutionFinishedEventHandler(userChatSessionProvider));
+    eventBus.registerHandler(new LlmConfigurationChangedEventHandler(llmClientProvider, sessionManager));
 
     const processExecutionPersister = new ProcessExecutionPersister(persistedExecutionRepository);
     const processExecutionServices: ProcessExecutionServices = {
@@ -243,9 +248,6 @@ export class Server {
     const userProcessProvider = new UserProcessProvider(myProcessAccessQuerier, processRepository);
     const userAssignedTaskProvider = new UserAssignedTaskProvider(taskRepository, assignedTaskRepository);
 
-    const llmClientFactory = new LlmClientFactory();
-    const llmClientProvider = new LlmClientProvider(llmConfigurationRepository, llmClientFactory);
-    eventBus.registerHandler(new LlmConfigurationChangedEventHandler(llmClientProvider, liveSessionStore));
     const userToolSetProvider = new UserToolSetProvider([
       new MyProcessesTool(myProcessListQuerier),
       new StartMyProcessTool(userProcessProvider, lazyProcessExecutor),
@@ -254,15 +256,17 @@ export class Server {
 
     const authMiddleware = new AuthMiddleware(authTokenRepository);
     const sessionResolver = new ChatSessionResolver(llmClientProvider, userToolSetProvider, serverPaths);
-
-    const crons: Cron[] = [new AuthTokenCleanupCron(authTokenRepository)];
+    const authContextResolver = new ChatAuthContextResolver();
 
     setupServer(app, {
       sessionResolver,
-      liveSessionStore,
       sessionStorage,
+      sessionManager,
+      authContextResolver,
       middleware: authMiddleware.user
     });
+
+    const crons: Cron[] = [new AuthTokenCleanupCron(authTokenRepository)];
 
     const endpoints = [
       new InstallEndpoint(userRepository, userAttributesRepository, sandboxRepository, passwordHasher),
@@ -283,11 +287,11 @@ export class Server {
         processExecutionResumer,
         userAssignedTaskProvider,
         assignedTaskRepository,
-        liveSessionStore,
+        sessionManager,
         incompleteAssignedTaskCountQuerier
       ),
       new GetMyProcessStartFormEndpoint(userProcessProvider),
-      new StartMyProcessEndpoint(userProcessProvider, lazyProcessExecutor, liveSessionStore),
+      new StartMyProcessEndpoint(userProcessProvider, lazyProcessExecutor, sessionManager),
       new GetProcessesEndpoint(processListQuerier),
       new GetProcessEndpoint(processRepository),
       new DeleteProcessEndpoint(processRepository),

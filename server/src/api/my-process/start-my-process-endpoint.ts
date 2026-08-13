@@ -7,7 +7,7 @@ import { parseBody } from '../framework/parse-request';
 import { startMyProcessRequestSchema, StartMyProcessResponse } from '@aila/model';
 import { LazyProcessExecutor } from '../../process-executor/lazy-process-executor';
 import { EndpointError } from '../framework/endpoint-error';
-import { LiveChatSessionStore } from '@aibindkit/express';
+import { ChatSessionManager } from '@aibindkit/express';
 
 export class StartMyProcessEndpoint implements Endpoint {
   public readonly method = 'post';
@@ -17,7 +17,7 @@ export class StartMyProcessEndpoint implements Endpoint {
   public constructor(
     private readonly userProcessProvider: UserProcessProvider,
     private readonly lazyProcessExecutor: LazyProcessExecutor,
-    private readonly liveSessionStore: LiveChatSessionStore
+    private readonly chatSessionManager: ChatSessionManager
   ) {}
 
   public async handle(req: Request): Promise<StartMyProcessResponse> {
@@ -36,7 +36,7 @@ export class StartMyProcessEndpoint implements Endpoint {
       throw new EndpointError(startValuesError, 400);
     }
 
-    const chatSession = this.liveSessionStore.tryGetByToken(request.chatSession.token);
+    const chatSession = this.chatSessionManager.tryGetByToken(request.chatSession.token);
     if (!chatSession) {
       throw new EndpointError('Chat session not found', 404);
     }

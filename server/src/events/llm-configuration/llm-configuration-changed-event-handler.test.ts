@@ -1,24 +1,22 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { LiveChatSessionStore } from '@aibindkit/express';
-import { ChatSession } from '@aibindkit/llm';
+import { ChatSessionManager } from '@aibindkit/express';
 import { LlmClientProvider } from '../../llm/llm-client-provider';
 import { LlmConfigurationChangedEventHandler } from './llm-configuration-changed-event-handler';
 
 test('flushes all LLM clients and live chat sessions', async () => {
-  let flushAllCalls = 0;
+  let llmFlushAllCalls = 0;
   const llmClientProvider = {
-    flushAll: () => flushAllCalls++
+    flushAll: () => llmFlushAllCalls++
   } as unknown as LlmClientProvider;
-  const liveChatSessionStore = new LiveChatSessionStore();
-  let destroyCalls = 0;
-  liveChatSessionStore.set({ id: 'session', token: 'token', destroy: () => destroyCalls++ } as unknown as ChatSession);
-  const handler = new LlmConfigurationChangedEventHandler(llmClientProvider, liveChatSessionStore);
+  let sessionFlushAllCalls = 0;
+  const chatSessionManager = {
+    flushAll: () => sessionFlushAllCalls++
+  } as unknown as ChatSessionManager;
+  const handler = new LlmConfigurationChangedEventHandler(llmClientProvider, chatSessionManager);
 
   await handler.handle();
 
-  assert.equal(flushAllCalls, 1);
-  assert.equal(destroyCalls, 1);
-  assert.equal(liveChatSessionStore.tryGetById('session'), undefined);
-  assert.equal(liveChatSessionStore.tryGetByToken('token'), undefined);
+  assert.equal(llmFlushAllCalls, 1);
+  assert.equal(sessionFlushAllCalls, 1);
 });

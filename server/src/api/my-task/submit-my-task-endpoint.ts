@@ -5,13 +5,13 @@ import { parseBody } from '../framework/parse-request';
 import { submitMyTaskRequestSchema, SubmitMyTaskResponse } from '@aila/model';
 import { ProcessExecutionResumer } from '../../process-executor/process-execution-resumer';
 import { EndpointError } from '../framework/endpoint-error';
-import { LiveChatSessionStore } from '@aibindkit/express';
 import { AssignedTaskRepository } from '../../repositories/task/assigned-task-repository';
 import { UserAssignedTaskProvider } from '../../task/user-assigned-task-provider';
 import { getAuthToken } from '../auth/auth-middleware';
 import { IncompleteAssignedTaskCountQuerier } from '../../queriers/task/incomplete-assigned-task-count-querier';
 import { Task } from '../../repositories/task/task';
 import { Logger } from '../../core/logger';
+import { ChatSessionManager } from '@aibindkit/express';
 
 export class SubmitMyTaskEndpoint implements Endpoint {
   private readonly logger = new Logger(SubmitMyTaskEndpoint.name);
@@ -24,7 +24,7 @@ export class SubmitMyTaskEndpoint implements Endpoint {
     private readonly resumer: ProcessExecutionResumer,
     private readonly userAssignedTaskProvider: UserAssignedTaskProvider,
     private readonly assignedTaskRepository: AssignedTaskRepository,
-    private readonly liveSessionStore: LiveChatSessionStore,
+    private readonly chatSessionManager: ChatSessionManager,
     private readonly incompleteAssignedTaskCountQuerier: IncompleteAssignedTaskCountQuerier
   ) {}
 
@@ -39,7 +39,7 @@ export class SubmitMyTaskEndpoint implements Endpoint {
     }
     const { assignedTask, task } = userAssignedTask;
 
-    const chatSession = this.liveSessionStore.tryGetByToken(request.chatSession.token);
+    const chatSession = this.chatSessionManager.tryGetByToken(request.chatSession.token);
     if (!chatSession) {
       throw new EndpointError('Chat session not found', 404);
     }

@@ -6,12 +6,16 @@ import type { Endpoint } from './endpoint';
 import { ChatSessionActivator } from '../chat-session-activator';
 import { SseResponse } from './sse-response';
 import { ChatSessionInitializerError } from '../chat-session-resolver';
+import { ChatAuthContext, ChatAuthContextResolver } from '../chat-auth-context-resolver';
 
 export class RestoreChatEndpoint implements Endpoint {
   public readonly method = 'post';
   public readonly path = '/api/chat';
 
-  public constructor(private readonly activator: ChatSessionActivator) {}
+  public constructor(
+    private readonly authContextResolver: ChatAuthContextResolver,
+    private readonly activator: ChatSessionActivator
+  ) {}
 
   public async handle(req: Request, res: Response) {
     const { data: request, error } = restoreChatRequestSchema.safeParse(req.body);
@@ -21,9 +25,24 @@ export class RestoreChatEndpoint implements Endpoint {
     }
 
     const abortSignal = AbortSignal.timeout(3_000);
-    let chatSession: ChatSession;
+
+    let authContext: ChatAuthContext;
     try {
-      chatSession = await this.activator.getOrActivate(abortSignal, req, request);
+      authContext = this.authContextResolver.resolve(req);
+    } catch (e) {
+      res.status(401).json({ error: 'Unauthorized' }).end();
+      return;
+    }
+
+    let session: ChatSession;
+    try {
+      session = await this.activator.getOrActivate(
+        abortSignal,
+        request.frontendTools,
+        request.frontendToolsHash,
+        request.channelName,
+        authContext
+      );
     } catch (e) {
       if (ChatSessionInitializerError.is(e)) {
         res.status(400).json({ error: e.message }).end();
@@ -47,21 +66,21 @@ export class RestoreChatEndpoint implements Endpoint {
     }
 
     sseResponse.send({
-      sessionToken: chatSession.token,
-      restoredMessages: chatSession.getAll()
+      sessionToken: session.token,
+      restoredMessages: session.getAll()
     });
 
-    chatSession.onMessageStarted.subscribe(onMessageCompletedOrFailed);
-    chatSession.onMessageCompleted.subscribe(onMessageCompletedOrFailed);
-    chatSession.onMessageFailed.subscribe(onMessageCompletedOrFailed);
-    chatSession.onReset.subscribe(onReset);
-    chatSession.onDestroyed.subscribe(onDestroyed);
+    session.onMessageStarted.subscribe(onMessageCompletedOrFailed);
+    session.onMessageCompleted.subscribe(onMessageCompletedOrFailed);
+    session.onMessageFailed.subscribe(onMessageCompletedOrFailed);
+    session.onReset.subscribe(onReset);
+    session.onDestroyed.subscribe(onDestroyed);
 
     sseResponse.onClose(() => {
-      chatSession.onMessageStarted.unsubscribe(onMessageCompletedOrFailed);
-      chatSession.onMessageCompleted.unsubscribe(onMessageCompletedOrFailed);
-      chatSession.onMessageFailed.unsubscribe(onMessageCompletedOrFailed);
-      chatSession.onReset.unsubscribe(onReset);
+      session.onMessageStarted.unsubscribe(onMessageCompletedOrFailed);
+      session.onMessageCompleted.unsubscribe(onMessageCompletedOrFailed);
+      session.onMessageFailed.unsubscribe(onMessageCompletedOrFailed);
+      session.onReset.unsubscribe(onReset);
     });
   }
 }

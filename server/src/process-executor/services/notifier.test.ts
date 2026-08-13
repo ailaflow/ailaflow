@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { ChatSession } from '@aibindkit/llm';
 import { UserChatSessionProvider } from '../../chat-session/user-chat-session-provider';
 import { UserAccessExpressionUserQuerier } from '../../queriers/user-access-expression/user-access-expression-user-querier';
 import { Notification } from '../../repositories/notification/notification';
@@ -12,7 +13,7 @@ test('persists a notification for every matched user', async () => {
     queryUserNames: async () => ['alice', 'bob']
   } as UserAccessExpressionUserQuerier;
   const sessionProvider = {
-    tryGetMainChannel: () => undefined
+    getDefault: async () => ({ queueUserMessage: () => undefined }) as unknown as ChatSession
   } as unknown as UserChatSessionProvider;
   const notificationRepository = {
     setup: async () => undefined,

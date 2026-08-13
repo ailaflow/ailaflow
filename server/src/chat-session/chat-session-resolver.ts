@@ -2,13 +2,12 @@ import {
   ChatSessionInitializerError,
   ChatSessionResolver as BaseChatSessionResolver,
   LlmClientWithSettings,
-  ResolvedChatSession
+  ResolvedChatSession,
+  ChatAuthContext
 } from '@aibindkit/express';
 import { readFileSync } from 'fs';
-import { getAuthToken } from '../api/auth/auth-middleware';
 import { ServerPaths } from '../core/server-paths';
 import { UserToolSetProvider } from './user-tools/user-tool-set-provider';
-import { Request } from 'express';
 import { ChatSessionId } from './chat-session-id';
 import { LlmClientProvider } from '../llm/llm-client-provider';
 import { LlmProviderConfigurationError } from '../repositories/llm-configuration/llm-provider-configuration';
@@ -28,27 +27,30 @@ export class ChatSessionResolver implements BaseChatSessionResolver {
     this.adminSystemPrompt = readFileSync(`${path}/admin-prompt.md`, 'utf-8');
   }
 
-  public resolve(httpRequest: Request, params: Record<string, unknown>): ResolvedChatSession {
-    const authToken = getAuthToken(httpRequest);
-    if (params.admin === true) {
+  public resolve(channelName: string, authContext: ChatAuthContext): ResolvedChatSession {
+    const userName = authContext['userName'] as string;
+
+    if (channelName === 'admin') {
       return {
-        sessionId: ChatSessionId.createAdmin(authToken.userName).encode(),
+        sessionId: ChatSessionId.createAdmin(userName).encode(),
         backendTools: [],
         backendToolsHash: '',
         systemPrompt: this.adminSystemPrompt,
         getLlmClientWithSettings: abortSignal => this.getLlmClientWithSettings(abortSignal, LlmUseCase.ADMIN_CHAT)
       };
     }
-    if (typeof params.name === 'string') {
-      // TODO: support user-defined channels
+
+    if (channelName === 'default') {
       return {
-        sessionId: ChatSessionId.createUserMainChannel(authToken.userName).encode(),
+        sessionId: ChatSessionId.createUserMainChannel(userName).encode(),
         backendTools: this.userToolSetProvider.tools,
         backendToolsHash: this.userToolSetProvider.hash,
         systemPrompt: this.userSystemPrompt,
         getLlmClientWithSettings: abortSignal => this.getLlmClientWithSettings(abortSignal, LlmUseCase.USER_CHAT)
       };
     }
+
+    // TODO: support user-defined channels
     throw new ChatSessionInitializerError('Unsupported chat session channel');
   }
 

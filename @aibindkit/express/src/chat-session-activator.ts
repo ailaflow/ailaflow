@@ -1,8 +1,8 @@
-import type { Request } from 'express';
-import type { ChatMessage, RestoreChatRequest } from '@aibindkit/core';
+import type { ChatMessage, ToolDescriptor } from '@aibindkit/core';
 import { ChatSession, ChatSessionFactory, ChatSessionStorage, FrontendToolFactory, ToolSet } from '@aibindkit/llm';
 import type { ChatSessionResolver } from './chat-session-resolver';
 import { LiveChatSessionStore } from './live-chat-session-store';
+import { ChatAuthContext } from './chat-auth-context-resolver';
 
 export class ChatSessionActivator {
   public constructor(
@@ -13,9 +13,18 @@ export class ChatSessionActivator {
     private readonly frontendToolFactory: FrontendToolFactory
   ) {}
 
-  public async getOrActivate(abortSignal: AbortSignal, httpRequest: Request, restoreRequest: RestoreChatRequest): Promise<ChatSession> {
-    const resolved = this.sessionResolver.resolve(httpRequest, restoreRequest.params);
-    const toolsHash = resolved.backendToolsHash.concat(restoreRequest.frontendToolsHash);
+  /**
+   * @throws {ChatSessionInitializerError} if the session cannot be initialized
+   */
+  public async getOrActivate(
+    abortSignal: AbortSignal,
+    frontendTools: ToolDescriptor[],
+    frontendToolsHash: string,
+    channelName: string,
+    authContext: ChatAuthContext
+  ): Promise<ChatSession> {
+    const resolved = this.sessionResolver.resolve(channelName, authContext);
+    const toolsHash = resolved.backendToolsHash.concat(frontendToolsHash);
 
     let session = this.liveSessionStore.tryGetById(resolved.sessionId);
     let messages: ReadonlyArray<ChatMessage> | null = null;
@@ -28,7 +37,7 @@ export class ChatSessionActivator {
 
     const llm = await resolved.getLlmClientWithSettings(abortSignal);
     const toolSet = new ToolSet();
-    for (const descriptor of restoreRequest.frontendTools) {
+    for (const descriptor of frontendTools) {
       toolSet.addTool(this.frontendToolFactory.create(descriptor));
     }
     for (const tool of resolved.backendTools) {
