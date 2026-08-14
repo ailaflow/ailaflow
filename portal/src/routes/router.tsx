@@ -16,6 +16,7 @@ import { MyNotificationsPage } from './my-notifications/my-notifications-page';
 import { MyTasksPage } from './my-tasks/my-tasks-page';
 import { UserListPage } from './user-list/user-list-page';
 import { UserEditorPage } from './user-editor/user-editor-page';
+import { UserTelegramConfigurationPage } from './user-telegram-configuration/user-telegram-configuration-page';
 import { TableListPage } from './table-list/table-list-page';
 import { TableEditorPage } from './table-editor/table-editor-page';
 import { LogsPage } from './logs/logs-page';
@@ -108,6 +109,10 @@ export const routes = [
       {
         path: '/admin/users/:userName',
         element: <UserEditorPage />
+      },
+      {
+        path: '/admin/users/:userName/telegram',
+        element: <UserTelegramConfigurationPage />
       },
       {
         path: '/admin/logs',

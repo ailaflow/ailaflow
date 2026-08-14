@@ -72,9 +72,13 @@ export function UserListPage() {
       emptyMessage="No users found."
       actions={[
         {
+          label: 'Telegram',
+          getTo: user => `/admin/users/${encodeURIComponent(user.name)}/telegram`
+        },
+        {
           label: <SvgIcon name="pencil" className="h-4 w-4" />,
-          ariaLabel: 'Edit user',
-          getTo: user => `/admin/users/${user.name}`
+          ariaLabel: user => `Edit user ${user.name}`,
+          getTo: user => `/admin/users/${encodeURIComponent(user.name)}`
         }
       ]}
     />

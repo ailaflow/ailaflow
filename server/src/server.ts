@@ -44,6 +44,9 @@ import { SqliteUserListQuerier } from './queriers/user-list/sqlite-user-list-que
 import { GetUsersEndpoint } from './api/user/get-users-endpoint';
 import { GetUserEndpoint } from './api/user/get-user-endpoint';
 import { SaveUserEndpoint } from './api/user/save-user-endpoint';
+import { GetUserTelegramConfigurationEndpoint } from './api/user/get-user-telegram-configuration-endpoint';
+import { SaveUserTelegramBotEndpoint } from './api/user/save-user-telegram-bot-endpoint';
+import { DeleteUserTelegramBotEndpoint } from './api/user/delete-user-telegram-bot-endpoint';
 import { ProcessExecutor } from './process-executor/process-executor';
 import { ProcessExecutionStore } from './process-executor/process-execution-store';
 import { SandboxRpcHandlerProvider } from './sandbox/sandbox-rpc-handler-provider';
@@ -127,10 +130,11 @@ import { SandboxHostDiagnostician } from './sandbox/sandbox-host-diagnostician';
 import { ChatAuthContextResolver } from './chat-session/chat-auth-context-resolver';
 import { TelegramConfigurationRepository } from './repositories/telegram-configuration/telegram-configuration-repository';
 import { SqliteTelegramConfigurationRepository } from './repositories/telegram-configuration/sqlite-telegram-configuration-repository';
-import { GetMyTelegramConfigurationEndpoint } from './api/telegram-configuration/get-my-telegram-configuration-endpoint';
-import { SaveMyTelegramBotEndpoint } from './api/telegram-configuration/save-my-telegram-bot-endpoint';
-import { DeleteMyTelegramBotEndpoint } from './api/telegram-configuration/delete-my-telegram-bot-endpoint';
+import { GetMyTelegramConfigurationEndpoint } from './api/my-configuration/get-my-telegram-configuration-endpoint';
+import { SaveMyTelegramBotEndpoint } from './api/my-configuration/save-my-telegram-bot-endpoint';
+import { DeleteMyTelegramBotEndpoint } from './api/my-configuration/delete-my-telegram-bot-endpoint';
 import { TelegramBotApiClient } from './telegram/telegram-bot-api-client';
+import { TelegramConfigurationApi } from './api/common/telegram-configuration-api';
 import { TelegramSynchronizationManager } from './telegram/telegram-synchronization-manager';
 import { TelegramConfigurationChangedEventHandler } from './events/telegram-configuration/telegram-configuration-changed-event-handler';
 
@@ -246,6 +250,7 @@ export class Server {
     eventBus.registerHandler(new LlmConfigurationChangedEventHandler(llmClientProvider, sessionManager));
 
     const telegramClient = new TelegramBotApiClient();
+    const telegramConfigurationApi = new TelegramConfigurationApi(telegramConfigurationRepository, telegramClient, eventBus);
     const telegramSynchronizationManager = new TelegramSynchronizationManager(
       telegramConfigurationRepository,
       telegramClient,
@@ -296,9 +301,9 @@ export class Server {
       new FetchLlmProviderModelsEndpoint(llmConfigurationRepository, llmClientFactory),
       new DeleteLlmProviderEndpoint(llmConfigurationRepository, eventBus),
       new SaveLlmUseCaseAssignmentsEndpoint(llmConfigurationRepository, eventBus),
-      new GetMyTelegramConfigurationEndpoint(telegramConfigurationRepository),
-      new SaveMyTelegramBotEndpoint(telegramConfigurationRepository, telegramClient, eventBus),
-      new DeleteMyTelegramBotEndpoint(telegramConfigurationRepository, eventBus),
+      new GetMyTelegramConfigurationEndpoint(telegramConfigurationApi),
+      new SaveMyTelegramBotEndpoint(telegramConfigurationApi),
+      new DeleteMyTelegramBotEndpoint(telegramConfigurationApi),
       new GetMyNotificationsEndpoint(myNotificationListQuerier),
       new DeleteMyNotificationEndpoint(notificationRepository),
       new GetMyProcessesEndpoint(myProcessListQuerier),
@@ -330,7 +335,10 @@ export class Server {
       new UpsertSandboxEndpoint(sandboxRepository),
       new GetUsersEndpoint(userListQuerier),
       new GetUserEndpoint(userRepository, userAttributesRepository),
-      new SaveUserEndpoint(userRepository, userAttributesRepository, passwordHasher)
+      new SaveUserEndpoint(userRepository, userAttributesRepository, passwordHasher),
+      new GetUserTelegramConfigurationEndpoint(userRepository, telegramConfigurationApi),
+      new SaveUserTelegramBotEndpoint(userRepository, telegramConfigurationApi),
+      new DeleteUserTelegramBotEndpoint(userRepository, telegramConfigurationApi)
     ];
     const router = new Router(app, endpoints, authMiddleware);
     router.setup();

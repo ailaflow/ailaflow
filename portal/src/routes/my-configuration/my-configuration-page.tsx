@@ -3,8 +3,8 @@ import { useSearchParams } from 'react-router';
 import { MyConfigurationView } from '../../views/my-configuration/my-configuration-view';
 import type { MyConfigurationTab } from '../../views/my-configuration/my-configuration-view';
 import { Portal } from '../common/portal';
+import { TelegramConfigurationPage } from '../common/telegram-configuration-page';
 import { MyConfigurationOverviewPage } from './my-configuration-overview-page';
-import { TelegramConfigurationPage } from './telegram-configuration-page';
 
 export function MyConfigurationPage() {
   const [searchParams, setSearchParams] = useSearchParams();

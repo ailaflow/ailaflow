@@ -1,5 +1,6 @@
 import type { TelegramBotConfigurationDto } from '@aila/model';
 import { useState } from 'react';
+import { SvgIcon } from './svg-icons';
 
 export interface TelegramBotDraft {
   channelName: string;
@@ -101,9 +102,15 @@ export function TelegramConfigurationView(props: TelegramConfigurationViewProps)
                       <td className="px-4 py-3">
                         <div className="flex justify-end gap-2">
                           {bot.isConnected && <ActionButton onClick={() => void props.onReconnect(bot)}>Reconnect</ActionButton>}
-                          <ActionButton onClick={() => props.onEdit(bot)}>Edit</ActionButton>
-                          <ActionButton danger onClick={() => void props.onDelete(bot)}>
-                            Delete
+                          <ActionButton ariaLabel={`Edit Telegram bot for channel ${bot.channelName}`} onClick={() => props.onEdit(bot)}>
+                            <SvgIcon name="pencil" className="h-4 w-4" />
+                          </ActionButton>
+                          <ActionButton
+                            danger
+                            ariaLabel={`Delete Telegram bot for channel ${bot.channelName}`}
+                            onClick={() => void props.onDelete(bot)}
+                          >
+                            <SvgIcon name="x" className="h-4 w-4" />
                           </ActionButton>
                         </div>
                       </td>
@@ -184,10 +191,11 @@ function TelegramBotEditor(props: {
   );
 }
 
-function ActionButton(props: { danger?: boolean; onClick(): void; children: React.ReactNode }) {
+function ActionButton(props: { danger?: boolean; ariaLabel?: string; onClick(): void; children: React.ReactNode }) {
   return (
     <button
       type="button"
+      aria-label={props.ariaLabel}
       onClick={props.onClick}
       className={`inline-flex h-8 items-center justify-center rounded-md border bg-white px-3 text-sm font-medium transition-colors ${
         props.danger ? 'border-red-200 text-red-700 hover:bg-red-50' : 'border-slate-200 text-slate-700 hover:bg-slate-100'

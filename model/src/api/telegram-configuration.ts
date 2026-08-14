@@ -11,30 +11,30 @@ export const telegramBotConfigurationDtoSchema = z.object({
 });
 export type TelegramBotConfigurationDto = z.infer<typeof telegramBotConfigurationDtoSchema>;
 
-// getMyTelegramConfiguration
+// getTelegramConfiguration
 
-export const getMyTelegramConfigurationResponseSchema = z.object({
+export const getTelegramConfigurationResponseSchema = z.object({
   bots: z.array(telegramBotConfigurationDtoSchema)
 });
-export type GetMyTelegramConfigurationResponse = z.infer<typeof getMyTelegramConfigurationResponseSchema>;
+export type GetTelegramConfigurationResponse = z.infer<typeof getTelegramConfigurationResponseSchema>;
 
-// saveMyTelegramBot
+// saveTelegramBot
 
-export const saveMyTelegramBotRequestSchema = z.object({
+export const saveTelegramBotRequestSchema = z.object({
   channelName: z.string().trim().min(1),
   botToken: z.string().trim().min(1).optional(),
   reconnect: z.boolean().optional()
 });
-export type SaveMyTelegramBotRequest = z.infer<typeof saveMyTelegramBotRequestSchema>;
+export type SaveTelegramBotRequest = z.infer<typeof saveTelegramBotRequestSchema>;
 
-export const saveMyTelegramBotResponseSchema = z.object({
+export const saveTelegramBotResponseSchema = z.object({
   bot: telegramBotConfigurationDtoSchema
 });
-export type SaveMyTelegramBotResponse = z.infer<typeof saveMyTelegramBotResponseSchema>;
+export type SaveTelegramBotResponse = z.infer<typeof saveTelegramBotResponseSchema>;
 
-// deleteMyTelegramBot
+// deleteTelegramBot
 
-export const deleteMyTelegramBotResponseSchema = z.object({
+export const deleteTelegramBotResponseSchema = z.object({
   channelName: z.string()
 });
-export type DeleteMyTelegramBotResponse = z.infer<typeof deleteMyTelegramBotResponseSchema>;
+export type DeleteTelegramBotResponse = z.infer<typeof deleteTelegramBotResponseSchema>;
