@@ -19,8 +19,17 @@ test('persists Telegram bot configurations per user and channel', async () => {
   await userRepository.insert(abortSignal, new User('alice', 'hash', false));
   await userRepository.insert(abortSignal, new User('bob', 'hash', false));
 
-  await repository.upsert(abortSignal, TelegramBotConfiguration.create('alice', 'default', 'alice-token'));
-  await repository.upsert(abortSignal, TelegramBotConfiguration.create('bob', 'default', 'bob-token'));
+  await repository.upsert(
+    abortSignal,
+    TelegramBotConfiguration.create('alice', 'default', 'alice-token', {
+      botId: 'bot-1',
+      botUserName: 'alice_bot',
+      telegramChatId: 'chat-1',
+      linkCode: 'link-1',
+      lastUpdateId: 41
+    })
+  );
+  await repository.upsert(abortSignal, TelegramBotConfiguration.create('bob', 'default', 'bob-token', { botId: 'bot-2' }));
   await repository.upsert(abortSignal, TelegramBotConfiguration.create('alice', 'support', 'support-token'));
 
   assert.deepEqual(
@@ -31,6 +40,19 @@ test('persists Telegram bot configurations per user and channel', async () => {
     ]
   );
   assert.equal((await repository.tryGet(abortSignal, 'bob', 'default'))?.botToken, 'bob-token');
+  assert.equal((await repository.tryGet(abortSignal, 'alice', 'default'))?.telegramChatId, 'chat-1');
+  assert.equal((await repository.getAll(abortSignal)).length, 3);
+
+  await repository.connectTelegramChat(abortSignal, 'alice', 'default', 'chat-2');
+  await repository.updateLastUpdateId(abortSignal, 'alice', 'default', 42);
+  assert.equal((await repository.tryGet(abortSignal, 'alice', 'default'))?.telegramChatId, 'chat-2');
+  assert.equal((await repository.tryGet(abortSignal, 'alice', 'default'))?.linkCode, null);
+  assert.equal((await repository.tryGet(abortSignal, 'alice', 'default'))?.lastUpdateId, 42);
+
+  await assert.rejects(
+    () => repository.upsert(abortSignal, TelegramBotConfiguration.create('bob', 'support', 'token', { botId: 'bot-1' })),
+    /already configured/
+  );
 
   await repository.upsert(abortSignal, TelegramBotConfiguration.create('alice', 'default', 'updated-token'));
   assert.equal((await repository.tryGet(abortSignal, 'alice', 'default'))?.botToken, 'updated-token');

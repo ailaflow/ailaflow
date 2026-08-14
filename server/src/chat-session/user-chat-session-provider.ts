@@ -4,9 +4,13 @@ import { ChatSession } from '@aibindkit/llm';
 export class UserChatSessionProvider {
   public constructor(private readonly chatSessionManager: ChatSessionManager) {}
 
-  public getDefault(abortSignal: AbortSignal, userName: string): Promise<ChatSession> {
-    return this.chatSessionManager.getOrActivate(abortSignal, 'default', {
+  public get(abortSignal: AbortSignal, userName: string, channelName: string): Promise<ChatSession> {
+    return this.chatSessionManager.getOrActivate(abortSignal, channelName, {
       userName
     });
+  }
+
+  public getDefault(abortSignal: AbortSignal, userName: string): Promise<ChatSession> {
+    return this.get(abortSignal, userName, 'default');
   }
 }

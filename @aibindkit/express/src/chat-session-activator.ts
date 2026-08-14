@@ -33,6 +33,7 @@ export class ChatSessionActivator {
         return session;
       }
       messages = session.dump();
+      session.destroy();
     }
 
     const llm = await resolved.getLlmClientWithSettings(abortSignal);

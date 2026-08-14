@@ -1,7 +1,7 @@
 import { ChatSession } from '@aibindkit/llm';
 import { ChatAuthContext } from './chat-auth-context-resolver';
 import { ChatSessionActivator } from './chat-session-activator';
-import { ToolDescriptor } from '@aibindkit/core';
+import { fnv1a, ToolDescriptor } from '@aibindkit/core';
 import { LiveChatSessionStore } from './live-chat-session-store';
 
 interface Services {
@@ -21,7 +21,7 @@ export class ChatSessionManager {
 
   public getOrActivate(abortSignal: AbortSignal, channelName: string, authContext: ChatAuthContext): Promise<ChatSession> {
     const frontendTools: ToolDescriptor[] = [];
-    const frontendToolsHash = '';
+    const frontendToolsHash = fnv1a(frontendTools);
     return this.getServices().chatSessionActivator.getOrActivate(abortSignal, frontendTools, frontendToolsHash, channelName, authContext);
   }
 

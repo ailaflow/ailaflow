@@ -48,6 +48,10 @@ export class ChatSession {
   }
 
   public async setMetadata(id: number, completedMessageIndex: number, key: string, value: unknown) {
+    if (this.isDestroyed) {
+      throw new Error('Session is destroyed');
+    }
+
     const message = this.stack.trySetMetadata(id, completedMessageIndex, key, value);
     if (!message) {
       throw new Error(`Cannot find message with id ${id} at completed message index ${completedMessageIndex}.`);
@@ -62,6 +66,10 @@ export class ChatSession {
   }
 
   public queueUserMessage(content: string, metadata?: ChatMessageMetadata): number {
+    if (this.isDestroyed) {
+      throw new Error('Session is destroyed');
+    }
+
     if (this.isInterrupted) {
       this.isInterrupted = false;
       this.interruptAbortController = new AbortController();

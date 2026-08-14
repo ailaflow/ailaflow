@@ -1,5 +1,7 @@
 import { DeleteMyTelegramBotResponse } from '@aila/model';
 import { Request } from 'express';
+import { EventBus } from '../../events/event-bus';
+import { TelegramConfigurationChangedEvent } from '../../events/telegram-configuration/telegram-configuration-changed-event';
 import { TelegramConfigurationRepository } from '../../repositories/telegram-configuration/telegram-configuration-repository';
 import { getAuthToken } from '../auth/auth-middleware';
 import { Endpoint } from '../framework/endpoint';
@@ -11,7 +13,10 @@ export class DeleteMyTelegramBotEndpoint implements Endpoint {
   public readonly path = '/api/my-telegram-bots/:channelName';
   public readonly auth = true;
 
-  public constructor(private readonly repository: TelegramConfigurationRepository) {}
+  public constructor(
+    private readonly repository: TelegramConfigurationRepository,
+    private readonly eventBus: EventBus
+  ) {}
 
   public async handle(req: Request): Promise<DeleteMyTelegramBotResponse> {
     const abortSignal = getEndpointAbortSignal(req);
@@ -21,6 +26,7 @@ export class DeleteMyTelegramBotEndpoint implements Endpoint {
     if (!deleted) {
       throw new EndpointError('Telegram bot configuration not found', 404);
     }
+    await this.eventBus.publish(new TelegramConfigurationChangedEvent(userName, channelName));
     return { channelName };
   }
 }

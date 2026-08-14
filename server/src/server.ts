@@ -130,6 +130,9 @@ import { SqliteTelegramConfigurationRepository } from './repositories/telegram-c
 import { GetMyTelegramConfigurationEndpoint } from './api/telegram-configuration/get-my-telegram-configuration-endpoint';
 import { SaveMyTelegramBotEndpoint } from './api/telegram-configuration/save-my-telegram-bot-endpoint';
 import { DeleteMyTelegramBotEndpoint } from './api/telegram-configuration/delete-my-telegram-bot-endpoint';
+import { TelegramBotApiClient } from './telegram/telegram-bot-api-client';
+import { TelegramSynchronizationManager } from './telegram/telegram-synchronization-manager';
+import { TelegramConfigurationChangedEventHandler } from './events/telegram-configuration/telegram-configuration-changed-event-handler';
 
 const PORT = process.env.PORT || 2048;
 
@@ -242,6 +245,14 @@ export class Server {
     eventBus.registerHandler(new ProcessExecutionFinishedEventHandler(userChatSessionProvider));
     eventBus.registerHandler(new LlmConfigurationChangedEventHandler(llmClientProvider, sessionManager));
 
+    const telegramClient = new TelegramBotApiClient();
+    const telegramSynchronizationManager = new TelegramSynchronizationManager(
+      telegramConfigurationRepository,
+      telegramClient,
+      userChatSessionProvider
+    );
+    eventBus.registerHandler(new TelegramConfigurationChangedEventHandler(telegramSynchronizationManager));
+
     const processExecutionPersister = new ProcessExecutionPersister(persistedExecutionRepository);
     const processExecutionServices: ProcessExecutionServices = {
       sandboxInstanceManager,
@@ -286,8 +297,8 @@ export class Server {
       new DeleteLlmProviderEndpoint(llmConfigurationRepository, eventBus),
       new SaveLlmUseCaseAssignmentsEndpoint(llmConfigurationRepository, eventBus),
       new GetMyTelegramConfigurationEndpoint(telegramConfigurationRepository),
-      new SaveMyTelegramBotEndpoint(telegramConfigurationRepository),
-      new DeleteMyTelegramBotEndpoint(telegramConfigurationRepository),
+      new SaveMyTelegramBotEndpoint(telegramConfigurationRepository, telegramClient, eventBus),
+      new DeleteMyTelegramBotEndpoint(telegramConfigurationRepository, eventBus),
       new GetMyNotificationsEndpoint(myNotificationListQuerier),
       new DeleteMyNotificationEndpoint(notificationRepository),
       new GetMyProcessesEndpoint(myProcessListQuerier),
@@ -324,6 +335,8 @@ export class Server {
     const router = new Router(app, endpoints, authMiddleware);
     router.setup();
 
+    await telegramSynchronizationManager.start(abortSignal);
+
     for (const cron of crons) {
       cron.start();
     }
@@ -331,16 +344,18 @@ export class Server {
     app.listen(PORT, () => {
       logger.log(`Server is running on port ${PORT}`);
     });
-    return new Server(sandboxInstanceManager, sqliteDatabases, crons);
+    return new Server(sandboxInstanceManager, sqliteDatabases, crons, telegramSynchronizationManager);
   }
 
   public constructor(
     private readonly sandboxInstanceManager: SandboxInstanceManager,
     private readonly sqliteDatabases: SqliteDatabases,
-    private readonly crons: Cron[]
+    private readonly crons: Cron[],
+    private readonly telegramSynchronizationManager: TelegramSynchronizationManager
   ) {}
 
   public async close() {
+    this.telegramSynchronizationManager.stop();
     this.sandboxInstanceManager.stop();
     this.sqliteDatabases.dispose();
     for (const cron of this.crons) {

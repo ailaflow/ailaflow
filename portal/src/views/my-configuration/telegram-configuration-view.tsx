@@ -17,6 +17,7 @@ export interface TelegramConfigurationViewProps {
   onAdd(): void;
   onEdit(bot: TelegramBotConfigurationDto): void;
   onDelete(bot: TelegramBotConfigurationDto): void | Promise<void>;
+  onReconnect(bot: TelegramBotConfigurationDto): void | Promise<void>;
   onDraftChange(delta: Partial<TelegramBotDraft>): void;
   onEditCancel(): void;
   onSave(): void | Promise<void>;
@@ -61,14 +62,15 @@ export function TelegramConfigurationView(props: TelegramConfigurationViewProps)
               <thead className="border-b border-slate-100 bg-slate-50 text-slate-600">
                 <tr>
                   <th className="px-4 py-3 font-semibold">Channel</th>
-                  <th className="w-40 px-4 py-3 font-semibold">Bot token</th>
-                  <th className="w-44 px-4 py-3 text-right font-semibold">Actions</th>
+                  <th className="w-48 px-4 py-3 font-semibold">Bot</th>
+                  <th className="w-48 px-4 py-3 font-semibold">Connection</th>
+                  <th className="w-60 px-4 py-3 text-right font-semibold">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {props.bots.length === 0 ? (
                   <tr>
-                    <td colSpan={3} className="px-4 py-8 text-center text-slate-500">
+                    <td colSpan={4} className="px-4 py-8 text-center text-slate-500">
                       No Telegram bots configured.
                     </td>
                   </tr>
@@ -76,9 +78,29 @@ export function TelegramConfigurationView(props: TelegramConfigurationViewProps)
                   props.bots.map(bot => (
                     <tr key={bot.channelName} className="hover:bg-slate-50">
                       <td className="px-4 py-3 font-medium text-slate-900">{bot.channelName}</td>
-                      <td className="px-4 py-3 text-slate-600">{bot.hasBotToken ? 'Configured' : 'Missing'}</td>
+                      <td className="px-4 py-3 text-slate-600">{bot.botUserName ? `@${bot.botUserName}` : 'Configured'}</td>
+                      <td className="px-4 py-3 text-slate-600">
+                        {bot.isConnected ? (
+                          'Connected'
+                        ) : bot.botUserName && bot.linkCode ? (
+                          <div className="flex flex-col items-start gap-1">
+                            <a
+                              href={`https://t.me/${bot.botUserName}?start=${bot.linkCode}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="font-medium text-blue-700 hover:underline"
+                            >
+                              Connect Telegram
+                            </a>
+                            <span className="font-mono text-xs text-slate-500">Code: {bot.linkCode}</span>
+                          </div>
+                        ) : (
+                          'Waiting for configuration'
+                        )}
+                      </td>
                       <td className="px-4 py-3">
                         <div className="flex justify-end gap-2">
+                          {bot.isConnected && <ActionButton onClick={() => void props.onReconnect(bot)}>Reconnect</ActionButton>}
                           <ActionButton onClick={() => props.onEdit(bot)}>Edit</ActionButton>
                           <ActionButton danger onClick={() => void props.onDelete(bot)}>
                             Delete

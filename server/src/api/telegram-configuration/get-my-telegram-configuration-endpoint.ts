@@ -19,7 +19,10 @@ export class GetMyTelegramConfigurationEndpoint implements Endpoint {
     return {
       bots: configurations.map(configuration => ({
         channelName: configuration.channelName,
-        hasBotToken: configuration.botToken.length > 0
+        hasBotToken: configuration.botToken.length > 0,
+        botUserName: configuration.botUserName,
+        isConnected: configuration.telegramChatId !== null,
+        linkCode: configuration.telegramChatId === null ? configuration.linkCode : null
       }))
     };
   }

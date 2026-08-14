@@ -45,13 +45,13 @@ function LoadedTelegramConfigurationPage(props: { initial: GetMyTelegramConfigur
     }
     setIsSaving(true);
     try {
-      await apiClient.telegramConfiguration.save(AbortSignal.timeout(10_000), {
+      const response = await apiClient.telegramConfiguration.save(AbortSignal.timeout(10_000), {
         channelName: draft.channelName,
         botToken: draft.botToken.trim() || undefined
       });
       setBots(current => {
         const next = current.filter(bot => bot.channelName !== draft.channelName);
-        next.push({ channelName: draft.channelName, hasBotToken: true });
+        next.push(response.bot);
         return next.sort((left, right) => left.channelName.localeCompare(right.channelName));
       });
       setDraft(null);
@@ -59,6 +59,21 @@ function LoadedTelegramConfigurationPage(props: { initial: GetMyTelegramConfigur
       window.alert(`Failed to save Telegram bot: ${error instanceof Error ? error.message : String(error)}`);
     } finally {
       setIsSaving(false);
+    }
+  }
+
+  async function reconnectBot(bot: TelegramBotConfigurationDto): Promise<void> {
+    if (!window.confirm(`Reconnect Telegram for channel "${bot.channelName}"? The current Telegram chat will be unlinked.`)) {
+      return;
+    }
+    try {
+      const response = await apiClient.telegramConfiguration.save(AbortSignal.timeout(10_000), {
+        channelName: bot.channelName,
+        reconnect: true
+      });
+      setBots(current => current.map(item => (item.channelName === bot.channelName ? response.bot : item)));
+    } catch (error) {
+      window.alert(`Failed to reconnect Telegram bot: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -86,6 +101,7 @@ function LoadedTelegramConfigurationPage(props: { initial: GetMyTelegramConfigur
       onAdd={addBot}
       onEdit={editBot}
       onDelete={deleteBot}
+      onReconnect={reconnectBot}
       onDraftChange={delta => setDraft(current => (current ? { ...current, ...delta } : null))}
       onEditCancel={() => setDraft(null)}
       onSave={saveBot}

@@ -1,5 +1,10 @@
 import { HttpClient } from '@aibindkit/react';
-import type { DeleteMyTelegramBotResponse, GetMyTelegramConfigurationResponse, SaveMyTelegramBotRequest } from '@aila/model';
+import type {
+  DeleteMyTelegramBotResponse,
+  GetMyTelegramConfigurationResponse,
+  SaveMyTelegramBotRequest,
+  SaveMyTelegramBotResponse
+} from '@aila/model';
 
 export class TelegramConfigurationApiClient {
   public constructor(private readonly client: HttpClient) {}
@@ -8,7 +13,7 @@ export class TelegramConfigurationApiClient {
     return this.client.json(abortSignal, 'GET', '/api/my-telegram-configuration');
   }
 
-  public save(abortSignal: AbortSignal, request: SaveMyTelegramBotRequest): Promise<void> {
+  public save(abortSignal: AbortSignal, request: SaveMyTelegramBotRequest): Promise<SaveMyTelegramBotResponse> {
     return this.client.json(abortSignal, 'POST', '/api/my-telegram-bot', request);
   }
 
