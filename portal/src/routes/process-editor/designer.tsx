@@ -25,7 +25,11 @@ export function Designer() {
       onSelectedStepIdChanged={state.setSelectedStepId}
       rootEditor={<RootEditor state={state} />}
       stepEditor={<StepEditor state={state} />}
-      stepsConfiguration={{}}
+      stepsConfiguration={{
+        iconUrlProvider: (_, type) => {
+          return `/assets/steps/${type}.svg`;
+        }
+      }}
       validatorConfiguration={{
         root: state.rootValidator.validateRoot,
         step: state.stepValidator.validateStep
