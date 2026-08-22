@@ -8,7 +8,7 @@ export class SqliteTableDataRepository implements TableDataRepository {
   private readonly db: DatabaseSync;
 
   public constructor(dbs: SqliteDatabases) {
-    this.db = dbs.modelDb;
+    this.db = dbs.dataDb;
   }
 
   public async tryGet(_: AbortSignal, tableName: string, pk: string): Promise<TableData | null> {

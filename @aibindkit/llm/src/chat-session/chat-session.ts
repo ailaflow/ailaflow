@@ -2,7 +2,7 @@ import type { ChatMessageUpdate, ChatMessageMetadata, ChatMessage } from '@aibin
 import { ChatMessageType, SimpleEvent } from '@aibindkit/core';
 import { Message, MessageCompletionResult } from './messages/message';
 import { MessageFactory } from './messages/message-factory';
-import { ChatSessionStack } from './chat-session-stack';
+import { ChatSessionStack, CompletedChatMessagePointer } from './chat-session-stack';
 import { ChatSessionQueue } from './chat-session-queue';
 import { ToolContext } from './tools';
 import { ChatSessionStorage } from './chat-session-storage';
@@ -63,6 +63,10 @@ export class ChatSession {
       }
     });
     await this.save();
+  }
+
+  public findByMetadata(key: string, value: unknown): CompletedChatMessagePointer | null {
+    return this.stack.findByMetadata(key, value);
   }
 
   public queueUserMessage(content: string, metadata?: ChatMessageMetadata): number {

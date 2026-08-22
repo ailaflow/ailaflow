@@ -32,37 +32,37 @@ test('assigned tasks can be upserted and queried by task and user', async () => 
   await taskRepository.insert(abortSignal, task1);
   await taskRepository.insert(abortSignal, task2);
 
-  await assignedTaskRepository.upsert(abortSignal, AssignedTask.create(task1.id, user1.name));
+  await assignedTaskRepository.upsert(abortSignal, AssignedTask.create(task1.id, user1.name, 'default'));
   await assignedTaskRepository.upsertMultiple(abortSignal, [
-    AssignedTask.create(task1.id, user2.name),
-    new AssignedTask(task2.id, user1.name, 2000, { approved: true, comments: ['ready'] })
+    AssignedTask.create(task1.id, user2.name, 'telegram'),
+    new AssignedTask(task2.id, user1.name, 'default', 2000, { approved: true, comments: ['ready'] })
   ]);
 
   assert.deepEqual(
     await assignedTaskRepository.tryGet(abortSignal, task1.id, user1.name),
-    new AssignedTask(task1.id, user1.name, null, null)
+    new AssignedTask(task1.id, user1.name, 'default', null, null)
   );
   assert.deepEqual(
     await assignedTaskRepository.tryGet(abortSignal, task1.id, user2.name),
-    new AssignedTask(task1.id, user2.name, null, null)
+    new AssignedTask(task1.id, user2.name, 'telegram', null, null)
   );
   assert.deepEqual(
     await assignedTaskRepository.tryGet(abortSignal, task2.id, user1.name),
-    new AssignedTask(task2.id, user1.name, 2000, { approved: true, comments: ['ready'] })
+    new AssignedTask(task2.id, user1.name, 'default', 2000, { approved: true, comments: ['ready'] })
   );
   assert.equal(await assignedTaskRepository.tryGet(abortSignal, 'missing', user1.name), null);
   assert.deepEqual(await assignedTaskRepository.getAllCompleted(abortSignal, task1.id), []);
   assert.deepEqual(await assignedTaskRepository.getAllCompleted(abortSignal, task2.id), [
-    new AssignedTask(task2.id, user1.name, 2000, { approved: true, comments: ['ready'] })
+    new AssignedTask(task2.id, user1.name, 'default', 2000, { approved: true, comments: ['ready'] })
   ]);
 
-  await assignedTaskRepository.upsert(abortSignal, new AssignedTask(task1.id, user1.name, 3000, { decision: 'accepted' }));
+  await assignedTaskRepository.upsert(abortSignal, new AssignedTask(task1.id, user1.name, 'admin', 3000, { decision: 'accepted' }));
   assert.deepEqual(
     await assignedTaskRepository.tryGet(abortSignal, task1.id, user1.name),
-    new AssignedTask(task1.id, user1.name, 3000, { decision: 'accepted' })
+    new AssignedTask(task1.id, user1.name, 'admin', 3000, { decision: 'accepted' })
   );
   assert.deepEqual(await assignedTaskRepository.getAllCompleted(abortSignal, task1.id), [
-    new AssignedTask(task1.id, user1.name, 3000, { decision: 'accepted' })
+    new AssignedTask(task1.id, user1.name, 'admin', 3000, { decision: 'accepted' })
   ]);
   assert.deepEqual(await assignedTaskRepository.getAllCompleted(abortSignal, 'missing'), []);
 
@@ -80,30 +80,6 @@ test('assigned tasks can be upserted and queried by task and user', async () => 
     .all()
     .map(row => ({ ...row }));
   assert.deepEqual(indexes, [{ name: 'assigned_tasks_user_name_idx' }]);
-
-  db.close();
-});
-
-test('setup adds the output values column to an existing assigned tasks table', async () => {
-  const db = new DatabaseSync(':memory:', { open: true });
-  const dbs = { modelDb: db } as SqliteDatabases;
-  const abortSignal = new AbortController().signal;
-  const assignedTaskRepository = new SqliteAssignedTaskRepository(dbs);
-
-  db.exec(`
-    CREATE TABLE assigned_tasks (
-      taskId TEXT NOT NULL,
-      userName TEXT NOT NULL,
-      completedAt INTEGER,
-      PRIMARY KEY (taskId, userName)
-    ) STRICT
-  `);
-  db.prepare(`INSERT INTO assigned_tasks (taskId, userName, completedAt) VALUES (?, ?, ?)`).run('task_1', 'user_1', null);
-
-  await assignedTaskRepository.setup(abortSignal);
-
-  assert.deepEqual(await assignedTaskRepository.tryGet(abortSignal, 'task_1', 'user_1'), new AssignedTask('task_1', 'user_1', null, null));
-  assert.equal(db.prepare(`SELECT type FROM pragma_table_info('assigned_tasks') WHERE name = 'outputValues'`).get()?.type, 'TEXT');
 
   db.close();
 });

@@ -8,7 +8,7 @@ export class SqliteTableDataListQuerier implements TableDataListQuerier {
   private readonly db: DatabaseSync;
 
   public constructor(dbs: SqliteDatabases) {
-    this.db = dbs.modelDb;
+    this.db = dbs.dataDb;
   }
 
   public async query(_: AbortSignal, tableName: string, page: number, pageSize: number): Promise<GetTableDataResponse> {

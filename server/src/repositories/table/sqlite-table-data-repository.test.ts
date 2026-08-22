@@ -10,7 +10,7 @@ import { Table } from './table';
 
 test('upserts and deletes data in a table-specific data table', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
-  const dbs = { modelDb: db } as SqliteDatabases;
+  const dbs = { modelDb: db, dataDb: db } as SqliteDatabases;
   const abortSignal = new AbortController().signal;
   const tableRepository = new SqliteTableRepository(dbs);
   const repository = new SqliteTableDataRepository(dbs);
@@ -48,7 +48,7 @@ test('upserts and deletes data in a table-specific data table', async () => {
 
 test('reports a repository error when the data table does not exist', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
-  const dbs = { modelDb: db } as SqliteDatabases;
+  const dbs = { dataDb: db } as SqliteDatabases;
   const abortSignal = new AbortController().signal;
   const repository = new SqliteTableDataRepository(dbs);
 

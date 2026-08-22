@@ -7,7 +7,7 @@ export class SqliteAuthTokenRepository implements AuthTokenRepository {
   private readonly db: DatabaseSync;
 
   public constructor(dbs: SqliteDatabases) {
-    this.db = dbs.authTokenDb;
+    this.db = dbs.modelDb;
   }
 
   public async setup(_: AbortSignal) {

@@ -42,16 +42,18 @@ export class TaskManager {
       null
     );
 
+    const channelName = this.userChatSessionProvider.getDefaultChannelName();
+
     const assignedTasks = new Array<AssignedTask>(userNames.length);
     for (let i = 0; i < userNames.length; i++) {
-      assignedTasks[i] = AssignedTask.create(task.id, userNames[i]);
+      assignedTasks[i] = AssignedTask.create(task.id, userNames[i], channelName);
     }
 
     await this.taskRepository.insert(abortSignal, task);
     await this.assignedTaskRepository.upsertMultiple(abortSignal, assignedTasks);
 
     for (const userName of userNames) {
-      const session = await this.userChatSessionProvider.getDefault(abortSignal, userName);
+      const session = await this.userChatSessionProvider.get(abortSignal, userName, channelName);
       if (session) {
         session.queueUserMessage(`>>>>>>>>\nYou have a new task assigned: "${step.name}", title: "${task.title}"\n<<<<<<<<`, {
           internal: true,

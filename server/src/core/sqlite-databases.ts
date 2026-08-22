@@ -3,17 +3,15 @@ import { ServerPaths } from './server-paths';
 import { join } from 'path';
 
 export class SqliteDatabases {
-  public readonly authTokenDb: DatabaseSync;
   public readonly modelDb: DatabaseSync;
-  public readonly chatSessionDb: DatabaseSync;
+  public readonly dataDb: DatabaseSync;
   private readonly dbs: DatabaseSync[] = [];
 
   public constructor(serverPaths: ServerPaths) {
     const dataFolderPath = serverPaths.getDatabaseFolderPath();
 
-    this.authTokenDb = this.create(join(dataFolderPath, 'authToken.db'));
     this.modelDb = this.create(join(dataFolderPath, 'model.db'));
-    this.chatSessionDb = this.create(join(dataFolderPath, 'chatSession.db'));
+    this.dataDb = this.create(join(dataFolderPath, 'data.db'));
   }
 
   private create(filePath: string): DatabaseSync {

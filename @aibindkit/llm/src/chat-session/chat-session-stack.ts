@@ -1,6 +1,11 @@
 import type { ChatMessage, CompletedChatMessage, LlmMessage } from '@aibindkit/core';
 import { Message } from './messages/message';
 
+export interface CompletedChatMessagePointer {
+  id: number;
+  completedMessageIndex: number;
+}
+
 export class ChatSessionStack {
   private readonly stack: ChatMessage[] = [];
   private readonly map = new Map<number, ChatMessage>();
@@ -58,6 +63,20 @@ export class ChatSessionStack {
       }
       metadata[key] = value;
       return message;
+    }
+    return null;
+  }
+
+  public findByMetadata(key: string, value: unknown): CompletedChatMessagePointer | null {
+    for (const message of this.stack) {
+      if (message.completedMessages) {
+        for (let i = 0; i < message.completedMessages.length; i++) {
+          const completedMessage = message.completedMessages[i];
+          if (completedMessage.metadata && completedMessage.metadata[key] === value) {
+            return { id: message.id, completedMessageIndex: i };
+          }
+        }
+      }
     }
     return null;
   }

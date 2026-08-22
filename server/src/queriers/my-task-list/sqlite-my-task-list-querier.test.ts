@@ -34,11 +34,11 @@ test('queries tasks assigned to the current user', async () => {
   await taskRepository.insert(abortSignal, new Task('task_5', 'No deadline', 'execution_1', [], null, null, null, 1004));
 
   await assignedTaskRepository.upsertMultiple(abortSignal, [
-    AssignedTask.create('task_1', 'alice'),
-    AssignedTask.create('task_2', 'alice'),
-    new AssignedTask('task_3', 'alice', 4500, null),
-    AssignedTask.create('task_4', 'bob'),
-    AssignedTask.create('task_5', 'alice')
+    AssignedTask.create('task_1', 'alice', 'default'),
+    AssignedTask.create('task_2', 'alice', 'default'),
+    new AssignedTask('task_3', 'alice', 'default', 4500, null),
+    AssignedTask.create('task_4', 'bob', 'default'),
+    AssignedTask.create('task_5', 'alice', 'default')
   ]);
 
   assert.deepEqual(await querier.query(abortSignal, 'alice', false, 1, 2), {

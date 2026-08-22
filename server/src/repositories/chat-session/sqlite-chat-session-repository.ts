@@ -7,7 +7,7 @@ export class SqliteChatSessionRepository implements ChatSessionRepository {
   private readonly db: DatabaseSync;
 
   public constructor(dbs: SqliteDatabases) {
-    this.db = dbs.chatSessionDb;
+    this.db = dbs.dataDb;
   }
 
   public async setup(_: AbortSignal): Promise<void> {

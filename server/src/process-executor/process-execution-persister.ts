@@ -4,6 +4,7 @@ import { PersistedExecutionRepository } from '../repositories/persisted-executio
 import { SerializedWorkflowMachineSnapshot } from 'sequential-workflow-machine';
 import { ProcessExecutionGlobalState } from './process-execution-global-state';
 import { ProcessExecutionSnapshotTransformer } from './process-execution-snapshot-transformer';
+import { ProcessExecutionOrigin } from './process-execution';
 
 export class ProcessExecutionPersister {
   public constructor(private readonly persistedExecutionRepository: PersistedExecutionRepository) {}
@@ -11,12 +12,12 @@ export class ProcessExecutionPersister {
   public async persist(
     process: Process,
     executionId: string,
-    startedBy: string,
+    origin: ProcessExecutionOrigin,
     serializedSnapshot: SerializedWorkflowMachineSnapshot<ProcessExecutionGlobalState>
   ): Promise<void> {
     const execution = PersistedExecution.create(
       executionId,
-      startedBy,
+      origin,
       process.name,
       process.hash,
       ProcessExecutionSnapshotTransformer.serialize(serializedSnapshot)

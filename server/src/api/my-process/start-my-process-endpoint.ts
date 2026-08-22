@@ -8,6 +8,7 @@ import { startMyProcessRequestSchema, StartMyProcessResponse } from '@aila/model
 import { LazyProcessExecutor } from '../../process-executor/lazy-process-executor';
 import { EndpointError } from '../framework/endpoint-error';
 import { ChatSessionManager } from '@aibindkit/express';
+import { ProcessExecutionOrigin } from '../../process-executor/process-execution';
 
 export class StartMyProcessEndpoint implements Endpoint {
   public readonly method = 'post';
@@ -41,7 +42,11 @@ export class StartMyProcessEndpoint implements Endpoint {
       throw new EndpointError('Chat session not found', 404);
     }
 
-    const result = await this.lazyProcessExecutor.execute(abortSignal, null, authToken.userName, process, request.startValues);
+    const origin: ProcessExecutionOrigin = {
+      userName: authToken.userName,
+      chatSessionId: chatSession.id
+    };
+    const result = await this.lazyProcessExecutor.execute(abortSignal, null, origin, process, request.startValues);
     if (result.finished) {
       throw new Error('Unexpected behavior');
     }

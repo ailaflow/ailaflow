@@ -11,7 +11,7 @@ import { getAuthToken } from '../auth/auth-middleware';
 import { IncompleteAssignedTaskCountQuerier } from '../../queriers/task/incomplete-assigned-task-count-querier';
 import { Task } from '../../repositories/task/task';
 import { Logger } from '../../core/logger';
-import { ChatSessionManager } from '@aibindkit/express';
+import { UserChatSessionProvider } from '../../chat-session/user-chat-session-provider';
 
 export class SubmitMyTaskEndpoint implements Endpoint {
   private readonly logger = new Logger(SubmitMyTaskEndpoint.name);
@@ -24,7 +24,7 @@ export class SubmitMyTaskEndpoint implements Endpoint {
     private readonly resumer: ProcessExecutionResumer,
     private readonly userAssignedTaskProvider: UserAssignedTaskProvider,
     private readonly assignedTaskRepository: AssignedTaskRepository,
-    private readonly chatSessionManager: ChatSessionManager,
+    private readonly userChatSessionProvider: UserChatSessionProvider,
     private readonly incompleteAssignedTaskCountQuerier: IncompleteAssignedTaskCountQuerier
   ) {}
 
@@ -39,7 +39,7 @@ export class SubmitMyTaskEndpoint implements Endpoint {
     }
     const { assignedTask, task } = userAssignedTask;
 
-    const chatSession = this.chatSessionManager.tryGetByToken(request.chatSession.token);
+    const chatSession = await this.userChatSessionProvider.get(abortSignal, userName, assignedTask.channelName);
     if (!chatSession) {
       throw new EndpointError('Chat session not found', 404);
     }
@@ -47,7 +47,10 @@ export class SubmitMyTaskEndpoint implements Endpoint {
     assignedTask.complete(request.outputValues);
     await this.assignedTaskRepository.upsert(abortSignal, assignedTask);
 
-    await chatSession.setMetadata(request.chatSession.messageId, request.chatSession.completedMessageIndex, 'finished', true);
+    const pointer = chatSession.findByMetadata('taskId', assignedTask.taskId);
+    if (pointer) {
+      await chatSession.setMetadata(pointer.id, pointer.completedMessageIndex, 'finished', true);
+    }
 
     const count = await this.incompleteAssignedTaskCountQuerier.queryIncompleteAssignedTaskCount(abortSignal, task.id);
     if (count === 0) {

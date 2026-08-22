@@ -20,6 +20,11 @@ export interface ProcessExecutionRunOptions {
   signalOnFirstWait?: SignalPayload;
 }
 
+export interface ProcessExecutionOrigin {
+  userName: string;
+  chatSessionId?: string;
+}
+
 export class ProcessExecution {
   public readonly onCurrentStepChanged = new SimpleEvent<string | null>();
   public readonly onFinished = new SimpleEvent<ProcessExecutionResult>();
@@ -29,7 +34,7 @@ export class ProcessExecution {
 
   public constructor(
     public readonly id: string,
-    public readonly startedBy: string,
+    public readonly origin: ProcessExecutionOrigin,
     private readonly process: Process,
     private readonly interpreter: WorkflowMachineInterpreter<ProcessExecutionGlobalState>,
     private readonly logger: ProcessLogger,
@@ -90,7 +95,7 @@ export class ProcessExecution {
     }
     this.paused = true;
     try {
-      await this.processExecutionPersister.persist(this.process, this.id, this.startedBy, serializedSnapshot);
+      await this.processExecutionPersister.persist(this.process, this.id, this.origin, serializedSnapshot);
       this.onPaused.emit();
     } catch (e) {
       this.onFinished.emit({

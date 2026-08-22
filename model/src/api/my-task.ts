@@ -36,12 +36,7 @@ export type GetMyTaskFormResponse = z.infer<typeof getMyTaskFormResponseSchema>;
 
 export const submitMyTaskRequestSchema = z.object({
   taskId: z.string(),
-  outputValues: z.record(z.string(), z.unknown()),
-  chatSession: z.object({
-    token: z.string(),
-    messageId: z.number(),
-    completedMessageIndex: z.number()
-  })
+  outputValues: z.record(z.string(), z.unknown())
 });
 
 export const submitMyTaskResponseSchema = z.object({

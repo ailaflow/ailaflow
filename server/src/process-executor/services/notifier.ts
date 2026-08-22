@@ -16,10 +16,12 @@ export class Notifier {
     const userNames = await this.userAccessExpressionUserQuerier.queryUserNames(abortSignal, expression);
     const notifications = userNames.map(userName => Notification.create(userName, notification));
 
+    const channelName = this.userChatSessionProvider.getDefaultChannelName();
+
     await this.notificationRepository.insertMultiple(abortSignal, notifications);
 
     for (const n of notifications) {
-      const session = await this.userChatSessionProvider.getDefault(abortSignal, n.userName);
+      const session = await this.userChatSessionProvider.get(abortSignal, n.userName, channelName);
       if (session) {
         session.queueUserMessage(`>>>>>>>>\nThe user has a new notification: "${n.message}"\n<<<<<<<<`, {
           internal: true

@@ -42,7 +42,7 @@ export class ChatSessionResolver implements BaseChatSessionResolver {
 
     if (channelName === 'default') {
       return {
-        sessionId: ChatSessionId.createUserMainChannel(userName).encode(),
+        sessionId: ChatSessionId.createUserChannel(userName, channelName).encode(),
         backendTools: this.userToolSetProvider.tools,
         backendToolsHash: this.userToolSetProvider.hash,
         systemPrompt: this.userSystemPrompt,

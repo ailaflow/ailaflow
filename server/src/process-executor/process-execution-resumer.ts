@@ -37,13 +37,13 @@ export class ProcessExecutionResumer {
 
     const execution = this.processExecutor.restore(
       persistedExecution.executionId,
-      persistedExecution.startedBy,
+      persistedExecution.origin,
       process,
       persistedExecution.state
     );
     execution.onFinished.subscribe(result => {
       this.eventBus.publish(
-        new ProcessExecutionFinishedEvent(persistedExecution.executionId, execution.startedBy, persistedExecution.processName, result)
+        new ProcessExecutionFinishedEvent(persistedExecution.executionId, execution.origin, persistedExecution.processName, result)
       );
     });
 

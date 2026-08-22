@@ -7,7 +7,7 @@ import { SqlitePersistedExecutionRepository } from './persisted-execution-reposi
 
 test('persisted execution repository upserts, gets, and deletes an execution', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
-  const dbs = { chatSessionDb: db } as SqliteDatabases;
+  const dbs = { dataDb: db } as SqliteDatabases;
   const abortSignal = new AbortController().signal;
   const repository = new SqlitePersistedExecutionRepository(dbs);
 
@@ -15,7 +15,7 @@ test('persisted execution repository upserts, gets, and deletes an execution', a
 
   const execution = new PersistedExecution(
     'execution_1',
-    'user_1',
+    { userName: 'user_1', chatSessionId: 'session_1' },
     'process_1',
     'hash_1',
     {

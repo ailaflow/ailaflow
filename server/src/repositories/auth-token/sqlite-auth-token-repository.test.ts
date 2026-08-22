@@ -7,7 +7,7 @@ import { SqliteAuthTokenRepository } from './sqlite-auth-token-repository';
 
 test('deletes only outdated auth tokens', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
-  const dbs = { authTokenDb: db } as SqliteDatabases;
+  const dbs = { modelDb: db } as SqliteDatabases;
   const abortSignal = new AbortController().signal;
   const repository = new SqliteAuthTokenRepository(dbs);
 

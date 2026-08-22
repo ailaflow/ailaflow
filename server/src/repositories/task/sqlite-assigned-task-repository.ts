@@ -16,6 +16,7 @@ export class SqliteAssignedTaskRepository implements AssignedTaskRepository {
       CREATE TABLE IF NOT EXISTS assigned_tasks (
         taskId TEXT NOT NULL,
         userName TEXT NOT NULL,
+        channelName TEXT NOT NULL,
         completedAt INTEGER,
         outputValues TEXT,
 
@@ -32,10 +33,6 @@ export class SqliteAssignedTaskRepository implements AssignedTaskRepository {
         CHECK (completedAt IS NULL OR completedAt >= 0)
       ) STRICT
     `);
-    const hasOutputValuesColumn = this.db.prepare(`SELECT 1 FROM pragma_table_info('assigned_tasks') WHERE name = 'outputValues'`).get();
-    if (!hasOutputValuesColumn) {
-      this.db.exec(`ALTER TABLE assigned_tasks ADD COLUMN outputValues TEXT`);
-    }
     this.db.exec(`
       CREATE INDEX IF NOT EXISTS assigned_tasks_user_name_idx
       ON assigned_tasks(userName)
@@ -44,7 +41,7 @@ export class SqliteAssignedTaskRepository implements AssignedTaskRepository {
 
   public async tryGet(_: AbortSignal, taskId: string, userName: string): Promise<AssignedTask | null> {
     const statement = this.db.prepare(`
-      SELECT taskId, userName, completedAt, outputValues
+      SELECT taskId, userName, channelName, completedAt, outputValues
       FROM assigned_tasks
       WHERE taskId = ?
         AND userName = ?
@@ -54,6 +51,7 @@ export class SqliteAssignedTaskRepository implements AssignedTaskRepository {
       | {
           taskId: string;
           userName: string;
+          channelName: string;
           completedAt: number | null;
           outputValues: string | null;
         }
@@ -64,7 +62,7 @@ export class SqliteAssignedTaskRepository implements AssignedTaskRepository {
 
   public async getAllCompleted(_: AbortSignal, taskId: string): Promise<AssignedTask[]> {
     const statement = this.db.prepare(`
-      SELECT taskId, userName, completedAt, outputValues
+      SELECT taskId, userName, channelName, completedAt, outputValues
       FROM assigned_tasks
       WHERE taskId = ?
         AND completedAt IS NOT NULL
@@ -100,9 +98,10 @@ export class SqliteAssignedTaskRepository implements AssignedTaskRepository {
 
   private createUpsertStatement(): ReturnType<DatabaseSync['prepare']> {
     return this.db.prepare(`
-      INSERT INTO assigned_tasks (taskId, userName, completedAt, outputValues)
-      VALUES (?, ?, ?, ?)
+      INSERT INTO assigned_tasks (taskId, userName, channelName, completedAt, outputValues)
+      VALUES (?, ?, ?, ?, ?)
       ON CONFLICT(taskId, userName) DO UPDATE SET
+        channelName = excluded.channelName,
         completedAt = excluded.completedAt,
         outputValues = excluded.outputValues
     `);
@@ -112,6 +111,7 @@ export class SqliteAssignedTaskRepository implements AssignedTaskRepository {
     statement.run(
       assignedTask.taskId,
       assignedTask.userName,
+      assignedTask.channelName,
       assignedTask.completedAt,
       assignedTask.outputValues === null ? null : JSON.stringify(assignedTask.outputValues)
     );
@@ -121,6 +121,7 @@ export class SqliteAssignedTaskRepository implements AssignedTaskRepository {
 interface AssignedTaskRow {
   taskId: string;
   userName: string;
+  channelName: string;
   completedAt: number | null;
   outputValues: string | null;
 }
@@ -129,6 +130,7 @@ function mapAssignedTask(row: AssignedTaskRow): AssignedTask {
   return new AssignedTask(
     row.taskId,
     row.userName,
+    row.channelName,
     row.completedAt,
     row.outputValues === null ? null : (JSON.parse(row.outputValues) as ProcessExecutionVariableValues)
   );

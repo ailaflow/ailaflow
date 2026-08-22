@@ -314,7 +314,7 @@ export class Server {
         processExecutionResumer,
         userAssignedTaskProvider,
         assignedTaskRepository,
-        sessionManager,
+        userChatSessionProvider,
         incompleteAssignedTaskCountQuerier
       ),
       new GetMyProcessStartFormEndpoint(userProcessProvider),

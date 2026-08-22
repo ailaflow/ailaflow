@@ -8,6 +8,7 @@ import { ProcessExecutor } from '../../process-executor/process-executor';
 import { parseBody } from '../framework/parse-request';
 import { getEndpointAbortSignal } from '../framework/endpoint-abort-signal';
 import { getAuthToken } from '../auth/auth-middleware';
+import { ProcessExecutionOrigin } from '../../process-executor/process-execution';
 
 export class TestProcessEndpoint implements Endpoint {
   public readonly method = 'post';
@@ -30,9 +31,12 @@ export class TestProcessEndpoint implements Endpoint {
       throw new EndpointError('Process not found', 404);
     }
 
+    const origin: ProcessExecutionOrigin = {
+      userName
+    };
     // We need to initialize the workflow machine before sending SSE headers.
     // If the workflow machine fails, the user will receive the expected HTTP 500 response.
-    const execution = this.processExecutor.initialize(userName, process, request.input);
+    const execution = this.processExecutor.initialize(origin, process, request.input);
 
     const abortController = new AbortController();
     const sseResponse = new SseResponse<TestProcessUpdate>(res);

@@ -1,6 +1,6 @@
 import { SerializedWorkflowMachineSnapshot, WorkflowMachineInterpreter, createWorkflowMachineBuilder } from 'sequential-workflow-machine';
 import { Process } from '../repositories/process/process';
-import { ProcessExecution } from './process-execution';
+import { ProcessExecution, ProcessExecutionOrigin } from './process-execution';
 import { activitySet } from './activities/activity-set';
 import { randomBytes } from 'crypto';
 import { ProcessExecutionStore } from './process-execution-store';
@@ -19,7 +19,7 @@ export class ProcessExecutor {
     private readonly services: ProcessExecutionServices
   ) {}
 
-  public initialize(startedBy: string, process: Process, input: ProcessExecutionVariableValues): ProcessExecution {
+  public initialize(origin: ProcessExecutionOrigin, process: Process, input: ProcessExecutionVariableValues): ProcessExecution {
     const executionId = randomBytes(24).toString('hex');
 
     const machine = this.builder.build(process.definition);
@@ -29,12 +29,12 @@ export class ProcessExecutor {
       init: () => globalState
     });
 
-    return this.createExecution(process, executionId, startedBy, interpreter, globalState);
+    return this.createExecution(executionId, origin, process, interpreter, globalState);
   }
 
   public restore(
     executionId: string,
-    startedBy: string,
+    origin: ProcessExecutionOrigin,
     process: Process,
     snapshot: SerializedWorkflowMachineSnapshot<SerializedProcessExecutionGlobalState>
   ): ProcessExecution {
@@ -42,19 +42,19 @@ export class ProcessExecutor {
     const machine = this.builder.build(process.definition);
     const interpreter = machine.deserializeSnapshot(restoredSnapshot);
     const globalState = restoredSnapshot.context.globalState;
-    return this.createExecution(process, executionId, startedBy, interpreter, globalState);
+    return this.createExecution(executionId, origin, process, interpreter, globalState);
   }
 
   private createExecution(
-    process: Process,
     executionId: string,
-    startedBy: string,
+    origin: ProcessExecutionOrigin,
+    process: Process,
     interpreter: WorkflowMachineInterpreter<ProcessExecutionGlobalState>,
     globalState: ProcessExecutionGlobalState
   ): ProcessExecution {
     const execution = new ProcessExecution(
       executionId,
-      startedBy,
+      origin,
       process,
       interpreter,
       globalState.logger,
