@@ -23,6 +23,7 @@ export interface ProcessExecutionRunOptions {
 export interface ProcessExecutionOrigin {
   startedBy: string;
   chatSessionId?: string;
+  test?: true;
 }
 
 export class ProcessExecution {

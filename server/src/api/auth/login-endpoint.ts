@@ -29,7 +29,7 @@ export class LoginEndpoint implements Endpoint {
     }
 
     const authToken = await AuthToken.create(user.name, user.isAdmin);
-    await this.authTokenRepository.insert(abortSignal, authToken);
+    await this.authTokenRepository.upsert(abortSignal, authToken);
 
     return { userName: user.name, authToken: authToken.token, isAdmin: user.isAdmin };
   }

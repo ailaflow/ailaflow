@@ -5,6 +5,21 @@ import { SqliteDatabases } from '../../core/sqlite-databases';
 import { AuthToken } from './auth-token';
 import { SqliteAuthTokenRepository } from './sqlite-auth-token-repository';
 
+test('upserts auth tokens', async () => {
+  const db = new DatabaseSync(':memory:', { open: true });
+  const dbs = { modelDb: db } as SqliteDatabases;
+  const abortSignal = new AbortController().signal;
+  const repository = new SqliteAuthTokenRepository(dbs);
+
+  await repository.setup(abortSignal);
+  await repository.upsert(abortSignal, new AuthToken('token', 'alice', 1000, false));
+  await repository.upsert(abortSignal, new AuthToken('token', 'bob', 2000, true));
+
+  assert.deepEqual(await repository.tryGetByToken(abortSignal, 'token'), new AuthToken('token', 'bob', 2000, true));
+
+  db.close();
+});
+
 test('deletes only outdated auth tokens', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
   const dbs = { modelDb: db } as SqliteDatabases;
@@ -12,9 +27,9 @@ test('deletes only outdated auth tokens', async () => {
   const repository = new SqliteAuthTokenRepository(dbs);
 
   await repository.setup(abortSignal);
-  await repository.insert(abortSignal, new AuthToken('outdated', 'alice', 999, false));
-  await repository.insert(abortSignal, new AuthToken('expires-now', 'bob', 1000, false));
-  await repository.insert(abortSignal, new AuthToken('current', 'charlie', 1001, true));
+  await repository.upsert(abortSignal, new AuthToken('outdated', 'alice', 999, false));
+  await repository.upsert(abortSignal, new AuthToken('expires-now', 'bob', 1000, false));
+  await repository.upsert(abortSignal, new AuthToken('current', 'charlie', 1001, true));
 
   await repository.deleteOutdated(abortSignal, 1000);
 

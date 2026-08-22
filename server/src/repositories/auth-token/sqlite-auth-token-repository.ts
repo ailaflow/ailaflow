@@ -12,7 +12,7 @@ export class SqliteAuthTokenRepository implements AuthTokenRepository {
 
   public async setup(_: AbortSignal) {
     this.db.exec(`
-      CREATE TABLE IF NOT EXISTS authTokens (
+      CREATE TABLE IF NOT EXISTS auth_tokens (
         token TEXT PRIMARY KEY,
         userName TEXT NOT NULL,
         isAdmin INTEGER NOT NULL,
@@ -21,10 +21,14 @@ export class SqliteAuthTokenRepository implements AuthTokenRepository {
     `);
   }
 
-  public async insert(_: AbortSignal, authToken: AuthToken): Promise<void> {
+  public async upsert(_: AbortSignal, authToken: AuthToken): Promise<void> {
     const statement = this.db.prepare(`
-      INSERT INTO authTokens (token, userName, isAdmin, expiresAt)
+      INSERT INTO auth_tokens (token, userName, isAdmin, expiresAt)
       VALUES (?, ?, ?, ?)
+      ON CONFLICT(token) DO UPDATE SET
+        userName = excluded.userName,
+        isAdmin = excluded.isAdmin,
+        expiresAt = excluded.expiresAt
     `);
     statement.run(authToken.token, authToken.userName, authToken.isAdmin ? 1 : 0, authToken.expiresAt);
   }
@@ -32,7 +36,7 @@ export class SqliteAuthTokenRepository implements AuthTokenRepository {
   public async tryGetByToken(_: AbortSignal, token: string): Promise<AuthToken | null> {
     const statement = this.db.prepare(`
       SELECT token, userName, isAdmin, expiresAt
-      FROM authTokens
+      FROM auth_tokens
       WHERE token = ?
       LIMIT 1
     `);
@@ -47,17 +51,9 @@ export class SqliteAuthTokenRepository implements AuthTokenRepository {
     return row ? new AuthToken(row.token, row.userName, row.expiresAt, row.isAdmin === 1) : null;
   }
 
-  public async delete(_: AbortSignal, token: string): Promise<void> {
-    const statement = this.db.prepare(`
-      DELETE FROM authTokens
-      WHERE token = ?
-    `);
-    statement.run(token);
-  }
-
   public async deleteOutdated(_: AbortSignal, now: number): Promise<void> {
     const statement = this.db.prepare(`
-      DELETE FROM authTokens
+      DELETE FROM auth_tokens
       WHERE expiresAt < ?
     `);
     statement.run(now);

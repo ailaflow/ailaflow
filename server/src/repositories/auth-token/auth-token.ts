@@ -20,11 +20,21 @@ export class AuthToken {
   public constructor(
     public readonly token: string,
     public readonly userName: string,
-    public readonly expiresAt: number,
+    public expiresAt: number,
     public readonly isAdmin: boolean
   ) {}
 
   public isExpired(): boolean {
     return Date.now() > this.expiresAt;
+  }
+
+  public tryScheduleExpiration(): boolean {
+    const now = Date.now();
+    const isExpired = now > this.expiresAt;
+    if (isExpired) {
+      return false;
+    }
+    this.expiresAt = Date.now() + 10 * 1000;
+    return true;
   }
 }
