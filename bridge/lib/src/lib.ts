@@ -94,6 +94,15 @@ export function log(...texts: unknown[]) {
   process.stdout.write(items.join(' ') + '\n');
 }
 
+/**
+ * Returns the name of the user who started the process with the '@' prefix.
+ * @returns The name of the user who started the process.
+ */
+export async function getStartedBy(): Promise<string> {
+  const name = await rpc<string>('getStartedBy', {});
+  return '@' + name;
+}
+
 function normalizeName(name: string, prefix: string): string {
   if (name.startsWith(prefix)) {
     return name.substring(1);

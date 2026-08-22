@@ -60,10 +60,7 @@ export function ProcessTester(props: ProcessTesterProps) {
   if (startFormData === null) {
     return <ProcessTesterStartForm definition={props.process.definition} onSubmit={data => setStartFormData(data)} />;
   }
-  if (result) {
-    if (!result.success) {
-      return <ProcessTesterError error={result.error} />;
-    }
+  if (result && result.success) {
     const step = result.stepId ? new DefinitionWalker().findById(props.process.definition, result.stepId) : null;
     const returnStep = step && step.type === 'return' ? (step as ReturnStep) : null;
     if (returnStep?.properties.outputForm) {
@@ -82,6 +79,12 @@ export function ProcessTester(props: ProcessTesterProps) {
           </li>
         ))}
       </ul>
+      {result?.error && (
+        <div style={{ color: 'red' }}>
+          <h3>Process Error</h3>
+          <pre>{result.error}</pre>
+        </div>
+      )}
     </div>
   );
 }

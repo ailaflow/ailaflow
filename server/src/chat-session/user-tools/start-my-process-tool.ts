@@ -44,7 +44,7 @@ export class StartMyProcessTool extends ZodTool<Arg> {
     }
 
     const origin: ProcessExecutionOrigin = {
-      userName,
+      startedBy: userName,
       chatSessionId: sessionId
     };
 

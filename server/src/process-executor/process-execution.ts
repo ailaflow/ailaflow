@@ -21,7 +21,7 @@ export interface ProcessExecutionRunOptions {
 }
 
 export interface ProcessExecutionOrigin {
-  userName: string;
+  startedBy: string;
   chatSessionId?: string;
 }
 

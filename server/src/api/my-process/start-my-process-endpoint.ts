@@ -43,7 +43,7 @@ export class StartMyProcessEndpoint implements Endpoint {
     }
 
     const origin: ProcessExecutionOrigin = {
-      userName: authToken.userName,
+      startedBy: authToken.userName,
       chatSessionId: chatSession.id
     };
     const result = await this.lazyProcessExecutor.execute(abortSignal, null, origin, process, request.startValues);

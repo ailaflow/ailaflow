@@ -32,7 +32,7 @@ export class TestProcessEndpoint implements Endpoint {
     }
 
     const origin: ProcessExecutionOrigin = {
-      userName
+      startedBy: userName
     };
     // We need to initialize the workflow machine before sending SSE headers.
     // If the workflow machine fails, the user will receive the expected HTTP 500 response.

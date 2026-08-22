@@ -10,6 +10,7 @@ import {
   ReturnStep,
   ScriptStep,
   TaskStep,
+  TaskStepValidator,
   UserAccessExpressionParser,
   VariableDefinition
 } from '@aila/model';
@@ -306,6 +307,11 @@ export function useProcessEditorAi(state: ProcessEditorState, save: () => Promis
           };
         },
         async taskStep_setOutputVariables(arg) {
+          const error = TaskStepValidator.validateOutputVariables(state.variableValidator, state.definition.value, arg.variableNames);
+          if (error) {
+            return toolError(error);
+          }
+
           const step = state.getStep<TaskStep>(arg.stepId, 'task');
           step.properties.outputVariableNames = arg.variableNames;
           state.notifyDefinitionChange();

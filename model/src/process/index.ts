@@ -10,4 +10,5 @@ export * from './process-step-validator';
 export * from './process-steps';
 export * from './variable-cached-validator';
 export * from './script-definition';
+export * from './task-step-validator';
 export * from './variable-definition';

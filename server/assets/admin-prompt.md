@@ -132,6 +132,10 @@ Tables are admin-created, persistent across executions, and store JSON-compatibl
 
 - `aila.log("Foo")` — writes to the Aila logger, visible in debug mode.
 
+##### Utilities
+
+- `await aila.getStartedBy()` - returns the user name who started this process with the `@` prefix, for example `@robert`.
+
 ### Forms
 
 A form is an HTML form. Each form is built from separate HTML, CSS, and JS fragments. Aila combines these fragments into a single HTML page during rendering, similar to how CodePen works. The form is responsible for reading input variables when needed, rendering the interface, collecting data from the user, validating the data, and submitting the data to Aila. Inside the form, a set of available JS functions allows it to interact with the Aila Form framework. All functions are available in the global `aila` object.

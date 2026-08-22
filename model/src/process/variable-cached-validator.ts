@@ -33,26 +33,20 @@ export class VariableCachedValidator {
     return zod.zod;
   }
 
-  public setErrorIfAnyVariableIsMissing(
-    names: string[],
-    definition: ProcessDefinition,
-    errors: Record<string, string>,
-    key: string
-  ): boolean {
-    for (const name of names) {
-      const error = this.validateVariableReference(name, definition);
-      if (error) {
-        errors[key] = error;
-        return true;
-      }
-    }
-    return false;
-  }
-
   public validateVariableReference(name: string, definition: ProcessDefinition): string | null {
     const variable = this.tryGet(name, definition);
     if (!variable) {
       return `Variable \$${name} does not exist`;
+    }
+    return null;
+  }
+
+  public validateVariablesReference(names: string[], definition: ProcessDefinition): string | null {
+    for (const name of names) {
+      const error = this.validateVariableReference(name, definition);
+      if (error) {
+        return error;
+      }
     }
     return null;
   }

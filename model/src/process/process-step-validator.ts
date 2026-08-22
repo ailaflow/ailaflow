@@ -5,6 +5,7 @@ import { FormDefinitionValidator } from './form-definition-validator';
 import { ProcessDefinition } from './process-definition';
 import { UserAccessExpressionParser } from '../user-access';
 import { ScriptDefinitionValidator } from './script-definition-validator';
+import { TaskStepValidator } from './task-step-validator';
 
 export class ProcessStepValidator {
   public constructor(
@@ -52,27 +53,14 @@ export class ProcessStepValidator {
       errors['properties.form'] = formErrors[0];
     }
 
-    this.variableValidator.setErrorIfAnyVariableIsMissing(
-      step.properties.inputVariableNames,
-      definition,
-      errors,
-      'properties.inputVariableNames'
-    );
-    const hasMissingVariables = this.variableValidator.setErrorIfAnyVariableIsMissing(
-      step.properties.outputVariableNames,
-      definition,
-      errors,
-      'properties.outputVariableNames'
-    );
+    const ivError = this.variableValidator.validateVariablesReference(step.properties.inputVariableNames, definition);
+    if (ivError) {
+      errors['properties.inputVariableNames'] = ivError;
+    }
 
-    if (!hasMissingVariables) {
-      for (const name of step.properties.outputVariableNames) {
-        const variable = this.variableValidator.tryGet(name, definition);
-        if (variable && variable.schema.schema.type !== 'array') {
-          errors['properties.outputVariableNames'] = `Variable \$${name} must be of type array.`;
-          break;
-        }
-      }
+    const ovError = TaskStepValidator.validateOutputVariables(this.variableValidator, definition, step.properties.outputVariableNames);
+    if (ovError) {
+      errors['properties.outputVariableNames'] = ovError;
     }
 
     const ueError = this.validateUserExpression(step.properties.userExpression, definition);
@@ -93,12 +81,10 @@ export class ProcessStepValidator {
   }
 
   private validateReturn(step: ReturnStep, definition: ProcessDefinition, errors: Record<string, string>) {
-    this.variableValidator.setErrorIfAnyVariableIsMissing(
-      step.properties.outputVariableNames,
-      definition,
-      errors,
-      'properties.outputVariableNames'
-    );
+    const ovError = this.variableValidator.validateVariablesReference(step.properties.outputVariableNames, definition);
+    if (ovError) {
+      errors['properties.outputVariableNames'] = ovError;
+    }
   }
 
   private validateStringOrVariable(

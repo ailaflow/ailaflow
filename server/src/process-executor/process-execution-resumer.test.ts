@@ -25,7 +25,7 @@ test('process execution resumer fails when the process hash changed', async () =
       tryGet: async () =>
         new PersistedExecution(
           'execution_1',
-          { userName: 'user_1' },
+          { startedBy: 'user_1' },
           'process_1',
           'old_hash',
           {

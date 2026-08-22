@@ -137,6 +137,7 @@ import { TelegramBotApiClient } from './telegram/telegram-bot-api-client';
 import { TelegramConfigurationApi } from './api/common/telegram-configuration-api';
 import { TelegramSynchronizationManager } from './telegram/telegram-synchronization-manager';
 import { TelegramConfigurationChangedEventHandler } from './events/telegram-configuration/telegram-configuration-changed-event-handler';
+import { GetStartedByRpcHandler } from './process-executor/rpc-handlers/get-started-by-rpc-handler';
 
 const PORT = process.env.PORT || 2048;
 
@@ -230,7 +231,8 @@ export class Server {
       new WriteVariableRpcHandler(processExecutionStore),
       new ReadTablePageRpcHandler(tableDataListQuerier),
       new WriteTableRpcHandler(tableDataRepository),
-      new TryReadTableRpcHandler(tableDataRepository)
+      new TryReadTableRpcHandler(tableDataRepository),
+      new GetStartedByRpcHandler(processExecutionStore)
     ]);
 
     const sessionManager = new ChatSessionManager();
