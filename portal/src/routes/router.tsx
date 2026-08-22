@@ -14,6 +14,7 @@ import { MyConfigurationPage } from './my-configuration/my-configuration-page';
 import { MyProcessListPage } from './my-process-list/my-process-list-page';
 import { MyNotificationsPage } from './my-notifications/my-notifications-page';
 import { MyTasksPage } from './my-tasks/my-tasks-page';
+import { MyTaskPage } from './my-tasks/my-task-page';
 import { UserListPage } from './user-list/user-list-page';
 import { UserEditorPage } from './user-editor/user-editor-page';
 import { UserTelegramConfigurationPage } from './user-telegram-configuration/user-telegram-configuration-page';
@@ -46,6 +47,10 @@ export const routes = [
   {
     path: '/my-tasks',
     element: <AuthGate route={<MyTasksPage />} />
+  },
+  {
+    path: '/my-tasks/:taskId',
+    element: <AuthGate route={<MyTaskPage />} />
   },
   {
     path: '/my-notifications',

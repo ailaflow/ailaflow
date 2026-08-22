@@ -35,12 +35,7 @@ export function TaskFormMessage(props: TaskFormMessageProps) {
       async submit(abortSignal: AbortSignal, outputValues: Record<string, unknown>) {
         await apiClient.myTask.submitMyTask(abortSignal, {
           taskId: props.taskId,
-          outputValues,
-          chatSession: {
-            token: props.sessionToken,
-            messageId: props.messageId,
-            completedMessageIndex: props.completedMessageIndex
-          }
+          outputValues
         });
       }
     }),

@@ -14,6 +14,7 @@ export interface ResourceListColumn<T> {
 export interface ResourceListAction<T> {
   label: ReactNode | ((item: T) => ReactNode);
   ariaLabel?: string | ((item: T) => string);
+  isVisible?(item: T): boolean;
   getTo?(item: T): string;
   onClick?(item: T): void | Promise<void>;
   danger?: boolean;
@@ -99,6 +100,9 @@ export function ResourceListView<T>(props: ResourceListViewProps<T>) {
                           <td className="px-3 py-3">
                             <div className="flex flex-nowrap justify-end gap-2">
                               {props.actions.map((action, i) => {
+                                if (action.isVisible && !action.isVisible(row)) {
+                                  return null;
+                                }
                                 const label = typeof action.label === 'function' ? action.label(row) : action.label;
                                 const ariaLabel = typeof action.ariaLabel === 'function' ? action.ariaLabel(row) : action.ariaLabel;
                                 const className = `inline-flex h-8 shrink-0 cursor-pointer items-center justify-center rounded-md border bg-white px-3 text-sm font-medium transition-colors ${

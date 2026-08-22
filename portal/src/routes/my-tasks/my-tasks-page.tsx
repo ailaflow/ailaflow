@@ -95,6 +95,14 @@ export function MyTasksPage() {
         rows={data.tasks}
         getRowKey={task => task.id}
         emptyMessage="No tasks found."
+        actions={[
+          {
+            label: 'Open',
+            ariaLabel: task => `Open task ${task.title}`,
+            isVisible: task => task.completedAt === undefined,
+            getTo: task => `/my-tasks/${encodeURIComponent(task.id)}`
+          }
+        ]}
         pagination={{
           page: data.page,
           pageSize: data.pageSize,
