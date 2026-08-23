@@ -1,5 +1,5 @@
 import { useLoader, toolError, toolSuccess, toolWait } from '@aibindkit/react';
-import { useNavigate } from 'react-router';
+import { useNavigate, useSearchParams } from 'react-router';
 import { useApiClient } from '../../auth/auth-context';
 import { PortalErrorView } from '../../views/portal/portal-error-view';
 import { PortalLoadingView } from '../../views/portal/portal-loading-view';
@@ -8,13 +8,25 @@ import { ResourceHeaderButtonView } from '../../views/resource-list/resource-hea
 import { useAiStore } from '../common/admin-portal';
 import { SvgIcon } from '../../views/common/svg-icons';
 
+const PAGE_SIZE = 20;
+
 export function UserListPage() {
   const apiClient = useApiClient();
   const navigate = useNavigate();
-  const loader = useLoader(abortSignal => apiClient.user.getUsers(abortSignal), [apiClient]);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const page = Number(searchParams.get('page') ?? 1);
+  const loader = useLoader(abortSignal => apiClient.user.getUsers(abortSignal, { page, pageSize: PAGE_SIZE }), [apiClient, page]);
 
   function createNew() {
     return navigate('/admin/create-user');
+  }
+
+  function changePage(value: number): void {
+    setSearchParams(current => {
+      const next = new URLSearchParams(current);
+      next.set('page', String(value));
+      return next;
+    });
   }
 
   useAiStore(
@@ -70,6 +82,12 @@ export function UserListPage() {
       rows={loader.data.users}
       getRowKey={user => user.name}
       emptyMessage="No users found."
+      pagination={{
+        page: loader.data.page,
+        pageSize: loader.data.pageSize,
+        totalCount: loader.data.totalCount,
+        onPageChange: changePage
+      }}
       actions={[
         {
           label: 'Telegram',

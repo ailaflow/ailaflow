@@ -1,4 +1,5 @@
 import z from 'zod/v4';
+import { paginationRequestSchema, paginationResponseSchema } from './pagination';
 
 // getUsers
 
@@ -7,11 +8,16 @@ const userLiteDtoSchema = z.object({
   isAdmin: z.boolean()
 });
 
-export const getUsersResponseSchema = z.object({
+export const getUsersRequestSchema = paginationRequestSchema.extend({
+  search: z.string().optional()
+});
+
+export const getUsersResponseSchema = paginationResponseSchema.extend({
   users: z.array(userLiteDtoSchema)
 });
 
 export type UserLiteDto = z.infer<typeof userLiteDtoSchema>;
+export type GetUsersRequest = z.infer<typeof getUsersRequestSchema>;
 export type GetUsersResponse = z.infer<typeof getUsersResponseSchema>;
 
 // getUser

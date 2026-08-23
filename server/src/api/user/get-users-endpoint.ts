@@ -1,8 +1,9 @@
-import { GetUsersResponse } from '@aila/model';
+import { GetUsersResponse, getUsersRequestSchema } from '@aila/model';
 import { UserListQuerier } from '../../queriers/user-list/user-list-querier';
 import { Endpoint } from '../framework/endpoint';
 import { Request } from 'express';
 import { getEndpointAbortSignal } from '../framework/endpoint-abort-signal';
+import { parseQuery } from '../framework/parse-request';
 
 export class GetUsersEndpoint implements Endpoint {
   public readonly method = 'get';
@@ -14,8 +15,7 @@ export class GetUsersEndpoint implements Endpoint {
 
   public async handle(req: Request): Promise<GetUsersResponse> {
     const abortSignal = getEndpointAbortSignal(req);
-    return {
-      users: await this.querier.query(abortSignal)
-    };
+    const { page, pageSize, search } = parseQuery(getUsersRequestSchema, req.query);
+    return this.querier.query(abortSignal, page, pageSize, search);
   }
 }

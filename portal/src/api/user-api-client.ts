@@ -3,6 +3,7 @@ import type {
   DeleteTelegramBotResponse,
   GetTelegramConfigurationResponse,
   GetUserResponse,
+  GetUsersRequest,
   GetUsersResponse,
   SaveTelegramBotRequest,
   SaveTelegramBotResponse,
@@ -13,8 +14,15 @@ import type {
 export class UserApiClient {
   public constructor(private readonly client: HttpClient) {}
 
-  public getUsers(abortSignal: AbortSignal): Promise<GetUsersResponse> {
-    return this.client.json(abortSignal, 'GET', '/api/users');
+  public getUsers(abortSignal: AbortSignal, request: GetUsersRequest): Promise<GetUsersResponse> {
+    const query = new URLSearchParams({
+      page: String(request.page),
+      pageSize: String(request.pageSize)
+    });
+    if (request.search !== undefined) {
+      query.set('search', request.search);
+    }
+    return this.client.json(abortSignal, 'GET', `/api/users?${query}`);
   }
 
   public getUser(abortSignal: AbortSignal, name: string): Promise<GetUserResponse> {

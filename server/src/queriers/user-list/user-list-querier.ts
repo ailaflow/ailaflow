@@ -1,5 +1,5 @@
-import { UserLiteDto } from '@aila/model';
+import { GetUsersResponse } from '@aila/model';
 
 export interface UserListQuerier {
-  query(abortSignal: AbortSignal): Promise<UserLiteDto[]>;
+  query(abortSignal: AbortSignal, page: number, pageSize: number, search?: string): Promise<GetUsersResponse>;
 }
