@@ -15,11 +15,11 @@ import { ChatToolCallsHandler, FrontEndToolCallsHandler } from './chat-tool-call
 
 export interface ChatProps {
   transport: ChatTransport;
-  frontendTools: ToolDescriptor[];
+  frontendTools?: ToolDescriptor[];
   channelName: string;
   messageRenderer?: ChatMessageRenderer;
   messageFilter?: ChatMessageFilter;
-  frontEndToolCallsHandler: FrontEndToolCallsHandler;
+  frontEndToolCallsHandler?: FrontEndToolCallsHandler;
 }
 
 interface ChatState {
@@ -31,21 +31,20 @@ interface ChatState {
 }
 
 export function Chat(props: ChatProps) {
-  const request = useMemo(
-    () =>
-      ({
-        channelName: props.channelName,
-        frontendTools: props.frontendTools,
-        frontendToolsHash: fnv1a(props.frontendTools)
-      }) satisfies RestoreChatRequest,
-    [props.channelName, props.frontendTools]
-  );
+  const request = useMemo((): RestoreChatRequest => {
+    const frontendTools = props.frontendTools ?? [];
+    return {
+      channelName: props.channelName,
+      frontendTools,
+      frontendToolsHash: fnv1a(frontendTools)
+    };
+  }, [props.channelName, props.frontendTools]);
 
   const lastHandledToolCallId = useRef<number>(-1);
   const pendingToolAbortControllers = useRef(new Set<AbortController>());
 
   const toolCallsHandler = useMemo<ChatToolCallsHandler>(
-    () => new ChatToolCallsHandler(props.transport, props.frontEndToolCallsHandler),
+    () => new ChatToolCallsHandler(props.transport, props.frontEndToolCallsHandler ?? (async () => null)),
     [props.transport, props.frontEndToolCallsHandler]
   );
 

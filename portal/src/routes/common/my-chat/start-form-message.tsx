@@ -1,9 +1,9 @@
 import { useLoader } from '@aibindkit/react';
-import { useApiClient } from '../../auth/auth-context';
-import { FormRenderer } from '../common/form-renderer/form-renderer';
-import { FormAdapter } from '../common/form-renderer/form-adapter';
 import { useMemo } from 'react';
-import { FormMessageView } from '../../views/my-chat/form-message-view';
+import { useApiClient } from '../../../auth/auth-context';
+import { FormAdapter } from '../form-renderer/form-adapter';
+import { FormMessageView } from '../../../views/my-chat/form-message-view';
+import { FormRenderer } from '../form-renderer/form-renderer';
 
 export interface StartFormMessageProps {
   processName: string;
