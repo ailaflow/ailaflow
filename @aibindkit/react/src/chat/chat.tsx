@@ -16,7 +16,7 @@ import { ChatToolCallsHandler, FrontEndToolCallsHandler } from './chat-tool-call
 export interface ChatProps {
   transport: ChatTransport;
   frontendTools?: ToolDescriptor[];
-  channelName: string;
+  sessionKey: string;
   messageRenderer?: ChatMessageRenderer;
   messageFilter?: ChatMessageFilter;
   frontEndToolCallsHandler?: FrontEndToolCallsHandler;
@@ -34,11 +34,11 @@ export function Chat(props: ChatProps) {
   const request = useMemo((): RestoreChatRequest => {
     const frontendTools = props.frontendTools ?? [];
     return {
-      channelName: props.channelName,
+      sessionKey: props.sessionKey,
       frontendTools,
       frontendToolsHash: fnv1a(frontendTools)
     };
-  }, [props.channelName, props.frontendTools]);
+  }, [props.sessionKey, props.frontendTools]);
 
   const lastHandledToolCallId = useRef<number>(-1);
   const pendingToolAbortControllers = useRef(new Set<AbortController>());

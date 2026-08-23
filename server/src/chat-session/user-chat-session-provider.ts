@@ -1,4 +1,4 @@
-import { ChatSessionManager } from '@aibindkit/express';
+import { ChatAuthContext, ChatSessionManager } from '@aibindkit/express';
 import { ChatSession } from '@aibindkit/llm';
 
 export class UserChatSessionProvider {
@@ -9,8 +9,10 @@ export class UserChatSessionProvider {
   }
 
   public get(abortSignal: AbortSignal, userName: string, channelName: string): Promise<ChatSession> {
-    return this.chatSessionManager.getOrActivate(abortSignal, channelName, {
-      userName
-    });
+    const authContext: ChatAuthContext = {
+      userName,
+      isAdmin: false
+    };
+    return this.chatSessionManager.getOrActivate(abortSignal, channelName, authContext);
   }
 }

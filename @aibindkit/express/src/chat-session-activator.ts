@@ -20,10 +20,10 @@ export class ChatSessionActivator {
     abortSignal: AbortSignal,
     frontendTools: ToolDescriptor[],
     frontendToolsHash: string,
-    channelName: string,
+    sessionKey: string,
     authContext: ChatAuthContext
   ): Promise<ChatSession> {
-    const resolved = this.sessionResolver.resolve(channelName, authContext);
+    const resolved = this.sessionResolver.resolve(sessionKey, authContext);
     const toolsHash = resolved.backendToolsHash.concat(frontendToolsHash);
 
     let session = this.liveSessionStore.tryGetById(resolved.sessionId);

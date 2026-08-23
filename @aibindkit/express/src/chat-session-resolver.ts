@@ -26,5 +26,5 @@ export interface ResolvedChatSession {
 }
 
 export interface ChatSessionResolver {
-  resolve(channelName: string, authContext: ChatAuthContext): ResolvedChatSession;
+  resolve(sessionKey: string, authContext: ChatAuthContext): ResolvedChatSession;
 }

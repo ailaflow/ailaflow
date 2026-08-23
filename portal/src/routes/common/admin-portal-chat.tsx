@@ -2,7 +2,7 @@ import { Chat } from '@aibindkit/react';
 import { useAiEnvironment, useAiStore } from './admin-portal';
 import { useApiClient, useSession } from '../../auth/auth-context';
 
-const CHANNEL_NAME = 'admin';
+const SESSION_KEY = 'admin:*';
 
 export function AdminPortalChat() {
   const api = useApiClient();
@@ -37,7 +37,7 @@ export function AdminPortalChat() {
   return (
     <Chat
       transport={api.chat}
-      channelName={CHANNEL_NAME}
+      sessionKey={SESSION_KEY}
       frontendTools={toolDescriptors}
       frontEndToolCallsHandler={frontEndToolCallsHandler}
     />

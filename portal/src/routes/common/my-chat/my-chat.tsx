@@ -57,11 +57,18 @@ function messageFilter(type: ChatMessageType, metadata?: ChatMessageMetadata) {
 }
 
 export interface MyChatProps {
-  channelName: string;
+  sessionKey: string;
 }
 
 export function MyChat(props: MyChatProps) {
   const api = useApiClient();
 
-  return <Chat transport={api.chat} channelName={props.channelName} messageFilter={messageFilter} messageRenderer={messageRenderer} />;
+  return (
+    <Chat
+      transport={api.chat}
+      sessionKey={props.sessionKey}
+      messageFilter={messageFilter}
+      messageRenderer={messageRenderer}
+    />
+  );
 }

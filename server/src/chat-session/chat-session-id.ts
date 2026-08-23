@@ -19,7 +19,11 @@ export class ChatSessionId {
   ) {}
 
   public encode(): string {
-    return `${this.userName}:${this.kind}`;
+    let id = `${this.userName}:${this.kind}`;
+    if (this.channelName) {
+      id += `:${this.channelName}`;
+    }
+    return id;
   }
 
   public getChannelName(): string {

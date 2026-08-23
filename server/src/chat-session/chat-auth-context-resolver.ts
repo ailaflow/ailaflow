@@ -4,8 +4,10 @@ import { getAuthToken } from '../api/auth/auth-middleware';
 
 export class ChatAuthContextResolver implements BaseChatAuthContextResolver {
   public resolve(httpRequest: Request): ChatAuthContext {
+    const authToken = getAuthToken(httpRequest);
     return {
-      userName: getAuthToken(httpRequest).userName
+      userName: authToken.userName,
+      isAdmin: authToken.isAdmin
     };
   }
 }

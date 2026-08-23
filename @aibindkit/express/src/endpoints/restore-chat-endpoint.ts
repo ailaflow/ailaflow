@@ -40,7 +40,7 @@ export class RestoreChatEndpoint implements Endpoint {
         abortSignal,
         request.frontendTools,
         request.frontendToolsHash,
-        request.channelName,
+        request.sessionKey,
         authContext
       );
     } catch (e) {
