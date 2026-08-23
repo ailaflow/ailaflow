@@ -11,7 +11,7 @@ type Arg = z.infer<typeof inputSchema>;
 
 export class OpenMyProcessStartFormTool extends ZodTool<Arg> {
   public constructor(private readonly userProcessProvider: UserProcessProvider) {
-    super('open_start_form_of_my_process', 'Opens a start for given process', inputSchema);
+    super('open_start_form_of_my_process', 'Opens a start form for given process', inputSchema);
   }
 
   protected async handle(abortSignal: AbortSignal, { sessionId }: ToolContext, arg: Arg): Promise<ZodToolExecutionResult> {

@@ -13,6 +13,7 @@ export class UserChatSessionProvider {
       userName,
       isAdmin: false
     };
-    return this.chatSessionManager.getOrActivate(abortSignal, channelName, authContext);
+    const sessionKey = `user:${channelName}`;
+    return this.chatSessionManager.getOrActivate(abortSignal, sessionKey, authContext);
   }
 }

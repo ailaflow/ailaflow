@@ -29,13 +29,11 @@ function messageRenderer(
     );
   }
 
-  const taskForm = completedMessage.metadata?.['taskForm'] as {
-    taskId: string;
-  };
-  if (typeof taskForm === 'object' && taskForm) {
+  const taskId = completedMessage.metadata?.['taskId'] as string | undefined;
+  if (taskId) {
     return (
       <TaskFormMessage
-        taskId={taskForm.taskId}
+        taskId={taskId}
         sessionToken={sessionToken}
         messageId={id}
         completedMessageIndex={completedMessageIndex}
@@ -63,12 +61,5 @@ export interface MyChatProps {
 export function MyChat(props: MyChatProps) {
   const api = useApiClient();
 
-  return (
-    <Chat
-      transport={api.chat}
-      sessionKey={props.sessionKey}
-      messageFilter={messageFilter}
-      messageRenderer={messageRenderer}
-    />
-  );
+  return <Chat transport={api.chat} sessionKey={props.sessionKey} messageFilter={messageFilter} messageRenderer={messageRenderer} />;
 }

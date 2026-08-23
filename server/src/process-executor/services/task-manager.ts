@@ -57,9 +57,7 @@ export class TaskManager {
       if (session) {
         session.queueUserMessage(`>>>>>>>>\nYou have a new task assigned: "${step.name}", title: "${task.title}"\n<<<<<<<<`, {
           internal: true,
-          taskForm: {
-            taskId: task.id
-          }
+          taskId: task.id
         });
       }
     }
