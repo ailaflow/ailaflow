@@ -7,6 +7,7 @@ export type LinkMenuItem = {
   label: string;
   action: 'link';
   href: string;
+  isSelected: boolean;
 };
 
 export type CommandMenuItem = {
@@ -19,9 +20,11 @@ export type CommandMenuItem = {
 export type MenuItem = LinkMenuItem | CommandMenuItem;
 
 function MenuItemView(props: { item: MenuItem; onCommand(command: string): void; onSelect?: () => void }) {
-  const itemClassName =
-    'flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors hover:bg-slate-100 cursor-pointer';
   const { item } = props;
+  const isSelected = item.action === 'link' && item.isSelected;
+  const itemClassName = `flex w-full cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors ${
+    isSelected ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-700 hover:bg-slate-100'
+  }`;
   const content = (
     <>
       <ResourceIcon>{item.icon}</ResourceIcon>
@@ -31,7 +34,12 @@ function MenuItemView(props: { item: MenuItem; onCommand(command: string): void;
 
   if (item.action === 'link') {
     return (
-      <Link to={item.href} className={itemClassName} onClick={props.onSelect}>
+      <Link
+        to={item.href}
+        className={itemClassName}
+        aria-current={item.isSelected ? 'page' : undefined}
+        onClick={props.onSelect}
+      >
         {content}
       </Link>
     );
