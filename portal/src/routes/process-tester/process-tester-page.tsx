@@ -1,10 +1,10 @@
-import { useNavigate, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { useApiClient } from '../../auth/auth-context';
 import { useLoader } from '@aibindkit/react';
 import { ProcessTester } from './process-tester';
-import { ResourceEditorView } from '../../views/resource-editor/resource-editor-view';
 import { PortalLoadingView } from '../../views/portal/portal-loading-view';
 import { PortalErrorView } from '../../views/portal/portal-error-view';
+import { ProcessTesterContext } from './process-tester-context';
 
 export function ProcessTesterPage() {
   const { processName } = useParams();
@@ -12,7 +12,6 @@ export function ProcessTesterPage() {
     throw new Error('Process name is required');
   }
   const apiClient = useApiClient();
-  const navigate = useNavigate();
 
   const { data, error, isLoading } = useLoader(abortSignal => apiClient.process.getProcess(abortSignal, processName), [processName]);
 
@@ -23,21 +22,9 @@ export function ProcessTesterPage() {
     return <PortalErrorView error={error} />;
   }
 
-  function openEditor() {
-    navigate(`/admin/processes/${processName}`);
-  }
-
   return (
-    <ResourceEditorView
-      icon="/"
-      name={data.process.name}
-      isNameReadOnly={true}
-      isNameValid={true}
-      switchLabel="Edit"
-      canSwitch={true}
-      onSwitch={openEditor}
-    >
+    <ProcessTesterContext key={data.process.name} process={data.process}>
       <ProcessTester process={data.process} />
-    </ResourceEditorView>
+    </ProcessTesterContext>
   );
 }

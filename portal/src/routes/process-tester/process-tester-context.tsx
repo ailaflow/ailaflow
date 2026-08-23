@@ -1,12 +1,21 @@
-import type { ProcessDto, TestProcessUpdate } from '@aila/model';
+import { ProcessLogLevel, type ProcessDefinition, type ProcessDto, type ReturnStep, type TestProcessUpdate } from '@aila/model';
 import { createContext, useContext, useEffect, useMemo, useReducer } from 'react';
+import { DefinitionWalker } from 'sequential-workflow-model';
 import { useApiClient, useSession } from '../../auth/auth-context';
+import {
+  ErrorProcessTesterTimelineItem,
+  FormProcessTesterTimelineItem,
+  LogProcessTesterTimelineItem,
+  OutputProcessTesterTimelineItem,
+  ProcessTesterTimelineFormStatus,
+  ProcessTesterTimelineFormType,
+  type ProcessTesterTimelineItem
+} from '../../views/process-tester/process-tester-top-view';
 
 export interface ProcessTesterData {
   process: ProcessDto;
   startFormData: Record<string, unknown> | null;
-  updates: TestProcessUpdate[];
-  error: string | null;
+  timelineItems: ProcessTesterTimelineItem[];
   currentUserName: string;
   chatUserNames: string[];
   activeChatUserName: string;
@@ -51,10 +60,25 @@ export function ProcessTesterContext(props: ProcessTesterContextProps) {
           abortController.signal,
           {
             onMessage(testUpdate) {
-              update(state => ({ updates: [...state.updates, testUpdate] }));
+              update(state => {
+                const timelineItems = createProcessTesterTimelineItems(
+                  testUpdate,
+                  state.process.definition,
+                  Date.now()
+                );
+                return { timelineItems: [...state.timelineItems, ...timelineItems] };
+              });
             },
             onClose() {
-              update(state => ({ updates: [...state.updates, { type: 'Connection closed' } as TestProcessUpdate] }));
+              update(state => {
+                const time = Date.now();
+                const item = new LogProcessTesterTimelineItem(
+                  time,
+                  ProcessLogLevel.INFO,
+                  'Connection closed'
+                );
+                return { timelineItems: [...state.timelineItems, item] };
+              });
             }
           },
           data.process.name,
@@ -62,7 +86,14 @@ export function ProcessTesterContext(props: ProcessTesterContextProps) {
         );
       } catch (e) {
         if (!abortController.signal.aborted) {
-          update({ error: String(e) });
+          update(state => {
+            const item = new ErrorProcessTesterTimelineItem(
+              Date.now(),
+              'Connection error',
+              String(e)
+            );
+            return { timelineItems: [...state.timelineItems, item] };
+          });
         }
       }
     }
@@ -73,7 +104,16 @@ export function ProcessTesterContext(props: ProcessTesterContextProps) {
 
   const state = useMemo<ProcessTesterState>(() => {
     function submitStartForm(startFormData: Record<string, unknown>) {
-      update({ startFormData, updates: [], error: null });
+      update({
+        startFormData,
+        timelineItems: [
+          new FormProcessTesterTimelineItem(
+            Date.now(),
+            ProcessTesterTimelineFormType.START,
+            ProcessTesterTimelineFormStatus.COMPLETED
+          )
+        ]
+      });
     }
 
     function openUserChat(userName: string) {
@@ -129,10 +169,55 @@ function createData(process: ProcessDto, currentUserName: string): ProcessTester
   return {
     process,
     startFormData: null,
-    updates: [],
-    error: null,
+    timelineItems: [
+      new FormProcessTesterTimelineItem(
+        Date.now(),
+        ProcessTesterTimelineFormType.START,
+        ProcessTesterTimelineFormStatus.ACTIVE
+      )
+    ],
     currentUserName,
     chatUserNames: [currentUserName],
     activeChatUserName: currentUserName
   };
+}
+
+function createProcessTesterTimelineItems(
+  update: TestProcessUpdate,
+  definition: ProcessDefinition,
+  receivedAt: number
+): ProcessTesterTimelineItem[] {
+  const items: ProcessTesterTimelineItem[] = [];
+
+  if (update.log) {
+    const [time, level, message] = update.log;
+    items.push(new LogProcessTesterTimelineItem(time, level, message));
+  }
+
+  if (!update.result) {
+    return items;
+  }
+  if (!update.result.success) {
+    items.push(new ErrorProcessTesterTimelineItem(receivedAt, 'Process failed', update.result.error));
+    return items;
+  }
+
+  const result = update.result;
+  const step = result.stepId ? new DefinitionWalker().findById(definition, result.stepId) : null;
+  const returnStep = step?.type === 'return' ? (step as ReturnStep) : null;
+  if (returnStep?.properties.outputForm) {
+    items.push(
+      new FormProcessTesterTimelineItem(
+        receivedAt,
+        ProcessTesterTimelineFormType.OUTPUT,
+        ProcessTesterTimelineFormStatus.COMPLETED,
+        returnStep.properties.outputForm,
+        result.output
+      )
+    );
+  } else {
+    items.push(new OutputProcessTesterTimelineItem(receivedAt, result.output));
+  }
+
+  return items;
 }

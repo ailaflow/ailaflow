@@ -1,39 +1,33 @@
-import type { FormDefinition, ProcessDefinition, ProcessExecutionVariableValues, ReturnStep } from '@aila/model';
+import type { FormDefinition, ProcessDefinition, ProcessExecutionVariableValues } from '@aila/model';
 import { VariableCachedValidator } from '@aila/model';
-import { useMemo } from 'react';
-import { DefinitionWalker } from 'sequential-workflow-model';
-import {
-  ProcessTesterErrorView,
-  ProcessTesterOutputView,
-  ProcessTesterTopView,
-  ProcessTesterUpdatesView
-} from '../../views/process-tester/process-tester-top-view';
+import { useEffect, useMemo, useRef } from 'react';
+import { ProcessTesterTimelineView } from '../../views/process-tester/process-tester-top-view';
 import { FormAdapter } from '../common/form-renderer/form-adapter';
 import { FormRenderer } from '../common/form-renderer/form-renderer';
 import { useProcessTester } from './process-tester-context';
 
 export function ProcessTesterTop() {
   const state = useProcessTester();
-  const result = useMemo(() => state.updates.find(update => update.result)?.result, [state.updates]);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-  let content: React.ReactNode;
-  if (state.error) {
-    content = <ProcessTesterErrorView error={state.error} />;
-  } else if (state.startFormData === null) {
-    content = <ProcessTesterStartForm definition={state.process.definition} onSubmit={state.submitStartForm} />;
-  } else if (result?.success) {
-    const step = result.stepId ? new DefinitionWalker().findById(state.process.definition, result.stepId) : null;
-    const returnStep = step?.type === 'return' ? (step as ReturnStep) : null;
-    content = returnStep?.properties.outputForm ? (
-      <ProcessTesterOutputForm form={returnStep.properties.outputForm} output={result.output} />
-    ) : (
-      <ProcessTesterOutputView output={result.output} />
-    );
-  } else {
-    content = <ProcessTesterUpdatesView updates={state.updates} resultError={result?.error} />;
-  }
+  useEffect(() => {
+    if (state.timelineItems.length === 1) {
+      return;
+    }
+    const animationFrame = requestAnimationFrame(() => {
+      scrollContainerRef.current?.scrollTo({ top: scrollContainerRef.current.scrollHeight, behavior: 'smooth' });
+    });
+    return () => cancelAnimationFrame(animationFrame);
+  }, [state.timelineItems.length]);
 
-  return <ProcessTesterTopView>{content}</ProcessTesterTopView>;
+  return (
+    <ProcessTesterTimelineView
+      items={state.timelineItems}
+      scrollContainerRef={scrollContainerRef}
+      startForm={<ProcessTesterStartForm definition={state.process.definition} onSubmit={state.submitStartForm} />}
+      renderOutputForm={(form, output) => <ProcessTesterOutputForm form={form} output={output} />}
+    />
+  );
 }
 
 function ProcessTesterStartForm(props: { definition: ProcessDefinition; onSubmit: (data: Record<string, unknown>) => void }) {
