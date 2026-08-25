@@ -34,21 +34,20 @@ export class ChatSessionResolver implements BaseChatSessionResolver {
       throw new ChatSessionInitializerError('Invalid auth context');
     }
 
-    const [type, value] = sessionKey.split(':', 2);
+    const [type, v0, v1] = sessionKey.split(':', 3);
     if (isAdmin) {
       if (type === 'admin') {
         return this.resolveAdminChannel(userName);
       }
       if (type === 'test') {
-        const testUserName = value;
-        return this.resolveUserChannel(testUserName, 'test');
+        const testUserName = v0;
+        const channelName = v1;
+        return this.resolveUserChannel(testUserName, true, channelName);
       }
     }
     if (type === 'user') {
-      if (value !== 'default') {
-        throw new Error('Only the default user channel is supported'); // TODO: support user-defined channels
-      }
-      return this.resolveUserChannel(userName, value);
+      const channelName = v0;
+      return this.resolveUserChannel(userName, false, channelName);
     }
 
     // TODO: support user-defined channels
@@ -65,9 +64,12 @@ export class ChatSessionResolver implements BaseChatSessionResolver {
     };
   }
 
-  private resolveUserChannel(userName: string, channelName: string): ResolvedChatSession {
+  private resolveUserChannel(userName: string, isTest: boolean, channelName: string): ResolvedChatSession {
+    if (channelName !== 'default') {
+      throw new Error('Only the default user channel is supported'); // TODO: support user-defined channels
+    }
     return {
-      sessionId: ChatSessionId.createUserChannel(userName, channelName).encode(),
+      sessionId: ChatSessionId.createUserChannel(userName, isTest, channelName).encode(),
       backendTools: this.userToolSetProvider.tools,
       backendToolsHash: this.userToolSetProvider.hash,
       systemPrompt: this.userSystemPrompt,

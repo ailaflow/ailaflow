@@ -23,7 +23,7 @@ export function ProcessTesterChats() {
         onSelectUser={state.selectUserChat}
         onCloseUser={state.closeUserChat}
       >
-        <MyChat sessionKey={`test:${state.activeChatUserName}`} />
+        <MyChat sessionKey={`test:${state.activeChatUserName}:default`} />
       </ProcessTesterChatsView>
       {isUserSearchOpen && <FindUserPopup onSelectUser={openUserChat} onClose={() => setIsUserSearchOpen(false)} />}
     </>

@@ -1,35 +1,31 @@
+export type ChatSessionType = 'admin' | 'user' | 'test';
+
 export class ChatSessionId {
   public static createAdmin(userName: string): ChatSessionId {
-    return new ChatSessionId(userName, 'admin', null);
+    return new ChatSessionId('admin', userName, 'default');
   }
 
-  public static createUserChannel(userName: string, channelName: string): ChatSessionId {
-    return new ChatSessionId(userName, 'channel', channelName);
+  public static createUserChannel(userName: string, isTest: boolean, channelName: string): ChatSessionId {
+    const type = isTest ? 'test' : 'user';
+    return new ChatSessionId(type, userName, channelName);
   }
 
   public static decode(sessionId: string): ChatSessionId {
     const parts = sessionId.split(':', 3);
-    return new ChatSessionId(parts[0], parts[1], parts[2] || null);
+    return new ChatSessionId(parts[1] as ChatSessionType, parts[0], parts[2]);
   }
 
   public constructor(
+    private readonly type: ChatSessionType,
     public readonly userName: string,
-    private readonly kind: string,
-    private readonly channelName: string | null
+    public readonly channelName: string
   ) {}
 
   public encode(): string {
-    let id = `${this.userName}:${this.kind}`;
-    if (this.channelName) {
-      id += `:${this.channelName}`;
-    }
-    return id;
+    return `${this.userName}:${this.type}:${this.channelName}`;
   }
 
-  public getChannelName(): string {
-    if (this.kind === 'channel' && this.channelName) {
-      return this.channelName;
-    }
-    throw new Error('This session is not a user channel');
+  public isTest(): boolean {
+    return this.type === 'test';
   }
 }

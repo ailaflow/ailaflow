@@ -39,7 +39,7 @@ export class SubmitMyTaskEndpoint implements Endpoint {
     }
     const { assignedTask, task } = userAssignedTask;
 
-    const chatSession = await this.userChatSessionProvider.get(abortSignal, userName, assignedTask.channelName);
+    const chatSession = await this.userChatSessionProvider.get(abortSignal, task.isTest, userName, assignedTask.channelName);
     if (!chatSession) {
       throw new EndpointError('Chat session not found', 404);
     }

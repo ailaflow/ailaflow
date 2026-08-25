@@ -24,7 +24,7 @@ test('persists a notification for every matched user', async () => {
   } as NotificationRepository;
   const notifier = new Notifier(userQuerier, sessionProvider, notificationRepository);
 
-  await notifier.notify(new AbortController().signal, '', 'Deployment completed');
+  await notifier.notify(new AbortController().signal, false, '', 'Deployment completed');
 
   assert.equal(storedNotifications.length, 2);
   assert.deepEqual(

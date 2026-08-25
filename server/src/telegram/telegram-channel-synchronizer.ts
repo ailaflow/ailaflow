@@ -51,7 +51,7 @@ export class TelegramChannelSynchronizer {
     void this.poll();
   }
 
-  public destroy(): void {
+  public destroy() {
     if (this.destroyAbortController.signal.aborted) {
       return;
     }
@@ -63,8 +63,10 @@ export class TelegramChannelSynchronizer {
     if (this.destroyAbortController.signal.aborted) {
       return;
     }
+    const isTest = false;
     const session = await this.userChatSessionProvider.get(
       AbortSignal.any([AbortSignal.timeout(10_000), this.destroyAbortController.signal]),
+      isTest,
       this.configuration.userName,
       this.configuration.channelName
     );

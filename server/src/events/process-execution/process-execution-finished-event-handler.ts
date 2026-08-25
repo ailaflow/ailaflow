@@ -15,7 +15,7 @@ export class ProcessExecutionFinishedEventHandler implements EventHandler<Proces
     const abortSignal = AbortSignal.timeout(3_000);
 
     const sessionId = ChatSessionId.decode(event.context.chatSessionId);
-    const session = await this.userChatSessionProvider.get(abortSignal, sessionId.userName, sessionId.getChannelName());
+    const session = await this.userChatSessionProvider.get(abortSignal, sessionId.isTest(), sessionId.userName, sessionId.channelName);
 
     let m = `>>>>>>>>\nProcess "${event.processName}" finished the execution ${event.executionId}`;
     if (event.result.success) {

@@ -17,6 +17,7 @@ export class SqliteTaskRepository implements TaskRepository {
         id TEXT PRIMARY KEY,
         title TEXT NOT NULL,
         executionId TEXT NOT NULL,
+        isTest INTEGER NOT NULL,
         inputVariableNames TEXT NOT NULL,
         outputVariableSchemas TEXT,
         form TEXT,
@@ -36,6 +37,7 @@ export class SqliteTaskRepository implements TaskRepository {
         id,
         title,
         executionId,
+        isTest,
         inputVariableNames,
         outputVariableSchemas,
         form,
@@ -50,6 +52,7 @@ export class SqliteTaskRepository implements TaskRepository {
           id: string;
           title: string;
           executionId: string;
+          isTest: number;
           inputVariableNames: string;
           outputVariableSchemas: string | null;
           form: string | null;
@@ -67,18 +70,20 @@ export class SqliteTaskRepository implements TaskRepository {
         id,
         title,
         executionId,
+        isTest,
         inputVariableNames,
         outputVariableSchemas,
         form,
         deadline,
         createdAt
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
     statement.run(
       task.id,
       task.title,
       task.executionId,
+      task.isTest ? 1 : 0,
       JSON.stringify(task.inputVariableNames),
       serializeOutputVariableSchemas(task.outputVariableSchemas),
       serializeForm(task.form),
@@ -92,6 +97,7 @@ function deserializeTask(row: {
   id: string;
   title: string;
   executionId: string;
+  isTest: number;
   inputVariableNames: string;
   outputVariableSchemas: string | null;
   form: string | null;
@@ -102,6 +108,7 @@ function deserializeTask(row: {
     row.id,
     row.title,
     row.executionId,
+    row.isTest === 1,
     JSON.parse(row.inputVariableNames) as string[],
     row.outputVariableSchemas ? (JSON.parse(row.outputVariableSchemas) as Record<string, JsonSchema>) : null,
     row.form ? (JSON.parse(row.form) as FormDefinition) : null,

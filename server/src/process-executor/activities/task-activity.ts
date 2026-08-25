@@ -6,9 +6,16 @@ export const taskStepActivity = createSignalActivity<TaskStep, ProcessExecutionG
   init: () => ({}),
   beforeSignal: async (step: TaskStep, globalState: ProcessExecutionGlobalState) => {
     const abortSignal = AbortSignal.timeout(5_000);
-    await globalState.taskManager.create(abortSignal, globalState.executionId, step, globalState.variableEvaluator, globalState.variables);
+    await globalState.taskManager.create(
+      abortSignal,
+      globalState.executionId,
+      globalState.context.isTest,
+      step,
+      globalState.variableEvaluator,
+      globalState.variables
+    );
   },
-  afterSignal: async (step: TaskStep, globalState: ProcessExecutionGlobalState, _: object, payload: SignalPayload) => {
+  afterSignal: async (step: TaskStep, { variables }: ProcessExecutionGlobalState, _: object, payload: SignalPayload) => {
     for (const name of step.properties.outputVariableNames) {
       if (!(name in payload)) {
         throw new Error(`Missing task output variable: ${name}`);
@@ -16,7 +23,7 @@ export const taskStepActivity = createSignalActivity<TaskStep, ProcessExecutionG
     }
     for (const name of step.properties.outputVariableNames) {
       const value = payload[name];
-      globalState.variables.set(name, value);
+      variables.set(name, value);
     }
   }
 });

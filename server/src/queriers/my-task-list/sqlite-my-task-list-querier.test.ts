@@ -27,21 +27,23 @@ test('queries tasks assigned to the current user', async () => {
   await userRepository.insert(abortSignal, new User('alice', 'hash', false));
   await userRepository.insert(abortSignal, new User('bob', 'hash', false));
 
-  await taskRepository.insert(abortSignal, new Task('task_1', 'Open outdated', 'execution_1', [], null, null, 4000, 1000));
-  await taskRepository.insert(abortSignal, new Task('task_2', 'Open current', 'execution_1', [], null, null, 6000, 1001));
-  await taskRepository.insert(abortSignal, new Task('task_3', 'Completed outdated', 'execution_1', [], null, null, 3000, 1002));
-  await taskRepository.insert(abortSignal, new Task('task_4', 'Other user', 'execution_1', [], null, null, 3000, 1003));
-  await taskRepository.insert(abortSignal, new Task('task_5', 'No deadline', 'execution_1', [], null, null, null, 1004));
+  await taskRepository.insert(abortSignal, new Task('task_1', 'Open outdated', 'execution_1', false, [], null, null, 4000, 1000));
+  await taskRepository.insert(abortSignal, new Task('task_2', 'Open current', 'execution_1', false, [], null, null, 6000, 1001));
+  await taskRepository.insert(abortSignal, new Task('task_3', 'Completed outdated', 'execution_1', false, [], null, null, 3000, 1002));
+  await taskRepository.insert(abortSignal, new Task('task_4', 'Other user', 'execution_1', false, [], null, null, 3000, 1003));
+  await taskRepository.insert(abortSignal, new Task('task_5', 'No deadline', 'execution_1', false, [], null, null, null, 1004));
+  await taskRepository.insert(abortSignal, new Task('task_6', 'Test task', 'execution_2', true, [], null, null, null, 1005));
 
   await assignedTaskRepository.upsertMultiple(abortSignal, [
     AssignedTask.create('task_1', 'alice', 'default'),
     AssignedTask.create('task_2', 'alice', 'default'),
     new AssignedTask('task_3', 'alice', 'default', 4500, null),
     AssignedTask.create('task_4', 'bob', 'default'),
-    AssignedTask.create('task_5', 'alice', 'default')
+    AssignedTask.create('task_5', 'alice', 'default'),
+    AssignedTask.create('task_6', 'alice', 'default')
   ]);
 
-  assert.deepEqual(await querier.query(abortSignal, 'alice', false, 1, 2), {
+  assert.deepEqual(await querier.query(abortSignal, false, 'alice', false, 1, 2), {
     tasks: [
       {
         id: 'task_1',
@@ -57,7 +59,7 @@ test('queries tasks assigned to the current user', async () => {
     page: 1,
     pageSize: 2
   });
-  assert.deepEqual(await querier.query(abortSignal, 'alice', false, 2, 2), {
+  assert.deepEqual(await querier.query(abortSignal, false, 'alice', false, 2, 2), {
     tasks: [
       {
         id: 'task_3',
@@ -73,7 +75,7 @@ test('queries tasks assigned to the current user', async () => {
     page: 2,
     pageSize: 2
   });
-  assert.deepEqual(await querier.query(abortSignal, 'alice', true, 1, 20), {
+  assert.deepEqual(await querier.query(abortSignal, false, 'alice', true, 1, 20), {
     tasks: [
       {
         id: 'task_1',
@@ -90,6 +92,17 @@ test('queries tasks assigned to the current user', async () => {
       }
     ],
     totalCount: 3,
+    page: 1,
+    pageSize: 20
+  });
+  assert.deepEqual(await querier.query(abortSignal, true, 'alice', false, 1, 20), {
+    tasks: [
+      {
+        id: 'task_6',
+        title: 'Test task'
+      }
+    ],
+    totalCount: 1,
     page: 1,
     pageSize: 20
   });

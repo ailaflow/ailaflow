@@ -18,6 +18,7 @@ export class GetMyTasksEndpoint implements Endpoint {
     const authToken = getAuthToken(req);
     const { onlyOpen, page, pageSize } = parseQuery(getMyTasksRequestSchema, req.query);
 
-    return this.querier.query(abortSignal, authToken.userName, onlyOpen, page, pageSize);
+    const isTest = false;
+    return this.querier.query(abortSignal, isTest, authToken.userName, onlyOpen, page, pageSize);
   }
 }

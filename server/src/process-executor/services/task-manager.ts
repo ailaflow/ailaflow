@@ -19,6 +19,7 @@ export class TaskManager {
   public async create(
     abortSignal: AbortSignal,
     executionId: string,
+    isTest: boolean,
     step: TaskStep,
     variableEvaluator: ProcessVariableEvaluator,
     variableManager: ProcessVariableManager
@@ -36,6 +37,7 @@ export class TaskManager {
     const task = Task.create(
       step.name,
       executionId,
+      isTest,
       step.properties.inputVariableNames,
       step.properties.outputVariableNames.length > 0 ? outputVariableSchemas : null,
       step.properties.form,
@@ -53,7 +55,7 @@ export class TaskManager {
     await this.assignedTaskRepository.upsertMultiple(abortSignal, assignedTasks);
 
     for (const userName of userNames) {
-      const session = await this.userChatSessionProvider.get(abortSignal, userName, channelName);
+      const session = await this.userChatSessionProvider.get(abortSignal, isTest, userName, channelName);
       if (session) {
         session.queueUserMessage(`>>>>>>>>\nYou have a new task assigned: "${step.name}", title: "${task.title}"\n<<<<<<<<`, {
           internal: true,

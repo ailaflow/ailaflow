@@ -8,12 +8,12 @@ export class UserChatSessionProvider {
     return 'default';
   }
 
-  public get(abortSignal: AbortSignal, userName: string, channelName: string): Promise<ChatSession> {
+  public get(abortSignal: AbortSignal, isTest: boolean, userName: string, channelName: string): Promise<ChatSession> {
     const authContext: ChatAuthContext = {
       userName,
-      isAdmin: false
+      isAdmin: isTest
     };
-    const sessionKey = `user:${channelName}`;
+    const sessionKey = isTest ? `test:${userName}:${channelName}` : `user:${channelName}`;
     return this.chatSessionManager.getOrActivate(abortSignal, sessionKey, authContext);
   }
 }

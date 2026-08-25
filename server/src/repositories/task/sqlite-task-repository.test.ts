@@ -13,12 +13,12 @@ test('task insert does not overwrite an existing task', async () => {
 
   await repository.setup(abortSignal);
 
-  await repository.insert(abortSignal, new Task('task_1', 'Original task', 'execution_1', [], null, null, null, 1000));
+  await repository.insert(abortSignal, new Task('task_1', 'Original task', 'execution_1', true, [], null, null, null, 1000));
 
   await assert.rejects(() =>
     repository.insert(
       abortSignal,
-      new Task('task_1', 'Changed task', 'execution_2', ['input'], { output: { type: 'string' } }, null, null, 2000)
+      new Task('task_1', 'Changed task', 'execution_2', false, ['input'], { output: { type: 'string' } }, null, null, 2000)
     )
   );
 
@@ -26,7 +26,7 @@ test('task insert does not overwrite an existing task', async () => {
     ...db
       .prepare(
         `
-        SELECT title, executionId, inputVariableNames, outputVariableSchemas, createdAt
+        SELECT title, executionId, isTest, inputVariableNames, outputVariableSchemas, createdAt
         FROM tasks
         WHERE id = ?
       `
@@ -35,6 +35,7 @@ test('task insert does not overwrite an existing task', async () => {
   } as {
     title: string;
     executionId: string;
+    isTest: number;
     inputVariableNames: string;
     outputVariableSchemas: string | null;
     createdAt: number;
@@ -42,6 +43,7 @@ test('task insert does not overwrite an existing task', async () => {
   assert.deepEqual(row, {
     title: 'Original task',
     executionId: 'execution_1',
+    isTest: 1,
     inputVariableNames: '[]',
     outputVariableSchemas: null,
     createdAt: 1000
@@ -59,6 +61,7 @@ test('task can be fetched by id', async () => {
     'task_1',
     'Task form',
     'execution_1',
+    true,
     ['input'],
     { output: { type: 'string' } },
     {

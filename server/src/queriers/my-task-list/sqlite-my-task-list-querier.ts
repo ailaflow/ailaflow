@@ -13,15 +13,25 @@ export class SqliteMyTaskListQuerier implements MyTaskListQuerier {
     this.db = dbs.modelDb;
   }
 
-  public async query(_: AbortSignal, userName: string, onlyOpen: boolean, page: number, pageSize: number): Promise<GetMyTasksResponse> {
+  public async query(
+    _: AbortSignal,
+    isTest: boolean,
+    userName: string,
+    onlyOpen: boolean,
+    page: number,
+    pageSize: number
+  ): Promise<GetMyTasksResponse> {
     const statusCondition = onlyOpen ? 'AND at.completedAt IS NULL' : '';
     const countStatement = this.db.prepare(`
       SELECT COUNT(*) AS totalCount
       FROM assigned_tasks at
-      WHERE at.userName = ?
+      JOIN tasks t
+        ON t.id = at.taskId
+      WHERE t.isTest = ?
+        AND at.userName = ?
       ${statusCondition}
     `);
-    const { totalCount } = countStatement.get(userName) as { totalCount: number };
+    const { totalCount } = countStatement.get(isTest ? 1 : 0, userName) as { totalCount: number };
 
     const statement = this.db.prepare(`
       SELECT
@@ -33,12 +43,13 @@ export class SqliteMyTaskListQuerier implements MyTaskListQuerier {
       FROM assigned_tasks at
       JOIN tasks t
         ON t.id = at.taskId
-      WHERE at.userName = ?
+      WHERE t.isTest = ?
+        AND at.userName = ?
       ${statusCondition}
       ORDER BY t.createdAt, t.id
       LIMIT ? OFFSET ?
     `);
-    const rows = statement.all(userName, pageSize, (page - 1) * pageSize) as {
+    const rows = statement.all(isTest ? 1 : 0, userName, pageSize, (page - 1) * pageSize) as {
       id: string;
       title: string;
       deadline: number | null;
