@@ -7,15 +7,16 @@ import { TaskManager } from './services/task-manager';
 import { Notifier } from './services/notifier';
 import { ProcessExecutionServices } from './services/services';
 import { ProcessVariableEvaluator } from './services/process-value-evaluator';
+import { ProcessExecutionContext } from './process-execution-context';
 
 export interface SerializedProcessExecutionGlobalState {
-  executionId: string;
   variableValues: ProcessExecutionVariableValues;
 }
 
 export class ProcessExecutionGlobalState {
   public static create(
     executionId: string,
+    context: ProcessExecutionContext,
     variableValues: ProcessExecutionVariableValues,
     process: Process,
     services: ProcessExecutionServices
@@ -27,6 +28,7 @@ export class ProcessExecutionGlobalState {
 
     return new ProcessExecutionGlobalState(
       executionId,
+      context,
       logger,
       variables,
       variableEvaluator,
@@ -37,11 +39,13 @@ export class ProcessExecutionGlobalState {
   }
 
   public static deserialize(
+    executionId: string,
+    context: ProcessExecutionContext,
     serialized: SerializedProcessExecutionGlobalState,
     process: Process,
     services: ProcessExecutionServices
   ): ProcessExecutionGlobalState {
-    return this.create(serialized.executionId, serialized.variableValues, process, services);
+    return this.create(executionId, context, serialized.variableValues, process, services);
   }
 
   public result?: {
@@ -51,6 +55,7 @@ export class ProcessExecutionGlobalState {
 
   public constructor(
     public readonly executionId: string,
+    public readonly context: ProcessExecutionContext,
     public readonly logger: ProcessLogger,
     public readonly variables: ProcessVariableManager,
     public readonly variableEvaluator: ProcessVariableEvaluator,
@@ -61,7 +66,6 @@ export class ProcessExecutionGlobalState {
 
   public serialize(): SerializedProcessExecutionGlobalState {
     return {
-      executionId: this.executionId,
       variableValues: this.variables.dump()
     };
   }

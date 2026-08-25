@@ -11,6 +11,7 @@ import { ProcessVariableManager } from './services/process-variable-manager';
 import { ProcessExecutionResult, ProcessLog } from '@aila/model';
 import { ProcessExecutionPersister } from './process-execution-persister';
 import type { Process } from '../repositories/process/process';
+import { ProcessExecutionContext } from './process-execution-context';
 
 const WAIT_FOR_SIGNAL_STATE = 'WAIT_FOR_SIGNAL';
 
@@ -18,12 +19,6 @@ type ProcessExecutionSnapshot = ReturnType<WorkflowMachineInterpreter<ProcessExe
 
 export interface ProcessExecutionRunOptions {
   signalOnFirstWait?: SignalPayload;
-}
-
-export interface ProcessExecutionOrigin {
-  startedBy: string;
-  chatSessionId?: string;
-  test?: true;
 }
 
 export class ProcessExecution {
@@ -35,7 +30,7 @@ export class ProcessExecution {
 
   public constructor(
     public readonly id: string,
-    public readonly origin: ProcessExecutionOrigin,
+    public readonly context: ProcessExecutionContext,
     private readonly process: Process,
     private readonly interpreter: WorkflowMachineInterpreter<ProcessExecutionGlobalState>,
     private readonly logger: ProcessLogger,
@@ -96,7 +91,7 @@ export class ProcessExecution {
     }
     this.paused = true;
     try {
-      await this.processExecutionPersister.persist(this.process, this.id, this.origin, serializedSnapshot);
+      await this.processExecutionPersister.persist(this.process, this, serializedSnapshot);
       this.onPaused.emit();
     } catch (e) {
       this.onFinished.emit({

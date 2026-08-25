@@ -15,14 +15,13 @@ test('persisted execution repository upserts, gets, and deletes an execution', a
 
   const execution = new PersistedExecution(
     'execution_1',
-    { startedBy: 'user_1', chatSessionId: 'session_1' },
+    { startedBy: 'user_1', chatSessionId: 'session_1', isTest: true },
     'process_1',
     'hash_1',
     {
       value: { MAIN: { STEP_task_1: 'WAIT_FOR_SIGNAL' } },
       context: {
         globalState: {
-          executionId: 'execution_1',
           variableValues: {
             answer: 123
           }

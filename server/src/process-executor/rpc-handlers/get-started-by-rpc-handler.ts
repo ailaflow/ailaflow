@@ -8,6 +8,6 @@ export class GetStartedByRpcHandler implements SandboxRpcHandler {
 
   public async handle(_abortSignal: AbortSignal, _sandboxName: string, executionId: string): Promise<string> {
     const execution = this.executionStore.get(executionId);
-    return execution.origin.startedBy;
+    return execution.context.startedBy;
   }
 }

@@ -9,12 +9,12 @@ export class ProcessExecutionFinishedEventHandler implements EventHandler<Proces
   public constructor(private readonly userChatSessionProvider: UserChatSessionProvider) {}
 
   public async handle(event: ProcessExecutionFinishedEvent) {
-    if (!event.origin.chatSessionId) {
+    if (!event.context.chatSessionId) {
       return;
     }
     const abortSignal = AbortSignal.timeout(3_000);
 
-    const sessionId = ChatSessionId.decode(event.origin.chatSessionId);
+    const sessionId = ChatSessionId.decode(event.context.chatSessionId);
     const session = await this.userChatSessionProvider.get(abortSignal, sessionId.userName, sessionId.getChannelName());
 
     let m = `>>>>>>>>\nProcess "${event.processName}" finished the execution ${event.executionId}`;

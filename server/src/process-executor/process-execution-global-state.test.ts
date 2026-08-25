@@ -9,6 +9,12 @@ import { ProcessLogger } from './services/process-logger';
 import { ProcessScriptExecutor } from './services/process-script-executor';
 import { ProcessExecutionSnapshotTransformer } from './process-execution-snapshot-transformer';
 import { Notifier } from './services/notifier';
+import { ProcessExecutionContext } from './process-execution-context';
+
+const context: ProcessExecutionContext = {
+  startedBy: 'user_1',
+  isTest: true
+};
 
 test('process execution global state serializes variables and recreates runtime services', () => {
   const process = createTestProcess();
@@ -19,19 +25,19 @@ test('process execution global state serializes variables and recreates runtime 
   const serialized = state.serialize();
 
   assert.deepEqual(serialized, {
-    executionId: 'execution_1',
     variableValues: {
       answer: 123
     }
   });
 
-  const deserialized = ProcessExecutionGlobalState.deserialize(serialized, process, {
+  const deserialized = ProcessExecutionGlobalState.deserialize('execution_1', context, serialized, process, {
     sandboxInstanceManager: {} as SandboxInstanceManager,
     taskManager: {} as TaskManager,
     notifier: {} as Notifier
   });
 
   assert.equal(deserialized.executionId, 'execution_1');
+  assert.equal(deserialized.context, context);
   assert.equal(deserialized.variables.get('answer'), 123);
   assert.equal(deserialized.logger instanceof ProcessLogger, true);
   assert.equal(deserialized.scriptExecutor instanceof ProcessScriptExecutor, true);
@@ -59,14 +65,13 @@ test('process execution snapshot transformer converts current and history global
   const serialized = ProcessExecutionSnapshotTransformer.serialize(snapshot);
 
   assert.deepEqual(serialized.context.globalState, {
-    executionId: 'execution_1',
     variableValues: {
       answer: 123
     }
   });
   assert.equal((serialized as { history?: unknown }).history, undefined);
 
-  const deserialized = ProcessExecutionSnapshotTransformer.deserialize(serialized, process, {
+  const deserialized = ProcessExecutionSnapshotTransformer.deserialize('execution_1', context, process, serialized, {
     sandboxInstanceManager: {} as SandboxInstanceManager,
     taskManager: {} as TaskManager,
     notifier: {} as Notifier
@@ -106,7 +111,7 @@ function createTestProcess(): Process {
 }
 
 function createGlobalState(process: Process, values: Record<string, unknown>): ProcessExecutionGlobalState {
-  return ProcessExecutionGlobalState.create('execution_1', values, process, {
+  return ProcessExecutionGlobalState.create('execution_1', context, values, process, {
     sandboxInstanceManager: {} as SandboxInstanceManager,
     taskManager: {} as TaskManager,
     notifier: {} as Notifier

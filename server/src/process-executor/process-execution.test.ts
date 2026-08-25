@@ -47,6 +47,7 @@ test('process execution signals the first wait and pauses on a later wait', asyn
     init: () =>
       new ProcessExecutionGlobalState(
         'execution_1',
+        { startedBy: 'user_1', isTest: false },
         $logger,
         $variables,
         new ProcessVariableEvaluator($variables),
@@ -58,12 +59,20 @@ test('process execution signals the first wait and pauses on a later wait', asyn
 
   const pausedStepId = await new Promise<string | null>((resolve, reject) => {
     const timeout = setTimeout(() => reject(new Error('Execution did not pause')), 250);
-    const execution = new ProcessExecution('execution_1', { startedBy: 'user_1' }, {} as Process, interpreter, $logger, $variables, {
-      persist: async () => {
-        clearTimeout(timeout);
-        resolve(interpreter.getSnapshot().tryGetCurrentStepId());
-      }
-    } as unknown as ProcessExecutionPersister);
+    const execution = new ProcessExecution(
+      'execution_1',
+      { startedBy: 'user_1', isTest: false },
+      {} as Process,
+      interpreter,
+      $logger,
+      $variables,
+      {
+        persist: async () => {
+          clearTimeout(timeout);
+          resolve(interpreter.getSnapshot().tryGetCurrentStepId());
+        }
+      } as unknown as ProcessExecutionPersister
+    );
 
     execution.run(new AbortController().signal, {
       signalOnFirstWait: {}
@@ -100,6 +109,7 @@ test('process execution fails when pause persistence fails', async () => {
     init: () =>
       new ProcessExecutionGlobalState(
         'execution_1',
+        { startedBy: 'user_1', isTest: false },
         $logger,
         $variables,
         new ProcessVariableEvaluator($variables),
@@ -111,11 +121,19 @@ test('process execution fails when pause persistence fails', async () => {
 
   const result = await new Promise((resolve, reject) => {
     const timeout = setTimeout(() => reject(new Error('Execution did not fail')), 250);
-    const execution = new ProcessExecution('execution_1', { startedBy: 'user_1' }, {} as Process, interpreter, $logger, $variables, {
-      persist: async () => {
-        throw new Error('Storage unavailable');
-      }
-    } as unknown as ProcessExecutionPersister);
+    const execution = new ProcessExecution(
+      'execution_1',
+      { startedBy: 'user_1', isTest: false },
+      {} as Process,
+      interpreter,
+      $logger,
+      $variables,
+      {
+        persist: async () => {
+          throw new Error('Storage unavailable');
+        }
+      } as unknown as ProcessExecutionPersister
+    );
 
     execution.onFinished.subscribe(value => {
       clearTimeout(timeout);

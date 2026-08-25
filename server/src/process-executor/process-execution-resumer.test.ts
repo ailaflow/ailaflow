@@ -25,14 +25,13 @@ test('process execution resumer fails when the process hash changed', async () =
       tryGet: async () =>
         new PersistedExecution(
           'execution_1',
-          { startedBy: 'user_1' },
+          { startedBy: 'user_1', isTest: false },
           'process_1',
           'old_hash',
           {
             value: { MAIN: { STEP_task_1: 'WAIT_FOR_SIGNAL' } },
             context: {
               globalState: {
-                executionId: 'execution_1',
                 variableValues: {}
               },
               activityStates: {}

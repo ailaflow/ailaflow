@@ -3,7 +3,7 @@ import { Process } from '../repositories/process/process';
 import { ProcessExecutor } from './process-executor';
 import { EventBus } from '../events/event-bus';
 import { ProcessExecutionFinishedEvent } from '../events/process-execution/process-execution-finished-event';
-import { ProcessExecutionOrigin } from './process-execution';
+import { ProcessExecutionContext } from './process-execution-context';
 
 export type LazyProcessExecutorResult =
   | {
@@ -24,11 +24,11 @@ export class LazyProcessExecutor {
   public execute(
     abortSignal: AbortSignal,
     fastTimeout: number | null,
-    origin: ProcessExecutionOrigin,
+    context: ProcessExecutionContext,
     process: Process,
     input: ProcessExecutionVariableValues
   ): Promise<LazyProcessExecutorResult> {
-    const execution = this.processExecutor.initialize(origin, process, input);
+    const execution = this.processExecutor.initialize(context, process, input);
 
     return new Promise(resolve => {
       let isWaiting = true;
@@ -64,7 +64,7 @@ export class LazyProcessExecutor {
           return;
         }
 
-        const event = new ProcessExecutionFinishedEvent(execution.id, origin, process.name, result);
+        const event = new ProcessExecutionFinishedEvent(execution.id, context, process.name, result);
         this.eventBus.publish(event);
       };
 

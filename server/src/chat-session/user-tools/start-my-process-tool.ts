@@ -3,7 +3,7 @@ import { LazyProcessExecutor } from '../../process-executor/lazy-process-executo
 import z from 'zod/v4';
 import { ChatSessionId } from '../chat-session-id';
 import { UserProcessProvider } from '../../process/user-process-provider';
-import { ProcessExecutionOrigin } from '../../process-executor/process-execution';
+import { ProcessExecutionContext } from '../../process-executor/process-execution-context';
 
 const FAST_TIMEOUT = 3_000;
 
@@ -43,13 +43,14 @@ export class StartMyProcessTool extends ZodTool<Arg> {
       };
     }
 
-    const origin: ProcessExecutionOrigin = {
+    const context: ProcessExecutionContext = {
       startedBy: userName,
-      chatSessionId: sessionId
+      chatSessionId: sessionId,
+      isTest: false
     };
 
     const abortController = new AbortController();
-    const result = await this.lazyProcessExecutor.execute(abortController.signal, FAST_TIMEOUT, origin, process, arg.startValues);
+    const result = await this.lazyProcessExecutor.execute(abortController.signal, FAST_TIMEOUT, context, process, arg.startValues);
 
     if (result.finished) {
       return {

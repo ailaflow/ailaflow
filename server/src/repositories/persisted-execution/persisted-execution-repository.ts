@@ -4,7 +4,7 @@ import { Repository } from '../repository';
 import { PersistedExecution } from './persisted-execution';
 import { SerializedWorkflowMachineSnapshot } from 'sequential-workflow-machine';
 import { SerializedProcessExecutionGlobalState } from '../../process-executor/process-execution-global-state';
-import type { ProcessExecutionOrigin } from '../../process-executor/process-execution';
+import { ProcessExecutionContext } from '../../process-executor/process-execution-context';
 
 export interface PersistedExecutionRepository extends Repository {
   upsert(abortSignal: AbortSignal, execution: PersistedExecution): Promise<void>;
@@ -23,7 +23,7 @@ export class SqlitePersistedExecutionRepository implements PersistedExecutionRep
     this.db.exec(`
       CREATE TABLE IF NOT EXISTS persisted_executions (
         executionId TEXT PRIMARY KEY,
-        origin TEXT NOT NULL,
+        context TEXT NOT NULL,
         processName TEXT NOT NULL,
         processHash TEXT NOT NULL,
         state TEXT NOT NULL,
@@ -35,10 +35,10 @@ export class SqlitePersistedExecutionRepository implements PersistedExecutionRep
 
   public async upsert(_: AbortSignal, execution: PersistedExecution): Promise<void> {
     const statement = this.db.prepare(`
-      INSERT INTO persisted_executions (executionId, origin, processName, processHash, state, createdAt, updatedAt)
+      INSERT INTO persisted_executions (executionId, context, processName, processHash, state, createdAt, updatedAt)
       VALUES (?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(executionId) DO UPDATE SET
-        origin = excluded.origin,
+        context = excluded.context,
         processName = excluded.processName,
         processHash = excluded.processHash,
         state = excluded.state,
@@ -46,7 +46,7 @@ export class SqlitePersistedExecutionRepository implements PersistedExecutionRep
     `);
     statement.run(
       execution.executionId,
-      JSON.stringify(execution.origin),
+      JSON.stringify(execution.context),
       execution.processName,
       execution.processHash,
       JSON.stringify(execution.state),
@@ -57,7 +57,7 @@ export class SqlitePersistedExecutionRepository implements PersistedExecutionRep
 
   public async tryGet(_: AbortSignal, executionId: string): Promise<PersistedExecution | null> {
     const statement = this.db.prepare(`
-      SELECT executionId, origin, processName, processHash, state, createdAt, updatedAt
+      SELECT executionId, context, processName, processHash, state, createdAt, updatedAt
       FROM persisted_executions
       WHERE executionId = ?
       LIMIT 1
@@ -65,7 +65,7 @@ export class SqlitePersistedExecutionRepository implements PersistedExecutionRep
     const row = statement.get(executionId) as
       | {
           executionId: string;
-          origin: string;
+          context: string;
           processName: string;
           processHash: string;
           state: string;
@@ -77,7 +77,7 @@ export class SqlitePersistedExecutionRepository implements PersistedExecutionRep
     return row
       ? new PersistedExecution(
           row.executionId,
-          JSON.parse(row.origin) as ProcessExecutionOrigin,
+          JSON.parse(row.context) as ProcessExecutionContext,
           row.processName,
           row.processHash,
           JSON.parse(row.state) as SerializedWorkflowMachineSnapshot<SerializedProcessExecutionGlobalState>,

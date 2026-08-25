@@ -1,6 +1,6 @@
 import { SerializedWorkflowMachineSnapshot, WorkflowMachineInterpreter, createWorkflowMachineBuilder } from 'sequential-workflow-machine';
 import { Process } from '../repositories/process/process';
-import { ProcessExecution, ProcessExecutionOrigin } from './process-execution';
+import { ProcessExecution } from './process-execution';
 import { activitySet } from './activities/activity-set';
 import { randomBytes } from 'crypto';
 import { ProcessExecutionStore } from './process-execution-store';
@@ -9,6 +9,7 @@ import { ProcessExecutionSnapshotTransformer } from './process-execution-snapsho
 import { ProcessExecutionGlobalState, SerializedProcessExecutionGlobalState } from './process-execution-global-state';
 import { ProcessExecutionPersister } from './process-execution-persister';
 import { ProcessExecutionServices } from './services/services';
+import { ProcessExecutionContext } from './process-execution-context';
 
 export class ProcessExecutor {
   private readonly builder = createWorkflowMachineBuilder(activitySet);
@@ -19,42 +20,42 @@ export class ProcessExecutor {
     private readonly services: ProcessExecutionServices
   ) {}
 
-  public initialize(origin: ProcessExecutionOrigin, process: Process, input: ProcessExecutionVariableValues): ProcessExecution {
+  public initialize(context: ProcessExecutionContext, process: Process, input: ProcessExecutionVariableValues): ProcessExecution {
     const executionId = randomBytes(24).toString('hex');
 
     const machine = this.builder.build(process.definition);
-    const globalState = ProcessExecutionGlobalState.create(executionId, input, process, this.services);
+    const globalState = ProcessExecutionGlobalState.create(executionId, context, input, process, this.services);
 
     const interpreter = machine.create({
       init: () => globalState
     });
 
-    return this.createExecution(executionId, origin, process, interpreter, globalState);
+    return this.createExecution(executionId, context, process, interpreter, globalState);
   }
 
   public restore(
     executionId: string,
-    origin: ProcessExecutionOrigin,
+    context: ProcessExecutionContext,
     process: Process,
     snapshot: SerializedWorkflowMachineSnapshot<SerializedProcessExecutionGlobalState>
   ): ProcessExecution {
-    const restoredSnapshot = ProcessExecutionSnapshotTransformer.deserialize(snapshot, process, this.services);
+    const restoredSnapshot = ProcessExecutionSnapshotTransformer.deserialize(executionId, context, process, snapshot, this.services);
     const machine = this.builder.build(process.definition);
     const interpreter = machine.deserializeSnapshot(restoredSnapshot);
     const globalState = restoredSnapshot.context.globalState;
-    return this.createExecution(executionId, origin, process, interpreter, globalState);
+    return this.createExecution(executionId, context, process, interpreter, globalState);
   }
 
   private createExecution(
     executionId: string,
-    origin: ProcessExecutionOrigin,
+    context: ProcessExecutionContext,
     process: Process,
     interpreter: WorkflowMachineInterpreter<ProcessExecutionGlobalState>,
     globalState: ProcessExecutionGlobalState
   ): ProcessExecution {
     const execution = new ProcessExecution(
       executionId,
-      origin,
+      context,
       process,
       interpreter,
       globalState.logger,
