@@ -138,6 +138,7 @@ import { TelegramConfigurationApi } from './api/common/telegram-configuration-ap
 import { TelegramSynchronizationManager } from './telegram/telegram-synchronization-manager';
 import { TelegramConfigurationChangedEventHandler } from './events/telegram-configuration/telegram-configuration-changed-event-handler';
 import { GetStartedByRpcHandler } from './process-executor/rpc-handlers/get-started-by-rpc-handler';
+import { ProcessExecutionResumeListenerStore } from './process-executor/process-execution-resume-listener-store';
 
 const PORT = process.env.PORT || 2048;
 
@@ -268,7 +269,14 @@ export class Server {
     };
     const processExecutor = new ProcessExecutor(processExecutionStore, processExecutionPersister, processExecutionServices);
     const lazyProcessExecutor = new LazyProcessExecutor(processExecutor, eventBus);
-    const processExecutionResumer = new ProcessExecutionResumer(processRepository, persistedExecutionRepository, processExecutor, eventBus);
+    const processExecutionResumeListenerStore = new ProcessExecutionResumeListenerStore();
+    const processExecutionResumer = new ProcessExecutionResumer(
+      processRepository,
+      persistedExecutionRepository,
+      processExecutor,
+      processExecutionResumeListenerStore,
+      eventBus
+    );
 
     const passwordHasher = new PasswordHasher();
     const userProcessProvider = new UserProcessProvider(myProcessAccessQuerier, processRepository);
@@ -325,7 +333,7 @@ export class Server {
       new GetProcessEndpoint(processRepository),
       new DeleteProcessEndpoint(processRepository),
       new SaveProcessEndpoint(processRepository, resourceAccessRepository, sandboxListQuerier),
-      new TestProcessEndpoint(processRepository, processExecutor),
+      new TestProcessEndpoint(processRepository, processExecutor, processExecutionResumeListenerStore),
       new GetTablesEndpoint(tableListQuerier),
       new GetTableEndpoint(tableRepository),
       new GetTableDataEndpoint(tableDataListQuerier),

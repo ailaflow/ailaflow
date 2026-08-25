@@ -2,6 +2,7 @@ import { HttpClient } from '@aibindkit/react';
 import type {
   GetMyProcessesRequest,
   GetMyProcessesResponse,
+  GetMyProcessStartFormRequest,
   GetMyProcessStartFormResponse,
   StartMyProcessRequest,
   StartMyProcessResponse
@@ -18,8 +19,16 @@ export class MyProcessApiClient {
     return this.client.json(abortSignal, 'GET', `/api/my-processes?${query}`);
   }
 
-  public getMyProcessStartForm(abortSignal: AbortSignal, name: string): Promise<GetMyProcessStartFormResponse> {
-    return this.client.json(abortSignal, 'GET', `/api/my-processes/${name}/start-form`);
+  public getMyProcessStartForm(
+    abortSignal: AbortSignal,
+    name: string,
+    request: GetMyProcessStartFormRequest
+  ): Promise<GetMyProcessStartFormResponse> {
+    const query = new URLSearchParams();
+    if (request.testUserName) {
+      query.set('testUserName', request.testUserName);
+    }
+    return this.client.json(abortSignal, 'GET', `/api/my-processes/${name}/start-form?${query}`);
   }
 
   public startMyProcess(abortSignal: AbortSignal, name: string, request: StartMyProcessRequest): Promise<StartMyProcessResponse> {

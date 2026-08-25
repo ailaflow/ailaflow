@@ -9,7 +9,8 @@ export enum ProcessTesterTimelineItemType {
   FORM = 1,
   LOG = 2,
   ERROR = 3,
-  OUTPUT = 4
+  OUTPUT = 4,
+  CURRENT_STEP = 5
 }
 
 export enum ProcessTesterTimelineFormType {
@@ -82,6 +83,20 @@ export class OutputProcessTesterTimelineItem implements ProcessTesterTimelineIte
   public constructor(public readonly time: number, public readonly output: ProcessExecutionVariableValues) {}
 }
 
+export class CurrentStepProcessTesterTimelineItem implements ProcessTesterTimelineItem {
+  public readonly type = ProcessTesterTimelineItemType.CURRENT_STEP;
+
+  public get id(): string {
+    return `current-step-${this.time}-${this.stepId}`;
+  }
+
+  public constructor(
+    public readonly time: number,
+    public readonly stepId: string,
+    public readonly stepName: string
+  ) {}
+}
+
 export interface ProcessTesterTimelineViewProps {
   items: ProcessTesterTimelineItem[];
   scrollContainerRef: RefObject<HTMLDivElement | null>;
@@ -130,6 +145,8 @@ function TimelineMarker(props: { item: ProcessTesterTimelineItem }) {
     markerClassName = 'border-emerald-500 bg-emerald-100';
   } else if (props.item instanceof FormProcessTesterTimelineItem) {
     markerClassName = 'border-blue-500 bg-blue-100';
+  } else if (props.item instanceof CurrentStepProcessTesterTimelineItem) {
+    markerClassName = 'border-blue-500 bg-blue-100';
   }
 
   return <span className={`absolute left-0 top-1.5 size-4 rounded-full border-2 ${markerClassName}`} aria-hidden="true" />;
@@ -151,7 +168,22 @@ function TimelineItem(
   if (item instanceof LogProcessTesterTimelineItem) {
     return <LogTimelineItem item={item} />;
   }
+  if (item instanceof CurrentStepProcessTesterTimelineItem) {
+    return <CurrentStepTimelineItem item={item} />;
+  }
   return null;
+}
+
+function CurrentStepTimelineItem(props: { item: CurrentStepProcessTesterTimelineItem }) {
+  return (
+    <article className="flex w-full min-w-0 items-start gap-3 rounded-lg border border-blue-200 bg-blue-50 px-3.5 py-2.5 shadow-sm">
+      <div className="min-w-0 flex-1">
+        <p className="text-[0.6875rem] font-medium uppercase tracking-wide text-blue-600">Current step</p>
+        <p className="mt-0.5 break-words text-sm font-medium text-blue-900">{props.item.stepName}</p>
+      </div>
+      <TimelineTime time={props.item.time} />
+    </article>
+  );
 }
 
 function ErrorTimelineItem(props: { item: ErrorProcessTesterTimelineItem }) {

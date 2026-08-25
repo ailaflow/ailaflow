@@ -1,10 +1,11 @@
-import { GetMyTaskFormResponse } from '@aila/model';
+import { getMyTaskFormRequestSchema, GetMyTaskFormResponse } from '@aila/model';
 import { Request } from 'express';
 import { UserAssignedTaskProvider } from '../../task/user-assigned-task-provider';
 import { getAuthToken } from '../auth/auth-middleware';
 import { Endpoint } from '../framework/endpoint';
 import { getEndpointAbortSignal } from '../framework/endpoint-abort-signal';
 import { EndpointError } from '../framework/endpoint-error';
+import { parseQuery } from '../framework/parse-request';
 
 export class GetMyTaskFormEndpoint implements Endpoint {
   public readonly method = 'get';
@@ -17,8 +18,11 @@ export class GetMyTaskFormEndpoint implements Endpoint {
     const abortSignal = getEndpointAbortSignal(req);
     const authToken = getAuthToken(req);
     const taskId = String(req.params.id);
+    const request = parseQuery(getMyTaskFormRequestSchema, req.query);
 
-    const userAssignedTask = await this.userAssignedTaskProvider.tryGet(abortSignal, authToken.userName, taskId);
+    const { isTest, userName } = authToken.maybeOverrideTestUserName(request.testUserName);
+
+    const userAssignedTask = await this.userAssignedTaskProvider.tryGet(abortSignal, isTest, userName, taskId);
     if (!userAssignedTask) {
       throw new EndpointError('Task not found', 404);
     }

@@ -73,4 +73,5 @@ export type TestProcessRequest = z.infer<typeof testProcessRequestSchema>;
 export interface TestProcessUpdate {
   log?: ProcessLog;
   result?: ProcessExecutionResult;
+  currentStepId?: string;
 }

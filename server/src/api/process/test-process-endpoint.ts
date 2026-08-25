@@ -1,4 +1,4 @@
-import { ProcessLogLevel, testProcessRequestSchema, TestProcessUpdate } from '@aila/model';
+import { ProcessExecutionResult, ProcessLog, ProcessLogLevel, testProcessRequestSchema, TestProcessUpdate } from '@aila/model';
 import { SseResponse } from '../../utilities/sse-response';
 import { Endpoint } from '../framework/endpoint';
 import { Request, Response } from 'express';
@@ -9,6 +9,8 @@ import { parseBody } from '../framework/parse-request';
 import { getEndpointAbortSignal } from '../framework/endpoint-abort-signal';
 import { getAuthToken } from '../auth/auth-middleware';
 import { ProcessExecutionContext } from '../../process-executor/process-execution-context';
+import { ProcessExecutionResumeListenerStore } from '../../process-executor/process-execution-resume-listener-store';
+import { ProcessExecution } from '../../process-executor/process-execution';
 
 export class TestProcessEndpoint implements Endpoint {
   public readonly method = 'post';
@@ -18,7 +20,8 @@ export class TestProcessEndpoint implements Endpoint {
 
   public constructor(
     private readonly processRepository: ProcessRepository,
-    private readonly processExecutor: ProcessExecutor
+    private readonly processExecutor: ProcessExecutor,
+    private readonly resumeListenerStore: ProcessExecutionResumeListenerStore
   ) {}
 
   public async handle(req: Request, res: Response) {
@@ -43,17 +46,49 @@ export class TestProcessEndpoint implements Endpoint {
     const sseResponse = new SseResponse<TestProcessUpdate>(res);
     sseResponse.onClose(() => abortController.abort());
 
-    execution.onCurrentStepChanged.subscribe(stepId => {
-      // TODO
-      sseResponse.send({ log: [Date.now(), ProcessLogLevel.INFO, `Current step: ${stepId}`] });
-    });
-    execution.onLog.subscribe(log => {
-      sseResponse.send({ log });
-    });
-    execution.onFinished.subscribe(result => {
-      sseResponse.send({ result });
-      res.end();
-    });
+    let lastStepId: string | null = null;
+
+    const listen = (exec: ProcessExecution) => {
+      let unsubscribed = false;
+
+      const onCurrentStepChanged = (stepId: string | null) => {
+        if (stepId && stepId !== lastStepId) {
+          lastStepId = stepId;
+          sseResponse.send({ currentStepId: stepId });
+        }
+      };
+      const onLog = (log: ProcessLog) => {
+        sseResponse.send({ log });
+      };
+      const onPaused = () => {
+        unsubscribeAll();
+      };
+      const onFinished = (result: ProcessExecutionResult) => {
+        this.resumeListenerStore.delete(exec.id);
+        unsubscribeAll();
+
+        sseResponse.send({ result });
+        res.end();
+      };
+      const unsubscribeAll = () => {
+        if (!unsubscribed) {
+          unsubscribed = true;
+          exec.onCurrentStepChanged.unsubscribe(onCurrentStepChanged);
+          exec.onLog.unsubscribe(onLog);
+          exec.onPaused.unsubscribe(onPaused);
+          exec.onFinished.unsubscribe(onFinished);
+        }
+      };
+
+      exec.onCurrentStepChanged.subscribe(onCurrentStepChanged);
+      exec.onLog.subscribe(onLog);
+      exec.onPaused.subscribe(onPaused);
+      exec.onFinished.subscribe(onFinished);
+    };
+
+    listen(execution);
+    this.resumeListenerStore.set(execution.id, listen);
+
     execution.run(abortController.signal);
   }
 }

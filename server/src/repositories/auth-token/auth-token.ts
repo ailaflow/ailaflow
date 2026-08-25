@@ -37,4 +37,23 @@ export class AuthToken {
     this.expiresAt = Date.now() + 10 * 1000;
     return true;
   }
+
+  public maybeOverrideTestUserName(testUserName: string | undefined): {
+    userName: string;
+    isTest: boolean;
+  } {
+    if (!testUserName) {
+      return {
+        isTest: false,
+        userName: this.userName
+      };
+    }
+    if (!this.isAdmin) {
+      throw new Error('Only admin can override the user name');
+    }
+    return {
+      isTest: true,
+      userName: testUserName
+    };
+  }
 }

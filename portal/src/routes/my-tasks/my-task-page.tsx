@@ -17,7 +17,7 @@ export function MyTaskPage() {
 
   const apiClient = useApiClient();
   const navigate = useNavigate();
-  const { data, error, isLoading } = useLoader(abortSignal => apiClient.myTask.getMyTaskForm(abortSignal, taskId), [apiClient, taskId]);
+  const { data, error, isLoading } = useLoader(abortSignal => apiClient.myTask.getMyTaskForm(abortSignal, taskId, {}), [apiClient, taskId]);
 
   const formAdapter: FormAdapter = useMemo(
     () => ({

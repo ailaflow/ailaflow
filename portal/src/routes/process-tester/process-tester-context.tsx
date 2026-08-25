@@ -3,6 +3,7 @@ import { createContext, useContext, useEffect, useMemo, useReducer } from 'react
 import { DefinitionWalker } from 'sequential-workflow-model';
 import { useApiClient, useSession } from '../../auth/auth-context';
 import {
+  CurrentStepProcessTesterTimelineItem,
   ErrorProcessTesterTimelineItem,
   FormProcessTesterTimelineItem,
   LogProcessTesterTimelineItem,
@@ -188,6 +189,13 @@ function createProcessTesterTimelineItems(
   receivedAt: number
 ): ProcessTesterTimelineItem[] {
   const items: ProcessTesterTimelineItem[] = [];
+
+  if (update.currentStepId) {
+    const step = new DefinitionWalker().findById(definition, update.currentStepId);
+    if (step) {
+      items.push(new CurrentStepProcessTesterTimelineItem(receivedAt, step.id, step.name));
+    }
+  }
 
   if (update.log) {
     const [time, level, message] = update.log;

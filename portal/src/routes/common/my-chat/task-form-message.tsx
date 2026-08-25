@@ -11,12 +11,16 @@ export interface TaskFormMessageProps {
   messageId: number;
   completedMessageIndex: number;
   finished: boolean;
+  testUserName: string | undefined;
 }
 
 export function TaskFormMessage(props: TaskFormMessageProps) {
   const apiClient = useApiClient();
   const { data, error, isLoading } = useLoader(
-    abortSignal => apiClient.myTask.getMyTaskForm(abortSignal, props.taskId),
+    abortSignal =>
+      apiClient.myTask.getMyTaskForm(abortSignal, props.taskId, {
+        testUserName: props.testUserName
+      }),
     [apiClient, props.taskId]
   );
 
@@ -26,7 +30,8 @@ export function TaskFormMessage(props: TaskFormMessageProps) {
       async readVariable(abortSignal: AbortSignal, variableName: string) {
         const response = await apiClient.myTask.getTaskVariableValue(abortSignal, {
           taskId: props.taskId,
-          variableName
+          variableName,
+          testUserName: props.testUserName
         });
         return response.value;
       },
@@ -35,7 +40,8 @@ export function TaskFormMessage(props: TaskFormMessageProps) {
       async submit(abortSignal: AbortSignal, outputValues: Record<string, unknown>) {
         await apiClient.myTask.submitMyTask(abortSignal, {
           taskId: props.taskId,
-          outputValues
+          outputValues,
+          testUserName: props.testUserName
         });
       }
     }),

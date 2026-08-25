@@ -24,19 +24,25 @@ export type GetMyTasksResponse = z.infer<typeof getMyTasksResponseSchema>;
 
 // getMyTaskForm
 
+export const getMyTaskFormRequestSchema = z.object({
+  testUserName: z.string().optional()
+});
+
 export const getMyTaskFormResponseSchema = z.object({
   form: formDefinitionSchema.nullable(),
   inputVariableNames: z.array(z.string()),
   outputVariableSchemas: z.record(z.string(), jsonSchema).nullable()
 });
 
+export type GetMyTaskFormRequest = z.infer<typeof getMyTaskFormRequestSchema>;
 export type GetMyTaskFormResponse = z.infer<typeof getMyTaskFormResponseSchema>;
 
 // submitMyTask
 
 export const submitMyTaskRequestSchema = z.object({
   taskId: z.string(),
-  outputValues: z.record(z.string(), z.unknown())
+  outputValues: z.record(z.string(), z.unknown()),
+  testUserName: z.string().optional()
 });
 
 export const submitMyTaskResponseSchema = z.object({
@@ -50,7 +56,8 @@ export type SubmitMyTaskResponse = z.infer<typeof submitMyTaskResponseSchema>;
 
 export const getTaskVariableValueRequestSchema = z.object({
   taskId: z.string(),
-  variableName: z.string()
+  variableName: z.string(),
+  testUserName: z.string().optional()
 });
 
 export const getTaskVariableValueResponseSchema = z.object({

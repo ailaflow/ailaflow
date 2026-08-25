@@ -1,5 +1,6 @@
 import { HttpClient } from '@aibindkit/react';
 import type {
+  GetMyTaskFormRequest,
   GetMyTaskFormResponse,
   GetMyTasksRequest,
   GetMyTasksResponse,
@@ -21,8 +22,12 @@ export class MyTaskApiClient {
     return this.client.json(abortSignal, 'GET', `/api/my-tasks?${query}`);
   }
 
-  public getMyTaskForm(abortSignal: AbortSignal, id: string): Promise<GetMyTaskFormResponse> {
-    return this.client.json(abortSignal, 'GET', `/api/my-tasks/${encodeURIComponent(id)}/form`);
+  public getMyTaskForm(abortSignal: AbortSignal, id: string, request: GetMyTaskFormRequest): Promise<GetMyTaskFormResponse> {
+    const query = new URLSearchParams();
+    if (request.testUserName) {
+      query.set('testUserName', request.testUserName);
+    }
+    return this.client.json(abortSignal, 'GET', `/api/my-tasks/${encodeURIComponent(id)}/form?${query}`);
   }
 
   public getTaskVariableValue(abortSignal: AbortSignal, request: GetTaskVariableValueRequest): Promise<GetTaskVariableValueResponse> {

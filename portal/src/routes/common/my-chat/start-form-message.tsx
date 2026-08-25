@@ -11,12 +11,16 @@ export interface StartFormMessageProps {
   messageId: number;
   completedMessageIndex: number;
   finished: boolean;
+  testUserName: string | undefined;
 }
 
 export function StartFormMessage(props: StartFormMessageProps) {
   const apiClient = useApiClient();
   const { data, error, isLoading } = useLoader(
-    abortSignal => apiClient.myProcess.getMyProcessStartForm(abortSignal, props.processName),
+    abortSignal =>
+      apiClient.myProcess.getMyProcessStartForm(abortSignal, props.processName, {
+        testUserName: props.testUserName
+      }),
     [apiClient, props.processName]
   );
 

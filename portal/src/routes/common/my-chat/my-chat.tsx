@@ -8,10 +8,10 @@ import { useApiClient } from '../../../auth/auth-context';
 
 function messageRenderer(
   id: number,
-  _: ChatMessageType,
   completedMessage: CompletedChatMessage,
   completedMessageIndex: number,
-  sessionToken: string
+  sessionToken: string,
+  testUserName?: string
 ) {
   const finished = completedMessage.metadata?.['finished'] === true;
   const startForm = completedMessage.metadata?.['startForm'] as {
@@ -25,6 +25,7 @@ function messageRenderer(
         messageId={id}
         sessionToken={sessionToken}
         finished={finished}
+        testUserName={testUserName}
       />
     );
   }
@@ -38,6 +39,7 @@ function messageRenderer(
         messageId={id}
         completedMessageIndex={completedMessageIndex}
         finished={finished}
+        testUserName={testUserName}
       />
     );
   }
@@ -56,10 +58,20 @@ function messageFilter(type: ChatMessageType, metadata?: ChatMessageMetadata) {
 
 export interface MyChatProps {
   sessionKey: string;
+  testUserName?: string;
 }
 
 export function MyChat(props: MyChatProps) {
   const api = useApiClient();
 
-  return <Chat transport={api.chat} sessionKey={props.sessionKey} messageFilter={messageFilter} messageRenderer={messageRenderer} />;
+  return (
+    <Chat
+      transport={api.chat}
+      sessionKey={props.sessionKey}
+      messageFilter={messageFilter}
+      messageRenderer={(id, _, completedMessage, completedMessageIndex, sessionToken) =>
+        messageRenderer(id, completedMessage, completedMessageIndex, sessionToken, props.testUserName)
+      }
+    />
+  );
 }

@@ -30,16 +30,18 @@ export class SubmitMyTaskEndpoint implements Endpoint {
 
   public async handle(req: Request): Promise<SubmitMyTaskResponse> {
     const abortSignal = getEndpointAbortSignal(req);
-    const { userName } = getAuthToken(req);
+    const authToken = getAuthToken(req);
     const request = parseBody(submitMyTaskRequestSchema, req.body);
 
-    const userAssignedTask = await this.userAssignedTaskProvider.tryGet(abortSignal, userName, request.taskId);
+    const { isTest, userName } = authToken.maybeOverrideTestUserName(request.testUserName);
+
+    const userAssignedTask = await this.userAssignedTaskProvider.tryGet(abortSignal, isTest, userName, request.taskId);
     if (!userAssignedTask) {
       throw new EndpointError('Task not found', 404);
     }
     const { assignedTask, task } = userAssignedTask;
 
-    const chatSession = await this.userChatSessionProvider.get(abortSignal, task.isTest, userName, assignedTask.channelName);
+    const chatSession = await this.userChatSessionProvider.get(abortSignal, isTest, userName, assignedTask.channelName);
     if (!chatSession) {
       throw new EndpointError('Chat session not found', 404);
     }

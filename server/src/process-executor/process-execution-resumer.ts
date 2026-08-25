@@ -5,6 +5,7 @@ import { ProcessExecution } from './process-execution';
 import { ProcessExecutor } from './process-executor';
 import { EventBus } from '../events/event-bus';
 import { ProcessExecutionFinishedEvent } from '../events/process-execution/process-execution-finished-event';
+import { ProcessExecutionResumeListenerStore } from './process-execution-resume-listener-store';
 
 export class ProcessExecutionResumeError extends Error {
   public constructor(message: string) {
@@ -18,6 +19,7 @@ export class ProcessExecutionResumer {
     private readonly processRepository: ProcessRepository,
     private readonly persistedExecutionRepository: PersistedExecutionRepository,
     private readonly processExecutor: ProcessExecutor,
+    private readonly resumeListenerStore: ProcessExecutionResumeListenerStore,
     private readonly eventBus: EventBus
   ) {}
 
@@ -48,6 +50,12 @@ export class ProcessExecutionResumer {
     });
 
     await this.persistedExecutionRepository.delete(abortSignal, executionId);
+
+    const listener = this.resumeListenerStore.tryGet(executionId);
+    if (listener) {
+      listener(execution);
+    }
+
     execution.run(abortSignal, {
       signalOnFirstWait: payload
     });

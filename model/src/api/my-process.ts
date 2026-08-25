@@ -22,11 +22,16 @@ export type GetMyProcessesResponse = z.infer<typeof getMyProcessesResponseSchema
 
 // getMyProcessStartForm
 
+export const getMyProcessStartFormRequestSchema = z.object({
+  testUserName: z.string().optional()
+});
+
 export const getMyProcessStartFormResponseSchema = z.object({
   form: formDefinitionSchema.nullable(),
   startVariableSchemas: jsonSchema.nullable()
 });
 
+export type GetMyProcessStartFormRequest = z.infer<typeof getMyProcessStartFormRequestSchema>;
 export type GetMyProcessStartFormResponse = z.infer<typeof getMyProcessStartFormResponseSchema>;
 
 // startMyProcess
