@@ -23,7 +23,9 @@ export class StartMyProcessTool extends ZodTool<Arg> {
   }
 
   protected async handle(abortSignal: AbortSignal, { sessionId }: ToolContext, arg: Arg): Promise<ZodToolExecutionResult> {
-    const { userName } = ChatSessionId.decode(sessionId);
+    const chatSession = ChatSessionId.decode(sessionId);
+    const userName = chatSession.userName;
+    const isTest = chatSession.isTest();
 
     const process = await this.userProcessProvider.tryGet(abortSignal, userName, arg.name);
     if (!process) {
@@ -46,7 +48,7 @@ export class StartMyProcessTool extends ZodTool<Arg> {
     const context: ProcessExecutionContext = {
       startedBy: userName,
       chatSessionId: sessionId,
-      isTest: false
+      isTest
     };
 
     const abortController = new AbortController();

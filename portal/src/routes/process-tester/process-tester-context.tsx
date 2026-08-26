@@ -2,6 +2,7 @@ import { ProcessLogLevel, type ProcessDefinition, type ProcessDto, type ReturnSt
 import { createContext, useContext, useEffect, useMemo, useReducer } from 'react';
 import { DefinitionWalker } from 'sequential-workflow-model';
 import { useApiClient, useSession } from '../../auth/auth-context';
+import { ProcessTesterPreferencesStorage } from './process-tester-preferences-storage';
 import {
   CurrentStepProcessTesterTimelineItem,
   ErrorProcessTesterTimelineItem,
@@ -47,7 +48,14 @@ export interface ProcessTesterContextProps {
 export function ProcessTesterContext(props: ProcessTesterContextProps) {
   const apiClient = useApiClient();
   const session = useSession();
-  const [data, update] = useReducer(reduceState, undefined, () => createData(props.process, session.userName));
+  const preferencesStorage = useMemo(() => new ProcessTesterPreferencesStorage(), []);
+  const [data, update] = useReducer(reduceState, undefined, () =>
+    createData(props.process, session.userName, preferencesStorage)
+  );
+
+  useEffect(() => {
+    preferencesStorage.saveChatUserNames(data.chatUserNames);
+  }, [data.chatUserNames, preferencesStorage]);
 
   useEffect(() => {
     if (!data.startFormData) {
@@ -166,7 +174,16 @@ function reduceState(state: ProcessTesterData, stateUpdate: StateUpdate): Proces
   return { ...state, ...delta };
 }
 
-function createData(process: ProcessDto, currentUserName: string): ProcessTesterData {
+function createData(
+  process: ProcessDto,
+  currentUserName: string,
+  preferencesStorage: ProcessTesterPreferencesStorage
+): ProcessTesterData {
+  const storedChatUserNames = preferencesStorage.readChatUserNames();
+  const chatUserNames = storedChatUserNames.includes(currentUserName)
+    ? storedChatUserNames
+    : [currentUserName, ...storedChatUserNames];
+
   return {
     process,
     startFormData: null,
@@ -178,7 +195,7 @@ function createData(process: ProcessDto, currentUserName: string): ProcessTester
       )
     ],
     currentUserName,
-    chatUserNames: [currentUserName],
+    chatUserNames,
     activeChatUserName: currentUserName
   };
 }
