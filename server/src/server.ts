@@ -76,7 +76,7 @@ import { TaskRepository } from './repositories/task/task-repository';
 import { AssignedTaskRepository } from './repositories/task/assigned-task-repository';
 import { SqliteTaskRepository } from './repositories/task/sqlite-task-repository';
 import { SqliteAssignedTaskRepository } from './repositories/task/sqlite-assigned-task-repository';
-import { TaskManager } from './process-executor/services/task-manager';
+import { TaskCreator } from './task/task-creator';
 import { UserAccessExpressionUserQuerier } from './queriers/user-access-expression/user-access-expression-user-querier';
 import { SqliteUserAccessExpressionUserQuerier } from './queriers/user-access-expression/sqlite-user-access-expression-user-querier';
 import { MyTaskListQuerier } from './queriers/my-task-list/my-task-list-querier';
@@ -140,6 +140,8 @@ import { TelegramSynchronizationManager } from './telegram/telegram-synchronizat
 import { TelegramConfigurationChangedEventHandler } from './events/telegram-configuration/telegram-configuration-changed-event-handler';
 import { GetStartedByRpcHandler } from './process-executor/rpc-handlers/get-started-by-rpc-handler';
 import { ProcessExecutionResumeListenerStore } from './process-executor/process-execution-resume-listener-store';
+import { TaskResumer } from './task/task-resumer';
+import { SubmitMyTaskTool } from './chat-session/user-tools/submit-my-task-tool';
 
 const PORT = process.env.PORT || 2048;
 
@@ -243,7 +245,7 @@ export class Server {
 
     const sandboxInstanceManager = new SandboxInstanceManager(serverPaths, sandboxRepository, rpcHandler);
 
-    const taskManager = new TaskManager(taskRepository, assignedTaskRepository, userAccessExpressionUserQuerier, userChatSessionProvider);
+    const taskCreator = new TaskCreator(taskRepository, assignedTaskRepository, userAccessExpressionUserQuerier, userChatSessionProvider);
     const notifier = new Notifier(userAccessExpressionUserQuerier, userChatSessionProvider, notificationRepository);
 
     const llmClientFactory = new LlmClientFactory();
@@ -265,7 +267,7 @@ export class Server {
     const processExecutionPersister = new ProcessExecutionPersister(persistedExecutionRepository);
     const processExecutionServices: ProcessExecutionServices = {
       sandboxInstanceManager,
-      taskManager,
+      taskCreator,
       notifier
     };
     const processExecutor = new ProcessExecutor(processExecutionStore, processExecutionPersister, processExecutionServices);
@@ -282,11 +284,19 @@ export class Server {
     const passwordHasher = new PasswordHasher();
     const userProcessProvider = new UserProcessProvider(myProcessAccessQuerier, processRepository);
     const userAssignedTaskProvider = new UserAssignedTaskProvider(taskRepository, assignedTaskRepository);
+    const taskResumer = new TaskResumer(
+      userAssignedTaskProvider,
+      userChatSessionProvider,
+      assignedTaskRepository,
+      incompleteAssignedTaskCountQuerier,
+      processExecutionResumer
+    );
 
     const userToolSetProvider = new UserToolSetProvider([
       new MyProcessesTool(myProcessListQuerier),
       new StartMyProcessTool(userProcessProvider, lazyProcessExecutor),
-      new OpenMyProcessStartFormTool(userProcessProvider)
+      new OpenMyProcessStartFormTool(userProcessProvider),
+      new SubmitMyTaskTool(taskResumer)
     ]);
 
     const authMiddleware = new AuthMiddleware(authTokenRepository);
@@ -321,13 +331,7 @@ export class Server {
       new GetMyTasksEndpoint(myTaskListQuerier),
       new GetMyTaskFormEndpoint(userAssignedTaskProvider),
       new GetTaskVariableValueEndpoint(userAssignedTaskProvider, persistedExecutionRepository),
-      new SubmitMyTaskEndpoint(
-        processExecutionResumer,
-        userAssignedTaskProvider,
-        assignedTaskRepository,
-        userChatSessionProvider,
-        incompleteAssignedTaskCountQuerier
-      ),
+      new SubmitMyTaskEndpoint(taskResumer),
       new GetMyProcessStartFormEndpoint(userProcessProvider),
       new StartMyProcessEndpoint(userProcessProvider, lazyProcessExecutor, sessionManager),
       new GetProcessesEndpoint(processListQuerier),

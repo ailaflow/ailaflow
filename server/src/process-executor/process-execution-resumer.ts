@@ -6,6 +6,7 @@ import { ProcessExecutor } from './process-executor';
 import { EventBus } from '../events/event-bus';
 import { ProcessExecutionFinishedEvent } from '../events/process-execution/process-execution-finished-event';
 import { ProcessExecutionResumeListenerStore } from './process-execution-resume-listener-store';
+import { Logger } from '../core/logger';
 
 export class ProcessExecutionResumeError extends Error {
   public constructor(message: string) {
@@ -15,6 +16,8 @@ export class ProcessExecutionResumeError extends Error {
 }
 
 export class ProcessExecutionResumer {
+  private readonly logger = new Logger(ProcessExecutionResumer.name);
+
   public constructor(
     private readonly processRepository: ProcessRepository,
     private readonly persistedExecutionRepository: PersistedExecutionRepository,
@@ -34,7 +37,10 @@ export class ProcessExecutionResumer {
       throw new ProcessExecutionResumeError(`Cannot find the process: ${persistedExecution.processName}`);
     }
     if (process.hash !== persistedExecution.processHash) {
-      throw new ProcessExecutionResumeError('Cannot resume execution because the process definition changed');
+      // TODO: this may cause issues, we should consider how to handle this case.
+      this.logger.warn(
+        `Reassuming execution ${executionId} with a different process hash ${persistedExecution.processHash} != ${process.hash}`
+      );
     }
 
     const execution = this.processExecutor.restore(

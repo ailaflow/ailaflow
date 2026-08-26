@@ -1,14 +1,14 @@
 import { JsonSchema, TaskStep, UserAccessExpressionParser } from '@aila/model';
-import { AssignedTaskRepository } from '../../repositories/task/assigned-task-repository';
-import { TaskRepository } from '../../repositories/task/task-repository';
-import { UserAccessExpressionUserQuerier } from '../../queriers/user-access-expression/user-access-expression-user-querier';
-import { AssignedTask } from '../../repositories/task/assigned-task';
-import { Task } from '../../repositories/task/task';
-import { UserChatSessionProvider } from '../../chat-session/user-chat-session-provider';
-import { ProcessVariableManager } from './process-variable-manager';
-import { ProcessVariableEvaluator } from './process-value-evaluator';
+import { AssignedTaskRepository } from '../repositories/task/assigned-task-repository';
+import { TaskRepository } from '../repositories/task/task-repository';
+import { UserAccessExpressionUserQuerier } from '../queriers/user-access-expression/user-access-expression-user-querier';
+import { AssignedTask } from '../repositories/task/assigned-task';
+import { Task } from '../repositories/task/task';
+import { UserChatSessionProvider } from '../chat-session/user-chat-session-provider';
+import { ProcessVariableManager } from '../process-executor/services/process-variable-manager';
+import { ProcessVariableEvaluator } from '../process-executor/services/process-value-evaluator';
 
-export class TaskManager {
+export class TaskCreator {
   public constructor(
     private readonly taskRepository: TaskRepository,
     private readonly assignedTaskRepository: AssignedTaskRepository,

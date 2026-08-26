@@ -3,7 +3,7 @@ import { Process } from '../repositories/process/process';
 import { ProcessLogger } from './services/process-logger';
 import { ProcessScriptExecutor } from './services/process-script-executor';
 import { ProcessVariableManager } from './services/process-variable-manager';
-import { TaskManager } from './services/task-manager';
+import { TaskCreator } from '../task/task-creator';
 import { Notifier } from './services/notifier';
 import { ProcessExecutionServices } from './services/services';
 import { ProcessVariableEvaluator } from './services/process-value-evaluator';
@@ -33,7 +33,7 @@ export class ProcessExecutionGlobalState {
       variables,
       variableEvaluator,
       scriptExecutor,
-      services.taskManager,
+      services.taskCreator,
       services.notifier
     );
   }
@@ -60,7 +60,7 @@ export class ProcessExecutionGlobalState {
     public readonly variables: ProcessVariableManager,
     public readonly variableEvaluator: ProcessVariableEvaluator,
     public readonly scriptExecutor: ProcessScriptExecutor,
-    public readonly taskManager: TaskManager,
+    public readonly taskCreator: TaskCreator,
     public readonly notifier: Notifier
   ) {}
 

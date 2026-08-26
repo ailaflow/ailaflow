@@ -39,7 +39,6 @@ export class Router {
       } else {
         this.app[endpoint.method](endpoint.path, handler);
       }
-      this.logger.log(`Registered endpoint: ${endpoint.method.toUpperCase()} ${endpoint.path}`);
     }
   }
 }

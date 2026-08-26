@@ -1,9 +1,9 @@
 import { SandboxInstanceManager } from '../../sandbox/sandbox-instance-manager';
+import { TaskCreator } from '../../task/task-creator';
 import { Notifier } from './notifier';
-import { TaskManager } from './task-manager';
 
 export interface ProcessExecutionServices {
   sandboxInstanceManager: SandboxInstanceManager;
-  taskManager: TaskManager;
+  taskCreator: TaskCreator;
   notifier: Notifier;
 }

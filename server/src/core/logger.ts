@@ -9,6 +9,10 @@ export class Logger {
     console.error(`\x1b[31m${this.prefix()} ${message}\x1b[0m`);
   }
 
+  public warn(message: string) {
+    console.warn(`\x1b[33m${this.prefix()} ${message}\x1b[0m`);
+  }
+
   private prefix() {
     const iso = new Date().toISOString();
     const t = iso.indexOf('T');

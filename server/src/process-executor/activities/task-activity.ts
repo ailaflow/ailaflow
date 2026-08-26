@@ -6,7 +6,7 @@ export const taskStepActivity = createSignalActivity<TaskStep, ProcessExecutionG
   init: () => ({}),
   beforeSignal: async (step: TaskStep, globalState: ProcessExecutionGlobalState) => {
     const abortSignal = AbortSignal.timeout(5_000);
-    await globalState.taskManager.create(
+    await globalState.taskCreator.create(
       abortSignal,
       globalState.executionId,
       globalState.context.isTest,

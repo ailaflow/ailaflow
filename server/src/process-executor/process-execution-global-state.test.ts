@@ -3,7 +3,7 @@ import test from 'node:test';
 import { SerializedWorkflowMachineSnapshot } from 'sequential-workflow-machine';
 import { Process } from '../repositories/process/process';
 import { SandboxInstanceManager } from '../sandbox/sandbox-instance-manager';
-import { TaskManager } from './services/task-manager';
+import { TaskCreator } from '../task/task-creator';
 import { ProcessExecutionGlobalState } from './process-execution-global-state';
 import { ProcessLogger } from './services/process-logger';
 import { ProcessScriptExecutor } from './services/process-script-executor';
@@ -32,7 +32,7 @@ test('process execution global state serializes variables and recreates runtime 
 
   const deserialized = ProcessExecutionGlobalState.deserialize('execution_1', context, serialized, process, {
     sandboxInstanceManager: {} as SandboxInstanceManager,
-    taskManager: {} as TaskManager,
+    taskCreator: {} as TaskCreator,
     notifier: {} as Notifier
   });
 
@@ -73,7 +73,7 @@ test('process execution snapshot transformer converts current and history global
 
   const deserialized = ProcessExecutionSnapshotTransformer.deserialize('execution_1', context, process, serialized, {
     sandboxInstanceManager: {} as SandboxInstanceManager,
-    taskManager: {} as TaskManager,
+    taskCreator: {} as TaskCreator,
     notifier: {} as Notifier
   });
 
@@ -113,7 +113,7 @@ function createTestProcess(): Process {
 function createGlobalState(process: Process, values: Record<string, unknown>): ProcessExecutionGlobalState {
   return ProcessExecutionGlobalState.create('execution_1', context, values, process, {
     sandboxInstanceManager: {} as SandboxInstanceManager,
-    taskManager: {} as TaskManager,
+    taskCreator: {} as TaskCreator,
     notifier: {} as Notifier
   });
 }
