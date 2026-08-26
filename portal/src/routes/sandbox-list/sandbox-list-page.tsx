@@ -81,6 +81,10 @@ export function SandboxListPage() {
       emptyMessage="No sandboxes found."
       actions={[
         {
+          label: 'Terminal',
+          getTo: sandbox => `/admin/sandboxes/${encodeURIComponent(sandbox.name)}/terminal`
+        },
+        {
           label: <SvgIcon name="pencil" className="h-4 w-4" />,
           ariaLabel: 'Edit sandbox',
           getTo: sandbox => `/admin/sandboxes/${encodeURIComponent(sandbox.name)}`

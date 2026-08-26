@@ -15,6 +15,7 @@ export interface ExecuteCommandRequest {
 export interface ExecuteCommandUpdate {
   stdout?: string;
   stderr?: string;
+  error?: string;
   close?: {
     code: number;
     signal: string | null;

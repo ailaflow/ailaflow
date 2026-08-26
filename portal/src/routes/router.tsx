@@ -8,6 +8,7 @@ import { ProcessEditorPage } from './process-editor/process-editor-page';
 import { ProcessTesterPage } from './process-tester/process-tester-page';
 import { SandboxListPage } from './sandbox-list/sandbox-list-page';
 import { SandboxEditorPage } from './sandbox-editor/sandbox-editor-page';
+import { SandboxTerminalPage } from './sandbox-terminal/sandbox-terminal-page';
 import { AdminPortal } from './common/admin-portal';
 import { MyChatPage } from './my-chat/my-chat-page';
 import { MyConfigurationPage } from './my-configuration/my-configuration-page';
@@ -102,6 +103,10 @@ export const routes = [
       {
         path: '/admin/sandboxes/:name',
         element: <SandboxEditorPage />
+      },
+      {
+        path: '/admin/sandboxes/:name/terminal',
+        element: <SandboxTerminalPage />
       },
       {
         path: '/admin/users',

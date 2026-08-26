@@ -53,3 +53,22 @@ export const upsertSandboxRequestSchema = z.object({
 });
 
 export type UpsertSandboxRequest = z.infer<typeof upsertSandboxRequestSchema>;
+
+// executeSandboxCommand
+
+export const executeSandboxCommandRequestSchema = z.object({
+  cwd: z.string().min(1),
+  command: z.string().min(1)
+});
+
+export type ExecuteSandboxCommandRequest = z.infer<typeof executeSandboxCommandRequestSchema>;
+
+export interface ExecuteSandboxCommandUpdate {
+  stdout?: string;
+  stderr?: string;
+  error?: string;
+  result?: {
+    code: number;
+    signal: string | null;
+  };
+}

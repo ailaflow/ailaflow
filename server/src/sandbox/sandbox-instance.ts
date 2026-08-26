@@ -1,13 +1,13 @@
 import { HttpSseHandler } from '../core/http-client';
 import { Process } from '../repositories/process/process';
 import { Sandbox } from '../repositories/sandbox/sandbox';
-import { ExecuteCommandUpdate } from './bridge-client';
+import { ExecuteCommandRequest, ExecuteCommandUpdate } from './bridge-client';
 import { SandboxDependenciesInstaller } from './sandbox-dependencies-installer';
 import { SandboxExecutor, SandboxExecutorRequest, SandboxExecutorResult } from './sandbox-executor';
 import { SandboxHostPaths } from './sandbox-host-paths';
 import { SandboxMaterializer } from './sandbox-materializer';
 import { SandboxRpcHandlerProvider } from './sandbox-rpc-handler-provider';
-import { SandboxRuntime } from './sandbox-runtime';
+import { CommandResult, SandboxRuntime } from './sandbox-runtime';
 
 export class SandboxInstance {
   public static async create(
@@ -54,6 +54,14 @@ export class SandboxInstance {
     handler?: HttpSseHandler<ExecuteCommandUpdate>
   ): Promise<SandboxExecutorResult> {
     return this.executor.execute(abortSignal, request, handler);
+  }
+
+  public runCommand(
+    abortSignal: AbortSignal,
+    command: ExecuteCommandRequest,
+    handler?: HttpSseHandler<ExecuteCommandUpdate>
+  ): Promise<CommandResult> {
+    return this.runtime.runCommand(abortSignal, command, handler);
   }
 
   public tryStop(error?: Error): Promise<boolean> {
