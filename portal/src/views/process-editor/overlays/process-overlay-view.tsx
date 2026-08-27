@@ -20,7 +20,7 @@ export function ProcessOverlayView(props: ProcessOverlayViewProps) {
               type="button"
               onClick={props.onClose}
               aria-label={props.closeAriaLabel}
-              className="inline-flex h-9 items-center justify-center rounded-md border border-slate-200 bg-white px-3 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-800"
+              className="cursor-pointer inline-flex h-9 items-center justify-center rounded-md border border-slate-200 bg-white px-3 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-800"
             >
               {props.closeContent}
             </button>
@@ -29,7 +29,7 @@ export function ProcessOverlayView(props: ProcessOverlayViewProps) {
                 type="button"
                 disabled={!props.isOkEnabled}
                 onClick={props.onOk}
-                className="inline-flex h-9 items-center justify-center rounded-md border border-slate-900 bg-slate-900 px-5 text-sm font-medium text-white transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:border-slate-300 disabled:bg-slate-300 disabled:text-white disabled:hover:bg-slate-300"
+                className="cursor-pointer inline-flex h-9 items-center justify-center rounded-md border border-slate-900 bg-slate-900 px-5 text-sm font-medium text-white transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:border-slate-300 disabled:bg-slate-300 disabled:text-white disabled:hover:bg-slate-300"
               >
                 OK
               </button>
