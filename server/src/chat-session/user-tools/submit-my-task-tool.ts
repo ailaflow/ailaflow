@@ -5,7 +5,7 @@ import { TaskResumer, TaskResumerError } from '../../task/task-resumer';
 
 const inputSchema = z.object({
   taskId: z.string(),
-  values: z.record(z.string(), z.unknown())
+  outputValues: z.record(z.string(), z.unknown())
 });
 
 type Arg = z.infer<typeof inputSchema>;
@@ -20,7 +20,7 @@ export class SubmitMyTaskTool extends ZodTool<Arg> {
     const isTest = chatSessionId.isTest();
 
     try {
-      await this.taskResumer.resume(abortSignal, isTest, chatSessionId.userName, arg.taskId, arg.values);
+      await this.taskResumer.resume(abortSignal, isTest, chatSessionId.userName, arg.taskId, arg.outputValues);
     } catch (e) {
       if (e instanceof TaskResumerError) {
         return {

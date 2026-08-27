@@ -1,0 +1,39 @@
+import { ToolContext, ZodTool, ZodToolExecutionResult } from '@aibindkit/llm';
+import { UserTaskDetailsProvider } from '../../task/user-task-details-provider';
+import { ChatSessionId } from '../chat-session-id';
+import z from 'zod/v4';
+
+const inputSchema = z.object({
+  taskId: z.string()
+});
+
+type Arg = z.infer<typeof inputSchema>;
+
+export class GetMyTaskDetailsTool extends ZodTool<Arg> {
+  public constructor(private readonly userTaskDetailsProvider: UserTaskDetailsProvider) {
+    super(
+      'get_my_task_details',
+      'Returns all input values and the schema for output values needed to submit an assigned task',
+      inputSchema
+    );
+  }
+
+  public async handle(abortSignal: AbortSignal, { sessionId }: ToolContext, arg: Arg): Promise<ZodToolExecutionResult> {
+    const chatSessionId = ChatSessionId.decode(sessionId);
+    const details = await this.userTaskDetailsProvider.tryGet(abortSignal, chatSessionId.isTest(), chatSessionId.userName, arg.taskId);
+    if (!details) {
+      return {
+        content: {
+          error: 'Task not found'
+        }
+      };
+    }
+
+    return {
+      content: {
+        inputValues: details.getAllInputVariableValues(),
+        outputVariableSchemas: details.outputVariableSchemas
+      }
+    };
+  }
+}

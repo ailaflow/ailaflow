@@ -145,8 +145,8 @@ import { SubmitMyTaskTool } from './chat-session/user-tools/submit-my-task-tool'
 import { ProcessManager } from './process/process-manager';
 import { ProcessDefinitionUpgrader } from './process/process-definition-upgrader';
 import { GetMyTasksTool } from './chat-session/user-tools/get-my-tasks-tool';
-import { GetMyTaskInputVariableValuesTool } from './chat-session/user-tools/get-my-task-input-variable-values-tool';
-import { TaskInputVariableValuesProvider } from './task/task-input-variable-values-provider';
+import { GetMyTaskDetailsTool } from './chat-session/user-tools/get-my-task-details-tool';
+import { UserTaskDetailsProvider } from './task/user-task-details-provider';
 
 const PORT = process.env.PORT || 2048;
 
@@ -291,7 +291,7 @@ export class Server {
     const passwordHasher = new PasswordHasher();
     const userProcessProvider = new UserProcessProvider(myProcessAccessQuerier, processManager);
     const userAssignedTaskProvider = new UserAssignedTaskProvider(taskRepository, assignedTaskRepository);
-    const taskInputVariableValuesProvider = new TaskInputVariableValuesProvider(userAssignedTaskProvider, persistedExecutionRepository);
+    const userTaskDetailsProvider = new UserTaskDetailsProvider(userAssignedTaskProvider, persistedExecutionRepository);
     const taskResumer = new TaskResumer(
       userAssignedTaskProvider,
       userChatSessionProvider,
@@ -303,7 +303,7 @@ export class Server {
     const userToolSetProvider = new UserToolSetProvider([
       new GetMyProcessesTool(myProcessListQuerier),
       new GetMyTasksTool(myTaskListQuerier),
-      new GetMyTaskInputVariableValuesTool(taskInputVariableValuesProvider),
+      new GetMyTaskDetailsTool(userTaskDetailsProvider),
       new StartMyProcessTool(userProcessProvider, lazyProcessExecutor),
       new OpenMyProcessStartFormTool(userProcessProvider),
       new SubmitMyTaskTool(taskResumer)
@@ -340,7 +340,7 @@ export class Server {
       new GetMyProcessesEndpoint(myProcessListQuerier),
       new GetMyTasksEndpoint(myTaskListQuerier),
       new GetMyTaskFormEndpoint(userAssignedTaskProvider),
-      new GetTaskVariableValueEndpoint(taskInputVariableValuesProvider),
+      new GetTaskVariableValueEndpoint(userTaskDetailsProvider),
       new SubmitMyTaskEndpoint(taskResumer),
       new GetMyProcessStartFormEndpoint(userProcessProvider),
       new StartMyProcessEndpoint(userProcessProvider, lazyProcessExecutor, sessionManager),

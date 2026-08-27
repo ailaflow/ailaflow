@@ -4,12 +4,12 @@ import test from 'node:test';
 import { PersistedExecution } from '../../repositories/persisted-execution/persisted-execution';
 import { PersistedExecutionRepository } from '../../repositories/persisted-execution/persisted-execution-repository';
 import { Task } from '../../repositories/task/task';
-import { TaskInputVariableValuesProvider } from '../../task/task-input-variable-values-provider';
 import { UserAssignedTaskProvider } from '../../task/user-assigned-task-provider';
+import { UserTaskDetailsProvider } from '../../task/user-task-details-provider';
 import { ChatSessionId } from '../chat-session-id';
-import { GetMyTaskInputVariableValuesTool } from './get-my-task-input-variable-values-tool';
+import { GetMyTaskDetailsTool } from './get-my-task-details-tool';
 
-test('returns all task input variable values and no other execution values', async () => {
+test('returns all task input values, output schemas, and no other execution values', async () => {
   const abortSignal = new AbortController().signal;
   const userAssignedTaskProvider = {
     tryGet: async (_: AbortSignal, isTest: boolean, userName: string, taskId: string) => {
@@ -20,8 +20,11 @@ test('returns all task input variable values and no other execution values', asy
         assignedTask: {},
         task: {
           executionId: 'execution_1',
-          inputVariableNames: ['name', 'count']
-        } as Task
+          inputVariableNames: ['name', 'count'],
+          outputVariableSchemas: {
+            approved: { type: 'boolean' }
+          }
+        } as unknown as Task
       };
     }
   } as UserAssignedTaskProvider;
@@ -43,15 +46,18 @@ test('returns all task input variable values and no other execution values', asy
       } as unknown as PersistedExecution;
     }
   } as PersistedExecutionRepository;
-  const provider = new TaskInputVariableValuesProvider(userAssignedTaskProvider, persistedExecutionRepository);
-  const tool = new GetMyTaskInputVariableValuesTool(provider);
+  const provider = new UserTaskDetailsProvider(userAssignedTaskProvider, persistedExecutionRepository);
+  const tool = new GetMyTaskDetailsTool(provider);
 
   const result = await tool.handle(abortSignal, createContext('alice', true), { taskId: 'task_1' });
 
   assert.deepEqual(result.content, {
-    values: {
+    inputValues: {
       name: 'Example',
       count: 3
+    },
+    outputVariableSchemas: {
+      approved: { type: 'boolean' }
     }
   });
 });
@@ -63,8 +69,8 @@ test('returns an error when the task is not assigned to the user', async () => {
   const persistedExecutionRepository = {
     tryGet: async () => assert.fail('execution should not be queried')
   } as unknown as PersistedExecutionRepository;
-  const provider = new TaskInputVariableValuesProvider(userAssignedTaskProvider, persistedExecutionRepository);
-  const tool = new GetMyTaskInputVariableValuesTool(provider);
+  const provider = new UserTaskDetailsProvider(userAssignedTaskProvider, persistedExecutionRepository);
+  const tool = new GetMyTaskDetailsTool(provider);
 
   const result = await tool.handle(new AbortController().signal, createContext('alice', false), { taskId: 'missing' });
 
