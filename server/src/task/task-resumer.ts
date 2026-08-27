@@ -36,7 +36,7 @@ export class TaskResumer {
   ): Promise<void> {
     const userAssignedTask = await this.userAssignedTaskProvider.tryGet(abortSignal, isTest, userName, taskId);
     if (!userAssignedTask) {
-      throw new TaskResumerError('Task not found');
+      throw new TaskResumerError('Task not found or not assigned to the user');
     }
     const { assignedTask, task } = userAssignedTask;
 
