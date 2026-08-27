@@ -61,6 +61,8 @@ export class TaskResumer {
     if (count === 0) {
       await this.resumeProcess(abortSignal, task);
     }
+
+    this.logger.log(`Resumed successfully task ${task.id}`);
   }
 
   private async resumeProcess(abortSignal: AbortSignal, task: Task) {
@@ -94,7 +96,6 @@ export class TaskResumer {
       }
     }
 
-    this.logger.log(`Resuming process execution for task ${task.id}`);
     await this.processExecutionResumer.resume(abortSignal, task.executionId, outputValues);
   }
 }

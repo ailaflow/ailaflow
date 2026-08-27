@@ -1,15 +1,12 @@
 import { JsonSchema, ProcessDefinition, VariableDefinition } from '@aila/model';
 import { useRootEditor } from 'sequential-workflow-designer-react';
 import { ProcessEditorOverlayType, ProcessEditorState } from '../process-editor-context';
-import { DesignerEditorView } from '../../../views/process-editor/designer-editors/designer-editor-view';
-import { EditorPropertyView } from '../../../views/process-editor/designer-editors/editor-property-view';
+import { DesignerEditorView } from '../../../views/process-editor/designer/designer-editor-view';
+import { EditorPropertyView } from '../../../views/process-editor/designer/editor-property-view';
 import { DefinitionPath } from '../../../core/definition-path';
-import {
-  DisabledSubValuePreviewView,
-  EnabledSubValuePreviewView
-} from '../../../views/process-editor/designer-editors/sub-value-preview-view';
-import { VariableSelectorPropertyView } from '../../../views/process-editor/designer-editors/variable-selector-property-view';
-import { VariableDefinitionsView } from '../../../views/process-editor/designer-editors/variable-definitions-view';
+import { DisabledSubValuePreviewView, EnabledSubValuePreviewView } from '../../../views/process-editor/designer/sub-value-preview-view';
+import { VariableSelectorPropertyView } from '../../../views/process-editor/designer/variable-selector-property-view';
+import { VariableDefinitionsView } from '../../../views/process-editor/designer/variable-definitions-view';
 import { createEmptyFormDefinition } from '../designer-configuration';
 
 export interface RootEditorProps {

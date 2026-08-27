@@ -2,12 +2,13 @@ import type { FormDefinition, FormInputExample } from '@aila/model';
 import { FormDefinitionValidator, VariableCachedValidator } from '@aila/model';
 import { useMemo, useState } from 'react';
 import { wrapDefinition } from 'sequential-workflow-designer-react';
-import { ProcessOverlayView } from '../../../views/process-editor/process-overlay-view';
-import { FormEditorTab, FormOverlayView } from '../../../views/process-editor/script-overlay/form-overlay-view';
+import { ProcessOverlayView } from '../../../views/process-editor/overlays/process-overlay-view';
+import { FormEditorTab, FormOverlayView } from '../../../views/process-editor/overlays/form-overlay-view';
 import { ProcessEditorOverlayType } from '../process-editor-context';
 import { useProcessEditor } from '../process-editor-context';
 import { FormEditorOverlayUtils } from './form-editor-overlay-utils';
 import { FormAdapter } from '../../common/form-renderer/form-adapter';
+import { SvgIcon } from '../../../views/common/svg-icons';
 
 export function FormEditorOverlay() {
   const state = useProcessEditor();
@@ -89,8 +90,11 @@ export function FormEditorOverlay() {
   return (
     <ProcessOverlayView
       title="Form Editor"
-      canOk={state.isDirty && Object.keys(formState.errors).length === 0}
-      onCancel={state.closeOverlay}
+      isOkVisible={state.isDirty}
+      isOkEnabled={state.isDirty && Object.keys(formState.errors).length === 0}
+      closeContent={state.isDirty ? 'Cancel' : <SvgIcon name="x" className="h-4 w-4" />}
+      closeAriaLabel={state.isDirty ? 'Cancel' : 'Back to designer'}
+      onClose={state.closeOverlay}
       onOk={ok}
     >
       <FormOverlayView

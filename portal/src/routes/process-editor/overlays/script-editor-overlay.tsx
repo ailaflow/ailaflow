@@ -1,12 +1,13 @@
 import { useProcessEditor } from '../process-editor-context';
-import { ProcessOverlayView } from '../../../views/process-editor/process-overlay-view';
+import { ProcessOverlayView } from '../../../views/process-editor/overlays/process-overlay-view';
 import { useEffect } from 'react';
 import { wrapDefinition } from 'sequential-workflow-designer-react';
-import { ScriptOverlayView } from '../../../views/process-editor/script-overlay/script-overlay-view';
+import { ScriptOverlayView } from '../../../views/process-editor/overlays/script-overlay-view';
 import type { FileContent } from '@aila/model';
-import { FolderTreeItem, FolderTreeView } from '../../../views/process-editor/script-overlay/folder-tree-view';
-import { FileContentEditorView } from '../../../views/process-editor/script-overlay/file-content-editor-view';
+import { FolderTreeItem, FolderTreeView } from '../../../views/process-editor/overlays/folder-tree-view';
+import { FileContentEditorView } from '../../../views/process-editor/overlays/file-content-editor-view';
 import { ScriptEditorOverlayUtils } from './script-editor-overlay-utils';
+import { SvgIcon } from '../../../views/common/svg-icons';
 
 export interface ScriptEditorOverlayState {
   selectedFilePath: string | undefined;
@@ -79,7 +80,15 @@ export function ScriptEditorOverlay() {
   }
 
   return (
-    <ProcessOverlayView title="Script Editor" canOk={state.isDirty} onCancel={state.closeOverlay} onOk={ok}>
+    <ProcessOverlayView
+      title="Script Editor"
+      isOkVisible={state.isDirty}
+      isOkEnabled={state.isDirty}
+      closeContent={state.isDirty ? 'Cancel' : <SvgIcon name="x" className="h-4 w-4" />}
+      closeAriaLabel={state.isDirty ? 'Cancel' : 'Back to designer'}
+      onClose={state.closeOverlay}
+      onOk={ok}
+    >
       <ScriptOverlayView>
         <FolderTreeView
           items={folderItems}

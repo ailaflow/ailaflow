@@ -2,7 +2,8 @@ import { JsonSchema } from '@aila/model';
 import { ProcessEditorOverlayType, useProcessEditor } from '../process-editor-context';
 import { wrapDefinition } from 'sequential-workflow-designer-react';
 import { useState } from 'react';
-import { ProcessOverlayView } from '../../../views/process-editor/process-overlay-view';
+import { ProcessOverlayView } from '../../../views/process-editor/overlays/process-overlay-view';
+import { SvgIcon } from '../../../views/common/svg-icons';
 
 export function SchemaEditorOverlay() {
   const state = useProcessEditor();
@@ -48,7 +49,15 @@ export function SchemaEditorOverlay() {
   }
 
   return (
-    <ProcessOverlayView title={`Schema`} canOk={state.isDirty && schema.isValid} onCancel={state.closeOverlay} onOk={ok}>
+    <ProcessOverlayView
+      title="Schema"
+      isOkVisible={state.isDirty}
+      isOkEnabled={state.isDirty && schema.isValid}
+      closeContent={state.isDirty ? 'Cancel' : <SvgIcon name="x" className="h-4 w-4" />}
+      closeAriaLabel={state.isDirty ? 'Cancel' : 'Back to designer'}
+      onClose={state.closeOverlay}
+      onOk={ok}
+    >
       <textarea
         value={schema.schema}
         onChange={e => setSchema2(e.target.value)}

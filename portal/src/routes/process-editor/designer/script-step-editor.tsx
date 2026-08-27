@@ -1,12 +1,12 @@
 import { useStepEditor } from 'sequential-workflow-designer-react';
-import { DesignerEditorView } from '../../../views/process-editor/designer-editors/designer-editor-view';
+import { DesignerEditorView } from '../../../views/process-editor/designer/designer-editor-view';
 import { StepEditorProps } from './step-editor';
-import { EditorPropertyView } from '../../../views/process-editor/designer-editors/editor-property-view';
-import { StringEditorPropertyView } from '../../../views/process-editor/designer-editors/string-editor-property-view';
-import { SelectEditorPropertyView } from '../../../views/process-editor/designer-editors/select-editor-property-view';
+import { EditorPropertyView } from '../../../views/process-editor/designer/editor-property-view';
+import { StringEditorPropertyView } from '../../../views/process-editor/designer/string-editor-property-view';
+import { SelectEditorPropertyView } from '../../../views/process-editor/designer/select-editor-property-view';
 import { ProcessDefinition, ScriptStep } from '@aila/model';
 import { DefinitionPath } from '../../../core/definition-path';
-import { EnabledSubValuePreviewView } from '../../../views/process-editor/designer-editors/sub-value-preview-view';
+import { EnabledSubValuePreviewView } from '../../../views/process-editor/designer/sub-value-preview-view';
 import { ProcessEditorOverlayType } from '../process-editor-context';
 
 export function ScriptStepEditor(props: StepEditorProps) {

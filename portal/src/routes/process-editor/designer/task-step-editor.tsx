@@ -1,14 +1,14 @@
 import { useStepEditor } from 'sequential-workflow-designer-react';
-import { DesignerEditorView } from '../../../views/process-editor/designer-editors/designer-editor-view';
+import { DesignerEditorView } from '../../../views/process-editor/designer/designer-editor-view';
 import { StepEditorProps } from './step-editor';
-import { StringEditorPropertyView } from '../../../views/process-editor/designer-editors/string-editor-property-view';
+import { StringEditorPropertyView } from '../../../views/process-editor/designer/string-editor-property-view';
 import { ProcessDefinition, TaskStep } from '@aila/model';
-import { EditorPropertyView } from '../../../views/process-editor/designer-editors/editor-property-view';
-import { EnabledSubValuePreviewView } from '../../../views/process-editor/designer-editors/sub-value-preview-view';
+import { EditorPropertyView } from '../../../views/process-editor/designer/editor-property-view';
+import { EnabledSubValuePreviewView } from '../../../views/process-editor/designer/sub-value-preview-view';
 import { DefinitionPath } from '../../../core/definition-path';
-import { VariableSelectorPropertyView } from '../../../views/process-editor/designer-editors/variable-selector-property-view';
+import { VariableSelectorPropertyView } from '../../../views/process-editor/designer/variable-selector-property-view';
 import { ProcessEditorOverlayType } from '../process-editor-context';
-import { StringOrVariablePropertyView } from '../../../views/process-editor/designer-editors/string-or-variable-property-view';
+import { StringOrVariablePropertyView } from '../../../views/process-editor/designer/string-or-variable-property-view';
 
 export function TaskStepEditor(props: StepEditorProps) {
   const { id, name, step, properties, definition, setName, setProperty } = useStepEditor<TaskStep, ProcessDefinition>();
