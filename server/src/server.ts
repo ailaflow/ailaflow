@@ -56,7 +56,7 @@ import { WriteVariableRpcHandler } from './process-executor/rpc-handlers/write-v
 import { ChatSessionResolver } from './chat-session/chat-session-resolver';
 import { ResourceAccessRepository } from './repositories/resource-access/resource-access-repository';
 import { SqliteResourceAccessRepository } from './repositories/resource-access/sqlite-resource-access-repository';
-import { MyProcessesTool } from './chat-session/user-tools/my-processes-tool';
+import { GetMyProcessesTool } from './chat-session/user-tools/get-my-processes-tool';
 import { StartMyProcessTool } from './chat-session/user-tools/start-my-process-tool';
 import { LazyProcessExecutor } from './process-executor/lazy-process-executor';
 import { EventBus } from './events/event-bus';
@@ -144,6 +144,7 @@ import { TaskResumer } from './task/task-resumer';
 import { SubmitMyTaskTool } from './chat-session/user-tools/submit-my-task-tool';
 import { ProcessManager } from './process/process-manager';
 import { ProcessDefinitionUpgrader } from './process/process-definition-upgrader';
+import { GetMyTasksTool } from './chat-session/user-tools/get-my-tasks-tool';
 
 const PORT = process.env.PORT || 2048;
 
@@ -297,7 +298,8 @@ export class Server {
     );
 
     const userToolSetProvider = new UserToolSetProvider([
-      new MyProcessesTool(myProcessListQuerier),
+      new GetMyProcessesTool(myProcessListQuerier),
+      new GetMyTasksTool(myTaskListQuerier),
       new StartMyProcessTool(userProcessProvider, lazyProcessExecutor),
       new OpenMyProcessStartFormTool(userProcessProvider),
       new SubmitMyTaskTool(taskResumer)

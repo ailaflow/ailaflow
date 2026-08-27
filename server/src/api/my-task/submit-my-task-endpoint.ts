@@ -5,7 +5,7 @@ import { parseBody } from '../framework/parse-request';
 import { submitMyTaskRequestSchema, SubmitMyTaskResponse } from '@aila/model';
 import { EndpointError } from '../framework/endpoint-error';
 import { getAuthToken } from '../auth/auth-middleware';
-import { TaskResumer, TaskResumerResult } from '../../task/task-resumer';
+import { TaskResumer, TaskResumerError } from '../../task/task-resumer';
 
 export class SubmitMyTaskEndpoint implements Endpoint {
   public readonly method = 'post';
@@ -21,9 +21,13 @@ export class SubmitMyTaskEndpoint implements Endpoint {
 
     const { isTest, userName } = authToken.maybeOverrideTestUserName(request.testUserName);
 
-    const result = await this.taskResumer.resume(abortSignal, isTest, userName, request.taskId, request.outputValues);
-    if (result === TaskResumerResult.TASK_NOT_FOUND) {
-      throw new EndpointError('Task not found', 404);
+    try {
+      await this.taskResumer.resume(abortSignal, isTest, userName, request.taskId, request.outputValues);
+    } catch (e) {
+      if (e instanceof TaskResumerError) {
+        throw new EndpointError(e.message, 400);
+      }
+      throw e;
     }
 
     return {

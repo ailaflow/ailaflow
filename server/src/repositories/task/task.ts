@@ -1,5 +1,6 @@
 import { FormDefinition, JsonSchema } from '@aila/model';
 import { randomBytes } from 'crypto';
+import { TaskVariables } from './task-variables';
 
 export class Task {
   public static create(
@@ -16,6 +17,8 @@ export class Task {
     return new Task(id, title, executionId, isTest, inputVariableNames, outputVariableSchemas, form, deadline, createdAt);
   }
 
+  private variablesCache: TaskVariables | null = null;
+
   public constructor(
     public readonly id: string,
     public readonly title: string,
@@ -30,5 +33,9 @@ export class Task {
 
   public canReadInputVariable(variableName: string): boolean {
     return this.inputVariableNames.includes(variableName);
+  }
+
+  public get variables(): TaskVariables {
+    return this.variablesCache ?? (this.variablesCache = new TaskVariables(this.outputVariableSchemas));
   }
 }

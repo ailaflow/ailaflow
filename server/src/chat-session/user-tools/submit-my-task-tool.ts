@@ -1,7 +1,7 @@
 import { ToolContext, ZodTool, ZodToolExecutionResult } from '@aibindkit/llm';
 import { ChatSessionId } from '../chat-session-id';
 import z from 'zod/v4';
-import { TaskResumer, TaskResumerResult } from '../../task/task-resumer';
+import { TaskResumer, TaskResumerError } from '../../task/task-resumer';
 
 const inputSchema = z.object({
   taskId: z.string(),
@@ -18,14 +18,20 @@ export class SubmitMyTaskTool extends ZodTool<Arg> {
   public async handle(abortSignal: AbortSignal, { sessionId }: ToolContext, arg: Arg): Promise<ZodToolExecutionResult> {
     const chatSessionId = ChatSessionId.decode(sessionId);
     const isTest = chatSessionId.isTest();
-    const result = await this.taskResumer.resume(abortSignal, isTest, chatSessionId.userName, arg.taskId, arg.values);
-    if (result === TaskResumerResult.TASK_NOT_FOUND) {
-      return {
-        content: {
-          error: 'Cannot find the task, or you do not have access to it'
-        }
-      };
+
+    try {
+      await this.taskResumer.resume(abortSignal, isTest, chatSessionId.userName, arg.taskId, arg.values);
+    } catch (e) {
+      if (e instanceof TaskResumerError) {
+        return {
+          content: {
+            error: e.message
+          }
+        };
+      }
+      throw e;
     }
+
     return {
       content: {
         success: true

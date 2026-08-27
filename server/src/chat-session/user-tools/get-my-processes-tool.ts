@@ -3,7 +3,7 @@ import { MyProcessLiteDto } from '@aila/model';
 import { MyProcessListQuerier } from '../../queriers/my-process-list/my-process-list-querier';
 import { ChatSessionId } from '../chat-session-id';
 
-export class MyProcessesTool extends ZodTool {
+export class GetMyProcessesTool extends ZodTool {
   public constructor(private readonly querier: MyProcessListQuerier) {
     super('get_my_processes', 'Returns a list of supported processes');
   }

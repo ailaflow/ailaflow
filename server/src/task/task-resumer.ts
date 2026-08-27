@@ -7,9 +7,10 @@ import { Task } from '../repositories/task/task';
 import { ProcessExecutionResumer } from '../process-executor/process-execution-resumer';
 import { Logger } from '../core/logger';
 
-export enum TaskResumerResult {
-  SUCCESS,
-  TASK_NOT_FOUND
+export class TaskResumerError extends Error {
+  public constructor(message: string) {
+    super(message);
+  }
 }
 
 export class TaskResumer {
@@ -23,16 +24,19 @@ export class TaskResumer {
     private readonly processExecutionResumer: ProcessExecutionResumer
   ) {}
 
+  /**
+   * @throws {TaskResumerError} if the task cannot be resumed
+   */
   public async resume(
     abortSignal: AbortSignal,
     isTest: boolean,
     userName: string,
     taskId: string,
     outputValues: ProcessExecutionVariableValues
-  ): Promise<TaskResumerResult> {
+  ): Promise<void> {
     const userAssignedTask = await this.userAssignedTaskProvider.tryGet(abortSignal, isTest, userName, taskId);
     if (!userAssignedTask) {
-      return TaskResumerResult.TASK_NOT_FOUND;
+      throw new TaskResumerError('Task not found');
     }
     const { assignedTask, task } = userAssignedTask;
 
@@ -41,7 +45,11 @@ export class TaskResumer {
       throw new Error('Chat session not found');
     }
 
-    assignedTask.complete(outputValues);
+    const completeError = assignedTask.tryComplete(outputValues, task);
+    if (completeError) {
+      throw new Error(completeError);
+    }
+
     await this.assignedTaskRepository.upsert(abortSignal, assignedTask);
 
     const pointer = chatSession.findByMetadata('taskId', assignedTask.taskId);
@@ -53,8 +61,6 @@ export class TaskResumer {
     if (count === 0) {
       await this.resumeProcess(abortSignal, task);
     }
-
-    return TaskResumerResult.SUCCESS;
   }
 
   private async resumeProcess(abortSignal: AbortSignal, task: Task) {

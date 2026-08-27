@@ -42,7 +42,7 @@ export class TaskCreator {
     for (const userName of userNames) {
       const session = await this.userChatSessionProvider.get(abortSignal, isTest, userName, channelName);
       if (session) {
-        session.queueUserMessage(`>>>>>>>>\nYou have a new task assigned: "${title}"\n<<<<<<<<`, {
+        session.queueUserMessage(`>>>>>>>>\nYou have a new task assigned: "${title}", id: ${task.id}\n<<<<<<<<`, {
           internal: true,
           taskId: task.id
         });
