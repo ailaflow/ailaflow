@@ -6,7 +6,8 @@ import { sequenceSchema } from './process-steps';
 export const processDefinitionPropertiesSchema = z.object({
   startForm: formDefinitionSchema.optional(),
   startVariableNames: z.array(z.string()),
-  variables: z.array(variableDefinitionSchema)
+  variables: z.array(variableDefinitionSchema),
+  version: z.number()
 });
 
 export const processDefinitionSchema = z.object({

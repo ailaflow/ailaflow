@@ -1,21 +1,23 @@
-import type { StringOrVariable } from '@aila/model';
+import type { StringOrVariable, VariableDefinition } from '@aila/model';
 import { EditorPropertyView } from './editor-property-view';
 
 export interface StringOrVariablePropertyViewProps {
   label: string;
   value: StringOrVariable;
-  variableNames: string[];
+  variables: VariableDefinition[];
   error?: string;
   onValueChanged: (value: StringOrVariable) => void;
 }
 
 export function StringOrVariablePropertyView(props: StringOrVariablePropertyViewProps) {
+  const stringVariables = props.variables.filter(variable => variable.schema.schema.type === 'string');
+
   function changeType(type: StringOrVariable['type']) {
     if (type === props.value.type) {
       return;
     }
 
-    props.onValueChanged(type === 'string' ? { type, value: '' } : { type, name: props.variableNames[0] ?? '' });
+    props.onValueChanged(type === 'string' ? { type, value: '' } : { type, name: stringVariables[0]?.name ?? '' });
   }
 
   return (
@@ -52,14 +54,14 @@ export function StringOrVariablePropertyView(props: StringOrVariablePropertyView
           <select
             value={props.value.name}
             onChange={event => props.onValueChanged({ type: 'variable', name: event.target.value })}
-            disabled={props.variableNames.length === 0}
+            disabled={stringVariables.length === 0}
             aria-label={`${props.label} variable`}
             className="h-full min-w-0 flex-1 bg-white px-2 text-sm text-slate-800 outline-none disabled:bg-slate-50 disabled:text-slate-400"
           >
-            {props.variableNames.length === 0 && <option value="">No string variables available</option>}
-            {props.variableNames.map(name => (
-              <option key={name} value={name}>
-                ${name}
+            {stringVariables.length === 0 && <option value="">No string variables available</option>}
+            {stringVariables.map(variable => (
+              <option key={variable.name} value={variable.name}>
+                ${variable.name}
               </option>
             ))}
           </select>

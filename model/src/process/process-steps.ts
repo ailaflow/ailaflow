@@ -66,6 +66,7 @@ export type NotificationStep = z.infer<typeof notificationStepSchema>;
 // task step
 
 export const taskStepPropertiesSchema = z.object({
+  title: stringOrVariableSchema,
   inputVariableNames: z.array(z.string()),
   outputVariableNames: z.array(z.string()),
   userExpression: stringOrVariableSchema,

@@ -8,17 +8,23 @@ import { ProcessExecutionResumeError, ProcessExecutionResumer } from './process-
 import { ProcessExecutor } from './process-executor';
 import { EventBus } from '../events/event-bus';
 import { ProcessExecutionResumeListenerStore } from './process-execution-resume-listener-store';
+import { ProcessManager } from '../process/process-manager';
+import { ProcessDefinitionUpgrader } from '../process/process-definition-upgrader';
+import { PROCESS_VERSION } from '@aila/model';
 
 test('process execution resumer fails when the process hash changed', async () => {
   const abortSignal = new AbortController().signal;
   const resumer = new ProcessExecutionResumer(
-    {
-      setup: async () => undefined,
-      insert: async () => undefined,
-      update: async () => undefined,
-      delete: async () => false,
-      tryGetByName: async () => createTestProcess('new_hash')
-    } as ProcessRepository,
+    new ProcessManager(
+      {
+        setup: async () => undefined,
+        insert: async () => undefined,
+        update: async () => undefined,
+        delete: async () => false,
+        tryGetByName: async () => createTestProcess('new_hash')
+      } as ProcessRepository,
+      new ProcessDefinitionUpgrader()
+    ),
     {
       setup: async () => undefined,
       upsert: async () => undefined,
@@ -59,7 +65,8 @@ function createTestProcess(hash: string): Process {
       sequence: [],
       properties: {
         startVariableNames: [],
-        variables: []
+        variables: [],
+        version: PROCESS_VERSION
       }
     },
     hash,

@@ -53,6 +53,11 @@ export class ProcessStepValidator {
       errors['properties.form'] = formErrors[0];
     }
 
+    const titleError = this.validateStringOrVariable(step.properties.title, definition);
+    if (titleError) {
+      errors['properties.title'] = titleError;
+    }
+
     const ivError = this.variableValidator.validateVariablesReference(step.properties.inputVariableNames, definition);
     if (ivError) {
       errors['properties.inputVariableNames'] = ivError;

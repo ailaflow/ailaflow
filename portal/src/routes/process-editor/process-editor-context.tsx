@@ -13,8 +13,8 @@ import { createContext } from 'react';
 import { SequentialWorkflowDesignerController, wrapDefinition, WrappedDefinition } from 'sequential-workflow-designer-react';
 import { DefinitionWalker, Step } from 'sequential-workflow-model';
 import { DefinitionPath, DefinitionPathValue } from '../../core/definition-path';
-import { DesignerUtils } from './designer-utils';
 import { ObjectCloner } from 'sequential-workflow-designer';
+import { createBlankDefinition } from './designer-configuration';
 
 export enum ProcessEditorOverlayType {
   SCHEMA_EDITOR = 'schemaEditor',
@@ -81,7 +81,7 @@ function createData(props: Omit<ProcessEditorContextProps, 'children'>): Process
   const rootValidator = new ProcessRootValidator(variableValidator);
   const stepValidator = new ProcessStepValidator(sandboxNames, variableValidator);
 
-  const definition = wrapDefinition<ProcessDefinition>(props.process ? props.process.definition : DesignerUtils.createBlankDefinition());
+  const definition = wrapDefinition<ProcessDefinition>(props.process ? props.process.definition : createBlankDefinition());
   const name = props.process?.name ?? 'new_process';
   const description = props.process?.description ?? '';
   const userAccessExpression = props.process?.userAccessExpression ?? '';

@@ -8,6 +8,7 @@ export * from './process-root-validator';
 export * from './process-root-variable-validator';
 export * from './process-step-validator';
 export * from './process-steps';
+export * from './process-version';
 export * from './variable-cached-validator';
 export * from './script-definition';
 export * from './task-step-validator';

@@ -3,16 +3,6 @@ import { JsonSchemaWithHash, ProcessDefinition, ScriptDefinition, ScriptStep } f
 import { BranchedStep, DefinitionWalker, Sequence, SequentialStep, Step } from 'sequential-workflow-model';
 
 export class DesignerUtils {
-  public static createBlankDefinition(): ProcessDefinition {
-    return {
-      properties: {
-        startVariableNames: [],
-        variables: []
-      },
-      sequence: []
-    };
-  }
-
   public static calcDefinitionHash(definition: ProcessDefinition): string {
     return fnv1a(definition);
   }

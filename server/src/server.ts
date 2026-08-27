@@ -142,6 +142,8 @@ import { GetStartedByRpcHandler } from './process-executor/rpc-handlers/get-star
 import { ProcessExecutionResumeListenerStore } from './process-executor/process-execution-resume-listener-store';
 import { TaskResumer } from './task/task-resumer';
 import { SubmitMyTaskTool } from './chat-session/user-tools/submit-my-task-tool';
+import { ProcessManager } from './process/process-manager';
+import { ProcessDefinitionUpgrader } from './process/process-definition-upgrader';
 
 const PORT = process.env.PORT || 2048;
 
@@ -265,6 +267,8 @@ export class Server {
     eventBus.registerHandler(new TelegramConfigurationChangedEventHandler(telegramSynchronizationManager));
 
     const processExecutionPersister = new ProcessExecutionPersister(persistedExecutionRepository);
+    const processDefinitionUpgrader = new ProcessDefinitionUpgrader();
+    const processManager = new ProcessManager(processRepository, processDefinitionUpgrader);
     const processExecutionServices: ProcessExecutionServices = {
       sandboxInstanceManager,
       taskCreator,
@@ -274,7 +278,7 @@ export class Server {
     const lazyProcessExecutor = new LazyProcessExecutor(processExecutor, eventBus);
     const processExecutionResumeListenerStore = new ProcessExecutionResumeListenerStore();
     const processExecutionResumer = new ProcessExecutionResumer(
-      processRepository,
+      processManager,
       persistedExecutionRepository,
       processExecutor,
       processExecutionResumeListenerStore,
@@ -282,7 +286,7 @@ export class Server {
     );
 
     const passwordHasher = new PasswordHasher();
-    const userProcessProvider = new UserProcessProvider(myProcessAccessQuerier, processRepository);
+    const userProcessProvider = new UserProcessProvider(myProcessAccessQuerier, processManager);
     const userAssignedTaskProvider = new UserAssignedTaskProvider(taskRepository, assignedTaskRepository);
     const taskResumer = new TaskResumer(
       userAssignedTaskProvider,
@@ -335,10 +339,10 @@ export class Server {
       new GetMyProcessStartFormEndpoint(userProcessProvider),
       new StartMyProcessEndpoint(userProcessProvider, lazyProcessExecutor, sessionManager),
       new GetProcessesEndpoint(processListQuerier),
-      new GetProcessEndpoint(processRepository),
-      new DeleteProcessEndpoint(processRepository),
-      new SaveProcessEndpoint(processRepository, resourceAccessRepository, sandboxListQuerier),
-      new TestProcessEndpoint(processRepository, processExecutor, processExecutionResumeListenerStore),
+      new GetProcessEndpoint(processManager),
+      new DeleteProcessEndpoint(processManager),
+      new SaveProcessEndpoint(processRepository, processManager, resourceAccessRepository, sandboxListQuerier),
+      new TestProcessEndpoint(processManager, processExecutor, processExecutionResumeListenerStore),
       new GetTablesEndpoint(tableListQuerier),
       new GetTableEndpoint(tableRepository),
       new GetTableDataEndpoint(tableDataListQuerier),

@@ -1,5 +1,5 @@
 import { Request } from 'express';
-import { ProcessRepository } from '../../repositories/process/process-repository';
+import { ProcessManager } from '../../process/process-manager';
 import { Endpoint } from '../framework/endpoint';
 import { GetProcessResponse } from '@aila/model';
 import { EndpointError } from '../framework/endpoint-error';
@@ -11,13 +11,13 @@ export class GetProcessEndpoint implements Endpoint {
   public readonly auth = true;
   public readonly admin = true;
 
-  public constructor(private readonly repository: ProcessRepository) {}
+  public constructor(private readonly processManager: ProcessManager) {}
 
   public async handle(req: Request): Promise<GetProcessResponse> {
     const abortSignal = getEndpointAbortSignal(req);
     const processName = String(req.params.name);
 
-    const process = await this.repository.tryGetByName(abortSignal, processName);
+    const process = await this.processManager.tryGetByName(abortSignal, processName);
     if (!process) {
       throw new EndpointError('Process not found', 404);
     }

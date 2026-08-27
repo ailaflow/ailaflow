@@ -23,6 +23,14 @@ export function TaskStepEditor(props: StepEditorProps) {
     <DesignerEditorView>
       <StringEditorPropertyView label="Name" value={name} onValueChanged={setName} error={errors['name']}></StringEditorPropertyView>
 
+      <StringOrVariablePropertyView
+        label="Title"
+        value={properties.title}
+        variables={definition.properties.variables}
+        onValueChanged={v => setProperty('title', v)}
+        error={errors['properties.title']}
+      />
+
       <EditorPropertyView label="Form">
         <EnabledSubValuePreviewView onEdit={editForm}>Form</EnabledSubValuePreviewView>
       </EditorPropertyView>
@@ -46,7 +54,7 @@ export function TaskStepEditor(props: StepEditorProps) {
       <StringOrVariablePropertyView
         label="User Expression"
         value={properties.userExpression}
-        variableNames={definition.properties.variables.map(v => v.name)}
+        variables={definition.properties.variables}
         onValueChanged={v => setProperty('userExpression', v)}
         error={errors['properties.userExpression']}
       />

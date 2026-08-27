@@ -1,5 +1,5 @@
 import { SignalPayload } from 'sequential-workflow-machine';
-import { ProcessRepository } from '../repositories/process/process-repository';
+import { ProcessManager } from '../process/process-manager';
 import { PersistedExecutionRepository } from '../repositories/persisted-execution/persisted-execution-repository';
 import { ProcessExecution } from './process-execution';
 import { ProcessExecutor } from './process-executor';
@@ -19,7 +19,7 @@ export class ProcessExecutionResumer {
   private readonly logger = new Logger(ProcessExecutionResumer.name);
 
   public constructor(
-    private readonly processRepository: ProcessRepository,
+    private readonly processManager: ProcessManager,
     private readonly persistedExecutionRepository: PersistedExecutionRepository,
     private readonly processExecutor: ProcessExecutor,
     private readonly resumeListenerStore: ProcessExecutionResumeListenerStore,
@@ -32,7 +32,7 @@ export class ProcessExecutionResumer {
       throw new ProcessExecutionResumeError(`Cannot find the persisted execution: ${executionId}`);
     }
 
-    const process = await this.processRepository.tryGetByName(abortSignal, persistedExecution.processName);
+    const process = await this.processManager.tryGetByName(abortSignal, persistedExecution.processName);
     if (!process) {
       throw new ProcessExecutionResumeError(`Cannot find the process: ${persistedExecution.processName}`);
     }

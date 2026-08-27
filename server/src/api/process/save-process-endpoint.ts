@@ -15,6 +15,7 @@ import { Process } from '../../repositories/process/process';
 import { getEndpointAbortSignal } from '../framework/endpoint-abort-signal';
 import { ResourceAccess, ResourceAccessRepository } from '../../repositories/resource-access/resource-access-repository';
 import { ProcessResourceId } from '../../repositories/process/process-resource-id';
+import { ProcessManager } from '../../process/process-manager';
 
 export class SaveProcessEndpoint implements Endpoint {
   public readonly method = 'post';
@@ -24,6 +25,7 @@ export class SaveProcessEndpoint implements Endpoint {
 
   public constructor(
     private readonly processRepository: ProcessRepository,
+    private readonly processManager: ProcessManager,
     private readonly resourceAccessRepository: ResourceAccessRepository,
     private readonly sandboxListQuerier: SandboxListQuerier
   ) {}
@@ -38,7 +40,7 @@ export class SaveProcessEndpoint implements Endpoint {
     const resourceAccess = ResourceAccess.createFromAccessExpression(resourceId, request.userAccessExpression);
 
     try {
-      let process = await this.processRepository.tryGetByName(abortSignal, request.name);
+      let process = await this.processManager.tryGetByName(abortSignal, request.name);
       if (request.insert) {
         if (process) {
           throw new EndpointError('Process already exists', 400);
@@ -51,7 +53,7 @@ export class SaveProcessEndpoint implements Endpoint {
           throw new EndpointError('Process not found', 404);
         }
         await process.update(request, rootValidator, stepValidator);
-        await this.processRepository.update(abortSignal, process);
+        await this.processManager.update(abortSignal, process);
         await this.resourceAccessRepository.replace(abortSignal, resourceAccess);
       }
     } catch (e) {

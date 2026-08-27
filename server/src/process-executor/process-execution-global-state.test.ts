@@ -10,6 +10,7 @@ import { ProcessScriptExecutor } from './services/process-script-executor';
 import { ProcessExecutionSnapshotTransformer } from './process-execution-snapshot-transformer';
 import { Notifier } from './services/notifier';
 import { ProcessExecutionContext } from './process-execution-context';
+import { PROCESS_VERSION } from '@aila/model';
 
 const context: ProcessExecutionContext = {
   startedBy: 'user_1',
@@ -101,7 +102,8 @@ function createTestProcess(): Process {
               hash: 'schema_hash'
             }
           }
-        ]
+        ],
+        version: PROCESS_VERSION
       }
     },
     'process_hash',

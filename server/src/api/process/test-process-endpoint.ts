@@ -2,7 +2,7 @@ import { ProcessExecutionResult, ProcessLog, ProcessLogLevel, testProcessRequest
 import { SseResponse } from '../../utilities/sse-response';
 import { Endpoint } from '../framework/endpoint';
 import { Request, Response } from 'express';
-import { ProcessRepository } from '../../repositories/process/process-repository';
+import { ProcessManager } from '../../process/process-manager';
 import { EndpointError } from '../framework/endpoint-error';
 import { ProcessExecutor } from '../../process-executor/process-executor';
 import { parseBody } from '../framework/parse-request';
@@ -19,7 +19,7 @@ export class TestProcessEndpoint implements Endpoint {
   public readonly admin = true;
 
   public constructor(
-    private readonly processRepository: ProcessRepository,
+    private readonly processManager: ProcessManager,
     private readonly processExecutor: ProcessExecutor,
     private readonly resumeListenerStore: ProcessExecutionResumeListenerStore
   ) {}
@@ -29,7 +29,7 @@ export class TestProcessEndpoint implements Endpoint {
     const { userName } = getAuthToken(req);
     const processName = String(req.params.name);
     const request = parseBody(testProcessRequestSchema, req.body);
-    const process = await this.processRepository.tryGetByName(endpointAbortSignal, processName);
+    const process = await this.processManager.tryGetByName(endpointAbortSignal, processName);
     if (!process) {
       throw new EndpointError('Process not found', 404);
     }

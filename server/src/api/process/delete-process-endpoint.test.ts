@@ -5,11 +5,13 @@ import { Request } from 'express';
 import { ProcessRepository } from '../../repositories/process/process-repository';
 import { DeleteProcessEndpoint } from './delete-process-endpoint';
 import { EndpointError } from '../framework/endpoint-error';
+import { ProcessManager } from '../../process/process-manager';
+import { ProcessDefinitionUpgrader } from '../../process/process-definition-upgrader';
 
 test('deletes a process by route name', async () => {
   let deletedName: string | null = null;
   const endpoint = new DeleteProcessEndpoint(
-    createRepository(async name => {
+    createManager(async name => {
       deletedName = name;
       return true;
     })
@@ -20,7 +22,7 @@ test('deletes a process by route name', async () => {
 });
 
 test('returns not found when the process does not exist', async () => {
-  const endpoint = new DeleteProcessEndpoint(createRepository(async () => false));
+  const endpoint = new DeleteProcessEndpoint(createManager(async () => false));
 
   await assert.rejects(
     () => endpoint.handle(createRequest('missing')),
@@ -28,14 +30,15 @@ test('returns not found when the process does not exist', async () => {
   );
 });
 
-function createRepository(deleteProcess: (name: string) => Promise<boolean>): ProcessRepository {
-  return {
+function createManager(deleteProcess: (name: string) => Promise<boolean>): ProcessManager {
+  const repository: ProcessRepository = {
     setup: async () => undefined,
     insert: async () => undefined,
     update: async () => undefined,
     delete: async (_, name) => deleteProcess(name),
     tryGetByName: async () => null
   };
+  return new ProcessManager(repository, new ProcessDefinitionUpgrader());
 }
 
 function createRequest(name: string): Request {

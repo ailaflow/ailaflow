@@ -1,5 +1,27 @@
 import { ToolboxConfiguration } from 'sequential-workflow-designer';
-import { ScriptStep, AgentStep, TaskStep, NotificationStep, FileContent, FormDefinition, ScriptDefinition, ReturnStep } from '@aila/model';
+import {
+  ScriptStep,
+  AgentStep,
+  TaskStep,
+  NotificationStep,
+  FileContent,
+  FormDefinition,
+  ScriptDefinition,
+  ReturnStep,
+  ProcessDefinition,
+  PROCESS_VERSION
+} from '@aila/model';
+
+export function createBlankDefinition(): ProcessDefinition {
+  return {
+    properties: {
+      startVariableNames: [],
+      variables: [],
+      version: PROCESS_VERSION
+    },
+    sequence: []
+  };
+}
 
 export function createEmptyFormDefinition(): FormDefinition {
   return {
@@ -76,6 +98,10 @@ const taskStep: Omit<TaskStep, 'id'> = {
   name: 'Task',
   componentType: 'task',
   properties: {
+    title: {
+      type: 'string',
+      value: 'Task'
+    },
     inputVariableNames: [],
     outputVariableNames: [],
     userExpression: { type: 'string', value: '' },

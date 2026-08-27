@@ -8,9 +8,6 @@ import { StringOrVariablePropertyView } from '../../../views/process-editor/desi
 export function NotificationStepEditor(props: StepEditorProps) {
   const { name, step, definition, properties, setName, setProperty } = useStepEditor<NotificationStep, ProcessDefinition>();
   const errors = props.state.stepValidator.validate(step, definition);
-  const stringVariableNames = definition.properties.variables
-    .filter(variable => variable.schema.schema.type === 'string')
-    .map(variable => variable.name);
 
   return (
     <DesignerEditorView>
@@ -19,7 +16,7 @@ export function NotificationStepEditor(props: StepEditorProps) {
       <StringOrVariablePropertyView
         label="User Expression"
         value={properties.userExpression}
-        variableNames={stringVariableNames}
+        variables={definition.properties.variables}
         onValueChanged={v => setProperty('userExpression', v)}
         error={errors['properties.userExpression']}
       />
@@ -27,7 +24,7 @@ export function NotificationStepEditor(props: StepEditorProps) {
       <StringOrVariablePropertyView
         label="Notification"
         value={properties.notification}
-        variableNames={stringVariableNames}
+        variables={definition.properties.variables}
         onValueChanged={v => setProperty('notification', v)}
         error={errors['properties.notification']}
       />
