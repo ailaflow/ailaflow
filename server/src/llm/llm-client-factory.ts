@@ -12,7 +12,11 @@ export class LlmClientFactory {
   public create(configuration: ResolvedLlmUseCaseConfiguration): ConfiguredLlmClient {
     return {
       client: this.createForProvider(configuration.provider),
-      modelSettings: { name: configuration.model }
+      modelSettings: {
+        name: configuration.modelName,
+        contextWindow: configuration.modelContextWindow,
+        effectiveContextWindowPercent: configuration.effectiveContextWindowPercent
+      }
     };
   }
 

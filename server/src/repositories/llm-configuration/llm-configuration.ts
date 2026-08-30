@@ -4,7 +4,9 @@ import { LlmUseCase, strLlmUseCase } from '@aila/model';
 
 export interface ResolvedLlmUseCaseConfiguration {
   provider: LlmProviderConfiguration;
-  model: string;
+  modelName: string;
+  modelContextWindow?: number;
+  effectiveContextWindowPercent: number;
 }
 
 export class LlmConfiguration {
@@ -31,9 +33,14 @@ export class LlmConfiguration {
 
   public resolveUseCase(assignment: LlmUseCaseConfiguration): ResolvedLlmUseCaseConfiguration {
     const provider = this.getProvider(assignment.providerId);
-    if (!provider.models.includes(assignment.model)) {
-      throw new LlmProviderConfigurationError(`Model "${assignment.model}" is not available for provider "${provider.name}"`);
+    if (!provider.models.some(model => model.name === assignment.modelName)) {
+      throw new LlmProviderConfigurationError(`Model "${assignment.modelName}" is not available for provider "${provider.name}"`);
     }
-    return { provider, model: assignment.model };
+    return {
+      provider,
+      modelName: assignment.modelName,
+      modelContextWindow: assignment.modelContextWindow,
+      effectiveContextWindowPercent: assignment.effectiveContextWindowPercent
+    };
   }
 }

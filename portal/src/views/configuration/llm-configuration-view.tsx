@@ -1,5 +1,5 @@
 import { LlmProviderType } from '@aila/model';
-import type { LlmProviderDto, LlmUseCase } from '@aila/model';
+import type { LlmModelDto, LlmProviderDto, LlmUseCase } from '@aila/model';
 import { useState } from 'react';
 
 export interface LlmProviderDraft {
@@ -10,14 +10,16 @@ export interface LlmProviderDraft {
   baseUrl: string;
   apiKey: string;
   hasApiKey: boolean;
-  models: string[];
+  models: LlmModelDto[];
 }
 
 export interface LlmUseCaseDraft {
   useCase: LlmUseCase;
   label: string;
   providerId: string;
-  model: string;
+  modelName: string;
+  modelContextWindow: string;
+  effectiveContextWindowPercent: string;
 }
 
 export interface LlmConfigurationViewProps {
@@ -37,7 +39,10 @@ export interface LlmConfigurationViewProps {
   onProviderModelsFetch(): void | Promise<void>;
   onProviderEditCancel(): void;
   onProviderSave(): void | Promise<void>;
-  onUseCaseChange(useCase: LlmUseCaseDraft['useCase'], delta: Partial<Pick<LlmUseCaseDraft, 'providerId' | 'model'>>): void;
+  onUseCaseChange(
+    useCase: LlmUseCaseDraft['useCase'],
+    delta: Partial<Pick<LlmUseCaseDraft, 'providerId' | 'modelName' | 'modelContextWindow' | 'effectiveContextWindowPercent'>>
+  ): void;
   onUseCasesSave(): void | Promise<void>;
 }
 
@@ -150,10 +155,15 @@ export function LlmConfigurationView(props: LlmConfigurationViewProps) {
 function UseCaseEditor(props: {
   useCase: LlmUseCaseDraft;
   providers: LlmProviderDto[];
-  onChange(useCase: LlmUseCaseDraft['useCase'], delta: Partial<Pick<LlmUseCaseDraft, 'providerId' | 'model'>>): void;
+  onChange(
+    useCase: LlmUseCaseDraft['useCase'],
+    delta: Partial<Pick<LlmUseCaseDraft, 'providerId' | 'modelName' | 'modelContextWindow' | 'effectiveContextWindowPercent'>>
+  ): void;
 }) {
   const provider = props.providers.find(item => item.id === props.useCase.providerId);
-  const hasUnavailableSelection = Boolean(props.useCase.model && !provider?.models.includes(props.useCase.model));
+  const hasUnavailableSelection = Boolean(
+    props.useCase.modelName && !provider?.models.some(model => model.name === props.useCase.modelName)
+  );
 
   return (
     <div className="rounded-md border border-slate-200 p-4">
@@ -163,7 +173,9 @@ function UseCaseEditor(props: {
           Provider
           <select
             value={props.useCase.providerId}
-            onChange={event => props.onChange(props.useCase.useCase, { providerId: event.target.value, model: '' })}
+            onChange={event =>
+              props.onChange(props.useCase.useCase, { providerId: event.target.value, modelName: '', modelContextWindow: '' })
+            }
             className="mt-1.5 h-9 w-full rounded-md border border-slate-200 bg-white px-2.5 text-sm font-normal text-slate-900 outline-none focus:border-slate-400"
           >
             <option value="">Not configured</option>
@@ -178,20 +190,52 @@ function UseCaseEditor(props: {
           Model
           <select
             disabled={!provider}
-            value={props.useCase.model}
-            onChange={event => props.onChange(props.useCase.useCase, { model: event.target.value })}
+            value={props.useCase.modelName}
+            onChange={event => {
+              const modelName = event.target.value;
+              const model = provider?.models.find(item => item.name === modelName);
+              props.onChange(props.useCase.useCase, {
+                modelName,
+                modelContextWindow: model?.contextWindow?.toString() ?? ''
+              });
+            }}
             className="mt-1.5 h-9 w-full rounded-md border border-slate-200 bg-white px-2.5 font-mono text-sm font-normal text-slate-900 outline-none focus:border-slate-400 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
           >
             <option value="">
               {provider ? (provider.models.length > 0 ? 'Select model' : 'No models fetched') : 'Select provider first'}
             </option>
-            {hasUnavailableSelection && <option value={props.useCase.model}>{props.useCase.model} (unavailable)</option>}
+            {hasUnavailableSelection && <option value={props.useCase.modelName}>{props.useCase.modelName} (unavailable)</option>}
             {provider?.models.map(model => (
-              <option key={model} value={model}>
-                {model}
+              <option key={model.name} value={model.name}>
+                {model.name}
               </option>
             ))}
           </select>
+        </label>
+        <label className="text-sm font-medium text-slate-700">
+          Context window
+          <input
+            type="number"
+            min="1"
+            step="1"
+            value={props.useCase.modelContextWindow}
+            onChange={event => props.onChange(props.useCase.useCase, { modelContextWindow: event.target.value })}
+            placeholder="Unknown"
+            className="mt-1.5 h-9 w-full rounded-md border border-slate-200 bg-white px-2.5 font-mono text-sm font-normal text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-400"
+          />
+        </label>
+        <label className="text-sm font-medium text-slate-700">
+          Effective context window (%)
+          <input
+            type="number"
+            min="1"
+            max="100"
+            step="1"
+            required
+            value={props.useCase.effectiveContextWindowPercent}
+            onChange={event => props.onChange(props.useCase.useCase, { effectiveContextWindowPercent: event.target.value })}
+            className="mt-1.5 h-9 w-full rounded-md border border-slate-200 bg-white px-2.5 font-mono text-sm font-normal text-slate-900 outline-none focus:border-slate-400"
+          />
         </label>
       </div>
     </div>

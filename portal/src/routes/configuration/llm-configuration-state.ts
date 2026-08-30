@@ -1,7 +1,8 @@
-import { ALL_LLM_USE_CASES, LlmProviderType, strLlmUseCase } from '@aila/model';
+import { ALL_LLM_USE_CASES, LlmProviderType, LlmUseCaseConfigurationValidator, strLlmUseCase } from '@aila/model';
 import type {
   FetchLlmProviderModelsRequest,
   GetLlmConfigurationResponse,
+  LlmModelDto,
   LlmProviderDto,
   SaveLlmProviderRequest,
   SaveLlmUseCaseAssignmentsRequest
@@ -21,11 +22,14 @@ export interface LlmConfigurationState {
   cancelProviderEdit(): void;
   updateProviderDraft(delta: Partial<LlmProviderDraft>): void;
   toFetchProviderModelsRequest(): FetchLlmProviderModelsRequest;
-  providerModelsFetched(models: string[]): void;
+  providerModelsFetched(models: LlmModelDto[]): void;
   toSaveProviderRequest(): SaveLlmProviderRequest;
   providerSaved(): void;
   providerDeleted(id: string): void;
-  updateUseCase(useCase: LlmUseCaseDraft['useCase'], delta: Partial<Pick<LlmUseCaseDraft, 'providerId' | 'model'>>): void;
+  updateUseCase(
+    useCase: LlmUseCaseDraft['useCase'],
+    delta: Partial<Pick<LlmUseCaseDraft, 'providerId' | 'modelName' | 'modelContextWindow' | 'effectiveContextWindowPercent'>>
+  ): void;
   toSaveUseCasesRequest(): SaveLlmUseCaseAssignmentsRequest;
   useCasesSaved(): void;
 }
@@ -39,7 +43,9 @@ export function useLlmConfigurationState(initial: GetLlmConfigurationResponse): 
         useCase,
         label: strLlmUseCase(useCase),
         providerId: saved?.providerId ?? '',
-        model: saved?.model ?? ''
+        modelName: saved?.modelName ?? '',
+        modelContextWindow: saved?.modelContextWindow?.toString() ?? '',
+        effectiveContextWindowPercent: (saved?.effectiveContextWindowPercent ?? 95).toString()
       };
     })
   );
@@ -68,11 +74,28 @@ export function useLlmConfigurationState(initial: GetLlmConfigurationResponse): 
 
   const canSaveUseCases = useMemo(() => {
     const isValid = useCases.every(item => {
-      if (!item.providerId && !item.model.trim()) {
+      const modelContextWindow = readOptionalNumber(item.modelContextWindow);
+      const effectiveContextWindowPercent = Number(item.effectiveContextWindowPercent);
+      if (LlmUseCaseConfigurationValidator.validateModelContextWindow(modelContextWindow)) {
+        return false;
+      }
+      if (LlmUseCaseConfigurationValidator.validateEffectiveContextWindowPercent(effectiveContextWindowPercent)) {
+        return false;
+      }
+      if (!item.providerId && !item.modelName.trim()) {
         return true;
       }
+      if (LlmUseCaseConfigurationValidator.validateProviderAndModel(item.providerId || null, item.modelName ? item.modelName : null)) {
+        return false;
+      }
+      if (
+        LlmUseCaseConfigurationValidator.validateProviderId(item.providerId) ||
+        LlmUseCaseConfigurationValidator.validateModelName(item.modelName)
+      ) {
+        return false;
+      }
       const provider = providers.find(candidate => candidate.id === item.providerId);
-      return Boolean(provider?.models.includes(item.model));
+      return Boolean(provider?.models.some(model => model.name === item.modelName));
     });
     return isValid && serializeUseCases(useCases) !== savedUseCases;
   }, [providers, savedUseCases, useCases]);
@@ -145,7 +168,7 @@ export function useLlmConfigurationState(initial: GetLlmConfigurationResponse): 
         baseUrl:
           providerDraft.type === LlmProviderType.OPENAI_COMPATIBLE ? new URL(providerDraft.baseUrl).toString().replace(/\/$/, '') : null,
         hasApiKey: true,
-        models: [...new Set(providerDraft.models.map(model => model.trim()))].sort((a, b) => a.localeCompare(b))
+        models: [...new Map(providerDraft.models.map(model => [model.name, model])).values()].sort((a, b) => a.name.localeCompare(b.name))
       };
       setProviders(current => {
         const exists = current.some(item => item.id === provider.id);
@@ -161,7 +184,9 @@ export function useLlmConfigurationState(initial: GetLlmConfigurationResponse): 
       assignments: useCases.map(item => ({
         useCase: item.useCase,
         providerId: item.providerId || null,
-        model: item.providerId ? item.model : null
+        modelName: item.providerId ? item.modelName : null,
+        modelContextWindow: item.providerId ? readOptionalNumber(item.modelContextWindow) : undefined,
+        effectiveContextWindowPercent: Number(item.effectiveContextWindowPercent)
       }))
     }),
     useCasesSaved: () => setSavedUseCases(serializeUseCases(useCases))
@@ -169,7 +194,13 @@ export function useLlmConfigurationState(initial: GetLlmConfigurationResponse): 
 }
 
 function serializeUseCases(useCases: LlmUseCaseDraft[]): string {
-  return JSON.stringify(useCases.map(item => [item.useCase, item.providerId, item.model]));
+  return JSON.stringify(
+    useCases.map(item => [item.useCase, item.providerId, item.modelName, item.modelContextWindow, item.effectiveContextWindowPercent])
+  );
+}
+
+function readOptionalNumber(value: string): number | undefined {
+  return value.trim() ? Number(value) : undefined;
 }
 
 function isValidUrl(value: string): boolean {

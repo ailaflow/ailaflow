@@ -19,7 +19,21 @@ test('domain validates provider and use-case invariants', () => {
       }),
     /Base URL is required/
   );
-  assert.throws(() => LlmUseCaseConfiguration.create(LlmUseCase.ADMIN_CHAT, 'provider', null), /both be set or both be null/);
+  assert.throws(
+    () => LlmUseCaseConfiguration.create(LlmUseCase.ADMIN_CHAT, 'provider', null, undefined, 95),
+    /both be set or both be null/
+  );
+  const modelName = 'model with spaces ';
+  const provider = LlmProviderConfiguration.create({
+    name: 'Provider',
+    type: LlmProviderType.OPENAI,
+    baseUrl: null,
+    apiKey: 'secret',
+    models: [{ name: modelName }]
+  });
+  const useCase = LlmUseCaseConfiguration.create(LlmUseCase.ADMIN_CHAT, provider.id, modelName, undefined, 95);
+  assert.equal(provider.models[0].name, modelName);
+  assert.equal(useCase.modelName, modelName);
 });
 
 test('persists LLM providers and use-case configurations', async () => {
@@ -34,15 +48,21 @@ test('persists LLM providers and use-case configurations', async () => {
     type: LlmProviderType.OPENAI,
     baseUrl: null,
     apiKey: 'secret',
-    models: ['gpt-model']
+    models: [{ name: 'gpt-model', contextWindow: 131_072 }]
   });
   await repository.insertProvider(abortSignal, provider);
-  await repository.saveUseCases(abortSignal, [new LlmUseCaseConfiguration(LlmUseCase.ADMIN_CHAT, provider.id, 'gpt-model')], []);
+  await repository.saveUseCases(
+    abortSignal,
+    [new LlmUseCaseConfiguration(LlmUseCase.ADMIN_CHAT, provider.id, 'gpt-model', 120_000, 90)],
+    []
+  );
 
   const configuration = await repository.get(abortSignal);
   assert.equal(configuration.getProvider(provider.id).apiKey, 'secret');
-  assert.deepEqual(configuration.getProvider(provider.id).models, ['gpt-model']);
-  assert.equal(configuration.getUseCase(LlmUseCase.ADMIN_CHAT).model, 'gpt-model');
+  assert.deepEqual(configuration.getProvider(provider.id).models, [{ name: 'gpt-model', contextWindow: 131_072 }]);
+  assert.equal(configuration.getUseCase(LlmUseCase.ADMIN_CHAT).modelName, 'gpt-model');
+  assert.equal(configuration.getUseCase(LlmUseCase.ADMIN_CHAT).modelContextWindow, 120_000);
+  assert.equal(configuration.getUseCase(LlmUseCase.ADMIN_CHAT).effectiveContextWindowPercent, 90);
 
   await assert.rejects(() => repository.deleteProvider(abortSignal, provider.id), /assigned to a use case/);
   await repository.saveUseCases(abortSignal, [], [LlmUseCase.ADMIN_CHAT]);
@@ -63,11 +83,11 @@ test('updates provider data while retaining its stable ID', async () => {
     type: LlmProviderType.OPENAI_COMPATIBLE,
     baseUrl: 'https://gateway.example/v1',
     apiKey: 'old-secret',
-    models: ['old-model']
+    models: [{ name: 'old-model' }]
   });
   await repository.insertProvider(abortSignal, provider);
   assert.throws(
-    () => provider.update({ name: 'Gateway 2', type: LlmProviderType.ANTHROPIC, baseUrl: null, models: ['new-model'] }),
+    () => provider.update({ name: 'Gateway 2', type: LlmProviderType.ANTHROPIC, baseUrl: null, models: [{ name: 'new-model' }] }),
     /API key must be entered/
   );
   provider.update({
@@ -75,7 +95,7 @@ test('updates provider data while retaining its stable ID', async () => {
     type: LlmProviderType.ANTHROPIC,
     baseUrl: null,
     apiKey: 'new-secret',
-    models: ['new-model']
+    models: [{ name: 'new-model' }]
   });
   await repository.updateProvider(abortSignal, provider);
 
@@ -83,6 +103,6 @@ test('updates provider data while retaining its stable ID', async () => {
   assert.equal(restored?.name, 'Gateway 2');
   assert.equal(restored?.type, LlmProviderType.ANTHROPIC);
   assert.equal(restored?.apiKey, 'new-secret');
-  assert.deepEqual(restored?.models, ['new-model']);
+  assert.deepEqual(restored?.models, [{ name: 'new-model' }]);
   db.close();
 });

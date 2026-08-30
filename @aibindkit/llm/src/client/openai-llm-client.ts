@@ -1,5 +1,5 @@
 import OpenAI from 'openai';
-import { LlmCompleteResult, LlmClient, LlmModelSettings } from './llm-client';
+import { LlmCompleteResult, LlmClient, LlmModel, LlmModelSettings } from './llm-client';
 import type { LlmMessage, ToolDescriptor } from '@aibindkit/core';
 
 export class OpenaiLlmClient implements LlmClient {
@@ -42,8 +42,20 @@ export class OpenaiLlmClient implements LlmClient {
     };
   }
 
-  public async getModels(abortSignal: AbortSignal): Promise<string[]> {
+  public async getModels(abortSignal: AbortSignal): Promise<LlmModel[]> {
     const response = await this.openai.models.list({ signal: abortSignal });
-    return response.data.map(model => model.id);
+    return response.data.map(model => {
+      return { name: model.id, contextWindow: tryReadContextWindow(model) };
+    });
   }
+}
+
+function tryReadContextWindow(model: object): number | undefined {
+  for (const name of ['context_window', 'context_length']) {
+    const value = name in model ? model[name as keyof typeof model] : undefined;
+    if (typeof value === 'number' && Number.isSafeInteger(value) && value > 0) {
+      return value;
+    }
+  }
+  return undefined;
 }

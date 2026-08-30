@@ -25,8 +25,15 @@ export class LlmProviderConfigurationValidator {
     }
   }
 
-  public static validateModels(models: string[]): string | null {
-    return models.some(model => !model.trim()) ? 'Model identifiers cannot be empty' : null;
+  public static validateModels(models: Array<{ name: string; contextWindow?: number }>): string | null {
+    if (models.some(model => !model.name.trim())) {
+      return 'Model identifiers cannot be empty';
+    }
+    return models.some(
+      model => model.contextWindow !== undefined && (!Number.isSafeInteger(model.contextWindow) || model.contextWindow <= 0)
+    )
+      ? 'Model context windows must be positive integers'
+      : null;
   }
 
   public static validateApiKeyForUpdate(

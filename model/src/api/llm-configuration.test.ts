@@ -12,7 +12,7 @@ test('validates numeric provider enum and structural fields', () => {
       type: LlmProviderType.OPENAI_COMPATIBLE,
       baseUrl: 'https://gateway.example/v1',
       apiKey: 'secret',
-      models: ['model-a']
+      models: [{ name: 'model-a', contextWindow: 131_072 }]
     }).success,
     true
   );
@@ -32,13 +32,27 @@ test('validates numeric provider enum and structural fields', () => {
 test('validates numeric use-case enum without domain cross-field validation', () => {
   assert.equal(
     saveLlmUseCaseAssignmentsRequestSchema.safeParse({
-      assignments: [{ useCase: LlmUseCase.ADMIN_CHAT, providerId: null, model: null }]
+      assignments: [
+        {
+          useCase: LlmUseCase.ADMIN_CHAT,
+          providerId: null,
+          modelName: null,
+          effectiveContextWindowPercent: 95
+        }
+      ]
     }).success,
     true
   );
   assert.equal(
     saveLlmUseCaseAssignmentsRequestSchema.safeParse({
-      assignments: [{ useCase: LlmUseCase.ADMIN_CHAT, providerId: 'provider', model: null }]
+      assignments: [
+        {
+          useCase: LlmUseCase.ADMIN_CHAT,
+          providerId: 'provider',
+          modelName: null,
+          effectiveContextWindowPercent: 95
+        }
+      ]
     }).success,
     true
   );

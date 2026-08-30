@@ -1,34 +1,57 @@
 import { LlmProviderConfigurationError } from './llm-provider-configuration';
-import { LlmUseCase } from '@aila/model';
+import { LlmUseCase, LlmUseCaseConfigurationValidator } from '@aila/model';
 
 export class LlmUseCaseConfiguration {
-  public static create(useCase: LlmUseCase, providerId: string | null, model: string | null): LlmUseCaseConfiguration | null {
-    if (providerId === null && model === null) {
-      return null;
+  public static create(
+    useCase: LlmUseCase,
+    providerId: string | null,
+    modelName: string | null,
+    modelContextWindow: number | undefined,
+    effectiveContextWindowPercent: number
+  ): LlmUseCaseConfiguration {
+    const error = LlmUseCaseConfigurationValidator.validateProviderAndModel(providerId, modelName);
+    if (error) {
+      throw new LlmProviderConfigurationError(error);
     }
-    if (providerId === null || model === null) {
-      throw new LlmProviderConfigurationError('Provider and model must either both be set or both be null');
-    }
-    return new LlmUseCaseConfiguration(useCase, providerId, model);
+    return new LlmUseCaseConfiguration(useCase, providerId!, modelName!, modelContextWindow, effectiveContextWindowPercent);
   }
 
   public constructor(
     public readonly useCase: LlmUseCase,
     public providerId: string,
-    public model: string
+    public modelName: string,
+    public modelContextWindow: number | undefined,
+    public effectiveContextWindowPercent: number
   ) {
-    this.update(providerId, model);
+    validate(providerId, modelName, modelContextWindow, effectiveContextWindowPercent);
   }
 
-  public update(providerId: string, model: string): void {
-    if (!providerId) {
-      throw new LlmProviderConfigurationError('Provider is required');
-    }
-    const trimmedModel = model.trim();
-    if (!trimmedModel) {
-      throw new LlmProviderConfigurationError('Model is required');
-    }
+  public update(
+    providerId: string,
+    modelName: string,
+    modelContextWindow: number | undefined,
+    effectiveContextWindowPercent: number
+  ): void {
+    validate(providerId, modelName, modelContextWindow, effectiveContextWindowPercent);
     this.providerId = providerId;
-    this.model = trimmedModel;
+    this.modelName = modelName;
+    this.modelContextWindow = modelContextWindow;
+    this.effectiveContextWindowPercent = effectiveContextWindowPercent;
+  }
+}
+
+function validate(
+  providerId: string,
+  modelName: string,
+  modelContextWindow: number | undefined,
+  effectiveContextWindowPercent: number
+): void {
+  const error =
+    LlmUseCaseConfigurationValidator.validateProviderId(providerId) ??
+    LlmUseCaseConfigurationValidator.validateModelName(modelName) ??
+    LlmUseCaseConfigurationValidator.validateModelContextWindow(modelContextWindow) ??
+    LlmUseCaseConfigurationValidator.validateEffectiveContextWindowPercent(effectiveContextWindowPercent);
+  if (error) {
+    throw new LlmProviderConfigurationError(error);
   }
 }

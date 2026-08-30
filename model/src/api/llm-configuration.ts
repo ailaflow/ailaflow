@@ -12,6 +12,12 @@ export const llmProviderTypeSchema = z.union([
 
 export const llmUseCaseSchema = z.union([z.literal(LlmUseCase.ADMIN_CHAT), z.literal(LlmUseCase.USER_CHAT)]);
 
+export const llmModelSchema = z.object({
+  name: z.string(),
+  contextWindow: z.number().int().positive().optional()
+});
+export type LlmModelDto = z.infer<typeof llmModelSchema>;
+
 // getLlmConfiguration
 
 export const llmProviderDtoSchema = z.object({
@@ -20,14 +26,16 @@ export const llmProviderDtoSchema = z.object({
   type: llmProviderTypeSchema,
   baseUrl: z.string().nullable(),
   hasApiKey: z.boolean(),
-  models: z.array(z.string())
+  models: z.array(llmModelSchema)
 });
 export type LlmProviderDto = z.infer<typeof llmProviderDtoSchema>;
 
 const llmUseCaseConfigurationDtoSchema = z.object({
   useCase: llmUseCaseSchema,
   providerId: z.string(),
-  model: z.string()
+  modelName: z.string(),
+  modelContextWindow: z.number().int().positive().optional(),
+  effectiveContextWindowPercent: z.number().int().min(1).max(100)
 });
 
 export const getLlmConfigurationResponseSchema = z.object({
@@ -45,7 +53,7 @@ export const saveLlmProviderRequestSchema = z.object({
   type: llmProviderTypeSchema,
   baseUrl: z.string().nullable(),
   apiKey: z.string().optional(),
-  models: z.array(z.string())
+  models: z.array(llmModelSchema)
 });
 export type SaveLlmProviderRequest = z.infer<typeof saveLlmProviderRequestSchema>;
 
@@ -60,7 +68,7 @@ export const fetchLlmProviderModelsRequestSchema = z.object({
 export type FetchLlmProviderModelsRequest = z.infer<typeof fetchLlmProviderModelsRequestSchema>;
 
 export const fetchLlmProviderModelsResponseSchema = z.object({
-  models: z.array(z.string())
+  models: z.array(llmModelSchema)
 });
 export type FetchLlmProviderModelsResponse = z.infer<typeof fetchLlmProviderModelsResponseSchema>;
 
@@ -78,7 +86,9 @@ export const saveLlmUseCaseAssignmentsRequestSchema = z.object({
     z.object({
       useCase: llmUseCaseSchema,
       providerId: z.string().nullable(),
-      model: z.string().nullable()
+      modelName: z.string().nullable(),
+      modelContextWindow: z.number().int().positive().optional(),
+      effectiveContextWindowPercent: z.number().int().min(1).max(100)
     })
   )
 });

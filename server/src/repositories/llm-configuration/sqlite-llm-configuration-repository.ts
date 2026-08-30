@@ -2,7 +2,7 @@ import { DatabaseSync } from 'node:sqlite';
 import { SqliteDatabases } from '../../core/sqlite-databases';
 import { LlmConfiguration } from './llm-configuration';
 import { LlmConfigurationRepository, LlmConfigurationRepositoryError } from './llm-configuration-repository';
-import { LlmProviderConfiguration } from './llm-provider-configuration';
+import { LlmModelProviderConfiguration, LlmProviderConfiguration } from './llm-provider-configuration';
 import { LlmProviderType, LlmUseCase } from '@aila/model';
 import { LlmUseCaseConfiguration } from './llm-use-case-configuration';
 
@@ -18,7 +18,9 @@ interface ProviderRow {
 interface UseCaseRow {
   useCase: number;
   providerId: string;
-  model: string;
+  modelName: string;
+  modelContextWindow: number | null;
+  effectiveContextWindowPercent: number;
 }
 
 export class SqliteLlmConfigurationRepository implements LlmConfigurationRepository {
@@ -43,7 +45,9 @@ export class SqliteLlmConfigurationRepository implements LlmConfigurationReposit
       CREATE TABLE IF NOT EXISTS llm_use_case_configurations (
         useCase INTEGER PRIMARY KEY,
         providerId TEXT NOT NULL,
-        model TEXT NOT NULL,
+        modelName TEXT NOT NULL,
+        modelContextWindow INTEGER,
+        effectiveContextWindowPercent INTEGER NOT NULL,
 
         FOREIGN KEY (providerId)
           REFERENCES llm_providers(id)
@@ -57,7 +61,9 @@ export class SqliteLlmConfigurationRepository implements LlmConfigurationReposit
       .prepare(`SELECT id, name, type, baseUrl, apiKey, serializedModels FROM llm_providers ORDER BY name, id`)
       .all() as unknown as ProviderRow[];
     const useCaseRows = this.db
-      .prepare(`SELECT useCase, providerId, model FROM llm_use_case_configurations ORDER BY useCase`)
+      .prepare(
+        `SELECT useCase, providerId, modelName, modelContextWindow, effectiveContextWindowPercent FROM llm_use_case_configurations ORDER BY useCase`
+      )
       .all() as unknown as UseCaseRow[];
     return new LlmConfiguration(providerRows.map(mapProvider), useCaseRows.map(mapUseCase));
   }
@@ -108,11 +114,13 @@ export class SqliteLlmConfigurationRepository implements LlmConfigurationReposit
 
   public async saveUseCases(_: AbortSignal, configurations: LlmUseCaseConfiguration[], removedUseCases: LlmUseCase[]): Promise<void> {
     const statement = this.db.prepare(`
-      INSERT INTO llm_use_case_configurations (useCase, providerId, model)
-      VALUES (?, ?, ?)
+      INSERT INTO llm_use_case_configurations (useCase, providerId, modelName, modelContextWindow, effectiveContextWindowPercent)
+      VALUES (?, ?, ?, ?, ?)
       ON CONFLICT(useCase) DO UPDATE SET
         providerId = excluded.providerId,
-        model = excluded.model
+        modelName = excluded.modelName,
+        modelContextWindow = excluded.modelContextWindow,
+        effectiveContextWindowPercent = excluded.effectiveContextWindowPercent
     `);
     try {
       this.db.exec(`BEGIN`);
@@ -121,7 +129,13 @@ export class SqliteLlmConfigurationRepository implements LlmConfigurationReposit
         deleteStatement.run(useCase);
       }
       for (const configuration of configurations) {
-        statement.run(configuration.useCase, configuration.providerId, configuration.model);
+        statement.run(
+          configuration.useCase,
+          configuration.providerId,
+          configuration.modelName,
+          configuration.modelContextWindow ?? null,
+          configuration.effectiveContextWindowPercent
+        );
       }
       this.db.exec(`COMMIT`);
     } catch (error) {
@@ -141,12 +155,18 @@ function mapProvider(row: ProviderRow): LlmProviderConfiguration {
     row.type as LlmProviderType,
     row.baseUrl,
     row.apiKey,
-    JSON.parse(row.serializedModels) as string[]
+    JSON.parse(row.serializedModels) as LlmModelProviderConfiguration[]
   );
 }
 
 function mapUseCase(row: UseCaseRow): LlmUseCaseConfiguration {
-  return new LlmUseCaseConfiguration(row.useCase as LlmUseCase, row.providerId, row.model);
+  return new LlmUseCaseConfiguration(
+    row.useCase as LlmUseCase,
+    row.providerId,
+    row.modelName,
+    row.modelContextWindow ?? undefined,
+    row.effectiveContextWindowPercent
+  );
 }
 
 function isUniqueNameError(error: unknown): boolean {

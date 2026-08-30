@@ -42,7 +42,7 @@ test('configures providers and use cases without exposing API keys', async () =>
           type: LlmProviderType.OPENAI,
           baseUrl: null,
           apiKey: 'top-secret',
-          models: ['admin-model']
+          models: [{ name: 'admin-model', contextWindow: 131_072 }]
         }
       })
     ),
@@ -52,13 +52,42 @@ test('configures providers and use cases without exposing API keys', async () =>
     createRequest({
       body: {
         assignments: [
-          { useCase: LlmUseCase.ADMIN_CHAT, providerId, model: 'admin-model' },
-          { useCase: LlmUseCase.USER_CHAT, providerId: null, model: null }
+          {
+            useCase: LlmUseCase.ADMIN_CHAT,
+            providerId,
+            modelName: 'admin-model',
+            modelContextWindow: 120_000,
+            effectiveContextWindowPercent: 90
+          },
+          {
+            useCase: LlmUseCase.USER_CHAT,
+            providerId: null,
+            modelName: null,
+            effectiveContextWindowPercent: 95
+          }
         ]
       }
     })
   );
   assert.equal(eventBus.events.length, 2);
+  await assert.rejects(
+    () =>
+      saveUseCases.handle(
+        createRequest({
+          body: {
+            assignments: [
+              {
+                useCase: LlmUseCase.ADMIN_CHAT,
+                providerId,
+                modelName: null,
+                effectiveContextWindowPercent: 95
+              }
+            ]
+          }
+        })
+      ),
+    /Provider and model must either both be set or both be null/
+  );
   await saveProvider.handle(
     createRequest({
       body: {
@@ -67,7 +96,7 @@ test('configures providers and use cases without exposing API keys', async () =>
         name: 'Primary OpenAI',
         type: LlmProviderType.OPENAI,
         baseUrl: null,
-        models: ['admin-model']
+        models: [{ name: 'admin-model', contextWindow: 131_072 }]
       }
     })
   );
@@ -81,18 +110,27 @@ test('configures providers and use cases without exposing API keys', async () =>
       type: LlmProviderType.OPENAI,
       baseUrl: null,
       hasApiKey: true,
-      models: ['admin-model']
+      models: [{ name: 'admin-model', contextWindow: 131_072 }]
     }
   ]);
   assert.equal('apiKey' in response.providers[0], false);
-  assert.equal(response.useCases.find(item => item.useCase === LlmUseCase.ADMIN_CHAT)?.model, 'admin-model');
+  assert.deepEqual(
+    response.useCases.find(item => item.useCase === LlmUseCase.ADMIN_CHAT),
+    {
+      useCase: LlmUseCase.ADMIN_CHAT,
+      providerId,
+      modelName: 'admin-model',
+      modelContextWindow: 120_000,
+      effectiveContextWindowPercent: 90
+    }
+  );
   assert.equal(
     response.useCases.find(item => item.useCase === LlmUseCase.USER_CHAT),
     undefined
   );
 
   assert.deepEqual(await fetchModels.handle(createRequest({ body: { id: providerId, type: LlmProviderType.OPENAI, baseUrl: null } })), {
-    models: ['model-a', 'model-b']
+    models: [{ name: 'model-a' }, { name: 'model-b', contextWindow: 131_072 }]
   });
   assert.equal(modelClientFactory.apiKey, 'top-secret');
   await assert.rejects(
@@ -111,7 +149,14 @@ test('configures providers and use cases without exposing API keys', async () =>
   await saveUseCases.handle(
     createRequest({
       body: {
-        assignments: [{ useCase: LlmUseCase.ADMIN_CHAT, providerId: null, model: null }]
+        assignments: [
+          {
+            useCase: LlmUseCase.ADMIN_CHAT,
+            providerId: null,
+            modelName: null,
+            effectiveContextWindowPercent: 95
+          }
+        ]
       }
     })
   );
@@ -139,7 +184,7 @@ class FakeModelLlmClientFactory extends LlmClientFactory {
       complete: async () => {
         throw new Error('Not implemented');
       },
-      getModels: async () => ['model-a', 'model-b']
+      getModels: async () => [{ name: 'model-a' }, { name: 'model-b', contextWindow: 131_072 }]
     };
   }
 }

@@ -75,5 +75,5 @@ function isLlmUseCaseConfigured(configuration: GetLlmConfigurationResponse, useC
     return false;
   }
   const provider = configuration.providers.find(item => item.id === assignment.providerId);
-  return Boolean(provider?.hasApiKey && provider.models.includes(assignment.model));
+  return Boolean(provider?.hasApiKey && provider.models.some(model => model.name === assignment.modelName));
 }

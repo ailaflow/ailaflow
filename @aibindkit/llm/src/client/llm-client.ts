@@ -8,6 +8,13 @@ export interface LlmCompleteResult {
 
 export interface LlmModelSettings {
   name: string;
+  contextWindow?: number;
+  effectiveContextWindowPercent: number;
+}
+
+export interface LlmModel {
+  name: string;
+  contextWindow?: number;
 }
 
 export class LlmClientError extends Error {
@@ -24,5 +31,5 @@ export interface LlmClient {
     messages: LlmMessage[],
     toolDescriptors: ToolDescriptor[] | undefined
   ): Promise<LlmCompleteResult>;
-  getModels(abortSignal: AbortSignal): Promise<string[]>;
+  getModels(abortSignal: AbortSignal): Promise<LlmModel[]>;
 }

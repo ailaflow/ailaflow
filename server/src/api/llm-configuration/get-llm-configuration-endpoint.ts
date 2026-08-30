@@ -28,7 +28,9 @@ export class GetLlmConfigurationEndpoint implements Endpoint {
       useCases: configuration.useCases.map(assignment => ({
         useCase: assignment.useCase,
         providerId: assignment.providerId,
-        model: assignment.model
+        modelName: assignment.modelName,
+        modelContextWindow: assignment.modelContextWindow,
+        effectiveContextWindowPercent: assignment.effectiveContextWindowPercent
       }))
     };
   }

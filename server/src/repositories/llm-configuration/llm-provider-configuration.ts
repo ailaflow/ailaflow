@@ -9,6 +9,11 @@ export class LlmProviderConfigurationError extends Error {
   }
 }
 
+export interface LlmModelProviderConfiguration {
+  name: string;
+  contextWindow?: number;
+}
+
 export class LlmProviderConfiguration {
   public static create(data: {
     id?: string;
@@ -16,7 +21,7 @@ export class LlmProviderConfiguration {
     type: LlmProviderType;
     baseUrl: string | null;
     apiKey: string | undefined;
-    models: string[];
+    models: LlmModelProviderConfiguration[];
   }): LlmProviderConfiguration {
     return new LlmProviderConfiguration(
       data.id ?? randomBytes(24).toString('hex'),
@@ -34,18 +39,25 @@ export class LlmProviderConfiguration {
     public type: LlmProviderType,
     public baseUrl: string | null,
     public apiKey: string,
-    public models: string[]
+    public models: LlmModelProviderConfiguration[]
   ) {}
 
-  public update(data: { name: string; type: LlmProviderType; baseUrl: string | null; apiKey?: string; models: string[] }): void {
+  public update(data: {
+    name: string;
+    type: LlmProviderType;
+    baseUrl: string | null;
+    apiKey?: string;
+    models: LlmModelProviderConfiguration[];
+  }): void {
     const name = normalizeName(data.name);
     const baseUrl = normalizeBaseUrl(data.type, data.baseUrl);
-    throwIfInvalid(
-      LlmProviderConfigurationValidator.validateApiKeyForUpdate(
-        { type: this.type, baseUrl: this.baseUrl },
-        { type: data.type, baseUrl, apiKey: data.apiKey }
-      )
+    const error = LlmProviderConfigurationValidator.validateApiKeyForUpdate(
+      { type: this.type, baseUrl: this.baseUrl },
+      { type: data.type, baseUrl, apiKey: data.apiKey }
     );
+    if (error) {
+      throw new LlmProviderConfigurationError(error);
+    }
     const apiKey = data.apiKey === undefined ? this.apiKey : normalizeApiKey(data.apiKey);
     const models = normalizeModels(data.models);
     this.name = name;
@@ -58,32 +70,43 @@ export class LlmProviderConfiguration {
 
 function normalizeName(name: string): string {
   const trimmed = name.trim();
-  throwIfInvalid(LlmProviderConfigurationValidator.validateName(trimmed));
+  const error = LlmProviderConfigurationValidator.validateName(trimmed);
+  if (error) {
+    throw new LlmProviderConfigurationError(error);
+  }
   return trimmed;
 }
 
 function normalizeApiKey(apiKey: string | undefined): string {
   const trimmed = apiKey?.trim();
-  throwIfInvalid(LlmProviderConfigurationValidator.validateApiKey(trimmed));
+  const error = LlmProviderConfigurationValidator.validateApiKey(trimmed);
+  if (error) {
+    throw new LlmProviderConfigurationError(error);
+  }
   return trimmed!;
 }
 
 function normalizeBaseUrl(type: LlmProviderType, baseUrl: string | null): string | null {
-  throwIfInvalid(LlmProviderConfigurationValidator.validateBaseUrl(type, baseUrl));
+  const error = LlmProviderConfigurationValidator.validateBaseUrl(type, baseUrl);
+  if (error) {
+    throw new LlmProviderConfigurationError(error);
+  }
   if (baseUrl === null) {
     return null;
   }
   return new URL(baseUrl).toString().replace(/\/$/, '');
 }
 
-function normalizeModels(models: string[]): string[] {
-  throwIfInvalid(LlmProviderConfigurationValidator.validateModels(models));
-  const normalized = models.map(model => model.trim());
-  return [...new Set(normalized)].sort((a, b) => a.localeCompare(b));
-}
-
-function throwIfInvalid(error: string | null): void {
+function normalizeModels(models: LlmModelProviderConfiguration[]): LlmModelProviderConfiguration[] {
+  const error = LlmProviderConfigurationValidator.validateModels(models);
   if (error) {
     throw new LlmProviderConfigurationError(error);
   }
+  const normalized = new Map<string, LlmModelProviderConfiguration>();
+  for (const model of models) {
+    const existing = normalized.get(model.name);
+    const contextWindow = model.contextWindow ?? existing?.contextWindow;
+    normalized.set(model.name, contextWindow === undefined ? { name: model.name } : { name: model.name, contextWindow });
+  }
+  return [...normalized.values()].sort((a, b) => a.name.localeCompare(b.name));
 }

@@ -36,12 +36,18 @@ export class SaveLlmUseCaseAssignmentsEndpoint implements Endpoint {
         throw new EndpointError(`Duplicate LLM use case "${item.useCase}"`, 400);
       }
       seen.add(useCase);
-      const configuration = LlmUseCaseConfiguration.create(useCase, item.providerId, item.model);
-      if (configuration === null) {
+      if (item.providerId === null && item.modelName === null) {
         removedUseCases.push(useCase);
-      } else {
-        assignments.push(configuration);
+        continue;
       }
+      const configuration = LlmUseCaseConfiguration.create(
+        useCase,
+        item.providerId,
+        item.modelName,
+        item.modelContextWindow,
+        item.effectiveContextWindowPercent
+      );
+      assignments.push(configuration);
     }
     try {
       const configuration = await this.repository.get(abortSignal);

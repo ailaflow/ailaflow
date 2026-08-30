@@ -23,30 +23,44 @@ class FakeLlmClient implements LlmClient {
     return { message: { role: 'assistant', content: modelSettings.name, refusal: null } };
   }
 
-  public async getModels(_: AbortSignal): Promise<string[]> {
-    return ['model-a', 'model-b'];
+  public async getModels(_: AbortSignal): Promise<Array<{ name: string }>> {
+    return [{ name: 'model-a' }, { name: 'model-b' }];
   }
 }
 
 class FakeLlmClientFactory extends LlmClientFactory {
   public readonly clients: FakeLlmClient[] = [];
 
-  public override create(configuration: { model: string }): ConfiguredLlmClient {
+  public override create(configuration: {
+    modelName: string;
+    modelContextWindow?: number;
+    effectiveContextWindowPercent: number;
+  }): ConfiguredLlmClient {
     const client = new FakeLlmClient();
     this.clients.push(client);
-    return { client, modelSettings: { name: configuration.model } };
+    return {
+      client,
+      modelSettings: {
+        name: configuration.modelName,
+        contextWindow: configuration.modelContextWindow,
+        effectiveContextWindowPercent: configuration.effectiveContextWindowPercent
+      }
+    };
   }
 }
 
 test('returns the same configured client until all clients are flushed', async () => {
   const providerConfiguration = new LlmProviderConfiguration('provider', 'Provider', LlmProviderType.OPENAI, null, 'secret', [
-    'model-a',
-    'model-b'
+    { name: 'model-a' },
+    { name: 'model-b' }
   ]);
   let model = 'model-a';
   const repository = {
     get: async () =>
-      new LlmConfiguration([providerConfiguration], [new LlmUseCaseConfiguration(LlmUseCase.ADMIN_CHAT, providerConfiguration.id, model)])
+      new LlmConfiguration(
+        [providerConfiguration],
+        [new LlmUseCaseConfiguration(LlmUseCase.ADMIN_CHAT, providerConfiguration.id, model, 131_072, 95)]
+      )
   } as unknown as LlmConfigurationRepository;
   const factory = new FakeLlmClientFactory();
   const provider = new LlmClientProvider(repository, factory);

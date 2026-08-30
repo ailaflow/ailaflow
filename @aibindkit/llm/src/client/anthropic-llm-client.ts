@@ -1,5 +1,5 @@
 import type { LlmMessage, ToolDescriptor } from '@aibindkit/core';
-import { LlmClientError, LlmCompleteResult, LlmClient, LlmModelSettings } from './llm-client';
+import { LlmClientError, LlmCompleteResult, LlmClient, LlmModel, LlmModelSettings } from './llm-client';
 
 type AnthropicContent =
   | { type: 'text'; text: string }
@@ -84,7 +84,7 @@ export class AnthropicLlmClient implements LlmClient {
     };
   }
 
-  public async getModels(abortSignal: AbortSignal): Promise<string[]> {
+  public async getModels(abortSignal: AbortSignal): Promise<LlmModel[]> {
     const models: string[] = [];
     const seenCursors = new Set<string>();
     let afterId: string | undefined;
@@ -135,8 +135,8 @@ function readModelIds(data: Array<{ id?: string }> | undefined): string[] {
   return data.map(item => item.id ?? '');
 }
 
-function normalizeModels(models: string[]): string[] {
-  return [...new Set(models.map(model => model.trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+function normalizeModels(models: string[]): LlmModel[] {
+  return [...new Set(models.filter(model => model.trim()))].sort((a, b) => a.localeCompare(b)).map(name => ({ name }));
 }
 
 function convertMessages(messages: LlmMessage[]): { system: string; messages: AnthropicMessage[] } {

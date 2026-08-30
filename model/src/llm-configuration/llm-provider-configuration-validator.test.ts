@@ -10,8 +10,9 @@ test('validates LLM provider fields', () => {
   assert.match(LlmProviderConfigurationValidator.validateApiKey('')!, /required/);
   assert.equal(LlmProviderConfigurationValidator.validateBaseUrl(LlmProviderType.OPENAI_COMPATIBLE, 'https://gateway.example/v1'), null);
   assert.match(LlmProviderConfigurationValidator.validateBaseUrl(LlmProviderType.OPENAI_COMPATIBLE, null)!, /required/);
-  assert.equal(LlmProviderConfigurationValidator.validateModels(['model-a']), null);
-  assert.match(LlmProviderConfigurationValidator.validateModels([' '])!, /cannot be empty/);
+  assert.equal(LlmProviderConfigurationValidator.validateModels([{ name: 'model-a', contextWindow: 131_072 }]), null);
+  assert.match(LlmProviderConfigurationValidator.validateModels([{ name: ' ' }])!, /cannot be empty/);
+  assert.match(LlmProviderConfigurationValidator.validateModels([{ name: 'model-a', contextWindow: 0 }])!, /positive integers/);
 });
 
 test('requires a new API key when the provider connection changes', () => {
