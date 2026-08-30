@@ -66,7 +66,7 @@ export function ConfigurationOverviewPage() {
     }
   ];
 
-  return <ConfigurationOverviewView statuses={statuses} />;
+  return <ConfigurationOverviewView title="System status" statuses={statuses} />;
 }
 
 function isLlmUseCaseConfigured(configuration: GetLlmConfigurationResponse, useCase: LlmUseCase): boolean {

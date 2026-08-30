@@ -13,6 +13,7 @@ export interface ConfigurationStatus {
 }
 
 export interface ConfigurationOverviewViewProps {
+  title: string;
   statuses: ConfigurationStatus[];
 }
 
@@ -21,7 +22,7 @@ export function ConfigurationOverviewView(props: ConfigurationOverviewViewProps)
     <div className="h-full overflow-auto p-4 sm:p-5">
       <div className="mx-auto max-w-6xl">
         <div className="mb-4">
-          <h2 className="text-lg font-semibold text-slate-900">System status</h2>
+          <h2 className="text-lg font-semibold text-slate-900">{props.title}</h2>
         </div>
 
         <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">

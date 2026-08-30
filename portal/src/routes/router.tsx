@@ -21,7 +21,6 @@ import { UserEditorPage } from './user-editor/user-editor-page';
 import { UserTelegramConfigurationPage } from './user-telegram-configuration/user-telegram-configuration-page';
 import { TableListPage } from './table-list/table-list-page';
 import { TableEditorPage } from './table-editor/table-editor-page';
-import { LogsPage } from './logs/logs-page';
 import { ConfigurationPage } from './configuration/configuration-page';
 import { TaskListPage } from './task-list/task-list-page';
 
@@ -128,10 +127,6 @@ export const routes = [
       {
         path: '/admin/tasks',
         element: <TaskListPage />
-      },
-      {
-        path: '/admin/logs',
-        element: <LogsPage />
       },
       {
         path: '/admin/configuration',

@@ -42,7 +42,6 @@ const adminItems: MenuItemDefinition[] = [
     activeAliases: ['/admin/create-user']
   },
   { icon: 'T', label: 'Tasks', action: 'link', href: '/admin/tasks' },
-  { icon: '*', label: 'Logs', action: 'link', href: '/admin/logs' },
   {
     icon: '+',
     label: 'Sandboxes',

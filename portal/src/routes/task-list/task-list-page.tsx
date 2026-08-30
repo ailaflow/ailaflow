@@ -123,12 +123,6 @@ export function TaskListPage() {
           getValue: task => `@${task.createdBy}`
         },
         {
-          id: 'executionId',
-          title: 'Execution ID',
-          width: '14%',
-          getValue: task => task.executionId
-        },
-        {
           id: 'type',
           title: 'Type',
           width: '8%',
