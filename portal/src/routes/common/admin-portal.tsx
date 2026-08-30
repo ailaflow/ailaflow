@@ -14,6 +14,7 @@ import { useEffect, useMemo, useRef } from 'react';
 import { globalAiStoreFactory } from './ai-bindings/global-ai-bindings';
 import { tableListAiStoreFactory } from './ai-bindings/table-list-ai-bindings';
 import { tableEditorAiStoreFactory } from './ai-bindings/table-editor-ai-bindings';
+import { taskListAiStoreFactory } from './ai-bindings/task-list-ai-bindings';
 
 export const env = aiEnvironment({
   global: globalAiStoreFactory(),
@@ -24,7 +25,8 @@ export const env = aiEnvironment({
   userList: userListAiStoreFactory(),
   userEditor: userEditorAiStoreFactory(),
   tableList: tableListAiStoreFactory(),
-  tableEditor: tableEditorAiStoreFactory()
+  tableEditor: tableEditorAiStoreFactory(),
+  taskList: taskListAiStoreFactory()
 });
 export const useAiEnvironment = env.useAiEnvironment;
 export const useAiStore = env.useAiStore;

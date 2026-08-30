@@ -27,12 +27,15 @@ test('queries tasks assigned to the current user', async () => {
   await userRepository.insert(abortSignal, new User('alice', 'hash', false));
   await userRepository.insert(abortSignal, new User('bob', 'hash', false));
 
-  await taskRepository.insert(abortSignal, new Task('task_1', 'Open outdated', 'execution_1', false, [], null, null, 4000, 1000));
-  await taskRepository.insert(abortSignal, new Task('task_2', 'Open current', 'execution_1', false, [], null, null, 6000, 1001));
-  await taskRepository.insert(abortSignal, new Task('task_3', 'Completed outdated', 'execution_1', false, [], null, null, 3000, 1002));
-  await taskRepository.insert(abortSignal, new Task('task_4', 'Other user', 'execution_1', false, [], null, null, 3000, 1003));
-  await taskRepository.insert(abortSignal, new Task('task_5', 'No deadline', 'execution_1', false, [], null, null, null, 1004));
-  await taskRepository.insert(abortSignal, new Task('task_6', 'Test task', 'execution_2', true, [], null, null, null, 1005));
+  await taskRepository.insert(abortSignal, new Task('task_1', 'Open outdated', false, 'alice', 'execution_1', [], null, null, 4000, 1000));
+  await taskRepository.insert(abortSignal, new Task('task_2', 'Open current', false, 'alice', 'execution_1', [], null, null, 6000, 1001));
+  await taskRepository.insert(
+    abortSignal,
+    new Task('task_3', 'Completed outdated', false, 'alice', 'execution_1', [], null, null, 3000, 1002)
+  );
+  await taskRepository.insert(abortSignal, new Task('task_4', 'Other user', false, 'bob', 'execution_1', [], null, null, 3000, 1003));
+  await taskRepository.insert(abortSignal, new Task('task_5', 'No deadline', false, 'alice', 'execution_1', [], null, null, null, 1004));
+  await taskRepository.insert(abortSignal, new Task('task_6', 'Test task', true, 'alice', 'execution_2', [], null, null, null, 1005));
 
   await assignedTaskRepository.upsertMultiple(abortSignal, [
     AssignedTask.create('task_1', 'alice', 'default'),

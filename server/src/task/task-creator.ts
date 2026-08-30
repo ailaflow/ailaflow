@@ -16,8 +16,9 @@ export class TaskCreator {
 
   public async create(
     abortSignal: AbortSignal,
-    executionId: string,
     isTest: boolean,
+    createdBy: string,
+    executionId: string,
     title: string,
     userExpression: string,
     inputVariableNames: string[],
@@ -27,7 +28,7 @@ export class TaskCreator {
     const parsedExpression = UserAccessExpressionParser.parse(userExpression);
     const userNames = await this.userAccessExpressionUserQuerier.queryUserNames(abortSignal, parsedExpression);
 
-    const task = Task.create(title, executionId, isTest, inputVariableNames, outputVariableSchemas, form, null);
+    const task = Task.create(title, isTest, createdBy, executionId, inputVariableNames, outputVariableSchemas, form, null);
 
     const channelName = this.userChatSessionProvider.getDefaultChannelName();
 

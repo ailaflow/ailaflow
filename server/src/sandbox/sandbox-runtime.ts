@@ -203,10 +203,10 @@ async function checkHealth(abortSignal: AbortSignal, client: BridgeClient): Prom
       await client.getHealth(abortSignal);
       return true;
     } catch (e) {
-      if (attempt >= 10) {
+      if (attempt >= 40) {
         return false;
       }
-      await abortableSleep(abortSignal, 200);
+      await abortableSleep(abortSignal, 250);
     }
   }
 }

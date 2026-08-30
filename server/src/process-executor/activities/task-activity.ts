@@ -17,8 +17,9 @@ export const taskStepActivity = createSignalActivity<TaskStep, ProcessExecutionG
 
     await globalState.taskCreator.create(
       abortSignal,
-      globalState.executionId,
       globalState.context.isTest,
+      globalState.context.startedBy,
+      globalState.executionId,
       title,
       userExpression,
       step.properties.inputVariableNames,

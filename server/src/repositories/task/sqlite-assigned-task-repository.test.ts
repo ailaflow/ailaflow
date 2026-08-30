@@ -27,8 +27,8 @@ test('assigned tasks can be upserted and queried by task and user', async () => 
   await userRepository.insert(abortSignal, user1);
   await userRepository.insert(abortSignal, user2);
 
-  const task1 = new Task('task_1', 'Review request', 'execution_1', false, [], null, null, null, 1000);
-  const task2 = new Task('task_2', 'Approve request', 'execution_1', false, [], null, null, null, 1001);
+  const task1 = new Task('task_1', 'Review request', false, 'user_1', 'execution_1', [], null, null, null, 1000);
+  const task2 = new Task('task_2', 'Approve request', false, 'user_1', 'execution_1', [], null, null, null, 1001);
   await taskRepository.insert(abortSignal, task1);
   await taskRepository.insert(abortSignal, task2);
 

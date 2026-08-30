@@ -16,8 +16,9 @@ export class SqliteTaskRepository implements TaskRepository {
       CREATE TABLE IF NOT EXISTS tasks (
         id TEXT PRIMARY KEY,
         title TEXT NOT NULL,
-        executionId TEXT NOT NULL,
         isTest INTEGER NOT NULL,
+        createdBy TEXT NOT NULL,
+        executionId TEXT NOT NULL,
         inputVariableNames TEXT NOT NULL,
         outputVariableSchemas TEXT,
         form TEXT,
@@ -36,8 +37,9 @@ export class SqliteTaskRepository implements TaskRepository {
       SELECT
         id,
         title,
-        executionId,
         isTest,
+        createdBy,
+        executionId,
         inputVariableNames,
         outputVariableSchemas,
         form,
@@ -51,8 +53,9 @@ export class SqliteTaskRepository implements TaskRepository {
       | {
           id: string;
           title: string;
-          executionId: string;
           isTest: number;
+          createdBy: string;
+          executionId: string;
           inputVariableNames: string;
           outputVariableSchemas: string | null;
           form: string | null;
@@ -69,21 +72,23 @@ export class SqliteTaskRepository implements TaskRepository {
       INSERT INTO tasks (
         id,
         title,
-        executionId,
         isTest,
+        createdBy,
+        executionId,
         inputVariableNames,
         outputVariableSchemas,
         form,
         deadline,
         createdAt
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
     statement.run(
       task.id,
       task.title,
-      task.executionId,
       task.isTest ? 1 : 0,
+      task.createdBy,
+      task.executionId,
       JSON.stringify(task.inputVariableNames),
       serializeOutputVariableSchemas(task.outputVariableSchemas),
       serializeForm(task.form),
@@ -91,13 +96,22 @@ export class SqliteTaskRepository implements TaskRepository {
       task.createdAt
     );
   }
+
+  public async delete(_: AbortSignal, id: string): Promise<boolean> {
+    const statement = this.db.prepare(`
+      DELETE FROM tasks
+      WHERE id = ?
+    `);
+    return statement.run(id).changes > 0;
+  }
 }
 
 function deserializeTask(row: {
   id: string;
   title: string;
-  executionId: string;
   isTest: number;
+  createdBy: string;
+  executionId: string;
   inputVariableNames: string;
   outputVariableSchemas: string | null;
   form: string | null;
@@ -107,8 +121,9 @@ function deserializeTask(row: {
   return new Task(
     row.id,
     row.title,
-    row.executionId,
     row.isTest === 1,
+    row.createdBy,
+    row.executionId,
     JSON.parse(row.inputVariableNames) as string[],
     row.outputVariableSchemas ? (JSON.parse(row.outputVariableSchemas) as Record<string, JsonSchema>) : null,
     row.form ? (JSON.parse(row.form) as FormDefinition) : null,

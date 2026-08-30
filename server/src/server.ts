@@ -147,6 +147,10 @@ import { ProcessDefinitionUpgrader } from './process/process-definition-upgrader
 import { GetMyTasksTool } from './chat-session/user-tools/get-my-tasks-tool';
 import { GetMyTaskDetailsTool } from './chat-session/user-tools/get-my-task-details-tool';
 import { UserTaskDetailsProvider } from './task/user-task-details-provider';
+import { TaskListQuerier } from './queriers/task-list/task-list-querier';
+import { SqliteTaskListQuerier } from './queriers/task-list/sqlite-task-list-querier';
+import { DeleteTaskEndpoint, GetTasksEndpoint } from './api/task/tasks-endpoint';
+import { TaskDeleter } from './task/task-deleter';
 
 const PORT = process.env.PORT || 2048;
 
@@ -186,6 +190,7 @@ export class Server {
     let tableListQuerier: TableListQuerier;
     let tableDataListQuerier: TableDataListQuerier;
     let incompleteAssignedTaskCountQuerier: IncompleteAssignedTaskCountQuerier;
+    let taskListQuerier: TaskListQuerier;
 
     const sqliteDatabases = new SqliteDatabases(serverPaths);
 
@@ -216,6 +221,7 @@ export class Server {
     tableListQuerier = new SqliteTableListQuerier(sqliteDatabases);
     tableDataListQuerier = new SqliteTableDataListQuerier(sqliteDatabases);
     incompleteAssignedTaskCountQuerier = new SqliteIncompleteAssignedTaskCountQuerier(sqliteDatabases);
+    taskListQuerier = new SqliteTaskListQuerier(sqliteDatabases);
 
     await Promise.all([
       userRepository.setup(abortSignal),
@@ -299,6 +305,7 @@ export class Server {
       incompleteAssignedTaskCountQuerier,
       processExecutionResumer
     );
+    const taskDeleter = new TaskDeleter(taskRepository, persistedExecutionRepository);
 
     const userToolSetProvider = new UserToolSetProvider([
       new GetMyProcessesTool(myProcessListQuerier),
@@ -339,6 +346,8 @@ export class Server {
       new DeleteMyNotificationEndpoint(notificationRepository),
       new GetMyProcessesEndpoint(myProcessListQuerier),
       new GetMyTasksEndpoint(myTaskListQuerier),
+      new GetTasksEndpoint(taskListQuerier),
+      new DeleteTaskEndpoint(taskDeleter),
       new GetMyTaskFormEndpoint(userAssignedTaskProvider),
       new GetTaskVariableValueEndpoint(userTaskDetailsProvider),
       new SubmitMyTaskEndpoint(taskResumer),

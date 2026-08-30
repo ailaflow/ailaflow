@@ -4,6 +4,10 @@ import test from 'node:test';
 import { SqliteDatabases } from '../../core/sqlite-databases';
 import { Task } from './task';
 import { SqliteTaskRepository } from './sqlite-task-repository';
+import { SqliteAssignedTaskRepository } from './sqlite-assigned-task-repository';
+import { AssignedTask } from './assigned-task';
+import { SqliteUserRepository } from '../user/sqlite-user-repository';
+import { User } from '../user/user';
 
 test('task insert does not overwrite an existing task', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
@@ -13,12 +17,12 @@ test('task insert does not overwrite an existing task', async () => {
 
   await repository.setup(abortSignal);
 
-  await repository.insert(abortSignal, new Task('task_1', 'Original task', 'execution_1', true, [], null, null, null, 1000));
+  await repository.insert(abortSignal, new Task('task_1', 'Original task', true, 'creator_1', 'execution_1', [], null, null, null, 1000));
 
   await assert.rejects(() =>
     repository.insert(
       abortSignal,
-      new Task('task_1', 'Changed task', 'execution_2', false, ['input'], { output: { type: 'string' } }, null, null, 2000)
+      new Task('task_1', 'Changed task', false, 'creator_2', 'execution_2', ['input'], { output: { type: 'string' } }, null, null, 2000)
     )
   );
 
@@ -26,7 +30,7 @@ test('task insert does not overwrite an existing task', async () => {
     ...db
       .prepare(
         `
-        SELECT title, executionId, isTest, inputVariableNames, outputVariableSchemas, createdAt
+        SELECT title, isTest, createdBy, executionId, inputVariableNames, outputVariableSchemas, createdAt
         FROM tasks
         WHERE id = ?
       `
@@ -34,16 +38,18 @@ test('task insert does not overwrite an existing task', async () => {
       .get('task_1')
   } as {
     title: string;
-    executionId: string;
     isTest: number;
+    createdBy: string;
+    executionId: string;
     inputVariableNames: string;
     outputVariableSchemas: string | null;
     createdAt: number;
   };
   assert.deepEqual(row, {
     title: 'Original task',
-    executionId: 'execution_1',
     isTest: 1,
+    createdBy: 'creator_1',
+    executionId: 'execution_1',
     inputVariableNames: '[]',
     outputVariableSchemas: null,
     createdAt: 1000
@@ -60,8 +66,9 @@ test('task can be fetched by id', async () => {
   const task = new Task(
     'task_1',
     'Task form',
-    'execution_1',
     true,
+    'creator_1',
+    'execution_1',
     ['input'],
     { output: { type: 'string' } },
     {
@@ -79,6 +86,30 @@ test('task can be fetched by id', async () => {
 
   assert.deepEqual(await repository.tryGet(abortSignal, 'task_1'), task);
   assert.equal(await repository.tryGet(abortSignal, 'missing'), null);
+
+  db.close();
+});
+
+test('task can be deleted with its assignments', async () => {
+  const db = new DatabaseSync(':memory:', { open: true });
+  db.exec(`PRAGMA foreign_keys = ON`);
+  const dbs = { modelDb: db } as SqliteDatabases;
+  const abortSignal = new AbortController().signal;
+  const userRepository = new SqliteUserRepository(dbs);
+  const taskRepository = new SqliteTaskRepository(dbs);
+  const assignedTaskRepository = new SqliteAssignedTaskRepository(dbs);
+
+  await userRepository.setup(abortSignal);
+  await taskRepository.setup(abortSignal);
+  await assignedTaskRepository.setup(abortSignal);
+  await userRepository.insert(abortSignal, new User('user_1', 'hash', false));
+  await taskRepository.insert(abortSignal, new Task('task_1', 'Task', false, 'creator_1', 'execution_1', [], null, null, null, 1000));
+  await assignedTaskRepository.upsert(abortSignal, AssignedTask.create('task_1', 'user_1', 'default'));
+
+  assert.equal(await taskRepository.delete(abortSignal, 'task_1'), true);
+  assert.equal(await taskRepository.tryGet(abortSignal, 'task_1'), null);
+  assert.equal(await assignedTaskRepository.tryGet(abortSignal, 'task_1', 'user_1'), null);
+  assert.equal(await taskRepository.delete(abortSignal, 'task_1'), false);
 
   db.close();
 });

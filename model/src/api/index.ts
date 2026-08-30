@@ -8,5 +8,6 @@ export * from './my-task';
 export * from './pagination';
 export * from './process';
 export * from './table';
+export * from './task';
 export * from './telegram-configuration';
 export * from './users';
