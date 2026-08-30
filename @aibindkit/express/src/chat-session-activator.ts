@@ -1,5 +1,5 @@
-import type { ChatMessage, ToolDescriptor } from '@aibindkit/core';
-import { ChatSession, ChatSessionFactory, ChatSessionStorage, FrontendToolFactory, ToolSet } from '@aibindkit/llm';
+import type { ToolDescriptor } from '@aibindkit/core';
+import { ChatSession, ChatSessionFactory, ChatSessionStorage, ChatSessionSnapshot, FrontendToolFactory, ToolSet } from '@aibindkit/llm';
 import type { ChatSessionResolver } from './chat-session-resolver';
 import { LiveChatSessionStore } from './live-chat-session-store';
 import { ChatAuthContext } from './chat-auth-context-resolver';
@@ -27,12 +27,12 @@ export class ChatSessionActivator {
     const toolsHash = resolved.backendToolsHash.concat(frontendToolsHash);
 
     let session = this.liveSessionStore.tryGetById(resolved.sessionId);
-    let messages: ReadonlyArray<ChatMessage> | null = null;
+    let snapshot: ChatSessionSnapshot | null = null;
     if (session) {
       if (session.toolsHash === toolsHash) {
         return session;
       }
-      messages = session.dump();
+      snapshot = session.export();
       session.destroy();
     }
 
@@ -45,16 +45,16 @@ export class ChatSessionActivator {
       toolSet.addTool(tool);
     }
 
-    if (!messages) {
-      messages = await this.sessionStorage.tryGet(abortSignal, resolved.sessionId);
+    if (!snapshot) {
+      snapshot = await this.sessionStorage.tryGet(abortSignal, resolved.sessionId);
     }
 
     session = this.chatSessionFactory.create(resolved.sessionId, toolsHash, llm.client, llm.modelSettings, toolSet);
     if (resolved.systemPrompt) {
       session.setSystemMessage(resolved.systemPrompt);
     }
-    if (messages && messages.length > 0) {
-      session.load(messages);
+    if (snapshot && snapshot.messages.length > 0) {
+      session.import(snapshot);
     }
 
     this.liveSessionStore.set(session);

@@ -18,6 +18,12 @@ export class TelegramMessageFormatter {
     if (completedMessage.metadata?.['internal'] === true) {
       return null;
     }
+    if (
+      (messageType === ChatMessageType.USER && completedMessage.message.role !== 'user') ||
+      (messageType === ChatMessageType.AI && completedMessage.message.role !== 'assistant')
+    ) {
+      return null;
+    }
 
     const content = completedMessage.message.content;
     let text: string;

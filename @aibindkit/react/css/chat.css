@@ -7,7 +7,12 @@
   overflow: hidden;
   background: #fff;
   color: #0f172a;
-  font: 14px/1.5 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font:
+    14px/1.5 system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    sans-serif;
 }
 
 .abk-chat-messages {
@@ -256,7 +261,13 @@
   border-top: 1px solid #e2e8f0;
   background: #fff;
   color: #1e293b;
-  font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font:
+    12px/1.5 ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    Monaco,
+    Consolas,
+    monospace;
 }
 
 .abk-chat-tool-calls {
@@ -365,7 +376,7 @@
 }
 
 .abk-chat-menu-button:hover,
-.abk-chat-menu-button[aria-expanded="true"] {
+.abk-chat-menu-button[aria-expanded='true'] {
   background: #f8fafc;
   border-color: #94a3b8;
 }
@@ -381,12 +392,56 @@
   right: 0;
   bottom: calc(100% + 8px);
   z-index: 1;
-  min-width: 196px;
+  min-width: 224px;
   padding: 4px;
   border: 1px solid #e2e8f0;
   border-radius: 6px;
   background: #fff;
   box-shadow: 0 8px 24px rgb(15 23 42 / 0.16);
+}
+
+.abk-chat-menu-context {
+  margin-bottom: 4px;
+  padding: 8px 10px 10px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.abk-chat-menu-context-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  color: #0f172a;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.abk-chat-menu-context-header strong {
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+
+.abk-chat-menu-context-tokens {
+  margin-top: 2px;
+  color: #64748b;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.abk-chat-menu-context-progress {
+  height: 3px;
+  margin-top: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e2e8f0;
+}
+
+.abk-chat-menu-context-progress span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #475569;
 }
 
 .abk-chat-menu-item {

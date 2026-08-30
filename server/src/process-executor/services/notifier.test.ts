@@ -13,7 +13,8 @@ test('persists a notification for every matched user', async () => {
     queryUserNames: async () => ['alice', 'bob']
   } as UserAccessExpressionUserQuerier;
   const sessionProvider = {
-    getDefault: async () => ({ queueUserMessage: () => undefined }) as unknown as ChatSession
+    getDefaultChannelName: () => 'default',
+    get: async () => ({ queueUserMessage: () => undefined }) as unknown as ChatSession
   } as unknown as UserChatSessionProvider;
   const notificationRepository = {
     setup: async () => undefined,

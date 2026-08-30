@@ -1,7 +1,7 @@
-import { ChatMessage } from '@aibindkit/core';
 import { Repository } from '../repository';
+import { ChatSessionSnapshot } from '@aibindkit/llm';
 
 export interface ChatSessionRepository extends Repository {
-  upsert(abortSignal: AbortSignal, sessionId: string, messages: ReadonlyArray<ChatMessage>): Promise<void>;
-  tryGet(abortSignal: AbortSignal, sessionId: string): Promise<ChatMessage[] | null>;
+  upsert(abortSignal: AbortSignal, sessionId: string, snapshot: ChatSessionSnapshot): Promise<void>;
+  tryGet(abortSignal: AbortSignal, sessionId: string): Promise<ChatSessionSnapshot | null>;
 }

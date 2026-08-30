@@ -1,7 +1,7 @@
 import { DatabaseSync } from 'node:sqlite';
 import { SqliteDatabases } from '../../core/sqlite-databases';
 import { ChatSessionRepository } from './chat-session-repository';
-import { ChatMessage } from '@aibindkit/core';
+import { ChatSessionSnapshot } from '@aibindkit/llm';
 
 export class SqliteChatSessionRepository implements ChatSessionRepository {
   private readonly db: DatabaseSync;
@@ -14,30 +14,30 @@ export class SqliteChatSessionRepository implements ChatSessionRepository {
     this.db.exec(`
       CREATE TABLE IF NOT EXISTS chat_sessions (
         sessionId TEXT PRIMARY KEY,
-        messages TEXT NOT NULL
+        serializedSnapshot TEXT NOT NULL
       ) STRICT
     `);
   }
 
-  public async upsert(_: AbortSignal, sessionId: string, messages: ReadonlyArray<ChatMessage>): Promise<void> {
+  public async upsert(_: AbortSignal, sessionId: string, snapshot: ChatSessionSnapshot): Promise<void> {
     const statement = this.db.prepare(`
-      INSERT INTO chat_sessions (sessionId, messages)
+      INSERT INTO chat_sessions (sessionId, serializedSnapshot)
       VALUES (?, ?)
       ON CONFLICT(sessionId) DO UPDATE SET
-        messages = excluded.messages
+        serializedSnapshot = excluded.serializedSnapshot
     `);
-    statement.run(sessionId, JSON.stringify(messages));
+    statement.run(sessionId, JSON.stringify(snapshot));
   }
 
-  public async tryGet(_: AbortSignal, sessionId: string): Promise<ChatMessage[] | null> {
+  public async tryGet(_: AbortSignal, sessionId: string): Promise<ChatSessionSnapshot | null> {
     const statement = this.db.prepare(`
-      SELECT messages
+      SELECT serializedSnapshot
       FROM chat_sessions
       WHERE sessionId = ?
       LIMIT 1
     `);
-    const row = statement.get(sessionId) as { messages: string } | undefined;
+    const row = statement.get(sessionId) as { serializedSnapshot: string } | undefined;
 
-    return row ? (JSON.parse(row.messages) as ChatMessage[]) : null;
+    return row ? (JSON.parse(row.serializedSnapshot) as ChatSessionSnapshot) : null;
   }
 }

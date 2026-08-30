@@ -10,7 +10,7 @@ import { SqliteTableDataListQuerier } from './sqlite-table-data-list-querier';
 
 test('queries a primary-key-ordered page of table data', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
-  const dbs = { modelDb: db } as SqliteDatabases;
+  const dbs = { modelDb: db, dataDb: db } as SqliteDatabases;
   const abortSignal = new AbortController().signal;
   const tableRepository = new SqliteTableRepository(dbs);
   const tableDataRepository = new SqliteTableDataRepository(dbs);

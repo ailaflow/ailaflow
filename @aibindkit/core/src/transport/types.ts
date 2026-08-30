@@ -13,15 +13,22 @@ export const restoreChatRequestSchema = z.object({
 export type RestoreChatRequest = z.infer<typeof restoreChatRequestSchema>;
 
 export type ChatMessageUpdate = Omit<ChatMessage, 'type'> & {
-  type?: ChatMessageType;
+  readonly type?: ChatMessageType;
 };
 
+export interface ChatContextUsageUpdate {
+  readonly percent: number;
+  readonly totalTokens?: number;
+  readonly contextWindow?: number;
+}
+
 export interface ChatUpdate {
-  sessionToken?: string;
-  restoredMessages?: ChatMessageUpdate[];
-  currentMessage?: ChatMessageUpdate;
-  isWorking?: boolean;
-  isReset?: true;
+  readonly sessionToken?: string;
+  readonly restoredMessages?: ChatMessageUpdate[];
+  readonly currentMessage?: ChatMessageUpdate;
+  readonly isWorking?: boolean;
+  readonly contextUsage?: ChatContextUsageUpdate;
+  readonly isReset?: true;
 }
 
 // sendChatMessage

@@ -5,10 +5,10 @@
   "type": "commonjs",
   "scripts": {
     "start": "tsx watch --env-file=.env src/main.ts",
-    "build": "tsc -p tsconfig.json",
+    "build": "rm -rf dist && tsc -p tsconfig.json",
     "prettier": "prettier --check ./src",
     "prettier:fix": "prettier --write ./src",
-    "test": "tsx --test"
+    "test": "node --import tsx --test \"src/**/*.test.ts\""
   },
   "dependencies": {
     "@aibindkit/llm": "workspace:*",

@@ -4,16 +4,26 @@ import { Process } from '../repositories/process/process';
 import { ProcessRepository } from '../repositories/process/process-repository';
 import { PersistedExecution } from '../repositories/persisted-execution/persisted-execution';
 import { PersistedExecutionRepository } from '../repositories/persisted-execution/persisted-execution-repository';
-import { ProcessExecutionResumeError, ProcessExecutionResumer } from './process-execution-resumer';
+import { ProcessExecutionResumer } from './process-execution-resumer';
 import { ProcessExecutor } from './process-executor';
+import { ProcessExecution } from './process-execution';
 import { EventBus } from '../events/event-bus';
 import { ProcessExecutionResumeListenerStore } from './process-execution-resume-listener-store';
 import { ProcessManager } from '../process/process-manager';
 import { ProcessDefinitionUpgrader } from '../process/process-definition-upgrader';
 import { PROCESS_VERSION } from '@aila/model';
 
-test('process execution resumer fails when the process hash changed', async () => {
+test('process execution resumer continues when the process hash changed', async () => {
   const abortSignal = new AbortController().signal;
+  let deletedExecutionId: string | null = null;
+  let runPayload: unknown;
+  const execution = {
+    context: { startedBy: 'user_1', isTest: false },
+    onFinished: { subscribe: () => undefined },
+    run: (_abortSignal: AbortSignal, options: { signalOnFirstWait?: unknown }) => {
+      runPayload = options.signalOnFirstWait;
+    }
+  } as unknown as ProcessExecution;
   const resumer = new ProcessExecutionResumer(
     new ProcessManager(
       {
@@ -28,7 +38,9 @@ test('process execution resumer fails when the process hash changed', async () =
     {
       setup: async () => undefined,
       upsert: async () => undefined,
-      delete: async () => undefined,
+      delete: async (_abortSignal, executionId) => {
+        deletedExecutionId = executionId;
+      },
       tryGet: async () =>
         new PersistedExecution(
           'execution_1',
@@ -48,12 +60,15 @@ test('process execution resumer fails when the process hash changed', async () =
           2000
         )
     } as PersistedExecutionRepository,
-    {} as ProcessExecutor,
+    { restore: () => execution } as unknown as ProcessExecutor,
     new ProcessExecutionResumeListenerStore(),
     new EventBus()
   );
 
-  await assert.rejects(() => resumer.resume(abortSignal, 'execution_1', {}), ProcessExecutionResumeError);
+  const payload = { signal: 'continue' };
+  assert.equal(await resumer.resume(abortSignal, 'execution_1', payload), execution);
+  assert.equal(deletedExecutionId, 'execution_1');
+  assert.equal(runPayload, payload);
 });
 
 function createTestProcess(hash: string): Process {

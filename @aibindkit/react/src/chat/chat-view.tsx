@@ -1,4 +1,12 @@
-import type { ChatMessageMetadata, ChatMessageType, ChatMessageUpdate, CompletedChatMessage, LlmMessage, ToolCall } from '@aibindkit/core';
+import type {
+  ChatContextUsageUpdate,
+  ChatMessageMetadata,
+  ChatMessageType,
+  ChatMessageUpdate,
+  CompletedChatMessage,
+  LlmMessage,
+  ToolCall
+} from '@aibindkit/core';
 import { Fragment, useLayoutEffect, useRef } from 'react';
 import { ChatComposerView } from './chat-composer-view';
 import { SvgIcon } from './svg-icon';
@@ -17,6 +25,7 @@ export interface ChatViewProps {
   isWorking: boolean;
   messages: ChatMessageUpdate[];
   message: string;
+  contextUsage?: ChatContextUsageUpdate;
   connectionError: string | null;
   messageFilter: ChatMessageFilter;
   messageRenderer?: ChatMessageRenderer;
@@ -62,6 +71,7 @@ export function ChatView(props: ChatViewProps) {
       <ChatComposerView
         isWorking={props.isWorking}
         message={props.message}
+        contextUsage={props.contextUsage}
         onMessageChanged={props.onMessageChanged}
         onSendMessage={props.onSendMessage}
         onStopClicked={props.onStopClicked}

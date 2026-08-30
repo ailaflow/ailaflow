@@ -54,7 +54,7 @@ export class RestoreChatEndpoint implements Endpoint {
     const sseResponse = new SseResponse<ChatUpdate>(res);
 
     function onMessageCompletedOrFailed(update: ChatSessionUpdate) {
-      sseResponse.send({ currentMessage: update.update, isWorking: update.isWorking });
+      sseResponse.send({ currentMessage: update.update, isWorking: update.isWorking, contextUsage: update.contextUsage });
     }
 
     function onReset() {
@@ -67,7 +67,8 @@ export class RestoreChatEndpoint implements Endpoint {
 
     sseResponse.send({
       sessionToken: session.token,
-      restoredMessages: session.getAll()
+      restoredMessages: session.getAll(),
+      contextUsage: session.getContextUsage()
     });
 
     session.onMessageStarted.subscribe(onMessageCompletedOrFailed);

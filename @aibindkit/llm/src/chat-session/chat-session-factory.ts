@@ -11,6 +11,14 @@ export class ChatSessionFactory {
   public create(id: string, toolsHash: string, llmClient: LlmClient, llmModelSettings: LlmModelSettings, toolSet: ToolSet): ChatSession {
     const messageFactory = new MessageFactory(llmClient, llmModelSettings, toolSet);
     const token = randomBytes(24).toString('hex');
-    return new ChatSession(id, token, toolsHash, this.storage, messageFactory);
+    return new ChatSession(
+      id,
+      token,
+      toolsHash,
+      llmModelSettings.contextWindow,
+      llmModelSettings.effectiveContextWindowPercent,
+      this.storage,
+      messageFactory
+    );
   }
 }

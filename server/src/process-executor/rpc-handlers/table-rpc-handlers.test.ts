@@ -14,7 +14,7 @@ import { WriteTableRpcHandler } from './write-table-rpc-handler';
 
 test('writes and reads table data through RPC handlers', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
-  const dbs = { modelDb: db } as SqliteDatabases;
+  const dbs = { modelDb: db, dataDb: db } as SqliteDatabases;
   const abortSignal = new AbortController().signal;
   const tableRepository = new SqliteTableRepository(dbs);
   const tableDataRepository = new SqliteTableDataRepository(dbs);
@@ -56,7 +56,7 @@ test('writes and reads table data through RPC handlers', async () => {
 
 test('reads paginated table values through an RPC handler', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
-  const dbs = { modelDb: db } as SqliteDatabases;
+  const dbs = { modelDb: db, dataDb: db } as SqliteDatabases;
   const abortSignal = new AbortController().signal;
   const tableRepository = new SqliteTableRepository(dbs);
   const tableDataRepository = new SqliteTableDataRepository(dbs);
@@ -88,7 +88,7 @@ test('reads paginated table values through an RPC handler', async () => {
 
 test('propagates missing-table errors and validates RPC requests', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
-  const dbs = { modelDb: db } as SqliteDatabases;
+  const dbs = { modelDb: db, dataDb: db } as SqliteDatabases;
   const abortSignal = new AbortController().signal;
   const repository = new SqliteTableDataRepository(dbs);
   const readHandler = new TryReadTableRpcHandler(repository);

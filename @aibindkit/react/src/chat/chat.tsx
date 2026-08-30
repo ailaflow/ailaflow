@@ -7,7 +7,8 @@ import {
   type ChatTransportListener,
   fnv1a,
   ChatUpdate,
-  ChatMessageType
+  ChatMessageType,
+  ChatContextUsageUpdate
 } from '@aibindkit/core';
 import { useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { ChatMessageFilter, ChatMessageRenderer, ChatView } from './chat-view';
@@ -25,6 +26,7 @@ export interface ChatProps {
 interface ChatState {
   sessionToken: string | null;
   lastUpdate: ChatUpdate | null;
+  contextUsage?: ChatContextUsageUpdate;
   isWorking: boolean;
   connectionError: string | null;
   messages: ChatMessageUpdate[];
@@ -62,6 +64,13 @@ export function Chat(props: ChatProps) {
       }
       if (update.isReset) {
         state.messages = [];
+        state.contextUsage =
+          state.contextUsage?.contextWindow === undefined
+            ? undefined
+            : {
+                percent: 0,
+                contextWindow: state.contextUsage.contextWindow
+              };
       }
       if (update.restoredMessages) {
         state.messages = update.restoredMessages;
@@ -81,6 +90,9 @@ export function Chat(props: ChatProps) {
       }
       if (update.isWorking !== undefined) {
         state.isWorking = update.isWorking;
+      }
+      if (update.contextUsage !== undefined) {
+        state.contextUsage = update.contextUsage;
       }
       if (update.connectionError !== undefined) {
         state.connectionError = update.connectionError;
@@ -213,6 +225,7 @@ export function Chat(props: ChatProps) {
       connectionError={state.connectionError}
       messages={state.messages}
       message={message}
+      contextUsage={state.contextUsage}
       messageRenderer={props.messageRenderer}
       messageFilter={props.messageFilter ?? defaultMessageFilter}
       onReconnectClicked={onReconnectClicked}

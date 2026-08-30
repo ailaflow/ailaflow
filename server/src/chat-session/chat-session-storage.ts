@@ -1,7 +1,6 @@
-import { ChatSessionStorage as Interface } from '@aibindkit/llm';
+import { ChatSessionSnapshot, ChatSessionStorage as Interface } from '@aibindkit/llm';
 import { ChatSessionRepository } from '../repositories/chat-session/chat-session-repository';
 import { Logger } from '../core/logger';
-import { ChatMessage } from '@aibindkit/core';
 
 export class ChatSessionStorage implements Interface {
   private readonly timeouts = new Map<string, ReturnType<typeof setTimeout>>();
@@ -9,13 +8,13 @@ export class ChatSessionStorage implements Interface {
 
   public constructor(private readonly repository: ChatSessionRepository) {}
 
-  public save(abortSignal: AbortSignal, sessionId: string, items: ReadonlyArray<ChatMessage>): Promise<void> {
+  public save(abortSignal: AbortSignal, sessionId: string, snapshot: ChatSessionSnapshot): Promise<void> {
     this.timeouts.set(
       sessionId,
       setTimeout(async () => {
         this.timeouts.delete(sessionId);
         try {
-          await this.repository.upsert(abortSignal, sessionId, items);
+          await this.repository.upsert(abortSignal, sessionId, snapshot);
         } catch (e) {
           this.logger.error(`Failed to save chat session: ${(e as Error).message ?? e}`);
         }
@@ -24,7 +23,7 @@ export class ChatSessionStorage implements Interface {
     return Promise.resolve();
   }
 
-  public tryGet(abortSignal: AbortSignal, sessionId: string): Promise<ChatMessage[] | null> {
+  public tryGet(abortSignal: AbortSignal, sessionId: string): Promise<ChatSessionSnapshot | null> {
     return this.repository.tryGet(abortSignal, sessionId);
   }
 }

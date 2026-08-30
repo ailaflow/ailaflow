@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import type { KeyboardEvent } from 'react';
+import type { ChatContextUsageUpdate } from '@aibindkit/core';
 import { SvgIcon } from './svg-icon';
 
 export interface ChatComposerViewProps {
   isWorking: boolean;
   message: string;
+  contextUsage?: ChatContextUsageUpdate;
   onMessageChanged: (message: string) => void;
   onSendMessage: () => void;
   onStopClicked: () => void;
@@ -54,6 +56,8 @@ export function ChatComposerView(props: ChatComposerViewProps) {
     props.onStartNewConversation();
   }
 
+  const contextPercent = Math.min(100, Math.max(0, props.contextUsage?.percent ?? 0));
+
   return (
     <div className="abk-chat-composer">
       <div className="abk-chat-composer-inner">
@@ -86,6 +90,27 @@ export function ChatComposerView(props: ChatComposerViewProps) {
           </button>
           {isMenuOpen && (
             <div role="menu" className="abk-chat-menu-panel">
+              <div role="none" className="abk-chat-menu-context">
+                <div className="abk-chat-menu-context-header">
+                  <span>Context usage</span>
+                  <strong>{Math.round(contextPercent)}%</strong>
+                </div>
+                {props.contextUsage?.totalTokens !== undefined && props.contextUsage.contextWindow !== undefined && (
+                  <div className="abk-chat-menu-context-tokens">
+                    {props.contextUsage.totalTokens.toString()} / {props.contextUsage.contextWindow.toString()}
+                  </div>
+                )}
+                <div
+                  role="progressbar"
+                  aria-label="Context usage"
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  aria-valuenow={Math.round(contextPercent)}
+                  className="abk-chat-menu-context-progress"
+                >
+                  <span style={{ width: `${contextPercent}%` }} />
+                </div>
+              </div>
               <button
                 type="button"
                 role="menuitem"

@@ -1,4 +1,4 @@
-import type { ChatMessageUpdate, ChatMessageMetadata, ChatMessage } from '@aibindkit/core';
+import type { ChatMessageUpdate, ChatMessageMetadata, ChatMessage, ChatContextUsageUpdate } from '@aibindkit/core';
 import { ChatMessageType, SimpleEvent } from '@aibindkit/core';
 import { Message, MessageCompletionResult } from './messages/message';
 import { MessageFactory } from './messages/message-factory';
@@ -9,7 +9,13 @@ import { ChatSessionStorage } from './chat-session-storage';
 
 export interface ChatSessionUpdate {
   isWorking?: boolean;
+  contextUsage?: ChatContextUsageUpdate;
   update: ChatMessageUpdate;
+}
+
+export interface ChatSessionSnapshot {
+  readonly totalTokens?: number;
+  readonly messages: ReadonlyArray<ChatMessage>;
 }
 
 export class ChatSession {
@@ -29,6 +35,7 @@ export class ChatSession {
   private readonly stack = new ChatSessionStack();
   private readonly queue = new ChatSessionQueue();
   private systemMessage?: string;
+  private contextUsage: ChatContextUsageUpdate = this.calcContextUsage();
 
   private readonly toolContext: ToolContext = {
     sessionId: this.id,
@@ -39,6 +46,8 @@ export class ChatSession {
     public readonly id: string,
     public readonly token: string,
     public readonly toolsHash: string,
+    private readonly contextWindow: number | undefined,
+    private readonly effectiveContextWindowPercent: number,
     private readonly storage: ChatSessionStorage,
     private readonly messageFactory: MessageFactory
   ) {}
@@ -72,6 +81,11 @@ export class ChatSession {
   public queueUserMessage(content: string, metadata?: ChatMessageMetadata): number {
     if (this.isDestroyed) {
       throw new Error('Session is destroyed');
+    }
+
+    if (this.effectiveContextWindowPercent <= this.contextUsage.percent) {
+      // TODO: we should replace this by compacting the session
+      throw new Error('Context window exceeded, please reset the session');
     }
 
     if (this.isInterrupted) {
@@ -127,17 +141,22 @@ export class ChatSession {
     return result;
   }
 
-  public load(items: ReadonlyArray<ChatMessage>) {
-    if (items.length === 0) {
+  public getContextUsage(): ChatContextUsageUpdate {
+    return this.contextUsage;
+  }
+
+  public import(snapshot: ChatSessionSnapshot) {
+    const messages = snapshot.messages;
+    if (messages.length === 0) {
       throw new Error('Cannot load an empty session');
     }
 
     this.stack.clear();
     let start = 0;
     if (this.systemMessage) {
-      const index = items.findIndex(item => item.type === ChatMessageType.SYSTEM);
+      const index = messages.findIndex(item => item.type === ChatMessageType.SYSTEM);
       if (index === 0) {
-        const systemMessageId = items[0].id;
+        const systemMessageId = messages[0].id;
         const systemMessage = this.messageFactory.createSystem(systemMessageId, this.systemMessage);
         this.stack.push(systemMessage);
         const result = systemMessage.complete();
@@ -145,12 +164,16 @@ export class ChatSession {
         start = 1;
       }
     }
-    this.stack.load(items, start, items.length);
-    this.lastId = items[items.length - 1].id;
+    this.stack.load(messages, start, messages.length);
+    this.lastId = messages[messages.length - 1].id;
+    this.contextUsage = this.calcContextUsage(snapshot.totalTokens);
   }
 
-  public dump(): ReadonlyArray<ChatMessage> {
-    return this.stack.all();
+  public export(): ChatSessionSnapshot {
+    return {
+      totalTokens: this.contextUsage.totalTokens,
+      messages: this.stack.all()
+    };
   }
 
   public destroy() {
@@ -176,7 +199,7 @@ export class ChatSession {
 
   private async save() {
     const abortSignal = AbortSignal.timeout(3_000);
-    await this.storage.save(abortSignal, this.id, this.dump());
+    await this.storage.save(abortSignal, this.id, this.export());
   }
 
   private tryNext() {
@@ -255,6 +278,7 @@ export class ChatSession {
       this.isWorking = false;
     }
 
+    this.contextUsage = this.calcContextUsage(result.usage?.total_tokens);
     this.stack.complete(message, result.completedMessages);
     await this.trySave();
 
@@ -263,13 +287,11 @@ export class ChatSession {
       const toolMessage = this.messageFactory.createTool(tid, this.toolContext, result.toolCalls);
       this.queue.pushAfterType(toolMessage, ChatMessageType.TOOL);
     }
-    if (result.usage) {
-      // console.log('usage', result.usage);
-    }
 
     const hasNext = this.tryNext();
     this.onMessageCompleted.emit({
       isWorking: hasNext === true,
+      contextUsage: this.contextUsage,
       update: {
         id: message.id,
         completedMessages: result.completedMessages
@@ -279,5 +301,17 @@ export class ChatSession {
 
   private nextId(): number {
     return ++this.lastId;
+  }
+
+  private calcContextUsage(totalTokens?: number): ChatContextUsageUpdate {
+    let percent = 0;
+    if (totalTokens !== undefined && this.contextWindow !== undefined) {
+      percent = Math.min(1, Math.max(0, totalTokens / this.contextWindow)) * 100;
+    }
+    return {
+      percent,
+      totalTokens,
+      contextWindow: this.contextWindow
+    };
   }
 }
