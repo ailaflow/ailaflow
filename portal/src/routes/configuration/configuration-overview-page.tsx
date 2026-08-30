@@ -11,8 +11,12 @@ export function ConfigurationOverviewPage() {
   const apiClient = useApiClient();
   const loader = useLoader(
     async abortSignal => {
-      const [host, llm] = await Promise.all([apiClient.sandbox.diagnoseHost(abortSignal), apiClient.llmConfiguration.get(abortSignal)]);
-      return { host, llm };
+      const [host, llm, publicUrlTest] = await Promise.all([
+        apiClient.sandbox.diagnoseHost(abortSignal),
+        apiClient.llmConfiguration.get(abortSignal),
+        apiClient.publicUrlConfiguration.test(abortSignal, {})
+      ]);
+      return { host, llm, publicUrlTest };
     },
     [apiClient]
   );
@@ -49,6 +53,16 @@ export function ConfigurationOverviewPage() {
       remediation: 'Grant the server process write access to the Aila data folder.'
     },
     {
+      id: 'public-url',
+      label: 'Public URL',
+      value: publicUrlStatusValue(loader.data.publicUrlTest.publicUrl, loader.data.publicUrlTest.isAvailable),
+      isHealthy: loader.data.publicUrlTest.isAvailable,
+      remediation: loader.data.publicUrlTest.publicUrl
+        ? (loader.data.publicUrlTest.error ?? 'Make sure the configured URL is externally accessible.')
+        : 'Configure the externally accessible URL for this Aila server.',
+      action: { label: 'Configure Public URL', href: '/admin/configuration?tab=public-url' }
+    },
+    {
       id: 'admin-chat-ai',
       label: 'Admin chat AI',
       value: adminChatConfigured ? 'Configured' : 'Not configured',
@@ -67,6 +81,13 @@ export function ConfigurationOverviewPage() {
   ];
 
   return <ConfigurationOverviewView title="System status" statuses={statuses} />;
+}
+
+function publicUrlStatusValue(publicUrl: string | null, isAvailable: boolean): string {
+  if (!publicUrl) {
+    return 'Not configured';
+  }
+  return `${isAvailable ? 'Available' : 'Unavailable'} · ${publicUrl}`;
 }
 
 function isLlmUseCaseConfigured(configuration: GetLlmConfigurationResponse, useCase: LlmUseCase): boolean {

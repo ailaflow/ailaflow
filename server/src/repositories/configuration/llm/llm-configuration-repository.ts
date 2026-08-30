@@ -1,4 +1,4 @@
-import { Repository } from '../repository';
+import { Repository } from '../../repository';
 import { LlmConfiguration } from './llm-configuration';
 import { LlmProviderConfiguration } from './llm-provider-configuration';
 import { LlmUseCaseConfiguration } from './llm-use-case-configuration';

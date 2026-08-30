@@ -1,4 +1,5 @@
 export * from './auth';
+export * from './health';
 export * from './sandbox';
 export * from './install';
 export * from './llm-configuration';
@@ -7,6 +8,7 @@ export * from './my-process';
 export * from './my-task';
 export * from './pagination';
 export * from './process';
+export * from './public-url-configuration';
 export * from './table';
 export * from './task';
 export * from './telegram-configuration';

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
 import test from 'node:test';
-import { SqliteDatabases } from '../../core/sqlite-databases';
+import { SqliteDatabases } from '../../../core/sqlite-databases';
 import { LlmProviderConfiguration } from './llm-provider-configuration';
 import { LlmProviderType, LlmUseCase } from '@aila/model';
 import { LlmUseCaseConfiguration } from './llm-use-case-configuration';

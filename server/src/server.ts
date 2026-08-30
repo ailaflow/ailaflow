@@ -117,8 +117,8 @@ import { Cron } from './crons/cron';
 import { AuthTokenCleanupCron } from './crons/auth-token-cleanup-cron';
 import { IncompleteAssignedTaskCountQuerier } from './queriers/task/incomplete-assigned-task-count-querier';
 import { SqliteIncompleteAssignedTaskCountQuerier } from './queriers/task/sqlite-incomplete-assigned-task-count-querier';
-import { LlmConfigurationRepository } from './repositories/llm-configuration/llm-configuration-repository';
-import { SqliteLlmConfigurationRepository } from './repositories/llm-configuration/sqlite-llm-configuration-repository';
+import { LlmConfigurationRepository } from './repositories/configuration/llm/llm-configuration-repository';
+import { SqliteLlmConfigurationRepository } from './repositories/configuration/llm/sqlite-llm-configuration-repository';
 import { LlmClientFactory } from './llm/llm-client-factory';
 import { LlmClientProvider } from './llm/llm-client-provider';
 import { GetLlmConfigurationEndpoint } from './api/llm-configuration/get-llm-configuration-endpoint';
@@ -129,8 +129,8 @@ import { FetchLlmProviderModelsEndpoint } from './api/llm-configuration/fetch-ll
 import { LlmConfigurationChangedEventHandler } from './events/llm-configuration/llm-configuration-changed-event-handler';
 import { SandboxHostDiagnostician } from './sandbox/sandbox-host-diagnostician';
 import { ChatAuthContextResolver } from './chat-session/chat-auth-context-resolver';
-import { TelegramConfigurationRepository } from './repositories/telegram-configuration/telegram-configuration-repository';
-import { SqliteTelegramConfigurationRepository } from './repositories/telegram-configuration/sqlite-telegram-configuration-repository';
+import { TelegramConfigurationRepository } from './repositories/configuration/telegram/telegram-configuration-repository';
+import { SqliteTelegramConfigurationRepository } from './repositories/configuration/telegram/sqlite-telegram-configuration-repository';
 import { GetMyTelegramConfigurationEndpoint } from './api/my-configuration/get-my-telegram-configuration-endpoint';
 import { SaveMyTelegramBotEndpoint } from './api/my-configuration/save-my-telegram-bot-endpoint';
 import { DeleteMyTelegramBotEndpoint } from './api/my-configuration/delete-my-telegram-bot-endpoint';
@@ -151,6 +151,13 @@ import { TaskListQuerier } from './queriers/task-list/task-list-querier';
 import { SqliteTaskListQuerier } from './queriers/task-list/sqlite-task-list-querier';
 import { DeleteTaskEndpoint, GetTasksEndpoint } from './api/task/tasks-endpoint';
 import { TaskDeleter } from './task/task-deleter';
+import { PublicUrlConfigurationRepository } from './repositories/configuration/public-url/public-url-configuration-repository';
+import { SqlitePublicUrlConfigurationRepository } from './repositories/configuration/public-url/sqlite-public-url-configuration-repository';
+import { PublicUrlTester } from './configuration/public-url/public-url-tester';
+import { HealthEndpoint } from './api/health/health-endpoint';
+import { GetPublicUrlConfigurationEndpoint } from './api/public-url-configuration/get-public-url-configuration-endpoint';
+import { SavePublicUrlConfigurationEndpoint } from './api/public-url-configuration/save-public-url-configuration-endpoint';
+import { TestPublicUrlEndpoint } from './api/public-url-configuration/test-public-url-endpoint';
 
 const PORT = process.env.PORT || 2048;
 
@@ -178,6 +185,7 @@ export class Server {
     let tableDataRepository: TableDataRepository;
     let llmConfigurationRepository: LlmConfigurationRepository;
     let telegramConfigurationRepository: TelegramConfigurationRepository;
+    let publicUrlConfigurationRepository: PublicUrlConfigurationRepository;
 
     let processListQuerier: ProcessListQuerier;
     let myProcessListQuerier: MyProcessListQuerier;
@@ -209,6 +217,7 @@ export class Server {
     tableDataRepository = new SqliteTableDataRepository(sqliteDatabases);
     llmConfigurationRepository = new SqliteLlmConfigurationRepository(sqliteDatabases);
     telegramConfigurationRepository = new SqliteTelegramConfigurationRepository(sqliteDatabases);
+    publicUrlConfigurationRepository = new SqlitePublicUrlConfigurationRepository(sqliteDatabases);
 
     processListQuerier = new SqliteProcessListQuerier(sqliteDatabases);
     myProcessListQuerier = new SqliteMyProcessListQuerier(sqliteDatabases);
@@ -237,7 +246,8 @@ export class Server {
       notificationRepository.setup(abortSignal),
       tableRepository.setup(abortSignal),
       llmConfigurationRepository.setup(abortSignal),
-      telegramConfigurationRepository.setup(abortSignal)
+      telegramConfigurationRepository.setup(abortSignal),
+      publicUrlConfigurationRepository.setup(abortSignal)
     ]);
 
     const processExecutionStore = new ProcessExecutionStore();
@@ -261,6 +271,7 @@ export class Server {
 
     const llmClientFactory = new LlmClientFactory();
     const llmClientProvider = new LlmClientProvider(llmConfigurationRepository, llmClientFactory);
+    const publicUrlTester = new PublicUrlTester();
 
     const eventBus = new EventBus();
     eventBus.registerHandler(new ProcessExecutionFinishedEventHandler(userChatSessionProvider));
@@ -331,6 +342,7 @@ export class Server {
     const crons: Cron[] = [new AuthTokenCleanupCron(authTokenRepository)];
 
     const endpoints = [
+      new HealthEndpoint(),
       new InstallEndpoint(userRepository, userAttributesRepository, sandboxRepository, passwordHasher),
       new LoginEndpoint(userRepository, authTokenRepository, passwordHasher),
       new RefreshAuthTokenEndpoint(authTokenRepository),
@@ -339,6 +351,9 @@ export class Server {
       new FetchLlmProviderModelsEndpoint(llmConfigurationRepository, llmClientFactory),
       new DeleteLlmProviderEndpoint(llmConfigurationRepository, eventBus),
       new SaveLlmUseCaseAssignmentsEndpoint(llmConfigurationRepository, eventBus),
+      new GetPublicUrlConfigurationEndpoint(publicUrlConfigurationRepository),
+      new SavePublicUrlConfigurationEndpoint(publicUrlConfigurationRepository),
+      new TestPublicUrlEndpoint(publicUrlConfigurationRepository, publicUrlTester),
       new GetMyTelegramConfigurationEndpoint(telegramConfigurationApi),
       new SaveMyTelegramBotEndpoint(telegramConfigurationApi),
       new DeleteMyTelegramBotEndpoint(telegramConfigurationApi),

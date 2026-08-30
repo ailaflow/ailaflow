@@ -1,6 +1,6 @@
 import { UserChatSessionProvider } from '../chat-session/user-chat-session-provider';
 import { Logger } from '../core/logger';
-import { TelegramConfigurationRepository } from '../repositories/telegram-configuration/telegram-configuration-repository';
+import { TelegramConfigurationRepository } from '../repositories/configuration/telegram/telegram-configuration-repository';
 import { TelegramChannelSynchronizer } from './telegram-channel-synchronizer';
 import { TelegramBotApiClient } from './telegram-bot-api-client';
 

@@ -2,11 +2,11 @@ import type { LlmMessage, ToolDescriptor } from '@aibindkit/core';
 import type { LlmClient, LlmCompleteResult, LlmModelSettings } from '@aibindkit/llm';
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { LlmConfiguration } from '../repositories/llm-configuration/llm-configuration';
-import { LlmConfigurationRepository } from '../repositories/llm-configuration/llm-configuration-repository';
-import { LlmProviderConfiguration } from '../repositories/llm-configuration/llm-provider-configuration';
+import { LlmConfiguration } from '../repositories/configuration/llm/llm-configuration';
+import { LlmConfigurationRepository } from '../repositories/configuration/llm/llm-configuration-repository';
+import { LlmProviderConfiguration } from '../repositories/configuration/llm/llm-provider-configuration';
 import { LlmProviderType, LlmUseCase } from '@aila/model';
-import { LlmUseCaseConfiguration } from '../repositories/llm-configuration/llm-use-case-configuration';
+import { LlmUseCaseConfiguration } from '../repositories/configuration/llm/llm-use-case-configuration';
 import { ConfiguredLlmClient, LlmClientFactory } from './llm-client-factory';
 import { LlmClientProvider } from './llm-client-provider';
 

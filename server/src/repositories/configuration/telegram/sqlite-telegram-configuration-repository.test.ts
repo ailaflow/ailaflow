@@ -1,9 +1,9 @@
 import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
 import test from 'node:test';
-import { SqliteDatabases } from '../../core/sqlite-databases';
-import { SqliteUserRepository } from '../user/sqlite-user-repository';
-import { User } from '../user/user';
+import { SqliteDatabases } from '../../../core/sqlite-databases';
+import { SqliteUserRepository } from '../../user/sqlite-user-repository';
+import { User } from '../../user/user';
 import { SqliteTelegramConfigurationRepository } from './sqlite-telegram-configuration-repository';
 import { TelegramBotConfiguration } from './telegram-bot-configuration';
 

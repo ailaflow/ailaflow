@@ -1,4 +1,4 @@
-import { Repository } from '../repository';
+import { Repository } from '../../repository';
 import { TelegramBotConfiguration } from './telegram-bot-configuration';
 
 export class TelegramConfigurationRepositoryError extends Error {

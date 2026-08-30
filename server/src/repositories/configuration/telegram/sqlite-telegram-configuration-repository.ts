@@ -1,5 +1,5 @@
 import { DatabaseSync } from 'node:sqlite';
-import { SqliteDatabases } from '../../core/sqlite-databases';
+import { SqliteDatabases } from '../../../core/sqlite-databases';
 import { TelegramBotConfiguration } from './telegram-bot-configuration';
 import { TelegramConfigurationRepository, TelegramConfigurationRepositoryError } from './telegram-configuration-repository';
 

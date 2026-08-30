@@ -5,7 +5,7 @@ import { LlmConfigurationChangedEvent } from '../../events/llm-configuration/llm
 import {
   LlmConfigurationRepository,
   LlmConfigurationRepositoryError
-} from '../../repositories/llm-configuration/llm-configuration-repository';
+} from '../../repositories/configuration/llm/llm-configuration-repository';
 import { Endpoint } from '../framework/endpoint';
 import { getEndpointAbortSignal } from '../framework/endpoint-abort-signal';
 import { EndpointError } from '../framework/endpoint-error';

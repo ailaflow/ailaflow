@@ -6,7 +6,7 @@ import { Request } from 'express';
 import { SqliteDatabases } from '../core/sqlite-databases';
 import { EventBus } from '../events/event-bus';
 import { AuthToken } from '../repositories/auth-token/auth-token';
-import { SqliteTelegramConfigurationRepository } from '../repositories/telegram-configuration/sqlite-telegram-configuration-repository';
+import { SqliteTelegramConfigurationRepository } from '../repositories/configuration/telegram/sqlite-telegram-configuration-repository';
 import { SqliteUserRepository } from '../repositories/user/sqlite-user-repository';
 import { User } from '../repositories/user/user';
 import { TelegramBotApiClient } from '../telegram/telegram-bot-api-client';

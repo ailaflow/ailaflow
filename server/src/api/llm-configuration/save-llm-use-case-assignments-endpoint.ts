@@ -5,9 +5,9 @@ import { LlmConfigurationChangedEvent } from '../../events/llm-configuration/llm
 import {
   LlmConfigurationRepository,
   LlmConfigurationRepositoryError
-} from '../../repositories/llm-configuration/llm-configuration-repository';
-import { LlmProviderConfigurationError } from '../../repositories/llm-configuration/llm-provider-configuration';
-import { LlmUseCaseConfiguration } from '../../repositories/llm-configuration/llm-use-case-configuration';
+} from '../../repositories/configuration/llm/llm-configuration-repository';
+import { LlmProviderConfigurationError } from '../../repositories/configuration/llm/llm-provider-configuration';
+import { LlmUseCaseConfiguration } from '../../repositories/configuration/llm/llm-use-case-configuration';
 import { Endpoint } from '../framework/endpoint';
 import { getEndpointAbortSignal } from '../framework/endpoint-abort-signal';
 import { EndpointError } from '../framework/endpoint-error';

@@ -1,6 +1,6 @@
 import { GetLlmConfigurationResponse } from '@aila/model';
 import { Request } from 'express';
-import { LlmConfigurationRepository } from '../../repositories/llm-configuration/llm-configuration-repository';
+import { LlmConfigurationRepository } from '../../repositories/configuration/llm/llm-configuration-repository';
 import { Endpoint } from '../framework/endpoint';
 import { getEndpointAbortSignal } from '../framework/endpoint-abort-signal';
 

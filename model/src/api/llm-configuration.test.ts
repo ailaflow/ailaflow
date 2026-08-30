@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { LlmProviderType, LlmUseCase } from '../llm-configuration';
+import { LlmProviderType, LlmUseCase } from '../configuration/llm';
 import { saveLlmProviderRequestSchema, saveLlmUseCaseAssignmentsRequestSchema } from './llm-configuration';
 
 test('validates numeric provider enum and structural fields', () => {

@@ -1,5 +1,5 @@
 import { DatabaseSync } from 'node:sqlite';
-import { SqliteDatabases } from '../../core/sqlite-databases';
+import { SqliteDatabases } from '../../../core/sqlite-databases';
 import { LlmConfiguration } from './llm-configuration';
 import { LlmConfigurationRepository, LlmConfigurationRepositoryError } from './llm-configuration-repository';
 import { LlmModelProviderConfiguration, LlmProviderConfiguration } from './llm-provider-configuration';

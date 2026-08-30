@@ -1,4 +1,4 @@
-import { LlmConfigurationRepository } from '../repositories/llm-configuration/llm-configuration-repository';
+import { LlmConfigurationRepository } from '../repositories/configuration/llm/llm-configuration-repository';
 import { LlmUseCase } from '@aila/model';
 import { ConfiguredLlmClient, LlmClientFactory } from './llm-client-factory';
 

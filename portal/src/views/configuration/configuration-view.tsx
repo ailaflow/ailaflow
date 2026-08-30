@@ -1,4 +1,4 @@
-export type ConfigurationTab = 'overview' | 'llm';
+export type ConfigurationTab = 'overview' | 'llm' | 'public-url';
 
 export interface ConfigurationViewProps {
   activeTab: ConfigurationTab;
@@ -8,7 +8,8 @@ export interface ConfigurationViewProps {
 
 const tabs: ReadonlyArray<{ id: ConfigurationTab; label: string }> = [
   { id: 'overview', label: 'Overview' },
-  { id: 'llm', label: 'LLM' }
+  { id: 'llm', label: 'LLM' },
+  { id: 'public-url', label: 'Public URL' }
 ];
 
 export function ConfigurationView(props: ConfigurationViewProps) {

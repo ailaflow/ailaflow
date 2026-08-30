@@ -1,6 +1,6 @@
 import { AnthropicLlmClient, LlmClient, LlmModelSettings, OpenaiLlmClient } from '@aibindkit/llm';
-import { ResolvedLlmUseCaseConfiguration } from '../repositories/llm-configuration/llm-configuration';
-import { LlmProviderConfiguration } from '../repositories/llm-configuration/llm-provider-configuration';
+import { ResolvedLlmUseCaseConfiguration } from '../repositories/configuration/llm/llm-configuration';
+import { LlmProviderConfiguration } from '../repositories/configuration/llm/llm-provider-configuration';
 import { LlmProviderType } from '@aila/model';
 
 export interface ConfiguredLlmClient {

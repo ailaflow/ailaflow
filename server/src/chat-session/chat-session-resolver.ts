@@ -10,7 +10,7 @@ import { ServerPaths } from '../core/server-paths';
 import { UserToolSetProvider } from './user-tools/user-tool-set-provider';
 import { ChatSessionId } from './chat-session-id';
 import { LlmClientProvider } from '../llm/llm-client-provider';
-import { LlmProviderConfigurationError } from '../repositories/llm-configuration/llm-provider-configuration';
+import { LlmProviderConfigurationError } from '../repositories/configuration/llm/llm-provider-configuration';
 import { LlmUseCase } from '@aila/model';
 
 export class ChatSessionResolver implements BaseChatSessionResolver {

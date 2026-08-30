@@ -2,8 +2,8 @@ import { ChatMessageType } from '@aibindkit/core';
 import { ChatSession, ChatSessionUpdate } from '@aibindkit/llm';
 import { UserChatSessionProvider } from '../chat-session/user-chat-session-provider';
 import { Logger } from '../core/logger';
-import { TelegramBotConfiguration } from '../repositories/telegram-configuration/telegram-bot-configuration';
-import { TelegramConfigurationRepository } from '../repositories/telegram-configuration/telegram-configuration-repository';
+import { TelegramBotConfiguration } from '../repositories/configuration/telegram/telegram-bot-configuration';
+import { TelegramConfigurationRepository } from '../repositories/configuration/telegram/telegram-configuration-repository';
 import { TelegramBotApiClient, TelegramBotApiError, TelegramUpdate } from './telegram-bot-api-client';
 import { TelegramMessageFormatter } from './telegram-message-formatter';
 import {

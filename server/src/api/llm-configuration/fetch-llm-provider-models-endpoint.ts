@@ -2,8 +2,8 @@ import { FetchLlmProviderModelsResponse, fetchLlmProviderModelsRequestSchema } f
 import { LlmClientError } from '@aibindkit/llm';
 import { Request } from 'express';
 import { LlmClientFactory } from '../../llm/llm-client-factory';
-import { LlmConfigurationRepository } from '../../repositories/llm-configuration/llm-configuration-repository';
-import { LlmProviderConfiguration, LlmProviderConfigurationError } from '../../repositories/llm-configuration/llm-provider-configuration';
+import { LlmConfigurationRepository } from '../../repositories/configuration/llm/llm-configuration-repository';
+import { LlmProviderConfiguration, LlmProviderConfigurationError } from '../../repositories/configuration/llm/llm-provider-configuration';
 import { Endpoint } from '../framework/endpoint';
 import { getEndpointAbortSignal } from '../framework/endpoint-abort-signal';
 import { EndpointError } from '../framework/endpoint-error';

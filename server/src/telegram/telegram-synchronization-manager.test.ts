@@ -3,8 +3,8 @@ import { SimpleEvent } from '@aibindkit/core';
 import { ChatSession, ChatSessionUpdate } from '@aibindkit/llm';
 import test from 'node:test';
 import { UserChatSessionProvider } from '../chat-session/user-chat-session-provider';
-import { TelegramBotConfiguration } from '../repositories/telegram-configuration/telegram-bot-configuration';
-import { TelegramConfigurationRepository } from '../repositories/telegram-configuration/telegram-configuration-repository';
+import { TelegramBotConfiguration } from '../repositories/configuration/telegram/telegram-bot-configuration';
+import { TelegramConfigurationRepository } from '../repositories/configuration/telegram/telegram-configuration-repository';
 import { TelegramBotApiClient } from './telegram-bot-api-client';
 import { TelegramSynchronizationManager } from './telegram-synchronization-manager';
 

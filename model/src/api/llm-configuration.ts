@@ -1,6 +1,5 @@
 import z from 'zod/v4';
-import { LlmProviderType } from '../llm-configuration/llm-provider-type';
-import { LlmUseCase } from '../llm-configuration/llm-use-case';
+import { LlmProviderType, LlmUseCase } from '../configuration/llm';
 
 // common
 

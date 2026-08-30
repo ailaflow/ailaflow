@@ -11,11 +11,11 @@ import { TelegramConfigurationChangedEvent } from '../../events/telegram-configu
 import {
   TelegramBotConfiguration,
   TelegramBotConfigurationError
-} from '../../repositories/telegram-configuration/telegram-bot-configuration';
+} from '../../repositories/configuration/telegram/telegram-bot-configuration';
 import {
   TelegramConfigurationRepository,
   TelegramConfigurationRepositoryError
-} from '../../repositories/telegram-configuration/telegram-configuration-repository';
+} from '../../repositories/configuration/telegram/telegram-configuration-repository';
 import { TelegramBotApiClient, TelegramBotApiError } from '../../telegram/telegram-bot-api-client';
 import { EndpointError } from '../framework/endpoint-error';
 
