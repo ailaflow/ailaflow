@@ -5,6 +5,17 @@ import { SqliteDatabases } from '../../core/sqlite-databases';
 import { DatabaseSync } from 'node:sqlite';
 import { ProcessResourceId } from './process-resource-id';
 
+interface ProcessRow {
+  name: string;
+  description: string;
+  userAccessExpression: string;
+  nSteps: number;
+  isPausable: number;
+  startVariableSchemas: string;
+  serializedDefinition: string;
+  definitionHash: string;
+}
+
 export class SqliteProcessRepository implements ProcessRepository {
   private readonly db: DatabaseSync;
 
@@ -19,6 +30,7 @@ export class SqliteProcessRepository implements ProcessRepository {
         description TEXT NOT NULL,
         userAccessExpression TEXT NOT NULL,
         nSteps INTEGER NOT NULL,
+        isPausable INTEGER NOT NULL DEFAULT 0 CHECK (isPausable IN (0, 1)),
         startVariableSchemas TEXT NOT NULL,
         serializedDefinition TEXT NOT NULL,
         definitionHash TEXT NOT NULL
@@ -28,8 +40,10 @@ export class SqliteProcessRepository implements ProcessRepository {
 
   public async insert(_: AbortSignal, process: Process): Promise<void> {
     const statement = this.db.prepare(`
-      INSERT INTO processes (name, description, userAccessExpression, nSteps, startVariableSchemas, serializedDefinition, definitionHash)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO processes (
+        name, description, userAccessExpression, nSteps, isPausable, startVariableSchemas, serializedDefinition, definitionHash
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `);
     try {
       statement.run(
@@ -37,6 +51,7 @@ export class SqliteProcessRepository implements ProcessRepository {
         process.description,
         process.userAccessExpression,
         process.nSteps,
+        process.isPausable ? 1 : 0,
         serializeStartVariableSchemas(process.startVariableSchemas),
         JSON.stringify(process.definition),
         process.hash
@@ -56,6 +71,7 @@ export class SqliteProcessRepository implements ProcessRepository {
         description = ?,
         userAccessExpression = ?,
         nSteps = ?,
+        isPausable = ?,
         startVariableSchemas = ?,
         serializedDefinition = ?,
         definitionHash = ?
@@ -65,6 +81,7 @@ export class SqliteProcessRepository implements ProcessRepository {
       process.description,
       process.userAccessExpression,
       process.nSteps,
+      process.isPausable ? 1 : 0,
       serializeStartVariableSchemas(process.startVariableSchemas),
       JSON.stringify(process.definition),
       process.hash,
@@ -98,22 +115,12 @@ export class SqliteProcessRepository implements ProcessRepository {
 
   public async tryGetByName(_: AbortSignal, name: string): Promise<Process | null> {
     const statement = this.db.prepare(`
-      SELECT name, description, userAccessExpression, nSteps, startVariableSchemas, serializedDefinition, definitionHash
+      SELECT name, description, userAccessExpression, nSteps, isPausable, startVariableSchemas, serializedDefinition, definitionHash
       FROM processes
       WHERE name = ?
       LIMIT 1
     `);
-    const row = statement.get(name) as
-      | {
-          name: string;
-          description: string;
-          userAccessExpression: string;
-          nSteps: number;
-          startVariableSchemas: string;
-          serializedDefinition: string;
-          definitionHash: string;
-        }
-      | undefined;
+    const row = statement.get(name) as ProcessRow | undefined;
 
     return row
       ? new Process(
@@ -123,7 +130,8 @@ export class SqliteProcessRepository implements ProcessRepository {
           JSON.parse(row.serializedDefinition) as ProcessDefinition,
           row.definitionHash,
           JSON.parse(row.startVariableSchemas) as Record<string, JsonSchema>,
-          row.nSteps
+          row.nSteps,
+          row.isPausable === 1
         )
       : null;
   }

@@ -108,7 +108,8 @@ function createTestProcess(): Process {
     },
     'process_hash',
     null,
-    0
+    0,
+    false
   );
 }
 

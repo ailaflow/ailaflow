@@ -13,7 +13,7 @@ export class SqliteProcessListQuerier implements ProcessListQuerier {
   public async query(_: AbortSignal, page: number, pageSize: number): Promise<GetProcessesResponse> {
     const { totalCount } = this.db.prepare(`SELECT COUNT(*) AS totalCount FROM processes`).get() as { totalCount: number };
     const statement = this.db.prepare(`
-      SELECT name, description, userAccessExpression, startVariableSchemas
+      SELECT name, description, userAccessExpression, isPausable, startVariableSchemas
       FROM processes
       ORDER BY name
       LIMIT ? OFFSET ?
@@ -32,6 +32,7 @@ interface ProcessRow {
   name: string;
   description: string;
   userAccessExpression: string;
+  isPausable: number;
   startVariableSchemas: string;
 }
 
@@ -40,6 +41,7 @@ function mapRows(rows: ProcessRow[]): ProcessLiteDto[] {
     name: row.name,
     description: row.description,
     userAccessExpression: row.userAccessExpression,
+    isPausable: row.isPausable === 1,
     startVariableSchemas: JSON.parse(row.startVariableSchemas)
   }));
 }

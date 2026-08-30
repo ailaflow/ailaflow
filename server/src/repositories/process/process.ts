@@ -14,20 +14,32 @@ function validateProcessDefinition(
   definition: ProcessDefinition,
   rootValidator: ProcessRootValidator,
   stepValidator: ProcessStepValidator
-): number {
+): {
+  nSteps: number;
+  isPausable: boolean;
+} {
   if (!rootValidator.validate(definition)) {
     throw new ProcessRepositoryError('Validation failed for root');
   }
 
   const walker = new DefinitionWalker();
   let nSteps = 0;
+  let isPausable = false;
+
   walker.forEach(definition, (step, _, sequence) => {
     if (!stepValidator.validateStep(step, sequence, definition)) {
       throw new ProcessRepositoryError(`Validation failed for step: ${step.id}`);
     }
+    if (!isPausable) {
+      isPausable = step.type === 'task';
+    }
     nSteps++;
   });
-  return nSteps;
+
+  return {
+    nSteps,
+    isPausable
+  };
 }
 
 function validateName(name: string) {
@@ -69,10 +81,19 @@ export class Process {
     validateDescription(data.description);
     validateUserAccessExpression(data.userAccessExpression);
 
-    const nSteps = validateProcessDefinition(data.definition, rootValidator, stepValidator);
+    const { nSteps, isPausable } = validateProcessDefinition(data.definition, rootValidator, stepValidator);
     const startVariableSchemas = extractStartVariableSchemas(data.definition);
 
-    return new Process(data.name, data.description, data.userAccessExpression, data.definition, data.hash, startVariableSchemas, nSteps);
+    return new Process(
+      data.name,
+      data.description,
+      data.userAccessExpression,
+      data.definition,
+      data.hash,
+      startVariableSchemas,
+      nSteps,
+      isPausable
+    );
   }
 
   private variablesCache: ProcessVariables | null = null;
@@ -84,14 +105,15 @@ export class Process {
     public definition: ProcessDefinition,
     public hash: string,
     public startVariableSchemas: Record<string, JsonSchema> | null,
-    public nSteps: number
+    public nSteps: number,
+    public isPausable: boolean
   ) {}
 
   public async update(data: SaveProcessRequest, rootValidator: ProcessRootValidator, stepValidator: ProcessStepValidator) {
     if (data.name !== this.name) {
       throw new Error('Process name cannot be changed');
     }
-    const nSteps = validateProcessDefinition(data.definition, rootValidator, stepValidator);
+    const { nSteps, isPausable } = validateProcessDefinition(data.definition, rootValidator, stepValidator);
     validateDescription(data.description);
     validateUserAccessExpression(data.userAccessExpression);
 
@@ -102,6 +124,7 @@ export class Process {
     this.hash = data.hash;
     this.startVariableSchemas = extractStartVariableSchemas(data.definition);
     this.nSteps = nSteps;
+    this.isPausable = isPausable;
   }
 
   public get variables(): ProcessVariables {

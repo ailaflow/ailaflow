@@ -13,9 +13,9 @@ test('queries a name-ordered page of processes', async () => {
   const querier = new SqliteProcessListQuerier(dbs);
 
   await processRepository.setup(abortSignal);
-  insertProcess(db, 'charlie');
-  insertProcess(db, 'alpha');
-  insertProcess(db, 'bravo');
+  insertProcess(db, 'charlie', true);
+  insertProcess(db, 'alpha', false);
+  insertProcess(db, 'bravo', false);
 
   assert.deepEqual(await querier.query(abortSignal, 2, 2), {
     processes: [
@@ -23,6 +23,7 @@ test('queries a name-ordered page of processes', async () => {
         name: 'charlie',
         description: 'charlie description',
         userAccessExpression: '',
+        isPausable: true,
         startVariableSchemas: {}
       }
     ],
@@ -34,7 +35,7 @@ test('queries a name-ordered page of processes', async () => {
   db.close();
 });
 
-function insertProcess(db: DatabaseSync, name: string): void {
+function insertProcess(db: DatabaseSync, name: string, isPausable: boolean): void {
   db.prepare(
     `
     INSERT INTO processes (
@@ -42,11 +43,12 @@ function insertProcess(db: DatabaseSync, name: string): void {
       description,
       userAccessExpression,
       nSteps,
+      isPausable,
       startVariableSchemas,
       serializedDefinition,
       definitionHash
     )
-    VALUES (?, ?, '', 0, '{}', '{}', 'hash')
+    VALUES (?, ?, '', 0, ?, '{}', '{}', 'hash')
   `
-  ).run(name, `${name} description`);
+  ).run(name, `${name} description`, isPausable ? 1 : 0);
 }

@@ -96,7 +96,7 @@ export function ProcessListPage() {
         {
           id: 'description',
           title: 'Description',
-          width: '34%',
+          width: '30%',
           getValue: process => process.description
         },
         {
@@ -104,6 +104,12 @@ export function ProcessListPage() {
           title: 'User access',
           width: '16%',
           getValue: process => process.userAccessExpression.trim() || 'all'
+        },
+        {
+          id: 'isPausable',
+          title: 'Pausable',
+          width: '10%',
+          getValue: process => (process.isPausable ? 'yes' : '')
         }
       ]}
       rows={data.processes}

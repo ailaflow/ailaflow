@@ -8,6 +8,7 @@ const processLiteDtoSchema = z.object({
   name: z.string(),
   description: z.string(),
   userAccessExpression: z.string(),
+  isPausable: z.boolean(),
   startVariableSchemas: jsonSchema
 });
 

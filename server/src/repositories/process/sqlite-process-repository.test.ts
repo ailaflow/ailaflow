@@ -6,6 +6,22 @@ import { ResourceAccess } from '../resource-access/resource-access-repository';
 import { SqliteResourceAccessRepository } from '../resource-access/sqlite-resource-access-repository';
 import { ProcessResourceId } from './process-resource-id';
 import { SqliteProcessRepository } from './sqlite-process-repository';
+import { Process } from './process';
+import { ProcessDefinition, PROCESS_VERSION } from '@aila/model';
+
+test('persists and updates whether a process is pausable', async () => {
+  const { abortSignal, db, processRepository } = await setup();
+  const process = createProcess('alpha', true);
+
+  await processRepository.insert(abortSignal, process);
+  assert.equal((await processRepository.tryGetByName(abortSignal, process.name))?.isPausable, true);
+
+  process.isPausable = false;
+  await processRepository.update(abortSignal, process);
+  assert.equal((await processRepository.tryGetByName(abortSignal, process.name))?.isPausable, false);
+
+  db.close();
+});
 
 test('deletes a process and its resource access rules', async () => {
   const { abortSignal, db, processRepository, resourceAccessRepository } = await setup();
@@ -72,6 +88,21 @@ function insertProcess(db: DatabaseSync, name: string): void {
       VALUES (?, '', '', 0, '{}', '{"sequence":[],"properties":{"startVariableNames":[],"variables":[]}}', 'hash')
     `
   ).run(name);
+}
+
+function createProcess(name: string, isPausable: boolean): Process {
+  return new Process(name, '', '', createDefinition(), 'hash', null, 0, isPausable);
+}
+
+function createDefinition(): ProcessDefinition {
+  return {
+    sequence: [],
+    properties: {
+      startVariableNames: [],
+      variables: [],
+      version: PROCESS_VERSION
+    }
+  };
 }
 
 async function grantAccess(abortSignal: AbortSignal, repository: SqliteResourceAccessRepository, processName: string): Promise<void> {

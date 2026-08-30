@@ -34,12 +34,7 @@ function MenuItemView(props: { item: MenuItem; onCommand(command: string): void;
 
   if (item.action === 'link') {
     return (
-      <Link
-        to={item.href}
-        className={itemClassName}
-        aria-current={item.isSelected ? 'page' : undefined}
-        onClick={props.onSelect}
-      >
+      <Link to={item.href} className={itemClassName} aria-current={item.isSelected ? 'page' : undefined} onClick={props.onSelect}>
         {content}
       </Link>
     );
@@ -92,7 +87,7 @@ export function PortalLayout(props: PortalLayoutProps) {
           }`}
         >
           <div className="flex h-full flex-col">
-            <div className="border-b border-slate-200 pb-3">
+            <div className="border-b border-slate-200 pt-2 pb-6">
               <Link
                 to="/"
                 onClick={closeSidebar}
