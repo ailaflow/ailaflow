@@ -5,14 +5,16 @@ import { TableRepository, TableRepositoryError } from './table-repository';
 import { Table } from './table';
 
 export class SqliteTableRepository implements TableRepository {
-  private readonly db: DatabaseSync;
+  private readonly modelDb: DatabaseSync;
+  private readonly dataDb: DatabaseSync;
 
   public constructor(dbs: SqliteDatabases) {
-    this.db = dbs.modelDb;
+    this.modelDb = dbs.modelDb;
+    this.dataDb = dbs.dataDb;
   }
 
   public async setup(_: AbortSignal): Promise<void> {
-    this.db.exec(`
+    this.modelDb.exec(`
       CREATE TABLE IF NOT EXISTS tables (
         name TEXT PRIMARY KEY,
         description TEXT NOT NULL
@@ -21,24 +23,24 @@ export class SqliteTableRepository implements TableRepository {
   }
 
   public async insert(_: AbortSignal, table: Table): Promise<void> {
-    const insertTableStatement = this.db.prepare(`
+    const insertTableStatement = this.modelDb.prepare(`
       INSERT INTO tables (name, description)
       VALUES (?, ?)
     `);
 
     try {
-      this.db.exec(`BEGIN`);
+      this.modelDb.exec(`BEGIN`);
       insertTableStatement.run(table.name, table.description);
-      this.db.exec(`
+      this.dataDb.exec(`
         CREATE TABLE ${SqliteTableDataNameProvider.getName(table.name)} (
           pk TEXT PRIMARY KEY,
           data TEXT NOT NULL,
           updatedAt INTEGER NOT NULL
         ) STRICT
       `);
-      this.db.exec(`COMMIT`);
+      this.modelDb.exec(`COMMIT`);
     } catch (e) {
-      this.db.exec(`ROLLBACK`);
+      this.modelDb.exec(`ROLLBACK`);
       if (isDuplicateTableNameSqliteError(e)) {
         throw new TableRepositoryError('A table name is already in use');
       }
@@ -47,7 +49,7 @@ export class SqliteTableRepository implements TableRepository {
   }
 
   public async update(_: AbortSignal, table: Table): Promise<void> {
-    const statement = this.db.prepare(`
+    const statement = this.modelDb.prepare(`
       UPDATE tables
       SET description = ?
       WHERE name = ?
@@ -56,27 +58,27 @@ export class SqliteTableRepository implements TableRepository {
   }
 
   public async delete(_: AbortSignal, tableName: string): Promise<boolean> {
-    const deleteTableStatement = this.db.prepare(`
+    const deleteTableStatement = this.modelDb.prepare(`
       DELETE FROM tables
       WHERE name = ?
     `);
 
     try {
-      this.db.exec(`BEGIN`);
+      this.modelDb.exec(`BEGIN`);
       const deleted = deleteTableStatement.run(tableName).changes > 0;
       if (deleted) {
-        this.db.exec(`DROP TABLE IF EXISTS ${SqliteTableDataNameProvider.getName(tableName)}`);
+        this.dataDb.exec(`DROP TABLE IF EXISTS ${SqliteTableDataNameProvider.getName(tableName)}`);
       }
-      this.db.exec(`COMMIT`);
+      this.modelDb.exec(`COMMIT`);
       return deleted;
     } catch (e) {
-      this.db.exec(`ROLLBACK`);
+      this.modelDb.exec(`ROLLBACK`);
       throw e;
     }
   }
 
   public async tryGetByName(_: AbortSignal, tableName: string): Promise<Table | null> {
-    const statement = this.db.prepare(`
+    const statement = this.modelDb.prepare(`
       SELECT name, description
       FROM tables
       WHERE name = ?
