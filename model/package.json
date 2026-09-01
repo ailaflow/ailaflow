@@ -15,9 +15,10 @@
   },
   "dependencies": {
     "@aibindkit/core": "workspace:*",
-    "zod": "^4.4.3",
+    "cron-parser": "^5.10.0",
     "openai": "^6.39.0",
-    "sequential-workflow-model": "^0.2.0"
+    "sequential-workflow-model": "^0.2.0",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@types/node": "^22.10.1",

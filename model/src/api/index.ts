@@ -8,6 +8,7 @@ export * from './my-process';
 export * from './my-task';
 export * from './pagination';
 export * from './process';
+export * from './process-cron-job';
 export * from './public-url-configuration';
 export * from './table';
 export * from './task';

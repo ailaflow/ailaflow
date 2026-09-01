@@ -23,6 +23,7 @@ import { TableListPage } from './table-list/table-list-page';
 import { TableEditorPage } from './table-editor/table-editor-page';
 import { ConfigurationPage } from './configuration/configuration-page';
 import { TaskListPage } from './task-list/task-list-page';
+import { ProcessCronJobsPage } from './process-cron-jobs/process-cron-jobs-page';
 
 export const routes = [
   {
@@ -79,6 +80,10 @@ export const routes = [
       {
         path: '/admin/processes/:processName/test',
         element: <ProcessTesterPage />
+      },
+      {
+        path: '/admin/processes/:processName/cron-jobs',
+        element: <ProcessCronJobsPage />
       },
       {
         path: '/admin/tables',

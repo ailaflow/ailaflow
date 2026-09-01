@@ -127,6 +127,10 @@ export function ProcessListPage() {
           getTo: process => `/admin/processes/${encodeURIComponent(process.name)}/test`
         },
         {
+          label: 'Cron',
+          getTo: process => `/admin/processes/${encodeURIComponent(process.name)}/cron-jobs`
+        },
+        {
           label: <SvgIcon name="pencil" className="h-4 w-4" />,
           ariaLabel: process => `Edit process ${process.name}`,
           getTo: process => `/admin/processes/${encodeURIComponent(process.name)}`

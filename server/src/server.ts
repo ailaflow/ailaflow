@@ -113,8 +113,8 @@ import { SqliteTableDataListQuerier } from './queriers/table-data-list/sqlite-ta
 import { GetTableDataEndpoint } from './api/table/get-table-data-endpoint';
 import { ReadTablePageRpcHandler } from './process-executor/rpc-handlers/read-table-page-rpc-handler';
 import { ProcessExecutionServices } from './process-executor/services/services';
-import { Cron } from './crons/cron';
-import { AuthTokenCleanupCron } from './crons/auth-token-cleanup-cron';
+import { Scheduler } from './schedulers/scheduler';
+import { AuthTokenCleanupScheduler } from './schedulers/auth-token-cleanup-scheduler';
 import { IncompleteAssignedTaskCountQuerier } from './queriers/task/incomplete-assigned-task-count-querier';
 import { SqliteIncompleteAssignedTaskCountQuerier } from './queriers/task/sqlite-incomplete-assigned-task-count-querier';
 import { LlmConfigurationRepository } from './repositories/configuration/llm/llm-configuration-repository';
@@ -158,6 +158,12 @@ import { HealthEndpoint } from './api/health/health-endpoint';
 import { GetPublicUrlConfigurationEndpoint } from './api/public-url-configuration/get-public-url-configuration-endpoint';
 import { SavePublicUrlConfigurationEndpoint } from './api/public-url-configuration/save-public-url-configuration-endpoint';
 import { TestPublicUrlEndpoint } from './api/public-url-configuration/test-public-url-endpoint';
+import { ProcessCronJobRepository } from './repositories/process-cron-job/process-cron-job-repository';
+import { SqliteProcessCronJobRepository } from './repositories/process-cron-job/sqlite-process-cron-job-repository';
+import { GetProcessCronJobsEndpoint } from './api/process-cron-job/get-process-cron-jobs-endpoint';
+import { SaveProcessCronJobEndpoint } from './api/process-cron-job/save-process-cron-job-endpoint';
+import { DeleteProcessCronJobEndpoint } from './api/process-cron-job/delete-process-cron-job-endpoint';
+import { ProcessCronJobScheduler } from './schedulers/process-cron-job-scheduler';
 
 const PORT = process.env.PORT || 2048;
 
@@ -175,6 +181,7 @@ export class Server {
     let resourceAccessRepository: ResourceAccessRepository;
     let authTokenRepository: AuthTokenRepository;
     let processRepository: ProcessRepository;
+    let processCronJobRepository: ProcessCronJobRepository;
     let sandboxRepository: SandboxRepository;
     let chatSessionRepository: ChatSessionRepository;
     let persistedExecutionRepository: PersistedExecutionRepository;
@@ -207,6 +214,7 @@ export class Server {
     resourceAccessRepository = new SqliteResourceAccessRepository(sqliteDatabases);
     authTokenRepository = new SqliteAuthTokenRepository(sqliteDatabases);
     processRepository = new SqliteProcessRepository(sqliteDatabases);
+    processCronJobRepository = new SqliteProcessCronJobRepository(sqliteDatabases);
     sandboxRepository = new SqliteSandboxRepository(sqliteDatabases);
     chatSessionRepository = new SqliteChatSessionRepository(sqliteDatabases);
     persistedExecutionRepository = new SqlitePersistedExecutionRepository(sqliteDatabases);
@@ -238,6 +246,7 @@ export class Server {
       resourceAccessRepository.setup(abortSignal),
       authTokenRepository.setup(abortSignal),
       processRepository.setup(abortSignal),
+      processCronJobRepository.setup(abortSignal),
       sandboxRepository.setup(abortSignal),
       chatSessionRepository.setup(abortSignal),
       persistedExecutionRepository.setup(abortSignal),
@@ -339,7 +348,10 @@ export class Server {
       middleware: authMiddleware.user
     });
 
-    const crons: Cron[] = [new AuthTokenCleanupCron(authTokenRepository)];
+    const schedulers: Scheduler[] = [
+      new AuthTokenCleanupScheduler(authTokenRepository),
+      new ProcessCronJobScheduler(processCronJobRepository, processManager, lazyProcessExecutor)
+    ];
 
     const endpoints = [
       new HealthEndpoint(),
@@ -373,6 +385,9 @@ export class Server {
       new DeleteProcessEndpoint(processManager),
       new SaveProcessEndpoint(processRepository, processManager, resourceAccessRepository, sandboxListQuerier),
       new TestProcessEndpoint(processManager, processExecutor, processExecutionResumeListenerStore),
+      new GetProcessCronJobsEndpoint(processManager, processCronJobRepository),
+      new SaveProcessCronJobEndpoint(processManager, processCronJobRepository),
+      new DeleteProcessCronJobEndpoint(processCronJobRepository),
       new GetTablesEndpoint(tableListQuerier),
       new GetTableEndpoint(tableRepository),
       new GetTableDataEndpoint(tableDataListQuerier),
@@ -395,29 +410,29 @@ export class Server {
 
     await telegramSynchronizationManager.start(abortSignal);
 
-    for (const cron of crons) {
-      cron.start();
+    for (const scheduler of schedulers) {
+      scheduler.start();
     }
 
     app.listen(PORT, () => {
       logger.log(`Server is running on port ${PORT}`);
     });
-    return new Server(sandboxInstanceManager, sqliteDatabases, crons, telegramSynchronizationManager);
+    return new Server(sandboxInstanceManager, sqliteDatabases, schedulers, telegramSynchronizationManager);
   }
 
   public constructor(
     private readonly sandboxInstanceManager: SandboxInstanceManager,
     private readonly sqliteDatabases: SqliteDatabases,
-    private readonly crons: Cron[],
+    private readonly schedulers: Scheduler[],
     private readonly telegramSynchronizationManager: TelegramSynchronizationManager
   ) {}
 
   public async close() {
     this.telegramSynchronizationManager.stop();
     this.sandboxInstanceManager.stop();
-    this.sqliteDatabases.dispose();
-    for (const cron of this.crons) {
-      cron.stop();
+    for (const scheduler of this.schedulers) {
+      scheduler.stop();
     }
+    this.sqliteDatabases.dispose();
   }
 }

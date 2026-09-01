@@ -1,9 +1,9 @@
 import { Logger } from '../core/logger';
 import { AuthTokenRepository } from '../repositories/auth-token/auth-token-repository';
-import { Cron } from './cron';
+import { Scheduler } from './scheduler';
 
-export class AuthTokenCleanupCron implements Cron {
-  private readonly logger = new Logger(AuthTokenCleanupCron.name);
+export class AuthTokenCleanupScheduler implements Scheduler {
+  private readonly logger = new Logger(AuthTokenCleanupScheduler.name);
   private iv?: ReturnType<typeof setInterval>;
 
   public constructor(private readonly authTokenRepository: AuthTokenRepository) {}

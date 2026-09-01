@@ -82,7 +82,7 @@ function createData(props: Omit<ProcessEditorContextProps, 'children'>): Process
   const stepValidator = new ProcessStepValidator(sandboxNames, variableValidator);
 
   const definition = wrapDefinition<ProcessDefinition>(props.process ? props.process.definition : createBlankDefinition());
-  const name = props.process?.name ?? 'new_process';
+  const name = props.process?.name ?? '';
   const description = props.process?.description ?? '';
   const userAccessExpression = props.process?.userAccessExpression ?? '';
   const controller = SequentialWorkflowDesignerController.create();

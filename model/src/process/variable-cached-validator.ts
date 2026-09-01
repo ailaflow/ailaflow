@@ -75,6 +75,25 @@ export class VariableCachedValidator {
     return null;
   }
 
+  public validateVariablesValue(names: string[], values: Record<string, unknown>, definition: ProcessDefinition): string | null {
+    if (!values || typeof values !== 'object' || Array.isArray(values)) {
+      return 'Input values must be a JSON object';
+    }
+    const keys = Object.keys(values);
+    for (const name of keys) {
+      if (!names.includes(name)) {
+        return `Variable \$${name} value is not expected in the input values`;
+      }
+    }
+    for (const name of names) {
+      const error = this.validateVariableValue(name, values[name], definition);
+      if (error) {
+        return error;
+      }
+    }
+    return null;
+  }
+
   public assertVariableValueIsValid(name: string, value: unknown, definition: ProcessDefinition) {
     const error = this.validateVariableValue(name, value, definition);
     if (error) {

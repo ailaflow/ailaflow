@@ -1,11 +1,15 @@
 import { HttpClient, HttpClientSseListener } from '@aibindkit/react';
 import type {
   DeleteProcessResponse,
+  DeleteProcessCronJobResponse,
+  GetProcessCronJobsResponse,
   GetProcessResponse,
   GetProcessesRequest,
   GetProcessesResponse,
   SaveProcessRequest,
   SaveProcessResponse,
+  SaveProcessCronJobRequest,
+  SaveProcessCronJobResponse,
   TestProcessRequest,
   TestProcessUpdate
 } from '@aila/model';
@@ -31,6 +35,18 @@ export class ProcessApiClient {
 
   public deleteProcess(abortSignal: AbortSignal, name: string): Promise<DeleteProcessResponse> {
     return this.client.json(abortSignal, 'DELETE', `/api/processes/${encodeURIComponent(name)}`);
+  }
+
+  public getProcessCronJobs(abortSignal: AbortSignal, processName: string): Promise<GetProcessCronJobsResponse> {
+    return this.client.json(abortSignal, 'GET', `/api/processes/${encodeURIComponent(processName)}/cron-jobs`);
+  }
+
+  public saveProcessCronJob(abortSignal: AbortSignal, request: SaveProcessCronJobRequest): Promise<SaveProcessCronJobResponse> {
+    return this.client.json(abortSignal, 'POST', '/api/process-cron-job', request);
+  }
+
+  public deleteProcessCronJob(abortSignal: AbortSignal, id: string): Promise<DeleteProcessCronJobResponse> {
+    return this.client.json(abortSignal, 'DELETE', `/api/process-cron-jobs/${encodeURIComponent(id)}`);
   }
 
   public testProcess(
