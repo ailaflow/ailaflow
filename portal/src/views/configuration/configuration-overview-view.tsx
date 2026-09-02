@@ -37,8 +37,14 @@ export function ConfigurationOverviewView(props: ConfigurationOverviewViewProps)
                 <div className={`text-xs font-semibold uppercase tracking-wide ${status.isHealthy ? 'text-slate-500' : 'text-orange-700'}`}>
                   {status.label}
                 </div>
-                <div className={`mt-1 break-all text-sm font-medium ${status.isHealthy ? 'text-slate-900' : 'text-orange-950'}`}>
-                  {status.value}
+                <div
+                  className={`mt-1 flex items-center gap-2 text-sm font-medium ${status.isHealthy ? 'text-slate-900' : 'text-orange-950'}`}
+                >
+                  <span
+                    aria-hidden="true"
+                    className={`h-2.5 w-2.5 shrink-0 rounded-full ${status.isHealthy ? 'bg-emerald-500' : 'bg-red-500'}`}
+                  />
+                  <span className="break-all">{status.value}</span>
                 </div>
                 {status.detail ? <div className="mt-1 break-all text-xs leading-5 text-slate-500">{status.detail}</div> : null}
               </div>
