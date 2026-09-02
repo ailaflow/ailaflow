@@ -7,11 +7,9 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "start": "tsc --watch",
-    "build": "rm -rf dist && tsc",
     "prettier": "prettier --check ./src",
     "prettier:fix": "prettier --write ./src",
-    "test": "pnpm build && node --test dist/**/*.test.js"
+    "test": "node --import tsx --test \"src/**/*.test.ts\""
   },
   "dependencies": {
     "@aibindkit/core": "workspace:*",

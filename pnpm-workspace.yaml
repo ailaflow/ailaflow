@@ -6,5 +6,6 @@ packages:
   - './model'
   - './server'
   - './portal'
+  - './cli'
   - './bridge/lib'
   - './bridge/server'

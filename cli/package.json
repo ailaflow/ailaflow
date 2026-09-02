@@ -1,0 +1,54 @@
+{
+  "name": "@aila/cli",
+  "version": "0.1.0",
+  "private": false,
+  "type": "module",
+  "license": "UNLICENSED",
+  "bin": {
+    "aila": "./dist/cli.mjs"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "start": "node ./dist/cli.mjs",
+    "build": "node scripts/build.mjs",
+    "prepack": "pnpm build",
+    "prettier": "prettier --check ./src ./scripts webpack.config.mjs",
+    "prettier:fix": "prettier --write ./src ./scripts webpack.config.mjs",
+    "test": "node --test tests/*.test.mjs"
+  },
+  "dependencies": {
+    "cron-parser": "^5.10.0",
+    "express": "^5.2.1",
+    "openai": "^6.39.0",
+    "sequential-workflow-machine": "^0.7.1",
+    "sequential-workflow-model": "^0.2.0",
+    "xstate": "^4.38.3",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@swc/core": "^1.13.5",
+    "@tailwindcss/postcss": "^4.3.0",
+    "copy-webpack-plugin": "^13.0.1",
+    "css-loader": "^7.1.2",
+    "html-webpack-plugin": "^5.6.6",
+    "mini-css-extract-plugin": "^2.9.4",
+    "postcss": "^8.5.6",
+    "postcss-loader": "^8.2.0",
+    "prettier": "^3.8.3",
+    "swc-loader": "^0.2.6",
+    "typescript": "^6.0.3",
+    "webpack": "^5.105.0",
+    "webpack-cli": "^7.0.0"
+  }
+}

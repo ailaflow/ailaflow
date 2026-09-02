@@ -2,7 +2,7 @@ import { join } from 'node:path';
 
 export class SandboxHostPaths {
   public constructor(
-    public readonly ailaFolderAbsolutePath: string,
+    public readonly runtimeFolderAbsolutePath: string,
     public readonly appDataFolderAbsolutePath: string,
     public readonly sandboxName: string
   ) {}

@@ -1,23 +1,34 @@
-import path from 'path';
-import fs from 'fs';
+import path from 'node:path';
+
+function requiredPath(name: string): string {
+  const value = process.env[name];
+  if (!value) {
+    throw new Error(`${name} is required`);
+  }
+  return path.resolve(value);
+}
 
 export class ServerPaths {
-  private readonly rootPath: string;
+  private readonly appDataFolderPath: string;
+  private readonly portalFolderPath: string;
+  private readonly runtimeFolderPath: string;
 
   public constructor() {
-    const cwd = path.resolve(process.cwd(), '..');
-    if (fs.existsSync(path.join(cwd, 'pnpm-workspace.yaml'))) {
-      this.rootPath = cwd;
-      return;
-    }
-    throw new Error('Cannot locate the project root');
+    this.appDataFolderPath = requiredPath('AILA_DATA_DIR');
+    this.portalFolderPath = requiredPath('AILA_PORTAL_DIR');
+    this.runtimeFolderPath = requiredPath('AILA_RUNTIME_DIR');
   }
-  public getAilaFolderPath(): string {
-    return this.rootPath;
+
+  public getRuntimeFolderPath(): string {
+    return this.runtimeFolderPath;
+  }
+
+  public getPortalFolderPath(): string {
+    return this.portalFolderPath;
   }
 
   public getAppDataFolderPath(): string {
-    return this.rootPath;
+    return this.appDataFolderPath;
   }
 
   public getDatabaseFolderPath(): string {

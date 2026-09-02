@@ -12,13 +12,13 @@ import { CommandResult, SandboxRuntime } from './sandbox-runtime';
 export class SandboxInstance {
   public static async create(
     abortSignal: AbortSignal,
-    ailaFolderAbsolutePath: string,
+    runtimeFolderAbsolutePath: string,
     appDataFolderAbsolutePath: string,
     name: string,
     sandbox: Sandbox,
     rpcHandlerProvider: SandboxRpcHandlerProvider
   ): Promise<SandboxInstance> {
-    const hostPaths = new SandboxHostPaths(ailaFolderAbsolutePath, appDataFolderAbsolutePath, name);
+    const hostPaths = new SandboxHostPaths(runtimeFolderAbsolutePath, appDataFolderAbsolutePath, name);
 
     const materializer = new SandboxMaterializer(hostPaths);
 

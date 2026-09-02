@@ -34,7 +34,8 @@ export function ConfigurationOverviewPage() {
     {
       id: 'docker',
       label: 'Docker',
-      value: loader.data.host.dockerVersion ? `Running · ${loader.data.host.dockerVersion}` : 'Not available',
+      value: loader.data.host.dockerVersion ? 'Running' : 'Not available',
+      detail: loader.data.host.dockerVersion ?? undefined,
       isHealthy: loader.data.host.dockerVersion !== null,
       remediation: 'Install Docker and make sure Docker daemon is running.'
     },
@@ -42,6 +43,7 @@ export function ConfigurationOverviewPage() {
       id: 'app-folder',
       label: 'Application folder',
       value: loader.data.host.isAppFolderReadable ? 'Readable' : 'Not readable',
+      detail: loader.data.host.appFolderPath,
       isHealthy: loader.data.host.isAppFolderReadable,
       remediation: 'Grant the server process read access to the Aila application folder.'
     },
@@ -49,6 +51,7 @@ export function ConfigurationOverviewPage() {
       id: 'data-folder',
       label: 'Application data folder',
       value: loader.data.host.isDataFolderWritable ? 'Writable' : 'Not writable',
+      detail: loader.data.host.dataFolderPath,
       isHealthy: loader.data.host.isDataFolderWritable,
       remediation: 'Grant the server process write access to the Aila data folder.'
     },

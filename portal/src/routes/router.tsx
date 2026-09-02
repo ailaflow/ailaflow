@@ -24,6 +24,7 @@ import { TableEditorPage } from './table-editor/table-editor-page';
 import { ConfigurationPage } from './configuration/configuration-page';
 import { TaskListPage } from './task-list/task-list-page';
 import { ProcessCronJobsPage } from './process-cron-jobs/process-cron-jobs-page';
+import { NotFoundPage } from './not-found/not-found-page';
 
 export const routes = [
   {
@@ -138,6 +139,10 @@ export const routes = [
         element: <ConfigurationPage />
       }
     ]
+  },
+  {
+    path: '*',
+    element: <NotFoundPage />
   }
 ];
 

@@ -14,12 +14,11 @@
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "react-jsx",
-    "types": ["vite/client"],
     "paths": {
       "@aibindkit/core": ["../@aibindkit/core/src/index.ts"],
       "@aibindkit/react": ["../@aibindkit/react/src/index.ts"],
       "@aila/model": ["../model/src/index.ts"]
     }
   },
-  "include": ["src", "vite.config.js"]
+  "include": ["src"]
 }

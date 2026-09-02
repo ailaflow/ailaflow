@@ -22,7 +22,7 @@ export class SandboxInstanceManager {
 
       instance = await SandboxInstance.create(
         abortSignal,
-        this.paths.getAilaFolderPath(),
+        this.paths.getRuntimeFolderPath(),
         this.paths.getAppDataFolderPath(),
         sandbox.name,
         sandbox,

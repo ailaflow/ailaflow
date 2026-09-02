@@ -5,6 +5,8 @@ import { Docker } from './docker';
 
 export interface SandboxHostDiagnosticianResult {
   dockerVersion: string | null;
+  appFolderPath: string;
+  dataFolderPath: string;
   isAppFolderReadable: boolean;
   isDataFolderWritable: boolean;
 }
@@ -13,16 +15,21 @@ export class SandboxHostDiagnostician {
   public constructor(private readonly paths: ServerPaths) {}
 
   public async diagnose(): Promise<SandboxHostDiagnosticianResult> {
+    const appFolderPath = this.paths.getRuntimeFolderPath();
+    const dataFolderPath = this.paths.getAppDataFolderPath();
+
     return {
       dockerVersion: await this.checkDocker(),
-      isAppFolderReadable: await this.checkPath(this.paths.getAilaFolderPath(), constants.R_OK),
-      isDataFolderWritable: await this.checkPath(this.paths.getAppDataFolderPath(), constants.W_OK)
+      appFolderPath,
+      dataFolderPath,
+      isAppFolderReadable: await this.checkPath(appFolderPath, constants.R_OK),
+      isDataFolderWritable: await this.checkPath(dataFolderPath, constants.W_OK)
     };
   }
 
   private async checkDocker() {
     try {
-      const docker = new Docker(this.paths.getAilaFolderPath());
+      const docker = new Docker(this.paths.getRuntimeFolderPath());
       const info = await docker.info();
       return info.ClientInfo.Version;
     } catch {

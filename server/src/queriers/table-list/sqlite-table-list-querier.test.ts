@@ -8,7 +8,7 @@ import { SqliteTableListQuerier } from './sqlite-table-list-querier';
 
 test('queries a name-ordered page of tables', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
-  const dbs = { modelDb: db } as SqliteDatabases;
+  const dbs = { modelDb: db, dataDb: db } as SqliteDatabases;
   const abortSignal = new AbortController().signal;
   const repository = new SqliteTableRepository(dbs);
   const querier = new SqliteTableListQuerier(dbs);

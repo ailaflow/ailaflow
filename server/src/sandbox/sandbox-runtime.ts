@@ -35,7 +35,7 @@ export class SandboxRuntime {
       SANDBOX_NAME: name
     };
 
-    const docker = new Docker(hostPaths.ailaFolderAbsolutePath);
+    const docker = new Docker(hostPaths.runtimeFolderAbsolutePath);
     await docker.tryRemove(dockerName);
     await docker.build(imageTag, hostPaths.dockerfileAbsolutePath, buildArgs);
     logger.log(`Built image with tag ${imageTag}`);

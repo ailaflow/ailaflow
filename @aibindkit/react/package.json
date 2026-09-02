@@ -17,7 +17,6 @@
     "./css/chat.css": "./css/chat.css"
   },
   "scripts": {
-    "build": "rm -rf build lib dist && rollup -c",
     "prettier": "prettier --check ./src",
     "prettier:fix": "prettier --write ./src"
   },
@@ -28,9 +27,6 @@
   },
   "devDependencies": {
     "@types/react": "^19.0.0",
-    "rollup": "^4.62.2",
-    "rollup-plugin-dts": "^6.4.1",
-    "rollup-plugin-typescript2": "^0.37.0",
     "typescript": "^6.0.3"
   }
 }

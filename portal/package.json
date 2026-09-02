@@ -3,11 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "scripts": {
-    "start": "vite --force",
-    "build": "tsc --noEmit && vite build",
-    "preview": "vite preview"
-  },
+  "scripts": {},
   "dependencies": {
     "@aibindkit/core": "workspace:*",
     "@aibindkit/react": "workspace:*",
@@ -22,11 +18,9 @@
     "react-router-dom": "^7.15.1"
   },
   "devDependencies": {
-    "@tailwindcss/vite": "^4.3.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "tailwindcss": "^4.3.0",
-    "typescript": "^6.0.3",
-    "vite": "^6.0.0"
+    "typescript": "^6.0.3"
   }
 }

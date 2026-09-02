@@ -16,7 +16,6 @@
     }
   },
   "scripts": {
-    "build": "rm -rf build lib dist && rollup -c",
     "prettier": "prettier --check ./src",
     "prettier:fix": "prettier --write ./src"
   },
@@ -25,9 +24,6 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "rollup": "^4.62.2",
-    "rollup-plugin-dts": "^6.4.1",
-    "rollup-plugin-typescript2": "^0.37.0",
     "typescript": "^6.0.3"
   }
 }

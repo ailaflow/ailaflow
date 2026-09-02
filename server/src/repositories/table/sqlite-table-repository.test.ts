@@ -7,7 +7,7 @@ import { Table } from './table';
 
 test('manages table definitions and their data tables', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
-  const dbs = { modelDb: db } as SqliteDatabases;
+  const dbs = { modelDb: db, dataDb: db } as SqliteDatabases;
   const abortSignal = new AbortController().signal;
   const repository = new SqliteTableRepository(dbs);
 
@@ -48,7 +48,7 @@ test('manages table definitions and their data tables', async () => {
 
 test('rolls back a definition insert when its data table cannot be created', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
-  const dbs = { modelDb: db } as SqliteDatabases;
+  const dbs = { modelDb: db, dataDb: db } as SqliteDatabases;
   const abortSignal = new AbortController().signal;
   const repository = new SqliteTableRepository(dbs);
 

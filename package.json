@@ -1,10 +1,19 @@
 {
   "name": "@aila/workspace",
+  "private": true,
   "license": "./LICENSE",
   "scripts": {
-    "build": "pnpm run -r build",
+    "dev": "pnpm --filter @aila/cli dev",
+    "start": "pnpm --filter @aila/cli start",
+    "build": "pnpm --filter @aila/cli build",
+    "typecheck": "tsc -p tsconfig.json",
     "prettier": "pnpm run -r prettier",
     "prettier:fix": "pnpm run -r prettier:fix",
     "test": "pnpm run -r test"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.1",
+    "tsx": "^4.22.3",
+    "typescript": "^6.0.3"
   }
 }

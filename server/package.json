@@ -4,8 +4,6 @@
   "private": true,
   "type": "commonjs",
   "scripts": {
-    "start": "tsx watch --env-file=.env src/main.ts",
-    "build": "rm -rf dist && tsc -p tsconfig.json",
     "prettier": "prettier --check ./src",
     "prettier:fix": "prettier --write ./src",
     "test": "node --import tsx --test \"src/**/*.test.ts\""
@@ -24,7 +22,6 @@
     "@types/express": "^5.0.6",
     "@types/node": "^22.10.1",
     "prettier": "^3.5.3",
-    "tsx": "^4.22.3",
     "typescript": "^6.0.3"
   }
 }

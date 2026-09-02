@@ -1,0 +1,27 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "lib": ["DOM", "DOM.Iterable", "ES2022"],
+    "strict": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "useDefineForClassFields": false,
+    "types": ["node"],
+    "paths": {
+      "@aila/model": ["./model/src/index.ts"],
+      "@aibindkit/core": ["./@aibindkit/core/src/index.ts"],
+      "@aibindkit/express": ["./@aibindkit/express/src/index.ts"],
+      "@aibindkit/llm": ["./@aibindkit/llm/src/index.ts"],
+      "@aibindkit/react": ["./@aibindkit/react/src/index.ts"],
+      "@aibindkit/react/css/chat.css": ["./@aibindkit/react/css/chat.css"]
+    }
+  },
+  "include": ["@aibindkit/*/src", "bridge/*/src", "cli/src", "model/src", "portal/src", "server/src"]
+}

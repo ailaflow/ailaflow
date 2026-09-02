@@ -12,6 +12,7 @@ import { ChatSessionId } from './chat-session-id';
 import { LlmClientProvider } from '../llm/llm-client-provider';
 import { LlmProviderConfigurationError } from '../repositories/configuration/llm/llm-provider-configuration';
 import { LlmUseCase } from '@aila/model';
+import { join } from 'node:path';
 
 export class ChatSessionResolver implements BaseChatSessionResolver {
   private readonly userSystemPrompt: string;
@@ -22,9 +23,9 @@ export class ChatSessionResolver implements BaseChatSessionResolver {
     private readonly userToolSetProvider: UserToolSetProvider,
     serverPaths: ServerPaths
   ) {
-    const path = `${serverPaths.getAilaFolderPath()}/server/assets`;
-    this.userSystemPrompt = readFileSync(`${path}/user-prompt.md`, 'utf-8');
-    this.adminSystemPrompt = readFileSync(`${path}/admin-prompt.md`, 'utf-8');
+    const path = join(serverPaths.getRuntimeFolderPath(), 'assets');
+    this.userSystemPrompt = readFileSync(join(path, 'user-prompt.md'), 'utf-8');
+    this.adminSystemPrompt = readFileSync(join(path, 'admin-prompt.md'), 'utf-8');
   }
 
   public resolve(sessionKey: string, authContext: ChatAuthContext): ResolvedChatSession {

@@ -164,12 +164,16 @@ import { GetProcessCronJobsEndpoint } from './api/process-cron-job/get-process-c
 import { SaveProcessCronJobEndpoint } from './api/process-cron-job/save-process-cron-job-endpoint';
 import { DeleteProcessCronJobEndpoint } from './api/process-cron-job/delete-process-cron-job-endpoint';
 import { ProcessCronJobScheduler } from './schedulers/process-cron-job-scheduler';
+import { extname, join } from 'node:path';
+import { Server as HttpServer } from 'node:http';
 
 const PORT = process.env.PORT || 2048;
 
 const logger = new Logger('Server');
 
 export class Server {
+  private isClosed = false;
+
   public static async create(abortSignal: AbortSignal): Promise<Server> {
     const app = express();
     app.use(express.json());
@@ -408,19 +412,42 @@ export class Server {
     const router = new Router(app, endpoints, authMiddleware);
     router.setup();
 
+    const portalFolderPath = serverPaths.getPortalFolderPath();
+    app.use(express.static(portalFolderPath));
+    app.use((request, response, next) => {
+      const isApiRequest = request.path === '/api' || request.path.startsWith('/api/');
+      const isStaticFileRequest = extname(request.path) !== '';
+      if (request.method !== 'GET' || isApiRequest || isStaticFileRequest) {
+        next();
+        return;
+      }
+      response.sendFile(join(portalFolderPath, 'index.html'), error => {
+        if (error) {
+          next(error);
+        }
+      });
+    });
+
     await telegramSynchronizationManager.start(abortSignal);
 
     for (const scheduler of schedulers) {
       scheduler.start();
     }
 
-    app.listen(PORT, () => {
-      logger.log(`Server is running on port ${PORT}`);
+    const server = await new Promise<HttpServer>((resolve, reject) => {
+      const listener = app.listen(PORT, () => {
+        logger.log(`Data folder: ${serverPaths.getAppDataFolderPath()}`);
+        logger.log(`Server is running on port ${PORT}`);
+        listener.off('error', reject);
+        resolve(listener);
+      });
+      listener.once('error', reject);
     });
-    return new Server(sandboxInstanceManager, sqliteDatabases, schedulers, telegramSynchronizationManager);
+    return new Server(server, sandboxInstanceManager, sqliteDatabases, schedulers, telegramSynchronizationManager);
   }
 
   public constructor(
+    private readonly server: HttpServer,
     private readonly sandboxInstanceManager: SandboxInstanceManager,
     private readonly sqliteDatabases: SqliteDatabases,
     private readonly schedulers: Scheduler[],
@@ -428,11 +455,22 @@ export class Server {
   ) {}
 
   public async close() {
+    if (this.isClosed) {
+      return;
+    }
+    this.isClosed = true;
+
     this.telegramSynchronizationManager.stop();
-    this.sandboxInstanceManager.stop();
+    await this.sandboxInstanceManager.stop();
     for (const scheduler of this.schedulers) {
       scheduler.stop();
     }
     this.sqliteDatabases.dispose();
+
+    if (this.server.listening) {
+      await new Promise<void>((resolve, reject) => {
+        this.server.close(error => (error ? reject(error) : resolve()));
+      });
+    }
   }
 }

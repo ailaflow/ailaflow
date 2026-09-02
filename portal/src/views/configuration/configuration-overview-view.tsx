@@ -4,6 +4,7 @@ export interface ConfigurationStatus {
   id: string;
   label: string;
   value: string;
+  detail?: string;
   isHealthy: boolean;
   remediation: string;
   action?: {
@@ -36,9 +37,10 @@ export function ConfigurationOverviewView(props: ConfigurationOverviewViewProps)
                 <div className={`text-xs font-semibold uppercase tracking-wide ${status.isHealthy ? 'text-slate-500' : 'text-orange-700'}`}>
                   {status.label}
                 </div>
-                <div className={`mt-1 truncate text-sm font-medium ${status.isHealthy ? 'text-slate-900' : 'text-orange-950'}`}>
+                <div className={`mt-1 break-all text-sm font-medium ${status.isHealthy ? 'text-slate-900' : 'text-orange-950'}`}>
                   {status.value}
                 </div>
+                {status.detail ? <div className="mt-1 break-all text-xs leading-5 text-slate-500">{status.detail}</div> : null}
               </div>
 
               {!status.isHealthy ? (

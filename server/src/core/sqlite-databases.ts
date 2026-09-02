@@ -1,6 +1,7 @@
 import { DatabaseSync } from 'node:sqlite';
 import { ServerPaths } from './server-paths';
-import { join } from 'path';
+import { mkdirSync } from 'node:fs';
+import { join } from 'node:path';
 
 export class SqliteDatabases {
   public readonly modelDb: DatabaseSync;
@@ -9,6 +10,7 @@ export class SqliteDatabases {
 
   public constructor(serverPaths: ServerPaths) {
     const dataFolderPath = serverPaths.getDatabaseFolderPath();
+    mkdirSync(dataFolderPath, { recursive: true });
 
     this.modelDb = this.create(join(dataFolderPath, 'model.db'));
     this.dataDb = this.create(join(dataFolderPath, 'data.db'));
