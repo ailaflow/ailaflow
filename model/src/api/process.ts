@@ -1,4 +1,4 @@
-import z from 'zod/v4';
+import * as z from 'zod/v4';
 import { jsonSchema, processDefinitionSchema, ProcessExecutionResult, ProcessLog } from '../process';
 import { paginationRequestSchema, paginationResponseSchema } from './pagination';
 

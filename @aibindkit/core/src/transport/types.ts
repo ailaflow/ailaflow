@@ -1,4 +1,4 @@
-import z from 'zod/v4';
+import * as z from 'zod/v4';
 import type { ToolDescriptor } from '../tools';
 import { ChatMessage } from '../chat-session/chat-message';
 import { ChatMessageType } from '../chat-session';

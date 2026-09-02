@@ -1,6 +1,6 @@
 import { FormDefinition, ReturnStep, TaskStep } from '@aila/model';
 import { ProcessEditorOverlayType, ProcessEditorState } from '../process-editor-context';
-import z from 'zod/v4';
+import * as z from 'zod/v4';
 
 export interface FormEditorOverlayData {
   form: FormDefinition;

@@ -1,5 +1,5 @@
 import { route, routeStoreFactory, tool } from '@aibindkit/react';
-import z from 'zod/v4';
+import * as z from 'zod/v4';
 
 const tableEditorRoute = route('tableEditor')
   .paths(['/admin/tables/:tableName', '/admin/create-table'])

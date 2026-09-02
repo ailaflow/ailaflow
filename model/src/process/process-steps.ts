@@ -1,5 +1,5 @@
 import { scriptDefinitionSchema } from './script-definition';
-import z from 'zod/v4';
+import * as z from 'zod/v4';
 import { formDefinitionSchema } from './form-definition';
 import { baseStepSchema } from './base-step-model';
 

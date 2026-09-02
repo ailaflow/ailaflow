@@ -1,4 +1,4 @@
-import z from 'zod/v4';
+import * as z from 'zod/v4';
 
 export const stepPropertiesSchema = z.record(z.string(), z.unknown()).describe('The properties of the step');
 

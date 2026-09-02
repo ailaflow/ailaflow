@@ -1,6 +1,6 @@
 import { formDefinitionSchema } from './form-definition';
 import { variableDefinitionSchema } from './variable-definition';
-import z from 'zod/v4';
+import * as z from 'zod/v4';
 import { sequenceSchema } from './process-steps';
 
 export const processDefinitionPropertiesSchema = z.object({

@@ -1,4 +1,4 @@
-import z from 'zod/v4';
+import * as z from 'zod/v4';
 import { route, routeStoreFactory, tool } from '@aibindkit/react';
 
 const userAttributeValue = z.union([z.string(), z.number(), z.boolean()]);
