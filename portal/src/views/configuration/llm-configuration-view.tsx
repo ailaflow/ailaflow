@@ -1,4 +1,4 @@
-import { LlmProviderType } from '@aila/model';
+import { LlmProviderPolicy, LlmProviderType } from '@aila/model';
 import type { LlmModelDto, LlmProviderDto, LlmUseCase } from '@aila/model';
 import { useState } from 'react';
 
@@ -7,7 +7,7 @@ export interface LlmProviderDraft {
   insert: boolean;
   name: string;
   type: LlmProviderType;
-  baseUrl: string;
+  url: string;
   apiKey: string;
   hasApiKey: boolean;
   models: LlmModelDto[];
@@ -49,7 +49,8 @@ export interface LlmConfigurationViewProps {
 const providerTypeLabels: Record<LlmProviderType, string> = {
   [LlmProviderType.OPENAI]: 'OpenAI',
   [LlmProviderType.ANTHROPIC]: 'Anthropic',
-  [LlmProviderType.OPENAI_COMPATIBLE]: 'OpenAI compatible'
+  [LlmProviderType.OPENAI_COMPATIBLE]: 'OpenAI compatible',
+  [LlmProviderType.CODEX_APP_SERVER]: 'Codex app-server'
 };
 
 export function LlmConfigurationView(props: LlmConfigurationViewProps) {
@@ -130,7 +131,7 @@ export function LlmConfigurationView(props: LlmConfigurationViewProps) {
                     <tr key={provider.id} className="hover:bg-slate-50">
                       <td className="truncate px-4 py-3 font-medium text-slate-900">{provider.name}</td>
                       <td className="px-4 py-3 text-slate-600">{providerTypeLabels[provider.type]}</td>
-                      <td className="truncate px-4 py-3 font-mono text-xs text-slate-600">{provider.baseUrl ?? 'Default endpoint'}</td>
+                      <td className="truncate px-4 py-3 font-mono text-xs text-slate-600">{provider.url ?? 'Default endpoint'}</td>
                       <td className="px-4 py-3 text-right text-slate-600">{provider.models.length}</td>
                       <td className="px-4 py-3">
                         <div className="flex justify-end gap-2">
@@ -254,6 +255,7 @@ function ProviderEditor(props: {
   onSave(): void | Promise<void>;
 }) {
   const [isKeyVisible, setIsKeyVisible] = useState(false);
+  const usesWebSocket = LlmProviderPolicy.supportsUrlProtocol(props.draft.type, 'ws:');
   return (
     <div className="border-b border-slate-200 bg-slate-50/60 p-4">
       <div className="grid gap-4 md:grid-cols-2">
@@ -269,7 +271,9 @@ function ProviderEditor(props: {
           Provider type
           <select
             value={props.draft.type}
-            onChange={event => props.onChange({ type: Number(event.target.value) as LlmProviderType, hasApiKey: false, models: [] })}
+            onChange={event =>
+              props.onChange({ type: Number(event.target.value) as LlmProviderType, apiKey: '', hasApiKey: false, models: [] })
+            }
             className="mt-1.5 h-9 w-full rounded-md border border-slate-200 bg-white px-2.5 font-normal outline-none focus:border-slate-400"
           >
             {Object.entries(providerTypeLabels).map(([value, label]) => (
@@ -279,37 +283,39 @@ function ProviderEditor(props: {
             ))}
           </select>
         </label>
-        {props.draft.type === LlmProviderType.OPENAI_COMPATIBLE && (
+        {LlmProviderPolicy.requiresUrl(props.draft.type) && (
           <label className="text-sm font-medium text-slate-700 md:col-span-2">
-            Base URL
+            {usesWebSocket ? 'WebSocket URL' : 'URL'}
             <input
-              type="url"
-              value={props.draft.baseUrl}
-              onChange={event => props.onChange({ baseUrl: event.target.value, hasApiKey: false, models: [] })}
-              placeholder="https://example.com/v1"
+              type="text"
+              value={props.draft.url}
+              onChange={event => props.onChange({ url: event.target.value, hasApiKey: false, models: [] })}
+              placeholder={LlmProviderPolicy.getUrlExample(props.draft.type)}
               className="mt-1.5 h-9 w-full rounded-md border border-slate-200 bg-white px-2.5 font-mono text-sm font-normal outline-none placeholder:text-slate-400 focus:border-slate-400"
             />
           </label>
         )}
-        <label className="text-sm font-medium text-slate-700 md:col-span-2">
-          API key
-          <div className="mt-1.5 flex h-9 overflow-hidden rounded-md border border-slate-200 bg-white focus-within:border-slate-400">
-            <input
-              type={isKeyVisible ? 'text' : 'password'}
-              value={props.draft.apiKey}
-              onChange={event => props.onChange({ apiKey: event.target.value, models: [] })}
-              placeholder={props.draft.hasApiKey ? 'Leave empty to keep the configured key' : 'API key'}
-              className="min-w-0 flex-1 px-2.5 font-mono text-sm font-normal outline-none placeholder:text-slate-400"
-            />
-            <button
-              type="button"
-              onClick={() => setIsKeyVisible(value => !value)}
-              className="border-l border-slate-200 px-3 text-xs font-medium text-slate-600 hover:bg-slate-50"
-            >
-              {isKeyVisible ? 'Hide' : 'Show'}
-            </button>
-          </div>
-        </label>
+        {LlmProviderPolicy.requiresApiKey(props.draft.type) && (
+          <label className="text-sm font-medium text-slate-700 md:col-span-2">
+            API key
+            <div className="mt-1.5 flex h-9 overflow-hidden rounded-md border border-slate-200 bg-white focus-within:border-slate-400">
+              <input
+                type={isKeyVisible ? 'text' : 'password'}
+                value={props.draft.apiKey}
+                onChange={event => props.onChange({ apiKey: event.target.value, models: [] })}
+                placeholder={props.draft.hasApiKey ? 'Leave empty to keep the configured key' : 'API key'}
+                className="min-w-0 flex-1 px-2.5 font-mono text-sm font-normal outline-none placeholder:text-slate-400"
+              />
+              <button
+                type="button"
+                onClick={() => setIsKeyVisible(value => !value)}
+                className="border-l border-slate-200 px-3 text-xs font-medium text-slate-600 hover:bg-slate-50"
+              >
+                {isKeyVisible ? 'Hide' : 'Show'}
+              </button>
+            </div>
+          </label>
+        )}
       </div>
       <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="text-sm text-slate-600">

@@ -111,6 +111,8 @@ export class AnthropicLlmClient implements LlmClient {
     }
   }
 
+  public dispose() {}
+
   private createHeaders(includeContentType = true): Record<string, string> {
     return {
       'anthropic-version': '2023-06-01',

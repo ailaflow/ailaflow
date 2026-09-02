@@ -1,4 +1,4 @@
-import { FetchLlmProviderModelsResponse, fetchLlmProviderModelsRequestSchema } from '@aila/model';
+import { FetchLlmProviderModelsResponse, LlmProviderPolicy, fetchLlmProviderModelsRequestSchema } from '@aila/model';
 import { LlmClientError } from '@aibindkit/llm';
 import { Request } from 'express';
 import { LlmClientFactory } from '../../llm/llm-client-factory';
@@ -25,12 +25,12 @@ export class FetchLlmProviderModelsEndpoint implements Endpoint {
     const request = parseBody(fetchLlmProviderModelsRequestSchema, req.body);
     try {
       let apiKey = request.apiKey;
-      if (!apiKey && request.id) {
+      if (!apiKey && request.id && LlmProviderPolicy.requiresApiKey(request.type)) {
         const existing = await this.repository.tryGetProvider(abortSignal, request.id);
         if (!existing) {
           throw new EndpointError('LLM provider not found', 404);
         }
-        if (existing.type !== request.type || existing.baseUrl !== request.baseUrl) {
+        if (existing.type !== request.type || existing.url !== request.url) {
           throw new LlmProviderConfigurationError('API key must be entered when changing the provider type or endpoint');
         }
         apiKey = existing.apiKey;
@@ -38,11 +38,16 @@ export class FetchLlmProviderModelsEndpoint implements Endpoint {
       const provider = LlmProviderConfiguration.create({
         name: 'Model fetch',
         type: request.type,
-        baseUrl: request.baseUrl,
+        url: request.url,
         apiKey,
         models: []
       });
-      return { models: await this.clientFactory.createForProvider(provider).getModels(abortSignal) };
+      const client = this.clientFactory.createForProvider(provider);
+      try {
+        return { models: await client.getModels(abortSignal) };
+      } finally {
+        client.dispose();
+      }
     } catch (error) {
       if (error instanceof LlmProviderConfigurationError || error instanceof LlmClientError) {
         throw new EndpointError(error.message, 400);

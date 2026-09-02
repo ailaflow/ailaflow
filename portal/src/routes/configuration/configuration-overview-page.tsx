@@ -1,5 +1,5 @@
 import { useLoader } from '@aibindkit/react';
-import { LlmUseCase } from '@aila/model';
+import { LlmProviderPolicy, LlmUseCase } from '@aila/model';
 import type { GetLlmConfigurationResponse } from '@aila/model';
 import { useApiClient } from '../../auth/auth-context';
 import { ConfigurationOverviewView } from '../../views/configuration/configuration-overview-view';
@@ -96,5 +96,9 @@ function isLlmUseCaseConfigured(configuration: GetLlmConfigurationResponse, useC
     return false;
   }
   const provider = configuration.providers.find(item => item.id === assignment.providerId);
-  return Boolean(provider?.hasApiKey && provider.models.some(model => model.name === assignment.modelName));
+  if (!provider) {
+    return false;
+  }
+  const requiresApiKey = LlmProviderPolicy.requiresApiKey(provider.type);
+  return Boolean(provider.hasApiKey === requiresApiKey && provider.models.some(model => model.name === assignment.modelName));
 }

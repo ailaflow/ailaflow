@@ -32,4 +32,5 @@ export interface LlmClient {
     toolDescriptors: ToolDescriptor[] | undefined
   ): Promise<LlmCompleteResult>;
   getModels(abortSignal: AbortSignal): Promise<LlmModel[]>;
+  dispose(): void;
 }

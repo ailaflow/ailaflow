@@ -40,7 +40,7 @@ test('configures providers and use cases without exposing API keys', async () =>
           id: providerId,
           name: 'Primary OpenAI',
           type: LlmProviderType.OPENAI,
-          baseUrl: null,
+          url: null,
           apiKey: 'top-secret',
           models: [{ name: 'admin-model', contextWindow: 131_072 }]
         }
@@ -95,7 +95,8 @@ test('configures providers and use cases without exposing API keys', async () =>
         id: providerId,
         name: 'Primary OpenAI',
         type: LlmProviderType.OPENAI,
-        baseUrl: null,
+        url: null,
+        apiKey: null,
         models: [{ name: 'admin-model', contextWindow: 131_072 }]
       }
     })
@@ -108,7 +109,7 @@ test('configures providers and use cases without exposing API keys', async () =>
       id: providerId,
       name: 'Primary OpenAI',
       type: LlmProviderType.OPENAI,
-      baseUrl: null,
+      url: null,
       hasApiKey: true,
       models: [{ name: 'admin-model', contextWindow: 131_072 }]
     }
@@ -129,10 +130,27 @@ test('configures providers and use cases without exposing API keys', async () =>
     undefined
   );
 
-  assert.deepEqual(await fetchModels.handle(createRequest({ body: { id: providerId, type: LlmProviderType.OPENAI, baseUrl: null } })), {
-    models: [{ name: 'model-a' }, { name: 'model-b', contextWindow: 131_072 }]
-  });
+  assert.deepEqual(
+    await fetchModels.handle(createRequest({ body: { id: providerId, type: LlmProviderType.OPENAI, url: null, apiKey: null } })),
+    {
+      models: [{ name: 'model-a' }, { name: 'model-b', contextWindow: 131_072 }]
+    }
+  );
   assert.equal(modelClientFactory.apiKey, 'top-secret');
+  assert.deepEqual(
+    await fetchModels.handle(
+      createRequest({
+        body: {
+          id: providerId,
+          type: LlmProviderType.CODEX_APP_SERVER,
+          url: 'ws://127.0.0.1:4500',
+          apiKey: null
+        }
+      })
+    ),
+    { models: [{ name: 'model-a' }, { name: 'model-b', contextWindow: 131_072 }] }
+  );
+  assert.equal(modelClientFactory.apiKey, null);
   await assert.rejects(
     () =>
       fetchModels.handle(
@@ -140,7 +158,8 @@ test('configures providers and use cases without exposing API keys', async () =>
           body: {
             id: providerId,
             type: LlmProviderType.OPENAI_COMPATIBLE,
-            baseUrl: 'https://other.example/v1'
+            url: 'https://other.example/v1',
+            apiKey: null
           }
         })
       ),
@@ -184,6 +203,7 @@ class FakeModelLlmClientFactory extends LlmClientFactory {
       complete: async () => {
         throw new Error('Not implemented');
       },
+      dispose: () => undefined,
       getModels: async () => [{ name: 'model-a' }, { name: 'model-b', contextWindow: 131_072 }]
     };
   }

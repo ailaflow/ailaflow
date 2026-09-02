@@ -12,6 +12,7 @@ import { LlmClientProvider } from './llm-client-provider';
 
 class FakeLlmClient implements LlmClient {
   public readonly completions: LlmMessage[][] = [];
+  public isDisposed = false;
 
   public async complete(
     _: AbortSignal,
@@ -25,6 +26,10 @@ class FakeLlmClient implements LlmClient {
 
   public async getModels(_: AbortSignal): Promise<Array<{ name: string }>> {
     return [{ name: 'model-a' }, { name: 'model-b' }];
+  }
+
+  public dispose(): void {
+    this.isDisposed = true;
   }
 }
 
@@ -79,6 +84,7 @@ test('returns the same configured client until all clients are flushed', async (
 
   model = 'model-b';
   provider.flushAll();
+  assert.equal(factory.clients[0].isDisposed, true);
   const second = await provider.get(abortSignal, LlmUseCase.ADMIN_CHAT);
   const result = await second.client.complete(abortSignal, second.modelSettings, completeHistory, undefined);
 

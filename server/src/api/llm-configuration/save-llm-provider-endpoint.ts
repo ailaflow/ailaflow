@@ -33,7 +33,7 @@ export class SaveLlmProviderEndpoint implements Endpoint {
           id: request.id,
           name: request.name,
           type: request.type,
-          baseUrl: request.baseUrl,
+          url: request.url,
           apiKey: request.apiKey,
           models: request.models
         });
@@ -47,7 +47,7 @@ export class SaveLlmProviderEndpoint implements Endpoint {
         provider.update({
           name: request.name,
           type: request.type,
-          baseUrl: request.baseUrl,
+          url: request.url,
           apiKey: request.apiKey,
           models: request.models
         });

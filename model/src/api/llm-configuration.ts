@@ -6,7 +6,8 @@ import { LlmProviderType, LlmUseCase } from '../configuration/llm';
 export const llmProviderTypeSchema = z.union([
   z.literal(LlmProviderType.OPENAI),
   z.literal(LlmProviderType.ANTHROPIC),
-  z.literal(LlmProviderType.OPENAI_COMPATIBLE)
+  z.literal(LlmProviderType.OPENAI_COMPATIBLE),
+  z.literal(LlmProviderType.CODEX_APP_SERVER)
 ]);
 
 export const llmUseCaseSchema = z.union([z.literal(LlmUseCase.ADMIN_CHAT), z.literal(LlmUseCase.USER_CHAT)]);
@@ -23,7 +24,7 @@ export const llmProviderDtoSchema = z.object({
   id: z.string(),
   name: z.string(),
   type: llmProviderTypeSchema,
-  baseUrl: z.string().nullable(),
+  url: z.string().nullable(),
   hasApiKey: z.boolean(),
   models: z.array(llmModelSchema)
 });
@@ -50,8 +51,8 @@ export const saveLlmProviderRequestSchema = z.object({
   id: z.string().min(1),
   name: z.string(),
   type: llmProviderTypeSchema,
-  baseUrl: z.string().nullable(),
-  apiKey: z.string().optional(),
+  url: z.string().nullable(),
+  apiKey: z.string().nullable(),
   models: z.array(llmModelSchema)
 });
 export type SaveLlmProviderRequest = z.infer<typeof saveLlmProviderRequestSchema>;
@@ -61,8 +62,8 @@ export type SaveLlmProviderRequest = z.infer<typeof saveLlmProviderRequestSchema
 export const fetchLlmProviderModelsRequestSchema = z.object({
   id: z.string().optional(),
   type: llmProviderTypeSchema,
-  baseUrl: z.string().nullable(),
-  apiKey: z.string().optional()
+  url: z.string().nullable(),
+  apiKey: z.string().nullable()
 });
 export type FetchLlmProviderModelsRequest = z.infer<typeof fetchLlmProviderModelsRequestSchema>;
 

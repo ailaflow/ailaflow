@@ -1,6 +1,6 @@
 import { LlmProviderConfigurationValidator } from '@aila/model';
 import { randomBytes } from 'crypto';
-import { LlmProviderType } from '@aila/model';
+import { LlmProviderPolicy, LlmProviderType } from '@aila/model';
 
 export class LlmProviderConfigurationError extends Error {
   public constructor(message: string) {
@@ -19,17 +19,20 @@ export class LlmProviderConfiguration {
     id?: string;
     name: string;
     type: LlmProviderType;
-    baseUrl: string | null;
-    apiKey: string | undefined;
+    url: string | null;
+    apiKey: string | null;
     models: LlmModelProviderConfiguration[];
   }): LlmProviderConfiguration {
+    throwIfInvalid(LlmProviderConfigurationValidator.validateName(data.name));
+    throwIfInvalid(LlmProviderConfigurationValidator.validateConnection(data.type, data.url, data.apiKey));
+    throwIfInvalid(LlmProviderConfigurationValidator.validateModels(data.models));
     return new LlmProviderConfiguration(
       data.id ?? randomBytes(24).toString('hex'),
-      normalizeName(data.name),
+      data.name,
       data.type,
-      normalizeBaseUrl(data.type, data.baseUrl),
-      normalizeApiKey(data.apiKey),
-      normalizeModels(data.models)
+      data.url,
+      data.apiKey,
+      data.models
     );
   }
 
@@ -37,76 +40,37 @@ export class LlmProviderConfiguration {
     public readonly id: string,
     public name: string,
     public type: LlmProviderType,
-    public baseUrl: string | null,
-    public apiKey: string,
+    public url: string | null,
+    public apiKey: string | null,
     public models: LlmModelProviderConfiguration[]
   ) {}
 
   public update(data: {
     name: string;
     type: LlmProviderType;
-    baseUrl: string | null;
-    apiKey?: string;
+    url: string | null;
+    apiKey: string | null;
     models: LlmModelProviderConfiguration[];
   }): void {
-    const name = normalizeName(data.name);
-    const baseUrl = normalizeBaseUrl(data.type, data.baseUrl);
-    const error = LlmProviderConfigurationValidator.validateApiKeyForUpdate(
-      { type: this.type, baseUrl: this.baseUrl },
-      { type: data.type, baseUrl, apiKey: data.apiKey }
+    throwIfInvalid(LlmProviderConfigurationValidator.validateName(data.name));
+    throwIfInvalid(
+      LlmProviderConfigurationValidator.validateConnectionForUpdate(
+        { type: this.type, url: this.url, hasApiKey: this.apiKey !== null },
+        data
+      )
     );
-    if (error) {
-      throw new LlmProviderConfigurationError(error);
-    }
-    const apiKey = data.apiKey === undefined ? this.apiKey : normalizeApiKey(data.apiKey);
-    const models = normalizeModels(data.models);
-    this.name = name;
+    throwIfInvalid(LlmProviderConfigurationValidator.validateModels(data.models));
+    const apiKey = data.apiKey === null && LlmProviderPolicy.requiresApiKey(data.type) ? this.apiKey : data.apiKey;
+    this.name = data.name;
     this.type = data.type;
-    this.baseUrl = baseUrl;
+    this.url = data.url;
     this.apiKey = apiKey;
-    this.models = models;
+    this.models = data.models;
   }
 }
 
-function normalizeName(name: string): string {
-  const trimmed = name.trim();
-  const error = LlmProviderConfigurationValidator.validateName(trimmed);
+function throwIfInvalid(error: string | null): void {
   if (error) {
     throw new LlmProviderConfigurationError(error);
   }
-  return trimmed;
-}
-
-function normalizeApiKey(apiKey: string | undefined): string {
-  const trimmed = apiKey?.trim();
-  const error = LlmProviderConfigurationValidator.validateApiKey(trimmed);
-  if (error) {
-    throw new LlmProviderConfigurationError(error);
-  }
-  return trimmed!;
-}
-
-function normalizeBaseUrl(type: LlmProviderType, baseUrl: string | null): string | null {
-  const error = LlmProviderConfigurationValidator.validateBaseUrl(type, baseUrl);
-  if (error) {
-    throw new LlmProviderConfigurationError(error);
-  }
-  if (baseUrl === null) {
-    return null;
-  }
-  return new URL(baseUrl).toString().replace(/\/$/, '');
-}
-
-function normalizeModels(models: LlmModelProviderConfiguration[]): LlmModelProviderConfiguration[] {
-  const error = LlmProviderConfigurationValidator.validateModels(models);
-  if (error) {
-    throw new LlmProviderConfigurationError(error);
-  }
-  const normalized = new Map<string, LlmModelProviderConfiguration>();
-  for (const model of models) {
-    const existing = normalized.get(model.name);
-    const contextWindow = model.contextWindow ?? existing?.contextWindow;
-    normalized.set(model.name, contextWindow === undefined ? { name: model.name } : { name: model.name, contextWindow });
-  }
-  return [...normalized.values()].sort((a, b) => a.name.localeCompare(b.name));
 }

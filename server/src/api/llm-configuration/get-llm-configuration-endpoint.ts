@@ -21,8 +21,8 @@ export class GetLlmConfigurationEndpoint implements Endpoint {
         id: provider.id,
         name: provider.name,
         type: provider.type,
-        baseUrl: provider.baseUrl,
-        hasApiKey: provider.apiKey.length > 0,
+        url: provider.url,
+        hasApiKey: Boolean(provider.apiKey),
         models: provider.models
       })),
       useCases: configuration.useCases.map(assignment => ({

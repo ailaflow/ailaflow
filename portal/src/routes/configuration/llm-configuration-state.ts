@@ -1,4 +1,11 @@
-import { ALL_LLM_USE_CASES, LlmProviderType, LlmUseCaseConfigurationValidator, strLlmUseCase } from '@aila/model';
+import {
+  ALL_LLM_USE_CASES,
+  LlmProviderConfigurationValidator,
+  LlmProviderPolicy,
+  LlmProviderType,
+  LlmUseCaseConfigurationValidator,
+  strLlmUseCase
+} from '@aila/model';
 import type {
   FetchLlmProviderModelsRequest,
   GetLlmConfigurationResponse,
@@ -53,23 +60,23 @@ export function useLlmConfigurationState(initial: GetLlmConfigurationResponse): 
   const [providerDraft, setProviderDraft] = useState<LlmProviderDraft | null>(null);
 
   const canSaveProvider = useMemo(() => {
-    if (!providerDraft || !providerDraft.name.trim()) {
+    if (!providerDraft) {
       return false;
     }
-    if (providerDraft.type === LlmProviderType.OPENAI_COMPATIBLE && !isValidUrl(providerDraft.baseUrl)) {
-      return false;
-    }
-    return providerDraft.hasApiKey || providerDraft.apiKey.trim().length > 0;
+    const data = prepareProviderData(providerDraft);
+    return (
+      LlmProviderConfigurationValidator.validateName(data.name) === null &&
+      LlmProviderConfigurationValidator.validateConnection(data.type, data.url, data.apiKey, providerDraft.hasApiKey) === null &&
+      LlmProviderConfigurationValidator.validateModels(data.models) === null
+    );
   }, [providerDraft]);
 
   const canFetchProviderModels = useMemo(() => {
     if (!providerDraft) {
       return false;
     }
-    if (providerDraft.type === LlmProviderType.OPENAI_COMPATIBLE && !isValidUrl(providerDraft.baseUrl)) {
-      return false;
-    }
-    return providerDraft.hasApiKey || providerDraft.apiKey.trim().length > 0;
+    const data = prepareProviderData(providerDraft);
+    return LlmProviderConfigurationValidator.validateConnection(data.type, data.url, data.apiKey, providerDraft.hasApiKey) === null;
   }, [providerDraft]);
 
   const canSaveUseCases = useMemo(() => {
@@ -113,7 +120,7 @@ export function useLlmConfigurationState(initial: GetLlmConfigurationResponse): 
         insert: true,
         name: '',
         type: LlmProviderType.OPENAI,
-        baseUrl: '',
+        url: '',
         apiKey: '',
         hasApiKey: false,
         models: []
@@ -124,7 +131,7 @@ export function useLlmConfigurationState(initial: GetLlmConfigurationResponse): 
         insert: false,
         name: provider.name,
         type: provider.type,
-        baseUrl: provider.baseUrl ?? '',
+        url: provider.url ?? '',
         apiKey: '',
         hasApiKey: provider.hasApiKey,
         models: provider.models
@@ -135,40 +142,38 @@ export function useLlmConfigurationState(initial: GetLlmConfigurationResponse): 
       if (!providerDraft) {
         throw new Error('No LLM provider is being edited');
       }
+      const data = prepareProviderData(providerDraft);
       return {
         id: providerDraft.insert ? undefined : providerDraft.id,
-        type: providerDraft.type,
-        baseUrl: providerDraft.type === LlmProviderType.OPENAI_COMPATIBLE ? providerDraft.baseUrl : null,
-        apiKey: providerDraft.apiKey.trim() || undefined
+        type: data.type,
+        url: data.url,
+        apiKey: data.apiKey
       };
     },
-    providerModelsFetched: models => setProviderDraft(current => (current ? { ...current, models } : null)),
+    providerModelsFetched: models => setProviderDraft(current => (current ? { ...current, models: prepareModels(models) } : null)),
     toSaveProviderRequest: () => {
       if (!providerDraft) {
         throw new Error('No LLM provider is being edited');
       }
+      const data = prepareProviderData(providerDraft);
       return {
         insert: providerDraft.insert,
         id: providerDraft.id,
-        name: providerDraft.name,
-        type: providerDraft.type,
-        baseUrl: providerDraft.type === LlmProviderType.OPENAI_COMPATIBLE ? providerDraft.baseUrl : null,
-        apiKey: providerDraft.apiKey.trim() || undefined,
-        models: providerDraft.models
+        ...data
       };
     },
     providerSaved: () => {
       if (!providerDraft) {
         throw new Error('No LLM provider is being edited');
       }
+      const data = prepareProviderData(providerDraft);
       const provider: LlmProviderDto = {
         id: providerDraft.id,
-        name: providerDraft.name.trim(),
-        type: providerDraft.type,
-        baseUrl:
-          providerDraft.type === LlmProviderType.OPENAI_COMPATIBLE ? new URL(providerDraft.baseUrl).toString().replace(/\/$/, '') : null,
-        hasApiKey: true,
-        models: [...new Map(providerDraft.models.map(model => [model.name, model])).values()].sort((a, b) => a.name.localeCompare(b.name))
+        name: data.name,
+        type: data.type,
+        url: data.url,
+        hasApiKey: LlmProviderPolicy.requiresApiKey(data.type),
+        models: data.models
       };
       setProviders(current => {
         const exists = current.some(item => item.id === provider.id);
@@ -203,11 +208,32 @@ function readOptionalNumber(value: string): number | undefined {
   return value.trim() ? Number(value) : undefined;
 }
 
-function isValidUrl(value: string): boolean {
-  try {
-    new URL(value);
-    return true;
-  } catch {
-    return false;
+function prepareProviderData(draft: LlmProviderDraft): Omit<SaveLlmProviderRequest, 'insert' | 'id'> {
+  return {
+    name: draft.name.trim(),
+    type: draft.type,
+    url: prepareUrl(draft.type, draft.url),
+    apiKey: LlmProviderPolicy.requiresApiKey(draft.type) ? draft.apiKey.trim() || null : null,
+    models: prepareModels(draft.models)
+  };
+}
+
+function prepareUrl(type: LlmProviderType, value: string): string | null {
+  if (!LlmProviderPolicy.requiresUrl(type)) {
+    return null;
   }
+  try {
+    return new URL(value).toString().replace(/\/$/, '');
+  } catch {
+    return value;
+  }
+}
+
+function prepareModels(models: LlmModelDto[]): LlmModelDto[] {
+  const prepared = new Map<string, LlmModelDto>();
+  for (const model of models) {
+    const contextWindow = model.contextWindow ?? prepared.get(model.name)?.contextWindow;
+    prepared.set(model.name, contextWindow === undefined ? { name: model.name } : { name: model.name, contextWindow });
+  }
+  return [...prepared.values()].sort((a, b) => a.name.localeCompare(b.name));
 }

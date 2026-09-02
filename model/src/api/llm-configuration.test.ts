@@ -10,7 +10,7 @@ test('validates numeric provider enum and structural fields', () => {
       id: 'provider',
       name: 'Gateway',
       type: LlmProviderType.OPENAI_COMPATIBLE,
-      baseUrl: 'https://gateway.example/v1',
+      url: 'https://gateway.example/v1',
       apiKey: 'secret',
       models: [{ name: 'model-a', contextWindow: 131_072 }]
     }).success,
@@ -22,7 +22,8 @@ test('validates numeric provider enum and structural fields', () => {
       id: 'provider',
       name: 'OpenAI',
       type: LlmProviderType.OPENAI,
-      baseUrl: null,
+      url: null,
+      apiKey: null,
       models: []
     }).success,
     true

@@ -1,13 +1,15 @@
 import OpenAI from 'openai';
 import { LlmCompleteResult, LlmClient, LlmModel, LlmModelSettings } from './llm-client';
 import type { LlmMessage, ToolDescriptor } from '@aibindkit/core';
+import { LlmMessageSanitizer } from './llm-message-sanitizer';
 
 export class OpenaiLlmClient implements LlmClient {
   private readonly openai: OpenAI;
+  private readonly sanitizer = new LlmMessageSanitizer();
 
-  public constructor(config: { baseUrl: string; apiKey: string }) {
+  public constructor(config: { url: string; apiKey: string }) {
     this.openai = new OpenAI({
-      baseURL: config.baseUrl,
+      baseURL: config.url,
       apiKey: config.apiKey
     });
   }
@@ -23,7 +25,7 @@ export class OpenaiLlmClient implements LlmClient {
         tools: toolDescriptors,
         model: modelSettings.name,
         stream: false,
-        messages
+        messages: this.sanitizer.sanitize(messages)
       },
       {
         signal: abortSignal
@@ -48,6 +50,8 @@ export class OpenaiLlmClient implements LlmClient {
       return { name: model.id, contextWindow: tryReadContextWindow(model) };
     });
   }
+
+  public dispose(): void {}
 }
 
 function tryReadContextWindow(model: object): number | undefined {

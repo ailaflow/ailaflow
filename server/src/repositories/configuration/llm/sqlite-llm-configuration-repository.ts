@@ -10,8 +10,8 @@ interface ProviderRow {
   id: string;
   name: string;
   type: number;
-  baseUrl: string | null;
-  apiKey: string;
+  url: string | null;
+  apiKey: string | null;
   serializedModels: string;
 }
 
@@ -36,8 +36,8 @@ export class SqliteLlmConfigurationRepository implements LlmConfigurationReposit
         id TEXT PRIMARY KEY,
         name TEXT NOT NULL UNIQUE,
         type INTEGER NOT NULL,
-        baseUrl TEXT,
-        apiKey TEXT NOT NULL,
+        url TEXT,
+        apiKey TEXT,
         serializedModels TEXT NOT NULL
       ) STRICT
     `);
@@ -58,7 +58,7 @@ export class SqliteLlmConfigurationRepository implements LlmConfigurationReposit
 
   public async get(_: AbortSignal): Promise<LlmConfiguration> {
     const providerRows = this.db
-      .prepare(`SELECT id, name, type, baseUrl, apiKey, serializedModels FROM llm_providers ORDER BY name, id`)
+      .prepare(`SELECT id, name, type, url, apiKey, serializedModels FROM llm_providers ORDER BY name, id`)
       .all() as unknown as ProviderRow[];
     const useCaseRows = this.db
       .prepare(
@@ -69,17 +69,17 @@ export class SqliteLlmConfigurationRepository implements LlmConfigurationReposit
   }
 
   public async tryGetProvider(_: AbortSignal, id: string): Promise<LlmProviderConfiguration | null> {
-    const row = this.db
-      .prepare(`SELECT id, name, type, baseUrl, apiKey, serializedModels FROM llm_providers WHERE id = ? LIMIT 1`)
-      .get(id) as ProviderRow | undefined;
+    const row = this.db.prepare(`SELECT id, name, type, url, apiKey, serializedModels FROM llm_providers WHERE id = ? LIMIT 1`).get(id) as
+      | ProviderRow
+      | undefined;
     return row ? mapProvider(row) : null;
   }
 
   public async insertProvider(_: AbortSignal, provider: LlmProviderConfiguration): Promise<void> {
     try {
       this.db
-        .prepare(`INSERT INTO llm_providers (id, name, type, baseUrl, apiKey, serializedModels) VALUES (?, ?, ?, ?, ?, ?)`)
-        .run(provider.id, provider.name, provider.type, provider.baseUrl, provider.apiKey, JSON.stringify(provider.models));
+        .prepare(`INSERT INTO llm_providers (id, name, type, url, apiKey, serializedModels) VALUES (?, ?, ?, ?, ?, ?)`)
+        .run(provider.id, provider.name, provider.type, provider.url, provider.apiKey, JSON.stringify(provider.models));
     } catch (error) {
       if (isUniqueNameError(error)) {
         throw new LlmConfigurationRepositoryError('An LLM provider name is already in use');
@@ -91,8 +91,8 @@ export class SqliteLlmConfigurationRepository implements LlmConfigurationReposit
   public async updateProvider(_: AbortSignal, provider: LlmProviderConfiguration): Promise<void> {
     try {
       this.db
-        .prepare(`UPDATE llm_providers SET name = ?, type = ?, baseUrl = ?, apiKey = ?, serializedModels = ? WHERE id = ?`)
-        .run(provider.name, provider.type, provider.baseUrl, provider.apiKey, JSON.stringify(provider.models), provider.id);
+        .prepare(`UPDATE llm_providers SET name = ?, type = ?, url = ?, apiKey = ?, serializedModels = ? WHERE id = ?`)
+        .run(provider.name, provider.type, provider.url, provider.apiKey, JSON.stringify(provider.models), provider.id);
     } catch (error) {
       if (isUniqueNameError(error)) {
         throw new LlmConfigurationRepositoryError('An LLM provider name is already in use');
@@ -149,11 +149,12 @@ export class SqliteLlmConfigurationRepository implements LlmConfigurationReposit
 }
 
 function mapProvider(row: ProviderRow): LlmProviderConfiguration {
+  const type = row.type as LlmProviderType;
   return new LlmProviderConfiguration(
     row.id,
     row.name,
-    row.type as LlmProviderType,
-    row.baseUrl,
+    type,
+    row.url,
     row.apiKey,
     JSON.parse(row.serializedModels) as LlmModelProviderConfiguration[]
   );

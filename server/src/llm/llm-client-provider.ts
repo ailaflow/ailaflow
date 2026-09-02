@@ -23,8 +23,9 @@ export class LlmClientProvider {
   }
 
   public flushAll() {
-    for (const useCase of this.clients.keys()) {
-      this.clients.delete(useCase);
+    for (const client of this.clients.values()) {
+      client.client.dispose();
     }
+    this.clients.clear();
   }
 }
