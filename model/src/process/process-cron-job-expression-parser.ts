@@ -1,9 +1,9 @@
-import { CronExpressionParser } from 'cron-parser';
+import { Cron } from 'croner';
 
 export class ProcessCronJobExpressionParser {
   public static validate(expression: string, timeZone: string): string | null {
     try {
-      this.parse(expression, timeZone, Date.now());
+      this.create(expression, timeZone).nextRun();
       return null;
     } catch (error) {
       return error instanceof Error ? error.message : String(error);
@@ -11,10 +11,14 @@ export class ProcessCronJobExpressionParser {
   }
 
   public static getNextExecutionAt(expression: string, timeZone: string, after: number): number {
-    return this.parse(expression, timeZone, after).next().getTime();
+    const nextRun = this.create(expression, timeZone).nextRun(new Date(after));
+    if (!nextRun) {
+      throw new Error('Cron expression has no future execution');
+    }
+    return nextRun.getTime();
   }
 
-  private static parse(expression: string, timeZone: string, currentDate: number) {
+  private static create(expression: string, timeZone: string): Cron {
     const normalizedExpression = expression.trim();
     if (normalizedExpression.split(/\s+/).length !== 5) {
       throw new Error('Cron expression must contain exactly five fields');
@@ -23,9 +27,10 @@ export class ProcessCronJobExpressionParser {
       throw new Error('Time zone is required');
     }
 
-    return CronExpressionParser.parse(normalizedExpression, {
-      currentDate,
-      tz: timeZone.trim()
+    return new Cron(normalizedExpression, {
+      mode: '5-part',
+      paused: true,
+      timezone: timeZone.trim()
     });
   }
 }
