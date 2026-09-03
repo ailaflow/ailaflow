@@ -4,6 +4,8 @@ import { ProcessTesterChats } from './process-tester-chats';
 import { ProcessTesterTop } from './process-tester-top';
 import { useNavigate } from 'react-router';
 import { ResourceEditorView } from '../../views/resource-editor/resource-editor-view';
+import { useProcessTester } from './process-tester-context';
+import { useProcessTesterAi } from './process-tester-ai';
 
 export interface ProcessTesterProps {
   process: ProcessDto;
@@ -11,6 +13,9 @@ export interface ProcessTesterProps {
 
 export function ProcessTester(props: ProcessTesterProps) {
   const navigate = useNavigate();
+  const state = useProcessTester();
+
+  useProcessTesterAi(state);
 
   function openEditor() {
     navigate(`/admin/processes/${props.process.name}`);

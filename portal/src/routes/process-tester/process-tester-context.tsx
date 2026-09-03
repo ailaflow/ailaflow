@@ -1,4 +1,11 @@
-import { ProcessLogLevel, type ProcessDefinition, type ProcessDto, type ReturnStep, type TestProcessUpdate } from '@aila/model';
+import {
+  ProcessLogLevel,
+  VariableCachedValidator,
+  type ProcessDefinition,
+  type ProcessDto,
+  type ReturnStep,
+  type TestProcessUpdate
+} from '@aila/model';
 import { createContext, useContext, useEffect, useMemo, useReducer } from 'react';
 import { DefinitionWalker } from 'sequential-workflow-model';
 import { useApiClient, useSession } from '../../auth/auth-context';
@@ -18,6 +25,7 @@ export interface ProcessTesterData {
   process: ProcessDto;
   startFormData: Record<string, unknown> | null;
   timelineItems: ProcessTesterTimelineItem[];
+  isRunning: boolean;
   currentUserName: string;
   chatUserNames: string[];
   activeChatUserName: string;
@@ -49,9 +57,8 @@ export function ProcessTesterContext(props: ProcessTesterContextProps) {
   const apiClient = useApiClient();
   const session = useSession();
   const preferencesStorage = useMemo(() => new ProcessTesterPreferencesStorage(), []);
-  const [data, update] = useReducer(reduceState, undefined, () =>
-    createData(props.process, session.userName, preferencesStorage)
-  );
+  const variableValidator = useMemo(() => new VariableCachedValidator(), []);
+  const [data, update] = useReducer(reduceState, undefined, () => createData(props.process, session.userName, preferencesStorage));
 
   useEffect(() => {
     preferencesStorage.saveChatUserNames(data.chatUserNames);
@@ -70,23 +77,15 @@ export function ProcessTesterContext(props: ProcessTesterContextProps) {
           {
             onMessage(testUpdate) {
               update(state => {
-                const timelineItems = createProcessTesterTimelineItems(
-                  testUpdate,
-                  state.process.definition,
-                  Date.now()
-                );
+                const timelineItems = createProcessTesterTimelineItems(testUpdate, state.process.definition, Date.now());
                 return { timelineItems: [...state.timelineItems, ...timelineItems] };
               });
             },
             onClose() {
               update(state => {
                 const time = Date.now();
-                const item = new LogProcessTesterTimelineItem(
-                  time,
-                  ProcessLogLevel.INFO,
-                  'Connection closed'
-                );
-                return { timelineItems: [...state.timelineItems, item] };
+                const item = new LogProcessTesterTimelineItem(time, ProcessLogLevel.INFO, 'Connection closed');
+                return { timelineItems: [...state.timelineItems, item], isRunning: false };
               });
             }
           },
@@ -96,12 +95,8 @@ export function ProcessTesterContext(props: ProcessTesterContextProps) {
       } catch (e) {
         if (!abortController.signal.aborted) {
           update(state => {
-            const item = new ErrorProcessTesterTimelineItem(
-              Date.now(),
-              'Connection error',
-              String(e)
-            );
-            return { timelineItems: [...state.timelineItems, item] };
+            const item = new ErrorProcessTesterTimelineItem(Date.now(), 'Connection error', String(e));
+            return { timelineItems: [...state.timelineItems, item], isRunning: false };
           });
         }
       }
@@ -113,14 +108,22 @@ export function ProcessTesterContext(props: ProcessTesterContextProps) {
 
   const state = useMemo<ProcessTesterState>(() => {
     function submitStartForm(startFormData: Record<string, unknown>) {
+      if (data.startFormData) {
+        throw new Error('The process test has already started');
+      }
+      const error = variableValidator.validateVariablesValue(
+        data.process.definition.properties.startVariableNames,
+        startFormData,
+        data.process.definition
+      );
+      if (error) {
+        throw new Error(error);
+      }
       update({
         startFormData,
+        isRunning: true,
         timelineItems: [
-          new FormProcessTesterTimelineItem(
-            Date.now(),
-            ProcessTesterTimelineFormType.START,
-            ProcessTesterTimelineFormStatus.COMPLETED
-          )
+          new FormProcessTesterTimelineItem(Date.now(), ProcessTesterTimelineFormType.START, ProcessTesterTimelineFormStatus.COMPLETED)
         ]
       });
     }
@@ -162,7 +165,7 @@ export function ProcessTesterContext(props: ProcessTesterContextProps) {
       selectUserChat,
       closeUserChat
     };
-  }, [data]);
+  }, [data, variableValidator]);
 
   return <processTesterContext.Provider value={state}>{props.children}</processTesterContext.Provider>;
 }
@@ -174,26 +177,17 @@ function reduceState(state: ProcessTesterData, stateUpdate: StateUpdate): Proces
   return { ...state, ...delta };
 }
 
-function createData(
-  process: ProcessDto,
-  currentUserName: string,
-  preferencesStorage: ProcessTesterPreferencesStorage
-): ProcessTesterData {
+function createData(process: ProcessDto, currentUserName: string, preferencesStorage: ProcessTesterPreferencesStorage): ProcessTesterData {
   const storedChatUserNames = preferencesStorage.readChatUserNames();
-  const chatUserNames = storedChatUserNames.includes(currentUserName)
-    ? storedChatUserNames
-    : [currentUserName, ...storedChatUserNames];
+  const chatUserNames = storedChatUserNames.includes(currentUserName) ? storedChatUserNames : [currentUserName, ...storedChatUserNames];
 
   return {
     process,
     startFormData: null,
     timelineItems: [
-      new FormProcessTesterTimelineItem(
-        Date.now(),
-        ProcessTesterTimelineFormType.START,
-        ProcessTesterTimelineFormStatus.ACTIVE
-      )
+      new FormProcessTesterTimelineItem(Date.now(), ProcessTesterTimelineFormType.START, ProcessTesterTimelineFormStatus.ACTIVE)
     ],
+    isRunning: false,
     currentUserName,
     chatUserNames,
     activeChatUserName: currentUserName

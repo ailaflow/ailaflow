@@ -5,6 +5,7 @@ import { ProcessTester } from './process-tester';
 import { PortalLoadingView } from '../../views/portal/portal-loading-view';
 import { PortalErrorView } from '../../views/portal/portal-error-view';
 import { ProcessTesterContext } from './process-tester-context';
+import { useAiStore } from '../common/admin-portal';
 
 export function ProcessTesterPage() {
   const { processName } = useParams();
@@ -13,7 +14,23 @@ export function ProcessTesterPage() {
   }
   const apiClient = useApiClient();
 
-  const { data, error, isLoading } = useLoader(abortSignal => apiClient.process.getProcess(abortSignal, processName), [processName]);
+  const { data, error, isLoading, finishSignal } = useLoader(
+    abortSignal => apiClient.process.getProcess(abortSignal, processName),
+    [apiClient, processName]
+  );
+
+  useAiStore(
+    'processTester',
+    store => {
+      if (isLoading) {
+        return store.bindWait(finishSignal);
+      }
+      if (error) {
+        return store.bindError(error);
+      }
+    },
+    [error, finishSignal, isLoading]
+  );
 
   if (isLoading) {
     return <PortalLoadingView />;

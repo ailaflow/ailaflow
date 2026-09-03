@@ -15,6 +15,9 @@ import { globalAiStoreFactory } from './ai-bindings/global-ai-bindings';
 import { tableListAiStoreFactory } from './ai-bindings/table-list-ai-bindings';
 import { tableEditorAiStoreFactory } from './ai-bindings/table-editor-ai-bindings';
 import { taskListAiStoreFactory } from './ai-bindings/task-list-ai-bindings';
+import { processTesterAiStoreFactory } from './ai-bindings/process-tester-ai-bindings';
+import { processCronJobsAiStoreFactory } from './ai-bindings/process-cron-jobs-ai-bindings';
+import { sandboxTerminalAiStoreFactory } from './ai-bindings/sandbox-terminal-ai-bindings';
 
 export const env = aiEnvironment({
   global: globalAiStoreFactory(),
@@ -26,7 +29,10 @@ export const env = aiEnvironment({
   userEditor: userEditorAiStoreFactory(),
   tableList: tableListAiStoreFactory(),
   tableEditor: tableEditorAiStoreFactory(),
-  taskList: taskListAiStoreFactory()
+  taskList: taskListAiStoreFactory(),
+  processTester: processTesterAiStoreFactory(),
+  processCronJobs: processCronJobsAiStoreFactory(),
+  sandboxTerminal: sandboxTerminalAiStoreFactory()
 });
 export const useAiEnvironment = env.useAiEnvironment;
 export const useAiStore = env.useAiStore;
