@@ -1,6 +1,4 @@
-import { Logger } from './core/logger';
 import { ServerPaths } from './core/server-paths';
-import express from 'express';
 import { SandboxInstanceManager } from './sandbox/sandbox-instance-manager';
 import { ChatSessionManager, setupServer } from '@aibindkit/express';
 import { LoginEndpoint } from './api/auth/login-endpoint';
@@ -164,21 +162,14 @@ import { GetProcessCronJobsEndpoint } from './api/process-cron-job/get-process-c
 import { SaveProcessCronJobEndpoint } from './api/process-cron-job/save-process-cron-job-endpoint';
 import { DeleteProcessCronJobEndpoint } from './api/process-cron-job/delete-process-cron-job-endpoint';
 import { ProcessCronJobScheduler } from './schedulers/process-cron-job-scheduler';
-import { extname, join } from 'node:path';
-import { Server as HttpServer } from 'node:http';
-
-const PORT = process.env.PORT || 2048;
-
-const logger = new Logger('Server');
+import { HttpServer } from './http-server';
 
 export class Server {
   private isClosed = false;
 
   public static async create(abortSignal: AbortSignal): Promise<Server> {
-    const app = express();
-    app.use(express.json());
-
     const serverPaths = new ServerPaths();
+    const httpServer = new HttpServer(serverPaths);
     const sandboxHostDiagnostician = new SandboxHostDiagnostician(serverPaths);
     let userRepository: UserRepository;
     let userAttributesRepository: UserAttributesRepository;
@@ -344,7 +335,7 @@ export class Server {
     const sessionResolver = new ChatSessionResolver(llmClientProvider, userToolSetProvider, serverPaths);
     const authContextResolver = new ChatAuthContextResolver();
 
-    setupServer(app, {
+    setupServer(httpServer.app, {
       sessionResolver,
       sessionStorage,
       sessionManager,
@@ -409,24 +400,10 @@ export class Server {
       new SaveUserTelegramBotEndpoint(userRepository, telegramConfigurationApi),
       new DeleteUserTelegramBotEndpoint(userRepository, telegramConfigurationApi)
     ];
-    const router = new Router(app, endpoints, authMiddleware);
+    const router = new Router(httpServer.app, endpoints, authMiddleware);
     router.setup();
 
-    const portalFolderPath = serverPaths.getPortalFolderPath();
-    app.use(express.static(portalFolderPath));
-    app.use((request, response, next) => {
-      const isApiRequest = request.path === '/api' || request.path.startsWith('/api/');
-      const isStaticFileRequest = extname(request.path) !== '';
-      if (request.method !== 'GET' || isApiRequest || isStaticFileRequest) {
-        next();
-        return;
-      }
-      response.sendFile(join(portalFolderPath, 'index.html'), error => {
-        if (error) {
-          next(error);
-        }
-      });
-    });
+    httpServer.setupPortal();
 
     await telegramSynchronizationManager.start(abortSignal);
 
@@ -434,20 +411,12 @@ export class Server {
       scheduler.start();
     }
 
-    const server = await new Promise<HttpServer>((resolve, reject) => {
-      const listener = app.listen(PORT, () => {
-        logger.log(`Data folder: ${serverPaths.getAppDataFolderPath()}`);
-        logger.log(`Server is running on port ${PORT}`);
-        listener.off('error', reject);
-        resolve(listener);
-      });
-      listener.once('error', reject);
-    });
-    return new Server(server, sandboxInstanceManager, sqliteDatabases, schedulers, telegramSynchronizationManager);
+    await httpServer.start();
+    return new Server(httpServer, sandboxInstanceManager, sqliteDatabases, schedulers, telegramSynchronizationManager);
   }
 
   public constructor(
-    private readonly server: HttpServer,
+    private readonly httpServer: HttpServer,
     private readonly sandboxInstanceManager: SandboxInstanceManager,
     private readonly sqliteDatabases: SqliteDatabases,
     private readonly schedulers: Scheduler[],
@@ -467,10 +436,6 @@ export class Server {
     }
     this.sqliteDatabases.dispose();
 
-    if (this.server.listening) {
-      await new Promise<void>((resolve, reject) => {
-        this.server.close(error => (error ? reject(error) : resolve()));
-      });
-    }
+    await this.httpServer.close();
   }
 }
