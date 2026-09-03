@@ -10,7 +10,11 @@ export const llmProviderTypeSchema = z.union([
   z.literal(LlmProviderType.CODEX_APP_SERVER)
 ]);
 
-export const llmUseCaseSchema = z.union([z.literal(LlmUseCase.ADMIN_CHAT), z.literal(LlmUseCase.USER_CHAT)]);
+export const llmUseCaseSchema = z.union([
+  z.literal(LlmUseCase.ADMIN_CHAT),
+  z.literal(LlmUseCase.USER_CHAT),
+  z.literal(LlmUseCase.AGENT_STEP)
+]);
 
 export const llmModelSchema = z.object({
   name: z.string(),

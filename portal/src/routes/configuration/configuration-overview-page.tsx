@@ -30,6 +30,7 @@ export function ConfigurationOverviewPage() {
 
   const adminChatConfigured = isLlmUseCaseConfigured(loader.data.llm, LlmUseCase.ADMIN_CHAT);
   const userChatConfigured = isLlmUseCaseConfigured(loader.data.llm, LlmUseCase.USER_CHAT);
+  const agentStepConfigured = isLlmUseCaseConfigured(loader.data.llm, LlmUseCase.AGENT_STEP);
   const statuses: ConfigurationStatus[] = [
     {
       id: 'docker',
@@ -56,16 +57,6 @@ export function ConfigurationOverviewPage() {
       remediation: 'Grant the server process write access to the Aila data folder.'
     },
     {
-      id: 'public-url',
-      label: 'Public URL',
-      value: publicUrlStatusValue(loader.data.publicUrlTest.publicUrl, loader.data.publicUrlTest.isAvailable),
-      isHealthy: loader.data.publicUrlTest.isAvailable,
-      remediation: loader.data.publicUrlTest.publicUrl
-        ? (loader.data.publicUrlTest.error ?? 'Make sure the configured URL is externally accessible.')
-        : 'Configure the externally accessible URL for this Aila server.',
-      action: { label: 'Configure Public URL', href: '/admin/configuration?tab=public-url' }
-    },
-    {
       id: 'admin-chat-ai',
       label: 'Admin chat AI',
       value: adminChatConfigured ? 'Configured' : 'Not configured',
@@ -80,6 +71,24 @@ export function ConfigurationOverviewPage() {
       isHealthy: userChatConfigured,
       remediation: 'Configure an LLM provider and assign it to User chat.',
       action: { label: 'Configure LLM', href: '/admin/configuration?tab=llm' }
+    },
+    {
+      id: 'agent-step-ai',
+      label: 'Agent step AI',
+      value: agentStepConfigured ? 'Configured' : 'Not configured',
+      isHealthy: agentStepConfigured,
+      remediation: 'Configure an LLM provider and assign it to Agent step.',
+      action: { label: 'Configure LLM', href: '/admin/configuration?tab=llm' }
+    },
+    {
+      id: 'public-url',
+      label: 'Public URL',
+      value: publicUrlStatusValue(loader.data.publicUrlTest.publicUrl, loader.data.publicUrlTest.isAvailable),
+      isHealthy: loader.data.publicUrlTest.isAvailable,
+      remediation: loader.data.publicUrlTest.publicUrl
+        ? (loader.data.publicUrlTest.error ?? 'Make sure the configured URL is externally accessible.')
+        : 'Configure the externally accessible URL for this Aila server.',
+      action: { label: 'Configure Public URL', href: '/admin/configuration?tab=public-url' }
     }
   ];
 

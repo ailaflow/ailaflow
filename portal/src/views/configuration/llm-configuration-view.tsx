@@ -72,7 +72,7 @@ export function LlmConfigurationView(props: LlmConfigurationViewProps) {
               {props.isSavingUseCases ? 'Saving…' : 'Save use cases'}
             </button>
           </div>
-          <div className="grid gap-4 p-4 md:grid-cols-2">
+          <div className="grid gap-4 p-4 md:grid-cols-2 lg:grid-cols-3">
             {props.useCases.map(useCase => (
               <UseCaseEditor key={useCase.useCase} useCase={useCase} providers={props.providers} onChange={props.onUseCaseChange} />
             ))}

@@ -48,7 +48,7 @@ test('validates numeric use-case enum without domain cross-field validation', ()
     saveLlmUseCaseAssignmentsRequestSchema.safeParse({
       assignments: [
         {
-          useCase: LlmUseCase.ADMIN_CHAT,
+          useCase: LlmUseCase.AGENT_STEP,
           providerId: 'provider',
           modelName: null,
           effectiveContextWindowPercent: 95
