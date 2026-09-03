@@ -20,11 +20,6 @@ test('preserves wall-clock scheduling across daylight-saving transitions', () =>
   assert.equal(autumn, Date.parse('2026-10-25T00:30:00Z'));
 });
 
-test('rejects expressions with seconds', () => {
-  assert.equal(ProcessCronJobExpressionParser.validate('0 */15 * * * *', 'UTC'), 'Cron expression must contain exactly five fields');
-});
-
-test('rejects invalid expressions and time zones', () => {
+test('rejects invalid expressions', () => {
   assert.match(ProcessCronJobExpressionParser.validate('invalid * * * *', 'UTC') ?? '', /illegal characters/i);
-  assert.notEqual(ProcessCronJobExpressionParser.validate('0 9 * * *', 'Not/A_Time_Zone'), null);
 });

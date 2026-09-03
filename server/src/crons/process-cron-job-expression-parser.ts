@@ -1,3 +1,4 @@
+import { ProcessCronJobExpressionValidator } from '@aila/model';
 import { Cron } from 'croner';
 
 export class ProcessCronJobExpressionParser {
@@ -19,15 +20,12 @@ export class ProcessCronJobExpressionParser {
   }
 
   private static create(expression: string, timeZone: string): Cron {
-    const normalizedExpression = expression.trim();
-    if (normalizedExpression.split(/\s+/).length !== 5) {
-      throw new Error('Cron expression must contain exactly five fields');
-    }
-    if (!timeZone.trim()) {
-      throw new Error('Time zone is required');
+    const validationError = ProcessCronJobExpressionValidator.validate(expression, timeZone);
+    if (validationError) {
+      throw new Error(validationError);
     }
 
-    return new Cron(normalizedExpression, {
+    return new Cron(expression.trim(), {
       mode: '5-part',
       paused: true,
       timezone: timeZone.trim()

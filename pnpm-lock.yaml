@@ -194,9 +194,6 @@ importers:
       '@aibindkit/core':
         specifier: workspace:*
         version: link:../@aibindkit/core
-      croner:
-        specifier: ^10.0.1
-        version: 10.0.1
       openai:
         specifier: ^6.39.0
         version: 6.39.0(zod@4.4.3)
@@ -280,6 +277,9 @@ importers:
       '@aila/model':
         specifier: workspace:*
         version: link:../model
+      croner:
+        specifier: ^10.0.1
+        version: 10.0.1
       express:
         specifier: ^5.2.1
         version: 5.2.1

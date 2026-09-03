@@ -1,6 +1,6 @@
 import {
   ProcessCronJobDto,
-  ProcessCronJobExpressionParser,
+  ProcessCronJobExpressionValidator,
   ProcessDto,
   ProcessExecutionVariableValues,
   VariableCachedValidator
@@ -23,7 +23,7 @@ export function ProcessCronJobs(props: ProcessCronJobsProps) {
   const [jobs, setJobs] = useState(props.initialJobs);
   const [draft, setDraft] = useState<ProcessCronJobDraftViewModel | null>(null);
   const [isSaving, setIsSaving] = useState(false);
-  const expressionError = draft ? ProcessCronJobExpressionParser.validate(draft.expression, draft.timeZone) : null;
+  const expressionError = draft ? ProcessCronJobExpressionValidator.validate(draft.expression, draft.timeZone) : null;
   const inputValidation = draft
     ? validateInputValues(draft.inputValuesText, props.process, variableValidator)
     : { inputValues: null, error: null };

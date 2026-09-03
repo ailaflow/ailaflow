@@ -1,5 +1,6 @@
-import { ProcessCronJobExpressionParser, ProcessCronJobRun, ProcessExecutionVariableValues } from '@aila/model';
+import { ProcessCronJobRun, ProcessExecutionVariableValues } from '@aila/model';
 import { randomBytes } from 'crypto';
+import { ProcessCronJobExpressionParser } from '../../crons/process-cron-job-expression-parser';
 import { ProcessCronJobRepositoryError } from './process-cron-job-repository';
 
 export class ProcessCronJob {

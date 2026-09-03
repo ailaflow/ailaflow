@@ -9,14 +9,15 @@
     "test": "node --import tsx --test \"src/**/*.test.ts\""
   },
   "dependencies": {
-    "@aibindkit/llm": "workspace:*",
     "@aibindkit/core": "workspace:*",
     "@aibindkit/express": "workspace:*",
+    "@aibindkit/llm": "workspace:*",
     "@aila/model": "workspace:*",
+    "croner": "^10.0.1",
     "express": "^5.2.1",
-    "zod": "^4.4.3",
+    "sequential-workflow-machine": "^0.7.1",
     "sequential-workflow-model": "^0.2.0",
-    "sequential-workflow-machine": "^0.7.1"
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@types/express": "^5.0.6",
