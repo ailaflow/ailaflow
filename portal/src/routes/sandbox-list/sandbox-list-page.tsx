@@ -73,6 +73,7 @@ export function SandboxListPage() {
           id: 'description',
           title: 'Description',
           width: '44%',
+          wrap: true,
           getValue: sandbox => sandbox.description
         }
       ]}

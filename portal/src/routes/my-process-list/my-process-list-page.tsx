@@ -56,6 +56,7 @@ export function MyProcessListPage() {
             id: 'description',
             title: 'Description',
             width: '52%',
+            wrap: true,
             getValue: process => process.description
           }
         ]}

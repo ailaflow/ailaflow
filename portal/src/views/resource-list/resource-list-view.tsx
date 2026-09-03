@@ -7,6 +7,7 @@ export interface ResourceListColumn<T> {
   title: string;
   width?: string;
   align?: 'left' | 'right';
+  wrap?: boolean;
   leadingBadge?: string;
   getValue(item: T): ReactNode;
 }
@@ -84,9 +85,9 @@ export function ResourceListView<T>(props: ResourceListViewProps<T>) {
                         {props.columns.map(column => (
                           <td
                             key={column.id}
-                            className={`truncate px-3 py-3 ${column.align === 'right' ? 'text-right' : ''} ${
-                              column.id === 'name' ? 'font-medium text-slate-900' : 'text-slate-600'
-                            }`}
+                            className={`px-3 py-3 ${column.wrap ? 'whitespace-pre-wrap break-words' : 'truncate'} ${
+                              column.align === 'right' ? 'text-right' : ''
+                            } ${column.id === 'name' ? 'font-medium text-slate-900' : 'text-slate-600'}`}
                           >
                             {column.leadingBadge ? (
                               <ResourceIcon size="md" className="mr-2">

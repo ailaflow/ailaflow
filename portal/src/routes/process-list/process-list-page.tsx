@@ -97,6 +97,7 @@ export function ProcessListPage() {
           id: 'description',
           title: 'Description',
           width: '30%',
+          wrap: true,
           getValue: process => process.description
         },
         {

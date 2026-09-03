@@ -92,6 +92,7 @@ export function TableListPage() {
           id: 'description',
           title: 'Description',
           width: '52%',
+          wrap: true,
           getValue: table => table.description
         }
       ]}
