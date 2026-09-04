@@ -238,11 +238,11 @@ importers:
         specifier: ^7.15.1
         version: 7.15.1(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       sequential-workflow-designer:
-        specifier: ^0.37.3
-        version: 0.37.3(sequential-workflow-model@0.2.0)
+        specifier: ^0.40.2
+        version: 0.40.2(sequential-workflow-model@0.2.0)
       sequential-workflow-designer-react:
-        specifier: ^0.37.3
-        version: 0.37.3(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(sequential-workflow-designer@0.37.3(sequential-workflow-model@0.2.0))
+        specifier: ^0.40.2
+        version: 0.40.2(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(sequential-workflow-designer@0.40.2(sequential-workflow-model@0.2.0))
       sequential-workflow-model:
         specifier: ^0.2.0
         version: 0.2.0
@@ -1670,15 +1670,15 @@ packages:
     resolution: {integrity: sha512-1gnZf7DFcoIcajTjTwjwuDjzuz4PPcY2StKPlsGAQ1+YH20IRVrBaXSWmdjowTJ6u8Rc01PoYOGHXfP1mYcZNQ==}
     engines: {node: '>= 18'}
 
-  sequential-workflow-designer-react@0.37.3:
-    resolution: {integrity: sha512-r86OOryk2pRHtkVCTptalb2uUrbgjnWwt3d/82xcqbIQQgrjuEmsLejW40xhSyA79OG0RtT8z9M1g5emkXeIag==}
+  sequential-workflow-designer-react@0.40.2:
+    resolution: {integrity: sha512-jREND/E9tYxWggq5nxpHUXZWNW/5Wt4zayBSJx+M0H3POljneuWpeRQbgO0V+lIF0cx/1MI7Z5hB9Qcjq+Os5w==}
     peerDependencies:
       react: '>=18.2.0'
       react-dom: '>=18.2.0'
-      sequential-workflow-designer: ^0.37.3
+      sequential-workflow-designer: ^0.40.2
 
-  sequential-workflow-designer@0.37.3:
-    resolution: {integrity: sha512-cDoKxO0EgAKFs+1YI88KXZHqJ2kYVWXVjT6IY8DHbM3YsSGCCaU2lvsiFW/YOIoSzcQzHOtkm6yfucpUtqLyLA==}
+  sequential-workflow-designer@0.40.2:
+    resolution: {integrity: sha512-imLkgGrryDJzaxaAijxx5O9Omx7to+jRV+NJmaXjZiRsskm2vOcycy7MpIEsodhNMDoK1GoWyUfh2pYmfUlauA==}
     peerDependencies:
       sequential-workflow-model: ^0.2.0
 
@@ -3098,13 +3098,13 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  sequential-workflow-designer-react@0.37.3(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(sequential-workflow-designer@0.37.3(sequential-workflow-model@0.2.0)):
+  sequential-workflow-designer-react@0.40.2(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(sequential-workflow-designer@0.40.2(sequential-workflow-model@0.2.0)):
     dependencies:
       react: 19.2.6
       react-dom: 19.2.6(react@19.2.6)
-      sequential-workflow-designer: 0.37.3(sequential-workflow-model@0.2.0)
+      sequential-workflow-designer: 0.40.2(sequential-workflow-model@0.2.0)
 
-  sequential-workflow-designer@0.37.3(sequential-workflow-model@0.2.0):
+  sequential-workflow-designer@0.40.2(sequential-workflow-model@0.2.0):
     dependencies:
       sequential-workflow-model: 0.2.0
 

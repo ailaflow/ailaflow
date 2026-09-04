@@ -182,17 +182,11 @@ export function ProcessEditorContext(props: ProcessEditorContextProps) {
     }
 
     function notifyDefinitionChange() {
-      // TODO: the designer should support also controller.updateEditor() that would refresh the content of the editor.
-      // if (data.controller.isReady()) {
-      //   data.controller.updateRootComponent();
-      //   data.controller.updateBadges();
-      // }
-      // Then we don't need to clone the definition.
-      const definition = ObjectCloner.deepClone(data.definition.value);
-      update({
-        definition: wrapDefinition(definition),
-        isDirty: true
-      });
+      if (data.controller.isReady()) {
+        data.controller.updateEditor();
+        data.controller.updateRootComponent();
+        data.controller.updateBadges();
+      }
     }
 
     function getStep<S extends Step>(id: string, requiredType?: S['type']): S {
