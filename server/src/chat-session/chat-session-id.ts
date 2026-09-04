@@ -25,6 +25,10 @@ export class ChatSessionId {
     return `${this.userName}:${this.type}:${this.channelName}`;
   }
 
+  public isAdmin(): boolean {
+    return this.type === 'admin';
+  }
+
   public isTest(): boolean {
     return this.type === 'test';
   }

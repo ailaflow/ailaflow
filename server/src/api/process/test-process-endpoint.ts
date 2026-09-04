@@ -1,4 +1,4 @@
-import { ProcessExecutionResult, ProcessLog, ProcessLogLevel, testProcessRequestSchema, TestProcessUpdate } from '@aila/model';
+import { ProcessExecutionResult, ProcessLog, testProcessRequestSchema, TestProcessUpdate } from '@aila/model';
 import { SseResponse } from '../../utilities/sse-response';
 import { Endpoint } from '../framework/endpoint';
 import { Request, Response } from 'express';

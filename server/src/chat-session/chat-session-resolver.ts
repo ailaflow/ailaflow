@@ -7,7 +7,7 @@ import {
 } from '@aibindkit/express';
 import { readFileSync } from 'fs';
 import { ServerPaths } from '../core/server-paths';
-import { UserToolSetProvider } from './user-tools/user-tool-set-provider';
+import { ToolSetProvider } from './tool-set-provider';
 import { ChatSessionId } from './chat-session-id';
 import { LlmClientProvider } from '../llm/llm-client-provider';
 import { LlmProviderConfigurationError } from '../repositories/configuration/llm/llm-provider-configuration';
@@ -20,7 +20,8 @@ export class ChatSessionResolver implements BaseChatSessionResolver {
 
   public constructor(
     private readonly llmClientProvider: LlmClientProvider,
-    private readonly userToolSetProvider: UserToolSetProvider,
+    private readonly userToolSetProvider: ToolSetProvider,
+    private readonly adminToolSetProvider: ToolSetProvider,
     serverPaths: ServerPaths
   ) {
     const path = join(serverPaths.getRuntimeFolderPath(), 'assets');
@@ -58,8 +59,8 @@ export class ChatSessionResolver implements BaseChatSessionResolver {
   private resolveAdminChannel(userName: string): ResolvedChatSession {
     return {
       sessionId: ChatSessionId.createAdmin(userName).encode(),
-      backendTools: [],
-      backendToolsHash: '',
+      backendTools: this.adminToolSetProvider.tools,
+      backendToolsHash: this.adminToolSetProvider.hash,
       systemPrompt: this.adminSystemPrompt,
       getLlmClientWithSettings: abortSignal => this.getLlmClientWithSettings(abortSignal, LlmUseCase.ADMIN_CHAT)
     };

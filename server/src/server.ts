@@ -28,7 +28,7 @@ import { GetProcessEndpoint } from './api/process/get-process-endpoint';
 import { DeleteProcessEndpoint } from './api/process/delete-process-endpoint';
 import { TestProcessEndpoint } from './api/process/test-process-endpoint';
 import { GetMyProcessesEndpoint } from './api/my-process/get-my-processes-endpoint';
-import { UserToolSetProvider } from './chat-session/user-tools/user-tool-set-provider';
+import { ToolSetProvider } from './chat-session/tool-set-provider';
 import { SandboxRepository } from './repositories/sandbox/sandbox-repository';
 import { SqliteSandboxRepository } from './repositories/sandbox/sqlite-sandbox-repository';
 import { SandboxListQuerier } from './queriers/sandbox-list/sandbox-list-querier';
@@ -163,6 +163,10 @@ import { SaveProcessCronJobEndpoint } from './api/process-cron-job/save-process-
 import { DeleteProcessCronJobEndpoint } from './api/process-cron-job/delete-process-cron-job-endpoint';
 import { ProcessCronJobScheduler } from './schedulers/process-cron-job-scheduler';
 import { HttpServer } from './http-server';
+import { GetSandboxesTool } from './chat-session/admin-tools/get-sandboxes-tool';
+import { GetProcessesTool } from './chat-session/admin-tools/get-processes-tool';
+import { GetTablesTool } from './chat-session/admin-tools/get-tables-tool';
+import { TestProcessTool } from './chat-session/admin-tools/test-process-tool';
 
 export class Server {
   private isClosed = false;
@@ -322,7 +326,7 @@ export class Server {
     );
     const taskDeleter = new TaskDeleter(taskRepository, persistedExecutionRepository);
 
-    const userToolSetProvider = new UserToolSetProvider([
+    const userToolSetProvider = new ToolSetProvider([
       new GetMyProcessesTool(myProcessListQuerier),
       new GetMyTasksTool(myTaskListQuerier),
       new GetMyTaskDetailsTool(userTaskDetailsProvider),
@@ -331,8 +335,15 @@ export class Server {
       new SubmitMyTaskTool(taskResumer)
     ]);
 
+    const adminToolSetProvider = new ToolSetProvider([
+      new GetSandboxesTool(sandboxListQuerier),
+      new GetProcessesTool(processListQuerier),
+      new GetTablesTool(tableListQuerier),
+      new TestProcessTool(processManager, lazyProcessExecutor)
+    ]);
+
     const authMiddleware = new AuthMiddleware(authTokenRepository);
-    const sessionResolver = new ChatSessionResolver(llmClientProvider, userToolSetProvider, serverPaths);
+    const sessionResolver = new ChatSessionResolver(llmClientProvider, userToolSetProvider, adminToolSetProvider, serverPaths);
     const authContextResolver = new ChatAuthContextResolver();
 
     setupServer(httpServer.app, {

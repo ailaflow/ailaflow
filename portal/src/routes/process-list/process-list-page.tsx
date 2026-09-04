@@ -61,7 +61,7 @@ export function ProcessListPage() {
             return toolError(error);
           }
           return data.processes.map(process => ({
-            name: `\$${process.name}`,
+            name: `/${process.name}`,
             description: process.description,
             userAccessExpression: process.userAccessExpression
           }));
