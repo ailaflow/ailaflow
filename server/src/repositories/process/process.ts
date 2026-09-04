@@ -68,7 +68,7 @@ function extractStartVariableSchemas(definition: ProcessDefinition): Record<stri
   let count = 0;
   for (const v of definition.properties.variables) {
     if (definition.properties.startVariableNames.includes(v.name)) {
-      schemas[v.name] = v.schema.schema;
+      schemas[v.name] = v.schema;
       count++;
     }
   }

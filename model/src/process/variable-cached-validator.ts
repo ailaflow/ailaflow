@@ -1,14 +1,9 @@
 import * as z from 'zod/v4';
 import { ProcessDefinition } from './process-definition';
-import { VariableDefinition } from './variable-definition';
-
-interface CachedZod {
-  hash: string;
-  zod: z.ZodType;
-}
+import { JsonSchema, VariableDefinition } from './variable-definition';
 
 export class VariableCachedValidator {
-  private readonly cache = new Map<string, CachedZod>();
+  private readonly cache = new WeakMap<JsonSchema, z.ZodType>();
 
   public tryGet(name: string, definition: ProcessDefinition): VariableDefinition | null {
     for (const variable of definition.properties.variables) {
@@ -24,13 +19,13 @@ export class VariableCachedValidator {
     if (!variable) {
       return null;
     }
-    const cache = this.cache.get(name);
-    if (cache && cache.hash === variable.schema.hash) {
-      return cache.zod;
+    const cached = this.cache.get(variable.schema);
+    if (cached) {
+      return cached;
     }
-    const zod = { hash: variable.schema.hash, zod: z.fromJSONSchema(variable.schema.schema) };
-    this.cache.set(name, zod);
-    return zod.zod;
+    const schema = z.fromJSONSchema(variable.schema);
+    this.cache.set(variable.schema, schema);
+    return schema;
   }
 
   public validateVariableReference(name: string, definition: ProcessDefinition): string | null {
@@ -56,7 +51,7 @@ export class VariableCachedValidator {
     if (!variable) {
       return `Variable \$${name} does not exist`;
     }
-    if (variable.schema.schema.type !== type) {
+    if (variable.schema.type !== type) {
       return `Variable \$${name} must be of type ${type}`;
     }
     return null;

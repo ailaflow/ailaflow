@@ -50,7 +50,7 @@ export function VariableDefinitionsView(props: VariableDefinitionsViewProps) {
             aria-label={`Edit schema for variable ${variable.name || index + 1}`}
             title="Edit schema"
           >
-            <span className="font-medium text-slate-700">{(variable.schema.schema as { type: string }).type}</span>
+            <span className="font-medium text-slate-700">{(variable.schema as { type: string }).type}</span>
           </button>
 
           <button

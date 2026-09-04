@@ -6,6 +6,7 @@ import { DockerfileContent, ProcessDefinition, ScriptDefinition, ScriptStep } fr
 import { Sandbox } from '../repositories/sandbox/sandbox';
 import { SandboxHostPaths } from './sandbox-host-paths';
 import { Logger } from '../core/logger';
+import { fnv1a } from '@aibindkit/core';
 
 async function tryRead(path: string): Promise<string | null> {
   try {
@@ -52,7 +53,8 @@ export class SandboxMaterializer {
     for (const [stepId, script] of scriptMap.entries()) {
       const stepFolderPath = join(processFolder, stepId);
       const stepVersionPath = join(stepFolderPath, 'version');
-      if ((await tryRead(stepVersionPath)) === script.hash) {
+      const scriptHash = fnv1a(script);
+      if ((await tryRead(stepVersionPath)) === scriptHash) {
         continue;
       }
 
@@ -64,7 +66,7 @@ export class SandboxMaterializer {
         abortSignal.throwIfAborted();
       }
 
-      await fs.writeFile(stepVersionPath, script.hash);
+      await fs.writeFile(stepVersionPath, scriptHash);
     }
 
     const packageJsonPath = join(processFolder, 'package.json');

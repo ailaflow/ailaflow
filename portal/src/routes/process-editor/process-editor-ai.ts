@@ -129,7 +129,7 @@ export function useProcessEditorAi(state: ProcessEditorState, save: () => Promis
           if (!found) {
             return toolError('No target workflow step was found with the provided ID; no step was inserted');
           }
-          found.parentSequence.splice(arg.placement === 'before' ? found.index : found.index + 1, 0, arg.step);
+          found.parentSequence.splice(arg.placement === 'before' ? found.index : found.index + 1, 0, parseResult.data);
 
           state.notifyDefinitionChange();
           return toolSuccess('Workflow step was inserted');
@@ -143,7 +143,7 @@ export function useProcessEditorAi(state: ProcessEditorState, save: () => Promis
           if (!found) {
             return toolError('No workflow step was found with the replacement step ID; no step was replaced');
           }
-          found.parentSequence[found.index] = arg.step;
+          found.parentSequence[found.index] = parseResult.data;
 
           state.notifyDefinitionChange();
           return toolSuccess('Workflow step was replaced');
@@ -163,7 +163,7 @@ export function useProcessEditorAi(state: ProcessEditorState, save: () => Promis
             }
             sequence = DesignerUtils.getStepSequence(found.step, arg.branchName);
           }
-          sequence.push(arg.step);
+          sequence.push(parseResult.data);
           state.notifyDefinitionChange();
           return toolSuccess('Workflow step was added');
         },
@@ -175,7 +175,7 @@ export function useProcessEditorAi(state: ProcessEditorState, save: () => Promis
           return variables.map(v => ({
             name: v.name,
             description: v.description,
-            schema: v.schema.schema
+            schema: v.schema
           }));
         },
         async getRootVariableSchema(arg) {
@@ -184,7 +184,7 @@ export function useProcessEditorAi(state: ProcessEditorState, save: () => Promis
             return toolError(`Cannot find the \$${arg.name} variable`);
           }
           return {
-            schema: variable.schema.schema
+            schema: variable.schema
           };
         },
         async isRootStartFormEnabled() {
@@ -234,10 +234,7 @@ export function useProcessEditorAi(state: ProcessEditorState, save: () => Promis
           const variable: VariableDefinition = {
             name: arg.name,
             description: arg.description,
-            schema: {
-              hash: '~', // Will be updated on save
-              schema: arg.schema
-            }
+            schema: arg.schema
           };
           const index = variables.findIndex(v => v.name === arg.name);
           if (index < 0) {

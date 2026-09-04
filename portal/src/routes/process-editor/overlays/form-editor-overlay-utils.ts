@@ -54,7 +54,7 @@ export class FormEditorOverlayUtils {
     const exampleValue = JSON.stringify(content);
     let example = data.form.inputExamples.find(i => i.variableName === variableName);
     if (!example) {
-      example = { variableName: variableName, exampleValue };
+      example = { variableName, exampleValue };
       data.form.inputExamples.push(example);
     } else {
       example.exampleValue = exampleValue;

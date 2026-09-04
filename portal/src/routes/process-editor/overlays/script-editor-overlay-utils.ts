@@ -34,32 +34,30 @@ export class ScriptEditorOverlayUtils {
     content: string,
     mode: 'edit' | 'create'
   ): 'ok' | 'fileNotFound' | 'fileAlreadyExists' {
-    let c = data.script.contents.find(c => c.path === filePath);
+    let file = data.script.contents.find(file => file.path === filePath);
     if (mode === 'edit') {
-      if (!c) {
+      if (!file) {
         return 'fileNotFound';
       }
     } else if (mode === 'create') {
-      if (c) {
+      if (file) {
         return 'fileAlreadyExists';
       }
-      c = {
+      file = {
         path: filePath,
         mimeType: ScriptEditorOverlayUtils.resolveMimeType(filePath),
-        content: '',
-        modifiedAt: 0
+        content: ''
       };
-      data.script.contents.push(c);
+      data.script.contents.push(file);
     } else {
       throw new Error('Unsupported mode');
     }
-    c.content = content;
-    c.modifiedAt = Date.now();
+    file.content = content;
     return 'ok';
   }
 
   public static deleteFile(data: ScriptEditorOverlayData, filePath: string): boolean {
-    const index = data.script.contents.findIndex(c => c.path === filePath);
+    const index = data.script.contents.findIndex(file => file.path === filePath);
     if (index < 0) {
       return false;
     }

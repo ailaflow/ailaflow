@@ -22,7 +22,7 @@ export class ProcessVariables {
     if (!v) {
       throw new Error(`Cannot find variable: ${name}`);
     }
-    return v.schema.schema;
+    return v.schema;
   }
 
   public getZodSchema(name: string): z.ZodType {

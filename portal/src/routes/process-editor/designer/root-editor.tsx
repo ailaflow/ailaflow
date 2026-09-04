@@ -31,10 +31,7 @@ export function RootEditor(props: RootEditorProps) {
       {
         name: '',
         description: '',
-        schema: {
-          schema,
-          hash: '~' // Will be updated on save
-        }
+        schema
       }
     ]);
   }

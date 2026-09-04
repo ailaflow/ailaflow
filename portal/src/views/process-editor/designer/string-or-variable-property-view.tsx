@@ -10,7 +10,7 @@ export interface StringOrVariablePropertyViewProps {
 }
 
 export function StringOrVariablePropertyView(props: StringOrVariablePropertyViewProps) {
-  const stringVariables = props.variables.filter(variable => variable.schema.schema.type === 'string');
+  const stringVariables = props.variables.filter(variable => variable.schema.type === 'string');
 
   function changeType(type: StringOrVariable['type']) {
     if (type === props.value.type) {

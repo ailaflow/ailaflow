@@ -96,10 +96,7 @@ function createTestProcess(): Process {
             name: 'answer',
             description: '',
             schema: {
-              schema: {
-                type: 'number'
-              },
-              hash: 'schema_hash'
+              type: 'number'
             }
           }
         ],

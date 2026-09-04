@@ -58,19 +58,16 @@ function createEmptyScriptDefinition(): ScriptDefinition {
     {
       mimeType: 'text/json',
       path: 'package.json',
-      modifiedAt: 0,
       content: SCRIPT_PACKAGE_JSON
     },
     {
       mimeType: 'text/javascript',
       path: 'main.js',
-      content: SCRIPT_MAIN_JS,
-      modifiedAt: 0
+      content: SCRIPT_MAIN_JS
     }
   ];
   return {
     sandboxName: 'default',
-    hash: `~`, // Will be updated on save
     contents
   };
 }

@@ -34,7 +34,6 @@ export function ProcessEditor() {
 
     const timeout = AbortSignal.timeout(5_000);
 
-    DesignerUtils.updateDefinitionHashes(state.walker, state.definition.value);
     const hash = DesignerUtils.calcDefinitionHash(state.definition.value);
 
     const response = await apiClient.process.saveProcess(timeout, {

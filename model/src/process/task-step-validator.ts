@@ -15,7 +15,7 @@ export class TaskStepValidator {
 
     for (const name of outputVariableNames) {
       const variable = variableValidator.tryGet(name, definition);
-      if (variable && variable.schema.schema.type !== 'array') {
+      if (variable && variable.schema.type !== 'array') {
         return `Variable \$${name} must be of type array.`;
       }
     }

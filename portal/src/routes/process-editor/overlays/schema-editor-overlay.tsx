@@ -4,6 +4,7 @@ import { wrapDefinition } from 'sequential-workflow-designer-react';
 import { useState } from 'react';
 import { ProcessOverlayView } from '../../../views/process-editor/overlays/process-overlay-view';
 import { SvgIcon } from '../../../views/common/svg-icons';
+import { DefinitionPath } from '../../../core/definition-path';
 
 export function SchemaEditorOverlay() {
   const state = useProcessEditor();
@@ -11,7 +12,7 @@ export function SchemaEditorOverlay() {
   const [schema, setSchema] = useState(() => {
     const { value: s } = state.getOverlayObject<JsonSchema>(ProcessEditorOverlayType.SCHEMA_EDITOR);
     return {
-      schema: JSON.stringify(s.schema, null, 2),
+      schema: JSON.stringify(s, null, 2),
       isValid: true
     };
   });
@@ -33,18 +34,16 @@ export function SchemaEditorOverlay() {
   function ok() {
     let newSchema: JsonSchema;
     try {
-      const s = JSON.parse(schema.schema);
-      newSchema = {
-        schema: s,
-        hash: '~' // Will be updated on save
-      };
+      newSchema = JSON.parse(schema.schema) as JsonSchema;
     } catch (e) {
       return;
     }
 
-    const { value } = state.getOverlayObject<JsonSchema>(ProcessEditorOverlayType.SCHEMA_EDITOR);
-    Object.assign(value, newSchema);
-    state.setDefinition(wrapDefinition(state.definition.value), true);
+    if (!state.overlay) {
+      throw new Error('Schema editor overlay is not open');
+    }
+    DefinitionPath.writePath(state.definition.value, state.overlay.path, newSchema);
+    state.notifyDefinitionChange();
     state.closeOverlay();
   }
 

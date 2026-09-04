@@ -1,7 +1,6 @@
 import { useProcessEditor } from '../process-editor-context';
 import { ProcessOverlayView } from '../../../views/process-editor/overlays/process-overlay-view';
 import { useEffect } from 'react';
-import { wrapDefinition } from 'sequential-workflow-designer-react';
 import { ScriptOverlayView } from '../../../views/process-editor/overlays/script-overlay-view';
 import type { FileContent } from '@aila/model';
 import { FolderTreeItem, FolderTreeView } from '../../../views/process-editor/overlays/folder-tree-view';
@@ -24,7 +23,7 @@ export function ScriptEditorOverlay() {
   const selectedFile = selectedFilePath ? ScriptEditorOverlayUtils.getFile(data, selectedFilePath) : undefined;
 
   function setSelectedFilePath(path: string | undefined) {
-    state.setOverlayState({ selectedFilePath: path });
+    state.setOverlayState<ScriptEditorOverlayState>({ selectedFilePath: path });
   }
 
   useEffect(() => {
@@ -75,7 +74,6 @@ export function ScriptEditorOverlay() {
   }
 
   function ok() {
-    state.setDefinition(wrapDefinition(state.definition.value), true);
     state.closeOverlay();
   }
 
@@ -122,7 +120,6 @@ function createFolderTree(contents: FileContent[]): FolderTreeItem[] {
           type: 'file',
           mimeType: content.mimeType,
           content: content.content,
-          modifiedAt: content.modifiedAt,
           isDirty: false
         });
         break;

@@ -73,7 +73,7 @@ function createProcessManager(): ProcessManager {
       properties: {
         version: PROCESS_VERSION,
         startVariableNames: ['x'],
-        variables: [{ name: 'x', description: '', schema: { schema: { type: 'integer' }, hash: 'x' } }]
+        variables: [{ name: 'x', description: '', schema: { type: 'integer' } }]
       }
     },
     'hash',

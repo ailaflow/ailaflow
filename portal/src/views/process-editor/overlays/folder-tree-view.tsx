@@ -11,7 +11,6 @@ export type FolderTreeItem =
       type: 'file';
       mimeType: string;
       content: string;
-      modifiedAt: number;
       isDirty: boolean;
     };
 
@@ -72,7 +71,10 @@ function FolderNodeList(props: FolderTreeViewProps & { nodes: FolderTreeItem[]; 
           />
         ) : (
           <div key={node.path}>
-            <div className="flex h-7 items-center gap-1 px-3 text-xs font-medium text-slate-500" style={{ paddingLeft: `${12 + props.depth * 14}px` }}>
+            <div
+              className="flex h-7 items-center gap-1 px-3 text-xs font-medium text-slate-500"
+              style={{ paddingLeft: `${12 + props.depth * 14}px` }}
+            >
               <span className="text-slate-400">▾</span>
               <span className="truncate">{node.name}</span>
             </div>
@@ -99,13 +101,18 @@ function FileTreeRow(props: {
   onRemoveFile: (path: string) => void;
   onSelectFile: (path: string) => void;
 }) {
-  const className = props.item.path === props.currentlyOpenPath
-    ? 'group flex h-8 w-full items-center gap-2 bg-white px-3 text-left text-sm text-slate-900 shadow-sm'
-    : 'group flex h-8 w-full items-center gap-2 px-3 text-left text-sm text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900';
+  const className =
+    props.item.path === props.currentlyOpenPath
+      ? 'group flex h-8 w-full items-center gap-2 bg-white px-3 text-left text-sm text-slate-900 shadow-sm'
+      : 'group flex h-8 w-full items-center gap-2 px-3 text-left text-sm text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900';
 
   return (
     <div className={className} style={{ paddingLeft: `${12 + props.depth * 14}px` }}>
-      <button type="button" onClick={() => props.onSelectFile(props.item.path)} className="flex min-w-0 flex-1 items-center gap-2 text-left">
+      <button
+        type="button"
+        onClick={() => props.onSelectFile(props.item.path)}
+        className="flex min-w-0 flex-1 items-center gap-2 text-left"
+      >
         <span className="shrink-0 text-xs text-slate-400">◇</span>
         <span className="truncate">{props.item.name}</span>
         {props.item.isDirty && <span className="shrink-0 text-xs text-slate-400">●</span>}
