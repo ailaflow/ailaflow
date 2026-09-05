@@ -2,6 +2,7 @@ import { scriptDefinitionSchema } from './script-definition';
 import * as z from 'zod/v4';
 import { formDefinitionSchema } from './form-definition';
 import { baseStepSchema } from './base-step-model';
+import { taskCompletionPolicySchema } from '../task';
 
 // common
 
@@ -69,8 +70,11 @@ export const taskStepPropertiesSchema = z.object({
   title: stringOrVariableSchema,
   inputVariableNames: z.array(z.string()),
   outputVariableNames: z.array(z.string()),
+  metadataVariableName: z.string().optional(),
   userExpression: stringOrVariableSchema,
-  form: formDefinitionSchema
+  form: formDefinitionSchema,
+  deadline: stringOrVariableSchema.optional(),
+  completionPolicy: taskCompletionPolicySchema
 });
 
 export const taskStepSchema = baseStepSchema.extend({

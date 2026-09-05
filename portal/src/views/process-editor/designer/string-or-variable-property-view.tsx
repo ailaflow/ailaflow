@@ -1,19 +1,38 @@
 import type { StringOrVariable, VariableDefinition } from '@aila/model';
 import { EditorPropertyView } from './editor-property-view';
 
-export interface StringOrVariablePropertyViewProps {
+interface StringOrVariablePropertyViewBaseProps {
   label: string;
-  value: StringOrVariable;
   variables: VariableDefinition[];
   error?: string;
-  onValueChanged: (value: StringOrVariable) => void;
 }
+
+export type StringOrVariablePropertyViewProps = StringOrVariablePropertyViewBaseProps &
+  (
+    | {
+        optional?: false;
+        value: StringOrVariable;
+        onValueChanged: (value: StringOrVariable) => void;
+      }
+    | {
+        optional: true;
+        value: StringOrVariable | undefined;
+        onValueChanged: (value: StringOrVariable | undefined) => void;
+      }
+  );
 
 export function StringOrVariablePropertyView(props: StringOrVariablePropertyViewProps) {
   const stringVariables = props.variables.filter(variable => variable.schema.type === 'string');
 
-  function changeType(type: StringOrVariable['type']) {
-    if (type === props.value.type) {
+  function changeType(type: string) {
+    if (type === 'unset') {
+      if (props.optional) {
+        props.onValueChanged(undefined);
+      }
+      return;
+    }
+
+    if ((type !== 'string' && type !== 'variable') || type === props.value?.type) {
       return;
     }
 
@@ -25,17 +44,18 @@ export function StringOrVariablePropertyView(props: StringOrVariablePropertyView
       label={props.label}
       action={
         <select
-          value={props.value.type}
-          onChange={event => changeType(event.target.value as StringOrVariable['type'])}
+          value={props.value?.type ?? 'unset'}
+          onChange={event => changeType(event.target.value)}
           aria-label={`${props.label} type`}
           className="h-8 rounded-md border border-slate-300 bg-white px-2 text-sm font-medium text-slate-700 outline-none"
         >
+          {props.optional && <option value="unset">Not set</option>}
           <option value="string">String</option>
           <option value="variable">Variable</option>
         </select>
       }
     >
-      {props.value.type === 'string' ? (
+      {props.value?.type === 'string' && (
         <label
           className={`flex h-9 min-w-0 overflow-hidden rounded-md border bg-white ${props.error ? 'border-red-300' : 'border-slate-300'}`}
         >
@@ -47,7 +67,8 @@ export function StringOrVariablePropertyView(props: StringOrVariablePropertyView
             placeholder={props.label}
           />
         </label>
-      ) : (
+      )}
+      {props.value?.type === 'variable' && (
         <label
           className={`flex h-9 min-w-0 overflow-hidden rounded-md border bg-white ${props.error ? 'border-red-300' : 'border-slate-300'}`}
         >

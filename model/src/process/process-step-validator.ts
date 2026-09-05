@@ -6,6 +6,7 @@ import { ProcessDefinition } from './process-definition';
 import { UserAccessExpressionParser } from '../user-access';
 import { ScriptDefinitionValidator } from './script-definition-validator';
 import { TaskStepValidator } from './task-step-validator';
+import { ProcessDateParser } from './process-date-parser';
 
 export class ProcessStepValidator {
   public constructor(
@@ -71,6 +72,21 @@ export class ProcessStepValidator {
     const ueError = this.validateUserExpression(step.properties.userExpression, definition);
     if (ueError) {
       errors['properties.userExpression'] = ueError;
+    }
+
+    const deadlineError = step.properties.deadline
+      ? this.validateStringOrVariable(step.properties.deadline, definition, v => ProcessDateParser.validate(v))
+      : null;
+    if (deadlineError) {
+      errors['properties.deadline'] = deadlineError;
+    }
+
+    // TODO: validate type.
+    const metadataVariableError = step.properties.metadataVariableName
+      ? this.variableValidator.validateVariableType(step.properties.metadataVariableName, 'object', definition)
+      : null;
+    if (metadataVariableError) {
+      errors['properties.metadataVariableName'] = metadataVariableError;
     }
   }
 

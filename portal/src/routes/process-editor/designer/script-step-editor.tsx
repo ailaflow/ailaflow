@@ -3,7 +3,7 @@ import { DesignerEditorView } from '../../../views/process-editor/designer/desig
 import { StepEditorProps } from './step-editor';
 import { EditorPropertyView } from '../../../views/process-editor/designer/editor-property-view';
 import { StringEditorPropertyView } from '../../../views/process-editor/designer/string-editor-property-view';
-import { SelectEditorPropertyView } from '../../../views/process-editor/designer/select-editor-property-view';
+import { DropdownPropertyView } from '../../../views/process-editor/designer/dropdown-property-view';
 import { ProcessDefinition, ScriptStep } from '@aila/model';
 import { DefinitionPath } from '../../../core/definition-path';
 import { EnabledSubValuePreviewView } from '../../../views/process-editor/designer/sub-value-preview-view';
@@ -29,7 +29,7 @@ export function ScriptStepEditor(props: StepEditorProps) {
         </EnabledSubValuePreviewView>
       </EditorPropertyView>
 
-      <SelectEditorPropertyView
+      <DropdownPropertyView
         label="Sandbox"
         value={properties.script.sandboxName}
         options={props.state.sandboxes.map(sandbox => ({

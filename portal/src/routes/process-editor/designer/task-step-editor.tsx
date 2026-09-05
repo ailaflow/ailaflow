@@ -2,13 +2,15 @@ import { useStepEditor } from 'sequential-workflow-designer-react';
 import { DesignerEditorView } from '../../../views/process-editor/designer/designer-editor-view';
 import { StepEditorProps } from './step-editor';
 import { StringEditorPropertyView } from '../../../views/process-editor/designer/string-editor-property-view';
-import { ProcessDefinition, TaskStep } from '@aila/model';
+import { ProcessDefinition, TaskCompletionPolicy, TaskStep } from '@aila/model';
 import { EditorPropertyView } from '../../../views/process-editor/designer/editor-property-view';
 import { EnabledSubValuePreviewView } from '../../../views/process-editor/designer/sub-value-preview-view';
 import { DefinitionPath } from '../../../core/definition-path';
 import { VariableSelectorPropertyView } from '../../../views/process-editor/designer/variable-selector-property-view';
 import { ProcessEditorOverlayType } from '../process-editor-context';
 import { StringOrVariablePropertyView } from '../../../views/process-editor/designer/string-or-variable-property-view';
+import { DropdownPropertyView } from '../../../views/process-editor/designer/dropdown-property-view';
+import { VariableNamePropertyView } from '../../../views/process-editor/designer/variable-name-property-view';
 
 export function TaskStepEditor(props: StepEditorProps) {
   const { id, name, step, properties, definition, setName, setProperty } = useStepEditor<TaskStep, ProcessDefinition>();
@@ -40,7 +42,7 @@ export function TaskStepEditor(props: StepEditorProps) {
         variables={definition.properties.variables}
         variableNames={properties.inputVariableNames}
         onChange={n => setProperty('inputVariableNames', n)}
-        error={errors['properties.readableVariableNames']}
+        error={errors['properties.inputVariableNames']}
       />
 
       <VariableSelectorPropertyView
@@ -57,6 +59,34 @@ export function TaskStepEditor(props: StepEditorProps) {
         variables={definition.properties.variables}
         onValueChanged={v => setProperty('userExpression', v)}
         error={errors['properties.userExpression']}
+      />
+
+      <VariableNamePropertyView
+        label="Metadata Variable"
+        value={properties.metadataVariableName ?? ''}
+        variables={definition.properties.variables}
+        onValueChanged={value => setProperty('metadataVariableName', value === '' ? undefined : value)}
+        error={errors['properties.metadataVariableName']}
+      />
+
+      <StringOrVariablePropertyView
+        label="Deadline (UTC Format)"
+        optional
+        value={properties.deadline}
+        variables={definition.properties.variables}
+        onValueChanged={value => setProperty('deadline', value)}
+        error={errors['properties.deadline']}
+      />
+
+      <DropdownPropertyView<TaskCompletionPolicy>
+        label="Completion Policy"
+        value={properties.completionPolicy}
+        options={[
+          { label: 'All assignees', value: TaskCompletionPolicy.ALL_ASSIGNEES },
+          { label: 'Any assignee', value: TaskCompletionPolicy.ANY_ASSIGNEE }
+        ]}
+        onValueChanged={value => setProperty('completionPolicy', value)}
+        error={errors['properties.completionPolicy']}
       />
     </DesignerEditorView>
   );

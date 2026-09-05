@@ -5,5 +5,6 @@ export * from './configuration/public-url';
 export * from './process';
 export * from './resource';
 export * from './table';
+export * from './task';
 export * from './user';
 export * from './user-access';

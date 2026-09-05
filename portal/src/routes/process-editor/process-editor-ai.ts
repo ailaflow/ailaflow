@@ -6,6 +6,7 @@ import { ObjectCloner, Sequence, Step, Uid } from 'sequential-workflow-designer'
 import {
   anyStepSchema,
   NotificationStep,
+  ProcessDateParser,
   ProcessRootVariableValidator,
   ReturnStep,
   ScriptStep,
@@ -337,6 +338,65 @@ export function useProcessEditorAi(state: ProcessEditorState, save: () => Promis
           step.properties.userExpression = { type: 'variable', name: arg.variableName };
           state.notifyDefinitionChange();
           return toolSuccess('User expression was updated');
+        },
+        async taskStep_getMetadataVariableName(arg) {
+          const step = state.getStep<TaskStep>(arg.stepId, 'task');
+          return {
+            variableName: step.properties.metadataVariableName ?? null
+          };
+        },
+        async taskStep_setMetadataVariableName(arg) {
+          const step = state.getStep<TaskStep>(arg.stepId, 'task');
+          const variableName = arg.variableName === '' ? undefined : (arg.variableName ?? undefined);
+          if (variableName !== undefined) {
+            const error = state.variableValidator.validateVariableType(variableName, 'object', state.definition.value);
+            if (error) {
+              return toolError(error);
+            }
+          }
+          step.properties.metadataVariableName = variableName;
+          state.notifyDefinitionChange();
+          return toolSuccess('Metadata variable name was updated');
+        },
+        async taskStep_getDeadline(arg) {
+          const step = state.getStep<TaskStep>(arg.stepId, 'task');
+          return {
+            deadline: step.properties.deadline ?? null
+          };
+        },
+        async taskStep_setDeadline(arg) {
+          const step = state.getStep<TaskStep>(arg.stepId, 'task');
+          if (arg.deadline !== null) {
+            const error = ProcessDateParser.validate(arg.deadline);
+            if (error) {
+              return toolError(`${error}; the deadline was not updated`);
+            }
+          }
+          step.properties.deadline = arg.deadline === null ? undefined : { type: 'string', value: arg.deadline };
+          state.notifyDefinitionChange();
+          return toolSuccess('Deadline was updated');
+        },
+        async taskStep_setDeadlineVariableName(arg) {
+          const step = state.getStep<TaskStep>(arg.stepId, 'task');
+          const error = state.variableValidator.validateVariableType(arg.variableName, 'string', state.definition.value);
+          if (error) {
+            return toolError(error);
+          }
+          step.properties.deadline = { type: 'variable', name: arg.variableName };
+          state.notifyDefinitionChange();
+          return toolSuccess('Deadline was updated');
+        },
+        async taskStep_getCompletionPolicy(arg) {
+          const step = state.getStep<TaskStep>(arg.stepId, 'task');
+          return {
+            completionPolicy: step.properties.completionPolicy
+          };
+        },
+        async taskStep_setCompletionPolicy(arg) {
+          const step = state.getStep<TaskStep>(arg.stepId, 'task');
+          step.properties.completionPolicy = arg.completionPolicy;
+          state.notifyDefinitionChange();
+          return toolSuccess('Completion policy was updated');
         },
 
         async notificationStep_getUserExpression(arg) {

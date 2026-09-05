@@ -9,7 +9,8 @@ import {
   ScriptDefinition,
   ReturnStep,
   ProcessDefinition,
-  PROCESS_VERSION
+  PROCESS_VERSION,
+  TaskCompletionPolicy
 } from '@aila/model';
 
 export function createBlankDefinition(): ProcessDefinition {
@@ -102,7 +103,8 @@ const taskStep: Omit<TaskStep, 'id'> = {
     inputVariableNames: [],
     outputVariableNames: [],
     userExpression: { type: 'string', value: '' },
-    form: createEmptyFormDefinition()
+    form: createEmptyFormDefinition(),
+    completionPolicy: TaskCompletionPolicy.ALL_ASSIGNEES
   }
 };
 

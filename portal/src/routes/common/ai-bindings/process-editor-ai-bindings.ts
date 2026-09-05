@@ -1,6 +1,6 @@
 import * as z from 'zod/v4';
 import { route, routeStoreFactory, tool } from '@aibindkit/react';
-import { jsonSchema } from '@aila/model';
+import { jsonSchema, taskCompletionPolicySchema } from '@aila/model';
 
 // Conventions:
 // - don't add a dot `.` at the end of the description to reduce amount of tokens.
@@ -186,6 +186,47 @@ const processEditorRoute = route('processEditor')
       z.object({
         stepId: z.string().describe('The ID of the task step to update'),
         variableName: z.string().describe('The variable name that contains the user expression for the task step')
+      })
+    ),
+    taskStep_getMetadataVariableName: tool('Get the task metadata variable name, or null when not set').input(
+      z.object({
+        stepId: z.string().describe('The ID of the task step to read')
+      })
+    ),
+    taskStep_setMetadataVariableName: tool('Set or clear the task metadata variable').input(
+      z.object({
+        stepId: z.string().describe('The ID of the task step to update'),
+        variableName: z.string().nullable().describe('An object variable name, or null or an empty string to clear')
+      })
+    ),
+    taskStep_getDeadline: tool('Get the task deadline as a string or variable reference, or null when not set').input(
+      z.object({
+        stepId: z.string().describe('The ID of the task step to read')
+      })
+    ),
+    taskStep_setDeadline: tool('Set or clear the task deadline').input(
+      z.object({
+        stepId: z.string().describe('The ID of the task step to update'),
+        deadline: z.string().nullable().describe('Date string with an explicit time zone or Unix timestamp in milliseconds; null to clear')
+      })
+    ),
+    taskStep_setDeadlineVariableName: tool('Set the string variable containing the task deadline').input(
+      z.object({
+        stepId: z.string().describe('The ID of the task step to update'),
+        variableName: z.string().describe('The string variable name containing the deadline')
+      })
+    ),
+    taskStep_getCompletionPolicy: tool('Get the task completion policy: all_assignees or any_assignee').input(
+      z.object({
+        stepId: z.string().describe('The ID of the task step to read')
+      })
+    ),
+    taskStep_setCompletionPolicy: tool('Set the task completion policy').input(
+      z.object({
+        stepId: z.string().describe('The ID of the task step to update'),
+        completionPolicy: taskCompletionPolicySchema.describe(
+          'all_assignees requires all assignees to complete; any_assignee requires any one assignee'
+        )
       })
     ),
 

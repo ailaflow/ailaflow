@@ -12,5 +12,6 @@ export * from './process-steps';
 export * from './process-version';
 export * from './variable-cached-validator';
 export * from './script-definition';
+export * from './process-date-parser';
 export * from './task-step-validator';
 export * from './variable-definition';
