@@ -12,25 +12,30 @@ export interface DockerInfo {
 export class Docker {
   public constructor(private readonly hostCwd: string) {}
 
-  public async info(): Promise<DockerInfo> {
-    const { stderr, stdout } = await this.execDocker(['info', '--format', '{{json .}}']);
+  public async info(abortSignal: AbortSignal): Promise<DockerInfo> {
+    const { stderr, stdout } = await this.execDocker(abortSignal, ['info', '--format', '{{json .}}']);
     if (stderr.includes('Cannot connect')) {
       throw new Error('Docker is not running');
     }
     return JSON.parse(stdout);
   }
 
-  public async build(imageTag: string, dockerfilePath: string, envs: Record<string, string>) {
+  public async build(abortSignal: AbortSignal, imageTag: string, dockerfilePath: string, envs: Record<string, string>) {
     const args = ['build', '-t', imageTag];
     for (const [key, value] of Object.entries(envs)) {
       args.push('--build-arg', `${key}=${value}`);
     }
     args.push('-f', dockerfilePath, '.');
 
-    await this.execDocker(args);
+    await this.execDocker(abortSignal, args);
   }
 
-  public async run(imageTag: string, internalPort: number, options?: [name: '-v' | '--name', string][]): Promise<string> {
+  public async run(
+    abortSignal: AbortSignal,
+    imageTag: string,
+    internalPort: number,
+    options?: [name: '-v' | '--name', string][]
+  ): Promise<string> {
     const args = ['run', '-d', '-p', `127.0.0.1::${internalPort}`];
     if (options) {
       for (const o of options) {
@@ -39,13 +44,13 @@ export class Docker {
     }
     args.push(imageTag);
 
-    const { stdout } = await this.execDocker(args);
+    const { stdout } = await this.execDocker(abortSignal, args);
     const containerId = stdout.trim();
     return containerId;
   }
 
-  public async getMappedHttpTarget(containerId: string, port: number): Promise<URL> {
-    const { stdout } = await this.execDocker(['port', containerId, `${port}/tcp`]);
+  public async getMappedHttpTarget(abortSignal: AbortSignal, containerId: string, port: number): Promise<URL> {
+    const { stdout } = await this.execDocker(abortSignal, ['port', containerId, `${port}/tcp`]);
     const mapping = stdout.trim().split('\n')[0];
     const lastColon = mapping.lastIndexOf(':');
     if (lastColon === -1) {
@@ -54,12 +59,12 @@ export class Docker {
     return new URL(`http://${mapping}`);
   }
 
-  public async tryRemove(containerIdOrName: string): Promise<boolean> {
-    const { stderr } = await this.execDocker(['rm', '-f', containerIdOrName]);
+  public async tryRemove(abortSignal: AbortSignal, containerIdOrName: string): Promise<boolean> {
+    const { stderr } = await this.execDocker(abortSignal, ['rm', '-f', containerIdOrName]);
     return !stderr.includes('No such container');
   }
 
-  private execDocker(args: string[]) {
-    return execFileAsync('docker', args, { cwd: this.hostCwd });
+  private execDocker(abortSignal: AbortSignal, args: string[]) {
+    return execFileAsync('docker', args, { cwd: this.hostCwd, signal: abortSignal });
   }
 }

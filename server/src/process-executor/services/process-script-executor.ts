@@ -31,7 +31,7 @@ export class ProcessScriptExecutor {
 
     await instance.tryMaterializeProcess(abortSignal, this.process, sseHandler);
 
-    const result = await instance.execute(
+    const result = await instance.executeScript(
       abortSignal,
       {
         cwd: `/app/${this.process.name}/${stepId}`,

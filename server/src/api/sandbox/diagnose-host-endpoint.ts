@@ -1,5 +1,7 @@
 import { Endpoint } from '../framework/endpoint';
 import { SandboxHostDiagnostician, SandboxHostDiagnosticianResult } from '../../sandbox/sandbox-host-diagnostician';
+import { getEndpointAbortSignal } from '../framework/endpoint-abort-signal';
+import { Request } from 'express';
 
 export class DiagnoseHostEndpoint implements Endpoint {
   public readonly method = 'get';
@@ -9,7 +11,8 @@ export class DiagnoseHostEndpoint implements Endpoint {
 
   public constructor(private readonly diagnostician: SandboxHostDiagnostician) {}
 
-  public async handle(): Promise<SandboxHostDiagnosticianResult> {
-    return this.diagnostician.diagnose();
+  public async handle(req: Request): Promise<SandboxHostDiagnosticianResult> {
+    const abortSignal = getEndpointAbortSignal(req);
+    return this.diagnostician.diagnose(abortSignal);
   }
 }

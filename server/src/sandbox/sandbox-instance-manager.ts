@@ -24,7 +24,6 @@ export class SandboxInstanceManager {
         abortSignal,
         this.paths.getRuntimeFolderPath(),
         this.paths.getAppDataFolderPath(),
-        sandbox.name,
         sandbox,
         this.rpcHandlerProvider
       );
@@ -34,8 +33,18 @@ export class SandboxInstanceManager {
     return instance;
   }
 
-  public async stop(error?: Error) {
-    await Promise.allSettled([...this.instances.values()].map(sandbox => sandbox.tryStop(error)));
+  public tryGet(sandboxName: string): SandboxInstance | undefined {
+    return this.instances.get(sandboxName);
+  }
+
+  public async stopAll(abortSignal: AbortSignal, error?: Error) {
+    for (const instance of this.instances.values()) {
+      try {
+        await instance.tryStop(abortSignal, error);
+      } catch (err) {
+        // Ignore
+      }
+    }
     this.instances.clear();
   }
 }

@@ -2,35 +2,35 @@ import { HttpSseHandler } from '../core/http-client';
 import { ExecuteCommandUpdate } from './bridge-client';
 import { CommandResult, SandboxRuntime } from './sandbox-runtime';
 
-export interface SandboxExecutorRequest {
+export interface SandboxScriptExecutorRequest {
   executionId: string;
   cwd: string;
   scriptName: string;
   stdin?: string;
 }
 
-export class SandboxExecutorError extends Error {
+export class SandboxScriptExecutorError extends Error {
   public constructor(message: string) {
     super(message);
   }
 }
 
-export interface SandboxExecutorResult {
+export interface SandboxScriptExecutorResult {
   result: CommandResult;
   totalTime: number;
 }
 
-export class SandboxExecutor {
+export class SandboxScriptExecutor {
   public constructor(private readonly runtime: SandboxRuntime) {}
 
   public async execute(
     abortSignal: AbortSignal,
-    request: SandboxExecutorRequest,
+    request: SandboxScriptExecutorRequest,
     handler?: HttpSseHandler<ExecuteCommandUpdate>
-  ): Promise<SandboxExecutorResult> {
-    const start = Date.now();
+  ): Promise<SandboxScriptExecutorResult> {
+    const startTime = Date.now();
 
-    const result = await this.runtime.runCommand(
+    const result = await this.runtime.executeCommand(
       abortSignal,
       {
         cwd: request.cwd,
@@ -46,12 +46,12 @@ export class SandboxExecutor {
 
     if (result.code !== 0) {
       const limitedError = result.stderr.substring(0, 512);
-      throw new SandboxExecutorError(
+      throw new SandboxScriptExecutorError(
         `Script ${request.cwd}/${request.scriptName} failed with code ${result.code} and error: ${limitedError}`
       );
     }
 
-    const totalTime = Date.now() - start;
+    const totalTime = Date.now() - startTime;
     return {
       totalTime,
       result

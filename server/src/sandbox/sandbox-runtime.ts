@@ -36,16 +36,16 @@ export class SandboxRuntime {
     };
 
     const docker = new Docker(hostPaths.runtimeFolderAbsolutePath);
-    await docker.tryRemove(dockerName);
-    await docker.build(imageTag, hostPaths.dockerfileAbsolutePath, buildArgs);
+    await docker.tryRemove(abortSignal, dockerName);
+    await docker.build(abortSignal, imageTag, hostPaths.dockerfileAbsolutePath, buildArgs);
     logger.log(`Built image for +${name}`);
 
-    const containerId = await docker.run(imageTag, BRIDGE_PORT, [
+    const containerId = await docker.run(abortSignal, imageTag, BRIDGE_PORT, [
       ['--name', dockerName],
       ['-v', `${hostPaths.appFolderAbsolutePath}:/app`],
       ['-v', `${hostPaths.dataFolderAbsolutePath}:/data`]
     ]);
-    const target = await docker.getMappedHttpTarget(containerId, BRIDGE_PORT);
+    const target = await docker.getMappedHttpTarget(abortSignal, containerId, BRIDGE_PORT);
     const client = new BridgeClient(target);
 
     if (!(await checkHealth(abortSignal, client))) {
@@ -135,7 +135,7 @@ export class SandboxRuntime {
     }
   }
 
-  public async runCommand(
+  public async executeCommand(
     abortSignal: AbortSignal,
     command: ExecuteCommandRequest,
     handler?: HttpSseHandler<ExecuteCommandUpdate>
@@ -175,10 +175,11 @@ export class SandboxRuntime {
   }
 
   private triggerTryStop(error?: Error) {
-    void this.tryStop(error);
+    const abortSignal = AbortSignal.timeout(5_000);
+    void this.tryStop(abortSignal, error);
   }
 
-  public async tryStop(error?: Error): Promise<boolean> {
+  public async tryStop(abortSignal: AbortSignal, error?: Error): Promise<boolean> {
     if (!this.isRunning) {
       return false;
     }
@@ -189,10 +190,15 @@ export class SandboxRuntime {
       clearInterval(this.healthCheckIv);
     }
 
-    await this.docker.tryRemove(this.name);
+    await this.docker.tryRemove(abortSignal, this.name);
 
     this.onClose.emit(error);
-    this.logger.log(`Sandbox +${this.name} is stopped`);
+
+    let log = `Sandbox +${this.name} is stopped`;
+    if (error) {
+      log += ` due to error: ${error.message}`;
+    }
+    this.logger.log(log);
     return true;
   }
 }

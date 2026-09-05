@@ -404,7 +404,7 @@ export class Server {
       new GetSandboxesEndpoint(sandboxListQuerier),
       new DiagnoseHostEndpoint(sandboxHostDiagnostician),
       new GetSandboxEndpoint(sandboxRepository),
-      new UpsertSandboxEndpoint(sandboxRepository),
+      new UpsertSandboxEndpoint(sandboxRepository, sandboxInstanceManager),
       new ExecuteSandboxCommandEndpoint(sandboxInstanceManager),
       new GetUsersEndpoint(userListQuerier),
       new GetUserEndpoint(userRepository, userAttributesRepository),
@@ -441,9 +441,10 @@ export class Server {
       return;
     }
     this.isClosed = true;
+    const abortSignal = new AbortController().signal;
 
     this.telegramSynchronizationManager.stop();
-    await this.sandboxInstanceManager.stop();
+    await this.sandboxInstanceManager.stopAll(abortSignal);
     for (const scheduler of this.schedulers) {
       scheduler.stop();
     }

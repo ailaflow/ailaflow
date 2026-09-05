@@ -16,7 +16,7 @@ export class SandboxDependenciesInstaller {
   public async install(abortSignal: AbortSignal, process: Process, handler?: HttpSseHandler<ExecuteCommandUpdate>) {
     const startTime = Date.now();
 
-    const result = await this.runtime.runCommand(
+    const result = await this.runtime.executeCommand(
       abortSignal,
       {
         cwd: `/app/${process.name}`,

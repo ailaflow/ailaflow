@@ -3,7 +3,7 @@ import { Process } from '../repositories/process/process';
 import { Sandbox } from '../repositories/sandbox/sandbox';
 import { ExecuteCommandRequest, ExecuteCommandUpdate } from './bridge-client';
 import { SandboxDependenciesInstaller } from './sandbox-dependencies-installer';
-import { SandboxExecutor, SandboxExecutorRequest, SandboxExecutorResult } from './sandbox-executor';
+import { SandboxScriptExecutor, SandboxScriptExecutorRequest, SandboxScriptExecutorResult } from './sandbox-script-executor';
 import { SandboxHostPaths } from './sandbox-host-paths';
 import { SandboxMaterializer } from './sandbox-materializer';
 import { SandboxRpcHandlerProvider } from './sandbox-rpc-handler-provider';
@@ -14,21 +14,20 @@ export class SandboxInstance {
     abortSignal: AbortSignal,
     runtimeFolderAbsolutePath: string,
     appDataFolderAbsolutePath: string,
-    name: string,
     sandbox: Sandbox,
     rpcHandlerProvider: SandboxRpcHandlerProvider
   ): Promise<SandboxInstance> {
-    const hostPaths = new SandboxHostPaths(runtimeFolderAbsolutePath, appDataFolderAbsolutePath, name);
+    const hostPaths = new SandboxHostPaths(runtimeFolderAbsolutePath, appDataFolderAbsolutePath, sandbox.name);
 
     const materializer = new SandboxMaterializer(hostPaths);
 
     await materializer.tryMaterializeSandbox(abortSignal, sandbox);
 
-    const runtime = await SandboxRuntime.create(abortSignal, hostPaths, name, sandbox.secrets, rpcHandlerProvider);
+    const runtime = await SandboxRuntime.create(abortSignal, hostPaths, sandbox.name, sandbox.secrets, rpcHandlerProvider);
 
     const dependenciesInstaller = new SandboxDependenciesInstaller(runtime, hostPaths);
-    const executor = new SandboxExecutor(runtime);
-    return new SandboxInstance(materializer, runtime, dependenciesInstaller, executor);
+    const scriptExecutor = new SandboxScriptExecutor(runtime);
+    return new SandboxInstance(materializer, runtime, dependenciesInstaller, scriptExecutor);
   }
 
   public readonly onClose = this.runtime.onClose;
@@ -37,7 +36,7 @@ export class SandboxInstance {
     private readonly materializer: SandboxMaterializer,
     private readonly runtime: SandboxRuntime,
     private readonly dependenciesInstaller: SandboxDependenciesInstaller,
-    private readonly executor: SandboxExecutor
+    private readonly scriptExecutor: SandboxScriptExecutor
   ) {}
 
   public async tryMaterializeProcess(abortSignal: AbortSignal, process: Process, handler?: HttpSseHandler<ExecuteCommandUpdate>) {
@@ -48,23 +47,23 @@ export class SandboxInstance {
     }
   }
 
-  public execute(
-    abortSignal: AbortSignal,
-    request: SandboxExecutorRequest,
-    handler?: HttpSseHandler<ExecuteCommandUpdate>
-  ): Promise<SandboxExecutorResult> {
-    return this.executor.execute(abortSignal, request, handler);
-  }
-
-  public runCommand(
+  public executeCommand(
     abortSignal: AbortSignal,
     command: ExecuteCommandRequest,
     handler?: HttpSseHandler<ExecuteCommandUpdate>
   ): Promise<CommandResult> {
-    return this.runtime.runCommand(abortSignal, command, handler);
+    return this.runtime.executeCommand(abortSignal, command, handler);
   }
 
-  public tryStop(error?: Error): Promise<boolean> {
-    return this.runtime.tryStop(error);
+  public executeScript(
+    abortSignal: AbortSignal,
+    request: SandboxScriptExecutorRequest,
+    handler?: HttpSseHandler<ExecuteCommandUpdate>
+  ): Promise<SandboxScriptExecutorResult> {
+    return this.scriptExecutor.execute(abortSignal, request, handler);
+  }
+
+  public tryStop(abortSignal: AbortSignal, error?: Error): Promise<boolean> {
+    return this.runtime.tryStop(abortSignal, error);
   }
 }

@@ -22,7 +22,7 @@ export class ExecuteSandboxCommandEndpoint implements Endpoint {
 
     try {
       const instance = await this.sandboxInstanceManager.getOrCreate(abortController.signal, sandboxName);
-      await instance.runCommand(
+      await instance.executeCommand(
         abortController.signal,
         {
           cwd: request.cwd,
