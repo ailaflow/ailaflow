@@ -25,6 +25,10 @@ export class ChatSessionManager {
     return this.getServices().chatSessionActivator.getOrActivate(abortSignal, frontendTools, frontendToolsHash, sessionKey, authContext);
   }
 
+  public tryGetById(id: string): ChatSession | undefined {
+    return this.getServices().liveChatSessionStore.tryGetById(id);
+  }
+
   public tryGetByToken(token: string): ChatSession | undefined {
     return this.getServices().liveChatSessionStore.tryGetByToken(token);
   }

@@ -13,25 +13,40 @@ export class ProcessExecutionFinishedEventHandler implements EventHandler<Proces
   ) {}
 
   public async handle(event: ProcessExecutionFinishedEvent) {
-    if (!event.context.chatSessionId) {
+    const abortSignal = AbortSignal.timeout(5_000);
+    const session = await this.tryGetSession(abortSignal, event);
+    if (!session) {
       return;
     }
-    const abortSignal = AbortSignal.timeout(3_000);
 
-    const sessionId = ChatSessionId.decode(event.context.chatSessionId);
-    const session = sessionId.isAdmin()
-      ? await this.adminChatSessionProvider.get(abortSignal, sessionId.userName)
-      : await this.userChatSessionProvider.get(abortSignal, sessionId.isTest(), sessionId.userName, sessionId.channelName);
-
-    let m = `>>>>>>>>\nProcess "${event.processName}" finished the execution ${event.executionId}`;
+    let m = '>>>>>>>>\n';
+    m += `Process "${event.processName}" has finished. Execution ID: "${event.executionId}"\n`;
+    m += `Result: ${event.result.success ? 'success' : 'error'}\n`;
     if (event.result.success) {
-      m += ` successfully, output: ${JSON.stringify(event.result.output)}`;
+      m += 'Output:\n```json\n';
+      m += JSON.stringify(event.result.output, null, 2) + '\n';
+      m += '```\n';
+    } else if (event.result.stepId) {
+      m += `Error at step ${event.result.stepId}: ${event.result.error}\n`;
     } else {
-      m += ` with an error: ${event.result.error}`;
+      m += `Error: ${event.result.error}\n`;
     }
-    m += `\n<<<<<<<<`;
+    m += `<<<<<<<<`;
     session.queueUserMessage(m, {
       internal: true
     });
+  }
+
+  private async tryGetSession(abortSignal: AbortSignal, event: ProcessExecutionFinishedEvent) {
+    if (!event.context.chatSessionId) {
+      return undefined;
+    }
+
+    const sessionId = ChatSessionId.decode(event.context.chatSessionId);
+    if (sessionId.isAdmin()) {
+      return this.adminChatSessionProvider.tryGet(sessionId.userName);
+    }
+
+    return await this.userChatSessionProvider.get(abortSignal, sessionId.isTest(), sessionId.userName, sessionId.channelName);
   }
 }

@@ -63,9 +63,13 @@ export class TestProcessTool extends ZodTool<Arg> {
       };
     }
 
+    let m = `Process "${arg.name}" started successfully. Execution ID: "${result.executionId}"\n`;
+    m += `The process is still running, so this tool is returning before it finishes. Execution will continue in the background.\n`;
+    m += `The system will notify you when the process finishes.`;
+
     return {
       content: {
-        success: `Process "${arg.name}" test started successfully. It is running in the background, execution id: ${result.executionId}. The system will notify you when it finishes.`
+        success: m
       }
     };
   }
