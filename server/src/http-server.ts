@@ -67,7 +67,7 @@ export class HttpServer {
     for (const networkInterface of Object.values(networkInterfaces())) {
       for (const interfaceAddress of networkInterface ?? []) {
         if (interfaceAddress.family === 'IPv4') {
-          this.logger.log(` • http://${interfaceAddress.address}:${PORT}`);
+          this.logger.log(`• http://${interfaceAddress.address}:${PORT}`);
         }
       }
     }

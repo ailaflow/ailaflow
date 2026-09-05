@@ -26,7 +26,7 @@ export class SandboxRuntime {
     secrets: Record<string, string>,
     rpcHandlerProvider: SandboxRpcHandlerProvider
   ): Promise<SandboxRuntime> {
-    const logger = new Logger(`Sandbox:${name}`);
+    const logger = new Logger(SandboxRuntime.name);
 
     const imageTag = `aila_sandbox_${name}`;
     const dockerName = `aila_sandbox_${name}`;
@@ -38,7 +38,7 @@ export class SandboxRuntime {
     const docker = new Docker(hostPaths.runtimeFolderAbsolutePath);
     await docker.tryRemove(dockerName);
     await docker.build(imageTag, hostPaths.dockerfileAbsolutePath, buildArgs);
-    logger.log(`Built image with tag ${imageTag}`);
+    logger.log(`Built image for +${name}`);
 
     const containerId = await docker.run(imageTag, BRIDGE_PORT, [
       ['--name', dockerName],
@@ -49,10 +49,10 @@ export class SandboxRuntime {
     const client = new BridgeClient(target);
 
     if (!(await checkHealth(abortSignal, client))) {
-      throw new Error('Cannot reach sandbox bridge server');
+      throw new Error(`Cannot reach sandbox bridge server in +${name}`);
     }
 
-    logger.log(`Sandbox is ready`);
+    logger.log(`Sandbox +${name} is ready`);
     return new SandboxRuntime(name, client, docker, logger, rpcHandlerProvider);
   }
 
@@ -93,7 +93,7 @@ export class SandboxRuntime {
       });
     } catch (e) {
       const error = e instanceof Error ? e : new Error(String(e));
-      this.logger.error(`RPC listener failed: ${error.message}`);
+      this.logger.error(`RPC listener of +${this.name} failed: ${error.message}`);
       this.triggerTryStop(error);
     }
   }
@@ -102,7 +102,7 @@ export class SandboxRuntime {
     this.healthCheckIv = setInterval(() => {
       const elapsed = Date.now() - this.lastPingTime;
       if (elapsed > 5_000) {
-        const error = new Error(`No ping received from sandbox bridge server for ${elapsed}ms`);
+        const error = new Error(`No ping received from sandbox +${this.name} for ${elapsed}ms`);
         this.logger.error(error.message);
         this.triggerTryStop(error);
       }
@@ -131,7 +131,7 @@ export class SandboxRuntime {
       await this.client.sendRpcReply(abortSignal, result);
     } catch (e) {
       const error = (e as Error)?.message ?? String(e);
-      this.logger.error(`Failed to send ${rpc.methodName} RPC response to bridge: ${error}`);
+      this.logger.error(`Failed to send ${rpc.methodName} RPC response to +${this.name} bridge: ${error}`);
     }
   }
 
@@ -192,7 +192,7 @@ export class SandboxRuntime {
     await this.docker.tryRemove(this.name);
 
     this.onClose.emit(error);
-    this.logger.log('Sandbox is stopped');
+    this.logger.log(`Sandbox +${this.name} is stopped`);
     return true;
   }
 }

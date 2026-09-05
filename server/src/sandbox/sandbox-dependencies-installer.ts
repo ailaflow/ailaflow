@@ -31,6 +31,6 @@ export class SandboxDependenciesInstaller {
     }
 
     const endTime = Date.now();
-    this.logger.log(`Installed dependencies for process ${process.name} in sandbox ${this.paths.sandboxName} in ${endTime - startTime}ms`);
+    this.logger.log(`Installed dependencies for /${process.name}, sandbox: +${this.paths.sandboxName}, time: ${endTime - startTime}ms`);
   }
 }

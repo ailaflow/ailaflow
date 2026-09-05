@@ -13,7 +13,6 @@ import { createContext } from 'react';
 import { SequentialWorkflowDesignerController, wrapDefinition, WrappedDefinition } from 'sequential-workflow-designer-react';
 import { DefinitionWalker, Step } from 'sequential-workflow-model';
 import { DefinitionPath, DefinitionPathValue } from '../../core/definition-path';
-import { ObjectCloner } from 'sequential-workflow-designer';
 import { createBlankDefinition } from './designer-configuration';
 
 export enum ProcessEditorOverlayType {
@@ -182,6 +181,10 @@ export function ProcessEditorContext(props: ProcessEditorContextProps) {
     }
 
     function notifyDefinitionChange() {
+      const definition = wrapDefinition(data.definition.value, data.definition.isValid);
+      update({ definition, isDirty: true });
+
+      // The above lines don't trigger the designer re-rendering, so we need to manually trigger it here.
       if (data.controller.isReady()) {
         data.controller.updateEditor();
         data.controller.updateRootComponent();

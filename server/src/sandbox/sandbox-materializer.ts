@@ -35,7 +35,7 @@ export class SandboxMaterializer {
     await fs.writeFile(versionPath, sandbox.hash);
 
     abortSignal.throwIfAborted();
-    this.logger.log(`Materialized sandbox ${sandbox.name} in sandbox ${this.paths.sandboxName}`);
+    this.logger.log(`Materialized sandbox +${sandbox.name}`);
     return true;
   }
 
@@ -46,6 +46,7 @@ export class SandboxMaterializer {
       return null;
     }
 
+    let nScripts = 0;
     await fs.mkdir(processFolder, { recursive: true });
     abortSignal.throwIfAborted();
 
@@ -67,6 +68,7 @@ export class SandboxMaterializer {
       }
 
       await fs.writeFile(stepVersionPath, scriptHash);
+      nScripts++;
     }
 
     const packageJsonPath = join(processFolder, 'package.json');
@@ -76,6 +78,7 @@ export class SandboxMaterializer {
 
     return async () => {
       await fs.writeFile(processVersionPath, process.hash);
+      this.logger.log(`Materialized ${nScripts} scripts for /${process.name}, sandbox: +${this.paths.sandboxName}`);
     };
   }
 
