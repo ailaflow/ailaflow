@@ -67,7 +67,7 @@ export class StartMyProcessTool extends ZodTool<Arg> {
     }
     return {
       content: {
-        success: `Process "${arg.name}" started successfully. It is running in the background, and you will be notified when it finishes, execution id: ${result.executionId}`
+        success: `Process "${arg.name}" started successfully. It is running in the background, and you will be notified when it finishes, execution id: ${result.executionId}. The system will notify you when it finishes.`
       }
     };
   }

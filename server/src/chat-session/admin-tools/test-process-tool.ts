@@ -65,7 +65,7 @@ export class TestProcessTool extends ZodTool<Arg> {
 
     return {
       content: {
-        success: `Process "${arg.name}" test started successfully. It is running in the background, execution id: ${result.executionId}`
+        success: `Process "${arg.name}" test started successfully. It is running in the background, execution id: ${result.executionId}. The system will notify you when it finishes.`
       }
     };
   }

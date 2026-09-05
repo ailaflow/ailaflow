@@ -2,11 +2,15 @@ import { EventHandler } from '../event-handler';
 import { ProcessExecutionFinishedEvent } from './process-execution-finished-event';
 import { UserChatSessionProvider } from '../../chat-session/user-chat-session-provider';
 import { ChatSessionId } from '../../chat-session/chat-session-id';
+import { AdminChatSessionProvider } from '../../chat-session/admin-chat-session-provider';
 
 export class ProcessExecutionFinishedEventHandler implements EventHandler<ProcessExecutionFinishedEvent> {
   public readonly name = ProcessExecutionFinishedEvent.name;
 
-  public constructor(private readonly userChatSessionProvider: UserChatSessionProvider) {}
+  public constructor(
+    private readonly userChatSessionProvider: UserChatSessionProvider,
+    private readonly adminChatSessionProvider: AdminChatSessionProvider
+  ) {}
 
   public async handle(event: ProcessExecutionFinishedEvent) {
     if (!event.context.chatSessionId) {
@@ -15,7 +19,9 @@ export class ProcessExecutionFinishedEventHandler implements EventHandler<Proces
     const abortSignal = AbortSignal.timeout(3_000);
 
     const sessionId = ChatSessionId.decode(event.context.chatSessionId);
-    const session = await this.userChatSessionProvider.get(abortSignal, sessionId.isTest(), sessionId.userName, sessionId.channelName);
+    const session = sessionId.isAdmin()
+      ? await this.adminChatSessionProvider.get(abortSignal, sessionId.userName)
+      : await this.userChatSessionProvider.get(abortSignal, sessionId.isTest(), sessionId.userName, sessionId.channelName);
 
     let m = `>>>>>>>>\nProcess "${event.processName}" finished the execution ${event.executionId}`;
     if (event.result.success) {

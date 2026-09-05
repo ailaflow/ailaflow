@@ -85,6 +85,7 @@ import { GetTaskVariableValueEndpoint } from './api/my-task/get-task-variable-va
 import { SubmitMyTaskEndpoint } from './api/my-task/submit-my-task-endpoint';
 import { ProcessExecutionPersister } from './process-executor/process-execution-persister';
 import { UserChatSessionProvider } from './chat-session/user-chat-session-provider';
+import { AdminChatSessionProvider } from './chat-session/admin-chat-session-provider';
 import { ProcessExecutionResumer } from './process-executor/process-execution-resumer';
 import { UserAssignedTaskProvider } from './task/user-assigned-task-provider';
 import { Notifier } from './process-executor/services/notifier';
@@ -271,6 +272,7 @@ export class Server {
     const sessionManager = new ChatSessionManager();
     const sessionStorage = new ChatSessionStorage(chatSessionRepository);
     const userChatSessionProvider = new UserChatSessionProvider(sessionManager);
+    const adminChatSessionProvider = new AdminChatSessionProvider(sessionManager);
 
     const sandboxInstanceManager = new SandboxInstanceManager(serverPaths, sandboxRepository, rpcHandler);
 
@@ -282,7 +284,7 @@ export class Server {
     const publicUrlTester = new PublicUrlTester();
 
     const eventBus = new EventBus();
-    eventBus.registerHandler(new ProcessExecutionFinishedEventHandler(userChatSessionProvider));
+    eventBus.registerHandler(new ProcessExecutionFinishedEventHandler(userChatSessionProvider, adminChatSessionProvider));
     eventBus.registerHandler(new LlmConfigurationChangedEventHandler(llmClientProvider, sessionManager));
 
     const telegramClient = new TelegramBotApiClient();
