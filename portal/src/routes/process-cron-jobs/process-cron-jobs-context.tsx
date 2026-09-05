@@ -22,7 +22,6 @@ export interface ProcessCronJobsState {
   refreshJobs(): Promise<void>;
   save(): Promise<void>;
   deleteJob(job: ProcessCronJobDto): Promise<void>;
-  setJobEnabled(job: ProcessCronJobDto, isEnabled: boolean): Promise<void>;
   updateDraft(changes: Partial<ProcessCronJobDraftViewModel>): void;
   cancelDraft(): void;
 }
@@ -108,19 +107,6 @@ export function ProcessCronJobsContext(props: ProcessCronJobsContextProps) {
     setDraft(current => (current?.id === job.id ? null : current));
   }
 
-  async function setJobEnabled(job: ProcessCronJobDto, isEnabled: boolean): Promise<void> {
-    await apiClient.process.saveProcessCronJob(AbortSignal.timeout(10_000), {
-      insert: false,
-      id: job.id,
-      processName: job.processName,
-      expression: job.expression,
-      timeZone: job.timeZone,
-      inputValues: job.inputValues,
-      isEnabled
-    });
-    await refreshJobs();
-  }
-
   function updateDraft(changes: Partial<ProcessCronJobDraftViewModel>): void {
     setDraft(current => (current ? { ...current, ...changes } : current));
   }
@@ -142,7 +128,6 @@ export function ProcessCronJobsContext(props: ProcessCronJobsContextProps) {
     refreshJobs,
     save,
     deleteJob,
-    setJobEnabled,
     updateDraft,
     cancelDraft
   };

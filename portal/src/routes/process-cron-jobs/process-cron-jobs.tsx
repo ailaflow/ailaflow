@@ -32,18 +32,6 @@ export function ProcessCronJobs() {
     }
   }
 
-  async function toggleJob(id: string): Promise<void> {
-    const job = state.jobs.find(item => item.id === id);
-    if (!job) {
-      return;
-    }
-    try {
-      await state.setJobEnabled(job, !job.isEnabled);
-    } catch (error) {
-      window.alert(`Failed to update cron job: ${error instanceof Error ? error.message : String(error)}`);
-    }
-  }
-
   return (
     <ResourceEditorView
       icon="/"
@@ -64,7 +52,6 @@ export function ProcessCronJobs() {
         onCreate={state.createJob}
         onEdit={state.editJob}
         onDelete={job => void deleteJob(job.id)}
-        onToggle={job => void toggleJob(job.id)}
         onDraftChange={state.updateDraft}
         onSave={() => void save()}
         onCancel={state.cancelDraft}

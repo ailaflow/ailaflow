@@ -18,7 +18,6 @@ export interface ProcessCronJobsViewProps {
   onCreate(): void;
   onEdit(job: ProcessCronJobDto): void;
   onDelete(job: ProcessCronJobDto): void;
-  onToggle(job: ProcessCronJobDto): void;
   onDraftChange(changes: Partial<ProcessCronJobDraftViewModel>): void;
   onSave(): void;
   onCancel(): void;
@@ -51,7 +50,7 @@ export function ProcessCronJobsView(props: ProcessCronJobsViewProps) {
         ) : (
           <div className="grid gap-4 lg:grid-cols-2">
             {props.jobs.map(job => (
-              <CronJobItem key={job.id} job={job} onEdit={props.onEdit} onDelete={props.onDelete} onToggle={props.onToggle} />
+              <CronJobItem key={job.id} job={job} onEdit={props.onEdit} onDelete={props.onDelete} />
             ))}
           </div>
         )}
@@ -167,7 +166,6 @@ function CronJobItem(props: {
   job: ProcessCronJobDto;
   onEdit(job: ProcessCronJobDto): void;
   onDelete(job: ProcessCronJobDto): void;
-  onToggle(job: ProcessCronJobDto): void;
 }) {
   const job = props.job;
   return (
@@ -200,9 +198,6 @@ function CronJobItem(props: {
       </dl>
 
       <div className="mt-auto flex flex-wrap justify-end gap-2 border-t border-slate-100 pt-4">
-        <button className={secondaryButtonClass} type="button" onClick={() => props.onToggle(job)}>
-          {job.isEnabled ? 'Disable' : 'Enable'}
-        </button>
         <button className={secondaryButtonClass} type="button" onClick={() => props.onEdit(job)}>
           Edit
         </button>

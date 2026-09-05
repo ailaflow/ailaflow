@@ -16,12 +16,6 @@ const processCronJobsRoute = route('processCronJobs')
         cronJobId: z.string().nullable().describe('ID of the cron job to edit, or null to create a new cron job')
       })
     ),
-    setIsEnabled: tool('Enable or disable an existing cron job').input(
-      z.object({
-        id: z.string().describe('ID of the cron job to update'),
-        isEnabled: z.boolean().describe('Whether the cron job should be enabled')
-      })
-    ),
 
     // overlay
 

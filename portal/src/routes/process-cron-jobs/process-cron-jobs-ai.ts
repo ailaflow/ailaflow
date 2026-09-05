@@ -25,21 +25,6 @@ export function useProcessCronJobsAi(state: ProcessCronJobsState) {
           state.editJob(job);
           return toolSuccess('Cron job editor overlay opened');
         },
-        async setIsEnabled(arg) {
-          const job = state.jobs.find(item => item.id === arg.id);
-          if (!job) {
-            return toolError(`Cannot find cron job "${arg.id}"`);
-          }
-          if (job.isEnabled === arg.isEnabled) {
-            return toolSuccess(`Cron job is already ${arg.isEnabled ? 'enabled' : 'disabled'}`);
-          }
-          try {
-            await state.setJobEnabled(job, arg.isEnabled);
-            return toolSuccess(`Cron job ${arg.isEnabled ? 'enabled' : 'disabled'}`);
-          } catch (error) {
-            return toolError(error instanceof Error ? error : String(error));
-          }
-        },
 
         // overlay
 
