@@ -6,7 +6,7 @@ export class PublicUrlTester {
   public async test(abortSignal: AbortSignal, publicUrl: string): Promise<TestPublicUrlResponse> {
     const timeoutSignal = AbortSignal.timeout(TIMEOUT);
     const signal = AbortSignal.any([abortSignal, timeoutSignal]);
-    const healthUrl = `${publicUrl.replace(/\/+$/, '')}/health`;
+    const healthUrl = `${publicUrl}/health`;
 
     try {
       const response = await fetch(healthUrl, {

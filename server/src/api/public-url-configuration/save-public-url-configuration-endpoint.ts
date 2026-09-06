@@ -1,11 +1,11 @@
 import { savePublicUrlConfigurationRequestSchema, SavePublicUrlConfigurationResponse } from '@aila/model';
 import { Request } from 'express';
-import { PublicUrlConfiguration, PublicUrlConfigurationError } from '../../repositories/configuration/public-url/public-url-configuration';
-import { PublicUrlConfigurationRepository } from '../../repositories/configuration/public-url/public-url-configuration-repository';
+import { KvConfigurationManager } from '../../configuration/kv/kv-configuration-manager';
 import { Endpoint } from '../framework/endpoint';
 import { getEndpointAbortSignal } from '../framework/endpoint-abort-signal';
-import { EndpointError } from '../framework/endpoint-error';
 import { parseBody } from '../framework/parse-request';
+import { KvConfigurationError } from '../../repositories/configuration/kv/kv-configuration';
+import { EndpointError } from '../framework/endpoint-error';
 
 export class SavePublicUrlConfigurationEndpoint implements Endpoint {
   public readonly method = 'post';
@@ -13,19 +13,23 @@ export class SavePublicUrlConfigurationEndpoint implements Endpoint {
   public readonly auth = true;
   public readonly admin = true;
 
-  public constructor(private readonly repository: PublicUrlConfigurationRepository) {}
+  public constructor(private readonly manager: KvConfigurationManager) {}
 
   public async handle(req: Request): Promise<SavePublicUrlConfigurationResponse> {
     const request = parseBody(savePublicUrlConfigurationRequestSchema, req.body);
+    const abortSignal = getEndpointAbortSignal(req);
+    const config = await this.manager.get(abortSignal);
+
     try {
-      const configuration = PublicUrlConfiguration.create(request.publicUrl);
-      await this.repository.save(getEndpointAbortSignal(req), configuration);
-      return { publicUrl: configuration.publicUrl };
-    } catch (error) {
-      if (error instanceof PublicUrlConfigurationError) {
-        throw new EndpointError(error.message, 400);
+      config.setPublicUrl(request.publicUrl);
+    } catch (e) {
+      if (e instanceof KvConfigurationError) {
+        throw new EndpointError(e.message, 400);
       }
-      throw error;
+      throw e;
     }
+
+    await this.manager.update(abortSignal, config);
+    return { publicUrl: config.publicUrl };
   }
 }

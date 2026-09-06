@@ -1,5 +1,5 @@
 import { useLoader } from '@aibindkit/react';
-import { LlmProviderPolicy, LlmUseCase } from '@aila/model';
+import { LicenseType, LlmProviderPolicy, LlmUseCase } from '@aila/model';
 import type { GetLlmConfigurationResponse } from '@aila/model';
 import { useApiClient } from '../../auth/auth-context';
 import { ConfigurationOverviewView } from '../../views/configuration/configuration-overview-view';
@@ -11,12 +11,13 @@ export function ConfigurationOverviewPage() {
   const apiClient = useApiClient();
   const loader = useLoader(
     async abortSignal => {
-      const [host, llm, publicUrlTest] = await Promise.all([
+      const [host, llm, publicUrlTest, license] = await Promise.all([
         apiClient.sandbox.diagnoseHost(abortSignal),
         apiClient.llmConfiguration.get(abortSignal),
-        apiClient.publicUrlConfiguration.test(abortSignal, {})
+        apiClient.publicUrlConfiguration.test(abortSignal, {}),
+        apiClient.licenseConfiguration.getStatus(abortSignal)
       ]);
-      return { host, llm, publicUrlTest };
+      return { host, llm, publicUrlTest, license };
     },
     [apiClient]
   );
@@ -31,6 +32,7 @@ export function ConfigurationOverviewPage() {
   const adminChatConfigured = isLlmUseCaseConfigured(loader.data.llm, LlmUseCase.ADMIN_CHAT);
   const userChatConfigured = isLlmUseCaseConfigured(loader.data.llm, LlmUseCase.USER_CHAT);
   const agentStepConfigured = isLlmUseCaseConfigured(loader.data.llm, LlmUseCase.AGENT_STEP);
+  const licenseStatus = loader.data.license.status;
   const statuses: ConfigurationStatus[] = [
     {
       id: 'docker',
@@ -89,6 +91,19 @@ export function ConfigurationOverviewPage() {
         ? (loader.data.publicUrlTest.error ?? 'Make sure the configured URL is externally accessible.')
         : 'Configure the externally accessible URL for this Aila server.',
       action: { label: 'Configure Public URL', href: '/admin/configuration?tab=public-url' }
+    },
+    {
+      id: 'license',
+      label: 'License',
+      value: licenseStatus
+        ? `${licenseStatus.type === LicenseType.HOME ? 'Home' : 'Pro'} · ${licenseStatus.isValid ? 'Valid' : 'Invalid'}`
+        : 'Not available',
+      detail: licenseStatus ? `Last checked: ${new Date(licenseStatus.checkedAt).toLocaleString()}` : undefined,
+      isHealthy: licenseStatus?.isValid ?? false,
+      remediation: licenseStatus
+        ? 'Review your license configuration and validate your license key.'
+        : 'License status data is not available yet.',
+      action: { label: 'Configure license', href: '/admin/configuration?tab=license' }
     }
   ];
 

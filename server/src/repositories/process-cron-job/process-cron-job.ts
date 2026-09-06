@@ -1,5 +1,5 @@
 import { ProcessCronJobRun, ProcessExecutionVariableValues } from '@aila/model';
-import { randomBytes } from 'crypto';
+import { randomUUID } from 'crypto';
 import { ProcessCronJobExpressionParser } from '../../crons/process-cron-job-expression-parser';
 import { ProcessCronJobRepositoryError } from './process-cron-job-repository';
 
@@ -13,7 +13,7 @@ export class ProcessCronJob {
   ): ProcessCronJob {
     validate(expression, timeZone);
     return new ProcessCronJob(
-      randomBytes(24).toString('hex'),
+      randomUUID(),
       processName,
       expression,
       timeZone,

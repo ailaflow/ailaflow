@@ -4,14 +4,17 @@ export class PublicUrlValidator {
       return null;
     }
 
-    const trimmed = publicUrl.trim();
-    if (!trimmed) {
+    if (!publicUrl.trim()) {
       return 'Public URL is required';
+    }
+
+    if (publicUrl !== publicUrl.trim()) {
+      return 'Public URL cannot contain surrounding whitespace';
     }
 
     let url: URL;
     try {
-      url = new URL(trimmed);
+      url = new URL(publicUrl);
     } catch {
       return 'Public URL is invalid';
     }
@@ -27,6 +30,13 @@ export class PublicUrlValidator {
     }
     if (url.hash) {
       return 'Public URL cannot contain a fragment';
+    }
+    if (publicUrl.endsWith('/')) {
+      return 'Public URL cannot end with a slash';
+    }
+    const expected = `${url.origin}${url.pathname === '/' ? '' : url.pathname}`;
+    if (publicUrl !== expected) {
+      return `Public URL must be written as ${expected}`;
     }
     return null;
   }

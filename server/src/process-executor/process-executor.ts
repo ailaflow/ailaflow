@@ -2,7 +2,6 @@ import { SerializedWorkflowMachineSnapshot, WorkflowMachineInterpreter, createWo
 import { Process } from '../repositories/process/process';
 import { ProcessExecution } from './process-execution';
 import { activitySet } from './activities/activity-set';
-import { randomBytes } from 'crypto';
 import { ProcessExecutionStore } from './process-execution-store';
 import { ProcessExecutionVariableValues } from '@aila/model';
 import { ProcessExecutionSnapshotTransformer } from './process-execution-snapshot-transformer';
@@ -10,6 +9,7 @@ import { ProcessExecutionGlobalState, SerializedProcessExecutionGlobalState } fr
 import { ProcessExecutionPersister } from './process-execution-persister';
 import { ProcessExecutionServices } from './services/services';
 import { ProcessExecutionContext } from './process-execution-context';
+import { randomUUID } from 'crypto';
 
 export class ProcessExecutor {
   private readonly builder = createWorkflowMachineBuilder(activitySet);
@@ -21,7 +21,7 @@ export class ProcessExecutor {
   ) {}
 
   public initialize(context: ProcessExecutionContext, process: Process, input: ProcessExecutionVariableValues): ProcessExecution {
-    const executionId = randomBytes(24).toString('hex');
+    const executionId = randomUUID();
 
     const machine = this.builder.build(process.definition);
     const globalState = ProcessExecutionGlobalState.create(executionId, context, input, process, this.services);

@@ -37,10 +37,17 @@ test('the packaged CLI serves the API and portal', async () => {
   });
 
   try {
-    await waitForOutput(child, 'Server is running');
+    await waitForOutput(child, 'Server is listening on:');
 
     const health = await fetch(`http://127.0.0.1:${port}/health`);
     assert.equal(health.status, 200);
+
+    const license = await fetch(`http://127.0.0.1:${port}/health/license`);
+    assert.equal(license.status, 200);
+    assert.deepEqual(await license.json(), { status: null });
+
+    const licenseConfiguration = await fetch(`http://127.0.0.1:${port}/api/license-configuration`);
+    assert.equal(licenseConfiguration.status, 401);
 
     const root = await fetch(`http://127.0.0.1:${port}/`);
     assert.equal(root.status, 200);

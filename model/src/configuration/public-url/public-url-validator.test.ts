@@ -5,7 +5,7 @@ import { PublicUrlValidator } from './public-url-validator';
 test('validates public URLs with domain, IP, port, and proxy path', () => {
   assert.equal(PublicUrlValidator.validate(null), null);
   assert.equal(PublicUrlValidator.validate('https://aila.example.com'), null);
-  assert.equal(PublicUrlValidator.validate('https://aila.example.com/proxy/aila/'), null);
+  assert.equal(PublicUrlValidator.validate('https://aila.example.com/proxy/aila'), null);
   assert.equal(PublicUrlValidator.validate('http://192.168.1.20:2048/aila'), null);
 });
 
@@ -16,4 +16,23 @@ test('rejects public URLs that cannot safely compose a health path', () => {
   assert.match(PublicUrlValidator.validate('https://user:secret@aila.example.com')!, /credentials/);
   assert.match(PublicUrlValidator.validate('https://aila.example.com?source=admin')!, /query/);
   assert.match(PublicUrlValidator.validate('https://aila.example.com#status')!, /fragment/);
+});
+
+test('requires the expected URL format instead of silently normalizing input', () => {
+  for (const value of [
+    ' https://aila.example.com',
+    'https://aila.example.com ',
+    'https://aila.example.com/',
+    'https://aila.example.com/proxy/aila/',
+    'https://AILA.example.com',
+    'https://aila.example.com:443',
+    'https:aila.example.com',
+    'https://aila.example.com/a/../b',
+    'https://aila.example.com/a b',
+    'https://aila.example.com?',
+    'https://aila.example.com#'
+  ]) {
+    assert.notEqual(PublicUrlValidator.validate(value), null, value);
+  }
+  assert.equal(PublicUrlValidator.validate('https://aila.example.com/CaseSensitive/a%20b'), null);
 });

@@ -1,3 +1,10 @@
+import { KvConfigurationManager } from './configuration/kv/kv-configuration-manager';
+import { LicenseManager } from './configuration/license/license-manager';
+import { LicenseValidator } from './configuration/license/license-validator';
+import { LicenseCheckScheduler } from './schedulers/license-check-scheduler';
+import { LicenseEndpoint } from './api/license-configuration/license-status-endpoint';
+import { GetLicenseConfigurationEndpoint } from './api/license-configuration/get-license-configuration-endpoint';
+import { SaveLicenseConfigurationEndpoint } from './api/license-configuration/save-license-configuration-endpoint';
 import { ServerPaths } from './core/server-paths';
 import { SandboxInstanceManager } from './sandbox/sandbox-instance-manager';
 import { ChatSessionManager, setupServer } from '@aibindkit/express';
@@ -150,8 +157,8 @@ import { TaskListQuerier } from './queriers/task-list/task-list-querier';
 import { SqliteTaskListQuerier } from './queriers/task-list/sqlite-task-list-querier';
 import { DeleteTaskEndpoint, GetTasksEndpoint } from './api/task/tasks-endpoint';
 import { TaskDeleter } from './task/task-deleter';
-import { PublicUrlConfigurationRepository } from './repositories/configuration/public-url/public-url-configuration-repository';
-import { SqlitePublicUrlConfigurationRepository } from './repositories/configuration/public-url/sqlite-public-url-configuration-repository';
+import { KvConfigurationRepository } from './repositories/configuration/kv/kv-configuration-repository';
+import { SqliteKvConfigurationRepository } from './repositories/configuration/kv/sqlite-kv-configuration-repository';
 import { PublicUrlTester } from './configuration/public-url/public-url-tester';
 import { HealthEndpoint } from './api/health/health-endpoint';
 import { GetPublicUrlConfigurationEndpoint } from './api/public-url-configuration/get-public-url-configuration-endpoint';
@@ -192,7 +199,7 @@ export class Server {
     let tableDataRepository: TableDataRepository;
     let llmConfigurationRepository: LlmConfigurationRepository;
     let telegramConfigurationRepository: TelegramConfigurationRepository;
-    let publicUrlConfigurationRepository: PublicUrlConfigurationRepository;
+    let kvConfigurationRepository: KvConfigurationRepository;
 
     let processListQuerier: ProcessListQuerier;
     let myProcessListQuerier: MyProcessListQuerier;
@@ -225,7 +232,7 @@ export class Server {
     tableDataRepository = new SqliteTableDataRepository(sqliteDatabases);
     llmConfigurationRepository = new SqliteLlmConfigurationRepository(sqliteDatabases);
     telegramConfigurationRepository = new SqliteTelegramConfigurationRepository(sqliteDatabases);
-    publicUrlConfigurationRepository = new SqlitePublicUrlConfigurationRepository(sqliteDatabases);
+    kvConfigurationRepository = new SqliteKvConfigurationRepository(sqliteDatabases);
 
     processListQuerier = new SqliteProcessListQuerier(sqliteDatabases);
     myProcessListQuerier = new SqliteMyProcessListQuerier(sqliteDatabases);
@@ -256,7 +263,7 @@ export class Server {
       tableRepository.setup(abortSignal),
       llmConfigurationRepository.setup(abortSignal),
       telegramConfigurationRepository.setup(abortSignal),
-      publicUrlConfigurationRepository.setup(abortSignal)
+      kvConfigurationRepository.setup(abortSignal)
     ]);
 
     const processExecutionStore = new ProcessExecutionStore();
@@ -356,14 +363,21 @@ export class Server {
       middleware: authMiddleware.user
     });
 
+    const kvConfigurationManager = new KvConfigurationManager(kvConfigurationRepository);
+    const licenseManager = new LicenseManager(new LicenseValidator(), kvConfigurationManager);
+
     const schedulers: Scheduler[] = [
+      new LicenseCheckScheduler(licenseManager),
       new AuthTokenCleanupScheduler(authTokenRepository),
       new ProcessCronJobScheduler(processCronJobRepository, processManager, lazyProcessExecutor)
     ];
 
     const endpoints = [
       new HealthEndpoint(),
-      new InstallEndpoint(userRepository, userAttributesRepository, sandboxRepository, passwordHasher),
+      new LicenseEndpoint(licenseManager),
+      new GetLicenseConfigurationEndpoint(kvConfigurationManager),
+      new SaveLicenseConfigurationEndpoint(licenseManager),
+      new InstallEndpoint(userRepository, userAttributesRepository, sandboxRepository, passwordHasher, licenseManager),
       new LoginEndpoint(userRepository, authTokenRepository, passwordHasher),
       new RefreshAuthTokenEndpoint(authTokenRepository),
       new GetLlmConfigurationEndpoint(llmConfigurationRepository),
@@ -371,9 +385,9 @@ export class Server {
       new FetchLlmProviderModelsEndpoint(llmConfigurationRepository, llmClientFactory),
       new DeleteLlmProviderEndpoint(llmConfigurationRepository, eventBus),
       new SaveLlmUseCaseAssignmentsEndpoint(llmConfigurationRepository, eventBus),
-      new GetPublicUrlConfigurationEndpoint(publicUrlConfigurationRepository),
-      new SavePublicUrlConfigurationEndpoint(publicUrlConfigurationRepository),
-      new TestPublicUrlEndpoint(publicUrlConfigurationRepository, publicUrlTester),
+      new GetPublicUrlConfigurationEndpoint(kvConfigurationManager),
+      new SavePublicUrlConfigurationEndpoint(kvConfigurationManager),
+      new TestPublicUrlEndpoint(kvConfigurationManager, publicUrlTester),
       new GetMyTelegramConfigurationEndpoint(telegramConfigurationApi),
       new SaveMyTelegramBotEndpoint(telegramConfigurationApi),
       new DeleteMyTelegramBotEndpoint(telegramConfigurationApi),

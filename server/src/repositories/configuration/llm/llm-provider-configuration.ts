@@ -1,5 +1,5 @@
 import { LlmProviderConfigurationValidator } from '@aila/model';
-import { randomBytes } from 'crypto';
+import { randomUUID } from 'crypto';
 import { LlmProviderPolicy, LlmProviderType } from '@aila/model';
 
 export class LlmProviderConfigurationError extends Error {
@@ -26,14 +26,7 @@ export class LlmProviderConfiguration {
     throwIfInvalid(LlmProviderConfigurationValidator.validateName(data.name));
     throwIfInvalid(LlmProviderConfigurationValidator.validateConnection(data.type, data.url, data.apiKey));
     throwIfInvalid(LlmProviderConfigurationValidator.validateModels(data.models));
-    return new LlmProviderConfiguration(
-      data.id ?? randomBytes(24).toString('hex'),
-      data.name,
-      data.type,
-      data.url,
-      data.apiKey,
-      data.models
-    );
+    return new LlmProviderConfiguration(data.id ?? randomUUID(), data.name, data.type, data.url, data.apiKey, data.models);
   }
 
   public constructor(

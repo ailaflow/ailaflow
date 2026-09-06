@@ -8,7 +8,7 @@ const randomBytesAsync = promisify(randomBytes);
 export class AuthToken {
   public static async create(userName: string, isAdmin: boolean): Promise<AuthToken> {
     const buffer = await randomBytesAsync(64);
-    const token = buffer.toString('hex');
+    const token = buffer.toString('base64');
     const expiresAt = Date.now() + EXPIRATION_TIME;
     return new AuthToken(token, userName, expiresAt, isAdmin);
   }

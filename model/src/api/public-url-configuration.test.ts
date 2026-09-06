@@ -10,4 +10,8 @@ test('validates Public URL API requests with the shared validator', () => {
   assert.equal(testPublicUrlRequestSchema.safeParse({ publicUrl: 'http://127.0.0.1:2048' }).success, true);
   assert.equal(testPublicUrlRequestSchema.safeParse({ publicUrl: 'aila.example.com' }).success, false);
   assert.equal(testPublicUrlRequestSchema.safeParse({ publicUrl: 'https://aila.example.com?invalid=true' }).success, false);
+  for (const publicUrl of [' https://aila.example.com ', 'https://aila.example.com/', 'https://AILA.example.com']) {
+    assert.equal(savePublicUrlConfigurationRequestSchema.safeParse({ publicUrl }).success, false);
+    assert.equal(testPublicUrlRequestSchema.safeParse({ publicUrl }).success, false);
+  }
 });

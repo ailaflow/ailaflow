@@ -1,3 +1,4 @@
+import { LicenseConfigurationApiClient } from './license-configuration-api-client';
 import { HttpClient, SseTransport } from '@aibindkit/react';
 import { AuthApiClient } from './auth-api-client';
 import { InstallApiClient } from './install-api-client';
@@ -16,6 +17,7 @@ import { PublicUrlConfigurationApiClient } from './public-url-configuration-api-
 export class ApiClient {
   private readonly client: HttpClient;
   public readonly install: InstallApiClient;
+  public readonly licenseConfiguration: LicenseConfigurationApiClient;
   public readonly auth: AuthApiClient;
   public readonly chat: SseTransport;
   public readonly process: ProcessApiClient;
@@ -33,6 +35,7 @@ export class ApiClient {
   public constructor(authToken: string | null) {
     this.client = new HttpClient(this.createHeaders(authToken));
     this.install = new InstallApiClient(this.client);
+    this.licenseConfiguration = new LicenseConfigurationApiClient(this.client);
     this.auth = new AuthApiClient(this.client);
     this.chat = new SseTransport(this.client);
     this.process = new ProcessApiClient(this.client);

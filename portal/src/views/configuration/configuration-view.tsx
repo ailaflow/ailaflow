@@ -1,4 +1,4 @@
-export type ConfigurationTab = 'overview' | 'llm' | 'public-url';
+export type ConfigurationTab = 'overview' | 'llm' | 'public-url' | 'license';
 
 export interface ConfigurationViewProps {
   activeTab: ConfigurationTab;
@@ -9,7 +9,8 @@ export interface ConfigurationViewProps {
 const tabs: ReadonlyArray<{ id: ConfigurationTab; label: string }> = [
   { id: 'overview', label: 'Overview' },
   { id: 'llm', label: 'LLM' },
-  { id: 'public-url', label: 'Public URL' }
+  { id: 'public-url', label: 'Public URL' },
+  { id: 'license', label: 'License' }
 ];
 
 export function ConfigurationView(props: ConfigurationViewProps) {
@@ -17,13 +18,13 @@ export function ConfigurationView(props: ConfigurationViewProps) {
     <div className="flex h-full min-h-0 flex-col bg-slate-50">
       <div className="shrink-0 border-b border-slate-200 bg-white px-4 pt-4 sm:px-5">
         <h1 className="text-3xl font-semibold tracking-tight text-slate-900">Configuration</h1>
-        <nav className="mt-4 flex gap-5" aria-label="Configuration sections">
+        <nav className="mt-4 flex gap-4 overflow-x-auto sm:gap-5" aria-label="Configuration sections">
           {tabs.map(tab => (
             <button
               key={tab.id}
               type="button"
               onClick={() => props.onTabChange(tab.id)}
-              className={`border-b-2 px-1 pb-3 text-sm font-medium transition-colors ${
+              className={`shrink-0 border-b-2 px-1 pb-3 text-sm font-medium transition-colors ${
                 props.activeTab === tab.id
                   ? 'border-slate-900 text-slate-900'
                   : 'border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-800'

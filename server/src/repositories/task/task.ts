@@ -1,6 +1,6 @@
 import { FormDefinition, JsonSchema } from '@aila/model';
-import { randomBytes } from 'crypto';
 import { TaskVariables } from './task-variables';
+import { randomUUID } from 'node:crypto';
 
 export class Task {
   public static create(
@@ -13,7 +13,7 @@ export class Task {
     form: FormDefinition | null,
     deadline: number | null
   ) {
-    const id = randomBytes(24).toString('hex');
+    const id = randomUUID();
     const createdAt = Date.now();
     return new Task(id, title, isTest, createdBy, executionId, inputVariableNames, outputVariableSchemas, form, deadline, createdAt);
   }

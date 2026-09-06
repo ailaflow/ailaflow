@@ -1,3 +1,4 @@
+import { LicenseConfigurationPage } from './license-configuration-page';
 import { useEffect } from 'react';
 import { useSearchParams } from 'react-router';
 import { ConfigurationView } from '../../views/configuration/configuration-view';
@@ -9,7 +10,8 @@ import { PublicUrlConfigurationPage } from './public-url-configuration-page';
 export function ConfigurationPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const requestedTab = searchParams.get('tab');
-  const activeTab: ConfigurationTab = requestedTab === 'llm' || requestedTab === 'public-url' ? requestedTab : 'overview';
+  const activeTab: ConfigurationTab =
+    requestedTab === 'llm' || requestedTab === 'public-url' || requestedTab === 'license' ? requestedTab : 'overview';
 
   useEffect(() => {
     if (requestedTab !== activeTab) {
@@ -27,8 +29,10 @@ export function ConfigurationPage() {
         <ConfigurationOverviewPage />
       ) : activeTab === 'llm' ? (
         <LlmConfigurationPage />
-      ) : (
+      ) : activeTab === 'public-url' ? (
         <PublicUrlConfigurationPage />
+      ) : (
+        <LicenseConfigurationPage />
       )}
     </ConfigurationView>
   );

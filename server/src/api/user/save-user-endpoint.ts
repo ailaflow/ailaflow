@@ -3,10 +3,7 @@ import { Request } from 'express';
 import { Endpoint } from '../framework/endpoint';
 import { parseBody } from '../framework/parse-request';
 import { UserRepository, UserRepositoryError } from '../../repositories/user/user-repository';
-import {
-  UserAttributesRepository,
-  UserAttributesRepositoryError
-} from '../../repositories/user-attributes/user-attributes-repository';
+import { UserAttributesRepository, UserAttributesRepositoryError } from '../../repositories/user-attributes/user-attributes-repository';
 import { UserAttributes } from '../../repositories/user-attributes/user-attributes';
 import { PasswordHasher } from '../../repositories/user/password-hasher';
 import { EndpointError } from '../framework/endpoint-error';

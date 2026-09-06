@@ -10,8 +10,8 @@ test('tests the health endpoint below a configured proxy path', async () => {
       return Response.json({ server: 'aila', status: 'ok' });
     },
     async () => {
-      assert.deepEqual(await new PublicUrlTester().test(new AbortController().signal, 'https://aila.example.com/proxy/aila/'), {
-        publicUrl: 'https://aila.example.com/proxy/aila/',
+      assert.deepEqual(await new PublicUrlTester().test(new AbortController().signal, 'https://aila.example.com/proxy/aila'), {
+        publicUrl: 'https://aila.example.com/proxy/aila',
         isAvailable: true,
         error: null
       });
