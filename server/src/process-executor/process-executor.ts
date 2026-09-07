@@ -24,7 +24,7 @@ export class ProcessExecutor {
     const executionId = randomUUID();
 
     const machine = this.builder.build(process.definition);
-    const globalState = ProcessExecutionGlobalState.create(executionId, context, input, process, this.services);
+    const globalState = ProcessExecutionGlobalState.create(executionId, context, input, process, this.services, this);
 
     const interpreter = machine.create({
       init: () => globalState
@@ -39,7 +39,7 @@ export class ProcessExecutor {
     process: Process,
     snapshot: SerializedWorkflowMachineSnapshot<SerializedProcessExecutionGlobalState>
   ): ProcessExecution {
-    const restoredSnapshot = ProcessExecutionSnapshotTransformer.deserialize(executionId, context, process, snapshot, this.services);
+    const restoredSnapshot = ProcessExecutionSnapshotTransformer.deserialize(executionId, context, process, snapshot, this.services, this);
     const machine = this.builder.build(process.definition);
     const interpreter = machine.deserializeSnapshot(restoredSnapshot);
     const globalState = restoredSnapshot.context.globalState;

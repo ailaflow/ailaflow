@@ -12,14 +12,15 @@ export abstract class ZodTool<T = void> implements Tool {
   private readonly inputZod?: z.ZodObject;
   public readonly descriptor: ChatCompletionFunctionTool;
 
-  public constructor(name: string, description: string, inputZod?: z.ZodObject) {
+  public constructor(name: string, description: string, inputZod?: z.ZodObject, inputJsonSchema?: Record<string, unknown>) {
     this.inputZod = inputZod;
     this.descriptor = {
       type: 'function',
       function: {
         name,
         description,
-        parameters: inputZod?.toJSONSchema()
+        // We should pass `inputJsonSchema` if we don't want to perform the conversion to JSON Schema using `toJSONSchema()`.
+        parameters: inputJsonSchema ?? inputZod?.toJSONSchema()
       }
     };
   }

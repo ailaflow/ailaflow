@@ -7,7 +7,9 @@ import { TaskCreator } from '../task/task-creator';
 import { Notifier } from './services/notifier';
 import { ProcessExecutionServices } from './services/services';
 import { ProcessVariableEvaluator } from './services/process-value-evaluator';
+import { AgentSessionRunner } from './services/agent-session-runner';
 import { ProcessExecutionContext } from './process-execution-context';
+import { ProcessExecutor } from './process-executor';
 
 export interface SerializedProcessExecutionGlobalState {
   variableValues: ProcessExecutionVariableValues;
@@ -19,7 +21,8 @@ export class ProcessExecutionGlobalState {
     context: ProcessExecutionContext,
     variableValues: ProcessExecutionVariableValues,
     process: Process,
-    services: ProcessExecutionServices
+    services: ProcessExecutionServices,
+    processExecutor: ProcessExecutor
   ): ProcessExecutionGlobalState {
     const logger = new ProcessLogger();
     const variables = new ProcessVariableManager(variableValues, process.variables);
@@ -29,12 +32,15 @@ export class ProcessExecutionGlobalState {
     return new ProcessExecutionGlobalState(
       executionId,
       context,
+      process,
       logger,
       variables,
       variableEvaluator,
       scriptExecutor,
       services.taskCreator,
-      services.notifier
+      services.notifier,
+      services.agentSessionRunner,
+      processExecutor
     );
   }
 
@@ -43,9 +49,10 @@ export class ProcessExecutionGlobalState {
     context: ProcessExecutionContext,
     serialized: SerializedProcessExecutionGlobalState,
     process: Process,
-    services: ProcessExecutionServices
+    services: ProcessExecutionServices,
+    processExecutor: ProcessExecutor
   ): ProcessExecutionGlobalState {
-    return this.create(executionId, context, serialized.variableValues, process, services);
+    return this.create(executionId, context, serialized.variableValues, process, services, processExecutor);
   }
 
   public result?: {
@@ -56,12 +63,15 @@ export class ProcessExecutionGlobalState {
   public constructor(
     public readonly executionId: string,
     public readonly context: ProcessExecutionContext,
+    public readonly process: Process,
     public readonly logger: ProcessLogger,
     public readonly variables: ProcessVariableManager,
     public readonly variableEvaluator: ProcessVariableEvaluator,
     public readonly scriptExecutor: ProcessScriptExecutor,
     public readonly taskCreator: TaskCreator,
-    public readonly notifier: Notifier
+    public readonly notifier: Notifier,
+    public readonly agentSessionRunner: AgentSessionRunner,
+    public readonly processExecutor: ProcessExecutor
   ) {}
 
   public serialize(): SerializedProcessExecutionGlobalState {

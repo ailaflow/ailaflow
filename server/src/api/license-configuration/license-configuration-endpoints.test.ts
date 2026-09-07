@@ -42,7 +42,7 @@ test('returns public status separately and exposes key presence only to administ
   assert.equal(f.get.admin, true);
   assert.equal(f.save.admin, true);
   assert.deepEqual(await f.status.handle(), { status: null });
-  await assert.rejects(f.get.handle(request()), (error: unknown) => error instanceof EndpointError && error.status === 500);
+  await assert.rejects(f.get.handle(request()), { name: 'Error', message: 'License type is not set' });
   assert.deepEqual(await f.save.handle(request({ type: LicenseType.PRO, licenseKey: 'valid-secret' })), {});
   assert.deepEqual(await f.get.handle(request()), { type: LicenseType.PRO, hasLicenseKey: true });
   const status = await f.status.handle();

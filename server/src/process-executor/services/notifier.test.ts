@@ -35,6 +35,9 @@ test('persists a notification for every matched user', async () => {
       { userName: 'bob', message: 'Deployment completed' }
     ]
   );
-  assert.ok(storedNotifications.every(notification => notification.id.length === 48));
+  for (const notification of storedNotifications) {
+    assert.match(notification.id, /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
+  }
+  assert.equal(new Set(storedNotifications.map(notification => notification.id)).size, storedNotifications.length);
   assert.ok(storedNotifications.every(notification => notification.createdAt > 0));
 });

@@ -118,6 +118,8 @@ import { TableDataListQuerier } from './queriers/table-data-list/table-data-list
 import { SqliteTableDataListQuerier } from './queriers/table-data-list/sqlite-table-data-list-querier';
 import { GetTableDataEndpoint } from './api/table/get-table-data-endpoint';
 import { ReadTablePageRpcHandler } from './process-executor/rpc-handlers/read-table-page-rpc-handler';
+import { AgentSessionRunner } from './process-executor/services/agent-session-runner';
+import { AgentToolSetProviderFactory } from './chat-session/agent-tool-set-provider-factory';
 import { ProcessExecutionServices } from './process-executor/services/services';
 import { Scheduler } from './schedulers/scheduler';
 import { AuthTokenCleanupScheduler } from './schedulers/auth-token-cleanup-scheduler';
@@ -306,11 +308,16 @@ export class Server {
     const processExecutionPersister = new ProcessExecutionPersister(persistedExecutionRepository);
     const processDefinitionUpgrader = new ProcessDefinitionUpgrader();
     const processManager = new ProcessManager(processRepository, processDefinitionUpgrader);
+
+    const agentToolSetProviderFactory = new AgentToolSetProviderFactory(processListQuerier, processManager, sandboxInstanceManager);
+    const agentSessionRunner = new AgentSessionRunner(llmClientProvider, agentToolSetProviderFactory, serverPaths);
     const processExecutionServices: ProcessExecutionServices = {
       sandboxInstanceManager,
       taskCreator,
-      notifier
+      notifier,
+      agentSessionRunner
     };
+
     const processExecutor = new ProcessExecutor(processExecutionStore, processExecutionPersister, processExecutionServices);
     const lazyProcessExecutor = new LazyProcessExecutor(processExecutor, eventBus);
     const processExecutionResumeListenerStore = new ProcessExecutionResumeListenerStore();
