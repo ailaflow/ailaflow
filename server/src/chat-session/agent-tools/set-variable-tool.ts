@@ -4,7 +4,9 @@ import { ProcessExecutionStore } from '../../process-executor/process-execution-
 
 const inputSchema = z.object({ name: z.string(), value: z.unknown() });
 
-export class SetVariableTool extends ZodTool<z.infer<typeof inputSchema>> {
+type Input = z.infer<typeof inputSchema>;
+
+export class SetVariableTool extends ZodTool<Input> {
   public constructor(
     private readonly executionId: string,
     private readonly executionStore: ProcessExecutionStore
@@ -16,7 +18,7 @@ export class SetVariableTool extends ZodTool<z.infer<typeof inputSchema>> {
     );
   }
 
-  protected async handle(_signal: AbortSignal, _context: ToolContext, arg: z.infer<typeof inputSchema>): Promise<ZodToolExecutionResult> {
+  protected async handle(_signal: AbortSignal, _context: ToolContext, arg: Input): Promise<ZodToolExecutionResult> {
     const execution = this.executionStore.get(this.executionId);
     execution.writeVariable(arg.name, arg.value);
     return { content: { success: true } };
