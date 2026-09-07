@@ -87,7 +87,13 @@ const agentStep: Omit<AgentStep, 'id'> = {
   name: 'Agent',
   componentType: 'task',
   properties: {
-    prompt: ''
+    prompt: {
+      type: 'string',
+      value: ''
+    },
+    allowedProcesses: null,
+    isTerminalAllowed: false,
+    sandboxName: 'default'
   }
 };
 

@@ -12,7 +12,9 @@ const processLiteDtoSchema = z.object({
   startVariableSchemas: jsonSchema
 });
 
-export const getProcessesRequestSchema = paginationRequestSchema;
+export const getProcessesRequestSchema = paginationRequestSchema.extend({
+  search: z.string().optional()
+});
 
 export const getProcessesResponseSchema = paginationResponseSchema.extend({
   processes: z.array(processLiteDtoSchema)

@@ -38,7 +38,13 @@ export type ScriptStep = z.infer<typeof scriptStepSchema>;
 // agent step
 
 export const agentStepPropertiesSchema = z.object({
-  prompt: z.string()
+  prompt: stringOrVariableSchema.describe('The prompt that will be sent to the agent for execution'),
+  sandboxName: z.string().min(3).describe('The name of the sandbox environment where the script will be executed'),
+  allowedProcesses: z
+    .array(z.string())
+    .describe('The list of allowed processes that can be executed by the agent, if null then allow all')
+    .nullable(),
+  isTerminalAllowed: z.boolean().describe('Whether the agent is allowed to execute terminal commands on the sandbox')
 });
 
 export const agentStepSchema = baseStepSchema.extend({

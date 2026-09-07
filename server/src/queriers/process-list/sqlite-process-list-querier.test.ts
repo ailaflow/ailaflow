@@ -35,6 +35,74 @@ test('queries a name-ordered page of processes', async () => {
   db.close();
 });
 
+test('filters process names before counting and paginating, with the same matching as user search', async () => {
+  const db = new DatabaseSync(':memory:', { open: true });
+  const dbs = { modelDb: db } as SqliteDatabases;
+  const abortSignal = new AbortController().signal;
+  const repository = new SqliteProcessRepository(dbs);
+  const querier = new SqliteProcessListQuerier(dbs);
+
+  try {
+    await repository.setup(abortSignal);
+    for (const name of ['review-charlie', 'other', 'review-alpha', 'review-bravo', 'Review-uppercase']) {
+      insertProcess(db, name, false);
+    }
+
+    const firstPage = await querier.query(abortSignal, 1, 2, 'review');
+    assert.deepEqual(
+      firstPage.processes.map(process => process.name),
+      ['review-alpha', 'review-bravo']
+    );
+    assert.equal(firstPage.totalCount, 3);
+
+    const secondPage = await querier.query(abortSignal, 2, 2, 'review');
+    assert.deepEqual(
+      secondPage.processes.map(process => process.name),
+      ['review-charlie']
+    );
+    assert.equal(secondPage.totalCount, 3);
+    assert.equal(secondPage.page, 2);
+    assert.equal(secondPage.pageSize, 2);
+
+    const noMatches = await querier.query(abortSignal, 1, 2, 'missing');
+    assert.deepEqual(noMatches.processes, []);
+    assert.equal(noMatches.totalCount, 0);
+    assert.equal((await querier.query(abortSignal, 1, 20, '')).totalCount, 5);
+  } finally {
+    db.close();
+  }
+});
+
+test('treats SQL wildcards and quotes as literal process search text', async () => {
+  const db = new DatabaseSync(':memory:', { open: true });
+  const dbs = { modelDb: db } as SqliteDatabases;
+  const abortSignal = new AbortController().signal;
+  const repository = new SqliteProcessRepository(dbs);
+  const querier = new SqliteProcessListQuerier(dbs);
+
+  try {
+    await repository.setup(abortSignal);
+    for (const name of ['percent%process', 'under_score', "quote'process", 'ordinary']) {
+      insertProcess(db, name, false);
+    }
+    for (const [search, expectedName] of [
+      ['%', 'percent%process'],
+      ['_', 'under_score'],
+      ["'", "quote'process"]
+    ]) {
+      const result = await querier.query(abortSignal, 1, 20, search);
+      assert.deepEqual(
+        result.processes.map(process => process.name),
+        [expectedName]
+      );
+      assert.equal(result.totalCount, 1);
+    }
+    assert.equal((await querier.query(abortSignal, 1, 20, "' OR 1=1 --")).totalCount, 0);
+  } finally {
+    db.close();
+  }
+});
+
 function insertProcess(db: DatabaseSync, name: string, isPausable: boolean): void {
   db.prepare(
     `

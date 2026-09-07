@@ -1,16 +1,18 @@
 import { useState } from 'react';
 import { ProcessTesterChatsView } from '../../views/process-tester/process-tester-chats-view';
-import { FindUserPopup } from './find-user-popup';
+import { FindUserPopup } from '../common/popups/find-user-popup';
 import { useProcessTester } from './process-tester-context';
 import { MyChat } from '../common/my-chat/my-chat';
+import { useApiClient } from '../../auth/auth-context';
 
 export function ProcessTesterChats() {
+  const apiClient = useApiClient();
   const state = useProcessTester();
-  const [isUserSearchOpen, setIsUserSearchOpen] = useState(false);
+  const [isFindUserPopupOpen, setIsFindUserPopupOpen] = useState(false);
 
   function openUserChat(userName: string) {
     state.openUserChat(userName);
-    setIsUserSearchOpen(false);
+    setIsFindUserPopupOpen(false);
   }
 
   return (
@@ -19,13 +21,20 @@ export function ProcessTesterChats() {
         userNames={state.chatUserNames}
         currentUserName={state.currentUserName}
         activeUserName={state.activeChatUserName}
-        onOpenUserChat={() => setIsUserSearchOpen(true)}
+        onOpenUserChat={() => setIsFindUserPopupOpen(true)}
         onSelectUser={state.selectUserChat}
         onCloseUser={state.closeUserChat}
       >
         <MyChat sessionKey={`test:${state.activeChatUserName}:default`} testUserName={state.activeChatUserName} />
       </ProcessTesterChatsView>
-      {isUserSearchOpen && <FindUserPopup onSelectUser={openUserChat} onClose={() => setIsUserSearchOpen(false)} />}
+      {isFindUserPopupOpen && (
+        <FindUserPopup
+          apiClient={apiClient}
+          openedUserNames={state.chatUserNames}
+          onSelectUser={openUserChat}
+          onClose={() => setIsFindUserPopupOpen(false)}
+        />
+      )}
     </>
   );
 }

@@ -14,6 +14,8 @@ import { SequentialWorkflowDesignerController, wrapDefinition, WrappedDefinition
 import { DefinitionWalker, Step } from 'sequential-workflow-model';
 import { DefinitionPath, DefinitionPathValue } from '../../core/definition-path';
 import { createBlankDefinition } from './designer-configuration';
+import { useApiClient } from '../../auth/auth-context';
+import { ApiClient } from '../../api/api-client';
 
 export enum ProcessEditorOverlayType {
   SCHEMA_EDITOR = 'schemaEditor',
@@ -48,6 +50,7 @@ export interface ProcessEditorData {
 }
 
 export interface ProcessEditorState extends ProcessEditorData {
+  apiClient: ApiClient;
   isValid: boolean;
   setIsDirty(isDirty: boolean): void;
   setName(name: string, throwIfInvalid: boolean): void;
@@ -119,6 +122,7 @@ export interface ProcessEditorContextProps {
 }
 
 export function ProcessEditorContext(props: ProcessEditorContextProps) {
+  const apiClient = useApiClient();
   const [data, update] = useReducer(reduceState, undefined, () => createData(props));
 
   const state = useMemo<ProcessEditorState>(() => {
@@ -253,6 +257,7 @@ export function ProcessEditorContext(props: ProcessEditorContextProps) {
 
     return {
       ...data,
+      apiClient,
       isValid,
       setIsDirty,
       setName,
@@ -268,7 +273,7 @@ export function ProcessEditorContext(props: ProcessEditorContextProps) {
       getOverlayState,
       setOverlayState
     };
-  }, [data]);
+  }, [apiClient, data]);
 
   return <processEditorContext.Provider value={state}>{props.children}</processEditorContext.Provider>;
 }

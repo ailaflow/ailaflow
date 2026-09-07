@@ -47,6 +47,9 @@ export class VariableCachedValidator {
   }
 
   public validateVariableType(name: string, type: string, definition: ProcessDefinition): string | null {
+    if (!name) {
+      return 'Variable is required';
+    }
     const variable = this.tryGet(name, definition);
     if (!variable) {
       return `Variable \$${name} does not exist`;

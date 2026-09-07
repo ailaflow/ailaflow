@@ -1,20 +1,19 @@
 import type { GetUsersResponse } from '@aila/model';
 import { useEffect, useState } from 'react';
-import { useApiClient } from '../../auth/auth-context';
-import { UserSearchPopupView } from '../../views/process-tester/user-search-popup-view';
-import { useProcessTester } from './process-tester-context';
+import { SimpleItemSearchPopupView } from '../../../views/common/popups/simple-item-search-popup-view';
+import { ApiClient } from '../../../api/api-client';
 
 const USER_SEARCH_PAGE_SIZE = 50;
 const USER_SEARCH_DEBOUNCE_MS = 300;
 
 export interface FindUserPopupProps {
+  apiClient: ApiClient;
+  openedUserNames: string[];
   onSelectUser(userName: string): void;
   onClose(): void;
 }
 
 export function FindUserPopup(props: FindUserPopupProps) {
-  const apiClient = useApiClient();
-  const state = useProcessTester();
   const [search, setSearch] = useState('');
   const [result, setResult] = useState<GetUsersResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -27,7 +26,7 @@ export function FindUserPopup(props: FindUserPopupProps) {
     setResult(null);
     const timeout = window.setTimeout(async () => {
       try {
-        const response = await apiClient.user.getUsers(abortController.signal, {
+        const response = await props.apiClient.user.getUsers(abortController.signal, {
           page: 1,
           pageSize: USER_SEARCH_PAGE_SIZE,
           search: search.trim() || undefined
@@ -48,7 +47,7 @@ export function FindUserPopup(props: FindUserPopupProps) {
       window.clearTimeout(timeout);
       abortController.abort();
     };
-  }, [apiClient, search]);
+  }, [props.apiClient, search]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -61,14 +60,30 @@ export function FindUserPopup(props: FindUserPopupProps) {
   }, [props.onClose]);
 
   return (
-    <UserSearchPopupView
+    <SimpleItemSearchPopupView
+      title="Open user chat"
+      description="Find a user to add to the test chat panel."
+      closeLabel="Close user search"
+      searchLabel="Search users"
+      searchPlaceholder="Enter a user name..."
+      loadingMessage="Loading users..."
+      errorMessage="Could not load users"
+      emptyMessage="No users found."
       search={search}
-      result={result}
-      openedUserNames={state.chatUserNames}
+      items={
+        result?.users.map(user => ({
+          id: user.name,
+          label: `@${user.name}`,
+          description: user.isAdmin ? 'Admin' : 'User',
+          actionLabel: props.openedUserNames.includes(user.name) ? 'Opened' : 'Open chat',
+          isActionMuted: props.openedUserNames.includes(user.name)
+        })) ?? []
+      }
+      resultHint={result && result.totalCount > result.users.length ? 'Refine your search to see more users.' : undefined}
       isLoading={isLoading}
       error={error}
       onSearchChange={setSearch}
-      onOpenUser={props.onSelectUser}
+      onSelectItem={props.onSelectUser}
       onClose={props.onClose}
     />
   );

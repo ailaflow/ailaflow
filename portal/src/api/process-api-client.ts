@@ -26,6 +26,9 @@ export class ProcessApiClient {
       page: String(request.page),
       pageSize: String(request.pageSize)
     });
+    if (request.search !== undefined) {
+      query.set('search', request.search);
+    }
     return this.client.json(abortSignal, 'GET', `/api/processes?${query}`);
   }
 

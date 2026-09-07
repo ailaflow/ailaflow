@@ -1,5 +1,5 @@
 import { Definition, Sequence, Step } from 'sequential-workflow-model';
-import { NotificationStep, ReturnStep, ScriptStep, StringOrVariable, TaskStep } from './process-steps';
+import { AgentStep, NotificationStep, ReturnStep, ScriptStep, StringOrVariable, TaskStep } from './process-steps';
 import { VariableCachedValidator } from './variable-cached-validator';
 import { FormDefinitionValidator } from './form-definition-validator';
 import { ProcessDefinition } from './process-definition';
@@ -23,6 +23,9 @@ export class ProcessStepValidator {
       case 'script':
         this.validateScript(step as ScriptStep, errors);
         break;
+      case 'agent':
+        this.validateAgent(step as AgentStep, definition, errors);
+        break;
       case 'task':
         this.validateTask(step as TaskStep, definition, errors);
         break;
@@ -43,6 +46,16 @@ export class ProcessStepValidator {
     }
     if (!this.sandboxNames.includes(step.properties.script.sandboxName)) {
       errors['properties.script.sandboxName'] = 'No sandbox with the specified name exists.';
+    }
+  }
+
+  private validateAgent(step: AgentStep, definition: ProcessDefinition, errors: Record<string, string>) {
+    const promptError = this.validateStringOrVariable(step.properties.prompt, definition);
+    if (promptError) {
+      errors['properties.prompt'] = promptError;
+    }
+    if (!this.sandboxNames.includes(step.properties.sandboxName)) {
+      errors['properties.sandboxName'] = 'No sandbox with the specified name exists.';
     }
   }
 

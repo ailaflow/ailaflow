@@ -2,12 +2,13 @@ import { SvgIcon } from '../../common/svg-icons';
 
 export interface DisabledSubValuePreviewViewProps {
   label: string;
+  error?: string;
   onEnable: () => void;
 }
 
 export function DisabledSubValuePreviewView(props: DisabledSubValuePreviewViewProps) {
   return (
-    <SubValuePreviewView>
+    <SubValuePreviewView error={props.error}>
       <div className="flex w-full justify-center">
         <SubValuePreviewButton transparent onClick={props.onEnable}>
           {props.label}

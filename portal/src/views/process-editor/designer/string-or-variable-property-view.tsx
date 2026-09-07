@@ -4,6 +4,7 @@ import { EditorPropertyView } from './editor-property-view';
 interface StringOrVariablePropertyViewBaseProps {
   label: string;
   variables: VariableDefinition[];
+  multiline?: number;
   error?: string;
 }
 
@@ -57,15 +58,25 @@ export function StringOrVariablePropertyView(props: StringOrVariablePropertyView
     >
       {props.value?.type === 'string' && (
         <label
-          className={`flex h-9 min-w-0 overflow-hidden rounded-md border bg-white ${props.error ? 'border-red-300' : 'border-slate-300'}`}
+          className={`flex ${props.multiline === undefined ? 'h-9' : ''} min-w-0 overflow-hidden rounded-md border bg-white ${props.error ? 'border-red-300' : 'border-slate-300'}`}
         >
-          <input
-            type="text"
-            value={props.value.value}
-            onChange={event => props.onValueChanged({ type: 'string', value: event.target.value })}
-            className="h-full min-w-0 flex-1 px-2 text-sm text-slate-800 outline-none placeholder:text-slate-400"
-            placeholder={props.label}
-          />
+          {props.multiline !== undefined ? (
+            <textarea
+              rows={props.multiline}
+              value={props.value.value}
+              onChange={event => props.onValueChanged({ type: 'string', value: event.target.value })}
+              className="min-h-9 min-w-0 flex-1 resize-y px-2 py-1.5 text-sm text-slate-800 outline-none placeholder:text-slate-400"
+              placeholder={props.label}
+            />
+          ) : (
+            <input
+              type="text"
+              value={props.value.value}
+              onChange={event => props.onValueChanged({ type: 'string', value: event.target.value })}
+              className="h-full min-w-0 flex-1 px-2 text-sm text-slate-800 outline-none placeholder:text-slate-400"
+              placeholder={props.label}
+            />
+          )}
         </label>
       )}
       {props.value?.type === 'variable' && (

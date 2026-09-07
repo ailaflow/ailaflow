@@ -10,17 +10,21 @@ export class SqliteProcessListQuerier implements ProcessListQuerier {
     this.db = dbs.modelDb;
   }
 
-  public async query(_: AbortSignal, page: number, pageSize: number): Promise<GetProcessesResponse> {
-    const { totalCount } = this.db.prepare(`SELECT COUNT(*) AS totalCount FROM processes`).get() as { totalCount: number };
+  public async query(_: AbortSignal, page: number, pageSize: number, search?: string): Promise<GetProcessesResponse> {
+    const searchTerm = search ?? '';
+    const { totalCount } = this.db.prepare(`SELECT COUNT(*) AS totalCount FROM processes WHERE instr(name, ?) > 0`).get(searchTerm) as {
+      totalCount: number;
+    };
     const statement = this.db.prepare(`
       SELECT name, description, userAccessExpression, isPausable, startVariableSchemas
       FROM processes
+      WHERE instr(name, ?) > 0
       ORDER BY name
       LIMIT ? OFFSET ?
     `);
 
     return {
-      processes: mapRows(statement.all(pageSize, (page - 1) * pageSize) as unknown as ProcessRow[]),
+      processes: mapRows(statement.all(searchTerm, pageSize, (page - 1) * pageSize) as unknown as ProcessRow[]),
       totalCount,
       page,
       pageSize
