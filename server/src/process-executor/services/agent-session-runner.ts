@@ -35,8 +35,7 @@ export class AgentSessionRunner {
       step.properties.isTerminalAllowed,
       state.process,
       state.context,
-      state.variables,
-      state.processExecutor
+      state.executionId
     );
     const llm = await this.llmClientProvider.get(signal, LlmUseCase.AGENT_STEP);
 

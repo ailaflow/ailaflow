@@ -309,7 +309,12 @@ export class Server {
     const processDefinitionUpgrader = new ProcessDefinitionUpgrader();
     const processManager = new ProcessManager(processRepository, processDefinitionUpgrader);
 
-    const agentToolSetProviderFactory = new AgentToolSetProviderFactory(processListQuerier, processManager, sandboxInstanceManager);
+    const agentToolSetProviderFactory = new AgentToolSetProviderFactory(
+      processListQuerier,
+      processManager,
+      sandboxInstanceManager,
+      processExecutionStore
+    );
     const agentSessionRunner = new AgentSessionRunner(llmClientProvider, agentToolSetProviderFactory, serverPaths);
     const processExecutionServices: ProcessExecutionServices = {
       sandboxInstanceManager,

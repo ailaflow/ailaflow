@@ -3,7 +3,6 @@ import { ProcessExecutionGlobalState, SerializedProcessExecutionGlobalState } fr
 import { Process } from '../repositories/process/process';
 import { ProcessExecutionServices } from './services/services';
 import { ProcessExecutionContext } from './process-execution-context';
-import { ProcessExecutor } from './process-executor';
 
 export class ProcessExecutionSnapshotTransformer {
   public static serialize(
@@ -26,21 +25,13 @@ export class ProcessExecutionSnapshotTransformer {
     context: ProcessExecutionContext,
     process: Process,
     snapshot: SerializedWorkflowMachineSnapshot<SerializedProcessExecutionGlobalState>,
-    services: ProcessExecutionServices,
-    processExecutor: ProcessExecutor
+    services: ProcessExecutionServices
   ): SerializedWorkflowMachineSnapshot<ProcessExecutionGlobalState> {
     const output = {
       ...snapshot,
       context: {
         ...snapshot.context,
-        globalState: ProcessExecutionGlobalState.deserialize(
-          executionId,
-          context,
-          snapshot.context.globalState,
-          process,
-          services,
-          processExecutor
-        )
+        globalState: ProcessExecutionGlobalState.deserialize(executionId, context, snapshot.context.globalState, process, services)
       }
     } as unknown as SerializedWorkflowMachineSnapshot<ProcessExecutionGlobalState>;
 

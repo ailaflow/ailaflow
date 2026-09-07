@@ -12,6 +12,7 @@ import { ProcessExecutionResult, ProcessLog } from '@aila/model';
 import { ProcessExecutionPersister } from './process-execution-persister';
 import type { Process } from '../repositories/process/process';
 import { ProcessExecutionContext } from './process-execution-context';
+import { ProcessExecutor } from './process-executor';
 
 const WAIT_FOR_SIGNAL_STATE = 'WAIT_FOR_SIGNAL';
 
@@ -35,7 +36,8 @@ export class ProcessExecution {
     private readonly interpreter: WorkflowMachineInterpreter<ProcessExecutionGlobalState>,
     private readonly logger: ProcessLogger,
     private readonly variableManager: ProcessVariableManager,
-    private readonly processExecutionPersister: ProcessExecutionPersister
+    private readonly processExecutionPersister: ProcessExecutionPersister,
+    private readonly processExecutor: ProcessExecutor
   ) {}
 
   private resolveResult(): ProcessExecutionResult {
@@ -145,5 +147,21 @@ export class ProcessExecution {
 
   public writeVariable(name: string, value: unknown) {
     this.variableManager.set(name, value);
+  }
+
+  public initializeSubExecution(process: Process, input: Record<string, unknown>): ProcessExecution {
+    const parentProcessNames = this.context.parentProcessNames
+      ? [...this.context.parentProcessNames, this.process.name]
+      : [this.process.name];
+
+    return this.processExecutor.initialize(
+      {
+        startedBy: this.context.startedBy,
+        isTest: this.context.isTest,
+        parentProcessNames
+      },
+      process,
+      input
+    );
   }
 }

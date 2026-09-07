@@ -13,11 +13,11 @@ import { SandboxInstanceManager } from '../sandbox/sandbox-instance-manager';
 import { AgentSessionRunner } from './services/agent-session-runner';
 import { ProcessExecutionServices } from './services/services';
 import { ProcessExecutor } from './process-executor';
+import { ProcessExecution } from './process-execution';
 import { RunProcessTool } from '../chat-session/agent-tools/run-process-tool';
 import { ProcessExecutionStore } from './process-execution-store';
 import { ProcessExecutionPersister } from './process-execution-persister';
 import { ProcessExecutionContext } from './process-execution-context';
-import { ProcessVariableManager } from './services/process-variable-manager';
 
 const context: ProcessExecutionContext = { startedBy: 'alice', isTest: true };
 const signal = new AbortController().signal;
@@ -103,7 +103,8 @@ function createHarness(
       return execution;
     }
   }
-  const tools = new AgentToolSetProviderFactory(querier, manager, sandbox);
+  const store = new ProcessExecutionStore();
+  const tools = new AgentToolSetProviderFactory(querier, manager, sandbox, store);
   const llm = {
     get: async (_: AbortSignal, useCase: LlmUseCase) => {
       assert.equal(useCase, LlmUseCase.AGENT_STEP);
@@ -116,7 +117,6 @@ function createHarness(
   const agent = new AgentSessionRunner(llm, tools, {
     getRuntimeFolderPath: () => resolve(__dirname, '../..')
   } as ServerPaths);
-  const store = new ProcessExecutionStore();
   const executor = new TrackingProcessExecutor(
     store,
     {
@@ -139,8 +139,10 @@ function createHarness(
     });
   }
 
+  let caller: ProcessExecution | undefined;
   function runProcessTool(process: Process, input: Record<string, unknown>) {
-    const tool = new RunProcessTool(process, 'caller', context, executor);
+    caller ??= executor.initialize(context, createProcess('caller'), { prompt: '' });
+    const tool = new RunProcessTool(caller.id, process, store);
     return tool.execute(
       signal,
       { sessionId: 'test', sessionToken: 'test' },
@@ -213,7 +215,6 @@ test('process tool discovery reads every page, filters selected and pausable pro
   const processes = Array.from({ length: 105 }, (_, index) => createProcess(`process_${index}`, [], index === 0));
   const harness = createHarness({ processes });
   const parent = createProcess('parent');
-  const variables = new ProcessVariableManager({}, parent.variables);
   const selected = await harness.tools.create(
     signal,
     ['process_0', 'process_104', 'missing'],
@@ -221,15 +222,14 @@ test('process tool discovery reads every page, filters selected and pausable pro
     false,
     parent,
     context,
-    variables,
-    harness.executor
+    'parent_execution'
   );
   assert.deepEqual(harness.pages, [1, 2, 3, 4]);
   assert.deepEqual(
     selected.tools.map(tool => tool.descriptor.function.name),
     ['listVariables', 'readVariable', 'setVariable', 'run_process_process_104']
   );
-  const all = await harness.tools.create(signal, null, 'sandbox', true, parent, context, variables, harness.executor);
+  const all = await harness.tools.create(signal, null, 'sandbox', true, parent, context, 'parent_execution');
   assert.equal(all.tools.filter(tool => tool.descriptor.function.name.startsWith('run_process_')).length, 104);
   assert.ok(all.tools.some(tool => tool.descriptor.function.name === 'runTerminalCommand'));
 });
@@ -271,8 +271,7 @@ for (const allowedProcesses of [null, ['parent', 'ancestor', 'middle', 'child']]
       false,
       parent,
       { ...context, parentProcessNames: ['ancestor', 'middle'] },
-      new ProcessVariableManager({}, parent.variables),
-      harness.executor
+      'parent_execution'
     );
     assert.deepEqual(
       tools.tools.map(tool => tool.descriptor.function.name),
@@ -287,7 +286,23 @@ test('pausable processes and invalid child inputs are rejected before execution'
   const harness = createHarness({ processes: [paused, child] });
   await assert.rejects(harness.runProcessTool(paused, { prompt: '' }), /pausable/);
   assert.match((await harness.runProcessTool(child, { prompt: 123 })).content, /Invalid tool arguments/);
-  assert.deepEqual(harness.contexts, []);
+  assert.deepEqual(harness.contexts, [context]);
+});
+
+test('process tools cannot create children after their parent execution finishes', async () => {
+  const harness = createHarness();
+  await harness.run(signal, context, createProcess('parent'), { prompt: '' });
+  const tool = new RunProcessTool(harness.executionIds[0], createProcess('child'), harness.store);
+
+  await assert.rejects(
+    tool.execute(
+      signal,
+      { sessionId: 'test', sessionToken: 'test' },
+      toolCall(tool.descriptor.function.name, { prompt: '' }).message.tool_calls[0]
+    ),
+    /Cannot find the execution/
+  );
+  assert.equal(harness.executionIds.length, 1);
 });
 
 test('terminal commands use the selected sandbox and return output to the agent', async () => {
@@ -352,11 +367,11 @@ test(
     const pendingResult = harness.runProcessTool(parent, { prompt: '' });
     try {
       await requestStarted;
-      assert.equal(harness.store.get(harness.executionIds[0]).id, harness.executionIds[0]);
+      assert.equal(harness.store.get(harness.executionIds[1]).id, harness.executionIds[1]);
       finishRequest();
       const result = await pendingResult;
       assert.match(result.content, /Maximum allowed time exceeded/);
-      assert.throws(() => harness.store.get(harness.executionIds[0]), /Cannot find/);
+      assert.throws(() => harness.store.get(harness.executionIds[1]), /Cannot find/);
     } finally {
       // Activity cancellation is deferred, so let the in-flight request finish.
       finishRequest();
@@ -447,9 +462,9 @@ test('agent runtime timeout fails the step and interrupts the session', async t 
 test('repeated process tools reuse cached start variable schemas', t => {
   const process = createProcess('child');
   const getZodSchema = t.mock.method(process.variables, 'getZodSchema');
-  const executor = {} as ProcessExecutor;
-  const first = new RunProcessTool(process, 'parent', context, executor);
-  const second = new RunProcessTool(process, 'parent', context, executor);
+  const store = new ProcessExecutionStore();
+  const first = new RunProcessTool('parent_execution', process, store);
+  const second = new RunProcessTool('parent_execution', process, store);
   assert.equal(getZodSchema.mock.callCount(), 2);
   assert.equal(getZodSchema.mock.calls[0].result, getZodSchema.mock.calls[1].result);
   assert.deepEqual(first.descriptor.function.parameters, second.descriptor.function.parameters);

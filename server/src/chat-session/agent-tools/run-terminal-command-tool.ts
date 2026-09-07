@@ -7,10 +7,12 @@ const inputSchema = z.object({
   cwd: z.string().min(1).optional().describe('Working directory inside the sandbox. Defaults to /app.')
 });
 
+type Input = z.infer<typeof inputSchema>;
+
 const TERMINAL_TIMEOUT_MS = 60_000;
 const MAX_OUTPUT_LENGTH = 16_000;
 
-export class RunTerminalCommandTool extends ZodTool<z.infer<typeof inputSchema>> {
+export class RunTerminalCommandTool extends ZodTool<Input> {
   public constructor(
     private readonly sandboxName: string,
     private readonly sandboxInstanceManager: SandboxInstanceManager
@@ -22,7 +24,7 @@ export class RunTerminalCommandTool extends ZodTool<z.infer<typeof inputSchema>>
     );
   }
 
-  protected async handle(abortSignal: AbortSignal, _: ToolContext, arg: z.infer<typeof inputSchema>): Promise<ZodToolExecutionResult> {
+  protected async handle(abortSignal: AbortSignal, _: ToolContext, arg: Input): Promise<ZodToolExecutionResult> {
     const signal = AbortSignal.any([abortSignal, AbortSignal.timeout(TERMINAL_TIMEOUT_MS)]);
 
     const sandbox = await this.sandboxInstanceManager.getOrCreate(signal, this.sandboxName);

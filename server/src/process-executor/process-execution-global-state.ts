@@ -9,7 +9,6 @@ import { ProcessExecutionServices } from './services/services';
 import { ProcessVariableEvaluator } from './services/process-value-evaluator';
 import { AgentSessionRunner } from './services/agent-session-runner';
 import { ProcessExecutionContext } from './process-execution-context';
-import { ProcessExecutor } from './process-executor';
 
 export interface SerializedProcessExecutionGlobalState {
   variableValues: ProcessExecutionVariableValues;
@@ -21,8 +20,7 @@ export class ProcessExecutionGlobalState {
     context: ProcessExecutionContext,
     variableValues: ProcessExecutionVariableValues,
     process: Process,
-    services: ProcessExecutionServices,
-    processExecutor: ProcessExecutor
+    services: ProcessExecutionServices
   ): ProcessExecutionGlobalState {
     const logger = new ProcessLogger();
     const variables = new ProcessVariableManager(variableValues, process.variables);
@@ -39,8 +37,7 @@ export class ProcessExecutionGlobalState {
       scriptExecutor,
       services.taskCreator,
       services.notifier,
-      services.agentSessionRunner,
-      processExecutor
+      services.agentSessionRunner
     );
   }
 
@@ -49,10 +46,9 @@ export class ProcessExecutionGlobalState {
     context: ProcessExecutionContext,
     serialized: SerializedProcessExecutionGlobalState,
     process: Process,
-    services: ProcessExecutionServices,
-    processExecutor: ProcessExecutor
+    services: ProcessExecutionServices
   ): ProcessExecutionGlobalState {
-    return this.create(executionId, context, serialized.variableValues, process, services, processExecutor);
+    return this.create(executionId, context, serialized.variableValues, process, services);
   }
 
   public result?: {
@@ -70,8 +66,7 @@ export class ProcessExecutionGlobalState {
     public readonly scriptExecutor: ProcessScriptExecutor,
     public readonly taskCreator: TaskCreator,
     public readonly notifier: Notifier,
-    public readonly agentSessionRunner: AgentSessionRunner,
-    public readonly processExecutor: ProcessExecutor
+    public readonly agentSessionRunner: AgentSessionRunner
   ) {}
 
   public serialize(): SerializedProcessExecutionGlobalState {

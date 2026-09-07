@@ -1,10 +1,8 @@
-import { VariableDefinition } from '@aila/model';
 import { Tool } from '@aibindkit/llm';
 import { ProcessListQuerier } from '../queriers/process-list/process-list-querier';
 import { ProcessManager } from '../process/process-manager';
 import { ProcessExecutionContext } from '../process-executor/process-execution-context';
-import { ProcessVariableManager } from '../process-executor/services/process-variable-manager';
-import { ProcessExecutor } from '../process-executor/process-executor';
+import { ProcessExecutionStore } from '../process-executor/process-execution-store';
 import { SandboxInstanceManager } from '../sandbox/sandbox-instance-manager';
 import { ToolSetProvider } from './tool-set-provider';
 import { ListVariablesTool } from './agent-tools/list-variables-tool';
@@ -20,7 +18,8 @@ export class AgentToolSetProviderFactory {
   public constructor(
     private readonly processListQuerier: ProcessListQuerier,
     private readonly processManager: ProcessManager,
-    private readonly sandboxInstanceManager: SandboxInstanceManager
+    private readonly sandboxInstanceManager: SandboxInstanceManager,
+    private readonly executionStore: ProcessExecutionStore
   ) {}
 
   public async create(
@@ -30,19 +29,21 @@ export class AgentToolSetProviderFactory {
     isTerminalAllowed: boolean,
     process: Process,
     context: ProcessExecutionContext,
-    variableManager: ProcessVariableManager,
-    processExecutor: ProcessExecutor
+    executionId: string
   ): Promise<ToolSetProvider> {
-    const tools: Tool[] = [
-      new ListVariablesTool(process.definition.properties.variables),
-      new ReadVariableTool(variableManager),
-      new SetVariableTool(variableManager)
-    ];
-    await this.addProcessTools(abortSignal, allowedProcesses, process.name, context, tools, processExecutor);
+    const tools: Tool[] = [];
+    this.addVariableTools(executionId, tools, process);
+    await this.addProcessTools(abortSignal, allowedProcesses, process.name, context, tools, executionId);
     if (isTerminalAllowed) {
-      tools.push(new RunTerminalCommandTool(sandboxName, this.sandboxInstanceManager));
+      this.addTerminalTools(sandboxName, tools);
     }
     return new ToolSetProvider(tools);
+  }
+
+  private addVariableTools(executionId: string, tools: Tool[], process: Process) {
+    tools.push(new ListVariablesTool(process.definition.properties.variables));
+    tools.push(new ReadVariableTool(executionId, this.executionStore));
+    tools.push(new SetVariableTool(executionId, this.executionStore));
   }
 
   private async addProcessTools(
@@ -51,7 +52,7 @@ export class AgentToolSetProviderFactory {
     currentProcessName: string,
     context: ProcessExecutionContext,
     tools: Tool[],
-    processExecutor: ProcessExecutor
+    executionId: string
   ) {
     if (allowedProcesses === null || allowedProcesses.length > 0) {
       // TODO: Filter allowed non-pausable processes in the database instead of loading every page.
@@ -77,7 +78,7 @@ export class AgentToolSetProviderFactory {
           if (process.isPausable) {
             continue;
           }
-          tools.push(new RunProcessTool(process, currentProcessName, context, processExecutor));
+          tools.push(new RunProcessTool(executionId, process, this.executionStore));
         }
         if (result.processes.length === 0 || page * result.pageSize >= result.totalCount) {
           break;
@@ -85,5 +86,9 @@ export class AgentToolSetProviderFactory {
       }
     }
     return tools;
+  }
+
+  private addTerminalTools(sandboxName: string, tools: Tool[]) {
+    tools.push(new RunTerminalCommandTool(sandboxName, this.sandboxInstanceManager));
   }
 }

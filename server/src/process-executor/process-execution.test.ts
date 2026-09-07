@@ -4,6 +4,7 @@ import { ProcessExecutionVariableValues } from '@aila/model';
 import { createActivitySet, createSignalActivity, createWorkflowMachineBuilder } from 'sequential-workflow-machine';
 import { Definition, Step } from 'sequential-workflow-model';
 import { ProcessExecution } from './process-execution';
+import { ProcessExecutor } from './process-executor';
 import { ProcessExecutionGlobalState } from './process-execution-global-state';
 import { ProcessLogger } from './services/process-logger';
 import { ProcessVariableManager } from './services/process-variable-manager';
@@ -55,8 +56,7 @@ test('process execution signals the first wait and pauses on a later wait', asyn
         {} as ProcessExecutionGlobalState['scriptExecutor'],
         {} as ProcessExecutionGlobalState['taskCreator'],
         {} as Notifier,
-        {} as ProcessExecutionGlobalState['agentSessionRunner'],
-        {} as ProcessExecutionGlobalState['processExecutor']
+        {} as ProcessExecutionGlobalState['agentSessionRunner']
       )
   });
 
@@ -74,7 +74,8 @@ test('process execution signals the first wait and pauses on a later wait', asyn
           clearTimeout(timeout);
           resolve(interpreter.getSnapshot().tryGetCurrentStepId());
         }
-      } as unknown as ProcessExecutionPersister
+      } as unknown as ProcessExecutionPersister,
+      {} as ProcessExecutor
     );
 
     execution.run(new AbortController().signal, {
@@ -120,8 +121,7 @@ test('process execution fails when pause persistence fails', async () => {
         {} as ProcessExecutionGlobalState['scriptExecutor'],
         {} as ProcessExecutionGlobalState['taskCreator'],
         {} as Notifier,
-        {} as ProcessExecutionGlobalState['agentSessionRunner'],
-        {} as ProcessExecutionGlobalState['processExecutor']
+        {} as ProcessExecutionGlobalState['agentSessionRunner']
       )
   });
 
@@ -138,7 +138,8 @@ test('process execution fails when pause persistence fails', async () => {
         persist: async () => {
           throw new Error('Storage unavailable');
         }
-      } as unknown as ProcessExecutionPersister
+      } as unknown as ProcessExecutionPersister,
+      {} as ProcessExecutor
     );
 
     execution.onFinished.subscribe(value => {

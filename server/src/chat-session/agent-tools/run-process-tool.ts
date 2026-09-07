@@ -1,16 +1,14 @@
 import { ToolContext, ZodTool, ZodToolExecutionResult } from '@aibindkit/llm';
 import { JsonSchema, ProcessExecutionResult } from '@aila/model';
 import { Process } from '../../repositories/process/process';
-import { ProcessExecutionContext } from '../../process-executor/process-execution-context';
-import { ProcessExecutor } from '../../process-executor/process-executor';
 import z from 'zod/v4';
+import { ProcessExecutionStore } from '../../process-executor/process-execution-store';
 
 export class RunProcessTool extends ZodTool<Record<string, unknown>> {
   public constructor(
+    private readonly executionId: string,
     private readonly process: Process,
-    private readonly currentProcessName: string,
-    private readonly executionContext: ProcessExecutionContext,
-    private readonly executor: ProcessExecutor
+    private readonly executionStore: ProcessExecutionStore
   ) {
     const schema: Record<string, JsonSchema> = {};
     const zod: Record<string, z.ZodType> = {};
@@ -28,7 +26,7 @@ export class RunProcessTool extends ZodTool<Record<string, unknown>> {
   }
 
   protected async handle(abortSignal: AbortSignal, _: ToolContext, input: Record<string, unknown>): Promise<ZodToolExecutionResult> {
-    const parentProcessNames = [...(this.executionContext.parentProcessNames ?? []), this.currentProcessName];
+    const execution = this.executionStore.get(this.executionId);
     if (this.process.isPausable) {
       throw new Error(`Process "${this.process.name}" is pausable and cannot be run by an agent`);
     }
@@ -40,23 +38,15 @@ export class RunProcessTool extends ZodTool<Record<string, unknown>> {
 
     const signal = AbortSignal.any([abortSignal, AbortSignal.timeout(60_000)]);
 
-    const execution = this.executor.initialize(
-      {
-        startedBy: this.executionContext.startedBy,
-        isTest: this.executionContext.isTest,
-        parentProcessNames
-      },
-      this.process,
-      input
-    );
+    const subExecution = execution.initializeSubExecution(this.process, input);
 
     const result = await new Promise<ProcessExecutionResult>(resolve => {
       const onFinished = (result: ProcessExecutionResult) => {
-        execution.onFinished.unsubscribe(onFinished);
+        subExecution.onFinished.unsubscribe(onFinished);
         resolve(result);
       };
-      execution.onFinished.subscribe(onFinished);
-      execution.run(signal);
+      subExecution.onFinished.subscribe(onFinished);
+      subExecution.run(signal);
     });
 
     return { content: result.success ? { outputValues: result.output } : { error: result.error } };

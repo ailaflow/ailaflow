@@ -12,7 +12,6 @@ import { AgentSessionRunner } from './services/agent-session-runner';
 import { Notifier } from './services/notifier';
 import { ProcessExecutionContext } from './process-execution-context';
 import { PROCESS_VERSION } from '@aila/model';
-import { ProcessExecutor } from './process-executor';
 
 const context: ProcessExecutionContext = {
   startedBy: 'user_1',
@@ -33,22 +32,13 @@ test('process execution global state serializes variables and recreates runtime 
     }
   });
 
-  const processExecutor = {} as ProcessExecutor;
-  const deserialized = ProcessExecutionGlobalState.deserialize(
-    'execution_1',
-    context,
-    serialized,
-    process,
-    {
-      sandboxInstanceManager: {} as SandboxInstanceManager,
-      taskCreator: {} as TaskCreator,
-      notifier: {} as Notifier,
-      agentSessionRunner: {} as AgentSessionRunner
-    },
-    processExecutor
-  );
+  const deserialized = ProcessExecutionGlobalState.deserialize('execution_1', context, serialized, process, {
+    sandboxInstanceManager: {} as SandboxInstanceManager,
+    taskCreator: {} as TaskCreator,
+    notifier: {} as Notifier,
+    agentSessionRunner: {} as AgentSessionRunner
+  });
 
-  assert.equal(deserialized.processExecutor, processExecutor);
   assert.equal(deserialized.process, process);
   assert.equal(deserialized.executionId, 'execution_1');
   assert.equal(deserialized.context, context);
@@ -85,22 +75,13 @@ test('process execution snapshot transformer converts current and history global
   });
   assert.equal((serialized as { history?: unknown }).history, undefined);
 
-  const processExecutor = {} as ProcessExecutor;
-  const deserialized = ProcessExecutionSnapshotTransformer.deserialize(
-    'execution_1',
-    context,
-    process,
-    serialized,
-    {
-      sandboxInstanceManager: {} as SandboxInstanceManager,
-      taskCreator: {} as TaskCreator,
-      notifier: {} as Notifier,
-      agentSessionRunner: {} as AgentSessionRunner
-    },
-    processExecutor
-  );
+  const deserialized = ProcessExecutionSnapshotTransformer.deserialize('execution_1', context, process, serialized, {
+    sandboxInstanceManager: {} as SandboxInstanceManager,
+    taskCreator: {} as TaskCreator,
+    notifier: {} as Notifier,
+    agentSessionRunner: {} as AgentSessionRunner
+  });
 
-  assert.equal(deserialized.context.globalState.processExecutor, processExecutor);
   assert.equal(deserialized.context.globalState.process, process);
   assert.equal(deserialized.context.globalState.variables.get('answer'), 123);
   assert.equal(deserialized.context.globalState.logger instanceof ProcessLogger, true);
@@ -135,18 +116,10 @@ function createTestProcess(): Process {
 }
 
 function createGlobalState(process: Process, values: Record<string, unknown>): ProcessExecutionGlobalState {
-  const processExecutor = {} as ProcessExecutor;
-  return ProcessExecutionGlobalState.create(
-    'execution_1',
-    context,
-    values,
-    process,
-    {
-      sandboxInstanceManager: {} as SandboxInstanceManager,
-      taskCreator: {} as TaskCreator,
-      notifier: {} as Notifier,
-      agentSessionRunner: {} as AgentSessionRunner
-    },
-    processExecutor
-  );
+  return ProcessExecutionGlobalState.create('execution_1', context, values, process, {
+    sandboxInstanceManager: {} as SandboxInstanceManager,
+    taskCreator: {} as TaskCreator,
+    notifier: {} as Notifier,
+    agentSessionRunner: {} as AgentSessionRunner
+  });
 }
