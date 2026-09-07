@@ -44,8 +44,6 @@ export class AgentSessionRunner {
       toolSet.addTool(tool);
     }
 
-    logger.info(`Agent "${step.name}" started`);
-
     const session = this.sessionFactory.create(randomUUID(), tools.hash, llm.client, llm.modelSettings, toolSet);
     session.setSystemMessage(this.systemPrompt);
 
@@ -57,13 +55,15 @@ export class AgentSessionRunner {
           for (const { message } of event.update.completedMessages ?? []) {
             if (message.role === 'assistant') {
               if (typeof message.content === 'string' && message.content.trim()) {
-                logger.info(`Agent: ${message.content.slice(0, 2_000)}`);
+                logger.info(`Agent: ${trim(message.content, 2_000)}`);
               }
               for (const call of message.tool_calls ?? []) {
                 if (call.type === 'function') {
                   logger.info(`Agent tool: ${call.function.name}`);
                 }
               }
+            } else if (message.role === 'tool' && typeof message.content === 'string') {
+              logger.info(`Agent tool response: ${trim(message.content, 128)}`);
             }
           }
           if (event.isWorking === false) {
@@ -88,4 +88,11 @@ export class AgentSessionRunner {
     }
     logger.info(`Agent "${step.name}" finished`);
   }
+}
+
+function trim(value: string, maxLength: number): string {
+  if (value.length > maxLength) {
+    return `${value.slice(0, maxLength)}...`;
+  }
+  return value;
 }
