@@ -184,14 +184,18 @@ function CronJobItem(props: {
         </span>
       </div>
 
-      <LastRunStatus run={job.lastRun} />
-
       <dl className="grid gap-3 text-sm sm:grid-cols-2">
+        <div>
+          <dt className="text-xs font-medium uppercase tracking-wide text-slate-400">Last run</dt>
+          <dd className="mt-1 text-slate-700">
+            <LastRunStatus run={job.lastRun} />
+          </dd>
+        </div>
         <div>
           <dt className="text-xs font-medium uppercase tracking-wide text-slate-400">Next execution</dt>
           <dd className="mt-1 text-slate-700">{formatTime(job.nextExecutionAt)}</dd>
         </div>
-        <div className="min-w-0">
+        <div className="min-w-0 sm:col-span-2">
           <dt className="text-xs font-medium uppercase tracking-wide text-slate-400">Input values</dt>
           <dd className="mt-1 truncate font-mono text-xs text-slate-700">{JSON.stringify(job.inputValues)}</dd>
         </div>
@@ -215,16 +219,16 @@ function CronJobItem(props: {
 
 function LastRunStatus(props: { run: ProcessCronJobRun | null }) {
   if (!props.run) {
-    return <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-600">Never run</div>;
+    return <>Never run</>;
   }
   const status = getRunStatus(props.run.status);
   return (
-    <div className={`rounded-lg border px-3 py-2.5 ${status.className}`}>
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <span className="text-sm font-semibold">{status.label}</span>
-        <span className="text-xs">{formatTime(props.run.finishedAt ?? props.run.startedAt)}</span>
+    <div>
+      <div className="flex flex-wrap items-center gap-2">
+        <span>{formatTime(props.run.finishedAt ?? props.run.startedAt)}</span>
+        <span className={`rounded-full border px-2 py-0.5 text-xs font-medium ${status.className}`}>{status.label}</span>
       </div>
-      {props.run.error ? <p className="mt-1 break-words text-xs">{props.run.error}</p> : null}
+      {props.run.error ? <p className="mt-1 break-words text-xs text-red-800">{props.run.error}</p> : null}
     </div>
   );
 }

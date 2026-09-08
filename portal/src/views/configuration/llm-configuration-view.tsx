@@ -332,7 +332,7 @@ function ProviderEditor(props: {
       <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="text-sm text-slate-600">
           {props.draft.models.length === 0
-            ? 'No models fetched.'
+            ? 'Fetch at least one model before saving the provider.'
             : `${props.draft.models.length} model${props.draft.models.length === 1 ? '' : 's'} fetched.`}
         </div>
         <div className="flex justify-end gap-2">

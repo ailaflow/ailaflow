@@ -57,7 +57,7 @@ export const saveLlmProviderRequestSchema = z.object({
   type: llmProviderTypeSchema,
   url: z.string().nullable(),
   apiKey: z.string().nullable(),
-  models: z.array(llmModelSchema)
+  models: z.array(llmModelSchema).min(1, 'At least one model is required to save a provider')
 });
 export type SaveLlmProviderRequest = z.infer<typeof saveLlmProviderRequestSchema>;
 

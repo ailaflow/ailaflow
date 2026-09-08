@@ -67,6 +67,7 @@ export function useLlmConfigurationState(initial: GetLlmConfigurationResponse): 
     return (
       LlmProviderConfigurationValidator.validateName(data.name) === null &&
       LlmProviderConfigurationValidator.validateConnection(data.type, data.url, data.apiKey, providerDraft.hasApiKey) === null &&
+      data.models.length > 0 &&
       LlmProviderConfigurationValidator.validateModels(data.models) === null
     );
   }, [providerDraft]);

@@ -24,10 +24,26 @@ test('validates numeric provider enum and structural fields', () => {
       type: LlmProviderType.OPENAI,
       url: null,
       apiKey: null,
-      models: []
+      models: [{ name: 'model-a' }]
     }).success,
     true
   );
+});
+
+test('rejects saving providers without models for both creation and updates', () => {
+  for (const insert of [true, false]) {
+    const result = saveLlmProviderRequestSchema.safeParse({
+      insert,
+      id: 'provider',
+      name: 'OpenAI',
+      type: LlmProviderType.OPENAI,
+      url: null,
+      apiKey: 'secret',
+      models: []
+    });
+    assert.equal(result.success, false);
+    assert.deepEqual(result.error?.issues.map(issue => issue.path), [['models']]);
+  }
 });
 
 test('validates numeric use-case enum without domain cross-field validation', () => {
