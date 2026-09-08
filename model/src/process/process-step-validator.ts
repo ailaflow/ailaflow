@@ -54,6 +54,12 @@ export class ProcessStepValidator {
     if (promptError) {
       errors['properties.prompt'] = promptError;
     }
+
+    const avError = this.variableValidator.validateVariablesReference(step.properties.allowedVariableNames, definition);
+    if (avError) {
+      errors['properties.allowedVariableNames'] = avError;
+    }
+
     if (!this.sandboxNames.includes(step.properties.sandboxName)) {
       errors['properties.sandboxName'] = 'No sandbox with the specified name exists.';
     }

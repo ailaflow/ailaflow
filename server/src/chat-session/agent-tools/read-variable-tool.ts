@@ -9,6 +9,7 @@ type Input = z.infer<typeof inputSchema>;
 export class ReadVariableTool extends ZodTool<Input> {
   public constructor(
     private readonly executionId: string,
+    private readonly allowedVariableNames: string[],
     private readonly executionStore: ProcessExecutionStore
   ) {
     super(
@@ -19,6 +20,10 @@ export class ReadVariableTool extends ZodTool<Input> {
   }
 
   protected async handle(_signal: AbortSignal, _context: ToolContext, arg: Input): Promise<ZodToolExecutionResult> {
+    if (!this.allowedVariableNames.includes(arg.name)) {
+      throw new Error(`Variable \$${arg.name} is not allowed to be accessed`);
+    }
+
     const execution = this.executionStore.get(this.executionId);
     return { content: { value: execution.readVariable(arg.name) } };
   }

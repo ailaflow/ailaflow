@@ -31,6 +31,7 @@ export class AgentSessionRunner {
     const tools = await this.toolSetProviderFactory.create(
       signal,
       step.properties.allowedProcesses,
+      step.properties.allowedVariableNames,
       step.properties.sandboxName,
       step.properties.isTerminalAllowed,
       state.process,

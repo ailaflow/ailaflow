@@ -25,6 +25,7 @@ export class AgentToolSetProviderFactory {
   public async create(
     abortSignal: AbortSignal,
     allowedProcesses: string[] | null,
+    allowedVariableNames: string[],
     sandboxName: string,
     isTerminalAllowed: boolean,
     process: Process,
@@ -32,18 +33,18 @@ export class AgentToolSetProviderFactory {
     executionId: string
   ): Promise<ToolSetProvider> {
     const tools: Tool[] = [];
-    this.addVariableTools(executionId, tools, process);
     await this.addProcessTools(abortSignal, allowedProcesses, process.name, context, tools, executionId);
+    this.addVariableTools(executionId, allowedVariableNames, tools, process);
     if (isTerminalAllowed) {
       this.addTerminalTools(sandboxName, tools);
     }
     return new ToolSetProvider(tools);
   }
 
-  private addVariableTools(executionId: string, tools: Tool[], process: Process) {
+  private addVariableTools(executionId: string, allowedVariableNames: string[], tools: Tool[], process: Process) {
     tools.push(new ListVariablesTool(process.definition.properties.variables));
-    tools.push(new ReadVariableTool(executionId, this.executionStore));
-    tools.push(new SetVariableTool(executionId, this.executionStore));
+    tools.push(new ReadVariableTool(executionId, allowedVariableNames, this.executionStore));
+    tools.push(new SetVariableTool(executionId, allowedVariableNames, this.executionStore));
   }
 
   private async addProcessTools(

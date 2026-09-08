@@ -32,6 +32,7 @@ function createAgent(properties: Partial<AgentStep['properties']> = {}): AgentSt
       prompt: { type: 'variable', name: 'prompt' },
       sandboxName: 'sandbox',
       allowedProcesses: [],
+      allowedVariableNames: [],
       isTerminalAllowed: false,
       ...properties
     }
@@ -166,7 +167,7 @@ function toolCall(name: string, input: object = {}) {
 test('agent evaluates its prompt, runs variable tools, logs summaries, and continues to the return step', async () => {
   let turn = 0;
   const process = createProcess('parent', [
-    createAgent(),
+    createAgent({ allowedVariableNames: ['answer'] }),
     {
       id: 'return',
       name: 'Return',
@@ -211,6 +212,39 @@ test('agent evaluates its prompt, runs variable tools, logs summaries, and conti
   assert.deepEqual(harness.pages, []);
 });
 
+for (const allowedVariableNames of [[], ['answer']]) {
+  test(`agent rejects reading and writing a variable with ${allowedVariableNames.length === 0 ? 'no' : 'other'} variables allowed`, async () => {
+    let turn = 0;
+    const process = createProcess('parent', [
+      createAgent({ allowedVariableNames }),
+      {
+        id: 'return',
+        name: 'Return',
+        type: 'return',
+        componentType: 'task',
+        properties: { outputVariableNames: ['prompt'] }
+      }
+    ]);
+    const harness = createHarness({
+      complete: async (_, __, messages) => {
+        turn++;
+        if (turn === 1) {
+          return toolCall('readVariable', { name: 'prompt' });
+        }
+        assert.match(String(messages.at(-1)?.content), /Variable \$prompt is not allowed to be accessed/);
+        if (turn === 2) {
+          return toolCall('setVariable', { name: 'prompt', value: 'Changed' });
+        }
+        return { message: { role: 'assistant', content: 'Access denied' } };
+      }
+    });
+
+    const result = await harness.run(signal, context, process, { prompt: 'Original' });
+    assert.deepEqual(result, { success: true, output: { prompt: 'Original' }, stepId: 'return' });
+    assert.equal(turn, 3);
+  });
+}
+
 test('process tool discovery reads every page, filters selected and pausable processes, and gates terminal access', async () => {
   const processes = Array.from({ length: 105 }, (_, index) => createProcess(`process_${index}`, [], index === 0));
   const harness = createHarness({ processes });
@@ -218,6 +252,7 @@ test('process tool discovery reads every page, filters selected and pausable pro
   const selected = await harness.tools.create(
     signal,
     ['process_0', 'process_104', 'missing'],
+    [],
     'sandbox',
     false,
     parent,
@@ -227,9 +262,9 @@ test('process tool discovery reads every page, filters selected and pausable pro
   assert.deepEqual(harness.pages, [1, 2, 3, 4]);
   assert.deepEqual(
     selected.tools.map(tool => tool.descriptor.function.name),
-    ['listVariables', 'readVariable', 'setVariable', 'run_process_process_104']
+    ['run_process_process_104', 'listVariables', 'readVariable', 'setVariable']
   );
-  const all = await harness.tools.create(signal, null, 'sandbox', true, parent, context, 'parent_execution');
+  const all = await harness.tools.create(signal, null, [], 'sandbox', true, parent, context, 'parent_execution');
   assert.equal(all.tools.filter(tool => tool.descriptor.function.name.startsWith('run_process_')).length, 104);
   assert.ok(all.tools.some(tool => tool.descriptor.function.name === 'runTerminalCommand'));
 });
@@ -267,6 +302,7 @@ for (const allowedProcesses of [null, ['parent', 'ancestor', 'middle', 'child']]
     const tools = await harness.tools.create(
       signal,
       allowedProcesses,
+      [],
       'sandbox',
       false,
       parent,
@@ -275,7 +311,7 @@ for (const allowedProcesses of [null, ['parent', 'ancestor', 'middle', 'child']]
     );
     assert.deepEqual(
       tools.tools.map(tool => tool.descriptor.function.name),
-      ['listVariables', 'readVariable', 'setVariable', 'run_process_child']
+      ['run_process_child', 'listVariables', 'readVariable', 'setVariable']
     );
   });
 }

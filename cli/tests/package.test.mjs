@@ -42,7 +42,7 @@ test('the packaged CLI serves the API and portal', async () => {
     const health = await fetch(`http://127.0.0.1:${port}/health`);
     assert.equal(health.status, 200);
 
-    const license = await fetch(`http://127.0.0.1:${port}/health/license`);
+    const license = await fetch(`http://127.0.0.1:${port}/license-status`);
     assert.equal(license.status, 200);
     assert.deepEqual(await license.json(), { status: null });
 

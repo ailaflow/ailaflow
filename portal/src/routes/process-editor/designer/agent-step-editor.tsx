@@ -8,6 +8,7 @@ import { StringOrVariablePropertyView } from '../../../views/process-editor/desi
 import { useState } from 'react';
 import { FindProcessesPopup } from '../../common/popups/find-processes-popup';
 import { AllowedProcessesPropertyView } from '../../../views/process-editor/designer/allowed-processes-property-view';
+import { VariableSelectorPropertyView } from '../../../views/process-editor/designer/variable-selector-property-view';
 
 export function AgentStepEditor(props: StepEditorProps) {
   const { name, step, properties, definition, setName, setProperty } = useStepEditor<AgentStep, ProcessDefinition>();
@@ -46,6 +47,14 @@ export function AgentStepEditor(props: StepEditorProps) {
         onAllowAll={() => setProperty('allowedProcesses', null)}
         onEdit={() => setIsFindProcessesPopupOpen(true)}
         error={errors['properties.allowedProcesses']}
+      />
+
+      <VariableSelectorPropertyView
+        label="Allowed Variables"
+        variables={definition.properties.variables}
+        variableNames={properties.allowedVariableNames}
+        onChange={n => setProperty('allowedVariableNames', n)}
+        error={errors['properties.allowedVariableNames']}
       />
 
       <DropdownPropertyView
