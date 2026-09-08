@@ -142,6 +142,68 @@ const processEditorRoute = route('processEditor')
       })
     ),
 
+    agentStep_getPrompt: tool('Get the agent prompt as text or a variable reference').input(
+      z.object({
+        stepId: z.string().describe('The agent step ID')
+      })
+    ),
+    agentStep_setPrompt: tool('Set the agent prompt text').input(
+      z.object({
+        stepId: z.string().describe('The agent step ID'),
+        prompt: z.string().describe('The prompt text')
+      })
+    ),
+    agentStep_setPromptVariableName: tool('Set the string variable containing the agent prompt').input(
+      z.object({
+        stepId: z.string().describe('The agent step ID'),
+        variableName: z.string().describe('The string variable name')
+      })
+    ),
+    agentStep_getAllowedProcesses: tool('Get allowed process names; null means all, an empty list means none').input(
+      z.object({
+        stepId: z.string().describe('The agent step ID')
+      })
+    ),
+    agentStep_setAllowedProcesses: tool('Set which processes the agent can run').input(
+      z.object({
+        stepId: z.string().describe('The agent step ID'),
+        processNames: z.array(z.string()).nullable().describe('Allowed process names; null allows all, an empty list allows none')
+      })
+    ),
+    agentStep_getAllowedVariables: tool('Get variable names the agent can read and write').input(
+      z.object({
+        stepId: z.string().describe('The agent step ID')
+      })
+    ),
+    agentStep_setAllowedVariables: tool('Set which variables the agent can read and write').input(
+      z.object({
+        stepId: z.string().describe('The agent step ID'),
+        variableNames: z.array(z.string()).describe('Allowed variable names; an empty list allows none')
+      })
+    ),
+    agentStep_getSandboxName: tool('Get the agent sandbox name').input(
+      z.object({
+        stepId: z.string().describe('The agent step ID')
+      })
+    ),
+    agentStep_setSandboxName: tool('Set the agent sandbox').input(
+      z.object({
+        stepId: z.string().describe('The agent step ID'),
+        sandboxName: z.string().describe('The sandbox name')
+      })
+    ),
+    agentStep_isTerminalAllowed: tool('Check whether the agent can run sandbox terminal commands').input(
+      z.object({
+        stepId: z.string().describe('The agent step ID')
+      })
+    ),
+    agentStep_setTerminalAllowed: tool('Allow or deny sandbox terminal commands for the agent').input(
+      z.object({
+        stepId: z.string().describe('The agent step ID'),
+        isTerminalAllowed: z.boolean().describe('Whether terminal commands are allowed')
+      })
+    ),
+
     taskStep_openFormEditorOverlay: tool('Open the form editor overlay for a specific task step').input(
       z.object({
         stepId: z.string().describe('The ID of the task step to edit')

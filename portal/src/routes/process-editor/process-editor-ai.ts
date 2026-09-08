@@ -4,6 +4,7 @@ import { ProcessEditorOverlayType, ProcessEditorState } from './process-editor-c
 import { createEmptyFormDefinition, toolboxConfiguration } from './designer-configuration';
 import { ObjectCloner, Sequence, Step, Uid } from 'sequential-workflow-designer';
 import {
+  AgentStep,
   anyStepSchema,
   NotificationStep,
   ProcessDateParser,
@@ -278,6 +279,82 @@ export function useProcessEditorAi(state: ProcessEditorState, save: () => Promis
           step.properties.script.sandboxName = arg.sandboxName;
           state.notifyDefinitionChange();
           return toolSuccess('Sandbox name was updated');
+        },
+
+        async agentStep_getPrompt(arg) {
+          const step = state.getStep<AgentStep>(arg.stepId, 'agent');
+          return step.properties.prompt;
+        },
+        async agentStep_setPrompt(arg) {
+          const step = state.getStep<AgentStep>(arg.stepId, 'agent');
+          step.properties.prompt = { type: 'string', value: arg.prompt };
+          state.notifyDefinitionChange();
+          return toolSuccess('Prompt was updated');
+        },
+        async agentStep_setPromptVariableName(arg) {
+          const step = state.getStep<AgentStep>(arg.stepId, 'agent');
+          const error = state.variableValidator.validateVariableType(arg.variableName, 'string', state.definition.value);
+          if (error) {
+            return toolError(error);
+          }
+          step.properties.prompt = { type: 'variable', name: arg.variableName };
+          state.notifyDefinitionChange();
+          return toolSuccess('Prompt was updated');
+        },
+        async agentStep_getAllowedProcesses(arg) {
+          const step = state.getStep<AgentStep>(arg.stepId, 'agent');
+          return {
+            processNames: step.properties.allowedProcesses
+          };
+        },
+        async agentStep_setAllowedProcesses(arg) {
+          const step = state.getStep<AgentStep>(arg.stepId, 'agent');
+          step.properties.allowedProcesses = arg.processNames;
+          state.notifyDefinitionChange();
+          return toolSuccess('Allowed processes were updated');
+        },
+        async agentStep_getAllowedVariables(arg) {
+          const step = state.getStep<AgentStep>(arg.stepId, 'agent');
+          return {
+            variableNames: step.properties.allowedVariableNames
+          };
+        },
+        async agentStep_setAllowedVariables(arg) {
+          const step = state.getStep<AgentStep>(arg.stepId, 'agent');
+          const error = state.variableValidator.validateVariablesReference(arg.variableNames, state.definition.value);
+          if (error) {
+            return toolError(error);
+          }
+          step.properties.allowedVariableNames = arg.variableNames;
+          state.notifyDefinitionChange();
+          return toolSuccess('Allowed variable names were updated');
+        },
+        async agentStep_getSandboxName(arg) {
+          const step = state.getStep<AgentStep>(arg.stepId, 'agent');
+          return {
+            sandboxName: step.properties.sandboxName
+          };
+        },
+        async agentStep_setSandboxName(arg) {
+          const step = state.getStep<AgentStep>(arg.stepId, 'agent');
+          if (!state.sandboxes.find(s => s.name === arg.sandboxName)) {
+            return toolError(`Sandbox name "${arg.sandboxName}" is not available`);
+          }
+          step.properties.sandboxName = arg.sandboxName;
+          state.notifyDefinitionChange();
+          return toolSuccess('Sandbox name was updated');
+        },
+        async agentStep_isTerminalAllowed(arg) {
+          const step = state.getStep<AgentStep>(arg.stepId, 'agent');
+          return {
+            isTerminalAllowed: step.properties.isTerminalAllowed
+          };
+        },
+        async agentStep_setTerminalAllowed(arg) {
+          const step = state.getStep<AgentStep>(arg.stepId, 'agent');
+          step.properties.isTerminalAllowed = arg.isTerminalAllowed;
+          state.notifyDefinitionChange();
+          return toolSuccess('Terminal access was updated');
         },
 
         async taskStep_openFormEditorOverlay(arg) {
