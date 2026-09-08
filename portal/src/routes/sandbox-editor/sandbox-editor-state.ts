@@ -78,10 +78,12 @@ export function useSandboxEditorState(sandbox?: SandboxDto): SandboxEditorState 
       })),
     getSecretNames: () => data.secrets.map(secret => secret.key),
     markSaved: () =>
-      setData(data => ({
-        ...data,
-        isDirty: false
-      })),
+      setData(current => {
+        if (current !== data) {
+          return current;
+        }
+        return { ...current, isDirty: false };
+      }),
     toUpsertRequest: () => ({
       name: data.name,
       description: data.description,

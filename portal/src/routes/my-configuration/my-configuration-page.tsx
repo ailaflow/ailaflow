@@ -3,8 +3,8 @@ import { useSearchParams } from 'react-router';
 import { MyConfigurationView } from '../../views/my-configuration/my-configuration-view';
 import type { MyConfigurationTab } from '../../views/my-configuration/my-configuration-view';
 import { Portal } from '../common/portal';
-import { TelegramConfigurationPage } from '../common/telegram-configuration-page';
-import { MyConfigurationOverviewPage } from './my-configuration-overview-page';
+import { TelegramConfiguration } from '../common/telegram-configuration';
+import { MyConfigurationOverview } from './my-configuration-overview';
 
 export function MyConfigurationPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -24,7 +24,7 @@ export function MyConfigurationPage() {
   return (
     <Portal>
       <MyConfigurationView activeTab={activeTab} onTabChange={selectTab}>
-        {activeTab === 'overview' ? <MyConfigurationOverviewPage /> : <TelegramConfigurationPage />}
+        {activeTab === 'overview' ? <MyConfigurationOverview /> : <TelegramConfiguration />}
       </MyConfigurationView>
     </Portal>
   );

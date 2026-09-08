@@ -1,4 +1,3 @@
-import { useNavigate } from 'react-router-dom';
 import { ProcessCronJobsView } from '../../views/process-cron-jobs/process-cron-jobs-view';
 import { ResourceEditorView } from '../../views/resource-editor/resource-editor-view';
 import { useUnsavedChangesController } from '../common/admin-portal';
@@ -6,7 +5,6 @@ import { useProcessCronJobsAi } from './process-cron-jobs-ai';
 import { useProcessCronJobs } from './process-cron-jobs-context';
 
 export function ProcessCronJobs() {
-  const navigate = useNavigate();
   const state = useProcessCronJobs();
 
   useProcessCronJobsAi(state);
@@ -38,16 +36,18 @@ export function ProcessCronJobs() {
       name={state.process.name}
       isNameReadOnly={true}
       isNameValid={true}
-      switchLabel="Edit"
-      canSwitch={true}
-      onSwitch={() => navigate(`/admin/processes/${encodeURIComponent(state.process.name)}`)}
+      viewSwitcherOptions={[
+        { label: 'Editor', href: `/admin/processes/${state.process.name}` },
+        { label: 'Test', href: `/admin/processes/${state.process.name}/test` },
+        { label: 'Cron jobs', href: `/admin/processes/${state.process.name}/cron-jobs`, selected: true }
+      ]}
+      viewSwitcherDisabledReason={state.draft !== null ? 'Please save changes' : undefined}
     >
       <ProcessCronJobsView
         jobs={state.jobs}
         draft={state.draft}
         expressionError={state.expressionError}
         inputValuesError={state.inputValuesError}
-        isSaving={state.isSaving}
         canSave={state.canSave}
         onCreate={state.createJob}
         onEdit={state.editJob}

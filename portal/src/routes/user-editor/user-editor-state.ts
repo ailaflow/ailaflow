@@ -80,11 +80,12 @@ export function useUserEditorState(user?: UserDto): UserEditorState {
         attributes: data.attributes.filter(attribute => attribute.name !== name)
       })),
     markSaved: () =>
-      setData(data => ({
-        ...data,
-        password: '',
-        isDirty: false
-      })),
+      setData(current => {
+        if (current !== data) {
+          return current;
+        }
+        return { ...current, password: '', isDirty: false };
+      }),
     toSaveRequest: () => ({
       insert: data.isNew,
       name: data.name,

@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import { UserDto } from '@aila/model';
 import { useNavigate } from 'react-router-dom';
 import { useApiClient } from '../../auth/auth-context';
@@ -10,15 +11,24 @@ import { useUnsavedChangesController } from '../common/admin-portal';
 export function UserEditor(props: { user?: UserDto }) {
   const apiClient = useApiClient();
   const navigate = useNavigate();
+  const isSaving = useRef(false);
   const state = useUserEditorState(props.user);
 
   async function save() {
-    const abortSignal = AbortSignal.timeout(5_000);
-    const response = await apiClient.user.saveUser(abortSignal, state.toSaveRequest());
-    if (state.isNew) {
-      navigate(`/admin/users/${response.name}`);
-    } else {
-      state.markSaved();
+    if (isSaving.current) {
+      return;
+    }
+    isSaving.current = true;
+    try {
+      const abortSignal = AbortSignal.timeout(5_000);
+      const response = await apiClient.user.saveUser(abortSignal, state.toSaveRequest());
+      if (state.isNew) {
+        navigate(`/admin/users/${response.name}`);
+      } else {
+        state.markSaved();
+      }
+    } finally {
+      isSaving.current = false;
     }
   }
 
@@ -34,7 +44,11 @@ export function UserEditor(props: { user?: UserDto }) {
       onNameChange={state.setName}
       canSave={state.canSave}
       onSave={save}
-      canSwitch={false}
+      viewSwitcherOptions={[
+        { label: 'Editor', href: `/admin/users/${state.name}`, selected: true },
+        { label: 'Telegram', href: `/admin/users/${state.name}/telegram` }
+      ]}
+      viewSwitcherDisabledReason={state.isNew || state.isDirty ? 'Please save changes' : undefined}
     >
       <UserEditorView
         isNew={state.isNew}

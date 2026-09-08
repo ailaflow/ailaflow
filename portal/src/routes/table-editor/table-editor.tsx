@@ -46,7 +46,6 @@ export function TableEditor(props: { table?: TableDto }) {
         />
       }
       areDetailsVisible={true}
-      canSwitch={false}
     >
       {!state.isNew && <TableDataGrid tableName={state.name} />}
     </ResourceEditorView>

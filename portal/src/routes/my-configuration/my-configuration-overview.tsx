@@ -5,7 +5,7 @@ import type { ConfigurationStatus } from '../../views/configuration/configuratio
 import { PortalErrorView } from '../../views/portal/portal-error-view';
 import { PortalLoadingView } from '../../views/portal/portal-loading-view';
 
-export function MyConfigurationOverviewPage() {
+export function MyConfigurationOverview() {
   const apiClient = useApiClient();
   const loader = useLoader(abortSignal => apiClient.telegramConfiguration.get(abortSignal), [apiClient]);
 

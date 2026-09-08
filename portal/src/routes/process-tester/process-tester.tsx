@@ -2,7 +2,6 @@ import type { ProcessDto } from '@aila/model';
 import { ProcessTesterView } from '../../views/process-tester/process-tester-view';
 import { ProcessTesterChats } from './process-tester-chats';
 import { ProcessTesterTop } from './process-tester-top';
-import { useNavigate } from 'react-router';
 import { ResourceEditorView } from '../../views/resource-editor/resource-editor-view';
 import { useProcessTester } from './process-tester-context';
 import { useProcessTesterAi } from './process-tester-ai';
@@ -12,14 +11,9 @@ export interface ProcessTesterProps {
 }
 
 export function ProcessTester(props: ProcessTesterProps) {
-  const navigate = useNavigate();
   const state = useProcessTester();
 
   useProcessTesterAi(state);
-
-  function openEditor() {
-    navigate(`/admin/processes/${props.process.name}`);
-  }
 
   return (
     <ResourceEditorView
@@ -27,9 +21,12 @@ export function ProcessTester(props: ProcessTesterProps) {
       name={props.process.name}
       isNameReadOnly={true}
       isNameValid={true}
-      switchLabel="Edit"
-      canSwitch={true}
-      onSwitch={openEditor}
+      viewSwitcherOptions={[
+        { label: 'Editor', href: `/admin/processes/${props.process.name}` },
+        { label: 'Test', href: `/admin/processes/${props.process.name}/test`, selected: true },
+        { label: 'Cron jobs', href: `/admin/processes/${props.process.name}/cron-jobs` }
+      ]}
+      viewSwitcherDisabledReason={state.isRunning ? 'Test in progress.' : undefined}
     >
       <ProcessTesterView>
         <ProcessTesterTop />

@@ -1,13 +1,17 @@
-import { useNavigate, useParams } from 'react-router-dom';
+import { useState } from 'react';
+import { useParams } from 'react-router-dom';
 import { ResourceEditorView } from '../../views/resource-editor/resource-editor-view';
-import { TelegramConfigurationPage } from '../common/telegram-configuration-page';
+import { TelegramConfiguration } from '../common/telegram-configuration';
+import { useUnsavedChangesController } from '../common/admin-portal';
 
 export function UserTelegramConfigurationPage() {
   const { userName } = useParams();
-  const navigate = useNavigate();
   if (!userName) {
     throw new Error('User name is required');
   }
+
+  const [isDirty, setIsDirty] = useState(false);
+  useUnsavedChangesController(isDirty);
 
   return (
     <ResourceEditorView
@@ -15,11 +19,13 @@ export function UserTelegramConfigurationPage() {
       name={userName}
       isNameReadOnly={true}
       isNameValid={true}
-      switchLabel="Edit"
-      canSwitch={true}
-      onSwitch={() => navigate(`/admin/users/${encodeURIComponent(userName)}`)}
+      viewSwitcherOptions={[
+        { label: 'Editor', href: `/admin/users/${userName}` },
+        { label: 'Telegram', href: `/admin/users/${userName}/telegram`, selected: true }
+      ]}
+      viewSwitcherDisabledReason={isDirty ? 'Please save changes' : undefined}
     >
-      <TelegramConfigurationPage userName={userName} />
+      <TelegramConfiguration key={userName} userName={userName} onIsDirtyChange={setIsDirty} />
     </ResourceEditorView>
   );
 }

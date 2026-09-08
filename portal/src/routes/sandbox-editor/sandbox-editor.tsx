@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import { SandboxDto } from '@aila/model';
 import { useNavigate } from 'react-router-dom';
 import { useApiClient } from '../../auth/auth-context';
@@ -11,15 +12,24 @@ import { useSandboxEditorState } from './sandbox-editor-state';
 export function SandboxEditor(props: { sandbox?: SandboxDto }) {
   const apiClient = useApiClient();
   const navigate = useNavigate();
+  const isSaving = useRef(false);
   const state = useSandboxEditorState(props.sandbox);
 
   async function save() {
-    const abortSignal = AbortSignal.timeout(5_000);
-    await apiClient.sandbox.upsertSandbox(abortSignal, state.toUpsertRequest());
-    if (state.isNew) {
-      navigate(`/admin/sandboxes/${state.name}`);
-    } else {
-      state.markSaved();
+    if (isSaving.current) {
+      return;
+    }
+    isSaving.current = true;
+    try {
+      const abortSignal = AbortSignal.timeout(5_000);
+      await apiClient.sandbox.upsertSandbox(abortSignal, state.toUpsertRequest());
+      if (state.isNew) {
+        navigate(`/admin/sandboxes/${state.name}`);
+      } else {
+        state.markSaved();
+      }
+    } finally {
+      isSaving.current = false;
     }
   }
 
@@ -47,7 +57,11 @@ export function SandboxEditor(props: { sandbox?: SandboxDto }) {
         />
       }
       areDetailsVisible={true}
-      canSwitch={false}
+      viewSwitcherOptions={[
+        { label: 'Editor', href: `/admin/sandboxes/${state.name}`, selected: true },
+        { label: 'Terminal', href: `/admin/sandboxes/${state.name}/terminal` }
+      ]}
+      viewSwitcherDisabledReason={state.isNew || state.isDirty ? 'Please save changes' : undefined}
     >
       <SandboxEditorView
         isEnabled={state.isEnabled}

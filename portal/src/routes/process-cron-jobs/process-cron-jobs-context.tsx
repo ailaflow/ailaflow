@@ -5,7 +5,7 @@ import {
   ProcessExecutionVariableValues,
   VariableCachedValidator
 } from '@aila/model';
-import { createContext, useContext, useMemo, useState } from 'react';
+import { createContext, useContext, useMemo, useRef, useState } from 'react';
 import { useApiClient } from '../../auth/auth-context';
 import type { ProcessCronJobDraftViewModel } from '../../views/process-cron-jobs/process-cron-jobs-view';
 
@@ -15,7 +15,6 @@ export interface ProcessCronJobsState {
   draft: ProcessCronJobDraftViewModel | null;
   expressionError: string | null;
   inputValuesError: string | null;
-  isSaving: boolean;
   canSave: boolean;
   createJob(): void;
   editJob(job: ProcessCronJobDto): void;
@@ -47,12 +46,12 @@ export function ProcessCronJobsContext(props: ProcessCronJobsContextProps) {
   const variableValidator = useMemo(() => new VariableCachedValidator(), []);
   const [jobs, setJobs] = useState(props.initialJobs);
   const [draft, setDraft] = useState<ProcessCronJobDraftViewModel | null>(null);
-  const [isSaving, setIsSaving] = useState(false);
+  const isSaving = useRef(false);
   const expressionError = draft ? ProcessCronJobExpressionValidator.validate(draft.expression, draft.timeZone) : null;
   const inputValidation = draft
     ? validateInputValues(draft.inputValuesText, props.process, variableValidator)
     : { inputValues: null, error: null };
-  const canSave = draft !== null && expressionError === null && inputValidation.error === null && !isSaving;
+  const canSave = draft !== null && expressionError === null && inputValidation.error === null;
 
   function createJob(): void {
     setDraft({
@@ -80,10 +79,13 @@ export function ProcessCronJobsContext(props: ProcessCronJobsContextProps) {
   }
 
   async function save(): Promise<void> {
+    if (isSaving.current) {
+      return;
+    }
     if (!draft || !canSave || !inputValidation.inputValues) {
       throw new Error('Cannot save cron job due to validation errors or no open draft');
     }
-    setIsSaving(true);
+    isSaving.current = true;
     try {
       await apiClient.process.saveProcessCronJob(AbortSignal.timeout(10_000), {
         insert: draft.id === null,
@@ -95,9 +97,9 @@ export function ProcessCronJobsContext(props: ProcessCronJobsContextProps) {
         isEnabled: draft.isEnabled
       });
       await refreshJobs();
-      setDraft(null);
+      setDraft(current => (current === draft ? null : current));
     } finally {
-      setIsSaving(false);
+      isSaving.current = false;
     }
   }
 
@@ -121,7 +123,6 @@ export function ProcessCronJobsContext(props: ProcessCronJobsContextProps) {
     draft,
     expressionError,
     inputValuesError: inputValidation.error,
-    isSaving,
     canSave,
     createJob,
     editJob,

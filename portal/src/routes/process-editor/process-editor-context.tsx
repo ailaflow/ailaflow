@@ -16,6 +16,7 @@ import { DefinitionPath, DefinitionPathValue } from '../../core/definition-path'
 import { createBlankDefinition } from './designer-configuration';
 import { useApiClient } from '../../auth/auth-context';
 import { ApiClient } from '../../api/api-client';
+import { DesignerUtils } from './designer-utils';
 
 export enum ProcessEditorOverlayType {
   SCHEMA_EDITOR = 'schemaEditor',
@@ -52,7 +53,7 @@ export interface ProcessEditorData {
 export interface ProcessEditorState extends ProcessEditorData {
   apiClient: ApiClient;
   isValid: boolean;
-  setIsDirty(isDirty: boolean): void;
+  markSaved(definitionHash: string): void;
   setName(name: string, throwIfInvalid: boolean): void;
   setDescription(description: string, throwIfInvalid: boolean): void;
   setUserAccessExpression(userAccessExpression: string, throwIfInvalid: boolean): void;
@@ -111,7 +112,10 @@ function createData(props: Omit<ProcessEditorContextProps, 'children'>): Process
   };
 }
 
-function reduceState(state: ProcessEditorData, delta: Partial<ProcessEditorData>): ProcessEditorData {
+type StateUpdate = Partial<ProcessEditorData> | ((state: ProcessEditorData) => Partial<ProcessEditorData>);
+
+function reduceState(state: ProcessEditorData, stateUpdate: StateUpdate): ProcessEditorData {
+  const delta = typeof stateUpdate === 'function' ? stateUpdate(state) : stateUpdate;
   return { ...state, ...delta };
 }
 
@@ -132,9 +136,17 @@ export function ProcessEditorContext(props: ProcessEditorContextProps) {
       data.userAccessExpressionError === null &&
       data.definition.isValid !== false;
 
-    function setIsDirty(isDirty: boolean) {
-      update({
-        isDirty
+    function markSaved(definitionHash: string) {
+      update(current => {
+        if (
+          current.name !== data.name ||
+          current.description !== data.description ||
+          current.userAccessExpression !== data.userAccessExpression ||
+          DesignerUtils.calcDefinitionHash(current.definition.value) !== definitionHash
+        ) {
+          return {};
+        }
+        return { isDirty: false };
       });
     }
 
@@ -259,7 +271,7 @@ export function ProcessEditorContext(props: ProcessEditorContextProps) {
       ...data,
       apiClient,
       isValid,
-      setIsDirty,
+      markSaved,
       setName,
       setDescription,
       setUserAccessExpression,

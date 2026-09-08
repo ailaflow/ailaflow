@@ -60,7 +60,6 @@ export function useProcessCronJobsAi(state: ProcessCronJobsState) {
             cronJob: state.draft,
             expressionError: state.expressionError,
             inputValuesError: state.inputValuesError,
-            isSaving: state.isSaving,
             canSave: state.canSave
           };
         },

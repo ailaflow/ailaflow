@@ -1,6 +1,6 @@
 import { useLoader } from '@aibindkit/react';
 import type { GetTelegramConfigurationResponse, TelegramBotConfigurationDto } from '@aila/model';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useApiClient } from '../../auth/auth-context';
 import { TelegramConfigurationView, type TelegramBotDraft } from '../../views/common/telegram-configuration-view';
 import { PortalErrorView } from '../../views/portal/portal-error-view';
@@ -8,7 +8,12 @@ import { PortalLoadingView } from '../../views/portal/portal-loading-view';
 
 const availableChannels = ['default'];
 
-export function TelegramConfigurationPage(props: { userName?: string }) {
+export interface TelegramConfigurationProps {
+  userName?: string;
+  onIsDirtyChange?: (isDirty: boolean) => void;
+}
+
+export function TelegramConfiguration(props: TelegramConfigurationProps) {
   const apiClient = useApiClient();
   const loader = useLoader(
     abortSignal =>
@@ -24,15 +29,20 @@ export function TelegramConfigurationPage(props: { userName?: string }) {
   if (loader.error) {
     return <PortalErrorView error={loader.error} />;
   }
-  return <LoadedTelegramConfigurationPage initial={loader.data} userName={props.userName} />;
+  return <LoadedTelegramConfiguration initial={loader.data} userName={props.userName} onIsDirtyChange={props.onIsDirtyChange} />;
 }
 
-function LoadedTelegramConfigurationPage(props: { initial: GetTelegramConfigurationResponse; userName?: string }) {
+function LoadedTelegramConfiguration(props: TelegramConfigurationProps & { initial: GetTelegramConfigurationResponse }) {
   const apiClient = useApiClient();
   const [bots, setBots] = useState(props.initial.bots);
   const [draft, setDraft] = useState<TelegramBotDraft | null>(null);
-  const [isSaving, setIsSaving] = useState(false);
+  const isSavingRef = useRef(false);
+  const isDirty = draft !== null;
   const unusedChannels = availableChannels.filter(channel => !bots.some(bot => bot.channelName === channel));
+
+  useEffect(() => {
+    props.onIsDirtyChange?.(isDirty);
+  }, [props.onIsDirtyChange, isDirty]);
 
   function addBot(): void {
     const channelName = unusedChannels[0];
@@ -46,10 +56,10 @@ function LoadedTelegramConfigurationPage(props: { initial: GetTelegramConfigurat
   }
 
   async function saveBot(): Promise<void> {
-    if (!draft) {
+    if (!draft || isSavingRef.current) {
       return;
     }
-    setIsSaving(true);
+    isSavingRef.current = true;
     try {
       const request = {
         channelName: draft.channelName,
@@ -63,18 +73,22 @@ function LoadedTelegramConfigurationPage(props: { initial: GetTelegramConfigurat
         next.push(response.bot);
         return next.sort((left, right) => left.channelName.localeCompare(right.channelName));
       });
-      setDraft(null);
+      setDraft(current => (current === draft ? null : current));
     } catch (error) {
       window.alert(`Failed to save Telegram bot: ${error instanceof Error ? error.message : String(error)}`);
     } finally {
-      setIsSaving(false);
+      isSavingRef.current = false;
     }
   }
 
   async function reconnectBot(bot: TelegramBotConfigurationDto): Promise<void> {
+    if (isSavingRef.current) {
+      return;
+    }
     if (!window.confirm(`Reconnect Telegram for channel "${bot.channelName}"? The current Telegram chat will be unlinked.`)) {
       return;
     }
+    isSavingRef.current = true;
     try {
       const request = { channelName: bot.channelName, reconnect: true };
       const response = props.userName
@@ -83,13 +97,19 @@ function LoadedTelegramConfigurationPage(props: { initial: GetTelegramConfigurat
       setBots(current => current.map(item => (item.channelName === bot.channelName ? response.bot : item)));
     } catch (error) {
       window.alert(`Failed to reconnect Telegram bot: ${error instanceof Error ? error.message : String(error)}`);
+    } finally {
+      isSavingRef.current = false;
     }
   }
 
   async function deleteBot(bot: TelegramBotConfigurationDto): Promise<void> {
+    if (isSavingRef.current) {
+      return;
+    }
     if (!window.confirm(`Delete the Telegram bot binding for channel "${bot.channelName}"?`)) {
       return;
     }
+    isSavingRef.current = true;
     try {
       if (props.userName) {
         await apiClient.user.deleteTelegramBot(AbortSignal.timeout(10_000), props.userName, bot.channelName);
@@ -100,6 +120,8 @@ function LoadedTelegramConfigurationPage(props: { initial: GetTelegramConfigurat
       setDraft(current => (current?.channelName === bot.channelName ? null : current));
     } catch (error) {
       window.alert(`Failed to delete Telegram bot: ${error instanceof Error ? error.message : String(error)}`);
+    } finally {
+      isSavingRef.current = false;
     }
   }
 
@@ -109,8 +131,7 @@ function LoadedTelegramConfigurationPage(props: { initial: GetTelegramConfigurat
       availableChannels={draft?.hasBotToken ? [draft.channelName] : unusedChannels}
       draft={draft}
       canAdd={!draft && unusedChannels.length > 0}
-      canSave={Boolean(draft && draft.channelName && (draft.hasBotToken || draft.botToken.trim())) && !isSaving}
-      isSaving={isSaving}
+      canSave={Boolean(draft && draft.channelName && (draft.hasBotToken || draft.botToken.trim()))}
       onAdd={addBot}
       onEdit={editBot}
       onDelete={deleteBot}

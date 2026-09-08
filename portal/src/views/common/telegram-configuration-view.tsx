@@ -14,7 +14,6 @@ export interface TelegramConfigurationViewProps {
   draft: TelegramBotDraft | null;
   canAdd: boolean;
   canSave: boolean;
-  isSaving: boolean;
   onAdd(): void;
   onEdit(bot: TelegramBotConfigurationDto): void;
   onDelete(bot: TelegramBotConfigurationDto): void | Promise<void>;
@@ -51,7 +50,6 @@ export function TelegramConfigurationView(props: TelegramConfigurationViewProps)
               draft={props.draft}
               availableChannels={props.availableChannels}
               canSave={props.canSave}
-              isSaving={props.isSaving}
               onChange={props.onDraftChange}
               onCancel={props.onEditCancel}
               onSave={props.onSave}
@@ -130,7 +128,6 @@ function TelegramBotEditor(props: {
   draft: TelegramBotDraft;
   availableChannels: string[];
   canSave: boolean;
-  isSaving: boolean;
   onChange(delta: Partial<TelegramBotDraft>): void;
   onCancel(): void;
   onSave(): void | Promise<void>;
@@ -184,7 +181,7 @@ function TelegramBotEditor(props: {
           onClick={() => void props.onSave()}
           className="inline-flex h-9 items-center justify-center rounded-md border border-slate-900 bg-slate-900 px-3 text-sm font-medium text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:border-slate-300 disabled:bg-slate-300"
         >
-          {props.isSaving ? 'Saving…' : 'Save bot'}
+          Save bot
         </button>
       </div>
     </div>

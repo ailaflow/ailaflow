@@ -13,7 +13,6 @@ export interface ProcessCronJobsViewProps {
   draft: ProcessCronJobDraftViewModel | null;
   expressionError: string | null;
   inputValuesError: string | null;
-  isSaving: boolean;
   canSave: boolean;
   onCreate(): void;
   onEdit(job: ProcessCronJobDto): void;
@@ -136,7 +135,7 @@ function CronJobEditor(props: ProcessCronJobsViewProps & { draft: ProcessCronJob
           onClick={props.onSave}
           className="inline-flex h-9 items-center justify-center rounded-md bg-slate-900 px-4 text-sm font-medium text-white hover:bg-slate-700 disabled:cursor-not-allowed disabled:bg-slate-300"
         >
-          {props.isSaving ? 'Saving…' : 'Save'}
+          Save
         </button>
       </div>
     </section>
@@ -162,11 +161,7 @@ function TextField(props: { label: string; value: string; placeholder: string; e
   );
 }
 
-function CronJobItem(props: {
-  job: ProcessCronJobDto;
-  onEdit(job: ProcessCronJobDto): void;
-  onDelete(job: ProcessCronJobDto): void;
-}) {
+function CronJobItem(props: { job: ProcessCronJobDto; onEdit(job: ProcessCronJobDto): void; onDelete(job: ProcessCronJobDto): void }) {
   const job = props.job;
   return (
     <article className="flex min-w-0 flex-col gap-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
