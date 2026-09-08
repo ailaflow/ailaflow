@@ -1,19 +1,20 @@
 import type { ReactNode } from 'react';
+import { DashboardPanelView } from './dashboard-panel-view';
 
 export interface DashboardViewProps {
+  chat: ReactNode;
   children: ReactNode;
 }
 
 export function DashboardView(props: DashboardViewProps) {
   return (
-    <div className="flex h-full min-h-0 flex-col bg-slate-50">
-      <div className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-5">
-        <div className="flex flex-col gap-5">{props.children}</div>
+    <div className="h-full min-h-0 overflow-y-auto bg-slate-50 p-4 sm:p-5 lg:overflow-hidden">
+      <div className="grid min-h-0 grid-cols-1 gap-5 lg:h-full lg:grid-cols-[minmax(0,7fr)_minmax(0,3fr)] lg:grid-rows-1">
+        <DashboardPanelView title="My chat" className="h-[70dvh] min-h-96 lg:h-full lg:min-h-0">
+          {props.chat}
+        </DashboardPanelView>
+        <div className="grid min-h-0 min-w-0 grid-cols-1 gap-5 lg:grid-rows-3">{props.children}</div>
       </div>
     </div>
   );
-}
-
-export function DashboardRowView(props: { children: ReactNode }) {
-  return <div className="grid grid-cols-1 items-stretch gap-5 lg:grid-cols-3">{props.children}</div>;
 }

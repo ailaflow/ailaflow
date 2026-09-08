@@ -2,9 +2,10 @@ import { useLoader } from '@aibindkit/react';
 import { useApiClient } from '../../auth/auth-context';
 import { DashboardListView } from '../../views/dashboard/dashboard-list-view';
 import { DashboardPanelView } from '../../views/dashboard/dashboard-panel-view';
-import { DashboardRowView, DashboardView } from '../../views/dashboard/dashboard-view';
+import { DashboardView } from '../../views/dashboard/dashboard-view';
 import { PortalErrorView } from '../../views/portal/portal-error-view';
 import { PortalLoadingView } from '../../views/portal/portal-loading-view';
+import { MyChat } from '../common/my-chat/my-chat';
 import { Portal } from '../common/portal';
 
 const PANEL_ITEM_LIMIT = 6;
@@ -42,52 +43,53 @@ export function DashboardPage() {
 
   return (
     <Portal>
-      <DashboardView>
-        <DashboardRowView>
-          <DashboardPanelView
-            title="My Tasks"
-            action={data.tasks.tasks.length > PANEL_ITEM_LIMIT ? { label: 'View all', href: '/my-tasks' } : undefined}
-          >
-            <DashboardListView
-              items={data.tasks.tasks.slice(0, PANEL_ITEM_LIMIT)}
-              emptyMessage="You have no open tasks."
-              getItemKey={task => task.id}
-              getItemTitle={task => task.title}
-              getItemDescription={task => (task.isOutdated ? 'Outdated' : 'Open')}
-              getItemBadge={() => 'T'}
-            />
-          </DashboardPanelView>
+      <DashboardView chat={<MyChat sessionKey="user:default" />}>
+        <DashboardPanelView
+          title="My Tasks"
+          variant="dashboard"
+          scrollable
+          action={data.tasks.tasks.length > PANEL_ITEM_LIMIT ? { label: 'View all', href: '/my-tasks' } : undefined}
+        >
+          <DashboardListView
+            items={data.tasks.tasks.slice(0, PANEL_ITEM_LIMIT)}
+            emptyMessage="You have no open tasks."
+            getItemKey={task => task.id}
+            getItemTitle={task => task.title}
+            getItemDescription={task => (task.isOutdated ? 'Outdated' : 'Open')}
+            getItemBadge={() => 'T'}
+          />
+        </DashboardPanelView>
 
-          <DashboardPanelView
-            title="My Processes"
-            action={data.processes.processes.length > PANEL_ITEM_LIMIT ? { label: 'View all', href: '/my-processes' } : undefined}
-          >
-            <DashboardListView
-              items={data.processes.processes.slice(0, PANEL_ITEM_LIMIT)}
-              emptyMessage="No processes are available."
-              getItemKey={process => process.name}
-              getItemTitle={process => process.name}
-              getItemDescription={process => process.description}
-              getItemBadge={() => 'P'}
-            />
-          </DashboardPanelView>
-
-          <DashboardPanelView
-            title="My Notifications"
-            action={
-              data.notifications.notifications.length > PANEL_ITEM_LIMIT ? { label: 'View all', href: '/my-notifications' } : undefined
-            }
-          >
-            <DashboardListView
-              items={data.notifications.notifications.slice(0, PANEL_ITEM_LIMIT)}
-              emptyMessage="You have no notifications."
-              getItemKey={notification => notification.id}
-              getItemTitle={notification => notification.message}
-              getItemMeta={notification => formatDate(notification.createdAt)}
-              getItemBadge={() => 'N'}
-            />
-          </DashboardPanelView>
-        </DashboardRowView>
+        <DashboardPanelView
+          title="My Notifications"
+          variant="dashboard"
+          scrollable
+          action={data.notifications.notifications.length > PANEL_ITEM_LIMIT ? { label: 'View all', href: '/my-notifications' } : undefined}
+        >
+          <DashboardListView
+            items={data.notifications.notifications.slice(0, PANEL_ITEM_LIMIT)}
+            emptyMessage="You have no notifications."
+            getItemKey={notification => notification.id}
+            getItemTitle={notification => notification.message}
+            getItemMeta={notification => formatDate(notification.createdAt)}
+            getItemBadge={() => 'N'}
+          />
+        </DashboardPanelView>
+        <DashboardPanelView
+          title="My Processes"
+          variant="dashboard"
+          scrollable
+          action={data.processes.processes.length > PANEL_ITEM_LIMIT ? { label: 'View all', href: '/my-processes' } : undefined}
+        >
+          <DashboardListView
+            items={data.processes.processes.slice(0, PANEL_ITEM_LIMIT)}
+            emptyMessage="No processes are available."
+            getItemKey={process => process.name}
+            getItemTitle={process => process.name}
+            getItemDescription={process => process.description}
+            getItemBadge={() => 'P'}
+          />
+        </DashboardPanelView>
       </DashboardView>
     </Portal>
   );
