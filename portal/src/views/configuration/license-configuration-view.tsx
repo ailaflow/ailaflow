@@ -1,5 +1,5 @@
-import { LicenseType } from '@ailaflow/model';
-import type { LicenseStatus } from '@ailaflow/model';
+import { LicenseType } from '@ailaflow/shared';
+import type { LicenseStatus } from '@ailaflow/shared';
 import type { SubmitEvent } from 'react';
 import { LicenseSelectorView } from '../common/license-selector-view';
 import type { LicenseSelectorViewProps } from '../common/license-selector-view';

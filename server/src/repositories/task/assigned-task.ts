@@ -1,4 +1,4 @@
-import { ProcessExecutionVariableValues } from '@ailaflow/model';
+import { ProcessExecutionVariableValues } from '@ailaflow/shared';
 import { Task } from './task';
 
 export class AssignedTask {

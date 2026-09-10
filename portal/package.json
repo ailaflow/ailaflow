@@ -7,7 +7,7 @@
   "dependencies": {
     "@aibindkit/core": "workspace:*",
     "@aibindkit/react": "workspace:*",
-    "@ailaflow/model": "workspace:*",
+    "@ailaflow/shared": "workspace:*",
     "sequential-workflow-model": "^0.2.0",
     "sequential-workflow-designer": "^0.40.2",
     "sequential-workflow-designer-react": "^0.40.2",

@@ -1,4 +1,4 @@
-import { NotificationStep } from '@ailaflow/model';
+import { NotificationStep } from '@ailaflow/shared';
 import { createAtomActivity } from 'sequential-workflow-machine';
 import { ProcessExecutionGlobalState } from '../process-execution-global-state';
 

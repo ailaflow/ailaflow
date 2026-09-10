@@ -1,4 +1,4 @@
-import { TableDto } from '@ailaflow/model';
+import { TableDto } from '@ailaflow/shared';
 import { useNavigate } from 'react-router-dom';
 import { useApiClient } from '../../auth/auth-context';
 import { ResourceEditorView } from '../../views/resource-editor/resource-editor-view';

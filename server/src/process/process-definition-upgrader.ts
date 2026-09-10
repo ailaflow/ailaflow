@@ -1,4 +1,4 @@
-import { PROCESS_VERSION, ProcessDefinition, TaskStep } from '@ailaflow/model';
+import { PROCESS_VERSION, ProcessDefinition, TaskStep } from '@ailaflow/shared';
 import { DefinitionWalker } from 'sequential-workflow-model';
 
 export class ProcessDefinitionUpgrader {

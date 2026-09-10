@@ -1,5 +1,5 @@
 import { PasswordHasher } from './password-hasher';
-import { UserValidator } from '@ailaflow/model';
+import { UserValidator } from '@ailaflow/shared';
 import { UserRepositoryError } from './user-repository';
 
 export class User {

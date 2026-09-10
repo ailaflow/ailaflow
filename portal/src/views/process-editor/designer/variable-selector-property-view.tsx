@@ -1,4 +1,4 @@
-import { VariableDefinition } from '@ailaflow/model';
+import { VariableDefinition } from '@ailaflow/shared';
 import { SvgIcon } from '../../common/svg-icons';
 import { EditorPropertyView } from './editor-property-view';
 

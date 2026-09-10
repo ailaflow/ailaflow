@@ -1,4 +1,4 @@
-import type { TelegramBotConfigurationDto } from '@ailaflow/model';
+import type { TelegramBotConfigurationDto } from '@ailaflow/shared';
 import { useState } from 'react';
 import { SvgIcon } from './svg-icons';
 

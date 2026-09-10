@@ -1,4 +1,4 @@
-import { ScriptDefinition } from '@ailaflow/model';
+import { ScriptDefinition } from '@ailaflow/shared';
 import { SandboxInstanceManager } from '../../sandbox/sandbox-instance-manager';
 import { Process } from '../../repositories/process/process';
 import { ProcessLogger } from './process-logger';

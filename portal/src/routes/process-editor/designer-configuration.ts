@@ -11,7 +11,7 @@ import {
   ProcessDefinition,
   PROCESS_VERSION,
   TaskCompletionPolicy
-} from '@ailaflow/model';
+} from '@ailaflow/shared';
 
 export function createBlankDefinition(): ProcessDefinition {
   return {

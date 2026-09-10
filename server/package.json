@@ -12,7 +12,7 @@
     "@aibindkit/core": "workspace:*",
     "@aibindkit/express": "workspace:*",
     "@aibindkit/llm": "workspace:*",
-    "@ailaflow/model": "workspace:*",
+    "@ailaflow/shared": "workspace:*",
     "croner": "^10.0.1",
     "express": "^5.2.1",
     "sequential-workflow-machine": "^0.7.1",

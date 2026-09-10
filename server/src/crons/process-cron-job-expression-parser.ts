@@ -1,4 +1,4 @@
-import { ProcessCronJobExpressionValidator } from '@ailaflow/model';
+import { ProcessCronJobExpressionValidator } from '@ailaflow/shared';
 import { Cron } from 'croner';
 
 export class ProcessCronJobExpressionParser {

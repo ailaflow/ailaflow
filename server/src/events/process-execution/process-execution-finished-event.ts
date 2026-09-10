@@ -1,4 +1,4 @@
-import { ProcessExecutionResult } from '@ailaflow/model';
+import { ProcessExecutionResult } from '@ailaflow/shared';
 import { Event } from '../event';
 import { ProcessExecutionContext } from '../../process-executor/process-execution-context';
 

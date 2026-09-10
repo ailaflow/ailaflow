@@ -1,4 +1,4 @@
-import { DeleteProcessCronJobResponse } from '@ailaflow/model';
+import { DeleteProcessCronJobResponse } from '@ailaflow/shared';
 import { Request } from 'express';
 import { ProcessCronJobRepository } from '../../repositories/process-cron-job/process-cron-job-repository';
 import { Endpoint } from '../framework/endpoint';

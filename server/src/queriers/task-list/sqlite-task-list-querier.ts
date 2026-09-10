@@ -1,4 +1,4 @@
-import { GetTasksResponse, TaskLiteDto } from '@ailaflow/model';
+import { GetTasksResponse, TaskLiteDto } from '@ailaflow/shared';
 import { DatabaseSync } from 'node:sqlite';
 import { SqliteDatabases } from '../../core/sqlite-databases';
 import { TaskListQuerier } from './task-list-querier';

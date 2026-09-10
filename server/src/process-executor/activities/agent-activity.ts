@@ -1,4 +1,4 @@
-import { AgentStep } from '@ailaflow/model';
+import { AgentStep } from '@ailaflow/shared';
 import { createAtomActivityFromHandler } from 'sequential-workflow-machine';
 import { ProcessExecutionGlobalState } from '../process-execution-global-state';
 

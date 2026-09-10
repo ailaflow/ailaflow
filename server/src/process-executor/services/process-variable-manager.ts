@@ -1,4 +1,4 @@
-import { JsonSchema, ProcessExecutionVariableValues } from '@ailaflow/model';
+import { JsonSchema, ProcessExecutionVariableValues } from '@ailaflow/shared';
 import { ProcessVariables } from '../../repositories/process/process-variables';
 
 export class ProcessVariableManager {

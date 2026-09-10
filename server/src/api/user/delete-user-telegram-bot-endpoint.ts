@@ -1,4 +1,4 @@
-import type { DeleteTelegramBotResponse } from '@ailaflow/model';
+import type { DeleteTelegramBotResponse } from '@ailaflow/shared';
 import { Request } from 'express';
 import { UserRepository } from '../../repositories/user/user-repository';
 import { TelegramConfigurationApi } from '../common/telegram-configuration-api';

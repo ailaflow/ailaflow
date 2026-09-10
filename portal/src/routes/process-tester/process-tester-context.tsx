@@ -5,7 +5,7 @@ import {
   type ProcessDto,
   type ReturnStep,
   type TestProcessUpdate
-} from '@ailaflow/model';
+} from '@ailaflow/shared';
 import { createContext, useContext, useEffect, useMemo, useReducer } from 'react';
 import { DefinitionWalker } from 'sequential-workflow-model';
 import { useApiClient, useSession } from '../../auth/auth-context';

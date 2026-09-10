@@ -1,4 +1,4 @@
-import { GetLicenseStatusResponse } from '@ailaflow/model';
+import { GetLicenseStatusResponse } from '@ailaflow/shared';
 import { LicenseManager } from '../../configuration/license/license-manager';
 import { Endpoint } from '../framework/endpoint';
 

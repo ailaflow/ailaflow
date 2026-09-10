@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import fs from 'node:fs/promises';
 import { Process } from '../repositories/process/process';
 import { DefinitionWalker } from 'sequential-workflow-model';
-import { DockerfileContent, ProcessDefinition, ScriptDefinition, ScriptStep } from '@ailaflow/model';
+import { DockerfileContent, ProcessDefinition, ScriptDefinition, ScriptStep } from '@ailaflow/shared';
 import { Sandbox } from '../repositories/sandbox/sandbox';
 import { SandboxHostPaths } from './sandbox-host-paths';
 import { Logger } from '../core/logger';

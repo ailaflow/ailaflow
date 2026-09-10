@@ -1,5 +1,5 @@
 import { fnv1a } from '@aibindkit/core';
-import { ProcessDefinition } from '@ailaflow/model';
+import { ProcessDefinition } from '@ailaflow/shared';
 import { BranchedStep, Sequence, SequentialStep, Step } from 'sequential-workflow-model';
 
 export class DesignerUtils {

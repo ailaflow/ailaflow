@@ -1,4 +1,4 @@
-import type { ProcessDto } from '@ailaflow/model';
+import type { ProcessDto } from '@ailaflow/shared';
 import { ProcessTesterView } from '../../views/process-tester/process-tester-view';
 import { ProcessTesterChats } from './process-tester-chats';
 import { ProcessTesterTop } from './process-tester-top';

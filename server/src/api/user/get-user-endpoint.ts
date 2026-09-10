@@ -1,4 +1,4 @@
-import { GetUserResponse } from '@ailaflow/model';
+import { GetUserResponse } from '@ailaflow/shared';
 import { Request } from 'express';
 import { UserRepository } from '../../repositories/user/user-repository';
 import { UserAttributesRepository } from '../../repositories/user-attributes/user-attributes-repository';

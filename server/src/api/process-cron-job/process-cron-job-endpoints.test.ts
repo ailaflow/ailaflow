@@ -1,4 +1,4 @@
-import { PROCESS_VERSION } from '@ailaflow/model';
+import { PROCESS_VERSION } from '@ailaflow/shared';
 import assert from 'node:assert/strict';
 import { EventEmitter } from 'node:events';
 import { Request } from 'express';

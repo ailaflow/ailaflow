@@ -1,4 +1,4 @@
-import { GetTablesResponse, TableLiteDto } from '@ailaflow/model';
+import { GetTablesResponse, TableLiteDto } from '@ailaflow/shared';
 import { DatabaseSync } from 'node:sqlite';
 import { SqliteDatabases } from '../../core/sqlite-databases';
 import { TableListQuerier } from './table-list-querier';

@@ -3,7 +3,7 @@ packages:
   - './@aibindkit/express'
   - './@aibindkit/llm'
   - './@aibindkit/react'
-  - './model'
+  - './shared'
   - './server'
   - './portal'
   - './cli'

@@ -1,4 +1,4 @@
-import type { ExecuteSandboxCommandUpdate, SandboxDto } from '@ailaflow/model';
+import type { ExecuteSandboxCommandUpdate, SandboxDto } from '@ailaflow/shared';
 import { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { useApiClient } from '../../auth/auth-context';
 import type { SandboxTerminalEntry, SandboxTerminalEntryType } from '../../views/sandbox-terminal/sandbox-terminal-view';

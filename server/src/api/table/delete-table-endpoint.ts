@@ -1,4 +1,4 @@
-import { DeleteTableResponse } from '@ailaflow/model';
+import { DeleteTableResponse } from '@ailaflow/shared';
 import { Request } from 'express';
 import { TableRepository } from '../../repositories/table/table-repository';
 import { Endpoint } from '../framework/endpoint';

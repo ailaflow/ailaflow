@@ -1,4 +1,4 @@
-import { ProcessCronJobRun } from '@ailaflow/model';
+import { ProcessCronJobRun } from '@ailaflow/shared';
 import { Repository } from '../repository';
 import { ProcessCronJob } from './process-cron-job';
 

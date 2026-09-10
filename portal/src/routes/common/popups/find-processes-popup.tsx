@@ -1,4 +1,4 @@
-import type { GetProcessesResponse } from '@ailaflow/model';
+import type { GetProcessesResponse } from '@ailaflow/shared';
 import { useEffect, useState } from 'react';
 import { SimpleItemSearchPopupView } from '../../../views/common/popups/simple-item-search-popup-view';
 import { ApiClient } from '../../../api/api-client';

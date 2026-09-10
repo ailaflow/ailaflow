@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { resolve } from 'node:path';
-import { AgentStep, ProcessDefinition, LlmUseCase, PROCESS_VERSION, ProcessLiteDto, ProcessExecutionResult } from '@ailaflow/model';
+import { AgentStep, ProcessDefinition, LlmUseCase, PROCESS_VERSION, ProcessLiteDto, ProcessExecutionResult } from '@ailaflow/shared';
 import { LlmClient } from '@aibindkit/llm';
 import { AgentToolSetProviderFactory } from '../chat-session/agent-tool-set-provider-factory';
 import { Process } from '../repositories/process/process';

@@ -1,4 +1,4 @@
-import { GetMyProcessesResponse, getMyProcessesRequestSchema } from '@ailaflow/model';
+import { GetMyProcessesResponse, getMyProcessesRequestSchema } from '@ailaflow/shared';
 import { Request } from 'express';
 import { getAuthToken } from '../auth/auth-middleware';
 import { Endpoint } from '../framework/endpoint';

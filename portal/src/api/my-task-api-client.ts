@@ -8,7 +8,7 @@ import type {
   GetTaskVariableValueResponse,
   SubmitMyTaskRequest,
   SubmitMyTaskResponse
-} from '@ailaflow/model';
+} from '@ailaflow/shared';
 
 export class MyTaskApiClient {
   public constructor(private readonly client: HttpClient) {}

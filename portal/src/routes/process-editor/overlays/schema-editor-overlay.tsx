@@ -1,4 +1,4 @@
-import { JsonSchema } from '@ailaflow/model';
+import { JsonSchema } from '@ailaflow/shared';
 import { ProcessEditorOverlayType, useProcessEditor } from '../process-editor-context';
 import { wrapDefinition } from 'sequential-workflow-designer-react';
 import { useState } from 'react';

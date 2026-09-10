@@ -1,4 +1,4 @@
-import { UserAttributesValidator, UserValidator } from '@ailaflow/model';
+import { UserAttributesValidator, UserValidator } from '@ailaflow/shared';
 import { toolError, toolSuccess } from '@aibindkit/react';
 import { useAiStore } from '../common/admin-portal';
 import { UserEditorState } from './user-editor-state';

@@ -1,5 +1,5 @@
 import { ZodTool, ZodToolExecutionResult } from '@aibindkit/llm';
-import { VariableDefinition } from '@ailaflow/model';
+import { VariableDefinition } from '@ailaflow/shared';
 
 export class ListVariablesTool extends ZodTool {
   public constructor(private readonly variables: VariableDefinition[]) {

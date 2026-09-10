@@ -1,5 +1,5 @@
 import { useLoader } from '@aibindkit/react';
-import type { GetTelegramConfigurationResponse, TelegramBotConfigurationDto } from '@ailaflow/model';
+import type { GetTelegramConfigurationResponse, TelegramBotConfigurationDto } from '@ailaflow/shared';
 import { useEffect, useRef, useState } from 'react';
 import { useApiClient } from '../../auth/auth-context';
 import { TelegramConfigurationView, type TelegramBotDraft } from '../../views/common/telegram-configuration-view';

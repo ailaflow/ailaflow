@@ -7,7 +7,7 @@ import { SqliteResourceAccessRepository } from '../resource-access/sqlite-resour
 import { ProcessResourceId } from './process-resource-id';
 import { SqliteProcessRepository } from './sqlite-process-repository';
 import { Process } from './process';
-import { ProcessDefinition, PROCESS_VERSION } from '@ailaflow/model';
+import { ProcessDefinition, PROCESS_VERSION } from '@ailaflow/shared';
 
 test('persists and updates whether a process is pausable', async () => {
   const { abortSignal, db, processRepository } = await setup();

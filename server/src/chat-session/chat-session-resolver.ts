@@ -11,7 +11,7 @@ import { ToolSetProvider } from './tool-set-provider';
 import { ChatSessionId } from './chat-session-id';
 import { LlmClientProvider } from '../llm/llm-client-provider';
 import { LlmProviderConfigurationError } from '../repositories/configuration/llm/llm-provider-configuration';
-import { LlmUseCase } from '@ailaflow/model';
+import { LlmUseCase } from '@ailaflow/shared';
 import { join } from 'node:path';
 
 export class ChatSessionResolver implements BaseChatSessionResolver {

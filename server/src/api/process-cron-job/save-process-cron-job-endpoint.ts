@@ -1,4 +1,4 @@
-import { SaveProcessCronJobResponse, saveProcessCronJobRequestSchema } from '@ailaflow/model';
+import { SaveProcessCronJobResponse, saveProcessCronJobRequestSchema } from '@ailaflow/shared';
 import { Request } from 'express';
 import { ProcessManager } from '../../process/process-manager';
 import { ProcessCronJob } from '../../repositories/process-cron-job/process-cron-job';

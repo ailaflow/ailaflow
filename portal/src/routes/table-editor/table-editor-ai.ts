@@ -1,4 +1,4 @@
-import { TableValidator } from '@ailaflow/model';
+import { TableValidator } from '@ailaflow/shared';
 import { toolError, toolSuccess } from '@aibindkit/react';
 import { useAiStore } from '../common/admin-portal';
 import { TableEditorState } from './table-editor-state';

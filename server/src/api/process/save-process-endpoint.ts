@@ -6,7 +6,7 @@ import {
   saveProcessRequestSchema,
   SaveProcessResponse,
   VariableCachedValidator
-} from '@ailaflow/model';
+} from '@ailaflow/shared';
 import { ProcessRepository, ProcessRepositoryError } from '../../repositories/process/process-repository';
 import { EndpointError } from '../framework/endpoint-error';
 import { SandboxListQuerier } from '../../queriers/sandbox-list/sandbox-list-querier';

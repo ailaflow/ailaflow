@@ -1,4 +1,4 @@
-# Model
+# Shared
 
 This package contains shared types and logic used by the `portal` and `server` applications.
 

@@ -2,7 +2,7 @@ import { useStepEditor } from 'sequential-workflow-designer-react';
 import { DesignerEditorView } from '../../../views/process-editor/designer/designer-editor-view';
 import { StepEditorProps } from './step-editor';
 import { StringEditorPropertyView } from '../../../views/process-editor/designer/string-editor-property-view';
-import { AgentStep, ProcessDefinition } from '@ailaflow/model';
+import { AgentStep, ProcessDefinition } from '@ailaflow/shared';
 import { DropdownPropertyView } from '../../../views/process-editor/designer/dropdown-property-view';
 import { StringOrVariablePropertyView } from '../../../views/process-editor/designer/string-or-variable-property-view';
 import { useState } from 'react';

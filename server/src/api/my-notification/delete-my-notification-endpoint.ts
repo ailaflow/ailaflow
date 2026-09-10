@@ -1,4 +1,4 @@
-import { DeleteMyNotificationResponse } from '@ailaflow/model';
+import { DeleteMyNotificationResponse } from '@ailaflow/shared';
 import { Request } from 'express';
 import { NotificationRepository } from '../../repositories/notification/notification-repository';
 import { getAuthToken } from '../auth/auth-middleware';

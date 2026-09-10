@@ -1,4 +1,4 @@
-import type { TestPublicUrlResponse } from '@ailaflow/model';
+import type { TestPublicUrlResponse } from '@ailaflow/shared';
 
 export interface PublicUrlConfigurationViewProps {
   publicUrl: string;

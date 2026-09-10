@@ -1,4 +1,4 @@
-import { ProcessExecutionVariableValues } from '@ailaflow/model';
+import { ProcessExecutionVariableValues } from '@ailaflow/shared';
 import { UserChatSessionProvider } from '../chat-session/user-chat-session-provider';
 import { IncompleteAssignedTaskCountQuerier } from '../queriers/task/incomplete-assigned-task-count-querier';
 import { AssignedTaskRepository } from '../repositories/task/assigned-task-repository';

@@ -1,4 +1,4 @@
-import { FormDefinition, JsonSchema } from '@ailaflow/model';
+import { FormDefinition, JsonSchema } from '@ailaflow/shared';
 import { TaskVariables } from './task-variables';
 import { randomUUID } from 'node:crypto';
 

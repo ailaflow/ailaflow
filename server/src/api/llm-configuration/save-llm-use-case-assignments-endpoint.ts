@@ -1,4 +1,4 @@
-import { LlmUseCase, saveLlmUseCaseAssignmentsRequestSchema } from '@ailaflow/model';
+import { LlmUseCase, saveLlmUseCaseAssignmentsRequestSchema } from '@ailaflow/shared';
 import { Request } from 'express';
 import { EventBus } from '../../events/event-bus';
 import { LlmConfigurationChangedEvent } from '../../events/llm-configuration/llm-configuration-changed-event';

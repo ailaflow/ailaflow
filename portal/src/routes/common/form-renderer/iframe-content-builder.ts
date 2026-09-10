@@ -1,4 +1,4 @@
-import { FormDefinition } from '@ailaflow/model';
+import { FormDefinition } from '@ailaflow/shared';
 
 const frameworkCss = `
 html,

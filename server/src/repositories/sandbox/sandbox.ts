@@ -1,4 +1,4 @@
-import { SandboxValidator, UpsertSandboxRequest } from '@ailaflow/model';
+import { SandboxValidator, UpsertSandboxRequest } from '@ailaflow/shared';
 import { SandboxRepositoryError } from './sandbox-repository';
 import { fnv1a } from '@aibindkit/core';
 

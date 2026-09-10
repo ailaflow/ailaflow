@@ -2,7 +2,7 @@ import {
   ProcessLogLevel,
   type FormDefinition,
   type ProcessExecutionVariableValues
-} from '@ailaflow/model';
+} from '@ailaflow/shared';
 import type { RefObject } from 'react';
 
 export enum ProcessTesterTimelineItemType {

@@ -1,4 +1,4 @@
-import { JsonSchema, ProcessDefinition } from '@ailaflow/model';
+import { JsonSchema, ProcessDefinition } from '@ailaflow/shared';
 import { ProcessRepository, ProcessRepositoryError } from './process-repository';
 import { Process } from './process';
 import { SqliteDatabases } from '../../core/sqlite-databases';

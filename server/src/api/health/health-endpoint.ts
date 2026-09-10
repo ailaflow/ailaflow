@@ -1,4 +1,4 @@
-import { HealthResponse } from '@ailaflow/model';
+import { HealthResponse } from '@ailaflow/shared';
 import { Endpoint } from '../framework/endpoint';
 
 export class HealthEndpoint implements Endpoint {

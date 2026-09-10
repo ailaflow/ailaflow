@@ -1,4 +1,4 @@
-import { UserAttributeValueType } from '@ailaflow/model';
+import { UserAttributeValueType } from '@ailaflow/shared';
 
 export interface UserAttributeEditorRow {
   id: number;

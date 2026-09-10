@@ -5,7 +5,7 @@ import {
   LlmProviderType,
   LlmUseCaseConfigurationValidator,
   strLlmUseCase
-} from '@ailaflow/model';
+} from '@ailaflow/shared';
 import type {
   FetchLlmProviderModelsRequest,
   GetLlmConfigurationResponse,
@@ -13,7 +13,7 @@ import type {
   LlmProviderDto,
   SaveLlmProviderRequest,
   SaveLlmUseCaseAssignmentsRequest
-} from '@ailaflow/model';
+} from '@ailaflow/shared';
 import { useMemo, useState } from 'react';
 import type { LlmProviderDraft, LlmUseCaseDraft } from '../../views/configuration/llm-configuration-view';
 

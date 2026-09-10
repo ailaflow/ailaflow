@@ -1,4 +1,4 @@
-import { JsonSchema, ProcessExecutionVariableValues } from '@ailaflow/model';
+import { JsonSchema, ProcessExecutionVariableValues } from '@ailaflow/shared';
 import z from 'zod/v4';
 
 export class TaskVariables {

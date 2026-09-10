@@ -1,4 +1,4 @@
-import { FetchLlmProviderModelsResponse, LlmProviderPolicy, fetchLlmProviderModelsRequestSchema } from '@ailaflow/model';
+import { FetchLlmProviderModelsResponse, LlmProviderPolicy, fetchLlmProviderModelsRequestSchema } from '@ailaflow/shared';
 import { LlmClientError } from '@aibindkit/llm';
 import { Request } from 'express';
 import { LlmClientFactory } from '../../llm/llm-client-factory';

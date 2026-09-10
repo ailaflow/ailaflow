@@ -1,4 +1,4 @@
-import { ProcessExecutionVariableValues } from '@ailaflow/model';
+import { ProcessExecutionVariableValues } from '@ailaflow/shared';
 import { Process } from '../repositories/process/process';
 import { ProcessLogger } from './services/process-logger';
 import { ProcessScriptExecutor } from './services/process-script-executor';

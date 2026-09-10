@@ -1,5 +1,5 @@
-import { LlmProviderPolicy, LlmProviderType } from '@ailaflow/model';
-import type { LlmModelDto, LlmProviderDto, LlmUseCase } from '@ailaflow/model';
+import { LlmProviderPolicy, LlmProviderType } from '@ailaflow/shared';
+import type { LlmModelDto, LlmProviderDto, LlmUseCase } from '@ailaflow/shared';
 import { useState } from 'react';
 
 export interface LlmProviderDraft {

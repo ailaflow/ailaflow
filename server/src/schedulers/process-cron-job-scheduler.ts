@@ -1,4 +1,4 @@
-import { ProcessCronJobRunStatus } from '@ailaflow/model';
+import { ProcessCronJobRunStatus } from '@ailaflow/shared';
 import { Logger } from '../core/logger';
 import { ProcessCronJobExpressionParser } from '../crons/process-cron-job-expression-parser';
 import { ProcessCronJob } from '../repositories/process-cron-job/process-cron-job';

@@ -4,7 +4,7 @@ import type {
   SaveTelegramBotRequest,
   SaveTelegramBotResponse,
   TelegramBotConfigurationDto
-} from '@ailaflow/model';
+} from '@ailaflow/shared';
 import { randomBytes } from 'crypto';
 import { EventBus } from '../../events/event-bus';
 import { TelegramConfigurationChangedEvent } from '../../events/telegram-configuration/telegram-configuration-changed-event';

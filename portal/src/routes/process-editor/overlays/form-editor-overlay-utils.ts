@@ -1,4 +1,4 @@
-import { FormDefinition, ReturnStep, TaskStep } from '@ailaflow/model';
+import { FormDefinition, ReturnStep, TaskStep } from '@ailaflow/shared';
 import { ProcessEditorOverlayType, ProcessEditorState } from '../process-editor-context';
 import * as z from 'zod/v4';
 

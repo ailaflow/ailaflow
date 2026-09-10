@@ -1,4 +1,4 @@
-import { GetMyProcessStartFormResponse } from '@ailaflow/model';
+import { GetMyProcessStartFormResponse } from '@ailaflow/shared';
 import { Endpoint } from '../framework/endpoint';
 import { getEndpointAbortSignal } from '../framework/endpoint-abort-signal';
 import { getAuthToken } from '../auth/auth-middleware';

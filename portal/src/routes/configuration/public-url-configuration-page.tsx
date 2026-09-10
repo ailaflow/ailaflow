@@ -1,6 +1,6 @@
 import { useLoader } from '@aibindkit/react';
-import { PublicUrlValidator } from '@ailaflow/model';
-import type { GetPublicUrlConfigurationResponse, TestPublicUrlResponse } from '@ailaflow/model';
+import { PublicUrlValidator } from '@ailaflow/shared';
+import type { GetPublicUrlConfigurationResponse, TestPublicUrlResponse } from '@ailaflow/shared';
 import { useState } from 'react';
 import { useApiClient } from '../../auth/auth-context';
 import { PublicUrlConfigurationView } from '../../views/configuration/public-url-configuration-view';

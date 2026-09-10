@@ -3,7 +3,7 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
-import { PROCESS_VERSION, ProcessDefinition, ScriptDefinition } from '@ailaflow/model';
+import { PROCESS_VERSION, ProcessDefinition, ScriptDefinition } from '@ailaflow/shared';
 import { Process } from '../repositories/process/process';
 import { SandboxHostPaths } from './sandbox-host-paths';
 import { SandboxMaterializer } from './sandbox-materializer';

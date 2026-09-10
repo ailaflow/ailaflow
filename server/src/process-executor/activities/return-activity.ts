@@ -1,6 +1,6 @@
 import { createInterruptionActivity } from 'sequential-workflow-machine';
 import { ProcessExecutionGlobalState } from '../process-execution-global-state';
-import { ReturnStep } from '@ailaflow/model';
+import { ReturnStep } from '@ailaflow/shared';
 
 export const returnActivity = createInterruptionActivity<ReturnStep, ProcessExecutionGlobalState>('return', {
   handler: async (step: ReturnStep, globalState: ProcessExecutionGlobalState) => {

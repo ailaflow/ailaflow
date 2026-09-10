@@ -1,4 +1,4 @@
-import type { FileContent, ScriptDefinition } from '@ailaflow/model';
+import type { FileContent, ScriptDefinition } from '@ailaflow/shared';
 import { ProcessEditorOverlayType, ProcessEditorState } from '../process-editor-context';
 
 export interface ScriptEditorOverlayData {

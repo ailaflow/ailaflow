@@ -6,7 +6,7 @@ import type {
   GetLlmConfigurationResponse,
   SaveLlmProviderRequest,
   SaveLlmUseCaseAssignmentsRequest
-} from '@ailaflow/model';
+} from '@ailaflow/shared';
 
 export class LlmConfigurationApiClient {
   public constructor(private readonly client: HttpClient) {}

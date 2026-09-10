@@ -1,6 +1,6 @@
 import { DatabaseSync } from 'node:sqlite';
 import { ProcessListQuerier } from './process-list-querier';
-import { GetProcessesResponse, ProcessLiteDto } from '@ailaflow/model';
+import { GetProcessesResponse, ProcessLiteDto } from '@ailaflow/shared';
 import { SqliteDatabases } from '../../core/sqlite-databases';
 
 export class SqliteProcessListQuerier implements ProcessListQuerier {

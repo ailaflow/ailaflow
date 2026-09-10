@@ -1,4 +1,4 @@
-import { ScriptStep } from '@ailaflow/model';
+import { ScriptStep } from '@ailaflow/shared';
 import { createAtomActivity } from 'sequential-workflow-machine';
 import { ProcessExecutionGlobalState } from '../process-execution-global-state';
 

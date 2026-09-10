@@ -1,5 +1,5 @@
 import { HttpClient } from '@aibindkit/react';
-import type { GetLicenseConfigurationResponse, GetLicenseStatusResponse, SaveLicenseConfigurationRequest } from '@ailaflow/model';
+import type { GetLicenseConfigurationResponse, GetLicenseStatusResponse, SaveLicenseConfigurationRequest } from '@ailaflow/shared';
 
 export class LicenseConfigurationApiClient {
   public constructor(private readonly client: HttpClient) {}

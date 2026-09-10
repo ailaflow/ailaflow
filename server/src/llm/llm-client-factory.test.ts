@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { CodexLlmClient } from '@aibindkit/llm';
-import { LlmProviderType } from '@ailaflow/model';
+import { LlmProviderType } from '@ailaflow/shared';
 import { LlmProviderConfiguration } from '../repositories/configuration/llm/llm-provider-configuration';
 import { LlmClientFactory } from './llm-client-factory';
 

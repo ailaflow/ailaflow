@@ -1,4 +1,4 @@
-import { LicenseStatus, LicenseType } from '@ailaflow/model';
+import { LicenseStatus, LicenseType } from '@ailaflow/shared';
 import { KvConfigurationManager } from '../kv/kv-configuration-manager';
 import { LicenseValidator } from './license-validator';
 import { Logger } from '../../core/logger';

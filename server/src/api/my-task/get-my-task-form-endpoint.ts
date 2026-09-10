@@ -1,4 +1,4 @@
-import { getMyTaskFormRequestSchema, GetMyTaskFormResponse } from '@ailaflow/model';
+import { getMyTaskFormRequestSchema, GetMyTaskFormResponse } from '@ailaflow/shared';
 import { Request } from 'express';
 import { UserAssignedTaskProvider } from '../../task/user-assigned-task-provider';
 import { getAuthToken } from '../auth/auth-middleware';

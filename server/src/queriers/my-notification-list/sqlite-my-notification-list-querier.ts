@@ -1,5 +1,5 @@
 import { DatabaseSync } from 'node:sqlite';
-import { GetMyNotificationsResponse, MyNotificationDto } from '@ailaflow/model';
+import { GetMyNotificationsResponse, MyNotificationDto } from '@ailaflow/shared';
 import { SqliteDatabases } from '../../core/sqlite-databases';
 import { MyNotificationListQuerier } from './my-notification-list-querier';
 

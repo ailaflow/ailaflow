@@ -1,5 +1,5 @@
 import { DatabaseSync } from 'node:sqlite';
-import { UserAccessCondition, UserAccessExpression, UserAttributeValueType } from '@ailaflow/model';
+import { UserAccessCondition, UserAccessExpression, UserAttributeValueType } from '@ailaflow/shared';
 import { SqliteDatabases } from '../../core/sqlite-databases';
 import { UserAccessExpressionUserQuerier } from './user-access-expression-user-querier';
 

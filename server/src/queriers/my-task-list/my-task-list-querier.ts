@@ -1,4 +1,4 @@
-import { GetMyTasksResponse } from '@ailaflow/model';
+import { GetMyTasksResponse } from '@ailaflow/shared';
 
 export interface MyTaskListQuerier {
   query(

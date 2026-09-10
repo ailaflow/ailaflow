@@ -1,4 +1,4 @@
-import { GetTablesResponse, getTablesRequestSchema } from '@ailaflow/model';
+import { GetTablesResponse, getTablesRequestSchema } from '@ailaflow/shared';
 import { Request } from 'express';
 import { TableListQuerier } from '../../queriers/table-list/table-list-querier';
 import { Endpoint } from '../framework/endpoint';

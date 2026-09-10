@@ -1,4 +1,4 @@
-import { ProcessExecutionResult, ProcessExecutionVariableValues } from '@ailaflow/model';
+import { ProcessExecutionResult, ProcessExecutionVariableValues } from '@ailaflow/shared';
 import { Process } from '../repositories/process/process';
 import { ProcessExecutor } from './process-executor';
 import { EventBus } from '../events/event-bus';

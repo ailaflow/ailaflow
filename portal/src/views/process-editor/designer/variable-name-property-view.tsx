@@ -1,4 +1,4 @@
-import type { VariableDefinition } from '@ailaflow/model';
+import type { VariableDefinition } from '@ailaflow/shared';
 import { DropdownPropertyView } from './dropdown-property-view';
 
 export interface VariableNamePropertyViewProps {

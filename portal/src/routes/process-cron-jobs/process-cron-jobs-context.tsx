@@ -4,7 +4,7 @@ import {
   ProcessDto,
   ProcessExecutionVariableValues,
   VariableCachedValidator
-} from '@ailaflow/model';
+} from '@ailaflow/shared';
 import { createContext, useContext, useMemo, useRef, useState } from 'react';
 import { useApiClient } from '../../auth/auth-context';
 import type { ProcessCronJobDraftViewModel } from '../../views/process-cron-jobs/process-cron-jobs-view';

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
 import test from 'node:test';
-import { UserAccessComparisonOperator, UserAttributeValueType } from '@ailaflow/model';
+import { UserAccessComparisonOperator, UserAttributeValueType } from '@ailaflow/shared';
 import { SqliteDatabases } from '../../core/sqlite-databases';
 import { ResourceAccess } from './resource-access-repository';
 import { SqliteResourceAccessRepository } from './sqlite-resource-access-repository';

@@ -11,7 +11,7 @@ import { EventBus } from '../events/event-bus';
 import { ProcessExecutionResumeListenerStore } from './process-execution-resume-listener-store';
 import { ProcessManager } from '../process/process-manager';
 import { ProcessDefinitionUpgrader } from '../process/process-definition-upgrader';
-import { PROCESS_VERSION } from '@ailaflow/model';
+import { PROCESS_VERSION } from '@ailaflow/shared';
 
 test('process execution resumer continues when the process hash changed', async () => {
   const abortSignal = new AbortController().signal;

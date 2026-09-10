@@ -1,5 +1,5 @@
 import { HttpClient } from '@aibindkit/react';
-import type { DeleteMyNotificationResponse, GetMyNotificationsRequest, GetMyNotificationsResponse } from '@ailaflow/model';
+import type { DeleteMyNotificationResponse, GetMyNotificationsRequest, GetMyNotificationsResponse } from '@ailaflow/shared';
 
 export class MyNotificationApiClient {
   public constructor(private readonly client: HttpClient) {}

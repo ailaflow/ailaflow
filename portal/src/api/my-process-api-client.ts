@@ -6,7 +6,7 @@ import type {
   GetMyProcessStartFormResponse,
   StartMyProcessRequest,
   StartMyProcessResponse
-} from '@ailaflow/model';
+} from '@ailaflow/shared';
 
 export class MyProcessApiClient {
   public constructor(private readonly client: HttpClient) {}

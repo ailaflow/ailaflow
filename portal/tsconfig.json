@@ -17,7 +17,7 @@
     "paths": {
       "@aibindkit/core": ["../@aibindkit/core/src/index.ts"],
       "@aibindkit/react": ["../@aibindkit/react/src/index.ts"],
-      "@ailaflow/model": ["../model/src/index.ts"]
+      "@ailaflow/shared": ["../shared/src/index.ts"]
     }
   },
   "include": ["src"]

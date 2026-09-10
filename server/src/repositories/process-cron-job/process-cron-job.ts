@@ -1,4 +1,4 @@
-import { ProcessCronJobRun, ProcessExecutionVariableValues } from '@ailaflow/model';
+import { ProcessCronJobRun, ProcessExecutionVariableValues } from '@ailaflow/shared';
 import { randomUUID } from 'crypto';
 import { ProcessCronJobExpressionParser } from '../../crons/process-cron-job-expression-parser';
 import { ProcessCronJobRepositoryError } from './process-cron-job-repository';

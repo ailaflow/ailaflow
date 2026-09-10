@@ -1,4 +1,4 @@
-import type { GetTelegramConfigurationResponse } from '@ailaflow/model';
+import type { GetTelegramConfigurationResponse } from '@ailaflow/shared';
 import { Request } from 'express';
 import { UserRepository } from '../../repositories/user/user-repository';
 import { TelegramConfigurationApi } from '../common/telegram-configuration-api';

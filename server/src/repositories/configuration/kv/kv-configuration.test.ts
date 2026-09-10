@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { LicenseType } from '@ailaflow/model';
+import { LicenseType } from '@ailaflow/shared';
 import { KvConfiguration } from './kv-configuration';
 
 test('tracks setter calls and preserves validated URLs', () => {

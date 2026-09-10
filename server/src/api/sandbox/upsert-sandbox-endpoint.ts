@@ -1,5 +1,5 @@
 import { Request } from 'express';
-import { upsertSandboxRequestSchema } from '@ailaflow/model';
+import { upsertSandboxRequestSchema } from '@ailaflow/shared';
 import { SandboxRepository } from '../../repositories/sandbox/sandbox-repository';
 import { Sandbox } from '../../repositories/sandbox/sandbox';
 import { Endpoint } from '../framework/endpoint';

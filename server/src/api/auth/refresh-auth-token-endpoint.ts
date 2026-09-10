@@ -1,6 +1,6 @@
 import { Request } from 'express';
 import { Endpoint } from '../framework/endpoint';
-import { refreshTokenRequestSchema, RefreshTokenResponse } from '@ailaflow/model';
+import { refreshTokenRequestSchema, RefreshTokenResponse } from '@ailaflow/shared';
 import { AuthTokenRepository } from '../../repositories/auth-token/auth-token-repository';
 import { AuthToken } from '../../repositories/auth-token/auth-token';
 import { EndpointError } from '../framework/endpoint-error';

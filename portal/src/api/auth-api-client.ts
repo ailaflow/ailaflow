@@ -1,5 +1,5 @@
 import { HttpClient } from '@aibindkit/react';
-import type { LoginRequest, LoginResponse, RefreshTokenRequest, RefreshTokenResponse } from '@ailaflow/model';
+import type { LoginRequest, LoginResponse, RefreshTokenRequest, RefreshTokenResponse } from '@ailaflow/shared';
 
 export class AuthApiClient {
   public constructor(private readonly client: HttpClient) {}

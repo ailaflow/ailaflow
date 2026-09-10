@@ -1,7 +1,7 @@
 import { AnthropicLlmClient, CodexLlmClient, LlmClient, LlmModelSettings, OpenaiLlmClient } from '@aibindkit/llm';
 import { ResolvedLlmUseCaseConfiguration } from '../repositories/configuration/llm/llm-configuration';
 import { LlmProviderConfiguration } from '../repositories/configuration/llm/llm-provider-configuration';
-import { LlmProviderType } from '@ailaflow/model';
+import { LlmProviderType } from '@ailaflow/shared';
 
 export interface ConfiguredLlmClient {
   client: LlmClient;

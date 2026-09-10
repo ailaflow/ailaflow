@@ -3,7 +3,7 @@ import { SqliteDatabases } from '../../../core/sqlite-databases';
 import { LlmConfiguration } from './llm-configuration';
 import { LlmConfigurationRepository, LlmConfigurationRepositoryError } from './llm-configuration-repository';
 import { LlmModelProviderConfiguration, LlmProviderConfiguration } from './llm-provider-configuration';
-import { LlmProviderType, LlmUseCase } from '@ailaflow/model';
+import { LlmProviderType, LlmUseCase } from '@ailaflow/shared';
 import { LlmUseCaseConfiguration } from './llm-use-case-configuration';
 
 interface ProviderRow {

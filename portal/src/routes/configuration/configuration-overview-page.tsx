@@ -1,6 +1,6 @@
 import { useLoader } from '@aibindkit/react';
-import { LicenseType, LlmProviderPolicy, LlmUseCase } from '@ailaflow/model';
-import type { GetLlmConfigurationResponse } from '@ailaflow/model';
+import { LicenseType, LlmProviderPolicy, LlmUseCase } from '@ailaflow/shared';
+import type { GetLlmConfigurationResponse } from '@ailaflow/shared';
 import { useApiClient } from '../../auth/auth-context';
 import { ConfigurationOverviewView } from '../../views/configuration/configuration-overview-view';
 import type { ConfigurationStatus } from '../../views/configuration/configuration-overview-view';

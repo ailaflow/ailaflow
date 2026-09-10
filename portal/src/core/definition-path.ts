@@ -1,4 +1,4 @@
-import { ProcessDefinition } from '@ailaflow/model';
+import { ProcessDefinition } from '@ailaflow/shared';
 import { DefinitionWalker, Step } from 'sequential-workflow-model';
 
 const processWalker = new DefinitionWalker();

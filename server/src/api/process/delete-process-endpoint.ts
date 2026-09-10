@@ -1,4 +1,4 @@
-import { DeleteProcessResponse } from '@ailaflow/model';
+import { DeleteProcessResponse } from '@ailaflow/shared';
 import { Request } from 'express';
 import { ProcessManager } from '../../process/process-manager';
 import { Endpoint } from '../framework/endpoint';

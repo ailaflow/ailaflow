@@ -9,7 +9,7 @@ import type {
   SaveTelegramBotResponse,
   SaveUserRequest,
   SaveUserResponse
-} from '@ailaflow/model';
+} from '@ailaflow/shared';
 
 export class UserApiClient {
   public constructor(private readonly client: HttpClient) {}

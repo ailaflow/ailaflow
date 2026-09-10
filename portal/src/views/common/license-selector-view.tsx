@@ -1,4 +1,4 @@
-import { LicenseType } from '@ailaflow/model';
+import { LicenseType } from '@ailaflow/shared';
 
 export interface LicenseSelectorViewProps {
   licenseType: LicenseType;

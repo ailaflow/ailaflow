@@ -4,7 +4,7 @@ import { EventEmitter } from 'node:events';
 import { DatabaseSync } from 'node:sqlite';
 import test, { TestContext } from 'node:test';
 import { Request } from 'express';
-import { LicenseType } from '@ailaflow/model';
+import { LicenseType } from '@ailaflow/shared';
 import { LicenseManager } from '../../configuration/license/license-manager';
 import { LicenseValidator } from '../../configuration/license/license-validator';
 import { SqliteDatabases } from '../../core/sqlite-databases';

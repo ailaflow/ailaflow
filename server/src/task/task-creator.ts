@@ -1,4 +1,4 @@
-import { FormDefinition, JsonSchema, UserAccessExpressionParser } from '@ailaflow/model';
+import { FormDefinition, JsonSchema, UserAccessExpressionParser } from '@ailaflow/shared';
 import { AssignedTaskRepository } from '../repositories/task/assigned-task-repository';
 import { TaskRepository } from '../repositories/task/task-repository';
 import { UserAccessExpressionUserQuerier } from '../queriers/user-access-expression/user-access-expression-user-querier';

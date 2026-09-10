@@ -4,7 +4,7 @@ import type {
   GetTelegramConfigurationResponse,
   SaveTelegramBotRequest,
   SaveTelegramBotResponse
-} from '@ailaflow/model';
+} from '@ailaflow/shared';
 
 export class TelegramConfigurationApiClient {
   public constructor(private readonly client: HttpClient) {}

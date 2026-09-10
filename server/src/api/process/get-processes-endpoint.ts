@@ -1,6 +1,6 @@
 import { ProcessListQuerier } from '../../queriers/process-list/process-list-querier';
 import { Endpoint } from '../framework/endpoint';
-import { GetProcessesResponse, getProcessesRequestSchema } from '@ailaflow/model';
+import { GetProcessesResponse, getProcessesRequestSchema } from '@ailaflow/shared';
 import { Request } from 'express';
 import { getEndpointAbortSignal } from '../framework/endpoint-abort-signal';
 import { parseQuery } from '../framework/parse-request';

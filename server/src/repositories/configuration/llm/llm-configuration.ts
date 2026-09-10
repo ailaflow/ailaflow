@@ -1,6 +1,6 @@
 import { LlmProviderConfiguration, LlmProviderConfigurationError } from './llm-provider-configuration';
 import { LlmUseCaseConfiguration } from './llm-use-case-configuration';
-import { LlmUseCase, strLlmUseCase } from '@ailaflow/model';
+import { LlmUseCase, strLlmUseCase } from '@ailaflow/shared';
 
 export interface ResolvedLlmUseCaseConfiguration {
   provider: LlmProviderConfiguration;

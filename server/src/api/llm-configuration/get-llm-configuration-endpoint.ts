@@ -1,4 +1,4 @@
-import { GetLlmConfigurationResponse } from '@ailaflow/model';
+import { GetLlmConfigurationResponse } from '@ailaflow/shared';
 import { Request } from 'express';
 import { LlmConfigurationRepository } from '../../repositories/configuration/llm/llm-configuration-repository';
 import { Endpoint } from '../framework/endpoint';

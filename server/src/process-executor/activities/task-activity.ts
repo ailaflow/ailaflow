@@ -1,4 +1,4 @@
-import { JsonSchema, TaskStep } from '@ailaflow/model';
+import { JsonSchema, TaskStep } from '@ailaflow/shared';
 import { createSignalActivity, SignalPayload } from 'sequential-workflow-machine';
 import { ProcessExecutionGlobalState } from '../process-execution-global-state';
 
