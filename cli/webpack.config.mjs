@@ -111,8 +111,8 @@ function portalConfig(mode) {
     new CopyWebpackPlugin({
       patterns: [
         {
-          from: resolve(rootDirectory, 'portal/public/assets/steps'),
-          to: 'assets/steps'
+          from: resolve(rootDirectory, 'portal/public'),
+          to: '.'
         }
       ]
     })

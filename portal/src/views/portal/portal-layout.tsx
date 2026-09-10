@@ -19,6 +19,10 @@ export type CommandMenuItem = {
 
 export type MenuItem = LinkMenuItem | CommandMenuItem;
 
+function Logo(props: { className: string }) {
+  return <img src="/assets/logo.png" alt="AilaFlow" className={props.className} />;
+}
+
 function MenuItemView(props: { item: MenuItem; onCommand(command: string): void; onSelect?: () => void }) {
   const { item } = props;
   const isSelected = item.action === 'link' && item.isSelected;
@@ -91,9 +95,9 @@ export function PortalLayout(props: PortalLayoutProps) {
               <Link
                 to="/"
                 onClick={closeSidebar}
-                className="block text-center text-3xl font-semibold tracking-tight transition-colors hover:text-slate-700"
+                className="block transition-opacity hover:opacity-80"
               >
-                AilaFlow
+                <Logo className="mx-auto h-16 w-16 object-contain" />
               </Link>
             </div>
 
@@ -123,7 +127,9 @@ export function PortalLayout(props: PortalLayoutProps) {
         <main className="min-h-0 min-w-0 flex-1 overflow-hidden bg-white">
           <div className="flex h-full min-h-0 flex-col">
             <div className="flex h-12 shrink-0 items-center justify-between border-b border-slate-200 px-4 md:hidden">
-              <div className="text-sm font-semibold tracking-tight">AilaFlow</div>
+              <Link to="/" aria-label="AilaFlow home">
+                <Logo className="h-8 w-8 object-contain" />
+              </Link>
               <button
                 type="button"
                 aria-label="Open navigation menu"

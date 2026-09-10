@@ -58,6 +58,14 @@ test('the packaged CLI serves the API and portal', async () => {
     assert.equal(deepRoute.status, 200);
     assert.equal(await deepRoute.text(), rootHtml);
 
+    const logo = await fetch(`http://127.0.0.1:${port}/assets/logo.png`);
+    assert.equal(logo.status, 200);
+    assert.equal(logo.headers.get('content-type'), 'image/png');
+
+    const favicon = await fetch(`http://127.0.0.1:${port}/favicon.ico`);
+    assert.equal(favicon.status, 200);
+    assert.equal(favicon.headers.get('content-type'), 'image/vnd.microsoft.icon');
+
     const missingAsset = await fetch(`http://127.0.0.1:${port}/assets/missing.js`);
     assert.equal(missingAsset.status, 404);
   } finally {
