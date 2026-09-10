@@ -3,7 +3,7 @@ import { EventEmitter } from 'node:events';
 import { DatabaseSync } from 'node:sqlite';
 import test from 'node:test';
 import { Request } from 'express';
-import { LlmProviderType, LlmUseCase } from '@aila/model';
+import { LlmProviderType, LlmUseCase } from '@ailaflow/model';
 import type { LlmClient } from '@aibindkit/llm';
 import { SqliteDatabases } from '../../core/sqlite-databases';
 import { EventBus } from '../../events/event-bus';

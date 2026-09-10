@@ -14,9 +14,9 @@ export class ServerPaths {
   private readonly runtimeFolderPath: string;
 
   public constructor() {
-    this.appDataFolderPath = requiredPath('AILA_DATA_DIR');
-    this.portalFolderPath = requiredPath('AILA_PORTAL_DIR');
-    this.runtimeFolderPath = requiredPath('AILA_RUNTIME_DIR');
+    this.appDataFolderPath = requiredPath('AILAFLOW_DATA_DIR');
+    this.portalFolderPath = requiredPath('AILAFLOW_PORTAL_DIR');
+    this.runtimeFolderPath = requiredPath('AILAFLOW_RUNTIME_DIR');
   }
 
   public getRuntimeFolderPath(): string {

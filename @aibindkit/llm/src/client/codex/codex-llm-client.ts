@@ -53,7 +53,7 @@ interface CodexActiveTurn {
 
 const maxLoadedThreads = 100;
 const inactiveThreadTtlMs = 30 * 60_000;
-const forbiddenServerRequestMessage = 'Codex attempted to invoke a native tool that Aila did not provide';
+const forbiddenServerRequestMessage = 'Codex attempted to invoke a native tool that AilaFlow did not provide';
 
 export class CodexLlmClient implements LlmClient {
   private readonly connection: CodexAppServerConnection;
@@ -179,7 +179,7 @@ export class CodexLlmClient implements LlmClient {
         if (abortSignal.aborted) {
           throw error;
         }
-        // An ephemeral thread can disappear when app-server restarts. Rebuild it from Aila's transcript.
+        // An ephemeral thread can disappear when app-server restarts. Rebuild it from AilaFlow's transcript.
       }
     }
 
@@ -347,7 +347,7 @@ export class CodexLlmClient implements LlmClient {
     }
     const active = this.activeTurns.get(call.threadId);
     if (!active || active.turnId !== call.turnId) {
-      throw new LlmClientError(`Codex dynamic tool call does not belong to an active Aila turn`);
+      throw new LlmClientError(`Codex dynamic tool call does not belong to an active AilaFlow turn`);
     }
     if (!active.toolNames.has(call.tool)) {
       const error = new LlmClientError(`Codex requested unknown dynamic tool ${call.tool}`);

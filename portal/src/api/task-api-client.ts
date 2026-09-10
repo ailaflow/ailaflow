@@ -1,5 +1,5 @@
 import { HttpClient } from '@aibindkit/react';
-import type { DeleteTaskResponse, GetTasksRequest, GetTasksResponse } from '@aila/model';
+import type { DeleteTaskResponse, GetTasksRequest, GetTasksResponse } from '@ailaflow/model';
 
 export class TaskApiClient {
   public constructor(private readonly client: HttpClient) {}

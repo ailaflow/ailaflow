@@ -1,4 +1,4 @@
-import { DockerfileContent, SandboxValidator } from '@aila/model';
+import { DockerfileContent, SandboxValidator } from '@ailaflow/model';
 import { toolError, toolSuccess } from '@aibindkit/react';
 import { useAiStore } from '../common/admin-portal';
 import { SandboxEditorState } from './sandbox-editor-state';

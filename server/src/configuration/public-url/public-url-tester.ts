@@ -1,4 +1,4 @@
-import { healthResponseSchema, TestPublicUrlResponse } from '@aila/model';
+import { healthResponseSchema, TestPublicUrlResponse } from '@ailaflow/model';
 
 const TIMEOUT = 5_000;
 

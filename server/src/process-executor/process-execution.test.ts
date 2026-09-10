@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { ProcessExecutionVariableValues } from '@aila/model';
+import { ProcessExecutionVariableValues } from '@ailaflow/model';
 import { createActivitySet, createSignalActivity, createWorkflowMachineBuilder } from 'sequential-workflow-machine';
 import { Definition, Step } from 'sequential-workflow-model';
 import { ProcessExecution } from './process-execution';

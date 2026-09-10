@@ -41,7 +41,7 @@ export class TelegramMessageFormatter {
     if (!text.trim()) {
       return null;
     }
-    return messageType === ChatMessageType.USER ? `You in Aila: ${text}` : text;
+    return messageType === ChatMessageType.USER ? `You in AilaFlow: ${text}` : text;
   }
 
   private split(text: string): string[] {

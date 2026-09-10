@@ -1,4 +1,4 @@
-import { saveUserRequestSchema, SaveUserResponse } from '@aila/model';
+import { saveUserRequestSchema, SaveUserResponse } from '@ailaflow/model';
 import { Request } from 'express';
 import { Endpoint } from '../framework/endpoint';
 import { parseBody } from '../framework/parse-request';

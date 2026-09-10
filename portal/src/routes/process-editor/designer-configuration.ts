@@ -11,7 +11,7 @@ import {
   ProcessDefinition,
   PROCESS_VERSION,
   TaskCompletionPolicy
-} from '@aila/model';
+} from '@ailaflow/model';
 
 export function createBlankDefinition(): ProcessDefinition {
   return {
@@ -39,14 +39,14 @@ function createEmptyScriptDefinition(): ScriptDefinition {
       name: 'process-script',
       private: true,
       dependencies: {
-        '@aila/bridge-lib': 'file:/bridge/lib'
+        '@ailaflow/bridge-lib': 'file:/bridge/lib'
       }
     },
     null,
     2
   );
   const SCRIPT_MAIN_JS = [
-    `const { readInput, writeOutput } = require('@aila/bridge-lib');`,
+    `const { readInput, writeOutput } = require('@ailaflow/bridge-lib');`,
     ``,
     `async function main() {`,
     `  const input = readInput();`,

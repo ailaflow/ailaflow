@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { SubmitEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { InstallResponse, LicenseType } from '@aila/model';
+import { InstallResponse, LicenseType } from '@ailaflow/model';
 import { useApiClient } from '../../auth/auth-context';
 import { CenteredFormLayout } from '../../views/centered-form/centered-form-layout';
 import { InstallView } from '../../views/install/install-view';

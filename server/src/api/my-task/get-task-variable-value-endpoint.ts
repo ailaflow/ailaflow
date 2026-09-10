@@ -1,4 +1,4 @@
-import { getTaskVariableValueRequestSchema, type GetTaskVariableValueResponse } from '@aila/model';
+import { getTaskVariableValueRequestSchema, type GetTaskVariableValueResponse } from '@ailaflow/model';
 import { Endpoint } from '../framework/endpoint';
 import { Request } from 'express';
 import { UserTaskDetailsProvider } from '../../task/user-task-details-provider';

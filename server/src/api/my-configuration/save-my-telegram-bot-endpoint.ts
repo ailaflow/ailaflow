@@ -1,5 +1,5 @@
-import type { SaveTelegramBotResponse } from '@aila/model';
-import { saveTelegramBotRequestSchema } from '@aila/model';
+import type { SaveTelegramBotResponse } from '@ailaflow/model';
+import { saveTelegramBotRequestSchema } from '@ailaflow/model';
 import { Request } from 'express';
 import { TelegramConfigurationApi } from '../common/telegram-configuration-api';
 import { getAuthToken } from '../auth/auth-middleware';

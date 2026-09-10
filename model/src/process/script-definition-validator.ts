@@ -16,9 +16,9 @@ export class ScriptDefinitionValidator {
       return 'package.json is not a valid JSON file.';
     }
 
-    const ailaDep = pkgJsonContent.dependencies?.['@aila/bridge-lib'];
-    if (ailaDep !== 'file:/bridge/lib') {
-      return 'package.json must have a dependency on @aila/bridge-lib with version file:/bridge/lib.';
+    const ailaflowDependency = pkgJsonContent.dependencies?.['@ailaflow/bridge-lib'];
+    if (ailaflowDependency !== 'file:/bridge/lib') {
+      return 'package.json must have a dependency on @ailaflow/bridge-lib with version file:/bridge/lib.';
     }
 
     return null;

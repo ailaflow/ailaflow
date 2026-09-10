@@ -1,4 +1,4 @@
-import type { TestPublicUrlResponse } from '@aila/model';
+import type { TestPublicUrlResponse } from '@ailaflow/model';
 
 export interface PublicUrlConfigurationViewProps {
   publicUrl: string;
@@ -21,7 +21,7 @@ export function PublicUrlConfigurationView(props: PublicUrlConfigurationViewProp
           <div className="border-b border-slate-200 px-4 py-4">
             <h2 className="text-lg font-semibold text-slate-900">Public server URL</h2>
             <p className="mt-1 text-sm text-slate-500">
-              Configure the externally accessible address used when Aila generates public links.
+              Configure the externally accessible address used when AilaFlow generates public links.
             </p>
           </div>
 
@@ -32,7 +32,7 @@ export function PublicUrlConfigurationView(props: PublicUrlConfigurationViewProp
                 type="url"
                 value={props.publicUrl}
                 onChange={event => props.onPublicUrlChange(event.target.value)}
-                placeholder="https://my-domain.com/aila"
+                placeholder="https://my-domain.com/ailaflow"
                 aria-invalid={Boolean(props.validationError)}
                 className={`mt-1.5 h-9 w-full rounded-md border bg-white px-2.5 font-mono text-sm font-normal text-slate-900 outline-none placeholder:text-slate-400 ${
                   props.validationError ? 'border-red-300 focus:border-red-500' : 'border-slate-200 focus:border-slate-400'

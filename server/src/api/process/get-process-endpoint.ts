@@ -1,7 +1,7 @@
 import { Request } from 'express';
 import { ProcessManager } from '../../process/process-manager';
 import { Endpoint } from '../framework/endpoint';
-import { GetProcessResponse } from '@aila/model';
+import { GetProcessResponse } from '@ailaflow/model';
 import { EndpointError } from '../framework/endpoint-error';
 import { getEndpointAbortSignal } from '../framework/endpoint-abort-signal';
 

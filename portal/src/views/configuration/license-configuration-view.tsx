@@ -1,5 +1,5 @@
-import { LicenseType } from '@aila/model';
-import type { LicenseStatus } from '@aila/model';
+import { LicenseType } from '@ailaflow/model';
+import type { LicenseStatus } from '@ailaflow/model';
 import type { SubmitEvent } from 'react';
 import { LicenseSelectorView } from '../common/license-selector-view';
 import type { LicenseSelectorViewProps } from '../common/license-selector-view';
@@ -20,7 +20,7 @@ export function LicenseConfigurationView(props: LicenseConfigurationViewProps) {
         <section className="rounded-lg border border-slate-200 bg-white shadow-sm">
           <div className="border-b border-slate-200 p-4">
             <h2 className="text-lg font-semibold text-slate-900">License</h2>
-            <p className="mt-1 text-sm text-slate-500">Choose the license for your use of Aila.</p>
+            <p className="mt-1 text-sm text-slate-500">Choose the license for your use of AilaFlow.</p>
           </div>
           <form onSubmit={props.onSubmit} className="space-y-4 p-4">
             <LicenseSelectorView {...props} />

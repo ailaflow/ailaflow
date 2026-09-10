@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import { UserDto } from '@aila/model';
+import { UserDto } from '@ailaflow/model';
 import { useNavigate } from 'react-router-dom';
 import { useApiClient } from '../../auth/auth-context';
 import { ResourceEditorView } from '../../views/resource-editor/resource-editor-view';

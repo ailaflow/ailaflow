@@ -1,4 +1,4 @@
-import { SaveUserRequest, UserAttributesValidator, UserAttributeValue, UserAttributeValueType, UserValidator, UserDto } from '@aila/model';
+import { SaveUserRequest, UserAttributesValidator, UserAttributeValue, UserAttributeValueType, UserValidator, UserDto } from '@ailaflow/model';
 import { useMemo, useState } from 'react';
 import { UserAttributeEditorRow } from '../../views/user-editor/user-editor-view';
 

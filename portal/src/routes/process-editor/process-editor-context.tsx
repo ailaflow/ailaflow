@@ -6,7 +6,7 @@ import {
   ProcessRootValidator,
   ProcessValidator,
   VariableCachedValidator
-} from '@aila/model';
+} from '@ailaflow/model';
 import { useMemo, useReducer } from 'react';
 import { useContext } from 'react';
 import { createContext } from 'react';

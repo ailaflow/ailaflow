@@ -28,8 +28,8 @@ export class SandboxRuntime {
   ): Promise<SandboxRuntime> {
     const logger = new Logger(SandboxRuntime.name);
 
-    const imageTag = `aila_sandbox_${name}`;
-    const dockerName = `aila_sandbox_${name}`;
+    const imageTag = `ailaflow_sandbox_${name}`;
+    const dockerName = `ailaflow_sandbox_${name}`;
     const buildArgs = {
       ...secrets,
       SANDBOX_NAME: name

@@ -1,4 +1,4 @@
-import { AgentStep, LlmUseCase } from '@aila/model';
+import { AgentStep, LlmUseCase } from '@ailaflow/model';
 import { ChatSessionFactory, ChatSessionUpdate, DisabledChatSessionStorage, ToolSet } from '@aibindkit/llm';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';

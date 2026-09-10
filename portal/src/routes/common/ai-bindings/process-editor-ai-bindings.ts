@@ -1,6 +1,6 @@
 import * as z from 'zod/v4';
 import { route, routeStoreFactory, tool } from '@aibindkit/react';
-import { jsonSchema, taskCompletionPolicySchema } from '@aila/model';
+import { jsonSchema, taskCompletionPolicySchema } from '@ailaflow/model';
 
 // Conventions:
 // - don't add a dot `.` at the end of the description to reduce amount of tokens.

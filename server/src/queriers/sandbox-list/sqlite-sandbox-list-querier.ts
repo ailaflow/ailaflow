@@ -1,5 +1,5 @@
 import { DatabaseSync } from 'node:sqlite';
-import { SandboxLiteDto } from '@aila/model';
+import { SandboxLiteDto } from '@ailaflow/model';
 import { SqliteDatabases } from '../../core/sqlite-databases';
 import { SandboxListQuerier } from './sandbox-list-querier';
 

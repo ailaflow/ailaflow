@@ -3,7 +3,7 @@ import { DatabaseSync } from 'node:sqlite';
 import test from 'node:test';
 import { SqliteDatabases } from '../../../core/sqlite-databases';
 import { LlmProviderConfiguration } from './llm-provider-configuration';
-import { LlmProviderType, LlmUseCase } from '@aila/model';
+import { LlmProviderType, LlmUseCase } from '@ailaflow/model';
 import { LlmUseCaseConfiguration } from './llm-use-case-configuration';
 import { SqliteLlmConfigurationRepository } from './sqlite-llm-configuration-repository';
 

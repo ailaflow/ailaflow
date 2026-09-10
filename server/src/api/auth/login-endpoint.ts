@@ -1,7 +1,7 @@
 import { Request } from 'express';
 import { Endpoint } from '../framework/endpoint';
 import { UserRepository } from '../../repositories/user/user-repository';
-import { loginRequestSchema, LoginResponse } from '@aila/model';
+import { loginRequestSchema, LoginResponse } from '@ailaflow/model';
 import { PasswordHasher } from '../../repositories/user/password-hasher';
 import { AuthTokenRepository } from '../../repositories/auth-token/auth-token-repository';
 import { AuthToken } from '../../repositories/auth-token/auth-token';

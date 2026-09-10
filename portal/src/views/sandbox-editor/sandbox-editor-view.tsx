@@ -1,4 +1,4 @@
-import { DockerfileContent } from '@aila/model';
+import { DockerfileContent } from '@ailaflow/model';
 import { useLayoutEffect, useRef, useState } from 'react';
 import { SvgIcon } from '../common/svg-icons';
 

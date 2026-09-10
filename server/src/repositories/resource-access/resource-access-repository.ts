@@ -1,4 +1,4 @@
-import { UserAccessExpression, UserAccessExpressionParser } from '@aila/model';
+import { UserAccessExpression, UserAccessExpressionParser } from '@ailaflow/model';
 import { Repository } from '../repository';
 
 export class ResourceAccess {

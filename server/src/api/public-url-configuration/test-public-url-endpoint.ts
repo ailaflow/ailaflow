@@ -1,4 +1,4 @@
-import { testPublicUrlRequestSchema, TestPublicUrlResponse } from '@aila/model';
+import { testPublicUrlRequestSchema, TestPublicUrlResponse } from '@ailaflow/model';
 import { Request } from 'express';
 import { PublicUrlTester } from '../../configuration/public-url/public-url-tester';
 import { KvConfigurationManager } from '../../configuration/kv/kv-configuration-manager';

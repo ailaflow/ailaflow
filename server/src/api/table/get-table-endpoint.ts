@@ -1,4 +1,4 @@
-import { GetTableResponse } from '@aila/model';
+import { GetTableResponse } from '@ailaflow/model';
 import { Request } from 'express';
 import { TableRepository } from '../../repositories/table/table-repository';
 import { Endpoint } from '../framework/endpoint';

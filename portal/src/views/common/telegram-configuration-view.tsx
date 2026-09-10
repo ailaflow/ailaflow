@@ -1,4 +1,4 @@
-import type { TelegramBotConfigurationDto } from '@aila/model';
+import type { TelegramBotConfigurationDto } from '@ailaflow/model';
 import { useState } from 'react';
 import { SvgIcon } from './svg-icons';
 
@@ -32,7 +32,7 @@ export function TelegramConfigurationView(props: TelegramConfigurationViewProps)
             <div>
               <h2 className="text-lg font-semibold text-slate-900">Telegram bots</h2>
               <p className="mt-1 text-sm text-slate-500">
-                Bind a Telegram bot to an Aila chat channel. Bot tokens are stored by the server and are never returned to the browser.
+                Bind a Telegram bot to an AilaFlow chat channel. Bot tokens are stored by the server and are never returned to the browser.
               </p>
             </div>
             <button

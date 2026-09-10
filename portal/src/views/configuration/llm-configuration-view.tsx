@@ -1,5 +1,5 @@
-import { LlmProviderPolicy, LlmProviderType } from '@aila/model';
-import type { LlmModelDto, LlmProviderDto, LlmUseCase } from '@aila/model';
+import { LlmProviderPolicy, LlmProviderType } from '@ailaflow/model';
+import type { LlmModelDto, LlmProviderDto, LlmUseCase } from '@ailaflow/model';
 import { useState } from 'react';
 
 export interface LlmProviderDraft {
@@ -61,7 +61,7 @@ export function LlmConfigurationView(props: LlmConfigurationViewProps) {
           <div className="flex flex-col gap-3 border-b border-slate-200 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h2 className="text-lg font-semibold text-slate-900">Use cases</h2>
-              <p className="mt-1 text-sm text-slate-500">Choose the provider and model used by each part of Aila.</p>
+              <p className="mt-1 text-sm text-slate-500">Choose the provider and model used by each part of AilaFlow.</p>
             </div>
             <button
               type="button"
@@ -298,7 +298,7 @@ function ProviderEditor(props: {
         {props.draft.type === LlmProviderType.CODEX_APP_SERVER && (
           <div className="min-w-0 rounded-md border border-sky-200 bg-sky-50 p-3 text-sm text-sky-900 md:col-span-2">
             <p className="font-medium">Start the Codex WebSocket server</p>
-            <p className="mt-1">Run this command in a terminal on the machine running the Aila server:</p>
+            <p className="mt-1">Run this command in a terminal on the machine running the AilaFlow server:</p>
             <pre className="mt-2 overflow-x-auto rounded border border-sky-100 bg-white p-2 text-xs">
               <code>codex app-server --listen ws://127.0.0.1:4500</code>
             </pre>

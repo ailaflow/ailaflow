@@ -1,4 +1,4 @@
-import type { GetTelegramConfigurationResponse } from '@aila/model';
+import type { GetTelegramConfigurationResponse } from '@ailaflow/model';
 import { Request } from 'express';
 import { TelegramConfigurationApi } from '../common/telegram-configuration-api';
 import { getAuthToken } from '../auth/auth-middleware';

@@ -2,7 +2,7 @@ import { useStepEditor } from 'sequential-workflow-designer-react';
 import { DesignerEditorView } from '../../../views/process-editor/designer/designer-editor-view';
 import { StepEditorProps } from './step-editor';
 import { StringEditorPropertyView } from '../../../views/process-editor/designer/string-editor-property-view';
-import { ProcessDefinition, TaskCompletionPolicy, TaskStep } from '@aila/model';
+import { ProcessDefinition, TaskCompletionPolicy, TaskStep } from '@ailaflow/model';
 import { EditorPropertyView } from '../../../views/process-editor/designer/editor-property-view';
 import { EnabledSubValuePreviewView } from '../../../views/process-editor/designer/sub-value-preview-view';
 import { DefinitionPath } from '../../../core/definition-path';

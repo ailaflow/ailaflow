@@ -72,7 +72,7 @@ test('replays eligible session messages, resumes chunks, and stores numeric sent
   await waitFor(() => client.sentTexts.length === 3);
   synchronizer.destroy();
 
-  assert.equal(client.sentTexts[0], 'You in Aila: Hello from portal');
+  assert.equal(client.sentTexts[0], 'You in AilaFlow: Hello from portal');
   assert.equal(client.sentTexts[1].length, 4_000);
   assert.equal(client.sentTexts[2].length, 1);
   assert.equal(client.sentTexts.includes('Hidden'), false);

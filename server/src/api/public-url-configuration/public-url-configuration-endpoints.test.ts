@@ -28,23 +28,27 @@ test('gets, saves, clears, and tests the Public URL configuration', async () => 
     isAvailable: false,
     error: 'Public URL is not configured.'
   });
-  assert.deepEqual(await saveEndpoint.handle(createRequest({ publicUrl: 'https://aila.example.com/proxy/aila' })), {
-    publicUrl: 'https://aila.example.com/proxy/aila'
+  assert.deepEqual(await saveEndpoint.handle(createRequest({ publicUrl: 'https://ailaflow.example.com/proxy/ailaflow' })), {
+    publicUrl: 'https://ailaflow.example.com/proxy/ailaflow'
   });
-  assert.deepEqual(await getEndpoint.handle(createRequest()), { publicUrl: 'https://aila.example.com/proxy/aila' });
-  for (const publicUrl of [' https://aila.example.com ', 'https://aila.example.com/proxy/aila/', 'https://AILA.example.com']) {
+  assert.deepEqual(await getEndpoint.handle(createRequest()), { publicUrl: 'https://ailaflow.example.com/proxy/ailaflow' });
+  for (const publicUrl of [
+    ' https://ailaflow.example.com ',
+    'https://ailaflow.example.com/proxy/ailaflow/',
+    'https://AILAFLOW.example.com'
+  ]) {
     await assert.rejects(saveEndpoint.handle(createRequest({ publicUrl })));
     await assert.rejects(testEndpoint.handle(createRequest({ publicUrl })));
   }
-  assert.deepEqual(await getEndpoint.handle(createRequest()), { publicUrl: 'https://aila.example.com/proxy/aila' });
+  assert.deepEqual(await getEndpoint.handle(createRequest()), { publicUrl: 'https://ailaflow.example.com/proxy/ailaflow' });
   const originalFetch = globalThis.fetch;
   globalThis.fetch = async input => {
-    assert.equal(input.toString(), 'https://aila.example.com/proxy/aila/health');
-    return Response.json({ server: 'aila', status: 'ok' });
+    assert.equal(input.toString(), 'https://ailaflow.example.com/proxy/ailaflow/health');
+    return Response.json({ server: 'ailaflow', status: 'ok' });
   };
   try {
     assert.deepEqual(await testEndpoint.handle(createRequest({})), {
-      publicUrl: 'https://aila.example.com/proxy/aila',
+      publicUrl: 'https://ailaflow.example.com/proxy/ailaflow',
       isAvailable: true,
       error: null
     });

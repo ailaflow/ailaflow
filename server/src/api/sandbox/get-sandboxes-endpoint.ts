@@ -1,4 +1,4 @@
-import { GetSandboxesResponse } from '@aila/model';
+import { GetSandboxesResponse } from '@ailaflow/model';
 import { SandboxListQuerier } from '../../queriers/sandbox-list/sandbox-list-querier';
 import { Endpoint } from '../framework/endpoint';
 import { Request } from 'express';

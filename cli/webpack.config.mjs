@@ -14,7 +14,7 @@ const packageJson = JSON.parse(readFileSync(resolve(cliDirectory, 'package.json'
 const serverExternalPackages = new Set(Object.keys(packageJson.dependencies ?? {}));
 
 const aliases = {
-  '@aila/model$': resolve(rootDirectory, 'model/src/index.ts'),
+  '@ailaflow/model$': resolve(rootDirectory, 'model/src/index.ts'),
   '@aibindkit/core$': resolve(rootDirectory, '@aibindkit/core/src/index.ts'),
   '@aibindkit/express$': resolve(rootDirectory, '@aibindkit/express/src/index.ts'),
   '@aibindkit/llm$': resolve(rootDirectory, '@aibindkit/llm/src/index.ts'),

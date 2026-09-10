@@ -1,4 +1,4 @@
-import { SandboxDto, SandboxValidator, UpsertSandboxRequest } from '@aila/model';
+import { SandboxDto, SandboxValidator, UpsertSandboxRequest } from '@ailaflow/model';
 import { useMemo, useRef, useState } from 'react';
 import { SandboxSecret } from '../../views/sandbox-editor/sandbox-editor-view';
 

@@ -1,4 +1,4 @@
-import { TableValidator } from '@aila/model';
+import { TableValidator } from '@ailaflow/model';
 import { TableRepositoryError } from './table-repository';
 
 export class Table {

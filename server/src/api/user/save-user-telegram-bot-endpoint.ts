@@ -1,5 +1,5 @@
-import type { SaveTelegramBotResponse } from '@aila/model';
-import { saveTelegramBotRequestSchema } from '@aila/model';
+import type { SaveTelegramBotResponse } from '@ailaflow/model';
+import { saveTelegramBotRequestSchema } from '@ailaflow/model';
 import { Request } from 'express';
 import { UserRepository } from '../../repositories/user/user-repository';
 import { TelegramConfigurationApi } from '../common/telegram-configuration-api';

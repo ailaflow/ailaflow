@@ -1,4 +1,4 @@
-import { FormDefinition } from '@aila/model';
+import { FormDefinition } from '@ailaflow/model';
 import { useEffect, useMemo, useState } from 'react';
 import { IframeContentBuilder } from './iframe-content-builder';
 import { IframeFormView } from '../../../views/form-renderer/iframe-form-view';

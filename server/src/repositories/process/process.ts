@@ -5,7 +5,7 @@ import {
   ProcessStepValidator,
   ProcessValidator,
   SaveProcessRequest
-} from '@aila/model';
+} from '@ailaflow/model';
 import { ProcessVariables } from './process-variables';
 import { DefinitionWalker } from 'sequential-workflow-model';
 import { ProcessRepositoryError } from './process-repository';

@@ -20,9 +20,9 @@ async function serve(options: ServeOptions): Promise<number> {
     env: {
       ...process.env,
       PORT: String(options.port),
-      AILA_DATA_DIR: options.dataDirectory,
-      AILA_PORTAL_DIR: join(distributionDirectory, 'portal'),
-      AILA_RUNTIME_DIR: join(distributionDirectory, 'runtime')
+      AILAFLOW_DATA_DIR: options.dataDirectory,
+      AILAFLOW_PORTAL_DIR: join(distributionDirectory, 'portal'),
+      AILAFLOW_RUNTIME_DIR: join(distributionDirectory, 'runtime')
     }
   });
   let shutdownSignal: NodeJS.Signals | null = null;
@@ -38,7 +38,7 @@ async function serve(options: ServeOptions): Promise<number> {
 
   return new Promise(resolveExit => {
     child.on('error', error => {
-      process.stderr.write(`Cannot start Aila: ${error.message}\n`);
+      process.stderr.write(`Cannot start AilaFlow: ${error.message}\n`);
       resolveExit(1);
     });
     child.on('exit', (code, signal) => {
@@ -76,7 +76,7 @@ async function confirmReset(dataDirectory: string): Promise<boolean> {
 
   const prompt = createInterface({ input: process.stdin, output: process.stdout });
   try {
-    const answer = await prompt.question(`Permanently delete all Aila data in ${dataDirectory}? [y/N] `);
+    const answer = await prompt.question(`Permanently delete all AilaFlow data in ${dataDirectory}? [y/N] `);
     return answer.trim().toLowerCase() === 'y' || answer.trim().toLowerCase() === 'yes';
   } finally {
     prompt.close();
@@ -96,7 +96,7 @@ async function resetData(dataDirectory: string, force: boolean): Promise<void> {
 
   const entries = await readdir(actualDirectory);
   await Promise.all(entries.map(entry => rm(join(actualDirectory, entry), { recursive: true, force: true })));
-  process.stdout.write(`Aila data reset: ${actualDirectory}\n`);
+  process.stdout.write(`AilaFlow data reset: ${actualDirectory}\n`);
 }
 
 async function main(): Promise<void> {
@@ -108,7 +108,7 @@ async function main(): Promise<void> {
     }
 
     const command = parser.getCommand('serve');
-    const dataDirectory = resolveDataDirectory(parser.getArg('data-dir', join(homedir(), '.aila')));
+    const dataDirectory = resolveDataDirectory(parser.getArg('data-dir', join(homedir(), '.ailaflow')));
     if (command === 'data path') {
       parser.assertAllowedArgs(['data-dir']);
       process.stdout.write(`${dataDirectory}\n`);

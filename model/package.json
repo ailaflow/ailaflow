@@ -1,5 +1,5 @@
 {
-  "name": "@aila/model",
+  "name": "@ailaflow/model",
   "private": true,
   "version": "1.0.0",
   "type": "commonjs",

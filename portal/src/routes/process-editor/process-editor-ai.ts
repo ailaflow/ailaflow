@@ -15,7 +15,7 @@ import {
   TaskStepValidator,
   UserAccessExpressionParser,
   VariableDefinition
-} from '@aila/model';
+} from '@ailaflow/model';
 import { DesignerUtils } from './designer-utils';
 import { DefinitionPath } from '../../core/definition-path';
 import { FormEditorOverlayUtils } from './overlays/form-editor-overlay-utils';

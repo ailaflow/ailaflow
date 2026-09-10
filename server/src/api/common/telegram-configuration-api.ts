@@ -4,7 +4,7 @@ import type {
   SaveTelegramBotRequest,
   SaveTelegramBotResponse,
   TelegramBotConfigurationDto
-} from '@aila/model';
+} from '@ailaflow/model';
 import { randomBytes } from 'crypto';
 import { EventBus } from '../../events/event-bus';
 import { TelegramConfigurationChangedEvent } from '../../events/telegram-configuration/telegram-configuration-changed-event';
@@ -46,7 +46,7 @@ export class TelegramConfigurationApi {
       }
       const webhook = await this.client.getWebhookInfo(abortSignal, botToken);
       if (webhook.url) {
-        throw new EndpointError('Telegram bot has a webhook configured; remove it before connecting it to Aila', 400);
+        throw new EndpointError('Telegram bot has a webhook configured; remove it before connecting it to AilaFlow', 400);
       }
 
       const isSameBot = existing?.botId === String(identity.id);

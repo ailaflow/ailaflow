@@ -1,6 +1,6 @@
 import { useLoader } from '@aibindkit/react';
-import { LicenseType, LlmProviderPolicy, LlmUseCase } from '@aila/model';
-import type { GetLlmConfigurationResponse } from '@aila/model';
+import { LicenseType, LlmProviderPolicy, LlmUseCase } from '@ailaflow/model';
+import type { GetLlmConfigurationResponse } from '@ailaflow/model';
 import { useApiClient } from '../../auth/auth-context';
 import { ConfigurationOverviewView } from '../../views/configuration/configuration-overview-view';
 import type { ConfigurationStatus } from '../../views/configuration/configuration-overview-view';
@@ -48,7 +48,7 @@ export function ConfigurationOverviewPage() {
       value: loader.data.host.isAppFolderReadable ? 'Readable' : 'Not readable',
       detail: loader.data.host.appFolderPath,
       isHealthy: loader.data.host.isAppFolderReadable,
-      remediation: 'Grant the server process read access to the Aila application folder.'
+      remediation: 'Grant the server process read access to the AilaFlow application folder.'
     },
     {
       id: 'data-folder',
@@ -56,7 +56,7 @@ export function ConfigurationOverviewPage() {
       value: loader.data.host.isDataFolderWritable ? 'Writable' : 'Not writable',
       detail: loader.data.host.dataFolderPath,
       isHealthy: loader.data.host.isDataFolderWritable,
-      remediation: 'Grant the server process write access to the Aila data folder.'
+      remediation: 'Grant the server process write access to the AilaFlow data folder.'
     },
     {
       id: 'admin-chat-ai',
@@ -89,7 +89,7 @@ export function ConfigurationOverviewPage() {
       isHealthy: loader.data.publicUrlTest.isAvailable,
       remediation: loader.data.publicUrlTest.publicUrl
         ? (loader.data.publicUrlTest.error ?? 'Make sure the configured URL is externally accessible.')
-        : 'Configure the externally accessible URL for this Aila server.',
+        : 'Configure the externally accessible URL for this AilaFlow server.',
       action: { label: 'Configure Public URL', href: '/admin/configuration?tab=public-url' }
     },
     {

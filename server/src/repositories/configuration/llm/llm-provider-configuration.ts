@@ -1,6 +1,6 @@
-import { LlmProviderConfigurationValidator } from '@aila/model';
+import { LlmProviderConfigurationValidator } from '@ailaflow/model';
 import { randomUUID } from 'crypto';
-import { LlmProviderPolicy, LlmProviderType } from '@aila/model';
+import { LlmProviderPolicy, LlmProviderType } from '@ailaflow/model';
 
 export class LlmProviderConfigurationError extends Error {
   public constructor(message: string) {

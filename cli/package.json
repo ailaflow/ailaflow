@@ -1,11 +1,11 @@
 {
-  "name": "@aila/cli",
+  "name": "@ailaflow/cli",
   "version": "0.1.0",
   "private": false,
   "type": "module",
   "license": "UNLICENSED",
   "bin": {
-    "aila": "./dist/cli.mjs"
+    "ailaflow": "./dist/cli.mjs"
   },
   "files": [
     "dist",

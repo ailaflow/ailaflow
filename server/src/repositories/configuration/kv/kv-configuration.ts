@@ -1,4 +1,4 @@
-import { LicenseType, PublicUrlValidator } from '@aila/model';
+import { LicenseType, PublicUrlValidator } from '@ailaflow/model';
 
 export type KvConfigurationKey = 'publicUrl' | 'instanceId' | 'licenseType' | 'licenseKey';
 

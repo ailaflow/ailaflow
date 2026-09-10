@@ -1,5 +1,5 @@
 import { Request } from 'express';
-import { installRequestSchema, InstallResponse } from '@aila/model';
+import { installRequestSchema, InstallResponse } from '@ailaflow/model';
 import { LicenseManager } from '../../configuration/license/license-manager';
 import { UserRepository } from '../../repositories/user/user-repository';
 import { User } from '../../repositories/user/user';

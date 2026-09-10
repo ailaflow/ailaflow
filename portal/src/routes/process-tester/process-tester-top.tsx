@@ -1,5 +1,5 @@
-import type { FormDefinition, ProcessDefinition, ProcessExecutionVariableValues } from '@aila/model';
-import { VariableCachedValidator } from '@aila/model';
+import type { FormDefinition, ProcessDefinition, ProcessExecutionVariableValues } from '@ailaflow/model';
+import { VariableCachedValidator } from '@ailaflow/model';
 import { useEffect, useMemo, useRef } from 'react';
 import { ProcessTesterTimelineView } from '../../views/process-tester/process-tester-top-view';
 import { FormAdapter } from '../common/form-renderer/form-adapter';

@@ -1,11 +1,11 @@
 {
-  "name": "@aila/workspace",
+  "name": "@ailaflow/workspace",
   "private": true,
   "license": "./LICENSE",
   "scripts": {
-    "dev": "pnpm --filter @aila/cli dev",
-    "start": "pnpm --filter @aila/cli start",
-    "build": "pnpm --filter @aila/cli build",
+    "dev": "pnpm --filter @ailaflow/cli dev",
+    "start": "pnpm --filter @ailaflow/cli start",
+    "build": "pnpm --filter @ailaflow/cli build",
     "typecheck": "tsc -p tsconfig.json",
     "prettier": "pnpm run -r prettier",
     "prettier:fix": "pnpm run -r prettier:fix",

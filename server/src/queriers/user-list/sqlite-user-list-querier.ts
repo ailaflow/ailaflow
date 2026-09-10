@@ -1,5 +1,5 @@
 import { DatabaseSync } from 'node:sqlite';
-import { GetUsersResponse } from '@aila/model';
+import { GetUsersResponse } from '@ailaflow/model';
 import { SqliteDatabases } from '../../core/sqlite-databases';
 import { UserListQuerier } from './user-list-querier';
 

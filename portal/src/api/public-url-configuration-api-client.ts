@@ -5,7 +5,7 @@ import type {
   SavePublicUrlConfigurationResponse,
   TestPublicUrlRequest,
   TestPublicUrlResponse
-} from '@aila/model';
+} from '@ailaflow/model';
 
 export class PublicUrlConfigurationApiClient {
   public constructor(private readonly client: HttpClient) {}

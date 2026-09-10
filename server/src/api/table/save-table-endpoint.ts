@@ -1,4 +1,4 @@
-import { saveTableRequestSchema, SaveTableResponse } from '@aila/model';
+import { saveTableRequestSchema, SaveTableResponse } from '@ailaflow/model';
 import { Request } from 'express';
 import { TableRepository, TableRepositoryError } from '../../repositories/table/table-repository';
 import { Table } from '../../repositories/table/table';

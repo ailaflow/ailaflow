@@ -6,7 +6,7 @@ import type {
   GetSandboxResponse,
   GetSandboxesResponse,
   UpsertSandboxRequest
-} from '@aila/model';
+} from '@ailaflow/model';
 
 export class SandboxApiClient {
   public constructor(private readonly client: HttpClient) {}

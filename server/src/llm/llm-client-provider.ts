@@ -1,5 +1,5 @@
 import { LlmConfigurationRepository } from '../repositories/configuration/llm/llm-configuration-repository';
-import { LlmUseCase } from '@aila/model';
+import { LlmUseCase } from '@ailaflow/model';
 import { ConfiguredLlmClient, LlmClientFactory } from './llm-client-factory';
 
 export class LlmClientProvider {

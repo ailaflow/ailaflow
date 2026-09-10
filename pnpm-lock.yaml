@@ -222,7 +222,7 @@ importers:
       '@aibindkit/react':
         specifier: workspace:*
         version: link:../@aibindkit/react
-      '@aila/model':
+      '@ailaflow/model':
         specifier: workspace:*
         version: link:../model
       react:
@@ -274,7 +274,7 @@ importers:
       '@aibindkit/llm':
         specifier: workspace:*
         version: link:../@aibindkit/llm
-      '@aila/model':
+      '@ailaflow/model':
         specifier: workspace:*
         version: link:../model
       croner:

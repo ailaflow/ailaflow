@@ -1,5 +1,5 @@
 import { HttpClient } from '@aibindkit/react';
-import type { InstallRequest, InstallResponse } from '@aila/model';
+import type { InstallRequest, InstallResponse } from '@ailaflow/model';
 
 export class InstallApiClient {
   public constructor(private readonly client: HttpClient) {}

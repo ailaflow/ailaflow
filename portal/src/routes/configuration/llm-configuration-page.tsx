@@ -1,5 +1,5 @@
 import { useLoader } from '@aibindkit/react';
-import type { GetLlmConfigurationResponse, LlmProviderDto } from '@aila/model';
+import type { GetLlmConfigurationResponse, LlmProviderDto } from '@ailaflow/model';
 import { useState } from 'react';
 import { useApiClient } from '../../auth/auth-context';
 import { LlmConfigurationView } from '../../views/configuration/llm-configuration-view';

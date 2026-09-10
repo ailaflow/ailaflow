@@ -1,4 +1,4 @@
-import { JsonSchema, ProcessExecutionVariableValues, VariableDefinition } from '@aila/model';
+import { JsonSchema, ProcessExecutionVariableValues, VariableDefinition } from '@ailaflow/model';
 import z from 'zod/v4';
 
 export class ProcessVariables {

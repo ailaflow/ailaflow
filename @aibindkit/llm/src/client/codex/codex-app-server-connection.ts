@@ -76,7 +76,7 @@ export class CodexAppServerConnection {
     this.disposed = true;
     const error = new LlmClientError('Codex app-server client was disposed');
     this.rejectPendingRequests(error);
-    this.socket?.close(1000, 'Aila client disposed');
+    this.socket?.close(1000, 'AilaFlow client disposed');
     this.socket = undefined;
   }
 
@@ -91,8 +91,8 @@ export class CodexAppServerConnection {
       await waitForOpen(socket);
       await this.sendRequest('initialize', {
         clientInfo: {
-          name: 'aila',
-          title: 'Aila',
+          name: 'ailaflow',
+          title: 'AilaFlow',
           version: '0.0.0'
         },
         capabilities: {

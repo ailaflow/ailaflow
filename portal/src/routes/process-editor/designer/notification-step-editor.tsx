@@ -2,7 +2,7 @@ import { useStepEditor } from 'sequential-workflow-designer-react';
 import { DesignerEditorView } from '../../../views/process-editor/designer/designer-editor-view';
 import { StepEditorProps } from './step-editor';
 import { StringEditorPropertyView } from '../../../views/process-editor/designer/string-editor-property-view';
-import { NotificationStep, ProcessDefinition } from '@aila/model';
+import { NotificationStep, ProcessDefinition } from '@ailaflow/model';
 import { StringOrVariablePropertyView } from '../../../views/process-editor/designer/string-or-variable-property-view';
 
 export function NotificationStepEditor(props: StepEditorProps) {

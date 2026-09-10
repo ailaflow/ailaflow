@@ -1,4 +1,4 @@
-import type { ExecuteSandboxCommandUpdate, SandboxDto } from '@aila/model';
+import type { ExecuteSandboxCommandUpdate, SandboxDto } from '@ailaflow/model';
 import { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { useApiClient } from '../../auth/auth-context';
 import type { SandboxTerminalEntry, SandboxTerminalEntryType } from '../../views/sandbox-terminal/sandbox-terminal-view';
@@ -165,7 +165,7 @@ interface CwdCapture {
 }
 
 function createCwdCapture(onCwd: (cwd: string) => void, onStdout: (stdout: string) => void): CwdCapture {
-  const marker = `AILA_CWD_${crypto.randomUUID()}:`;
+  const marker = `AILAFLOW_CWD_${crypto.randomUUID()}:`;
   const prefix = `\0${marker}`;
   const suffix = '\0';
   let buffer = '';

@@ -1,7 +1,7 @@
 import { IframeForm } from './iframe-form';
 import { JsonForm } from './json-form';
 import { FormAdapter } from './form-adapter';
-import { FormDefinition } from '@aila/model';
+import { FormDefinition } from '@ailaflow/model';
 
 export interface FormRendererProps {
   form: FormDefinition | null | undefined;

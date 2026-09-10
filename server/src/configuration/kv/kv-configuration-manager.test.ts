@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
 import test, { TestContext } from 'node:test';
-import { LicenseType } from '@aila/model';
+import { LicenseType } from '@ailaflow/model';
 import { SqliteDatabases } from '../../core/sqlite-databases';
 import { SqliteKvConfigurationRepository } from '../../repositories/configuration/kv/sqlite-kv-configuration-repository';
 import { KvConfigurationManager } from './kv-configuration-manager';
@@ -23,12 +23,12 @@ test('caches reads, returns independent drafts, and invalidates only after a suc
   const second = await manager.get(signal);
   assert.equal(get.mock.callCount(), 1);
   assert.notEqual(first, second);
-  first.setPublicUrl('https://aila.example.com');
+  first.setPublicUrl('https://ailaflow.example.com');
   assert.equal(second.publicUrl, null);
   assert.equal((await manager.get(signal)).publicUrl, null);
   await manager.update(signal, first);
   assert.equal(get.mock.callCount(), 1);
-  assert.equal((await manager.get(signal)).publicUrl, 'https://aila.example.com');
+  assert.equal((await manager.get(signal)).publicUrl, 'https://ailaflow.example.com');
   assert.equal(get.mock.callCount(), 2);
   assert.deepEqual((await manager.get(signal)).getChangedKeys(), []);
 });
@@ -37,19 +37,19 @@ test('merges independent drafts without overwriting unrelated fields', async t =
   const { manager } = await fixture(t);
   const url = await manager.get(signal);
   const license = await manager.get(signal);
-  url.setPublicUrl('https://aila.example.com');
+  url.setPublicUrl('https://ailaflow.example.com');
   license.setLicenseType(LicenseType.HOME, null);
   const updatingUrl = manager.update(signal, url);
   await Promise.all([updatingUrl, manager.update(signal, license)]);
   const result = await manager.get(signal);
-  assert.equal(result.publicUrl, 'https://aila.example.com');
+  assert.equal(result.publicUrl, 'https://ailaflow.example.com');
   assert.equal(result.licenseType, LicenseType.HOME);
 });
 
 test('failed writes preserve cached values and later updates can retry', async t => {
   const { repository, manager } = await fixture(t);
   const draft = await manager.get(signal);
-  draft.setPublicUrl('https://aila.example.com');
+  draft.setPublicUrl('https://ailaflow.example.com');
   const update = t.mock.method(repository, 'updateChanged', async () => {
     throw new Error('database failed');
   });
@@ -57,7 +57,7 @@ test('failed writes preserve cached values and later updates can retry', async t
   assert.equal((await manager.get(signal)).publicUrl, null);
   update.mock.restore();
   await manager.update(signal, draft);
-  assert.equal((await manager.get(signal)).publicUrl, 'https://aila.example.com');
+  assert.equal((await manager.get(signal)).publicUrl, 'https://ailaflow.example.com');
   await assert.rejects(manager.update(AbortSignal.abort(), draft));
 });
 

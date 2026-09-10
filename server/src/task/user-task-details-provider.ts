@@ -1,4 +1,4 @@
-import { JsonSchema, ProcessExecutionVariableValues } from '@aila/model';
+import { JsonSchema, ProcessExecutionVariableValues } from '@ailaflow/model';
 import { PersistedExecutionRepository } from '../repositories/persisted-execution/persisted-execution-repository';
 import { UserAssignedTaskProvider } from './user-assigned-task-provider';
 

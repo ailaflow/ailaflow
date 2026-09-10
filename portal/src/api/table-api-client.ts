@@ -8,7 +8,7 @@ import type {
   GetTablesResponse,
   SaveTableRequest,
   SaveTableResponse
-} from '@aila/model';
+} from '@ailaflow/model';
 
 export class TableApiClient {
   public constructor(private readonly client: HttpClient) {}

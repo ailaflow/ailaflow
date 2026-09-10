@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
 import test from 'node:test';
-import { UserAccessExpressionParser } from '@aila/model';
+import { UserAccessExpressionParser } from '@ailaflow/model';
 import { SqliteDatabases } from '../../core/sqlite-databases';
 import { UserAttributes } from '../../repositories/user-attributes/user-attributes';
 import { SqliteUserAttributesRepository } from '../../repositories/user-attributes/sqlite-user-attributes-repository';

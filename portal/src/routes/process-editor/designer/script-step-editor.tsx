@@ -4,7 +4,7 @@ import { StepEditorProps } from './step-editor';
 import { EditorPropertyView } from '../../../views/process-editor/designer/editor-property-view';
 import { StringEditorPropertyView } from '../../../views/process-editor/designer/string-editor-property-view';
 import { DropdownPropertyView } from '../../../views/process-editor/designer/dropdown-property-view';
-import { ProcessDefinition, ScriptStep } from '@aila/model';
+import { ProcessDefinition, ScriptStep } from '@ailaflow/model';
 import { DefinitionPath } from '../../../core/definition-path';
 import { EnabledSubValuePreviewView } from '../../../views/process-editor/designer/sub-value-preview-view';
 import { ProcessEditorOverlayType } from '../process-editor-context';

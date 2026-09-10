@@ -3,13 +3,13 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
-import { PROCESS_VERSION, ProcessDefinition, ScriptDefinition } from '@aila/model';
+import { PROCESS_VERSION, ProcessDefinition, ScriptDefinition } from '@ailaflow/model';
 import { Process } from '../repositories/process/process';
 import { SandboxHostPaths } from './sandbox-host-paths';
 import { SandboxMaterializer } from './sandbox-materializer';
 
 test('materializes a script only when its definition changes', async () => {
-  const temporaryFolder = await fs.mkdtemp(join(os.tmpdir(), 'aila-materializer-'));
+  const temporaryFolder = await fs.mkdtemp(join(os.tmpdir(), 'ailaflow-materializer-'));
   try {
     const paths = new SandboxHostPaths(temporaryFolder, temporaryFolder, 'default');
     const materializer = new SandboxMaterializer(paths);

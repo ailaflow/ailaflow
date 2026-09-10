@@ -1,4 +1,4 @@
-import { savePublicUrlConfigurationRequestSchema, SavePublicUrlConfigurationResponse } from '@aila/model';
+import { savePublicUrlConfigurationRequestSchema, SavePublicUrlConfigurationResponse } from '@ailaflow/model';
 import { Request } from 'express';
 import { KvConfigurationManager } from '../../configuration/kv/kv-configuration-manager';
 import { Endpoint } from '../framework/endpoint';

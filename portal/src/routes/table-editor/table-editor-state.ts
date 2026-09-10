@@ -1,4 +1,4 @@
-import { SaveTableRequest, TableDto, TableValidator } from '@aila/model';
+import { SaveTableRequest, TableDto, TableValidator } from '@ailaflow/model';
 import { useMemo, useState } from 'react';
 
 export interface TableEditorData {

@@ -1,5 +1,5 @@
 import { DatabaseSync } from 'node:sqlite';
-import { GetMyTasksResponse } from '@aila/model';
+import { GetMyTasksResponse } from '@ailaflow/model';
 import { SqliteDatabases } from '../../core/sqlite-databases';
 import { MyTaskListQuerier } from './my-task-list-querier';
 

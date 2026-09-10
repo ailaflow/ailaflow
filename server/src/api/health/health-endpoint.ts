@@ -1,4 +1,4 @@
-import { HealthResponse } from '@aila/model';
+import { HealthResponse } from '@ailaflow/model';
 import { Endpoint } from '../framework/endpoint';
 
 export class HealthEndpoint implements Endpoint {
@@ -6,6 +6,6 @@ export class HealthEndpoint implements Endpoint {
   public readonly path = '/health';
 
   public async handle(): Promise<HealthResponse> {
-    return { server: 'aila', status: 'ok' };
+    return { server: 'ailaflow', status: 'ok' };
   }
 }

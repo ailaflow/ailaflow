@@ -1,4 +1,4 @@
-import { DeleteTaskResponse, GetTasksResponse, getTasksRequestSchema } from '@aila/model';
+import { DeleteTaskResponse, GetTasksResponse, getTasksRequestSchema } from '@ailaflow/model';
 import { Request } from 'express';
 import { TaskListQuerier } from '../../queriers/task-list/task-list-querier';
 import { TaskDeleter } from '../../task/task-deleter';

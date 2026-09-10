@@ -10,7 +10,7 @@ import createConfigurations from '../webpack.config.mjs';
 const cliDirectory = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const rootDirectory = resolve(cliDirectory, '..');
 const outputDirectory = resolve(cliDirectory, 'dist');
-const dataDirectory = join(homedir(), '.aila');
+const dataDirectory = join(homedir(), '.ailaflow');
 
 await rm(outputDirectory, { recursive: true, force: true });
 await mkdir(dataDirectory, { recursive: true });
@@ -43,9 +43,9 @@ async function restartServer() {
     stdio: 'inherit',
     env: {
       ...process.env,
-      AILA_DATA_DIR: dataDirectory,
-      AILA_PORTAL_DIR: resolve(outputDirectory, 'portal'),
-      AILA_RUNTIME_DIR: resolve(outputDirectory, 'runtime')
+      AILAFLOW_DATA_DIR: dataDirectory,
+      AILAFLOW_PORTAL_DIR: resolve(outputDirectory, 'portal'),
+      AILAFLOW_RUNTIME_DIR: resolve(outputDirectory, 'runtime')
     }
   });
   serverProcess.on('error', error => process.stderr.write(`Cannot start server: ${error.message}\n`));

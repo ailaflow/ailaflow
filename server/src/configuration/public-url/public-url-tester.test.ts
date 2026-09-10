@@ -7,25 +7,25 @@ test('tests the health endpoint below a configured proxy path', async () => {
   await withFetch(
     async input => {
       requestedUrl = input.toString();
-      return Response.json({ server: 'aila', status: 'ok' });
+      return Response.json({ server: 'ailaflow', status: 'ok' });
     },
     async () => {
-      assert.deepEqual(await new PublicUrlTester().test(new AbortController().signal, 'https://aila.example.com/proxy/aila'), {
-        publicUrl: 'https://aila.example.com/proxy/aila',
+      assert.deepEqual(await new PublicUrlTester().test(new AbortController().signal, 'https://ailaflow.example.com/proxy/ailaflow'), {
+        publicUrl: 'https://ailaflow.example.com/proxy/ailaflow',
         isAvailable: true,
         error: null
       });
     }
   );
-  assert.equal(requestedUrl, 'https://aila.example.com/proxy/aila/health');
+  assert.equal(requestedUrl, 'https://ailaflow.example.com/proxy/ailaflow/health');
 });
 
 test('reports HTTP and identity failures as unavailable', async () => {
   await withFetch(
     async () => new Response(null, { status: 404 }),
     async () => {
-      assert.deepEqual(await new PublicUrlTester().test(new AbortController().signal, 'https://aila.example.com'), {
-        publicUrl: 'https://aila.example.com',
+      assert.deepEqual(await new PublicUrlTester().test(new AbortController().signal, 'https://ailaflow.example.com'), {
+        publicUrl: 'https://ailaflow.example.com',
         isAvailable: false,
         error: 'Health endpoint returned HTTP 404.'
       });
@@ -35,8 +35,8 @@ test('reports HTTP and identity failures as unavailable', async () => {
   await withFetch(
     async () => Response.json({ server: 'other', status: 'ok' }),
     async () => {
-      assert.deepEqual(await new PublicUrlTester().test(new AbortController().signal, 'https://aila.example.com'), {
-        publicUrl: 'https://aila.example.com',
+      assert.deepEqual(await new PublicUrlTester().test(new AbortController().signal, 'https://ailaflow.example.com'), {
+        publicUrl: 'https://ailaflow.example.com',
         isAvailable: false,
         error: 'Health endpoint returned an unexpected response.'
       });
@@ -50,8 +50,8 @@ test('reports network failures as unavailable', async () => {
       throw new Error('Connection refused');
     },
     async () => {
-      assert.deepEqual(await new PublicUrlTester().test(new AbortController().signal, 'https://aila.example.com'), {
-        publicUrl: 'https://aila.example.com',
+      assert.deepEqual(await new PublicUrlTester().test(new AbortController().signal, 'https://ailaflow.example.com'), {
+        publicUrl: 'https://ailaflow.example.com',
         isAvailable: false,
         error: 'Health endpoint could not be reached.'
       });

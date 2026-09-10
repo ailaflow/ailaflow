@@ -1,6 +1,6 @@
 import { useLoader } from '@aibindkit/react';
-import { LicenseType } from '@aila/model';
-import type { GetLicenseConfigurationResponse, GetLicenseStatusResponse, SaveLicenseConfigurationRequest } from '@aila/model';
+import { LicenseType } from '@ailaflow/model';
+import type { GetLicenseConfigurationResponse, GetLicenseStatusResponse, SaveLicenseConfigurationRequest } from '@ailaflow/model';
 import { useState } from 'react';
 import type { SubmitEvent } from 'react';
 import { useApiClient } from '../../auth/auth-context';

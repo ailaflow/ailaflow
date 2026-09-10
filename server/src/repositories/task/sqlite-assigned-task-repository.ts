@@ -1,5 +1,5 @@
 import { DatabaseSync } from 'node:sqlite';
-import { ProcessExecutionVariableValues } from '@aila/model';
+import { ProcessExecutionVariableValues } from '@ailaflow/model';
 import { SqliteDatabases } from '../../core/sqlite-databases';
 import { AssignedTaskRepository } from './assigned-task-repository';
 import { AssignedTask } from './assigned-task';

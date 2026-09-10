@@ -1,4 +1,4 @@
-import { UserAccessExpressionParser } from '@aila/model';
+import { UserAccessExpressionParser } from '@ailaflow/model';
 import { UserChatSessionProvider } from '../../chat-session/user-chat-session-provider';
 import { UserAccessExpressionUserQuerier } from '../../queriers/user-access-expression/user-access-expression-user-querier';
 import { Notification } from '../../repositories/notification/notification';

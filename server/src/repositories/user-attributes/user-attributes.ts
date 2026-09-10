@@ -1,4 +1,4 @@
-import { ALL_ATTRIBUTE_NAME, UserAttributes as Attributes, USER_NAME_ATTRIBUTE_NAME, UserAttributesValidator } from '@aila/model';
+import { ALL_ATTRIBUTE_NAME, UserAttributes as Attributes, USER_NAME_ATTRIBUTE_NAME, UserAttributesValidator } from '@ailaflow/model';
 import { UserAttributesRepositoryError } from './user-attributes-repository';
 import { User } from '../user/user';
 

@@ -12,7 +12,7 @@ test('formats user and assistant messages for Telegram', () => {
       type: ChatMessageType.USER,
       completedMessages: [{ message: { role: 'user', content: 'Hello' } }]
     }),
-    ['You in Aila: Hello']
+    ['You in AilaFlow: Hello']
   );
   assert.deepEqual(
     formatter.format({

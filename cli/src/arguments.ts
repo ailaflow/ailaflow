@@ -68,17 +68,17 @@ export class ArgsParser {
 }
 
 export const help = `Usage:
-  aila [serve] [options]
-  aila data path [options]
-  aila data reset [options]
+  ailaflow [serve] [options]
+  ailaflow data path [options]
+  ailaflow data reset [options]
 
 Commands:
-  serve               Run the Aila server (default)
+  serve               Run the AilaFlow server (default)
   data path           Print the application data directory
   data reset          Permanently delete all application data
 
 Options:
   --port <number>      HTTP port for serve (default: 2048)
-  --data-dir <path>    Application data directory (default: ~/.aila)
+  --data-dir <path>    Application data directory (default: ~/.ailaflow)
   --force              Skip confirmation for data reset
   --help               Show help`;

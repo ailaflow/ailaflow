@@ -1,4 +1,4 @@
-import type { FormDefinition, FormInputExample } from '@aila/model';
+import type { FormDefinition, FormInputExample } from '@ailaflow/model';
 import { IframeForm } from '../../../routes/common/form-renderer/iframe-form';
 import { FormAdapter } from '../../../routes/common/form-renderer/form-adapter';
 

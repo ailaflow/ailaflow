@@ -1,4 +1,4 @@
-import { ProcessCronJobRun, ProcessExecutionVariableValues } from '@aila/model';
+import { ProcessCronJobRun, ProcessExecutionVariableValues } from '@ailaflow/model';
 import { DatabaseSync } from 'node:sqlite';
 import { SqliteDatabases } from '../../core/sqlite-databases';
 import { ProcessCronJob } from './process-cron-job';

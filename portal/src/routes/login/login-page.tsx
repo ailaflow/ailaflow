@@ -2,7 +2,7 @@ import { useAuthState } from '../../auth/auth-context';
 import { useState } from 'react';
 import type { SubmitEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LoginResponse } from '@aila/model';
+import { LoginResponse } from '@ailaflow/model';
 import { LoginView } from '../../views/centered-form/login-view';
 import { CenteredFormLayout } from '../../views/centered-form/centered-form-layout';
 

@@ -14,7 +14,7 @@ async function waitForOutput(child, expectedOutput) {
   let stderr = '';
   child.stderr.on('data', chunk => (stderr += chunk));
   await new Promise((resolveReady, rejectReady) => {
-    const timeout = setTimeout(() => rejectReady(new Error(`Aila did not start:\n${stderr}`)), 10_000);
+    const timeout = setTimeout(() => rejectReady(new Error(`AilaFlow did not start:\n${stderr}`)), 10_000);
     child.stdout.on('data', chunk => {
       if (chunk.toString().includes(expectedOutput)) {
         clearTimeout(timeout);
@@ -23,13 +23,13 @@ async function waitForOutput(child, expectedOutput) {
     });
     child.once('exit', code => {
       clearTimeout(timeout);
-      rejectReady(new Error(`Aila exited with code ${code}:\n${stderr}`));
+      rejectReady(new Error(`AilaFlow exited with code ${code}:\n${stderr}`));
     });
   });
 }
 
 test('the packaged CLI serves the API and portal', async () => {
-  const dataDirectory = await mkdtemp(resolve(tmpdir(), 'aila-cli-test-'));
+  const dataDirectory = await mkdtemp(resolve(tmpdir(), 'ailaflow-cli-test-'));
   const port = 21_481;
   const child = spawn(process.execPath, [cliPath, 'serve', '--data-dir', dataDirectory, '--port', String(port)], {
     cwd: cliDirectory,
@@ -70,7 +70,7 @@ test('the packaged CLI serves the API and portal', async () => {
 });
 
 test('the packaged CLI reports and resets its data directory', async () => {
-  const temporaryDirectory = await mkdtemp(resolve(tmpdir(), 'aila-cli-data-test-'));
+  const temporaryDirectory = await mkdtemp(resolve(tmpdir(), 'ailaflow-cli-data-test-'));
   const dataDirectory = resolve(temporaryDirectory, 'custom-data');
 
   try {
@@ -82,7 +82,7 @@ test('the packaged CLI reports and resets its data directory', async () => {
     await writeFile(resolve(dataDirectory, 'nested/file.txt'), 'test');
 
     const resetResult = await execFileAsync(process.execPath, [cliPath, 'data', 'reset', '--data-dir', dataDirectory, '--force']);
-    assert.match(resetResult.stdout, /Aila data reset:/);
+    assert.match(resetResult.stdout, /AilaFlow data reset:/);
     assert.deepEqual(await readdir(dataDirectory), []);
   } finally {
     await rm(temporaryDirectory, { recursive: true, force: true });

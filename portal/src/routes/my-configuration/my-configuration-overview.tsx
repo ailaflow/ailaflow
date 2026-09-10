@@ -24,7 +24,7 @@ export function MyConfigurationOverview() {
       label: 'Telegram',
       value: telegramConfigured ? `Configured · ${configuredBotCount} ${configuredBotCount === 1 ? 'bot' : 'bots'}` : 'Not configured',
       isHealthy: telegramConfigured,
-      remediation: 'Configure a Telegram bot to use Aila through Telegram.',
+      remediation: 'Configure a Telegram bot to chat with Aila through Telegram.',
       action: { label: 'Configure Telegram', href: '/my-configuration?tab=telegram' }
     }
   ];

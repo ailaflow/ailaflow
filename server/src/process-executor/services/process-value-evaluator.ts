@@ -1,4 +1,4 @@
-import { StringOrVariable } from '@aila/model';
+import { StringOrVariable } from '@ailaflow/model';
 import { ProcessVariableManager } from './process-variable-manager';
 
 export class ProcessVariableEvaluator {

@@ -1,4 +1,4 @@
-import type { StringOrVariable, VariableDefinition } from '@aila/model';
+import type { StringOrVariable, VariableDefinition } from '@ailaflow/model';
 import { EditorPropertyView } from './editor-property-view';
 
 interface StringOrVariablePropertyViewBaseProps {

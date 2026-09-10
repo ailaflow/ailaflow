@@ -1,4 +1,4 @@
-import { FormDefinition } from '@aila/model';
+import { FormDefinition } from '@ailaflow/model';
 
 const frameworkCss = `
 html,
@@ -55,7 +55,7 @@ const frameworkScript = `
     return name;
   }
 
-  window.aila = {
+  window.ailaflow = {
     submitForm: (data) => request('submitForm', data),
     readVariable: (name) => request('readVariable', { name: normalizeVariableName(name) }),
   };
@@ -68,7 +68,7 @@ export class IframeContentBuilder {
 <!doctype html>
 <html>
   <head>
-    <title>Aila Form</title>
+    <title>AilaFlow Form</title>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <script>${frameworkScript}<\/script>

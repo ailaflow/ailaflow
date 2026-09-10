@@ -15,7 +15,7 @@
     "useDefineForClassFields": false,
     "types": ["node"],
     "paths": {
-      "@aila/model": ["./model/src/index.ts"],
+      "@ailaflow/model": ["./model/src/index.ts"],
       "@aibindkit/core": ["./@aibindkit/core/src/index.ts"],
       "@aibindkit/express": ["./@aibindkit/express/src/index.ts"],
       "@aibindkit/llm": ["./@aibindkit/llm/src/index.ts"],

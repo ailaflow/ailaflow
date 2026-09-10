@@ -12,7 +12,7 @@ import type {
   SaveProcessCronJobResponse,
   TestProcessRequest,
   TestProcessUpdate
-} from '@aila/model';
+} from '@ailaflow/model';
 
 export class ProcessApiClient {
   public constructor(private readonly client: HttpClient) {}

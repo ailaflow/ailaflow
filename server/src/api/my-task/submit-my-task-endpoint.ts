@@ -2,7 +2,7 @@ import { Request } from 'express';
 import { Endpoint } from '../framework/endpoint';
 import { getEndpointAbortSignal } from '../framework/endpoint-abort-signal';
 import { parseBody } from '../framework/parse-request';
-import { submitMyTaskRequestSchema, SubmitMyTaskResponse } from '@aila/model';
+import { submitMyTaskRequestSchema, SubmitMyTaskResponse } from '@ailaflow/model';
 import { EndpointError } from '../framework/endpoint-error';
 import { getAuthToken } from '../auth/auth-middleware';
 import { TaskResumer, TaskResumerError } from '../../task/task-resumer';

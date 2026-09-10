@@ -1,5 +1,5 @@
 import { DatabaseSync } from 'node:sqlite';
-import { FormDefinition, JsonSchema } from '@aila/model';
+import { FormDefinition, JsonSchema } from '@ailaflow/model';
 import { SqliteDatabases } from '../../core/sqlite-databases';
 import { Task } from './task';
 import { TaskRepository } from './task-repository';

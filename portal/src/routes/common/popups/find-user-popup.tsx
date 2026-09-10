@@ -1,4 +1,4 @@
-import type { GetUsersResponse } from '@aila/model';
+import type { GetUsersResponse } from '@ailaflow/model';
 import { useEffect, useState } from 'react';
 import { SimpleItemSearchPopupView } from '../../../views/common/popups/simple-item-search-popup-view';
 import { ApiClient } from '../../../api/api-client';

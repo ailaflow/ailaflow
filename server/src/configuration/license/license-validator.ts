@@ -1,4 +1,4 @@
-import { LicenseType } from '@aila/model';
+import { LicenseType } from '@ailaflow/model';
 
 export class LicenseValidator {
   public async validate(

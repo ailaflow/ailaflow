@@ -11,7 +11,7 @@ import { ProcessExecutionSnapshotTransformer } from './process-execution-snapsho
 import { AgentSessionRunner } from './services/agent-session-runner';
 import { Notifier } from './services/notifier';
 import { ProcessExecutionContext } from './process-execution-context';
-import { PROCESS_VERSION } from '@aila/model';
+import { PROCESS_VERSION } from '@ailaflow/model';
 
 const context: ProcessExecutionContext = {
   startedBy: 'user_1',

@@ -2,7 +2,7 @@ import { Repository } from '../../repository';
 import { LlmConfiguration } from './llm-configuration';
 import { LlmProviderConfiguration } from './llm-provider-configuration';
 import { LlmUseCaseConfiguration } from './llm-use-case-configuration';
-import { LlmUseCase } from '@aila/model';
+import { LlmUseCase } from '@ailaflow/model';
 
 export class LlmConfigurationRepositoryError extends Error {
   public constructor(message: string) {

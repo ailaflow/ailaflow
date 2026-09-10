@@ -1,4 +1,4 @@
-import { GetProcessCronJobsResponse } from '@aila/model';
+import { GetProcessCronJobsResponse } from '@ailaflow/model';
 import { Request } from 'express';
 import { ProcessManager } from '../../process/process-manager';
 import { ProcessCronJobRepository } from '../../repositories/process-cron-job/process-cron-job-repository';

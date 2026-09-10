@@ -1,5 +1,5 @@
 import { LlmProviderConfigurationError } from './llm-provider-configuration';
-import { LlmUseCase, LlmUseCaseConfigurationValidator } from '@aila/model';
+import { LlmUseCase, LlmUseCaseConfigurationValidator } from '@ailaflow/model';
 
 export class LlmUseCaseConfiguration {
   public static create(

@@ -8,7 +8,7 @@ import { ProcessLogger } from './services/process-logger';
 import { ProcessExecutionGlobalState } from './process-execution-global-state';
 import { SimpleEvent } from '@aibindkit/core';
 import { ProcessVariableManager } from './services/process-variable-manager';
-import { ProcessExecutionResult, ProcessLog } from '@aila/model';
+import { ProcessExecutionResult, ProcessLog } from '@ailaflow/model';
 import { ProcessExecutionPersister } from './process-execution-persister';
 import type { Process } from '../repositories/process/process';
 import { ProcessExecutionContext } from './process-execution-context';

@@ -5,7 +5,7 @@ import test from 'node:test';
 import { LlmConfiguration } from '../repositories/configuration/llm/llm-configuration';
 import { LlmConfigurationRepository } from '../repositories/configuration/llm/llm-configuration-repository';
 import { LlmProviderConfiguration } from '../repositories/configuration/llm/llm-provider-configuration';
-import { LlmProviderType, LlmUseCase } from '@aila/model';
+import { LlmProviderType, LlmUseCase } from '@ailaflow/model';
 import { LlmUseCaseConfiguration } from '../repositories/configuration/llm/llm-use-case-configuration';
 import { ConfiguredLlmClient, LlmClientFactory } from './llm-client-factory';
 import { LlmClientProvider } from './llm-client-provider';

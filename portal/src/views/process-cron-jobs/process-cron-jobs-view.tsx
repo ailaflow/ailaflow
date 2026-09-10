@@ -1,4 +1,4 @@
-import { ProcessCronJobDto, ProcessCronJobRun, ProcessCronJobRunStatus } from '@aila/model';
+import { ProcessCronJobDto, ProcessCronJobRun, ProcessCronJobRunStatus } from '@ailaflow/model';
 
 export interface ProcessCronJobDraftViewModel {
   id: string | null;

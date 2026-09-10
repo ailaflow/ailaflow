@@ -93,7 +93,7 @@ export function PortalLayout(props: PortalLayoutProps) {
                 onClick={closeSidebar}
                 className="block text-center text-4xl font-semibold tracking-tight transition-colors hover:text-slate-700"
               >
-                Aila
+                AilaFlow
               </Link>
             </div>
 
@@ -123,7 +123,7 @@ export function PortalLayout(props: PortalLayoutProps) {
         <main className="min-h-0 min-w-0 flex-1 overflow-hidden bg-white">
           <div className="flex h-full min-h-0 flex-col">
             <div className="flex h-12 shrink-0 items-center justify-between border-b border-slate-200 px-4 md:hidden">
-              <div className="text-sm font-semibold tracking-tight">Aila</div>
+              <div className="text-sm font-semibold tracking-tight">AilaFlow</div>
               <button
                 type="button"
                 aria-label="Open navigation menu"

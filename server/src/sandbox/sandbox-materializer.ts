@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import fs from 'node:fs/promises';
 import { Process } from '../repositories/process/process';
 import { DefinitionWalker } from 'sequential-workflow-model';
-import { DockerfileContent, ProcessDefinition, ScriptDefinition, ScriptStep } from '@aila/model';
+import { DockerfileContent, ProcessDefinition, ScriptDefinition, ScriptStep } from '@ailaflow/model';
 import { Sandbox } from '../repositories/sandbox/sandbox';
 import { SandboxHostPaths } from './sandbox-host-paths';
 import { Logger } from '../core/logger';
@@ -95,7 +95,7 @@ export class SandboxMaterializer {
 
   private createPackageJsonContent(process: Process): string {
     return JSON.stringify({
-      name: `aila_process_${process.name}`,
+      name: `ailaflow_process_${process.name}`,
       version: '1.0.0'
     });
   }

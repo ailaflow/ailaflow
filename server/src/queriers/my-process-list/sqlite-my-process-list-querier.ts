@@ -1,5 +1,5 @@
 import { DatabaseSync } from 'node:sqlite';
-import { GetMyProcessesResponse, MyProcessLiteDto } from '@aila/model';
+import { GetMyProcessesResponse, MyProcessLiteDto } from '@ailaflow/model';
 import { SqliteDatabases } from '../../core/sqlite-databases';
 import { SqliteResourceAccessQueryBuilder } from '../../core/sqlite-resource-access-query-builder';
 import { MyProcessListQuerier } from './my-process-list-querier';

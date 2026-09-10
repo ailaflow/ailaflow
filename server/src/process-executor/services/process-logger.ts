@@ -1,5 +1,5 @@
 import { SimpleEvent } from '@aibindkit/core';
-import { ProcessLog, ProcessLogLevel } from '@aila/model';
+import { ProcessLog, ProcessLogLevel } from '@ailaflow/model';
 
 export class ProcessLogger {
   public readonly onLog = new SimpleEvent<ProcessLog>();

@@ -1,4 +1,4 @@
-import { GetUsersResponse, getUsersRequestSchema } from '@aila/model';
+import { GetUsersResponse, getUsersRequestSchema } from '@ailaflow/model';
 import { UserListQuerier } from '../../queriers/user-list/user-list-querier';
 import { Endpoint } from '../framework/endpoint';
 import { Request } from 'express';

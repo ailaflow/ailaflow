@@ -4,13 +4,16 @@ import { savePublicUrlConfigurationRequestSchema, testPublicUrlRequestSchema } f
 
 test('validates Public URL API requests with the shared validator', () => {
   assert.equal(savePublicUrlConfigurationRequestSchema.safeParse({ publicUrl: null }).success, true);
-  assert.equal(savePublicUrlConfigurationRequestSchema.safeParse({ publicUrl: 'https://aila.example.com/proxy/aila' }).success, true);
+  assert.equal(
+    savePublicUrlConfigurationRequestSchema.safeParse({ publicUrl: 'https://ailaflow.example.com/proxy/ailaflow' }).success,
+    true
+  );
   assert.equal(testPublicUrlRequestSchema.safeParse({}).success, true);
   assert.equal(testPublicUrlRequestSchema.safeParse({ publicUrl: null }).success, true);
   assert.equal(testPublicUrlRequestSchema.safeParse({ publicUrl: 'http://127.0.0.1:2048' }).success, true);
-  assert.equal(testPublicUrlRequestSchema.safeParse({ publicUrl: 'aila.example.com' }).success, false);
-  assert.equal(testPublicUrlRequestSchema.safeParse({ publicUrl: 'https://aila.example.com?invalid=true' }).success, false);
-  for (const publicUrl of [' https://aila.example.com ', 'https://aila.example.com/', 'https://AILA.example.com']) {
+  assert.equal(testPublicUrlRequestSchema.safeParse({ publicUrl: 'ailaflow.example.com' }).success, false);
+  assert.equal(testPublicUrlRequestSchema.safeParse({ publicUrl: 'https://ailaflow.example.com?invalid=true' }).success, false);
+  for (const publicUrl of [' https://ailaflow.example.com ', 'https://ailaflow.example.com/', 'https://AILAFLOW.example.com']) {
     assert.equal(savePublicUrlConfigurationRequestSchema.safeParse({ publicUrl }).success, false);
     assert.equal(testPublicUrlRequestSchema.safeParse({ publicUrl }).success, false);
   }

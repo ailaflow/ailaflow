@@ -1,5 +1,5 @@
 import { ToolContext, ZodTool, ZodToolExecutionResult } from '@aibindkit/llm';
-import { MyProcessLiteDto } from '@aila/model';
+import { MyProcessLiteDto } from '@ailaflow/model';
 import { MyProcessListQuerier } from '../../queriers/my-process-list/my-process-list-querier';
 import { ChatSessionId } from '../chat-session-id';
 

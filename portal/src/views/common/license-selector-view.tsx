@@ -1,4 +1,4 @@
-import { LicenseType } from '@aila/model';
+import { LicenseType } from '@ailaflow/model';
 
 export interface LicenseSelectorViewProps {
   licenseType: LicenseType;
@@ -58,7 +58,7 @@ export function LicenseSelectorView(props: LicenseSelectorViewProps) {
             />
           </label>
           <p className="mt-3 rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-xs text-blue-900">
-            Using Aila for your business?{' '}
+            Using AilaFlow for your business?{' '}
             <a
               // TODO: Replace with the license purchase URL.
               href="https://example.com/purchase-license"

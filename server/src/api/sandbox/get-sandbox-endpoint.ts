@@ -1,5 +1,5 @@
 import { Request } from 'express';
-import { GetSandboxResponse } from '@aila/model';
+import { GetSandboxResponse } from '@ailaflow/model';
 import { SandboxRepository } from '../../repositories/sandbox/sandbox-repository';
 import { Endpoint } from '../framework/endpoint';
 import { EndpointError } from '../framework/endpoint-error';

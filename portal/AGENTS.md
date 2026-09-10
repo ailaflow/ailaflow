@@ -1,4 +1,4 @@
-# Aila Portal
+# AilaFlow Portal
 
 This React project is split into two main parts:
 

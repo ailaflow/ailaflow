@@ -1,4 +1,4 @@
-import { saveLicenseConfigurationRequestSchema } from '@aila/model';
+import { saveLicenseConfigurationRequestSchema } from '@ailaflow/model';
 import { Request } from 'express';
 import { LicenseManager } from '../../configuration/license/license-manager';
 import { Endpoint } from '../framework/endpoint';

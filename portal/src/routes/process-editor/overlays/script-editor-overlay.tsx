@@ -2,7 +2,7 @@ import { useProcessEditor } from '../process-editor-context';
 import { ProcessOverlayView } from '../../../views/process-editor/overlays/process-overlay-view';
 import { useEffect } from 'react';
 import { ScriptOverlayView } from '../../../views/process-editor/overlays/script-overlay-view';
-import type { FileContent } from '@aila/model';
+import type { FileContent } from '@ailaflow/model';
 import { FolderTreeItem, FolderTreeView } from '../../../views/process-editor/overlays/folder-tree-view';
 import { FileContentEditorView } from '../../../views/process-editor/overlays/file-content-editor-view';
 import { ScriptEditorOverlayUtils } from './script-editor-overlay-utils';

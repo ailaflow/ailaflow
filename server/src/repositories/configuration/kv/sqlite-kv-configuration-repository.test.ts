@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
 import test, { TestContext } from 'node:test';
-import { LicenseType } from '@aila/model';
+import { LicenseType } from '@ailaflow/model';
 import { SqliteDatabases } from '../../../core/sqlite-databases';
 import { SqliteKvConfigurationRepository } from './sqlite-kv-configuration-repository';
 
@@ -23,13 +23,13 @@ test('updates only changed fields so independent stale snapshots do not overwrit
   assert.equal(url.publicUrl, null);
   assert.equal(instance.instanceId, null);
   instance.setInstanceId('instance-id');
-  url.setPublicUrl('https://aila.example.com');
+  url.setPublicUrl('https://ailaflow.example.com');
   license.setLicenseType(LicenseType.PRO, 'secret');
   await repository.updateChanged(signal, url);
   await repository.updateChanged(signal, license);
   await repository.updateChanged(signal, instance);
   const restored = await new SqliteKvConfigurationRepository({ modelDb: db } as SqliteDatabases).get(signal);
-  assert.equal(restored.publicUrl, 'https://aila.example.com');
+  assert.equal(restored.publicUrl, 'https://ailaflow.example.com');
   assert.equal(restored.instanceId, 'instance-id');
   assert.equal(restored.licenseType, LicenseType.PRO);
   assert.equal(restored.licenseKey, 'secret');
@@ -55,7 +55,7 @@ test('updates only changed fields so independent stale snapshots do not overwrit
 test('does not touch unchanged fields and rolls back all changes on failure', async t => {
   const { repository, db } = await fixture(t);
   const initial = await repository.get(signal);
-  initial.setPublicUrl('https://aila.example.com');
+  initial.setPublicUrl('https://ailaflow.example.com');
   await repository.updateChanged(signal, initial);
   db.exec(`CREATE TRIGGER reject_public_url BEFORE UPDATE ON kv_configuration WHEN NEW.key = 'publicUrl'
     BEGIN SELECT RAISE(ABORT, 'URL write rejected'); END`);

@@ -1,4 +1,4 @@
-import { GetMyTasksResponse } from '@aila/model';
+import { GetMyTasksResponse } from '@ailaflow/model';
 
 export interface MyTaskListQuerier {
   query(

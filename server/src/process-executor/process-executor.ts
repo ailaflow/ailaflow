@@ -3,7 +3,7 @@ import { Process } from '../repositories/process/process';
 import { ProcessExecution } from './process-execution';
 import { activitySet } from './activities/activity-set';
 import { ProcessExecutionStore } from './process-execution-store';
-import { ProcessExecutionVariableValues } from '@aila/model';
+import { ProcessExecutionVariableValues } from '@ailaflow/model';
 import { ProcessExecutionSnapshotTransformer } from './process-execution-snapshot-transformer';
 import { ProcessExecutionGlobalState, SerializedProcessExecutionGlobalState } from './process-execution-global-state';
 import { ProcessExecutionPersister } from './process-execution-persister';

@@ -1,5 +1,5 @@
 {
-  "name": "@aila/portal",
+  "name": "@ailaflow/portal",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -7,7 +7,7 @@
   "dependencies": {
     "@aibindkit/core": "workspace:*",
     "@aibindkit/react": "workspace:*",
-    "@aila/model": "workspace:*",
+    "@ailaflow/model": "workspace:*",
     "sequential-workflow-model": "^0.2.0",
     "sequential-workflow-designer": "^0.40.2",
     "sequential-workflow-designer-react": "^0.40.2",

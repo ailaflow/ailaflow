@@ -1,5 +1,5 @@
 import { DatabaseSync } from 'node:sqlite';
-import { UserAttributeValueType } from '@aila/model';
+import { UserAttributeValueType } from '@ailaflow/model';
 import { SqliteDatabases } from '../../core/sqlite-databases';
 import { UserAttributesRepository, UserAttributesRepositoryError } from './user-attributes-repository';
 import { UserAttributes } from './user-attributes';

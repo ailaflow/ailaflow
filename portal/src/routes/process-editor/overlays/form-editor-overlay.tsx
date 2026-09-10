@@ -1,5 +1,5 @@
-import type { FormDefinition, FormInputExample } from '@aila/model';
-import { FormDefinitionValidator, VariableCachedValidator } from '@aila/model';
+import type { FormDefinition, FormInputExample } from '@ailaflow/model';
+import { FormDefinitionValidator, VariableCachedValidator } from '@ailaflow/model';
 import { useMemo, useState } from 'react';
 import { wrapDefinition } from 'sequential-workflow-designer-react';
 import { ProcessOverlayView } from '../../../views/process-editor/overlays/process-overlay-view';

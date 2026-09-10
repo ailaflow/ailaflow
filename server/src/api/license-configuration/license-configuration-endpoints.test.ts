@@ -3,7 +3,7 @@ import { EventEmitter } from 'node:events';
 import { DatabaseSync } from 'node:sqlite';
 import test, { TestContext } from 'node:test';
 import { Request } from 'express';
-import { LicenseType } from '@aila/model';
+import { LicenseType } from '@ailaflow/model';
 import { LicenseManager } from '../../configuration/license/license-manager';
 import { LicenseValidator } from '../../configuration/license/license-validator';
 import { KvConfigurationManager } from '../../configuration/kv/kv-configuration-manager';

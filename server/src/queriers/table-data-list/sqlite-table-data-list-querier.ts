@@ -1,4 +1,4 @@
-import { GetTableDataResponse, TableDataDto } from '@aila/model';
+import { GetTableDataResponse, TableDataDto } from '@ailaflow/model';
 import { DatabaseSync } from 'node:sqlite';
 import { SqliteDatabases } from '../../core/sqlite-databases';
 import { SqliteTableDataNameProvider } from '../../repositories/table/sqlite-table-data-name-provider';

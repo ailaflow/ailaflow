@@ -1,4 +1,4 @@
-import { GetMyNotificationsResponse, getMyNotificationsRequestSchema } from '@aila/model';
+import { GetMyNotificationsResponse, getMyNotificationsRequestSchema } from '@ailaflow/model';
 import { Request } from 'express';
 import { MyNotificationListQuerier } from '../../queriers/my-notification-list/my-notification-list-querier';
 import { getAuthToken } from '../auth/auth-middleware';

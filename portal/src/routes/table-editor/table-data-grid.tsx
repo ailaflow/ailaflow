@@ -1,4 +1,4 @@
-import { TableDataDto } from '@aila/model';
+import { TableDataDto } from '@ailaflow/model';
 import { useLoader } from '@aibindkit/react';
 import { useSearchParams } from 'react-router-dom';
 import { useApiClient } from '../../auth/auth-context';

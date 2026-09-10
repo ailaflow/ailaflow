@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
 import test, { TestContext } from 'node:test';
-import { LicenseType } from '@aila/model';
+import { LicenseType } from '@ailaflow/model';
 import { SqliteDatabases } from '../../core/sqlite-databases';
 import { SqliteKvConfigurationRepository } from '../../repositories/configuration/kv/sqlite-kv-configuration-repository';
 import { KvConfigurationManager } from '../kv/kv-configuration-manager';

@@ -1,4 +1,4 @@
-import { JsonSchema, ProcessDefinition, VariableDefinition } from '@aila/model';
+import { JsonSchema, ProcessDefinition, VariableDefinition } from '@ailaflow/model';
 import { useRootEditor } from 'sequential-workflow-designer-react';
 import { ProcessEditorOverlayType, ProcessEditorState } from '../process-editor-context';
 import { DesignerEditorView } from '../../../views/process-editor/designer/designer-editor-view';

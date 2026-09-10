@@ -1,4 +1,4 @@
-import { executeSandboxCommandRequestSchema, ExecuteSandboxCommandUpdate } from '@aila/model';
+import { executeSandboxCommandRequestSchema, ExecuteSandboxCommandUpdate } from '@ailaflow/model';
 import { Request, Response } from 'express';
 import { SandboxInstanceManager } from '../../sandbox/sandbox-instance-manager';
 import { SseResponse } from '../../utilities/sse-response';

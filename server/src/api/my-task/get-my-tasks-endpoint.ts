@@ -1,4 +1,4 @@
-import { GetMyTasksResponse, getMyTasksRequestSchema } from '@aila/model';
+import { GetMyTasksResponse, getMyTasksRequestSchema } from '@ailaflow/model';
 import { Request } from 'express';
 import { MyTaskListQuerier } from '../../queriers/my-task-list/my-task-list-querier';
 import { getAuthToken } from '../auth/auth-middleware';
