@@ -91,7 +91,7 @@ export function PortalLayout(props: PortalLayoutProps) {
               <Link
                 to="/"
                 onClick={closeSidebar}
-                className="block text-center text-4xl font-semibold tracking-tight transition-colors hover:text-slate-700"
+                className="block text-center text-3xl font-semibold tracking-tight transition-colors hover:text-slate-700"
               >
                 AilaFlow
               </Link>

@@ -1,4 +1,5 @@
 export enum LicenseType {
   HOME = 3,
-  PRO = 9
+  STARTER = 6,
+  BUSINESS = 9
 }

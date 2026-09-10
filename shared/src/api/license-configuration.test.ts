@@ -14,16 +14,17 @@ test('uses numeric license types with flat license fields during installation', 
   for (const license of [
     {},
     { type: 'home', licenseKey: null },
-    { type: 'pro', licenseKey: 'key' },
+    { type: 'business', licenseKey: 'key' },
     { type: 1, licenseKey: null },
-    { type: LicenseType.PRO }
+    { type: LicenseType.BUSINESS }
   ]) {
     assert.equal(installRequestSchema.safeParse({ ...install, licenseType: license.type, licenseKey: license.licenseKey }).success, false);
     assert.equal(saveLicenseConfigurationRequestSchema.safeParse(license).success, false);
   }
   for (const license of [
     { type: LicenseType.HOME, licenseKey: null },
-    { type: LicenseType.PRO, licenseKey: 'key' }
+    { type: LicenseType.STARTER, licenseKey: null },
+    { type: LicenseType.BUSINESS, licenseKey: 'key' }
   ]) {
     const request = { ...install, licenseType: license.type, licenseKey: license.licenseKey };
     assert.deepEqual(installRequestSchema.parse(request), request);
@@ -33,8 +34,8 @@ test('uses numeric license types with flat license fields during installation', 
 });
 
 test('configuration exposes only key presence while status and proof can be null', () => {
-  assert.deepEqual(getLicenseConfigurationResponseSchema.parse({ type: LicenseType.PRO, hasLicenseKey: true }), {
-    type: LicenseType.PRO,
+  assert.deepEqual(getLicenseConfigurationResponseSchema.parse({ type: LicenseType.BUSINESS, hasLicenseKey: true }), {
+    type: LicenseType.BUSINESS,
     hasLicenseKey: true
   });
   assert.deepEqual(getLicenseStatusResponseSchema.parse({ status: null }), { status: null });

@@ -17,7 +17,8 @@ import { InstallEndpoint } from './install-endpoint';
 
 const signal = new AbortController().signal;
 const home = { licenseType: LicenseType.HOME, licenseKey: null } as const;
-const pro = { licenseType: LicenseType.PRO, licenseKey: 'accepted-key' } as const;
+const starter = { licenseType: LicenseType.STARTER, licenseKey: null } as const;
+const business = { licenseType: LicenseType.BUSINESS, licenseKey: 'accepted-key' } as const;
 
 async function fixture(t: TestContext) {
   const db = new DatabaseSync(':memory:');
@@ -32,8 +33,8 @@ async function fixture(t: TestContext) {
   const validator = new LicenseValidator();
   const validate = t.mock.method(validator, 'validate');
   validate.mock.mockImplementation(async (_signal, _instanceId, type, key) => ({
-    isValid: type === LicenseType.HOME || key === 'accepted-key',
-    proof: type === LicenseType.HOME ? null : 'proof'
+    isValid: type !== LicenseType.BUSINESS || key === 'accepted-key',
+    proof: type === LicenseType.BUSINESS ? 'proof' : null
   }));
   const manager = new LicenseManager(validator, new KvConfigurationManager(configuration));
   const endpoint = new InstallEndpoint(users, attributes, sandboxes, new PasswordHasher(), manager);
@@ -44,7 +45,7 @@ function request(license: object | undefined): Request {
   return Object.assign(new EventEmitter(), { body: { rootUserName: 'root', rootPassword: 'password', ...license } }) as unknown as Request;
 }
 
-for (const license of [home, pro]) {
+for (const license of [home, starter, business]) {
   test(`installs ${license.licenseType} and saves license status with initial application data`, async t => {
     const f = await fixture(t);
     assert.deepEqual(await f.endpoint.handle(request(license)), {});
@@ -56,7 +57,7 @@ for (const license of [home, pro]) {
     assert.equal((await f.configuration.get(signal)).licenseKey, license.licenseKey);
     assert.equal(f.manager.getStatus()!.isValid, true);
     assert.equal(f.validate.mock.callCount(), 1);
-    await assert.rejects(f.endpoint.handle(request(pro)), /already initialized/);
+    await assert.rejects(f.endpoint.handle(request(business)), /already initialized/);
     assert.equal(f.validate.mock.callCount(), 1);
   });
 }
@@ -65,11 +66,15 @@ for (const unavailable of [false, true]) {
   test(`validation ${unavailable ? 'service error' : 'rejection'} saves only the instance ID and allows retry`, async t => {
     const f = await fixture(t);
     f.validate.mock.mockImplementation(async (_signal, _instanceId, type) => {
-      if (type === LicenseType.HOME) return { isValid: true, proof: null };
-      if (unavailable) throw new Error('service failed');
+      if (type !== LicenseType.BUSINESS) {
+        return { isValid: true, proof: null };
+      }
+      if (unavailable) {
+        throw new Error('service failed');
+      }
       return { isValid: false, proof: '' };
     });
-    await assert.rejects(f.endpoint.handle(request(pro)), unavailable ? /service failed/ : /License validation failed/);
+    await assert.rejects(f.endpoint.handle(request(business)), unavailable ? /service failed/ : /License validation failed/);
     for (const table of ['users', 'user_attributes', 'user_attribute_definitions', 'sandboxes']) {
       assert.equal((f.db.prepare(`SELECT COUNT(*) AS count FROM ${table}`).get() as { count: number }).count, 0);
     }
@@ -97,7 +102,7 @@ test('waits for validation before writing and rejects concurrent installation at
         resolve = done;
       })
   );
-  const installing = f.endpoint.handle(request(pro));
+  const installing = f.endpoint.handle(request(business));
   await Promise.resolve();
   assert.equal(await f.users.count(signal), 0);
   assert.equal((await f.configuration.get(signal)).licenseType, null);
@@ -110,9 +115,9 @@ test('rejects malformed license requests without calling the service or writing'
   const f = await fixture(t);
   for (const license of [
     undefined,
-    { licenseType: LicenseType.PRO },
-    { licenseType: 'pro', licenseKey: 'key' },
-    { license: { type: LicenseType.PRO, licenseKey: 'key' } }
+    { licenseType: LicenseType.BUSINESS },
+    { licenseType: 'business', licenseKey: 'key' },
+    { license: { type: LicenseType.BUSINESS, licenseKey: 'key' } }
   ]) {
     await assert.rejects(f.endpoint.handle(request(license)));
   }

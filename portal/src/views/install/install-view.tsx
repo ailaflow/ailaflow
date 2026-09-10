@@ -14,7 +14,7 @@ export interface InstallViewProps extends LicenseSelectorViewProps {
 
 export function InstallView(props: InstallViewProps) {
   return (
-    <div className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-5">
+    <div className="w-full max-w-2xl rounded-xl border border-slate-200 bg-white p-5">
       <div className="mb-4">
         <h1 className="text-lg font-semibold tracking-tight">Install</h1>
         <p className="mt-1 text-xs text-slate-500">Create the root account and choose a license to finish setup.</p>

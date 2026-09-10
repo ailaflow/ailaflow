@@ -37,10 +37,10 @@ function LoadedLicenseConfigurationPage(props: { initial: GetLicenseConfiguratio
   const [success, setSuccess] = useState(false);
   const draft: SaveLicenseConfigurationRequest = {
     type: licenseType,
-    licenseKey: licenseType === LicenseType.HOME ? null : licenseKey.trim()
+    licenseKey: licenseType === LicenseType.BUSINESS ? licenseKey.trim() : null
   };
   const isChanged = draft.type !== saved.type || Boolean(draft.licenseKey);
-  const canSave = !isSaving && (draft.type === LicenseType.HOME || Boolean(draft.licenseKey)) && (isChanged || !status?.isValid);
+  const canSave = !isSaving && (draft.type !== LicenseType.BUSINESS || Boolean(draft.licenseKey)) && (isChanged || !status?.isValid);
 
   async function save(event: SubmitEvent): Promise<void> {
     event.preventDefault();
@@ -71,7 +71,7 @@ function LoadedLicenseConfigurationPage(props: { initial: GetLicenseConfiguratio
     <LicenseConfigurationView
       licenseType={licenseType}
       licenseKey={licenseKey}
-      hasLicenseKey={saved.type === LicenseType.PRO && saved.hasLicenseKey}
+      hasLicenseKey={saved.type === LicenseType.BUSINESS && saved.hasLicenseKey}
       disabled={isSaving}
       canSave={canSave}
       error={error}
@@ -80,7 +80,9 @@ function LoadedLicenseConfigurationPage(props: { initial: GetLicenseConfiguratio
       checkedAt={status ? new Date(status.checkedAt).toLocaleString() : null}
       onLicenseTypeChange={type => {
         setLicenseType(type);
-        if (type === LicenseType.HOME) setLicenseKey('');
+        if (type !== LicenseType.BUSINESS) {
+          setLicenseKey('');
+        }
         setError(null);
         setSuccess(false);
       }}

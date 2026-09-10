@@ -24,14 +24,14 @@ test('updates only changed fields so independent stale snapshots do not overwrit
   assert.equal(instance.instanceId, null);
   instance.setInstanceId('instance-id');
   url.setPublicUrl('https://ailaflow.example.com');
-  license.setLicenseType(LicenseType.PRO, 'secret');
+  license.setLicenseType(LicenseType.BUSINESS, 'secret');
   await repository.updateChanged(signal, url);
   await repository.updateChanged(signal, license);
   await repository.updateChanged(signal, instance);
   const restored = await new SqliteKvConfigurationRepository({ modelDb: db } as SqliteDatabases).get(signal);
   assert.equal(restored.publicUrl, 'https://ailaflow.example.com');
   assert.equal(restored.instanceId, 'instance-id');
-  assert.equal(restored.licenseType, LicenseType.PRO);
+  assert.equal(restored.licenseType, LicenseType.BUSINESS);
   assert.equal(restored.licenseKey, 'secret');
   assert.deepEqual(restored.getChangedKeys(), []);
   restored.setPublicUrl(null);
@@ -61,7 +61,7 @@ test('does not touch unchanged fields and rolls back all changes on failure', as
     BEGIN SELECT RAISE(ABORT, 'URL write rejected'); END`);
   const license = await repository.get(signal);
   await repository.updateChanged(signal, license);
-  license.setLicenseType(LicenseType.PRO, 'key');
+  license.setLicenseType(LicenseType.BUSINESS, 'key');
   await repository.updateChanged(signal, license);
   db.exec(`CREATE TRIGGER reject_key BEFORE UPDATE ON kv_configuration WHEN NEW.key = 'licenseKey'
     BEGIN SELECT RAISE(ABORT, 'Key write rejected'); END`);
@@ -70,6 +70,6 @@ test('does not touch unchanged fields and rolls back all changes on failure', as
   await assert.rejects(repository.updateChanged(signal, update), /Key write rejected/);
   const after = await repository.get(signal);
   assert.equal(after.licenseKey, 'key');
-  assert.equal(after.licenseType, LicenseType.PRO);
+  assert.equal(after.licenseType, LicenseType.BUSINESS);
   await assert.rejects(repository.updateChanged(AbortSignal.abort(), update));
 });

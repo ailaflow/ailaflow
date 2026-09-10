@@ -96,7 +96,7 @@ export function ConfigurationOverviewPage() {
       id: 'license',
       label: 'License',
       value: licenseStatus
-        ? `${licenseStatus.type === LicenseType.HOME ? 'Home' : 'Pro'} · ${licenseStatus.isValid ? 'Valid' : 'Invalid'}`
+        ? `${getLicenseTypeLabel(licenseStatus.type)} · ${licenseStatus.isValid ? 'Valid' : 'Invalid'}`
         : 'Not available',
       detail: licenseStatus ? `Last checked: ${new Date(licenseStatus.checkedAt).toLocaleString()}` : undefined,
       isHealthy: licenseStatus?.isValid ?? false,
@@ -115,6 +115,20 @@ function publicUrlStatusValue(publicUrl: string | null, isAvailable: boolean): s
     return 'Not configured';
   }
   return `${isAvailable ? 'Available' : 'Unavailable'} · ${publicUrl}`;
+}
+
+function getLicenseTypeLabel(type: LicenseType): string {
+  switch (type) {
+    case LicenseType.HOME: {
+      return 'Home';
+    }
+    case LicenseType.STARTER: {
+      return 'Starter';
+    }
+    case LicenseType.BUSINESS: {
+      return 'Business';
+    }
+  }
 }
 
 function isLlmUseCaseConfigured(configuration: GetLlmConfigurationResponse, useCase: LlmUseCase): boolean {

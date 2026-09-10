@@ -43,17 +43,19 @@ test('returns public status separately and exposes key presence only to administ
   assert.equal(f.save.admin, true);
   assert.deepEqual(await f.status.handle(), { status: null });
   await assert.rejects(f.get.handle(request()), { name: 'Error', message: 'License type is not set' });
-  assert.deepEqual(await f.save.handle(request({ type: LicenseType.PRO, licenseKey: 'valid-secret' })), {});
-  assert.deepEqual(await f.get.handle(request()), { type: LicenseType.PRO, hasLicenseKey: true });
+  assert.deepEqual(await f.save.handle(request({ type: LicenseType.BUSINESS, licenseKey: 'valid-secret' })), {});
+  assert.deepEqual(await f.get.handle(request()), { type: LicenseType.BUSINESS, hasLicenseKey: true });
   const status = await f.status.handle();
   assert.equal(status.status!.isValid, true);
-  assert.equal(status.status!.type, LicenseType.PRO);
+  assert.equal(status.status!.type, LicenseType.BUSINESS);
   assert.equal(JSON.stringify(status).includes('valid-secret'), false);
   assert.equal(JSON.stringify(await f.get.handle(request())).includes('valid-secret'), false);
   assert.equal(f.validate.mock.callCount(), 1);
   await f.save.handle(request({ type: LicenseType.HOME, licenseKey: null }));
   assert.deepEqual(await f.get.handle(request()), { type: LicenseType.HOME, hasLicenseKey: false });
   assert.equal((await f.repository.get(signal)).licenseKey, null);
+  await f.save.handle(request({ type: LicenseType.STARTER, licenseKey: null }));
+  assert.deepEqual(await f.get.handle(request()), { type: LicenseType.STARTER, hasLicenseKey: false });
 });
 
 test('validation rejection and service failure preserve stored selection and status', async t => {
@@ -62,14 +64,14 @@ test('validation rejection and service failure preserve stored selection and sta
   const savedStatus = await f.status.handle();
   for (const licenseKey of [null, '', '   ', 'missing']) {
     await assert.rejects(
-      f.save.handle(request({ type: LicenseType.PRO, licenseKey })),
+      f.save.handle(request({ type: LicenseType.BUSINESS, licenseKey })),
       (error: unknown) => error instanceof EndpointError && error.status === 400
     );
   }
   f.validate.mock.mockImplementation(async () => {
     throw new Error('License service unavailable');
   });
-  await assert.rejects(f.save.handle(request({ type: LicenseType.PRO, licenseKey: 'valid-secret' })), /License service unavailable/);
+  await assert.rejects(f.save.handle(request({ type: LicenseType.BUSINESS, licenseKey: 'valid-secret' })), /License service unavailable/);
   assert.deepEqual(await f.get.handle(request()), { type: LicenseType.HOME, hasLicenseKey: false });
   assert.deepEqual(await f.status.handle(), savedStatus);
 });

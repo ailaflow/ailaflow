@@ -11,7 +11,7 @@ export class LicenseValidator {
     proof: string | null;
   }> {
     abortSignal.throwIfAborted();
-    if (type === LicenseType.HOME) {
+    if (type !== LicenseType.BUSINESS) {
       return { isValid: true, proof: null };
     }
     // TODO:

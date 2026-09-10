@@ -21,8 +21,8 @@ test('tracks setter calls and preserves validated URLs', () => {
 });
 
 test('tracks license type and key changes without persisting status', () => {
-  const configuration = new KvConfiguration(null, null, LicenseType.PRO, 'old-key');
-  configuration.setLicenseType(LicenseType.PRO, 'new-key');
+  const configuration = new KvConfiguration(null, null, LicenseType.BUSINESS, 'old-key');
+  configuration.setLicenseType(LicenseType.BUSINESS, 'new-key');
   assert.equal(configuration.licenseKey, 'new-key');
   assert.deepEqual(configuration.getChangedKeys(), ['licenseType', 'licenseKey']);
   configuration.setLicenseType(LicenseType.HOME, null);
@@ -31,7 +31,7 @@ test('tracks license type and key changes without persisting status', () => {
 });
 
 test('clones preserve pending changes and keep properties independent', () => {
-  const configuration = new KvConfiguration(null, 'instance-id', LicenseType.PRO, 'key');
+  const configuration = new KvConfiguration(null, 'instance-id', LicenseType.BUSINESS, 'key');
   configuration.setPublicUrl('https://ailaflow.example.com');
   const copy = configuration.clone();
   assert.equal(copy.instanceId, 'instance-id');

@@ -51,7 +51,9 @@ export function LicenseConfigurationView(props: LicenseConfigurationViewProps) {
             <dl className="mt-4 space-y-3 text-sm">
               <div className="flex justify-between gap-3">
                 <dt className="text-slate-500">Saved license</dt>
-                <dd>{props.status.type === LicenseType.HOME ? 'Home' : 'Pro'}</dd>
+                <dd>
+                  {props.status.type === LicenseType.HOME ? 'Home' : props.status.type === LicenseType.STARTER ? 'Starter' : 'Business'}
+                </dd>
               </div>
               <div className="flex justify-between gap-3">
                 <dt className="text-slate-500">Validation</dt>

@@ -14,7 +14,7 @@ export function InstallPage() {
   const [licenseType, setLicenseType] = useState(LicenseType.HOME);
   const [licenseKey, setLicenseKey] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const canSubmit = !isSubmitting && (licenseType === LicenseType.HOME || Boolean(licenseKey.trim()));
+  const canSubmit = !isSubmitting && (licenseType !== LicenseType.BUSINESS || Boolean(licenseKey.trim()));
   const [error, setError] = useState<string | null>(null);
 
   const onSubmit = async (e: SubmitEvent) => {
@@ -30,7 +30,7 @@ export function InstallPage() {
         rootUserName,
         rootPassword,
         licenseType,
-        licenseKey: licenseKey.trim() || null
+        licenseKey: licenseType === LicenseType.BUSINESS ? licenseKey.trim() : null
       });
     } catch (e) {
       setError((e as Error).message ?? String(e));
@@ -60,7 +60,7 @@ export function InstallPage() {
         onLicenseTypeChange={type => {
           setLicenseType(type);
           setError(null);
-          if (type === LicenseType.HOME) {
+          if (type !== LicenseType.BUSINESS) {
             setLicenseKey('');
           }
         }}

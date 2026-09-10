@@ -13,10 +13,11 @@ export function LicenseSelectorView(props: LicenseSelectorViewProps) {
   return (
     <fieldset disabled={props.disabled} className="space-y-3">
       <legend className="mb-2 text-sm font-medium text-slate-700">License type</legend>
-      <div className="grid gap-2 sm:grid-cols-2">
+      <div className="grid gap-2 sm:grid-cols-3">
         {[
-          { type: LicenseType.HOME, label: 'Home', description: 'Free for personal, non-commercial use.' },
-          { type: LicenseType.PRO, label: 'Pro', description: 'For companies and commercial use.' }
+          { type: LicenseType.HOME, label: 'Home', description: 'For personal projects, learning, and non-profit work.' },
+          { type: LicenseType.STARTER, label: 'Starter', description: 'For teams of up to 3 people using AilaFlow at work.' },
+          { type: LicenseType.BUSINESS, label: 'Business', description: 'For commercial and public sector teams with more than 3 users.' }
         ].map(option => (
           <label
             key={option.type}
@@ -39,7 +40,7 @@ export function LicenseSelectorView(props: LicenseSelectorViewProps) {
           </label>
         ))}
       </div>
-      {props.licenseType === LicenseType.PRO && (
+      {props.licenseType === LicenseType.BUSINESS && (
         <div>
           <label className="block space-y-1">
             <span className="text-sm font-medium text-slate-700">License key</span>
@@ -53,7 +54,7 @@ export function LicenseSelectorView(props: LicenseSelectorViewProps) {
               required
               value={props.licenseKey}
               onChange={event => props.onLicenseKeyChange(event.target.value)}
-              placeholder="Enter your Pro license key"
+              placeholder="Enter your Business license key"
               className="h-9 w-full rounded-md border border-slate-300 bg-white px-3 text-sm outline-none placeholder:text-slate-400 focus:border-slate-500"
             />
           </label>
@@ -66,7 +67,7 @@ export function LicenseSelectorView(props: LicenseSelectorViewProps) {
               rel="noopener noreferrer"
               className="font-semibold text-blue-700 underline decoration-blue-300 underline-offset-2 transition-colors hover:text-blue-900"
             >
-              Purchase a Pro license
+              Purchase a Business license
             </a>
             .
           </p>
