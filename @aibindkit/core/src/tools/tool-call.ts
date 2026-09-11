@@ -1,3 +1,8 @@
-import type OpenAI from 'openai';
-
-export type ToolCall = OpenAI.Chat.ChatCompletionMessageFunctionToolCall;
+export interface ToolCall {
+  id: string;
+  function: {
+    arguments: string;
+    name: string;
+  };
+  type: 'function';
+}

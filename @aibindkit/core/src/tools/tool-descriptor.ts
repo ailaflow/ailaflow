@@ -1,3 +1,9 @@
-import type OpenAI from 'openai';
-
-export type ToolDescriptor = OpenAI.Chat.ChatCompletionFunctionTool;
+export interface ToolDescriptor {
+  function: {
+    name: string;
+    description?: string;
+    parameters?: Record<string, unknown>;
+    strict?: boolean | null;
+  };
+  type: 'function';
+}

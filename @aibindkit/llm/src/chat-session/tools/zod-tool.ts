@@ -1,5 +1,4 @@
-import { ChatMessageMetadata, ToolCall } from '@aibindkit/core';
-import { ChatCompletionFunctionTool } from 'openai/resources';
+import { ChatMessageMetadata, ToolCall, ToolDescriptor } from '@aibindkit/core';
 import { Tool, ToolContext, ToolExecutionResult } from './tool';
 import z from 'zod/v4';
 
@@ -10,7 +9,7 @@ export interface ZodToolExecutionResult {
 
 export abstract class ZodTool<T = void> implements Tool {
   private readonly inputZod?: z.ZodObject;
-  public readonly descriptor: ChatCompletionFunctionTool;
+  public readonly descriptor: ToolDescriptor;
 
   public constructor(name: string, description: string, inputZod?: z.ZodObject, inputJsonSchema?: Record<string, unknown>) {
     this.inputZod = inputZod;

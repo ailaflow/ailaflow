@@ -30,7 +30,6 @@
   "dependencies": {
     "croner": "^10.0.1",
     "express": "^5.2.1",
-    "openai": "^6.39.0",
     "sequential-workflow-machine": "^0.7.1",
     "sequential-workflow-model": "^0.2.0",
     "xstate": "^4.38.3",

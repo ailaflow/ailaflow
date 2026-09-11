@@ -20,9 +20,6 @@ importers:
 
   '@aibindkit/core':
     dependencies:
-      openai:
-        specifier: ^6.39.0
-        version: 6.39.0(zod@4.4.3)
       zod:
         specifier: ^4.4.3
         version: 4.4.3
@@ -61,9 +58,6 @@ importers:
       '@aibindkit/core':
         specifier: workspace:*
         version: link:../core
-      openai:
-        specifier: ^6.39.0
-        version: 6.39.0(zod@4.4.3)
       zod:
         specifier: ^4.4.3
         version: 4.4.3
@@ -71,6 +65,9 @@ importers:
       '@types/node':
         specifier: ^22.10.1
         version: 22.19.19
+      tsx:
+        specifier: ^4.22.3
+        version: 4.22.3
       typescript:
         specifier: ^6.0.3
         version: 6.0.3
@@ -133,9 +130,6 @@ importers:
       express:
         specifier: ^5.2.1
         version: 5.2.1
-      openai:
-        specifier: ^6.39.0
-        version: 6.39.0(zod@4.4.3)
       sequential-workflow-machine:
         specifier: ^0.7.1
         version: 0.7.1(sequential-workflow-model@0.2.0)(xstate@4.38.3)
@@ -188,31 +182,6 @@ importers:
       webpack-cli:
         specifier: ^7.0.0
         version: 7.2.3(js-yaml@4.3.2)(webpack@5.110.3)
-
-  shared:
-    dependencies:
-      '@aibindkit/core':
-        specifier: workspace:*
-        version: link:../@aibindkit/core
-      openai:
-        specifier: ^6.39.0
-        version: 6.39.0(zod@4.4.3)
-      sequential-workflow-model:
-        specifier: ^0.2.0
-        version: 0.2.0
-      zod:
-        specifier: ^4.4.3
-        version: 4.4.3
-    devDependencies:
-      '@types/node':
-        specifier: ^22.10.1
-        version: 22.19.19
-      prettier:
-        specifier: ^3.8.3
-        version: 3.8.3
-      typescript:
-        specifier: ^6.0.3
-        version: 6.0.3
 
   portal:
     dependencies:
@@ -301,6 +270,28 @@ importers:
         version: 22.19.19
       prettier:
         specifier: ^3.5.3
+        version: 3.8.3
+      typescript:
+        specifier: ^6.0.3
+        version: 6.0.3
+
+  shared:
+    dependencies:
+      '@aibindkit/core':
+        specifier: workspace:*
+        version: link:../@aibindkit/core
+      sequential-workflow-model:
+        specifier: ^0.2.0
+        version: 0.2.0
+      zod:
+        specifier: ^4.4.3
+        version: 4.4.3
+    devDependencies:
+      '@types/node':
+        specifier: ^22.10.1
+        version: 22.19.19
+      prettier:
+        specifier: ^3.8.3
         version: 3.8.3
       typescript:
         specifier: ^6.0.3
@@ -1439,18 +1430,6 @@ packages:
 
   once@1.4.0:
     resolution: {integrity: sha512-lNaJgI+2Q5URQBkccEKHTQOPaXdUxnZZElQTZY0MFUAuaEqe1E+Nyvgdz/aIyNi6Z9MzO5dv1H8n58/GELp3+w==}
-
-  openai@6.39.0:
-    resolution: {integrity: sha512-O61LIsimY3acVabwvomwFhwrnN36yvHY2quIfy9keEcFytGgWeV35yLHQ6NVMLSBxRpHmcg2yuhCnlu2HT4pLQ==}
-    hasBin: true
-    peerDependencies:
-      ws: ^8.18.0
-      zod: ^3.25 || ^4.0
-    peerDependenciesMeta:
-      ws:
-        optional: true
-      zod:
-        optional: true
 
   p-limit@2.3.0:
     resolution: {integrity: sha512-//88mFWSJx8lxCzwdAABTJL2MyWB12+eIY7MDL2SqLmAkeKU9qxRvWuSyTjm3FUmpBEMuFfckAIqEaVGUDxb6w==}
@@ -2871,10 +2850,6 @@ snapshots:
   once@1.4.0:
     dependencies:
       wrappy: 1.0.2
-
-  openai@6.39.0(zod@4.4.3):
-    optionalDependencies:
-      zod: 4.4.3
 
   p-limit@2.3.0:
     dependencies:
