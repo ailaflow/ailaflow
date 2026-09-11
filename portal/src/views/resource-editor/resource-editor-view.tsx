@@ -74,7 +74,7 @@ export function ResourceEditorView(props: ResourceEditorViewProps) {
                 aria-expanded={isDetailsExpanded}
                 aria-controls={detailsId}
                 onClick={() => setIsDetailsExpanded(isExpanded => !isExpanded)}
-                className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-800"
+                className="cursor-pointer inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-800"
               >
                 <SvgIcon name={isDetailsExpanded ? 'chevronUp' : 'chevronDown'} className="h-4 w-4" />
               </button>

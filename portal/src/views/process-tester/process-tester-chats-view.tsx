@@ -33,7 +33,7 @@ export function ProcessTesterChatsView(props: ProcessTesterChatsViewProps) {
                     role="tab"
                     aria-selected={isActive}
                     onClick={() => props.onSelectUser(userName)}
-                    className="h-full max-w-48 truncate px-3 text-left text-sm font-medium"
+                    className="cursor-pointer h-full max-w-48 truncate px-3 text-left text-sm font-medium"
                     title={`Open chat for ${userName}`}
                   >
                     @{userName}
@@ -43,7 +43,7 @@ export function ProcessTesterChatsView(props: ProcessTesterChatsViewProps) {
                     <button
                       type="button"
                       onClick={() => props.onCloseUser(userName)}
-                      className="mr-1 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded text-slate-400 transition-colors hover:bg-slate-200 hover:text-slate-700"
+                      className="cursor-pointer mr-1 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded text-slate-400 transition-colors hover:bg-slate-200 hover:text-slate-700"
                       aria-label={`Close chat for ${userName}`}
                       title={`Close chat for ${userName}`}
                     >
@@ -57,7 +57,7 @@ export function ProcessTesterChatsView(props: ProcessTesterChatsViewProps) {
           <button
             type="button"
             onClick={props.onOpenUserChat}
-            className="mb-1 ml-2 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-slate-300 bg-white text-slate-600 transition-colors hover:border-slate-400 hover:bg-slate-50 hover:text-slate-900"
+            className="cursor-pointer mb-1 ml-2 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-slate-300 bg-white text-slate-600 transition-colors hover:border-slate-400 hover:bg-slate-50 hover:text-slate-900"
             aria-label="Add chat"
             title="Open user chat"
           >

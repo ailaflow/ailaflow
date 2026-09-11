@@ -115,7 +115,7 @@ export function ResourceViewSwitcherView(props: ResourceViewSwitcherViewProps) {
           >
             {props.options.map(option => {
               const disabledReason = props.disabledReason ?? option.disabledReason;
-              const className = `flex w-full items-center gap-2 rounded px-3 py-2 text-left text-sm outline-none focus:bg-slate-100 ${
+              const className = `flex w-full cursor-pointer items-center gap-2 rounded px-3 py-2 text-left text-sm outline-none focus:bg-slate-100 ${
                 option.selected
                   ? 'bg-slate-50 font-medium text-slate-900'
                   : disabledReason

@@ -111,7 +111,7 @@ function PaginationButton(props: { disabled: boolean; onClick(): void; children:
       type="button"
       disabled={props.disabled}
       onClick={props.onClick}
-      className="inline-flex h-8 items-center justify-center rounded-md border border-slate-200 bg-white px-3 font-medium text-slate-700 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
+      className="cursor-pointer inline-flex h-8 items-center justify-center rounded-md border border-slate-200 bg-white px-3 font-medium text-slate-700 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
     >
       {props.children}
     </button>

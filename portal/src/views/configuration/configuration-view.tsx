@@ -24,7 +24,7 @@ export function ConfigurationView(props: ConfigurationViewProps) {
               key={tab.id}
               type="button"
               onClick={() => props.onTabChange(tab.id)}
-              className={`shrink-0 border-b-2 px-1 pb-3 text-sm font-medium transition-colors ${
+              className={`cursor-pointer shrink-0 border-b-2 px-1 pb-3 text-sm font-medium transition-colors ${
                 props.activeTab === tab.id
                   ? 'border-slate-900 text-slate-900'
                   : 'border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-800'

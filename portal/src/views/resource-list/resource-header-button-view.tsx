@@ -10,7 +10,7 @@ export function ResourceHeaderButtonView(props: ResourceHeaderButtonViewProps) {
     <button
       type="button"
       onClick={() => void props.onClick()}
-      className="inline-flex h-9 shrink-0 items-center justify-center rounded-md border border-slate-900 bg-slate-900 px-3 text-sm font-medium text-white transition-colors hover:bg-slate-800"
+      className="cursor-pointer inline-flex h-9 shrink-0 items-center justify-center rounded-md border border-slate-900 bg-slate-900 px-3 text-sm font-medium text-white transition-colors hover:bg-slate-800"
     >
       {props.children}
     </button>

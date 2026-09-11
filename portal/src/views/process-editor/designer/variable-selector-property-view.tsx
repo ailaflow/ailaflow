@@ -56,7 +56,7 @@ export function VariableSelectorPropertyView(props: VariableSelectorPropertyView
           <button
             type="button"
             onClick={() => removeVariable(index)}
-            className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-slate-400 transition-colors hover:bg-red-50 hover:text-red-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400"
+            className="cursor-pointer inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-slate-400 transition-colors hover:bg-red-50 hover:text-red-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400"
             aria-label={`Remove variable ${name}`}
             title="Remove variable"
           >

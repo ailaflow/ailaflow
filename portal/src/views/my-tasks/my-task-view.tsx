@@ -18,7 +18,7 @@ export function MyTaskView(props: MyTaskViewProps) {
         <button
           type="button"
           onClick={props.onBack}
-          className="inline-flex h-9 shrink-0 items-center justify-center rounded-md border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 hover:text-slate-900"
+          className="cursor-pointer inline-flex h-9 shrink-0 items-center justify-center rounded-md border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 hover:text-slate-900"
         >
           Back to tasks
         </button>

@@ -34,7 +34,7 @@ export function ProcessCronJobsView(props: ProcessCronJobsViewProps) {
           <button
             type="button"
             onClick={props.onCreate}
-            className="inline-flex h-9 items-center justify-center rounded-md bg-slate-900 px-4 text-sm font-medium text-white transition-colors hover:bg-slate-700"
+            className="cursor-pointer inline-flex h-9 items-center justify-center rounded-md bg-slate-900 px-4 text-sm font-medium text-white transition-colors hover:bg-slate-700"
           >
             Create cron job
           </button>
@@ -82,7 +82,7 @@ function CronJobEditor(props: ProcessCronJobsViewProps & { draft: ProcessCronJob
                 type="button"
                 title={example.expression}
                 onClick={() => props.onDraftChange({ expression: example.expression })}
-                className={`text-xs font-medium underline decoration-slate-300 underline-offset-2 transition-colors hover:text-slate-900 ${
+                className={`cursor-pointer text-xs font-medium underline decoration-slate-300 underline-offset-2 transition-colors hover:text-slate-900 ${
                   props.draft.expression === example.expression ? 'text-slate-900' : 'text-slate-600'
                 }`}
               >
@@ -125,7 +125,7 @@ function CronJobEditor(props: ProcessCronJobsViewProps & { draft: ProcessCronJob
         <button
           type="button"
           onClick={props.onCancel}
-          className="inline-flex h-9 items-center justify-center rounded-md border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 hover:bg-slate-50"
+          className="cursor-pointer inline-flex h-9 items-center justify-center rounded-md border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 hover:bg-slate-50"
         >
           Cancel
         </button>
@@ -133,7 +133,7 @@ function CronJobEditor(props: ProcessCronJobsViewProps & { draft: ProcessCronJob
           type="button"
           disabled={!props.canSave}
           onClick={props.onSave}
-          className="inline-flex h-9 items-center justify-center rounded-md bg-slate-900 px-4 text-sm font-medium text-white hover:bg-slate-700 disabled:cursor-not-allowed disabled:bg-slate-300"
+          className="cursor-pointer inline-flex h-9 items-center justify-center rounded-md bg-slate-900 px-4 text-sm font-medium text-white hover:bg-slate-700 disabled:cursor-not-allowed disabled:bg-slate-300"
         >
           Save
         </button>
@@ -201,7 +201,7 @@ function CronJobItem(props: { job: ProcessCronJobDto; onEdit(job: ProcessCronJob
           Edit
         </button>
         <button
-          className="inline-flex h-8 items-center rounded-md border border-red-200 px-3 text-sm font-medium text-red-700 hover:bg-red-50"
+          className="cursor-pointer inline-flex h-8 items-center rounded-md border border-red-200 px-3 text-sm font-medium text-red-700 hover:bg-red-50"
           type="button"
           onClick={() => props.onDelete(job)}
         >
@@ -244,7 +244,7 @@ function formatTime(value: number | null): string {
 }
 
 const secondaryButtonClass =
-  'inline-flex h-8 items-center rounded-md border border-slate-200 px-3 text-sm font-medium text-slate-700 hover:bg-slate-50';
+  'inline-flex h-8 cursor-pointer items-center rounded-md border border-slate-200 px-3 text-sm font-medium text-slate-700 hover:bg-slate-50';
 
 const expressionExamples = [
   { label: 'Every 10 minutes', expression: '*/10 * * * *' },

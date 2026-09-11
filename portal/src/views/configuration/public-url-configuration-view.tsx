@@ -61,7 +61,7 @@ export function PublicUrlConfigurationView(props: PublicUrlConfigurationViewProp
                 type="button"
                 disabled={!props.canTest}
                 onClick={() => void props.onTest()}
-                className="inline-flex h-9 items-center justify-center rounded-md border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700 hover:bg-slate-100 disabled:cursor-not-allowed disabled:border-slate-200 disabled:text-slate-400"
+                className="cursor-pointer inline-flex h-9 items-center justify-center rounded-md border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700 hover:bg-slate-100 disabled:cursor-not-allowed disabled:border-slate-200 disabled:text-slate-400"
               >
                 {props.isTesting ? 'Testing…' : 'Test connection'}
               </button>
@@ -69,7 +69,7 @@ export function PublicUrlConfigurationView(props: PublicUrlConfigurationViewProp
                 type="button"
                 disabled={!props.canSave}
                 onClick={() => void props.onSave()}
-                className="inline-flex h-9 items-center justify-center rounded-md border border-slate-900 bg-slate-900 px-3 text-sm font-medium text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:border-slate-300 disabled:bg-slate-300"
+                className="cursor-pointer inline-flex h-9 items-center justify-center rounded-md border border-slate-900 bg-slate-900 px-3 text-sm font-medium text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:border-slate-300 disabled:bg-slate-300"
               >
                 {props.isSaving ? 'Saving…' : 'Save Public URL'}
               </button>

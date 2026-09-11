@@ -38,7 +38,7 @@ export function FormOverlayView(props: FormOverlayViewProps) {
                 role="tab"
                 aria-selected={isSelected}
                 onClick={() => props.onSelectTab(tab)}
-                className={`relative h-10 shrink-0 border-r border-slate-300 px-4 text-sm transition-colors ${
+                className={`cursor-pointer relative h-10 shrink-0 border-r border-slate-300 px-4 text-sm transition-colors ${
                   isSelected
                     ? 'bg-white font-medium text-slate-900 after:absolute after:inset-x-0 after:top-0 after:h-0.5 after:bg-blue-500'
                     : 'bg-slate-100 text-slate-600 hover:bg-slate-50 hover:text-slate-900'

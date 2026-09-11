@@ -62,7 +62,7 @@ export function LoginView(props: LoginViewProps) {
 
         <button
           type="submit"
-          className="h-9 w-full rounded-md border border-slate-900 bg-slate-900 px-3 text-sm font-medium text-white transition-colors hover:bg-slate-800"
+          className="cursor-pointer h-9 w-full rounded-md border border-slate-900 bg-slate-900 px-3 text-sm font-medium text-white transition-colors hover:bg-slate-800"
         >
           Sign in
         </button>

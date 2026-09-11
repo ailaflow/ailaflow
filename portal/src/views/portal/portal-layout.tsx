@@ -77,7 +77,7 @@ export function PortalLayout(props: PortalLayoutProps) {
           <button
             type="button"
             aria-label="Close navigation menu"
-            className="fixed inset-0 z-30 bg-slate-900/20 md:hidden"
+            className="cursor-pointer fixed inset-0 z-30 bg-slate-900/20 md:hidden"
             onClick={closeSidebar}
           />
         )}
@@ -126,7 +126,7 @@ export function PortalLayout(props: PortalLayoutProps) {
               <button
                 type="button"
                 aria-label="Open navigation menu"
-                className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-slate-300 text-slate-700 hover:bg-slate-100"
+                className="cursor-pointer inline-flex h-8 w-8 items-center justify-center rounded-md border border-slate-300 text-slate-700 hover:bg-slate-100"
                 onClick={() => setIsSidebarOpen(true)}
               >
                 <span className="text-base leading-none">≡</span>

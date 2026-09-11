@@ -30,7 +30,7 @@ export function FolderTreeView(props: FolderTreeViewProps) {
         <button
           type="button"
           onClick={props.onAddFile}
-          className="inline-flex h-7 items-center justify-center rounded-md border border-slate-200 bg-white px-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100 hover:text-slate-900"
+          className="cursor-pointer inline-flex h-7 items-center justify-center rounded-md border border-slate-200 bg-white px-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100 hover:text-slate-900"
           title="Add file"
         >
           +
@@ -111,7 +111,7 @@ function FileTreeRow(props: {
       <button
         type="button"
         onClick={() => props.onSelectFile(props.item.path)}
-        className="flex min-w-0 flex-1 items-center gap-2 text-left"
+        className="cursor-pointer flex min-w-0 flex-1 items-center gap-2 text-left"
       >
         <span className="shrink-0 text-xs text-slate-400">◇</span>
         <span className="truncate">{props.item.name}</span>
@@ -120,7 +120,7 @@ function FileTreeRow(props: {
       <button
         type="button"
         onClick={() => props.onRemoveFile(props.item.path)}
-        className="hidden h-6 w-6 shrink-0 items-center justify-center rounded text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600 group-hover:inline-flex"
+        className="cursor-pointer hidden h-6 w-6 shrink-0 items-center justify-center rounded text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600 group-hover:inline-flex"
         title={`Remove ${props.item.path}`}
       >
         ×

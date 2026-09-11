@@ -40,7 +40,12 @@ export function SimpleItemSearchPopupView(props: SimpleItemSearchPopupViewProps)
   const selection = props.multiSelection;
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6" role="presentation">
-      <button type="button" className="absolute inset-0 bg-slate-900/40" onClick={props.onClose} aria-label={props.closeLabel} />
+      <button
+        type="button"
+        className="cursor-pointer absolute inset-0 bg-slate-900/40"
+        onClick={props.onClose}
+        aria-label={props.closeLabel}
+      />
       <div
         role="dialog"
         aria-modal="true"
@@ -57,7 +62,7 @@ export function SimpleItemSearchPopupView(props: SimpleItemSearchPopupViewProps)
           <button
             type="button"
             onClick={props.onClose}
-            className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-800"
+            className="cursor-pointer inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-800"
             aria-label={props.closeLabel}
           >
             <SvgIcon name="x" className="h-5 w-5" />
@@ -85,7 +90,7 @@ export function SimpleItemSearchPopupView(props: SimpleItemSearchPopupViewProps)
                     type="button"
                     onClick={() => props.onSelectItem(item.id)}
                     aria-label={`Remove ${item.label}`}
-                    className="inline-flex max-w-full items-center gap-1 rounded-md bg-slate-100 px-2 py-1 text-xs text-slate-700 hover:bg-slate-200"
+                    className="cursor-pointer inline-flex max-w-full items-center gap-1 rounded-md bg-slate-100 px-2 py-1 text-xs text-slate-700 hover:bg-slate-200"
                   >
                     <span className="truncate">{item.label}</span>
                     <SvgIcon name="x" className="h-3 w-3 shrink-0" />
@@ -129,7 +134,7 @@ export function SimpleItemSearchPopupView(props: SimpleItemSearchPopupViewProps)
                       <button
                         type="button"
                         onClick={() => props.onSelectItem(item.id)}
-                        className="flex w-full items-center justify-between gap-4 rounded-md px-3 py-2.5 text-left transition-colors hover:bg-slate-100"
+                        className="cursor-pointer flex w-full items-center justify-between gap-4 rounded-md px-3 py-2.5 text-left transition-colors hover:bg-slate-100"
                       >
                         <ItemDetails item={item} />
                         {item.actionLabel && (
@@ -159,14 +164,14 @@ export function SimpleItemSearchPopupView(props: SimpleItemSearchPopupViewProps)
               <button
                 type="button"
                 onClick={props.onClose}
-                className="rounded-md border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
+                className="cursor-pointer rounded-md border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
               >
                 Cancel
               </button>
               <button
                 type="button"
                 onClick={selection.onConfirm}
-                className="rounded-md bg-slate-800 px-3 py-2 text-sm font-medium text-white hover:bg-slate-700"
+                className="cursor-pointer rounded-md bg-slate-800 px-3 py-2 text-sm font-medium text-white hover:bg-slate-700"
               >
                 Confirm selection
               </button>

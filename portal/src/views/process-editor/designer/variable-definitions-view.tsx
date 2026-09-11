@@ -44,7 +44,7 @@ export function VariableDefinitionsView(props: VariableDefinitionsViewProps) {
           <button
             type="button"
             onClick={() => props.onEditSchema(index)}
-            className={`inline-flex h-9 shrink-0 items-center gap-1.5 rounded-md border bg-slate-50 px-2.5 text-sm transition-colors hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 ${
+            className={`cursor-pointer inline-flex h-9 shrink-0 items-center gap-1.5 rounded-md border bg-slate-50 px-2.5 text-sm transition-colors hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 ${
               schemaError ? 'border-red-300 text-red-700' : 'border-slate-300 text-slate-600 hover:border-slate-400'
             }`}
             aria-label={`Edit schema for variable ${variable.name || index + 1}`}
@@ -56,7 +56,7 @@ export function VariableDefinitionsView(props: VariableDefinitionsViewProps) {
           <button
             type="button"
             onClick={() => props.onRemove(index)}
-            className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-slate-300 bg-white/60 text-slate-400 transition-colors hover:border-red-300 hover:bg-red-50 hover:text-red-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400"
+            className="cursor-pointer inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-slate-300 bg-white/60 text-slate-400 transition-colors hover:border-red-300 hover:bg-red-50 hover:text-red-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400"
             aria-label={`Remove variable ${variable.name || index + 1}`}
             title="Remove variable"
           >

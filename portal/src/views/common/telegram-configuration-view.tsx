@@ -39,7 +39,7 @@ export function TelegramConfigurationView(props: TelegramConfigurationViewProps)
               type="button"
               disabled={!props.canAdd}
               onClick={props.onAdd}
-              className="inline-flex h-9 shrink-0 items-center justify-center rounded-md border border-slate-900 bg-slate-900 px-3 text-sm font-medium text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:border-slate-300 disabled:bg-slate-300"
+              className="cursor-pointer inline-flex h-9 shrink-0 items-center justify-center rounded-md border border-slate-900 bg-slate-900 px-3 text-sm font-medium text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:border-slate-300 disabled:bg-slate-300"
             >
               Add bot
             </button>
@@ -166,7 +166,7 @@ function TelegramBotEditor(props: {
             <button
               type="button"
               onClick={() => setIsTokenVisible(value => !value)}
-              className="border-l border-slate-200 px-3 text-xs font-medium text-slate-600 hover:bg-slate-50"
+              className="cursor-pointer border-l border-slate-200 px-3 text-xs font-medium text-slate-600 hover:bg-slate-50"
             >
               {isTokenVisible ? 'Hide' : 'Show'}
             </button>
@@ -179,7 +179,7 @@ function TelegramBotEditor(props: {
           type="button"
           disabled={!props.canSave}
           onClick={() => void props.onSave()}
-          className="inline-flex h-9 items-center justify-center rounded-md border border-slate-900 bg-slate-900 px-3 text-sm font-medium text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:border-slate-300 disabled:bg-slate-300"
+          className="cursor-pointer inline-flex h-9 items-center justify-center rounded-md border border-slate-900 bg-slate-900 px-3 text-sm font-medium text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:border-slate-300 disabled:bg-slate-300"
         >
           Save bot
         </button>
@@ -194,7 +194,7 @@ function ActionButton(props: { danger?: boolean; ariaLabel?: string; onClick(): 
       type="button"
       aria-label={props.ariaLabel}
       onClick={props.onClick}
-      className={`inline-flex h-8 items-center justify-center rounded-md border bg-white px-3 text-sm font-medium transition-colors ${
+      className={`cursor-pointer inline-flex h-8 items-center justify-center rounded-md border bg-white px-3 text-sm font-medium transition-colors ${
         props.danger ? 'border-red-200 text-red-700 hover:bg-red-50' : 'border-slate-200 text-slate-700 hover:bg-slate-100'
       }`}
     >

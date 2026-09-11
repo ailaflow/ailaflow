@@ -69,7 +69,7 @@ export function SandboxEditorView(props: SandboxEditorViewProps) {
             role="switch"
             aria-checked={props.isEnabled}
             onClick={() => props.onIsEnabledChange(!props.isEnabled)}
-            className="inline-flex h-9 items-center gap-3 rounded-md border border-slate-200 px-3 text-sm text-slate-700 transition-colors hover:bg-slate-50"
+            className="cursor-pointer inline-flex h-9 items-center gap-3 rounded-md border border-slate-200 px-3 text-sm text-slate-700 transition-colors hover:bg-slate-50"
           >
             <span
               className={`flex h-5 w-9 items-center rounded-full p-0.5 transition-colors ${
@@ -90,7 +90,7 @@ export function SandboxEditorView(props: SandboxEditorViewProps) {
             <button
               type="button"
               onClick={props.onSecretAdd}
-              className="inline-flex h-8 shrink-0 items-center justify-center rounded-md border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 hover:text-slate-900"
+              className="cursor-pointer inline-flex h-8 shrink-0 items-center justify-center rounded-md border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 hover:text-slate-900"
             >
               Add secret
             </button>
@@ -145,7 +145,7 @@ export function SandboxEditorView(props: SandboxEditorViewProps) {
                             type="button"
                             aria-label={`${isSecretValueVisible(secret.id) ? 'Hide' : 'Show'} ${secret.key || 'secret'} value`}
                             onClick={() => toggleSecretValueVisibility(secret.id)}
-                            className="inline-flex h-full w-9 shrink-0 items-center justify-center border-l border-slate-200 bg-white text-slate-500 transition-colors hover:bg-slate-50 hover:text-slate-800"
+                            className="cursor-pointer inline-flex h-full w-9 shrink-0 items-center justify-center border-l border-slate-200 bg-white text-slate-500 transition-colors hover:bg-slate-50 hover:text-slate-800"
                           >
                             {isSecretValueVisible(secret.id) ? (
                               <SvgIcon name="eyeClosed" className="h-4 w-4" />
@@ -160,7 +160,7 @@ export function SandboxEditorView(props: SandboxEditorViewProps) {
                           type="button"
                           aria-label={`Remove ${secret.key || 'secret'}`}
                           onClick={() => removeSecret(secret.id)}
-                          className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-slate-200 bg-white text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900"
+                          className="cursor-pointer inline-flex h-9 w-9 items-center justify-center rounded-md border border-slate-200 bg-white text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900"
                         >
                           <SvgIcon name="x" className="h-4 w-4" />
                         </button>

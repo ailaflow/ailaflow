@@ -18,7 +18,7 @@ export function PaginationView(props: PaginationViewProps) {
           type="button"
           disabled={props.page <= 1}
           onClick={() => props.onPageChange(props.page - 1)}
-          className="inline-flex h-8 items-center justify-center rounded-md border border-slate-200 bg-white px-3 font-medium text-slate-700 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
+          className="cursor-pointer inline-flex h-8 items-center justify-center rounded-md border border-slate-200 bg-white px-3 font-medium text-slate-700 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
         >
           Previous
         </button>
@@ -26,7 +26,7 @@ export function PaginationView(props: PaginationViewProps) {
           type="button"
           disabled={props.page >= totalPages}
           onClick={() => props.onPageChange(props.page + 1)}
-          className="inline-flex h-8 items-center justify-center rounded-md border border-slate-200 bg-white px-3 font-medium text-slate-700 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
+          className="cursor-pointer inline-flex h-8 items-center justify-center rounded-md border border-slate-200 bg-white px-3 font-medium text-slate-700 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
         >
           Next
         </button>

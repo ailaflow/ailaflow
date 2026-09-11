@@ -63,7 +63,7 @@ function SubValuePreviewButton(props: SubValuePreviewButtonProps) {
   return (
     <button
       type="button"
-      className={`inline-flex items-center justify-center rounded-md border transition-colors focus-visible:outline-none focus-visible:ring-2 ${sizeClassName} ${surfaceClassName} ${colorClassName}`}
+      className={`cursor-pointer inline-flex items-center justify-center rounded-md border transition-colors focus-visible:outline-none focus-visible:ring-2 ${sizeClassName} ${surfaceClassName} ${colorClassName}`}
       onClick={props.onClick}
       aria-label={props.label}
       title={props.title ?? props.label}

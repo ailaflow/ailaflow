@@ -50,7 +50,7 @@ export function JsonFormView(props: JsonFormViewProps) {
           <button
             type="submit"
             disabled={hasErrors}
-            className="inline-flex h-9 items-center justify-center rounded-md bg-slate-900 px-5 text-sm font-medium text-white transition-colors hover:bg-slate-700 disabled:cursor-not-allowed disabled:bg-slate-300"
+            className="cursor-pointer inline-flex h-9 items-center justify-center rounded-md bg-slate-900 px-5 text-sm font-medium text-white transition-colors hover:bg-slate-700 disabled:cursor-not-allowed disabled:bg-slate-300"
           >
             Submit
           </button>

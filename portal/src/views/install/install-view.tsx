@@ -92,7 +92,7 @@ export function InstallView(props: InstallViewProps) {
         <button
           type="submit"
           disabled={!props.canSubmit}
-          className="h-9 w-full rounded-md border border-slate-900 bg-slate-900 px-3 text-sm font-medium text-white transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:border-slate-300 disabled:bg-slate-300"
+          className="cursor-pointer h-9 w-full rounded-md border border-slate-900 bg-slate-900 px-3 text-sm font-medium text-white transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:border-slate-300 disabled:bg-slate-300"
         >
           {props.disabled ? 'Validating and installing…' : 'Install'}
         </button>

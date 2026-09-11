@@ -67,7 +67,7 @@ export function LlmConfigurationView(props: LlmConfigurationViewProps) {
               type="button"
               disabled={!props.canSaveUseCases}
               onClick={() => void props.onUseCasesSave()}
-              className="inline-flex h-9 items-center justify-center rounded-md border border-slate-900 bg-slate-900 px-3 text-sm font-medium text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:border-slate-300 disabled:bg-slate-300"
+              className="cursor-pointer inline-flex h-9 items-center justify-center rounded-md border border-slate-900 bg-slate-900 px-3 text-sm font-medium text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:border-slate-300 disabled:bg-slate-300"
             >
               {props.isSavingUseCases ? 'Saving…' : 'Save use cases'}
             </button>
@@ -88,7 +88,7 @@ export function LlmConfigurationView(props: LlmConfigurationViewProps) {
             <button
               type="button"
               onClick={props.onProviderAdd}
-              className="inline-flex h-9 shrink-0 items-center justify-center rounded-md border border-slate-900 bg-slate-900 px-3 text-sm font-medium text-white hover:bg-slate-800"
+              className="cursor-pointer inline-flex h-9 shrink-0 items-center justify-center rounded-md border border-slate-900 bg-slate-900 px-3 text-sm font-medium text-white hover:bg-slate-800"
             >
               Add provider
             </button>
@@ -321,7 +321,7 @@ function ProviderEditor(props: {
               <button
                 type="button"
                 onClick={() => setIsKeyVisible(value => !value)}
-                className="border-l border-slate-200 px-3 text-xs font-medium text-slate-600 hover:bg-slate-50"
+                className="cursor-pointer border-l border-slate-200 px-3 text-xs font-medium text-slate-600 hover:bg-slate-50"
               >
                 {isKeyVisible ? 'Hide' : 'Show'}
               </button>
@@ -340,7 +340,7 @@ function ProviderEditor(props: {
             type="button"
             disabled={!props.canFetchModels}
             onClick={() => void props.onFetchModels()}
-            className="inline-flex h-9 items-center justify-center rounded-md border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700 hover:bg-slate-100 disabled:cursor-not-allowed disabled:border-slate-200 disabled:text-slate-400"
+            className="cursor-pointer inline-flex h-9 items-center justify-center rounded-md border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700 hover:bg-slate-100 disabled:cursor-not-allowed disabled:border-slate-200 disabled:text-slate-400"
           >
             {props.isFetchingModels ? 'Fetching…' : props.draft.models.length > 0 ? 'Refresh models' : 'Fetch models'}
           </button>
@@ -349,7 +349,7 @@ function ProviderEditor(props: {
             type="button"
             disabled={!props.canSave}
             onClick={() => void props.onSave()}
-            className="inline-flex h-9 items-center justify-center rounded-md border border-slate-900 bg-slate-900 px-3 text-sm font-medium text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:border-slate-300 disabled:bg-slate-300"
+            className="cursor-pointer inline-flex h-9 items-center justify-center rounded-md border border-slate-900 bg-slate-900 px-3 text-sm font-medium text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:border-slate-300 disabled:bg-slate-300"
           >
             {props.isSaving ? 'Saving…' : 'Save provider'}
           </button>
@@ -364,7 +364,7 @@ function ActionButton(props: { danger?: boolean; onClick(): void; children: Reac
     <button
       type="button"
       onClick={props.onClick}
-      className={`inline-flex h-8 items-center justify-center rounded-md border bg-white px-3 text-sm font-medium transition-colors ${
+      className={`cursor-pointer inline-flex h-8 items-center justify-center rounded-md border bg-white px-3 text-sm font-medium transition-colors ${
         props.danger ? 'border-red-200 text-red-700 hover:bg-red-50' : 'border-slate-200 text-slate-700 hover:bg-slate-100'
       }`}
     >

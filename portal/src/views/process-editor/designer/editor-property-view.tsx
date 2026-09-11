@@ -20,7 +20,7 @@ export function EditorPropertyView(props: EditorPropertyViewProps) {
             <button
               key={button.command}
               type="button"
-              className="inline-flex h-8 items-center rounded-md border border-slate-300 bg-white px-2.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
+              className="cursor-pointer inline-flex h-8 items-center rounded-md border border-slate-300 bg-white px-2.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
               onClick={() => props.onButtonClick?.(button.command)}
             >
               {button.label}

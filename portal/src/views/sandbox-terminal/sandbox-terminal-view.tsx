@@ -93,7 +93,7 @@ export function SandboxTerminalView(props: SandboxTerminalViewProps) {
           <button
             type="submit"
             disabled={props.isExecuting || props.command.trim().length === 0}
-            className="inline-flex h-8 shrink-0 items-center justify-center rounded-md bg-sky-500 px-3 text-sm font-semibold text-white transition-colors hover:bg-sky-400 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-400"
+            className="cursor-pointer inline-flex h-8 shrink-0 items-center justify-center rounded-md bg-sky-500 px-3 text-sm font-semibold text-white transition-colors hover:bg-sky-400 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-400"
           >
             {props.isExecuting ? 'Running' : 'Run'}
           </button>

@@ -38,7 +38,7 @@ export function LicenseConfigurationView(props: LicenseConfigurationViewProps) {
               <button
                 type="submit"
                 disabled={!props.canSave}
-                className="h-9 w-full rounded-md bg-slate-900 px-3 text-sm font-medium text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300 sm:w-auto"
+                className="cursor-pointer h-9 w-full rounded-md bg-slate-900 px-3 text-sm font-medium text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300 sm:w-auto"
               >
                 {props.disabled ? 'Validating and saving…' : 'Save license'}
               </button>

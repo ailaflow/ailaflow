@@ -57,7 +57,7 @@ export function UserEditorView(props: UserEditorViewProps) {
             <button
               type="button"
               onClick={props.onAttributeAdd}
-              className="inline-flex h-8 items-center rounded-md border border-slate-900 bg-slate-900 px-3 text-sm font-medium text-white hover:bg-slate-800"
+              className="cursor-pointer inline-flex h-8 items-center rounded-md border border-slate-900 bg-slate-900 px-3 text-sm font-medium text-white hover:bg-slate-800"
             >
               Add
             </button>
@@ -114,7 +114,7 @@ export function UserEditorView(props: UserEditorViewProps) {
                         <button
                           type="button"
                           onClick={() => props.onAttributeRemove(attribute.id)}
-                          className="inline-flex h-8 items-center rounded-md border border-slate-200 px-3 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                          className="cursor-pointer inline-flex h-8 items-center rounded-md border border-slate-200 px-3 text-sm font-medium text-slate-700 hover:bg-slate-50"
                         >
                           Remove
                         </button>
