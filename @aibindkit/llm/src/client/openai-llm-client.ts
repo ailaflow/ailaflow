@@ -1,6 +1,7 @@
 import type { LlmAssistantMessage, LlmCompletionUsage, LlmMessage, ToolDescriptor } from '@aibindkit/core';
 import { LlmCompleteResult, LlmClient, LlmClientError, LlmModel, LlmModelSettings } from './llm-client';
 import { LlmMessageSanitizer } from './llm-message-sanitizer';
+import { RetryableHttpClient } from './retryable-http-client';
 
 interface OpenaiErrorResponse {
   error?: {
@@ -23,15 +24,23 @@ interface OpenaiModelsResponse extends OpenaiErrorResponse {
   }>;
 }
 
+const defaultMaxRetries = 2;
+
 export class OpenaiLlmClient implements LlmClient {
   private readonly sanitizer = new LlmMessageSanitizer();
+  private readonly httpClient: RetryableHttpClient;
+  private readonly baseUrl: string;
 
   public constructor(
     private readonly config: {
       url: string;
       apiKey: string;
+      maxRetries?: number;
     }
-  ) {}
+  ) {
+    this.baseUrl = config.url.replace(/\/+$/, '');
+    this.httpClient = new RetryableHttpClient(config.maxRetries ?? defaultMaxRetries);
+  }
 
   public async complete(
     abortSignal: AbortSignal,
@@ -39,7 +48,7 @@ export class OpenaiLlmClient implements LlmClient {
     messages: LlmMessage[],
     toolDescriptors: ToolDescriptor[] | undefined
   ): Promise<LlmCompleteResult> {
-    const response = await fetch(createUrl(this.config.url, 'chat/completions'), {
+    const response = await this.httpClient.fetch(`${this.baseUrl}/chat/completions`, {
       method: 'POST',
       headers: this.createHeaders(true),
       body: JSON.stringify({
@@ -48,6 +57,7 @@ export class OpenaiLlmClient implements LlmClient {
         stream: false,
         messages: this.sanitizer.sanitize(messages)
       }),
+      keepalive: true,
       signal: abortSignal
     });
     const data = await readResponse<OpenaiChatCompletionResponse>(response);
@@ -67,7 +77,7 @@ export class OpenaiLlmClient implements LlmClient {
   }
 
   public async getModels(abortSignal: AbortSignal): Promise<LlmModel[]> {
-    const response = await fetch(createUrl(this.config.url, 'models'), {
+    const response = await this.httpClient.fetch(`${this.baseUrl}/models`, {
       headers: this.createHeaders(false),
       signal: abortSignal
     });
@@ -94,10 +104,6 @@ export class OpenaiLlmClient implements LlmClient {
       ...(includeContentType ? { 'Content-Type': 'application/json' } : {})
     };
   }
-}
-
-function createUrl(baseUrl: string, path: string): string {
-  return `${baseUrl.replace(/\/+$/, '')}/${path}`;
 }
 
 async function readResponse<T>(response: Response): Promise<T> {

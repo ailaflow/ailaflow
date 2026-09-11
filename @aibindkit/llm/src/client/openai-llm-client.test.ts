@@ -6,12 +6,17 @@ const originalFetch = globalThis.fetch;
 
 test('sends a chat completion request and passes through the response', async () => {
   let requestBody: Record<string, unknown> | undefined;
+  let requestCount = 0;
   globalThis.fetch = async (input, init) => {
+    requestCount++;
     assert.equal(String(input), 'https://gateway.example/v1/chat/completions');
     assert.equal(init?.method, 'POST');
     assert.equal(new Headers(init?.headers).get('Authorization'), 'Bearer secret');
     assert.equal(new Headers(init?.headers).get('Content-Type'), 'application/json');
     requestBody = JSON.parse(String(init?.body)) as Record<string, unknown>;
+    if (requestCount === 1) {
+      return Response.json({ error: { message: 'Try again' } }, { status: 429, headers: { 'retry-after-ms': '1' } });
+    }
     return Response.json({
       choices: [
         {
@@ -105,6 +110,7 @@ test('sends a chat completion request and passes through the response', async ()
         }
       ]
     });
+    assert.equal(requestCount, 2);
   } finally {
     globalThis.fetch = originalFetch;
   }
@@ -134,7 +140,9 @@ test('lists models and reads compatible context-window fields', async () => {
 });
 
 test('reports API error messages', async () => {
+  let requestCount = 0;
   globalThis.fetch = async () => {
+    requestCount++;
     return Response.json({ error: { message: 'Invalid API key' } }, { status: 401 });
   };
 
@@ -144,6 +152,45 @@ test('reports API error messages', async () => {
       client.getModels(AbortSignal.timeout(1_000)),
       error => error instanceof Error && error.name === 'LlmClientError' && error.message === 'Invalid API key'
     );
+    assert.equal(requestCount, 1);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test('limits retries for server errors', async () => {
+  let requestCount = 0;
+  globalThis.fetch = async () => {
+    requestCount++;
+    return Response.json({ error: { message: 'Temporarily unavailable' } }, { status: 503, headers: { 'retry-after-ms': '1' } });
+  };
+
+  try {
+    const client = new OpenaiLlmClient({ url: 'https://gateway.example/v1', apiKey: 'secret' });
+    await assert.rejects(
+      client.getModels(AbortSignal.timeout(1_000)),
+      error => error instanceof Error && error.message === 'Temporarily unavailable'
+    );
+    assert.equal(requestCount, 3);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test('does not retry after aborting', async () => {
+  let requestCount = 0;
+  globalThis.fetch = async () => {
+    requestCount++;
+    return Response.json({ error: { message: 'Try again' } }, { status: 429, headers: { 'retry-after-ms': '50' } });
+  };
+
+  try {
+    const abortController = new AbortController();
+    const client = new OpenaiLlmClient({ url: 'https://gateway.example/v1', apiKey: 'secret' });
+    const models = client.getModels(abortController.signal);
+    abortController.abort();
+    await assert.rejects(models, error => error === abortController.signal.reason);
+    assert.equal(requestCount, 1);
   } finally {
     globalThis.fetch = originalFetch;
   }
