@@ -1,4 +1,4 @@
-import { RouterProvider, createBrowserRouter } from 'react-router-dom';
+import { BrowserRouter, useRoutes } from 'react-router-dom';
 import { LoginPage } from './login/login-page';
 import { AuthGate } from './common/auth-gate';
 import { DashboardPage } from './dashboard/dashboard-page';
@@ -146,8 +146,14 @@ export const routes = [
   }
 ];
 
-const router = createBrowserRouter(routes);
+function RouteElements() {
+  return useRoutes(routes);
+}
 
 export function Router() {
-  return <RouterProvider router={router} />;
+  return (
+    <BrowserRouter>
+      <RouteElements />
+    </BrowserRouter>
+  );
 }
