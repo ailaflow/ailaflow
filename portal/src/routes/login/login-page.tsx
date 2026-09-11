@@ -1,5 +1,5 @@
 import { useAuthState } from '../../auth/auth-context';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { SubmitEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LoginResponse } from '@ailaflow/shared';
@@ -11,7 +11,17 @@ export function LoginPage() {
   const navigate = useNavigate();
   const [userName, setUserName] = useState('');
   const [password, setPassword] = useState('');
+  const [canInstall, setCanInstall] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function checkCanInstall() {
+      const abortSignal = AbortSignal.timeout(3_000);
+      const response = await apiClient.install.canInstall(abortSignal);
+      setCanInstall(response.canInstall);
+    }
+    void checkCanInstall();
+  }, [apiClient]);
 
   const onSubmit = async (e: SubmitEvent) => {
     e.preventDefault();
@@ -41,7 +51,9 @@ export function LoginPage() {
       <LoginView
         userName={userName}
         password={password}
+        canInstall={canInstall}
         error={error}
+        onInstall={() => navigate('/install')}
         onUserNameChange={setUserName}
         onPasswordChange={setPassword}
         onSubmit={onSubmit}

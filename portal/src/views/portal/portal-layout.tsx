@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { AilaFlowLogo } from '../common/aila-flow-logo';
 import { ResourceIcon } from '../common/resource-icon';
 
 export type LinkMenuItem = {
@@ -18,10 +19,6 @@ export type CommandMenuItem = {
 };
 
 export type MenuItem = LinkMenuItem | CommandMenuItem;
-
-function Logo(props: { className: string }) {
-  return <img src="/assets/logo.png" alt="AilaFlow" className={props.className} />;
-}
 
 function MenuItemView(props: { item: MenuItem; onCommand(command: string): void; onSelect?: () => void }) {
   const { item } = props;
@@ -92,12 +89,8 @@ export function PortalLayout(props: PortalLayoutProps) {
         >
           <div className="flex h-full flex-col">
             <div className="border-b border-slate-200 pt-2 pb-6">
-              <Link
-                to="/"
-                onClick={closeSidebar}
-                className="block transition-opacity hover:opacity-80"
-              >
-                <Logo className="mx-auto h-16 w-16 object-contain" />
+              <Link to="/" onClick={closeSidebar} className="block transition-opacity hover:opacity-80">
+                <AilaFlowLogo className="mx-auto h-16 w-16 object-contain" />
               </Link>
             </div>
 
@@ -128,7 +121,7 @@ export function PortalLayout(props: PortalLayoutProps) {
           <div className="flex h-full min-h-0 flex-col">
             <div className="flex h-12 shrink-0 items-center justify-between border-b border-slate-200 px-4 md:hidden">
               <Link to="/" aria-label="AilaFlow home">
-                <Logo className="h-8 w-8 object-contain" />
+                <AilaFlowLogo className="h-8 w-8 object-contain" />
               </Link>
               <button
                 type="button"

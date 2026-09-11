@@ -3,7 +3,9 @@ import type { SubmitEvent } from 'react';
 export interface LoginViewProps {
   userName: string;
   password: string;
+  canInstall: boolean;
   error: string | null;
+  onInstall: () => void;
   onUserNameChange: (userName: string) => void;
   onPasswordChange: (password: string) => void;
   onSubmit: (e: SubmitEvent) => void;
@@ -16,6 +18,20 @@ export function LoginView(props: LoginViewProps) {
         <h1 className="text-lg font-semibold tracking-tight">Sign in</h1>
         <p className="mt-1 text-xs text-slate-500">Use your account credentials to access the portal.</p>
       </div>
+
+      {props.canInstall && (
+        <div className="mb-4 rounded-lg border border-blue-200 bg-blue-50 p-3 text-blue-950">
+          <p className="text-sm font-semibold">Installation isn’t finished yet</p>
+          <p className="mt-1 text-xs text-blue-800">Complete setup to start using AilaFlow.</p>
+          <button
+            type="button"
+            onClick={props.onInstall}
+            className="mt-3 h-8 cursor-pointer rounded-md bg-blue-700 px-3 text-xs font-medium text-white transition-colors hover:bg-blue-800"
+          >
+            Install AilaFlow
+          </button>
+        </div>
+      )}
 
       <form onSubmit={props.onSubmit} className="space-y-3">
         <label className="block space-y-1">

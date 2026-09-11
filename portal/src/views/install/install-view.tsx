@@ -6,9 +6,11 @@ export interface InstallViewProps extends LicenseSelectorViewProps {
   canSubmit: boolean;
   rootUserName: string;
   rootPassword: string;
+  isPolicyAccepted: boolean;
   error: string | null;
   onRootUserNameChange: (rootUserName: string) => void;
   onRootPasswordChange: (rootPassword: string) => void;
+  onPolicyAcceptedChange: (isAccepted: boolean) => void;
   onSubmit: (e: SubmitEvent) => void;
 }
 
@@ -48,6 +50,38 @@ export function InstallView(props: InstallViewProps) {
         </label>
 
         <LicenseSelectorView {...props} />
+
+        <div className="flex items-start gap-2 text-xs text-slate-700">
+          <input
+            id="install-policy-acceptance"
+            type="checkbox"
+            checked={props.isPolicyAccepted}
+            disabled={props.disabled}
+            onChange={e => props.onPolicyAcceptedChange(e.target.checked)}
+            className="mt-0.5 size-4 shrink-0 rounded border-slate-300"
+          />
+          <label htmlFor="install-policy-acceptance">
+            I accept the{' '}
+            <a
+              href="https://ailaflow.com/license/"
+              target="_blank"
+              rel="noreferrer"
+              className="font-medium text-blue-700 underline decoration-blue-300 underline-offset-2 transition-colors hover:text-blue-900"
+            >
+              license
+            </a>{' '}
+            and{' '}
+            <a
+              href="https://ailaflow.com/privacy-policy/"
+              target="_blank"
+              rel="noreferrer"
+              className="font-medium text-blue-700 underline decoration-blue-300 underline-offset-2 transition-colors hover:text-blue-900"
+            >
+              privacy policy
+            </a>
+            .
+          </label>
+        </div>
 
         {props.error && (
           <p role="alert" className="rounded-md border border-red-200 bg-red-50 px-2 py-1 text-xs text-red-700">

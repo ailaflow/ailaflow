@@ -14,6 +14,8 @@ import { SqliteUserAttributesRepository } from '../../repositories/user-attribut
 import { PasswordHasher } from '../../repositories/user/password-hasher';
 import { SqliteUserRepository } from '../../repositories/user/sqlite-user-repository';
 import { InstallEndpoint } from './install-endpoint';
+import { Installer } from '../../install/installer';
+import { CanInstallEndpoint } from './can-install-endpoint';
 
 const signal = new AbortController().signal;
 const home = { licenseType: LicenseType.HOME, licenseKey: null } as const;
@@ -37,8 +39,10 @@ async function fixture(t: TestContext) {
     proof: type === LicenseType.BUSINESS ? 'proof' : null
   }));
   const manager = new LicenseManager(validator, new KvConfigurationManager(configuration));
-  const endpoint = new InstallEndpoint(users, attributes, sandboxes, new PasswordHasher(), manager);
-  return { db, users, attributes, sandboxes, configuration, manager, endpoint, validate };
+  const installer = new Installer(users, attributes, sandboxes, new PasswordHasher(), manager);
+  const endpoint = new InstallEndpoint(installer);
+  const canInstallEndpoint = new CanInstallEndpoint(installer);
+  return { db, users, attributes, sandboxes, configuration, manager, endpoint, canInstallEndpoint, validate };
 }
 
 function request(license: object | undefined): Request {
@@ -48,6 +52,7 @@ function request(license: object | undefined): Request {
 for (const license of [home, starter, business]) {
   test(`installs ${license.licenseType} and saves license status with initial application data`, async t => {
     const f = await fixture(t);
+    assert.deepEqual(await f.canInstallEndpoint.handle(request(undefined)), { canInstall: true });
     assert.deepEqual(await f.endpoint.handle(request(license)), {});
     assert.equal(await f.users.count(signal), 1);
     assert.ok((await f.users.tryGetUser(signal, 'root'))!.isAdmin);
@@ -57,6 +62,7 @@ for (const license of [home, starter, business]) {
     assert.equal((await f.configuration.get(signal)).licenseKey, license.licenseKey);
     assert.equal(f.manager.getStatus()!.isValid, true);
     assert.equal(f.validate.mock.callCount(), 1);
+    assert.deepEqual(await f.canInstallEndpoint.handle(request(undefined)), { canInstall: false });
     await assert.rejects(f.endpoint.handle(request(business)), /already initialized/);
     assert.equal(f.validate.mock.callCount(), 1);
   });

@@ -20,6 +20,7 @@ import { AuthTokenRepository } from './repositories/auth-token/auth-token-reposi
 import { RefreshAuthTokenEndpoint } from './api/auth/refresh-auth-token-endpoint';
 import { AuthMiddleware } from './api/auth/auth-middleware';
 import { InstallEndpoint } from './api/install/install-endpoint';
+import { CanInstallEndpoint } from './api/install/can-install-endpoint';
 import { GetProcessesEndpoint } from './api/process/get-processes-endpoint';
 import { SaveProcessEndpoint } from './api/process/save-process-endpoint';
 import { ProcessRepository } from './repositories/process/process-repository';
@@ -177,6 +178,7 @@ import { GetSandboxesTool } from './chat-session/admin-tools/get-sandboxes-tool'
 import { GetProcessesTool } from './chat-session/admin-tools/get-processes-tool';
 import { GetTablesTool } from './chat-session/admin-tools/get-tables-tool';
 import { TestProcessTool } from './chat-session/admin-tools/test-process-tool';
+import { Installer } from './install/installer';
 
 export class Server {
   private isClosed = false;
@@ -377,6 +379,7 @@ export class Server {
 
     const kvConfigurationManager = new KvConfigurationManager(kvConfigurationRepository);
     const licenseManager = new LicenseManager(new LicenseValidator(), kvConfigurationManager);
+    const installer = new Installer(userRepository, userAttributesRepository, sandboxRepository, passwordHasher, licenseManager);
 
     const schedulers: Scheduler[] = [
       new LicenseCheckScheduler(licenseManager),
@@ -389,7 +392,8 @@ export class Server {
       new LicenseEndpoint(licenseManager),
       new GetLicenseConfigurationEndpoint(kvConfigurationManager),
       new SaveLicenseConfigurationEndpoint(licenseManager),
-      new InstallEndpoint(userRepository, userAttributesRepository, sandboxRepository, passwordHasher, licenseManager),
+      new CanInstallEndpoint(installer),
+      new InstallEndpoint(installer),
       new LoginEndpoint(userRepository, authTokenRepository, passwordHasher),
       new RefreshAuthTokenEndpoint(authTokenRepository),
       new GetLlmConfigurationEndpoint(llmConfigurationRepository),

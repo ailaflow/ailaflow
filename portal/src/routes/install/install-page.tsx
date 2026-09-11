@@ -13,8 +13,9 @@ export function InstallPage() {
   const [rootPassword, setRootPassword] = useState('');
   const [licenseType, setLicenseType] = useState(LicenseType.HOME);
   const [licenseKey, setLicenseKey] = useState('');
+  const [isPolicyAccepted, setIsPolicyAccepted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const canSubmit = !isSubmitting && (licenseType !== LicenseType.BUSINESS || Boolean(licenseKey.trim()));
+  const canSubmit = !isSubmitting && isPolicyAccepted && (licenseType !== LicenseType.BUSINESS || Boolean(licenseKey.trim()));
   const [error, setError] = useState<string | null>(null);
 
   const onSubmit = async (e: SubmitEvent) => {
@@ -52,6 +53,7 @@ export function InstallPage() {
       <InstallView
         rootUserName={rootUserName}
         rootPassword={rootPassword}
+        isPolicyAccepted={isPolicyAccepted}
         error={error}
         licenseType={licenseType}
         licenseKey={licenseKey}
@@ -70,6 +72,7 @@ export function InstallPage() {
         }}
         onRootUserNameChange={setRootUserName}
         onRootPasswordChange={setRootPassword}
+        onPolicyAcceptedChange={setIsPolicyAccepted}
         onSubmit={onSubmit}
       />
     </CenteredFormLayout>

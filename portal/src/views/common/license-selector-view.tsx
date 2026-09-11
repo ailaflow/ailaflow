@@ -61,8 +61,7 @@ export function LicenseSelectorView(props: LicenseSelectorViewProps) {
           <p className="mt-3 rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-xs text-blue-900">
             Using AilaFlow for your business?{' '}
             <a
-              // TODO: Replace with the license purchase URL.
-              href="https://example.com/purchase-license"
+              href="https://ailaflow.com/pricing/"
               target="_blank"
               rel="noopener noreferrer"
               className="font-semibold text-blue-700 underline decoration-blue-300 underline-offset-2 transition-colors hover:text-blue-900"

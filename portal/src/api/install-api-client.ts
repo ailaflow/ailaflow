@@ -1,8 +1,12 @@
 import { HttpClient } from '@aibindkit/react';
-import type { InstallRequest, InstallResponse } from '@ailaflow/shared';
+import type { CanInstallResponse, InstallRequest, InstallResponse } from '@ailaflow/shared';
 
 export class InstallApiClient {
   public constructor(private readonly client: HttpClient) {}
+
+  public canInstall(abortSignal: AbortSignal): Promise<CanInstallResponse> {
+    return this.client.json(abortSignal, 'GET', '/api/install/can-install');
+  }
 
   public install(abortSignal: AbortSignal, request: InstallRequest): Promise<InstallResponse> {
     return this.client.json(abortSignal, 'POST', '/api/install', request);
