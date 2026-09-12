@@ -1,53 +1,62 @@
+import { TableRow } from '@ailaflow/shared';
 import { DatabaseSync } from 'node:sqlite';
 import { SqliteDatabases } from '../../core/sqlite-databases';
 import { SqliteTableDataNameProvider } from './sqlite-table-data-name-provider';
+import { TableRowSqliteCodec } from './table-row-sqlite-codec';
+import { TableSchemaManager } from './table-schema-manager';
 import { TableDataRepository, TableDataRepositoryError } from './table-data-repository';
-import { TableData } from './table-data';
 
 export class SqliteTableDataRepository implements TableDataRepository {
   private readonly db: DatabaseSync;
 
-  public constructor(dbs: SqliteDatabases) {
+  public constructor(
+    dbs: SqliteDatabases,
+    private readonly tableSchemaManager: TableSchemaManager
+  ) {
     this.db = dbs.dataDb;
   }
 
-  public async tryGet(_: AbortSignal, tableName: string, pk: string): Promise<TableData | null> {
+  public async tryGet(abortSignal: AbortSignal, tableName: string, _id: string): Promise<TableRow | null> {
     try {
+      const schema = await this.tableSchemaManager.get(abortSignal, tableName);
       const statement = this.db.prepare(`
-        SELECT pk, data, updatedAt
+        SELECT *
         FROM ${SqliteTableDataNameProvider.getName(tableName)}
-        WHERE pk = ?
+        WHERE _id = ?
         LIMIT 1
       `);
-      const row = statement.get(pk) as { pk: string; data: string; updatedAt: number } | undefined;
-      return row ? new TableData(tableName, row.pk, JSON.parse(row.data) as unknown, row.updatedAt) : null;
+      const values = statement.get(_id) as Record<string, unknown> | undefined;
+      return values ? TableRowSqliteCodec.decode(schema, values) : null;
     } catch (e) {
       throw mapSqliteError(e, tableName);
     }
   }
 
-  public async upsert(_: AbortSignal, tableData: TableData): Promise<void> {
+  public async upsert(abortSignal: AbortSignal, tableName: string, row: Record<string, unknown> & { _id: string }): Promise<void> {
     try {
+      const schema = await this.tableSchemaManager.ensureCompatible(abortSignal, tableName, row);
+      const userColumnNames = schema.columns.map(column => `"${column.name}"`);
+      const columnNames = ['_id', '_updatedAt', ...userColumnNames];
+      const updatedColumnNames = ['_updatedAt', ...userColumnNames];
       const statement = this.db.prepare(`
-        INSERT INTO ${SqliteTableDataNameProvider.getName(tableData.tableName)} (pk, data, updatedAt)
-        VALUES (?, ?, ?)
-        ON CONFLICT(pk) DO UPDATE SET
-          data = excluded.data,
-          updatedAt = excluded.updatedAt
+        INSERT INTO ${SqliteTableDataNameProvider.getName(tableName)} (${columnNames.join(', ')})
+        VALUES (${columnNames.map(() => '?').join(', ')})
+        ON CONFLICT(_id) DO UPDATE SET
+          ${updatedColumnNames.map(columnName => `${columnName} = excluded.${columnName}`).join(', ')}
       `);
-      statement.run(tableData.pk, JSON.stringify(tableData.data), tableData.updatedAt);
+      statement.run(row._id, Date.now(), ...TableRowSqliteCodec.encode(schema, row));
     } catch (e) {
-      throw mapSqliteError(e, tableData.tableName);
+      throw mapSqliteError(e, tableName);
     }
   }
 
-  public async delete(_: AbortSignal, tableName: string, pk: string): Promise<void> {
+  public async delete(_: AbortSignal, tableName: string, _id: string): Promise<void> {
     try {
       const statement = this.db.prepare(`
         DELETE FROM ${SqliteTableDataNameProvider.getName(tableName)}
-        WHERE pk = ?
+        WHERE _id = ?
       `);
-      statement.run(pk);
+      statement.run(_id);
     } catch (e) {
       throw mapSqliteError(e, tableName);
     }

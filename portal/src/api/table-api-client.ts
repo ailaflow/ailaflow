@@ -32,7 +32,9 @@ export class TableApiClient {
   public getTableData(abortSignal: AbortSignal, name: string, request: GetTableDataRequest): Promise<GetTableDataResponse> {
     const query = new URLSearchParams({
       page: String(request.page),
-      pageSize: String(request.pageSize)
+      pageSize: String(request.pageSize),
+      orderBy: request.orderBy,
+      ascending: String(request.ascending)
     });
     return this.client.json(abortSignal, 'GET', `/api/tables/${encodeURIComponent(name)}/data?${query}`);
   }

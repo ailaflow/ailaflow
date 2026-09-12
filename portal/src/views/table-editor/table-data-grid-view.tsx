@@ -4,9 +4,9 @@ export interface TableDataGridColumn {
 }
 
 export interface TableDataGridRow {
-  pk: string;
+  _id: string;
   values: Record<string, string>;
-  updatedAt: string;
+  _updatedAt: string;
 }
 
 export interface TableDataGridViewProps {
@@ -30,14 +30,14 @@ export function TableDataGridView(props: TableDataGridViewProps) {
         <table className="w-max min-w-full border-separate border-spacing-0 text-left text-sm">
           <thead className="sticky top-0 z-20 bg-slate-100 text-xs font-semibold uppercase tracking-wide text-slate-600">
             <tr>
-              <GridHeader className="sticky left-0 z-30 min-w-52 bg-slate-100">PK</GridHeader>
+              <GridHeader className="sticky left-0 z-30 min-w-52 bg-slate-100">_id (STRING)</GridHeader>
               {props.columns.map(column => (
                 <GridHeader key={column.id} className="min-w-48">
                   {column.label}
                 </GridHeader>
               ))}
               <GridHeader className="min-w-48" isLast>
-                Updated at
+                _updatedAt (NUMBER)
               </GridHeader>
             </tr>
           </thead>
@@ -50,15 +50,15 @@ export function TableDataGridView(props: TableDataGridViewProps) {
               </tr>
             ) : (
               props.rows.map(row => (
-                <tr key={row.pk} className="group">
+                <tr key={row._id} className="group">
                   <GridCell className="sticky left-0 z-10 max-w-72 bg-white font-semibold text-slate-900 group-hover:bg-blue-50">
-                    {row.pk}
+                    {row._id}
                   </GridCell>
                   {props.columns.map(column => (
                     <GridCell key={column.id}>{row.values[column.id]}</GridCell>
                   ))}
                   <GridCell className="font-sans text-xs text-slate-500" isLast>
-                    {row.updatedAt}
+                    {row._updatedAt}
                   </GridCell>
                 </tr>
               ))

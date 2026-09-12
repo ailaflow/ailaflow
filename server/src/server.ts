@@ -107,6 +107,8 @@ import { TableRepository } from './repositories/table/table-repository';
 import { SqliteTableRepository } from './repositories/table/sqlite-table-repository';
 import { TableDataRepository } from './repositories/table/table-data-repository';
 import { SqliteTableDataRepository } from './repositories/table/sqlite-table-data-repository';
+import { SqliteTableSchemaRepository } from './repositories/table/sqlite-table-schema-repository';
+import { TableSchemaManager } from './repositories/table/table-schema-manager';
 import { TableListQuerier } from './queriers/table-list/table-list-querier';
 import { SqliteTableListQuerier } from './queriers/table-list/sqlite-table-list-querier';
 import { GetTablesEndpoint } from './api/table/get-tables-endpoint';
@@ -232,8 +234,9 @@ export class Server {
     taskRepository = new SqliteTaskRepository(sqliteDatabases);
     assignedTaskRepository = new SqliteAssignedTaskRepository(sqliteDatabases);
     notificationRepository = new SqliteNotificationRepository(sqliteDatabases);
-    tableRepository = new SqliteTableRepository(sqliteDatabases);
-    tableDataRepository = new SqliteTableDataRepository(sqliteDatabases);
+    const tableSchemaManager = new TableSchemaManager(new SqliteTableSchemaRepository(sqliteDatabases));
+    tableRepository = new SqliteTableRepository(sqliteDatabases, tableSchemaManager);
+    tableDataRepository = new SqliteTableDataRepository(sqliteDatabases, tableSchemaManager);
     llmConfigurationRepository = new SqliteLlmConfigurationRepository(sqliteDatabases);
     telegramConfigurationRepository = new SqliteTelegramConfigurationRepository(sqliteDatabases);
     kvConfigurationRepository = new SqliteKvConfigurationRepository(sqliteDatabases);
@@ -247,7 +250,7 @@ export class Server {
     myTaskListQuerier = new SqliteMyTaskListQuerier(sqliteDatabases);
     myNotificationListQuerier = new SqliteMyNotificationListQuerier(sqliteDatabases);
     tableListQuerier = new SqliteTableListQuerier(sqliteDatabases);
-    tableDataListQuerier = new SqliteTableDataListQuerier(sqliteDatabases);
+    tableDataListQuerier = new SqliteTableDataListQuerier(sqliteDatabases, tableSchemaManager);
     incompleteAssignedTaskCountQuerier = new SqliteIncompleteAssignedTaskCountQuerier(sqliteDatabases);
     taskListQuerier = new SqliteTaskListQuerier(sqliteDatabases);
 

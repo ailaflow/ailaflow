@@ -1,4 +1,5 @@
 import * as z from 'zod/v4';
+import { tableRowSchema } from '../table';
 import { paginationRequestSchema, paginationResponseSchema } from './pagination';
 
 // getTables
@@ -34,19 +35,16 @@ export type GetTableResponse = z.infer<typeof getTableResponseSchema>;
 
 // getTableData
 
-const tableDataDtoSchema = z.object({
-  pk: z.string(),
-  data: z.unknown(),
-  updatedAt: z.number()
+export const getTableDataRequestSchema = paginationRequestSchema.extend({
+  orderBy: z.string().default('_id'),
+  ascending: z.union([z.boolean(), z.enum(['true', 'false']).transform(value => value === 'true')]).default(true)
 });
-
-export const getTableDataRequestSchema = paginationRequestSchema;
 
 export const getTableDataResponseSchema = paginationResponseSchema.extend({
-  rows: z.array(tableDataDtoSchema)
+  rows: z.array(tableRowSchema),
+  hasMore: z.boolean()
 });
 
-export type TableDataDto = z.infer<typeof tableDataDtoSchema>;
 export type GetTableDataRequest = z.infer<typeof getTableDataRequestSchema>;
 export type GetTableDataResponse = z.infer<typeof getTableDataResponseSchema>;
 

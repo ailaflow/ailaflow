@@ -1,19 +1,39 @@
 import { rpc, RpcConfig } from './core';
 
-export interface TablePage<Data> {
-  /** Rows ordered by primary key. */
-  rows: {
-    /** The row's primary key. */
-    pk: string;
-    /** The stored value. */
-    data: Data;
-    /** The Unix timestamp in milliseconds of the last update. */
-    updatedAt: number;
-  }[];
+export interface TablePage<Row extends TableRow = TableRow> {
+  /** The rows included in this page. */
+  rows: Row[];
   /** The one-based page number. */
   page: number;
+  /** The number of rows requested per page. */
+  pageSize: number;
+  /** The total number of rows in the table. */
+  totalCount: number;
   /** Whether another page is available. */
   hasMore: boolean;
+}
+
+export interface TableRow extends Record<string, unknown> {
+  /** The row's identifier. */
+  _id: string;
+  /** The Unix timestamp in milliseconds of the last update. */
+  _updatedAt: number;
+}
+
+export interface TableRowInput extends Record<string, unknown> {
+  /** The row's identifier. */
+  _id: string;
+}
+
+export interface ReadTablePageOptions {
+  /** The one-based page number. Defaults to `1`. */
+  page?: number;
+  /** The number of rows to read, from 1 to 100. Defaults to `100`. */
+  pageSize?: number;
+  /** The column used to order rows. Defaults to `_id`. */
+  orderBy?: string;
+  /** Whether to sort in ascending order. Defaults to `true`. */
+  ascending?: boolean;
 }
 
 /**
@@ -43,46 +63,53 @@ export async function writeVariable(name: string, value: unknown, rpcConfig?: Rp
 /**
  * Tries to read a value from a table by its primary key.
  * @param name The name of the table to read from.
- * @param pk The primary key of the row to read.
+ * @param _id The identifier of the row to read.
  * @param rpcConfig Optional configuration for the RPC call.
  * @returns The stored value or `null` if the row is not found.
  * @throws If the table does not exist or if the RPC call fails.
  */
-export async function tryReadTable(name: string, pk: string, rpcConfig?: RpcConfig): Promise<unknown | null> {
+export async function tryReadTable<Row extends TableRow = TableRow>(name: string, _id: string, rpcConfig?: RpcConfig): Promise<Row | null> {
   name = normalizeName(name, '#');
-  return rpc<unknown>('tryReadTable', { name, pk }, rpcConfig);
+  return rpc<Row>('tryReadTable', { name, _id }, rpcConfig);
 }
 
 /**
- * Reads one page of rows from a table, ordered by primary key.
+ * Reads one ordered page of rows from a table.
  * @param name The name of the table to read from.
- * @param page The one-based page number. Defaults to `1`.
- * @param pageSize The number of rows to read, from 1 to 100. Defaults to `100`.
+ * @param options Pagination and ordering options.
  * @param rpcConfig Optional configuration for the RPC call.
- * @returns The requested page, including each row's primary key, stored data, and last-update timestamp.
- * @throws If pagination is invalid, the table does not exist, or the RPC call fails.
+ * @returns The requested page. Each row includes `_id` and `_updatedAt` system fields.
+ * @throws If pagination or ordering is invalid, the table does not exist, or the RPC call fails.
  */
-export async function readTablePage<Data = unknown>(
+export async function readTablePage<Row extends TableRow = TableRow>(
   name: string,
-  page = 1,
-  pageSize = 100,
+  options: ReadTablePageOptions = {},
   rpcConfig?: RpcConfig
-): Promise<TablePage<Data>> {
+): Promise<TablePage<Row>> {
   name = normalizeName(name, '#');
-  return rpc<TablePage<Data>>('readTablePage', { name, page, pageSize }, rpcConfig);
+  return rpc<TablePage<Row>>(
+    'readTablePage',
+    {
+      name,
+      page: options.page ?? 1,
+      pageSize: options.pageSize ?? 100,
+      orderBy: options.orderBy ?? '_id',
+      ascending: options.ascending ?? true
+    },
+    rpcConfig
+  );
 }
 
 /**
  * Writes a value to a table row, inserting or updating it by primary key.
  * @param name The name of the table to write to.
- * @param pk The primary key of the row to write.
- * @param value The value to write.
+ * @param row The identifier and user-defined columns to write. AilaFlow overrides `_updatedAt` when supplied.
  * @param rpcConfig Optional configuration for the RPC call.
  * @throws If the table does not exist or if the RPC call fails.
  */
-export async function writeTable(name: string, pk: string, value: unknown, rpcConfig?: RpcConfig): Promise<void> {
+export async function writeTable(name: string, row: TableRowInput, rpcConfig?: RpcConfig): Promise<void> {
   name = normalizeName(name, '#');
-  return rpc<void>('writeTable', { name, pk, value }, rpcConfig);
+  return rpc<void>('writeTable', { name, row }, rpcConfig);
 }
 
 /**

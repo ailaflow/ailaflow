@@ -1,4 +1,4 @@
-import { TableData } from './table-data';
+import { TableRow } from '@ailaflow/shared';
 
 export class TableDataRepositoryError extends Error {
   public constructor(message: string) {
@@ -8,7 +8,7 @@ export class TableDataRepositoryError extends Error {
 }
 
 export interface TableDataRepository {
-  tryGet(abortSignal: AbortSignal, tableName: string, pk: string): Promise<TableData | null>;
-  upsert(abortSignal: AbortSignal, data: TableData): Promise<void>;
-  delete(abortSignal: AbortSignal, tableName: string, pk: string): Promise<void>;
+  tryGet(abortSignal: AbortSignal, tableName: string, _id: string): Promise<TableRow | null>;
+  upsert(abortSignal: AbortSignal, tableName: string, row: Record<string, unknown> & { _id: string }): Promise<void>;
+  delete(abortSignal: AbortSignal, tableName: string, _id: string): Promise<void>;
 }

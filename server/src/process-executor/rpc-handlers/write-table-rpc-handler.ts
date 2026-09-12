@@ -1,12 +1,14 @@
 import z from 'zod';
 import { TableDataRepository } from '../../repositories/table/table-data-repository';
-import { TableData } from '../../repositories/table/table-data';
 import { SandboxRpcHandler } from '../../sandbox/sandbox-rpc-handler';
 
 const requestSchema = z.object({
   name: z.string(),
-  pk: z.string(),
-  value: z.unknown()
+  row: z
+    .object({
+      _id: z.string()
+    })
+    .catchall(z.unknown())
 });
 
 export class WriteTableRpcHandler implements SandboxRpcHandler {
@@ -16,7 +18,7 @@ export class WriteTableRpcHandler implements SandboxRpcHandler {
 
   public async handle(abortSignal: AbortSignal, _sandboxName: string, _executionId: string, data: object): Promise<true> {
     const request = requestSchema.parse(data);
-    await this.repository.upsert(abortSignal, TableData.create(request.name, request.pk, request.value));
+    await this.repository.upsert(abortSignal, request.name, request.row);
     return true;
   }
 }

@@ -1,6 +1,7 @@
 import { DatabaseSync } from 'node:sqlite';
 import { SqliteDatabases } from '../../core/sqlite-databases';
 import { SqliteTableDataNameProvider } from './sqlite-table-data-name-provider';
+import { TableSchemaManager } from './table-schema-manager';
 import { TableRepository, TableRepositoryError } from './table-repository';
 import { Table } from './table';
 
@@ -8,7 +9,10 @@ export class SqliteTableRepository implements TableRepository {
   private readonly modelDb: DatabaseSync;
   private readonly dataDb: DatabaseSync;
 
-  public constructor(dbs: SqliteDatabases) {
+  public constructor(
+    dbs: SqliteDatabases,
+    private readonly tableSchemaManager: Pick<TableSchemaManager, 'invalidate'>
+  ) {
     this.modelDb = dbs.modelDb;
     this.dataDb = dbs.dataDb;
   }
@@ -33,12 +37,12 @@ export class SqliteTableRepository implements TableRepository {
       insertTableStatement.run(table.name, table.description);
       this.dataDb.exec(`
         CREATE TABLE ${SqliteTableDataNameProvider.getName(table.name)} (
-          pk TEXT PRIMARY KEY,
-          data TEXT NOT NULL,
-          updatedAt INTEGER NOT NULL
+          _id TEXT PRIMARY KEY,
+          _updatedAt INTEGER NOT NULL
         ) STRICT
       `);
       this.modelDb.exec(`COMMIT`);
+      this.tableSchemaManager.invalidate(table.name);
     } catch (e) {
       this.modelDb.exec(`ROLLBACK`);
       if (isDuplicateTableNameSqliteError(e)) {
@@ -68,6 +72,7 @@ export class SqliteTableRepository implements TableRepository {
       const deleted = deleteTableStatement.run(tableName).changes > 0;
       if (deleted) {
         this.dataDb.exec(`DROP TABLE IF EXISTS ${SqliteTableDataNameProvider.getName(tableName)}`);
+        this.tableSchemaManager.invalidate(tableName);
       }
       this.modelDb.exec(`COMMIT`);
       return deleted;

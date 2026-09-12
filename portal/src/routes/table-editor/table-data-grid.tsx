@@ -1,4 +1,4 @@
-import { TableDataDto } from '@ailaflow/shared';
+import { TableColumnResolver, TableColumnType, TableRow } from '@ailaflow/shared';
 import { useLoader } from '@aibindkit/react';
 import { useSearchParams } from 'react-router-dom';
 import { useApiClient } from '../../auth/auth-context';
@@ -7,14 +7,19 @@ import { PortalLoadingView } from '../../views/portal/portal-loading-view';
 import { TableDataGridColumn, TableDataGridRow, TableDataGridView } from '../../views/table-editor/table-data-grid-view';
 
 const PAGE_SIZE = 20;
-const VALUE_COLUMN_ID = 'value';
 
 export function TableDataGrid(props: { tableName: string }) {
   const apiClient = useApiClient();
   const [searchParams, setSearchParams] = useSearchParams();
   const page = Number(searchParams.get('page') ?? 1);
   const loader = useLoader(
-    abortSignal => apiClient.table.getTableData(abortSignal, props.tableName, { page, pageSize: PAGE_SIZE }),
+    abortSignal =>
+      apiClient.table.getTableData(abortSignal, props.tableName, {
+        page,
+        pageSize: PAGE_SIZE,
+        orderBy: '_id',
+        ascending: true
+      }),
     [apiClient, props.tableName, page]
   );
 
@@ -48,41 +53,42 @@ export function TableDataGrid(props: { tableName: string }) {
   );
 }
 
-function createGrid(rows: TableDataDto[]): { columns: TableDataGridColumn[]; rows: TableDataGridRow[] } {
-  const keys = new Set<string>();
-  let hasValueColumn = false;
+function createGrid(rows: TableRow[]): { columns: TableDataGridColumn[]; rows: TableDataGridRow[] } {
+  const columnTypes = new Map<string, TableColumnType>();
 
   for (const row of rows) {
-    if (isRecord(row.data)) {
-      Object.keys(row.data).forEach(key => keys.add(key));
-    } else {
-      hasValueColumn = true;
+    for (const [key, value] of Object.entries(row)) {
+      if (key.startsWith('_')) {
+        continue;
+      }
+
+      const column = TableColumnResolver.resolve(key, value);
+      if (column !== null) {
+        columnTypes.set(key, column.type);
+      }
     }
   }
 
-  const columns = Array.from(keys, key => ({ id: fieldColumnId(key), label: key }));
-  if (hasValueColumn) {
-    columns.push({ id: VALUE_COLUMN_ID, label: 'Value' });
-  }
+  const keys = [...columnTypes.keys()];
+  const columns = Array.from(columnTypes, ([key, type]) => ({
+    id: fieldColumnId(key),
+    label: `${key} (${TableColumnType[type]})`
+  }));
 
   return {
     columns,
     rows: rows.map(row => ({
-      pk: row.pk,
-      values: createValues(row.data, keys),
-      updatedAt: new Date(row.updatedAt).toLocaleString()
+      _id: row._id,
+      values: createValues(row, keys),
+      _updatedAt: new Date(row._updatedAt).toLocaleString()
     }))
   };
 }
 
-function createValues(data: unknown, keys: Set<string>): Record<string, string> {
-  if (!isRecord(data)) {
-    return { [VALUE_COLUMN_ID]: formatValue(data) };
-  }
-
+function createValues(row: Record<string, unknown>, keys: readonly string[]): Record<string, string> {
   return Array.from(keys).reduce<Record<string, string>>((values, key) => {
-    if (key in data) {
-      values[fieldColumnId(key)] = formatValue(data[key]);
+    if (key in row) {
+      values[fieldColumnId(key)] = formatValue(row[key]);
     }
     return values;
   }, {});
@@ -90,10 +96,6 @@ function createValues(data: unknown, keys: Set<string>): Record<string, string> 
 
 function fieldColumnId(key: string): string {
   return `field:${key}`;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return value !== null && typeof value === 'object' && !Array.isArray(value);
 }
 
 function formatValue(value: unknown): string {

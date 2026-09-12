@@ -10,7 +10,7 @@ test('queries a name-ordered page of tables', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
   const dbs = { modelDb: db, dataDb: db } as SqliteDatabases;
   const abortSignal = new AbortController().signal;
-  const repository = new SqliteTableRepository(dbs);
+  const repository = new SqliteTableRepository(dbs, { invalidate() {} });
   const querier = new SqliteTableListQuerier(dbs);
 
   await repository.setup(abortSignal);

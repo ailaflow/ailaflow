@@ -16,7 +16,7 @@ export class GetTableDataEndpoint implements Endpoint {
   public async handle(req: Request): Promise<GetTableDataResponse> {
     const abortSignal = getEndpointAbortSignal(req);
     const tableName = String(req.params.name);
-    const { page, pageSize } = parseQuery(getTableDataRequestSchema, req.query);
-    return this.querier.query(abortSignal, tableName, page, pageSize);
+    const { page, pageSize, orderBy, ascending } = parseQuery(getTableDataRequestSchema, req.query);
+    return this.querier.query(abortSignal, tableName, page, pageSize, orderBy, ascending);
   }
 }

@@ -9,7 +9,7 @@ test('manages table definitions and their data tables', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
   const dbs = { modelDb: db, dataDb: db } as SqliteDatabases;
   const abortSignal = new AbortController().signal;
-  const repository = new SqliteTableRepository(dbs);
+  const repository = new SqliteTableRepository(dbs, { invalidate() {} });
 
   await repository.setup(abortSignal);
   await repository.insert(abortSignal, new Table('customers', 'Customer records'));
@@ -23,12 +23,11 @@ test('manages table definitions and their data tables', async () => {
       name: row.name,
       type: row.type,
       notnull: row.notnull,
-      pk: row.pk
+      primaryKeyPosition: row.pk
     })),
     [
-      { name: 'pk', type: 'TEXT', notnull: 1, pk: 1 },
-      { name: 'data', type: 'TEXT', notnull: 1, pk: 0 },
-      { name: 'updatedAt', type: 'INTEGER', notnull: 1, pk: 0 }
+      { name: '_id', type: 'TEXT', notnull: 1, primaryKeyPosition: 1 },
+      { name: '_updatedAt', type: 'INTEGER', notnull: 1, primaryKeyPosition: 0 }
     ]
   );
 
@@ -50,10 +49,10 @@ test('rolls back a definition insert when its data table cannot be created', asy
   const db = new DatabaseSync(':memory:', { open: true });
   const dbs = { modelDb: db, dataDb: db } as SqliteDatabases;
   const abortSignal = new AbortController().signal;
-  const repository = new SqliteTableRepository(dbs);
+  const repository = new SqliteTableRepository(dbs, { invalidate() {} });
 
   await repository.setup(abortSignal);
-  db.exec(`CREATE TABLE data_customers (pk TEXT PRIMARY KEY)`);
+  db.exec(`CREATE TABLE data_customers (legacyId TEXT PRIMARY KEY)`);
 
   await assert.rejects(() => repository.insert(abortSignal, new Table('customers', 'Customer records')));
   assert.deepEqual(toPlainRows(db.prepare(`SELECT name, description FROM tables`)), []);

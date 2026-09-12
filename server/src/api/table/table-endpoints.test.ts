@@ -14,7 +14,7 @@ test('creates, reads, updates, and deletes a table definition', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
   const dbs = { modelDb: db, dataDb: db } as SqliteDatabases;
   const abortSignal = new AbortController().signal;
-  const repository = new SqliteTableRepository(dbs);
+  const repository = new SqliteTableRepository(dbs, { invalidate() {} });
   const saveEndpoint = new SaveTableEndpoint(repository);
   const getEndpoint = new GetTableEndpoint(repository);
   const deleteEndpoint = new DeleteTableEndpoint(repository);
@@ -44,7 +44,7 @@ test('rejects invalid, duplicate, and missing table saves', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
   const dbs = { modelDb: db, dataDb: db } as SqliteDatabases;
   const abortSignal = new AbortController().signal;
-  const repository = new SqliteTableRepository(dbs);
+  const repository = new SqliteTableRepository(dbs, { invalidate() {} });
   const endpoint = new SaveTableEndpoint(repository);
   await repository.setup(abortSignal);
 
