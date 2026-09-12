@@ -1,8 +1,6 @@
-import { global, globalStoreFactory, tool } from '@aibindkit/react';
+import { global, globalStoreFactory } from '@aibindkit/react';
 
-const g = global().tools({
-  getCurrentUser: tool('Get the current user ID and email, you can use this function on any page')
-});
+const g = global().tools({});
 
 export const globalAiStoreFactory = globalStoreFactory(g);
 

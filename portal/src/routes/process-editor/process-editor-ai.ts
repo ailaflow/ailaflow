@@ -172,22 +172,22 @@ export function useProcessEditorAi(state: ProcessEditorState, save: () => Promis
 
         // root
 
-        async getRootVariables() {
-          const variables = state.definition.value.properties.variables;
+        async getRootVariables(arg) {
+          let variables = state.definition.value.properties.variables;
+          const filter = arg.filter;
+          if (filter) {
+            variables = variables.filter(v => v.name.includes(filter));
+          }
           return variables.map(v => ({
             name: v.name,
             description: v.description,
             schema: v.schema
           }));
         },
-        async getRootVariableSchema(arg) {
-          const variable = state.definition.value.properties.variables.find(v => v.name === arg.name);
-          if (!variable) {
-            return toolError(`Cannot find the \$${arg.name} variable`);
-          }
-          return {
-            schema: variable.schema
-          };
+        async readRootProperties() {
+          const props = ObjectCloner.deepClone(state.definition.value.properties) as Record<string, unknown>;
+          delete props.version;
+          return props;
         },
         async isRootStartFormEnabled() {
           return {
@@ -265,12 +265,6 @@ export function useProcessEditorAi(state: ProcessEditorState, save: () => Promis
           state.openOverlay(ProcessEditorOverlayType.SCRIPT_EDITOR, path);
           return toolSuccess('Script editor overlay was opened');
         },
-        async scriptStep_getSandboxName(arg) {
-          const step = state.getStep<ScriptStep>(arg.stepId, 'script');
-          return {
-            sandboxName: step.properties.script.sandboxName
-          };
-        },
         async scriptStep_setSandboxName(arg) {
           if (!state.sandboxes.find(s => s.name === arg.sandboxName)) {
             return toolError(`Sandbox name "${arg.sandboxName}" is not available`);
@@ -281,10 +275,6 @@ export function useProcessEditorAi(state: ProcessEditorState, save: () => Promis
           return toolSuccess('Sandbox name was updated');
         },
 
-        async agentStep_getPrompt(arg) {
-          const step = state.getStep<AgentStep>(arg.stepId, 'agent');
-          return step.properties.prompt;
-        },
         async agentStep_setPrompt(arg) {
           const step = state.getStep<AgentStep>(arg.stepId, 'agent');
           step.properties.prompt = { type: 'string', value: arg.prompt };
@@ -301,23 +291,11 @@ export function useProcessEditorAi(state: ProcessEditorState, save: () => Promis
           state.notifyDefinitionChange();
           return toolSuccess('Prompt was updated');
         },
-        async agentStep_getAllowedProcesses(arg) {
-          const step = state.getStep<AgentStep>(arg.stepId, 'agent');
-          return {
-            processNames: step.properties.allowedProcesses
-          };
-        },
         async agentStep_setAllowedProcesses(arg) {
           const step = state.getStep<AgentStep>(arg.stepId, 'agent');
           step.properties.allowedProcesses = arg.processNames;
           state.notifyDefinitionChange();
           return toolSuccess('Allowed processes were updated');
-        },
-        async agentStep_getAllowedVariables(arg) {
-          const step = state.getStep<AgentStep>(arg.stepId, 'agent');
-          return {
-            variableNames: step.properties.allowedVariableNames
-          };
         },
         async agentStep_setAllowedVariables(arg) {
           const step = state.getStep<AgentStep>(arg.stepId, 'agent');
@@ -328,12 +306,6 @@ export function useProcessEditorAi(state: ProcessEditorState, save: () => Promis
           step.properties.allowedVariableNames = arg.variableNames;
           state.notifyDefinitionChange();
           return toolSuccess('Allowed variable names were updated');
-        },
-        async agentStep_getSandboxName(arg) {
-          const step = state.getStep<AgentStep>(arg.stepId, 'agent');
-          return {
-            sandboxName: step.properties.sandboxName
-          };
         },
         async agentStep_setSandboxName(arg) {
           const step = state.getStep<AgentStep>(arg.stepId, 'agent');
@@ -363,23 +335,11 @@ export function useProcessEditorAi(state: ProcessEditorState, save: () => Promis
           state.openOverlay(ProcessEditorOverlayType.FORM_EDITOR, path);
           return toolSuccess('Task step form editor overlay was opened');
         },
-        async taskStep_getInputVariables(arg) {
-          const step = state.getStep<TaskStep>(arg.stepId, 'task');
-          return {
-            variableNames: step.properties.inputVariableNames
-          };
-        },
         async taskStep_setInputVariables(arg) {
           const step = state.getStep<TaskStep>(arg.stepId, 'task');
           step.properties.inputVariableNames = arg.variableNames;
           state.notifyDefinitionChange();
           return toolSuccess('Input variable names were updated');
-        },
-        async taskStep_getOutputVariables(arg) {
-          const step = state.getStep<TaskStep>(arg.stepId, 'task');
-          return {
-            variableNames: step.properties.outputVariableNames
-          };
         },
         async taskStep_setOutputVariables(arg) {
           const error = TaskStepValidator.validateOutputVariables(state.variableValidator, state.definition.value, arg.variableNames);
@@ -391,10 +351,6 @@ export function useProcessEditorAi(state: ProcessEditorState, save: () => Promis
           step.properties.outputVariableNames = arg.variableNames;
           state.notifyDefinitionChange();
           return toolSuccess('Output variable names were updated');
-        },
-        async taskStep_getUserExpression(arg) {
-          const step = state.getStep<TaskStep>(arg.stepId, 'task');
-          return step.properties.userExpression;
         },
         async taskStep_setUserExpression(arg) {
           const step = state.getStep<TaskStep>(arg.stepId, 'task');
@@ -416,12 +372,6 @@ export function useProcessEditorAi(state: ProcessEditorState, save: () => Promis
           state.notifyDefinitionChange();
           return toolSuccess('User expression was updated');
         },
-        async taskStep_getMetadataVariableName(arg) {
-          const step = state.getStep<TaskStep>(arg.stepId, 'task');
-          return {
-            variableName: step.properties.metadataVariableName ?? null
-          };
-        },
         async taskStep_setMetadataVariableName(arg) {
           const step = state.getStep<TaskStep>(arg.stepId, 'task');
           const variableName = arg.variableName === '' ? undefined : (arg.variableName ?? undefined);
@@ -434,12 +384,6 @@ export function useProcessEditorAi(state: ProcessEditorState, save: () => Promis
           step.properties.metadataVariableName = variableName;
           state.notifyDefinitionChange();
           return toolSuccess('Metadata variable name was updated');
-        },
-        async taskStep_getDeadline(arg) {
-          const step = state.getStep<TaskStep>(arg.stepId, 'task');
-          return {
-            deadline: step.properties.deadline ?? null
-          };
         },
         async taskStep_setDeadline(arg) {
           const step = state.getStep<TaskStep>(arg.stepId, 'task');
@@ -463,12 +407,6 @@ export function useProcessEditorAi(state: ProcessEditorState, save: () => Promis
           state.notifyDefinitionChange();
           return toolSuccess('Deadline was updated');
         },
-        async taskStep_getCompletionPolicy(arg) {
-          const step = state.getStep<TaskStep>(arg.stepId, 'task');
-          return {
-            completionPolicy: step.properties.completionPolicy
-          };
-        },
         async taskStep_setCompletionPolicy(arg) {
           const step = state.getStep<TaskStep>(arg.stepId, 'task');
           step.properties.completionPolicy = arg.completionPolicy;
@@ -476,10 +414,6 @@ export function useProcessEditorAi(state: ProcessEditorState, save: () => Promis
           return toolSuccess('Completion policy was updated');
         },
 
-        async notificationStep_getUserExpression(arg) {
-          const step = state.getStep<NotificationStep>(arg.stepId, 'notification');
-          return step.properties.userExpression;
-        },
         async notificationStep_setUserExpression(arg) {
           const step = state.getStep<NotificationStep>(arg.stepId, 'notification');
           const error = UserAccessExpressionParser.validate(arg.userExpression);
@@ -499,10 +433,6 @@ export function useProcessEditorAi(state: ProcessEditorState, save: () => Promis
           step.properties.userExpression = { type: 'variable', name: arg.variableName };
           state.notifyDefinitionChange();
           return toolSuccess('User expression was updated');
-        },
-        async notificationStep_getNotification(arg) {
-          const step = state.getStep<NotificationStep>(arg.stepId, 'notification');
-          return step.properties.notification;
         },
         async notificationStep_setNotification(arg) {
           const step = state.getStep<NotificationStep>(arg.stepId, 'notification');
@@ -541,12 +471,6 @@ export function useProcessEditorAi(state: ProcessEditorState, save: () => Promis
           const path = DefinitionPath.createStepPath(step.id, 'properties.outputForm');
           state.openOverlay(ProcessEditorOverlayType.FORM_EDITOR, path);
           return toolSuccess('The form editor overlay is opened');
-        },
-        async returnStep_getOutputVariables(arg) {
-          const step = state.getStep<ReturnStep>(arg.stepId, 'return');
-          return {
-            variableNames: step.properties.outputVariableNames
-          };
         },
         async returnStep_setOutputVariables(arg) {
           const step = state.getStep<ReturnStep>(arg.stepId, 'return');

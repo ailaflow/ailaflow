@@ -49,7 +49,7 @@ export function useTableEditorState(table?: TableDto): TableEditorState {
 
 function createData(table?: TableDto): TableEditorData {
   return {
-    name: table?.name ?? 'new_table',
+    name: table?.name ?? '',
     description: table?.description ?? '',
     isDirty: !table,
     isNew: !table

@@ -11,18 +11,7 @@ export function AdminPortalChat() {
   const { toolDescriptors, frontEndToolCallsHandler } = useAiEnvironment();
   const session = useSession();
 
-  useAiStore(
-    'global',
-    store =>
-      store.bind({
-        async getCurrentUser() {
-          return {
-            userName: session.userName
-          };
-        }
-      }),
-    []
-  );
+  useAiStore('global', store => store.bind({}), []);
 
   return (
     <Chat

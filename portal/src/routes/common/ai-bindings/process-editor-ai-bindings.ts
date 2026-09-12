@@ -93,6 +93,7 @@ const processEditorRoute = route('processEditor')
 
     // root
 
+    readRootProperties: tool('Read the full JSON for the root process properties'),
     isRootStartFormEnabled: tool('Check whether the process start form is enabled'),
     setRootStartFormEnabled: tool('Enable or disable the process start form').input(
       z.object({
@@ -106,10 +107,9 @@ const processEditorRoute = route('processEditor')
         variableNames: z.array(z.string()).describe('The list of required input variable names')
       })
     ),
-    getRootVariables: tool('List process variables with their names and JSON schemas'),
-    getRootVariableSchema: tool('Get the JSON schema for a specific process variable').input(
+    getRootVariables: tool('List process variables with their names and JSON schemas').input(
       z.object({
-        name: z.string().min(1).describe('The name of the variable')
+        filter: z.string().optional().describe('Optional filter for variable names')
       })
     ),
     setRootVariable: tool(
@@ -134,7 +134,6 @@ const processEditorRoute = route('processEditor')
         stepId: z.string().describe('The ID of the script step to edit')
       })
     ),
-    scriptStep_getSandboxName: tool('Get the sandbox configuration for a specific script step'),
     scriptStep_setSandboxName: tool('Set the sandbox configuration for a specific script step').input(
       z.object({
         stepId: z.string().describe('The ID of the script step to update'),
@@ -142,11 +141,6 @@ const processEditorRoute = route('processEditor')
       })
     ),
 
-    agentStep_getPrompt: tool('Get the agent prompt as text or a variable reference').input(
-      z.object({
-        stepId: z.string().describe('The agent step ID')
-      })
-    ),
     agentStep_setPrompt: tool('Set the agent prompt text').input(
       z.object({
         stepId: z.string().describe('The agent step ID'),
@@ -159,31 +153,16 @@ const processEditorRoute = route('processEditor')
         variableName: z.string().describe('The string variable name')
       })
     ),
-    agentStep_getAllowedProcesses: tool('Get allowed process names; null means all, an empty list means none').input(
-      z.object({
-        stepId: z.string().describe('The agent step ID')
-      })
-    ),
     agentStep_setAllowedProcesses: tool('Set which processes the agent can run').input(
       z.object({
         stepId: z.string().describe('The agent step ID'),
         processNames: z.array(z.string()).nullable().describe('Allowed process names; null allows all, an empty list allows none')
       })
     ),
-    agentStep_getAllowedVariables: tool('Get variable names the agent can read and write').input(
-      z.object({
-        stepId: z.string().describe('The agent step ID')
-      })
-    ),
     agentStep_setAllowedVariables: tool('Set which variables the agent can read and write').input(
       z.object({
         stepId: z.string().describe('The agent step ID'),
         variableNames: z.array(z.string()).describe('Allowed variable names; an empty list allows none')
-      })
-    ),
-    agentStep_getSandboxName: tool('Get the agent sandbox name').input(
-      z.object({
-        stepId: z.string().describe('The agent step ID')
       })
     ),
     agentStep_setSandboxName: tool('Set the agent sandbox').input(
@@ -209,33 +188,16 @@ const processEditorRoute = route('processEditor')
         stepId: z.string().describe('The ID of the task step to edit')
       })
     ),
-    taskStep_getInputVariables: tool('Get the list of input variable names for a specific task step').input(
-      z.object({
-        stepId: z.string().describe('The ID of the task step to read')
-      })
-    ),
     taskStep_setInputVariables: tool('Set the list of input variable names for a specific task step').input(
       z.object({
         stepId: z.string().describe('The ID of the task step to update'),
         variableNames: z.array(z.string()).describe('The new list of input variable names for the task step')
       })
     ),
-    taskStep_getOutputVariables: tool('Get the list of output variable names for a specific task step').input(
-      z.object({
-        stepId: z.string().describe('The ID of the task step to read')
-      })
-    ),
     taskStep_setOutputVariables: tool('Set the list of output variable names for a specific task step').input(
       z.object({
         stepId: z.string().describe('The ID of the task step to update'),
         variableNames: z.array(z.string()).describe('The new list of output variable names for the task step')
-      })
-    ),
-    taskStep_getUserExpression: tool(
-      'Get the user expression for a specific task step or a variable name that contains the user expression'
-    ).input(
-      z.object({
-        stepId: z.string().describe('The ID of the task step to read')
       })
     ),
     taskStep_setUserExpression: tool('Set the user expression for a specific task step').input(
@@ -250,20 +212,10 @@ const processEditorRoute = route('processEditor')
         variableName: z.string().describe('The variable name that contains the user expression for the task step')
       })
     ),
-    taskStep_getMetadataVariableName: tool('Get the task metadata variable name, or null when not set').input(
-      z.object({
-        stepId: z.string().describe('The ID of the task step to read')
-      })
-    ),
     taskStep_setMetadataVariableName: tool('Set or clear the task metadata variable').input(
       z.object({
         stepId: z.string().describe('The ID of the task step to update'),
         variableName: z.string().nullable().describe('An object variable name, or null or an empty string to clear')
-      })
-    ),
-    taskStep_getDeadline: tool('Get the task deadline as a string or variable reference, or null when not set').input(
-      z.object({
-        stepId: z.string().describe('The ID of the task step to read')
       })
     ),
     taskStep_setDeadline: tool('Set or clear the task deadline').input(
@@ -278,11 +230,6 @@ const processEditorRoute = route('processEditor')
         variableName: z.string().describe('The string variable name containing the deadline')
       })
     ),
-    taskStep_getCompletionPolicy: tool('Get the task completion policy: all_assignees or any_assignee').input(
-      z.object({
-        stepId: z.string().describe('The ID of the task step to read')
-      })
-    ),
     taskStep_setCompletionPolicy: tool('Set the task completion policy').input(
       z.object({
         stepId: z.string().describe('The ID of the task step to update'),
@@ -292,13 +239,6 @@ const processEditorRoute = route('processEditor')
       })
     ),
 
-    notificationStep_getUserExpression: tool(
-      'Get the user expression for a specific notification step or a variable name that contains the user expression'
-    ).input(
-      z.object({
-        stepId: z.string().describe('The ID of the notification step to read')
-      })
-    ),
     notificationStep_setUserExpression: tool('Set the user expression for a specific notification step').input(
       z.object({
         stepId: z.string().describe('The ID of the notification step to update'),
@@ -311,13 +251,6 @@ const processEditorRoute = route('processEditor')
       z.object({
         stepId: z.string().describe('The ID of the notification step to update'),
         variableName: z.string().describe('The variable name that contains the user expression for the notification step')
-      })
-    ),
-    notificationStep_getNotification: tool(
-      'Get the notification for a specific notification step or a variable name that contains the notification'
-    ).input(
-      z.object({
-        stepId: z.string().describe('The ID of the notification step to read')
       })
     ),
     notificationStep_setNotification: tool('Set the notification for a specific notification step').input(
@@ -345,11 +278,6 @@ const processEditorRoute = route('processEditor')
     returnStep_openOutputFormEditorOverlay: tool('Open the form editor overlay for a specific return step').input(
       z.object({
         stepId: z.string().describe('The ID of the return step to edit')
-      })
-    ),
-    returnStep_getOutputVariables: tool('Get the list of output variable names for a specific return step').input(
-      z.object({
-        stepId: z.string().describe('The ID of the return step to read')
       })
     ),
     returnStep_setOutputVariables: tool('Set the list of output variable names for a specific return step').input(
