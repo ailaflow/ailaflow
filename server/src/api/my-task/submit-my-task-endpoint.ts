@@ -5,14 +5,14 @@ import { parseBody } from '../framework/parse-request';
 import { submitMyTaskRequestSchema, SubmitMyTaskResponse } from '@ailaflow/shared';
 import { EndpointError } from '../framework/endpoint-error';
 import { getAuthToken } from '../auth/auth-middleware';
-import { TaskResumer, TaskResumerError } from '../../task/task-resumer';
+import { AssignedTaskCompleter, AssignedTaskCompleterError } from '../../task/assigned-task-completer';
 
 export class SubmitMyTaskEndpoint implements Endpoint {
   public readonly method = 'post';
   public readonly path = '/api/my-tasks/submit';
   public readonly auth = true;
 
-  public constructor(private readonly taskResumer: TaskResumer) {}
+  public constructor(private readonly assignedTaskCompleter: AssignedTaskCompleter) {}
 
   public async handle(req: Request): Promise<SubmitMyTaskResponse> {
     const abortSignal = getEndpointAbortSignal(req);
@@ -22,9 +22,9 @@ export class SubmitMyTaskEndpoint implements Endpoint {
     const { isTest, userName } = authToken.maybeOverrideTestUserName(request.testUserName);
 
     try {
-      await this.taskResumer.resume(abortSignal, isTest, userName, request.taskId, request.outputValues);
+      await this.assignedTaskCompleter.complete(abortSignal, isTest, userName, request.taskId, request.outputValues);
     } catch (e) {
-      if (e instanceof TaskResumerError) {
+      if (e instanceof AssignedTaskCompleterError) {
         throw new EndpointError(e.message, 400);
       }
       throw e;

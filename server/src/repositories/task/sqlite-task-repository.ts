@@ -1,5 +1,5 @@
 import { DatabaseSync } from 'node:sqlite';
-import { FormDefinition, JsonSchema, taskCompletionPolicySchema } from '@ailaflow/shared';
+import { FormDefinition, JsonSchema, taskFinalizationPolicySchema } from '@ailaflow/shared';
 import { SqliteDatabases } from '../../core/sqlite-databases';
 import { Task } from './task';
 import { TaskRepository } from './task-repository';
@@ -23,8 +23,10 @@ export class SqliteTaskRepository implements TaskRepository {
         outputVariableSchemas TEXT,
         form TEXT,
         deadline INTEGER,
-        completionPolicy TEXT NOT NULL,
-        createdAt INTEGER NOT NULL
+        finalizationPolicy TEXT NOT NULL,
+        metadataVariableName TEXT,
+        createdAt INTEGER NOT NULL,
+        finalizedAt INTEGER
       ) STRICT
     `);
     this.db.exec(`
@@ -45,8 +47,10 @@ export class SqliteTaskRepository implements TaskRepository {
         outputVariableSchemas,
         form,
         deadline,
-        completionPolicy,
-        createdAt
+        finalizationPolicy,
+        metadataVariableName,
+        createdAt,
+        finalizedAt
       FROM tasks
       WHERE id = ?
       LIMIT 1
@@ -62,8 +66,10 @@ export class SqliteTaskRepository implements TaskRepository {
           outputVariableSchemas: string | null;
           form: string | null;
           deadline: number | null;
-          completionPolicy: string;
+          finalizationPolicy: string;
+          metadataVariableName: string | null;
           createdAt: number;
+          finalizedAt: number | null;
         }
       | undefined;
 
@@ -82,10 +88,12 @@ export class SqliteTaskRepository implements TaskRepository {
         outputVariableSchemas,
         form,
         deadline,
-        completionPolicy,
-        createdAt
+        finalizationPolicy,
+        metadataVariableName,
+        createdAt,
+        finalizedAt
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
     statement.run(
       task.id,
@@ -97,9 +105,20 @@ export class SqliteTaskRepository implements TaskRepository {
       serializeOutputVariableSchemas(task.outputVariableSchemas),
       serializeForm(task.form),
       task.deadline,
-      task.completionPolicy,
-      task.createdAt
+      task.finalizationPolicy,
+      task.metadataVariableName,
+      task.createdAt,
+      task.finalizedAt
     );
+  }
+
+  public async update(_: AbortSignal, task: Task): Promise<void> {
+    const statement = this.db.prepare(`
+      UPDATE tasks
+      SET finalizedAt = ?
+      WHERE id = ?
+    `);
+    statement.run(task.finalizedAt, task.id);
   }
 
   public async delete(_: AbortSignal, id: string): Promise<boolean> {
@@ -121,8 +140,10 @@ function deserializeTask(row: {
   outputVariableSchemas: string | null;
   form: string | null;
   deadline: number | null;
-  completionPolicy: string;
+  finalizationPolicy: string;
+  metadataVariableName: string | null;
   createdAt: number;
+  finalizedAt: number | null;
 }): Task {
   return new Task(
     row.id,
@@ -134,8 +155,10 @@ function deserializeTask(row: {
     row.outputVariableSchemas ? (JSON.parse(row.outputVariableSchemas) as Record<string, JsonSchema>) : null,
     row.form ? (JSON.parse(row.form) as FormDefinition) : null,
     row.deadline,
-    taskCompletionPolicySchema.parse(row.completionPolicy),
-    row.createdAt
+    taskFinalizationPolicySchema.parse(row.finalizationPolicy),
+    row.metadataVariableName,
+    row.createdAt,
+    row.finalizedAt
   );
 }
 

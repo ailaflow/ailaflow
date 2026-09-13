@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
 import test from 'node:test';
-import { TaskCompletionPolicy } from '@ailaflow/shared';
+import { TaskFinalizationPolicy } from '@ailaflow/shared';
 import { SqliteDatabases } from '../../core/sqlite-databases';
 import { Task } from './task';
 import { SqliteTaskRepository } from './sqlite-task-repository';
@@ -30,8 +30,10 @@ test('task insert does not overwrite an existing task', async () => {
       null,
       null,
       null,
-      TaskCompletionPolicy.ALL_ASSIGNEES,
-      1000
+      TaskFinalizationPolicy.ALL_ASSIGNEES,
+      'originalMetadata',
+      1000,
+      null
     )
   );
 
@@ -48,8 +50,10 @@ test('task insert does not overwrite an existing task', async () => {
         { output: { type: 'string' } },
         null,
         null,
-        TaskCompletionPolicy.ANY_ASSIGNEE,
-        2000
+        TaskFinalizationPolicy.ANY_ASSIGNEE,
+        null,
+        2000,
+        null
       )
     )
   );
@@ -58,7 +62,7 @@ test('task insert does not overwrite an existing task', async () => {
     ...db
       .prepare(
         `
-        SELECT title, isTest, createdBy, executionId, inputVariableNames, outputVariableSchemas, completionPolicy, createdAt
+        SELECT title, isTest, createdBy, executionId, inputVariableNames, outputVariableSchemas, finalizationPolicy, metadataVariableName, createdAt, finalizedAt
         FROM tasks
         WHERE id = ?
       `
@@ -71,8 +75,10 @@ test('task insert does not overwrite an existing task', async () => {
     executionId: string;
     inputVariableNames: string;
     outputVariableSchemas: string | null;
-    completionPolicy: string;
+    finalizationPolicy: string;
+    metadataVariableName: string | null;
     createdAt: number;
+    finalizedAt: number | null;
   };
   assert.deepEqual(row, {
     title: 'Original task',
@@ -81,9 +87,48 @@ test('task insert does not overwrite an existing task', async () => {
     executionId: 'execution_1',
     inputVariableNames: '[]',
     outputVariableSchemas: null,
-    completionPolicy: TaskCompletionPolicy.ALL_ASSIGNEES,
-    createdAt: 1000
+    finalizationPolicy: TaskFinalizationPolicy.ALL_ASSIGNEES,
+    metadataVariableName: 'originalMetadata',
+    createdAt: 1000,
+    finalizedAt: null
   });
+
+  db.close();
+});
+
+test('task update persists only the finalization timestamp', async () => {
+  const db = new DatabaseSync(':memory:', { open: true });
+  const dbs = { modelDb: db } as SqliteDatabases;
+  const abortSignal = new AbortController().signal;
+  const repository = new SqliteTaskRepository(dbs);
+  const task = new Task(
+    'task_1',
+    'Task',
+    true,
+    'creator_1',
+    'execution_1',
+    ['input'],
+    { output: { type: 'string' } },
+    null,
+    2000,
+    TaskFinalizationPolicy.ANY_ASSIGNEE,
+    'taskMetadata',
+    1000,
+    null
+  );
+
+  await repository.setup(abortSignal);
+  await repository.insert(abortSignal, task);
+  const rowBeforeUpdate = { ...db.prepare(`SELECT * FROM tasks WHERE id = ?`).get(task.id) };
+
+  task.finalize();
+  await repository.update(abortSignal, task);
+
+  assert.deepEqual({ ...db.prepare(`SELECT * FROM tasks WHERE id = ?`).get(task.id) }, {
+    ...rowBeforeUpdate,
+    finalizedAt: task.finalizedAt
+  });
+  assert.deepEqual(await repository.tryGet(abortSignal, task.id), task);
 
   db.close();
 });
@@ -108,8 +153,10 @@ test('task can be fetched by id', async () => {
       inputExamples: []
     },
     2000,
-    TaskCompletionPolicy.ANY_ASSIGNEE,
-    1000
+    TaskFinalizationPolicy.ANY_ASSIGNEE,
+    'taskMetadata',
+    1000,
+    null
   );
 
   await repository.setup(abortSignal);
@@ -146,8 +193,10 @@ test('task can be deleted with its assignments', async () => {
       null,
       null,
       null,
-      TaskCompletionPolicy.ALL_ASSIGNEES,
-      1000
+      TaskFinalizationPolicy.ALL_ASSIGNEES,
+      null,
+      1000,
+      null
     )
   );
   await assignedTaskRepository.upsert(abortSignal, AssignedTask.create('task_1', 'user_1', 'default'));

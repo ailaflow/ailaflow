@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
 import test from 'node:test';
-import { TaskCompletionPolicy } from '@ailaflow/shared';
+import { TaskFinalizationPolicy } from '@ailaflow/shared';
 import { SqliteDatabases } from '../../core/sqlite-databases';
 import { AssignedTask } from '../../repositories/task/assigned-task';
 import { SqliteAssignedTaskRepository } from '../../repositories/task/sqlite-assigned-task-repository';
@@ -40,8 +40,10 @@ test('queries tasks assigned to the current user', async () => {
       null,
       null,
       4000,
-      TaskCompletionPolicy.ALL_ASSIGNEES,
-      1000
+      TaskFinalizationPolicy.ALL_ASSIGNEES,
+      null,
+      1000,
+      null
     )
   );
   await taskRepository.insert(
@@ -56,8 +58,10 @@ test('queries tasks assigned to the current user', async () => {
       null,
       null,
       6000,
-      TaskCompletionPolicy.ALL_ASSIGNEES,
-      1001
+      TaskFinalizationPolicy.ALL_ASSIGNEES,
+      null,
+      1001,
+      null
     )
   );
   await taskRepository.insert(
@@ -72,8 +76,10 @@ test('queries tasks assigned to the current user', async () => {
       null,
       null,
       3000,
-      TaskCompletionPolicy.ALL_ASSIGNEES,
-      1002
+      TaskFinalizationPolicy.ALL_ASSIGNEES,
+      null,
+      1002,
+      null
     )
   );
   await taskRepository.insert(
@@ -88,8 +94,10 @@ test('queries tasks assigned to the current user', async () => {
       null,
       null,
       3000,
-      TaskCompletionPolicy.ALL_ASSIGNEES,
-      1003
+      TaskFinalizationPolicy.ALL_ASSIGNEES,
+      null,
+      1003,
+      null
     )
   );
   await taskRepository.insert(
@@ -104,8 +112,10 @@ test('queries tasks assigned to the current user', async () => {
       null,
       null,
       null,
-      TaskCompletionPolicy.ALL_ASSIGNEES,
-      1004
+      TaskFinalizationPolicy.ALL_ASSIGNEES,
+      null,
+      1004,
+      null
     )
   );
   await taskRepository.insert(
@@ -120,8 +130,10 @@ test('queries tasks assigned to the current user', async () => {
       null,
       null,
       null,
-      TaskCompletionPolicy.ALL_ASSIGNEES,
-      1005
+      TaskFinalizationPolicy.ALL_ASSIGNEES,
+      null,
+      1005,
+      null
     )
   );
 

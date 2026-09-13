@@ -9,7 +9,7 @@ export class UserTaskDetailsProvider {
   ) {}
 
   public async tryGet(abortSignal: AbortSignal, isTest: boolean, userName: string, taskId: string): Promise<TaskDetails | null> {
-    const userAssignedTask = await this.provider.tryGet(abortSignal, isTest, userName, taskId);
+    const userAssignedTask = await this.provider.tryGetCompletable(abortSignal, isTest, userName, taskId);
     if (!userAssignedTask) {
       return null;
     }

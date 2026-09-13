@@ -14,15 +14,26 @@ export class UserAssignedTaskProvider {
     private readonly assignedTaskRepository: AssignedTaskRepository
   ) {}
 
-  public async tryGet(abortSignal: AbortSignal, isTest: boolean, userName: string, taskId: string): Promise<UserAssignedTask | null> {
+  public async tryGetCompletable(
+    abortSignal: AbortSignal,
+    isTest: boolean,
+    userName: string,
+    taskId: string
+  ): Promise<UserAssignedTask | null> {
     const assignedTask = await this.assignedTaskRepository.tryGet(abortSignal, taskId, userName);
     if (!assignedTask) {
       return null;
     }
 
     const task = await this.taskRepository.tryGet(abortSignal, taskId);
-    if (!task || task.isTest !== isTest) {
-      throw new Error('Task not found but assignment exists');
+    if (!task) {
+      throw new Error(`Task ${taskId} not found but assignment exists`);
+    }
+    if (task.isTest !== isTest) {
+      throw new Error(`Task ${taskId} test status test failed ${task.isTest} !== ${isTest}`);
+    }
+    if (task.finalizedAt !== null) {
+      throw new Error(`Task ${taskId} is already finalized`);
     }
 
     return {

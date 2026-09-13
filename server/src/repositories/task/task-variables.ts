@@ -29,7 +29,7 @@ export class TaskVariables {
     return null;
   }
 
-  public validateStartValues(values: ProcessExecutionVariableValues): string | null {
+  public validateOutputValues(values: ProcessExecutionVariableValues): string | null {
     const passedVariableNames = Object.keys(values);
 
     if (this.outputVariableSchemas === null) {

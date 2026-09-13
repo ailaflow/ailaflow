@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { TaskCompletionPolicy } from '@ailaflow/shared';
+import { TaskFinalizationPolicy } from '@ailaflow/shared';
 import { PersistedExecutionRepository } from '../repositories/persisted-execution/persisted-execution-repository';
 import { TaskRepository } from '../repositories/task/task-repository';
 import { Task } from '../repositories/task/task';
@@ -18,8 +18,10 @@ test('deletes the persisted execution and task', async () => {
     null,
     null,
     null,
-    TaskCompletionPolicy.ALL_ASSIGNEES,
-    1000
+    TaskFinalizationPolicy.ALL_ASSIGNEES,
+    null,
+    1000,
+    null
   );
   const taskRepository = createTaskRepository(task, async id => {
     calls.push(`task:${id}`);
@@ -54,6 +56,7 @@ function createTaskRepository(task: Task | null, deleteTask: (id: string) => Pro
     setup: async () => undefined,
     tryGet: async () => task,
     insert: async () => undefined,
+    update: async () => undefined,
     delete: async (_, id) => deleteTask(id)
   };
 }

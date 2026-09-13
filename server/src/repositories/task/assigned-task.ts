@@ -15,7 +15,7 @@ export class AssignedTask {
   ) {}
 
   public tryComplete(outputValues: ProcessExecutionVariableValues, task: Task): string | null {
-    const error = task.variables.validateStartValues(outputValues);
+    const error = task.variables.validateOutputValues(outputValues);
     if (error) {
       return error;
     }

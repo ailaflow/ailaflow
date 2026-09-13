@@ -400,11 +400,11 @@ export function useProcessEditorAi(state: ProcessEditorState, save: () => Promis
           state.notifyDefinitionChange();
           return toolSuccess('Deadline was updated');
         },
-        async taskStep_setCompletionPolicy(arg) {
+        async taskStep_setFinalizationPolicy(arg) {
           const step = state.getStep<TaskStep>(arg.stepId, 'task');
-          step.properties.completionPolicy = arg.completionPolicy;
+          step.properties.finalizationPolicy = arg.finalizationPolicy;
           state.notifyDefinitionChange();
-          return toolSuccess('Completion policy was updated');
+          return toolSuccess('Finalization policy was updated');
         },
 
         async notificationStep_setUserExpression(arg) {

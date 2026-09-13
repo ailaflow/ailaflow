@@ -1,7 +1,7 @@
 import { ToolContext, ZodTool, ZodToolExecutionResult } from '@aibindkit/llm';
 import { ChatSessionId } from '../chat-session-id';
 import z from 'zod/v4';
-import { TaskResumer, TaskResumerError } from '../../task/task-resumer';
+import { AssignedTaskCompleter, AssignedTaskCompleterError } from '../../task/assigned-task-completer';
 
 const inputSchema = z.object({
   taskId: z.string(),
@@ -11,7 +11,7 @@ const inputSchema = z.object({
 type Arg = z.infer<typeof inputSchema>;
 
 export class SubmitMyTaskTool extends ZodTool<Arg> {
-  public constructor(private readonly taskResumer: TaskResumer) {
+  public constructor(private readonly completer: AssignedTaskCompleter) {
     super('submit_my_task', 'Submits a task for the user', inputSchema);
   }
 
@@ -20,9 +20,9 @@ export class SubmitMyTaskTool extends ZodTool<Arg> {
     const isTest = chatSessionId.isTest();
 
     try {
-      await this.taskResumer.resume(abortSignal, isTest, chatSessionId.userName, arg.taskId, arg.outputValues);
+      await this.completer.complete(abortSignal, isTest, chatSessionId.userName, arg.taskId, arg.outputValues);
     } catch (e) {
-      if (e instanceof TaskResumerError) {
+      if (e instanceof AssignedTaskCompleterError) {
         return {
           content: {
             error: e.message

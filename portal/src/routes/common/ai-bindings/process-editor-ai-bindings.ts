@@ -1,6 +1,6 @@
 import * as z from 'zod/v4';
 import { route, routeStoreFactory, tool } from '@aibindkit/react';
-import { jsonSchema, taskCompletionPolicySchema, taskDeadlinePresetSchema } from '@ailaflow/shared';
+import { jsonSchema, taskFinalizationPolicySchema, taskDeadlinePresetSchema } from '@ailaflow/shared';
 
 // Conventions:
 // - don't add a dot `.` at the end of the description to reduce amount of tokens.
@@ -242,11 +242,11 @@ const processEditorRoute = route('processEditor')
           .strict()
       ])
     ),
-    taskStep_setCompletionPolicy: tool('Set the task completion policy').input(
+    taskStep_setFinalizationPolicy: tool('Set the task finalization policy').input(
       z.object({
         stepId: z.string().describe('The ID of the task step to update'),
-        completionPolicy: taskCompletionPolicySchema.describe(
-          'all_assignees requires all assignees to complete; any_assignee requires any one assignee'
+        finalizationPolicy: taskFinalizationPolicySchema.describe(
+          'Determines when the task is finalized: all_assignees waits for every assigned task to be completed; any_assignee finalizes after the first assigned task is completed'
         )
       })
     ),

@@ -1,4 +1,4 @@
-import { FormDefinition, JsonSchema, TaskCompletionPolicy } from '@ailaflow/shared';
+import { FormDefinition, JsonSchema, TaskFinalizationPolicy } from '@ailaflow/shared';
 import { TaskVariables } from './task-variables';
 import { randomUUID } from 'node:crypto';
 
@@ -12,7 +12,8 @@ export class Task {
     outputVariableSchemas: Record<string, JsonSchema> | null,
     form: FormDefinition | null,
     deadline: number | null,
-    completionPolicy: TaskCompletionPolicy
+    finalizationPolicy: TaskFinalizationPolicy,
+    metadataVariableName: string | null
   ) {
     const id = randomUUID();
     const createdAt = Date.now();
@@ -26,8 +27,10 @@ export class Task {
       outputVariableSchemas,
       form,
       deadline,
-      completionPolicy,
-      createdAt
+      finalizationPolicy,
+      metadataVariableName,
+      createdAt,
+      null
     );
   }
 
@@ -43,12 +46,18 @@ export class Task {
     public readonly outputVariableSchemas: Record<string, JsonSchema> | null,
     public readonly form: FormDefinition | null,
     public readonly deadline: number | null,
-    public readonly completionPolicy: TaskCompletionPolicy,
-    public readonly createdAt: number
+    public readonly finalizationPolicy: TaskFinalizationPolicy,
+    public readonly metadataVariableName: string | null,
+    public readonly createdAt: number,
+    public finalizedAt: number | null
   ) {}
 
   public canReadInputVariable(variableName: string): boolean {
     return this.inputVariableNames.includes(variableName);
+  }
+
+  public finalize() {
+    this.finalizedAt = Date.now();
   }
 
   public get variables(): TaskVariables {

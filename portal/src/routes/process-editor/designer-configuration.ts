@@ -10,7 +10,7 @@ import {
   ReturnStep,
   ProcessDefinition,
   PROCESS_VERSION,
-  TaskCompletionPolicy
+  TaskFinalizationPolicy
 } from '@ailaflow/shared';
 
 export function createBlankDefinition(): ProcessDefinition {
@@ -111,7 +111,7 @@ const taskStep: Omit<TaskStep, 'id'> = {
     outputVariableNames: [],
     userExpression: { type: 'string', value: '' },
     form: createEmptyFormDefinition(),
-    completionPolicy: TaskCompletionPolicy.ALL_ASSIGNEES
+    finalizationPolicy: TaskFinalizationPolicy.ALL_ASSIGNEES
   }
 };
 

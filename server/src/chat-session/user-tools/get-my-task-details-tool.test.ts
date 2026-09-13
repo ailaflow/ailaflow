@@ -12,7 +12,7 @@ import { GetMyTaskDetailsTool } from './get-my-task-details-tool';
 test('returns all task input values, output schemas, and no other execution values', async () => {
   const abortSignal = new AbortController().signal;
   const userAssignedTaskProvider = {
-    tryGet: async (_: AbortSignal, isTest: boolean, userName: string, taskId: string) => {
+    tryGetCompletable: async (_: AbortSignal, isTest: boolean, userName: string, taskId: string) => {
       assert.equal(isTest, true);
       assert.equal(userName, 'alice');
       assert.equal(taskId, 'task_1');

@@ -45,7 +45,8 @@ export const taskStepActivity = createSignalActivity<TaskStep, ProcessExecutionG
       title,
       userExpression,
       deadline,
-      step.properties.completionPolicy,
+      step.properties.finalizationPolicy,
+      step.properties.metadataVariableName ?? null,
       step.properties.inputVariableNames,
       step.properties.outputVariableNames.length > 0 ? outputVariableSchemas : null,
       step.properties.form
@@ -60,6 +61,10 @@ export const taskStepActivity = createSignalActivity<TaskStep, ProcessExecutionG
     for (const name of step.properties.outputVariableNames) {
       const value = payload[name];
       variables.set(name, value);
+    }
+    if (step.properties.metadataVariableName) {
+      const value = payload[step.properties.metadataVariableName];
+      variables.set(step.properties.metadataVariableName, value);
     }
   }
 });

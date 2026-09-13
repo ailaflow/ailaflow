@@ -12,4 +12,5 @@ export interface TaskRepository extends Repository {
   tryGet(abortSignal: AbortSignal, id: string): Promise<Task | null>;
   insert(abortSignal: AbortSignal, task: Task): Promise<void>;
   delete(abortSignal: AbortSignal, id: string): Promise<boolean>;
+  update(abortSignal: AbortSignal, task: Task): Promise<void>;
 }

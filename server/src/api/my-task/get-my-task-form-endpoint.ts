@@ -22,7 +22,7 @@ export class GetMyTaskFormEndpoint implements Endpoint {
 
     const { isTest, userName } = authToken.maybeOverrideTestUserName(request.testUserName);
 
-    const userAssignedTask = await this.userAssignedTaskProvider.tryGet(abortSignal, isTest, userName, taskId);
+    const userAssignedTask = await this.userAssignedTaskProvider.tryGetCompletable(abortSignal, isTest, userName, taskId);
     if (!userAssignedTask) {
       throw new EndpointError('Task not found', 404);
     }

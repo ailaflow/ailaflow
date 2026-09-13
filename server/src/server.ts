@@ -151,7 +151,8 @@ import { TelegramSynchronizationManager } from './telegram/telegram-synchronizat
 import { TelegramConfigurationChangedEventHandler } from './events/telegram-configuration/telegram-configuration-changed-event-handler';
 import { GetStartedByRpcHandler } from './process-executor/rpc-handlers/get-started-by-rpc-handler';
 import { ProcessExecutionResumeListenerStore } from './process-executor/process-execution-resume-listener-store';
-import { TaskResumer } from './task/task-resumer';
+import { AssignedTaskCompleter } from './task/assigned-task-completer';
+import { TaskFinalizer } from './task/task-finalizer';
 import { SubmitMyTaskTool } from './chat-session/user-tools/submit-my-task-tool';
 import { ProcessManager } from './process/process-manager';
 import { ProcessDefinitionUpgrader } from './process/process-definition-upgrader';
@@ -343,12 +344,17 @@ export class Server {
     const userProcessProvider = new UserProcessProvider(myProcessAccessQuerier, processManager);
     const userAssignedTaskProvider = new UserAssignedTaskProvider(taskRepository, assignedTaskRepository);
     const userTaskDetailsProvider = new UserTaskDetailsProvider(userAssignedTaskProvider, persistedExecutionRepository);
-    const taskResumer = new TaskResumer(
+    const taskFinalizer = new TaskFinalizer(
+      assignedTaskRepository,
+      taskRepository,
+      incompleteAssignedTaskCountQuerier,
+      processExecutionResumer
+    );
+    const assignedTaskCompleter = new AssignedTaskCompleter(
       userAssignedTaskProvider,
       userChatSessionProvider,
       assignedTaskRepository,
-      incompleteAssignedTaskCountQuerier,
-      processExecutionResumer
+      taskFinalizer
     );
     const taskDeleter = new TaskDeleter(taskRepository, persistedExecutionRepository);
 
@@ -358,7 +364,7 @@ export class Server {
       new GetMyTaskDetailsTool(userTaskDetailsProvider),
       new StartMyProcessTool(userProcessProvider, lazyProcessExecutor),
       new OpenMyProcessStartFormTool(userProcessProvider),
-      new SubmitMyTaskTool(taskResumer)
+      new SubmitMyTaskTool(assignedTaskCompleter)
     ]);
 
     const adminToolSetProvider = new ToolSetProvider([
@@ -418,7 +424,7 @@ export class Server {
       new DeleteTaskEndpoint(taskDeleter),
       new GetMyTaskFormEndpoint(userAssignedTaskProvider),
       new GetTaskVariableValueEndpoint(userTaskDetailsProvider),
-      new SubmitMyTaskEndpoint(taskResumer),
+      new SubmitMyTaskEndpoint(assignedTaskCompleter),
       new GetMyProcessStartFormEndpoint(userProcessProvider),
       new StartMyProcessEndpoint(userProcessProvider, lazyProcessExecutor, sessionManager),
       new GetProcessesEndpoint(processListQuerier),

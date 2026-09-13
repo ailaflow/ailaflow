@@ -2,7 +2,7 @@ import { useStepEditor } from 'sequential-workflow-designer-react';
 import { DesignerEditorView } from '../../../views/process-editor/designer/designer-editor-view';
 import { StepEditorProps } from './step-editor';
 import { StringEditorPropertyView } from '../../../views/process-editor/designer/string-editor-property-view';
-import { ProcessDefinition, TaskCompletionPolicy, TaskDeadlinePreset, TaskStep } from '@ailaflow/shared';
+import { ProcessDefinition, TaskFinalizationPolicy, TaskDeadlinePreset, TaskStep } from '@ailaflow/shared';
 import { EditorPropertyView } from '../../../views/process-editor/designer/editor-property-view';
 import { EnabledSubValuePreviewView } from '../../../views/process-editor/designer/sub-value-preview-view';
 import { DefinitionPath } from '../../../core/definition-path';
@@ -87,15 +87,15 @@ export function TaskStepEditor(props: StepEditorProps) {
         error={errors['properties.deadline']}
       />
 
-      <DropdownPropertyView<TaskCompletionPolicy>
-        label="Completion Policy"
-        value={properties.completionPolicy}
+      <DropdownPropertyView<TaskFinalizationPolicy>
+        label="Finalization Policy"
+        value={properties.finalizationPolicy}
         options={[
-          { label: 'All assignees', value: TaskCompletionPolicy.ALL_ASSIGNEES },
-          { label: 'Any assignee', value: TaskCompletionPolicy.ANY_ASSIGNEE }
+          { label: 'After all assigned tasks are completed', value: TaskFinalizationPolicy.ALL_ASSIGNEES },
+          { label: 'After any assigned task is completed', value: TaskFinalizationPolicy.ANY_ASSIGNEE }
         ]}
-        onValueChanged={value => setProperty('completionPolicy', value)}
-        error={errors['properties.completionPolicy']}
+        onValueChanged={value => setProperty('finalizationPolicy', value)}
+        error={errors['properties.finalizationPolicy']}
       />
     </DesignerEditorView>
   );

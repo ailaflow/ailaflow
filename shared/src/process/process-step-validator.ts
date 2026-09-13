@@ -7,6 +7,7 @@ import { UserAccessExpressionParser } from '../user-access';
 import { ScriptDefinitionValidator } from './script-definition-validator';
 import { TaskStepValidator } from './task-step-validator';
 import { TaskDeadlinePresetValidator } from '../task';
+import { TaskCompletionMetadataSchemaValidator } from '../task/task-completion-metadata';
 
 export class ProcessStepValidator {
   public constructor(
@@ -100,7 +101,19 @@ export class ProcessStepValidator {
       errors['properties.deadline'] = deadlineError;
     }
 
-    // TODO: validate type.
+    if (step.properties.metadataVariableName) {
+      const variable = this.variableValidator.tryGet(step.properties.metadataVariableName, definition);
+      let error: string | null = null;
+      if (variable) {
+        error = TaskCompletionMetadataSchemaValidator.validate(variable.schema);
+      } else {
+        error = 'No variable with the specified name exists';
+      }
+      if (error) {
+        errors['properties.metadataVariableName'] = error;
+      }
+    }
+
     const metadataVariableError = step.properties.metadataVariableName
       ? this.variableValidator.validateVariableType(step.properties.metadataVariableName, 'object', definition)
       : null;
