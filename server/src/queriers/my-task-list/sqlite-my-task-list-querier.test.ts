@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
 import test from 'node:test';
+import { TaskCompletionPolicy } from '@ailaflow/shared';
 import { SqliteDatabases } from '../../core/sqlite-databases';
 import { AssignedTask } from '../../repositories/task/assigned-task';
 import { SqliteAssignedTaskRepository } from '../../repositories/task/sqlite-assigned-task-repository';
@@ -27,15 +28,102 @@ test('queries tasks assigned to the current user', async () => {
   await userRepository.insert(abortSignal, new User('alice', 'hash', false));
   await userRepository.insert(abortSignal, new User('bob', 'hash', false));
 
-  await taskRepository.insert(abortSignal, new Task('task_1', 'Open outdated', false, 'alice', 'execution_1', [], null, null, 4000, 1000));
-  await taskRepository.insert(abortSignal, new Task('task_2', 'Open current', false, 'alice', 'execution_1', [], null, null, 6000, 1001));
   await taskRepository.insert(
     abortSignal,
-    new Task('task_3', 'Completed outdated', false, 'alice', 'execution_1', [], null, null, 3000, 1002)
+    new Task(
+      'task_1',
+      'Open outdated',
+      false,
+      'alice',
+      'execution_1',
+      [],
+      null,
+      null,
+      4000,
+      TaskCompletionPolicy.ALL_ASSIGNEES,
+      1000
+    )
   );
-  await taskRepository.insert(abortSignal, new Task('task_4', 'Other user', false, 'bob', 'execution_1', [], null, null, 3000, 1003));
-  await taskRepository.insert(abortSignal, new Task('task_5', 'No deadline', false, 'alice', 'execution_1', [], null, null, null, 1004));
-  await taskRepository.insert(abortSignal, new Task('task_6', 'Test task', true, 'alice', 'execution_2', [], null, null, null, 1005));
+  await taskRepository.insert(
+    abortSignal,
+    new Task(
+      'task_2',
+      'Open current',
+      false,
+      'alice',
+      'execution_1',
+      [],
+      null,
+      null,
+      6000,
+      TaskCompletionPolicy.ALL_ASSIGNEES,
+      1001
+    )
+  );
+  await taskRepository.insert(
+    abortSignal,
+    new Task(
+      'task_3',
+      'Completed outdated',
+      false,
+      'alice',
+      'execution_1',
+      [],
+      null,
+      null,
+      3000,
+      TaskCompletionPolicy.ALL_ASSIGNEES,
+      1002
+    )
+  );
+  await taskRepository.insert(
+    abortSignal,
+    new Task(
+      'task_4',
+      'Other user',
+      false,
+      'bob',
+      'execution_1',
+      [],
+      null,
+      null,
+      3000,
+      TaskCompletionPolicy.ALL_ASSIGNEES,
+      1003
+    )
+  );
+  await taskRepository.insert(
+    abortSignal,
+    new Task(
+      'task_5',
+      'No deadline',
+      false,
+      'alice',
+      'execution_1',
+      [],
+      null,
+      null,
+      null,
+      TaskCompletionPolicy.ALL_ASSIGNEES,
+      1004
+    )
+  );
+  await taskRepository.insert(
+    abortSignal,
+    new Task(
+      'task_6',
+      'Test task',
+      true,
+      'alice',
+      'execution_2',
+      [],
+      null,
+      null,
+      null,
+      TaskCompletionPolicy.ALL_ASSIGNEES,
+      1005
+    )
+  );
 
   await assignedTaskRepository.upsertMultiple(abortSignal, [
     AssignedTask.create('task_1', 'alice', 'default'),

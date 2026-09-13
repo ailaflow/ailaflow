@@ -1,5 +1,5 @@
 import { DatabaseSync } from 'node:sqlite';
-import { FormDefinition, JsonSchema } from '@ailaflow/shared';
+import { FormDefinition, JsonSchema, taskCompletionPolicySchema } from '@ailaflow/shared';
 import { SqliteDatabases } from '../../core/sqlite-databases';
 import { Task } from './task';
 import { TaskRepository } from './task-repository';
@@ -23,6 +23,7 @@ export class SqliteTaskRepository implements TaskRepository {
         outputVariableSchemas TEXT,
         form TEXT,
         deadline INTEGER,
+        completionPolicy TEXT NOT NULL,
         createdAt INTEGER NOT NULL
       ) STRICT
     `);
@@ -44,6 +45,7 @@ export class SqliteTaskRepository implements TaskRepository {
         outputVariableSchemas,
         form,
         deadline,
+        completionPolicy,
         createdAt
       FROM tasks
       WHERE id = ?
@@ -60,6 +62,7 @@ export class SqliteTaskRepository implements TaskRepository {
           outputVariableSchemas: string | null;
           form: string | null;
           deadline: number | null;
+          completionPolicy: string;
           createdAt: number;
         }
       | undefined;
@@ -79,9 +82,10 @@ export class SqliteTaskRepository implements TaskRepository {
         outputVariableSchemas,
         form,
         deadline,
+        completionPolicy,
         createdAt
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
     statement.run(
       task.id,
@@ -93,6 +97,7 @@ export class SqliteTaskRepository implements TaskRepository {
       serializeOutputVariableSchemas(task.outputVariableSchemas),
       serializeForm(task.form),
       task.deadline,
+      task.completionPolicy,
       task.createdAt
     );
   }
@@ -116,6 +121,7 @@ function deserializeTask(row: {
   outputVariableSchemas: string | null;
   form: string | null;
   deadline: number | null;
+  completionPolicy: string;
   createdAt: number;
 }): Task {
   return new Task(
@@ -128,6 +134,7 @@ function deserializeTask(row: {
     row.outputVariableSchemas ? (JSON.parse(row.outputVariableSchemas) as Record<string, JsonSchema>) : null,
     row.form ? (JSON.parse(row.form) as FormDefinition) : null,
     row.deadline,
+    taskCompletionPolicySchema.parse(row.completionPolicy),
     row.createdAt
   );
 }

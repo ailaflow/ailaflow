@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
 import test from 'node:test';
+import { TaskCompletionPolicy } from '@ailaflow/shared';
 import { SqliteDatabases } from '../../core/sqlite-databases';
 import { AssignedTask } from '../../repositories/task/assigned-task';
 import { SqliteAssignedTaskRepository } from '../../repositories/task/sqlite-assigned-task-repository';
@@ -109,6 +110,18 @@ async function insertTask(
 ): Promise<void> {
   await repository.insert(
     abortSignal,
-    new Task(id, `${id} title`, isTest, `${id} creator`, `${id} execution`, [], null, null, deadline, createdAt)
+    new Task(
+      id,
+      `${id} title`,
+      isTest,
+      `${id} creator`,
+      `${id} execution`,
+      [],
+      null,
+      null,
+      deadline,
+      TaskCompletionPolicy.ALL_ASSIGNEES,
+      createdAt
+    )
   );
 }

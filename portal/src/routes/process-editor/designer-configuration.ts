@@ -36,7 +36,7 @@ export function createEmptyFormDefinition(): FormDefinition {
 function createEmptyScriptDefinition(): ScriptDefinition {
   const SCRIPT_PACKAGE_JSON = JSON.stringify(
     {
-      name: 'process-script',
+      name: 'script',
       private: true,
       dependencies: {
         '@ailaflow/bridge-lib': 'file:/bridge/lib'

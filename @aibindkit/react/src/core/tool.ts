@@ -1,9 +1,9 @@
 import * as z from 'zod/v4';
-import { AiBinding } from './binding';
+import { AiBinding, AiToolInputZod } from './binding';
 
 interface AiToolBuilderState {
   description: string;
-  inputZod?: z.ZodObject;
+  inputZod?: AiToolInputZod;
 }
 
 export type AiToolRecords = Record<string, AiToolBuilder<any>>;
@@ -18,7 +18,7 @@ export class AiToolBuilder<Input = any> {
 
   public constructor(private readonly state: AiToolBuilderState) {}
 
-  public input<S extends z.ZodObject>(zod: S): AiToolBuilder<z.infer<S>> {
+  public input<S extends AiToolInputZod>(zod: S): AiToolBuilder<z.infer<S>> {
     this.state.inputZod = zod;
     return new AiToolBuilder<z.infer<S>>(this.state);
   }

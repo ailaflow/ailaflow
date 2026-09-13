@@ -1,6 +1,6 @@
 import * as z from 'zod/v4';
 import { route, routeStoreFactory, tool } from '@aibindkit/react';
-import { jsonSchema, taskCompletionPolicySchema } from '@ailaflow/shared';
+import { jsonSchema, taskCompletionPolicySchema, taskDeadlinePresetSchema } from '@ailaflow/shared';
 
 // Conventions:
 // - don't add a dot `.` at the end of the description to reduce amount of tokens.
@@ -218,17 +218,29 @@ const processEditorRoute = route('processEditor')
         variableName: z.string().nullable().describe('An object variable name, or null or an empty string to clear')
       })
     ),
-    taskStep_setDeadline: tool('Set or clear the task deadline').input(
-      z.object({
-        stepId: z.string().describe('The ID of the task step to update'),
-        deadline: z.string().nullable().describe('Date string with an explicit time zone or Unix timestamp in milliseconds; null to clear')
-      })
-    ),
-    taskStep_setDeadlineVariableName: tool('Set the string variable containing the task deadline').input(
-      z.object({
-        stepId: z.string().describe('The ID of the task step to update'),
-        variableName: z.string().describe('The string variable name containing the deadline')
-      })
+    taskStep_setDeadline: tool('Set or clear the task deadline using a preset or string variable').input(
+      z.discriminatedUnion('action', [
+        z
+          .object({
+            stepId: z.string().describe('The ID of the task step to update'),
+            action: z.literal('preset').describe('Set the deadline from a preset'),
+            preset: taskDeadlinePresetSchema.describe('The deadline preset')
+          })
+          .strict(),
+        z
+          .object({
+            stepId: z.string().describe('The ID of the task step to update'),
+            action: z.literal('variable').describe('Set the deadline from a string variable'),
+            variableName: z.string().describe('The string variable name containing the deadline preset')
+          })
+          .strict(),
+        z
+          .object({
+            stepId: z.string().describe('The ID of the task step to update'),
+            action: z.literal('unset').describe('Clear the deadline')
+          })
+          .strict()
+      ])
     ),
     taskStep_setCompletionPolicy: tool('Set the task completion policy').input(
       z.object({

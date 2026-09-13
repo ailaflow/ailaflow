@@ -1,6 +1,26 @@
-import { JsonSchema, TaskStep } from '@ailaflow/shared';
+import { JsonSchema, TaskDeadlinePresetEvaluator, TaskStep } from '@ailaflow/shared';
 import { createSignalActivity, SignalPayload } from 'sequential-workflow-machine';
 import { ProcessExecutionGlobalState } from '../process-execution-global-state';
+import { ProcessVariableManager } from '../services/process-variable-manager';
+
+function evaluateDeadline(step: TaskStep, variables: ProcessVariableManager): number | null {
+  let deadline: number | null = null;
+  if (step.properties.deadline) {
+    const now = Date.now();
+    if (step.properties.deadline.type === 'string') {
+      deadline = TaskDeadlinePresetEvaluator.evaluate(step.properties.deadline.value) + now;
+    } else if (step.properties.deadline.type === 'variable') {
+      const value = variables.get(step.properties.deadline.name);
+      if (typeof value === 'string') {
+        deadline = new Date(value).getTime() + now;
+      }
+    }
+    if (deadline !== null && deadline <= now) {
+      throw new Error(`Deadline is set in the past: ${new Date(deadline).toISOString()}`);
+    }
+  }
+  return deadline;
+}
 
 export const taskStepActivity = createSignalActivity<TaskStep, ProcessExecutionGlobalState>('task', {
   init: () => ({}),
@@ -15,6 +35,8 @@ export const taskStepActivity = createSignalActivity<TaskStep, ProcessExecutionG
       outputVariableSchemas[name] = globalState.variables.getSchema(name);
     }
 
+    const deadline = evaluateDeadline(step, globalState.variables);
+
     await globalState.taskCreator.create(
       abortSignal,
       globalState.context.isTest,
@@ -22,6 +44,8 @@ export const taskStepActivity = createSignalActivity<TaskStep, ProcessExecutionG
       globalState.executionId,
       title,
       userExpression,
+      deadline,
+      step.properties.completionPolicy,
       step.properties.inputVariableNames,
       step.properties.outputVariableNames.length > 0 ? outputVariableSchemas : null,
       step.properties.form

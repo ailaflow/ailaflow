@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
 import test from 'node:test';
+import { TaskCompletionPolicy } from '@ailaflow/shared';
 import { SqliteDatabases } from '../../core/sqlite-databases';
 import { User } from '../user/user';
 import { SqliteUserRepository } from '../user/sqlite-user-repository';
@@ -27,8 +28,32 @@ test('assigned tasks can be upserted and queried by task and user', async () => 
   await userRepository.insert(abortSignal, user1);
   await userRepository.insert(abortSignal, user2);
 
-  const task1 = new Task('task_1', 'Review request', false, 'user_1', 'execution_1', [], null, null, null, 1000);
-  const task2 = new Task('task_2', 'Approve request', false, 'user_1', 'execution_1', [], null, null, null, 1001);
+  const task1 = new Task(
+    'task_1',
+    'Review request',
+    false,
+    'user_1',
+    'execution_1',
+    [],
+    null,
+    null,
+    null,
+    TaskCompletionPolicy.ALL_ASSIGNEES,
+    1000
+  );
+  const task2 = new Task(
+    'task_2',
+    'Approve request',
+    false,
+    'user_1',
+    'execution_1',
+    [],
+    null,
+    null,
+    null,
+    TaskCompletionPolicy.ANY_ASSIGNEE,
+    1001
+  );
   await taskRepository.insert(abortSignal, task1);
   await taskRepository.insert(abortSignal, task2);
 

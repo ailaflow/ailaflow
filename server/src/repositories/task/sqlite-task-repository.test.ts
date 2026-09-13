@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
 import test from 'node:test';
+import { TaskCompletionPolicy } from '@ailaflow/shared';
 import { SqliteDatabases } from '../../core/sqlite-databases';
 import { Task } from './task';
 import { SqliteTaskRepository } from './sqlite-task-repository';
@@ -17,12 +18,39 @@ test('task insert does not overwrite an existing task', async () => {
 
   await repository.setup(abortSignal);
 
-  await repository.insert(abortSignal, new Task('task_1', 'Original task', true, 'creator_1', 'execution_1', [], null, null, null, 1000));
+  await repository.insert(
+    abortSignal,
+    new Task(
+      'task_1',
+      'Original task',
+      true,
+      'creator_1',
+      'execution_1',
+      [],
+      null,
+      null,
+      null,
+      TaskCompletionPolicy.ALL_ASSIGNEES,
+      1000
+    )
+  );
 
   await assert.rejects(() =>
     repository.insert(
       abortSignal,
-      new Task('task_1', 'Changed task', false, 'creator_2', 'execution_2', ['input'], { output: { type: 'string' } }, null, null, 2000)
+      new Task(
+        'task_1',
+        'Changed task',
+        false,
+        'creator_2',
+        'execution_2',
+        ['input'],
+        { output: { type: 'string' } },
+        null,
+        null,
+        TaskCompletionPolicy.ANY_ASSIGNEE,
+        2000
+      )
     )
   );
 
@@ -30,7 +58,7 @@ test('task insert does not overwrite an existing task', async () => {
     ...db
       .prepare(
         `
-        SELECT title, isTest, createdBy, executionId, inputVariableNames, outputVariableSchemas, createdAt
+        SELECT title, isTest, createdBy, executionId, inputVariableNames, outputVariableSchemas, completionPolicy, createdAt
         FROM tasks
         WHERE id = ?
       `
@@ -43,6 +71,7 @@ test('task insert does not overwrite an existing task', async () => {
     executionId: string;
     inputVariableNames: string;
     outputVariableSchemas: string | null;
+    completionPolicy: string;
     createdAt: number;
   };
   assert.deepEqual(row, {
@@ -52,6 +81,7 @@ test('task insert does not overwrite an existing task', async () => {
     executionId: 'execution_1',
     inputVariableNames: '[]',
     outputVariableSchemas: null,
+    completionPolicy: TaskCompletionPolicy.ALL_ASSIGNEES,
     createdAt: 1000
   });
 
@@ -78,6 +108,7 @@ test('task can be fetched by id', async () => {
       inputExamples: []
     },
     2000,
+    TaskCompletionPolicy.ANY_ASSIGNEE,
     1000
   );
 
@@ -103,7 +134,22 @@ test('task can be deleted with its assignments', async () => {
   await taskRepository.setup(abortSignal);
   await assignedTaskRepository.setup(abortSignal);
   await userRepository.insert(abortSignal, new User('user_1', 'hash', false));
-  await taskRepository.insert(abortSignal, new Task('task_1', 'Task', false, 'creator_1', 'execution_1', [], null, null, null, 1000));
+  await taskRepository.insert(
+    abortSignal,
+    new Task(
+      'task_1',
+      'Task',
+      false,
+      'creator_1',
+      'execution_1',
+      [],
+      null,
+      null,
+      null,
+      TaskCompletionPolicy.ALL_ASSIGNEES,
+      1000
+    )
+  );
   await assignedTaskRepository.upsert(abortSignal, AssignedTask.create('task_1', 'user_1', 'default'));
 
   assert.equal(await taskRepository.delete(abortSignal, 'task_1'), true);

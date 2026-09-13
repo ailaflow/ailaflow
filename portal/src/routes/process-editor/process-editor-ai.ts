@@ -7,7 +7,6 @@ import {
   AgentStep,
   anyStepSchema,
   NotificationStep,
-  ProcessDateParser,
   ProcessRootVariableValidator,
   ReturnStep,
   ScriptStep,
@@ -387,23 +386,17 @@ export function useProcessEditorAi(state: ProcessEditorState, save: () => Promis
         },
         async taskStep_setDeadline(arg) {
           const step = state.getStep<TaskStep>(arg.stepId, 'task');
-          if (arg.deadline !== null) {
-            const error = ProcessDateParser.validate(arg.deadline);
+          if (arg.action === 'preset') {
+            step.properties.deadline = { type: 'string', value: arg.preset };
+          } else if (arg.action === 'variable') {
+            const error = state.variableValidator.validateVariableType(arg.variableName, 'string', state.definition.value);
             if (error) {
-              return toolError(`${error}; the deadline was not updated`);
+              return toolError(error);
             }
+            step.properties.deadline = { type: 'variable', name: arg.variableName };
+          } else {
+            step.properties.deadline = undefined;
           }
-          step.properties.deadline = arg.deadline === null ? undefined : { type: 'string', value: arg.deadline };
-          state.notifyDefinitionChange();
-          return toolSuccess('Deadline was updated');
-        },
-        async taskStep_setDeadlineVariableName(arg) {
-          const step = state.getStep<TaskStep>(arg.stepId, 'task');
-          const error = state.variableValidator.validateVariableType(arg.variableName, 'string', state.definition.value);
-          if (error) {
-            return toolError(error);
-          }
-          step.properties.deadline = { type: 'variable', name: arg.variableName };
           state.notifyDefinitionChange();
           return toolSuccess('Deadline was updated');
         },

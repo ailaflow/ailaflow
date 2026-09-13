@@ -6,7 +6,7 @@ import { ProcessDefinition } from './process-definition';
 import { UserAccessExpressionParser } from '../user-access';
 import { ScriptDefinitionValidator } from './script-definition-validator';
 import { TaskStepValidator } from './task-step-validator';
-import { ProcessDateParser } from './process-date-parser';
+import { TaskDeadlinePresetValidator } from '../task';
 
 export class ProcessStepValidator {
   public constructor(
@@ -94,7 +94,7 @@ export class ProcessStepValidator {
     }
 
     const deadlineError = step.properties.deadline
-      ? this.validateStringOrVariable(step.properties.deadline, definition, v => ProcessDateParser.validate(v))
+      ? this.validateStringOrVariable(step.properties.deadline, definition, preset => TaskDeadlinePresetValidator.validate(preset))
       : null;
     if (deadlineError) {
       errors['properties.deadline'] = deadlineError;

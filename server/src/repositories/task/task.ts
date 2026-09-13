@@ -1,4 +1,4 @@
-import { FormDefinition, JsonSchema } from '@ailaflow/shared';
+import { FormDefinition, JsonSchema, TaskCompletionPolicy } from '@ailaflow/shared';
 import { TaskVariables } from './task-variables';
 import { randomUUID } from 'node:crypto';
 
@@ -11,11 +11,24 @@ export class Task {
     inputVariableNames: string[],
     outputVariableSchemas: Record<string, JsonSchema> | null,
     form: FormDefinition | null,
-    deadline: number | null
+    deadline: number | null,
+    completionPolicy: TaskCompletionPolicy
   ) {
     const id = randomUUID();
     const createdAt = Date.now();
-    return new Task(id, title, isTest, createdBy, executionId, inputVariableNames, outputVariableSchemas, form, deadline, createdAt);
+    return new Task(
+      id,
+      title,
+      isTest,
+      createdBy,
+      executionId,
+      inputVariableNames,
+      outputVariableSchemas,
+      form,
+      deadline,
+      completionPolicy,
+      createdAt
+    );
   }
 
   private variablesCache: TaskVariables | null = null;
@@ -30,6 +43,7 @@ export class Task {
     public readonly outputVariableSchemas: Record<string, JsonSchema> | null,
     public readonly form: FormDefinition | null,
     public readonly deadline: number | null,
+    public readonly completionPolicy: TaskCompletionPolicy,
     public readonly createdAt: number
   ) {}
 

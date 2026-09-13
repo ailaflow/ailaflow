@@ -2,11 +2,13 @@ import type { ToolDescriptor } from '@aibindkit/core';
 import * as z from 'zod/v4';
 import { AiBindingsFromTools, AiToolRecords } from './tool';
 
+export type AiToolInputZod = z.ZodObject | z.ZodDiscriminatedUnion;
+
 export interface AiBinding<Input = any, Name extends string = string> {
   readonly __input?: Input;
   name: Name;
   description: string;
-  inputZod?: z.ZodObject;
+  inputZod?: AiToolInputZod;
   inputSchema?: ToolDescriptor['function']['parameters'];
 }
 

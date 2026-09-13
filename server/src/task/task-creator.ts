@@ -1,4 +1,4 @@
-import { FormDefinition, JsonSchema, UserAccessExpressionParser } from '@ailaflow/shared';
+import { FormDefinition, JsonSchema, TaskCompletionPolicy, UserAccessExpressionParser } from '@ailaflow/shared';
 import { AssignedTaskRepository } from '../repositories/task/assigned-task-repository';
 import { TaskRepository } from '../repositories/task/task-repository';
 import { UserAccessExpressionUserQuerier } from '../queriers/user-access-expression/user-access-expression-user-querier';
@@ -21,6 +21,8 @@ export class TaskCreator {
     executionId: string,
     title: string,
     userExpression: string,
+    deadline: number | null,
+    completionPolicy: TaskCompletionPolicy,
     inputVariableNames: string[],
     outputVariableSchemas: Record<string, JsonSchema> | null,
     form: FormDefinition
@@ -28,7 +30,17 @@ export class TaskCreator {
     const parsedExpression = UserAccessExpressionParser.parse(userExpression);
     const userNames = await this.userAccessExpressionUserQuerier.queryUserNames(abortSignal, parsedExpression);
 
-    const task = Task.create(title, isTest, createdBy, executionId, inputVariableNames, outputVariableSchemas, form, null);
+    const task = Task.create(
+      title,
+      isTest,
+      createdBy,
+      executionId,
+      inputVariableNames,
+      outputVariableSchemas,
+      form,
+      deadline,
+      completionPolicy
+    );
 
     const channelName = this.userChatSessionProvider.getDefaultChannelName();
 
