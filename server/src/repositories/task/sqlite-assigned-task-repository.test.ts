@@ -3,6 +3,7 @@ import { DatabaseSync } from 'node:sqlite';
 import test from 'node:test';
 import { TaskFinalizationPolicy } from '@ailaflow/shared';
 import { SqliteDatabases } from '../../core/sqlite-databases';
+import { AsyncMutex } from '../../core/async-mutex';
 import { User } from '../user/user';
 import { SqliteUserRepository } from '../user/sqlite-user-repository';
 import { Task } from './task';
@@ -13,7 +14,7 @@ import { SqliteAssignedTaskRepository } from './sqlite-assigned-task-repository'
 test('assigned tasks can be upserted and queried by task and user', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
   db.exec(`PRAGMA foreign_keys = ON`);
-  const dbs = { modelDb: db } as SqliteDatabases;
+  const dbs = { modelDb: db, modelDbMutex: new AsyncMutex() } as SqliteDatabases;
   const abortSignal = new AbortController().signal;
 
   const userRepository = new SqliteUserRepository(dbs);
@@ -65,6 +66,7 @@ test('assigned tasks can be upserted and queried by task and user', async () => 
   await taskRepository.insert(abortSignal, task1);
   await taskRepository.insert(abortSignal, task2);
 
+  await assert.rejects(() => assignedTaskRepository.upsert(abortSignal, AssignedTask.create('missing', user1.name, 'default')));
   await assignedTaskRepository.upsert(abortSignal, AssignedTask.create(task1.id, user1.name, 'default'));
   await assignedTaskRepository.upsertMultiple(abortSignal, [
     AssignedTask.create(task1.id, user2.name, 'telegram'),

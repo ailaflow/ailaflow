@@ -5,12 +5,15 @@ import { AssignedTaskRepository } from './assigned-task-repository';
 import { AssignedTask } from './assigned-task';
 import { Transaction } from '../../core/transaction';
 import { SqliteTransaction } from '../../core/sqlite-transaction';
+import { AsyncMutex } from '../../core/async-mutex';
 
 export class SqliteAssignedTaskRepository implements AssignedTaskRepository {
   private readonly db: DatabaseSync;
+  private readonly dbMutex: AsyncMutex;
 
   public constructor(dbs: SqliteDatabases) {
     this.db = dbs.modelDb;
+    this.dbMutex = dbs.modelDbMutex;
   }
 
   public async setup(_: AbortSignal): Promise<void> {
@@ -78,7 +81,7 @@ export class SqliteAssignedTaskRepository implements AssignedTaskRepository {
   public async upsert(_: AbortSignal, assignedTask: AssignedTask, transaction?: Transaction): Promise<void> {
     const statement = this.createUpsertStatement();
 
-    const t = await SqliteTransaction.begin(this.db, transaction);
+    const t = await SqliteTransaction.begin(this.db, this.dbMutex, transaction);
     try {
       this.runUpsert(statement, assignedTask);
       await t.commit();
@@ -94,7 +97,7 @@ export class SqliteAssignedTaskRepository implements AssignedTaskRepository {
     }
 
     const statement = this.createUpsertStatement();
-    const t = await SqliteTransaction.begin(this.db, transaction);
+    const t = await SqliteTransaction.begin(this.db, this.dbMutex, transaction);
     try {
       for (const assignedTask of assignedTasks) {
         this.runUpsert(statement, assignedTask);

@@ -2,10 +2,13 @@ import { DatabaseSync } from 'node:sqlite';
 import { ServerPaths } from './server-paths';
 import { mkdirSync } from 'node:fs';
 import { join } from 'node:path';
+import { AsyncMutex } from './async-mutex';
 
 export class SqliteDatabases {
   public readonly modelDb: DatabaseSync;
+  public readonly modelDbMutex = new AsyncMutex();
   public readonly dataDb: DatabaseSync;
+  public readonly dataDbMutex = new AsyncMutex();
   private readonly dbs: DatabaseSync[] = [];
 
   public constructor(serverPaths: ServerPaths) {

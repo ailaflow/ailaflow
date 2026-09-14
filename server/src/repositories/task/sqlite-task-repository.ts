@@ -5,12 +5,15 @@ import { Task } from './task';
 import { TaskRepository } from './task-repository';
 import { Transaction } from '../../core/transaction';
 import { SqliteTransaction } from '../../core/sqlite-transaction';
+import { AsyncMutex } from '../../core/async-mutex';
 
 export class SqliteTaskRepository implements TaskRepository {
   private readonly db: DatabaseSync;
+  private readonly dbMutex: AsyncMutex;
 
   public constructor(dbs: SqliteDatabases) {
     this.db = dbs.modelDb;
+    this.dbMutex = dbs.modelDbMutex;
   }
 
   public async setup(_: AbortSignal): Promise<void> {
@@ -136,7 +139,7 @@ export class SqliteTaskRepository implements TaskRepository {
   }
 
   public async incrementFinalizationRequestCount(_: AbortSignal, id: string, delta: number, transaction?: Transaction): Promise<void> {
-    const t = await SqliteTransaction.begin(this.db, transaction);
+    const t = await SqliteTransaction.begin(this.db, this.dbMutex, transaction);
     try {
       const statement = this.db.prepare(`
       UPDATE tasks
