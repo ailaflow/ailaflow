@@ -1,4 +1,5 @@
 import { Repository } from '../repository';
+import { Transaction } from '../../core/transaction';
 import { Task } from './task';
 
 export class TaskRepositoryError extends Error {
@@ -13,6 +14,6 @@ export interface TaskRepository extends Repository {
   insert(abortSignal: AbortSignal, task: Task): Promise<void>;
   delete(abortSignal: AbortSignal, id: string): Promise<boolean>;
   finalize(abortSignal: AbortSignal, id: string, time: number): Promise<void>;
-  incrementFinalizationRequestCount(abortSignal: AbortSignal, id: string, delta: number): Promise<void>;
+  incrementFinalizationRequestCount(abortSignal: AbortSignal, id: string, delta: number, transaction?: Transaction): Promise<void>;
   setNextFinalizationAttemptAt(abortSignal: AbortSignal, id: string, time: number): Promise<void>;
 }

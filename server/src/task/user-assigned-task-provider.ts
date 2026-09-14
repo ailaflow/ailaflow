@@ -21,7 +21,7 @@ export class UserAssignedTaskProvider {
     taskId: string
   ): Promise<UserAssignedTask | null> {
     const assignedTask = await this.assignedTaskRepository.tryGet(abortSignal, taskId, userName);
-    if (!assignedTask) {
+    if (!assignedTask || assignedTask.completedAt !== null) {
       return null;
     }
 
@@ -33,7 +33,7 @@ export class UserAssignedTaskProvider {
       throw new Error(`Task ${taskId} test status test failed ${task.isTest} !== ${isTest}`);
     }
     if (task.finalizedAt !== null) {
-      throw new Error(`Task ${taskId} is already finalized`);
+      return null;
     }
 
     return {

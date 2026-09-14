@@ -3,6 +3,8 @@ import { ProcessExecutionVariableValues } from '@ailaflow/shared';
 import { SqliteDatabases } from '../../core/sqlite-databases';
 import { AssignedTaskRepository } from './assigned-task-repository';
 import { AssignedTask } from './assigned-task';
+import { Transaction } from '../../core/transaction';
+import { SqliteTransaction } from '../../core/sqlite-transaction';
 
 export class SqliteAssignedTaskRepository implements AssignedTaskRepository {
   private readonly db: DatabaseSync;
@@ -73,25 +75,33 @@ export class SqliteAssignedTaskRepository implements AssignedTaskRepository {
     return rows.map(mapAssignedTask);
   }
 
-  public async upsert(_: AbortSignal, assignedTask: AssignedTask): Promise<void> {
+  public async upsert(_: AbortSignal, assignedTask: AssignedTask, transaction?: Transaction): Promise<void> {
     const statement = this.createUpsertStatement();
-    this.runUpsert(statement, assignedTask);
+
+    const t = await SqliteTransaction.begin(this.db, transaction);
+    try {
+      this.runUpsert(statement, assignedTask);
+      await t.commit();
+    } catch (e) {
+      await t.rollback();
+      throw e;
+    }
   }
 
-  public async upsertMultiple(_: AbortSignal, assignedTasks: AssignedTask[]): Promise<void> {
+  public async upsertMultiple(_: AbortSignal, assignedTasks: AssignedTask[], transaction?: Transaction): Promise<void> {
     if (assignedTasks.length === 0) {
       return;
     }
 
     const statement = this.createUpsertStatement();
+    const t = await SqliteTransaction.begin(this.db, transaction);
     try {
-      this.db.exec(`BEGIN`);
       for (const assignedTask of assignedTasks) {
         this.runUpsert(statement, assignedTask);
       }
-      this.db.exec(`COMMIT`);
+      await t.commit();
     } catch (e) {
-      this.db.exec(`ROLLBACK`);
+      await t.rollback();
       throw e;
     }
   }

@@ -3,6 +3,8 @@ import { FormDefinition, JsonSchema, taskFinalizationPolicySchema } from '@ailaf
 import { SqliteDatabases } from '../../core/sqlite-databases';
 import { Task } from './task';
 import { TaskRepository } from './task-repository';
+import { Transaction } from '../../core/transaction';
+import { SqliteTransaction } from '../../core/sqlite-transaction';
 
 export class SqliteTaskRepository implements TaskRepository {
   private readonly db: DatabaseSync;
@@ -133,13 +135,20 @@ export class SqliteTaskRepository implements TaskRepository {
     statement.run(time, id);
   }
 
-  public async incrementFinalizationRequestCount(_: AbortSignal, id: string, delta: number): Promise<void> {
-    const statement = this.db.prepare(`
+  public async incrementFinalizationRequestCount(_: AbortSignal, id: string, delta: number, transaction?: Transaction): Promise<void> {
+    const t = await SqliteTransaction.begin(this.db, transaction);
+    try {
+      const statement = this.db.prepare(`
       UPDATE tasks
       SET finalizationRequestCount = finalizationRequestCount + ?
       WHERE id = ?
     `);
-    statement.run(delta, id);
+      statement.run(delta, id);
+      await t.commit();
+    } catch (e) {
+      await t.rollback();
+      throw e;
+    }
   }
 
   public async setNextFinalizationAttemptAt(_: AbortSignal, id: string, time: number): Promise<void> {

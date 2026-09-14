@@ -6,6 +6,7 @@ import { Logger } from '../core/logger';
 import { ChatSession } from '@aibindkit/llm';
 import { TaskRepository } from '../repositories/task/task-repository';
 import { TaskFinalizationWorker } from './task-finalization-worker';
+import { Transaction } from '../core/transaction';
 
 export class AssignedTaskCompleterError extends Error {
   public constructor(message: string) {
@@ -50,8 +51,15 @@ export class AssignedTaskCompleter {
       throw new AssignedTaskCompleterError(`Cannot complete assigned task: ${completeError}`);
     }
 
-    await this.assignedTaskRepository.upsert(abortSignal, assignedTask);
-    await this.taskRepository.incrementFinalizationRequestCount(abortSignal, assignedTask.taskId, 1);
+    const transaction = Transaction.begin();
+    try {
+      await this.assignedTaskRepository.upsert(abortSignal, assignedTask, transaction);
+      await this.taskRepository.incrementFinalizationRequestCount(abortSignal, assignedTask.taskId, 1, transaction);
+      await transaction.commit();
+    } catch (e) {
+      await transaction.rollback();
+      throw e;
+    }
 
     void this.updateChatSessionOnBackground(chatSession, assignedTask.taskId);
 
