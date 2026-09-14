@@ -33,7 +33,9 @@ test('returns not found when deleting a missing task', async () => {
     setup: async () => undefined,
     tryGet: async () => null,
     insert: async () => undefined,
-    update: async () => undefined,
+    finalize: async () => undefined,
+    incrementFinalizationRequestCount: async () => undefined,
+    setNextFinalizationAttemptAt: async () => undefined,
     delete: async () => false
   };
   const persistedExecutionRepository: PersistedExecutionRepository = {

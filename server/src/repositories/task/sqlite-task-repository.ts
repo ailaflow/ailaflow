@@ -25,6 +25,8 @@ export class SqliteTaskRepository implements TaskRepository {
         deadline INTEGER,
         finalizationPolicy TEXT NOT NULL,
         metadataVariableName TEXT,
+        finalizationRequestCount INTEGER NOT NULL,
+        nextFinalizationAttemptAt INTEGER,
         createdAt INTEGER NOT NULL,
         finalizedAt INTEGER
       ) STRICT
@@ -49,6 +51,8 @@ export class SqliteTaskRepository implements TaskRepository {
         deadline,
         finalizationPolicy,
         metadataVariableName,
+        finalizationRequestCount,
+        nextFinalizationAttemptAt,
         createdAt,
         finalizedAt
       FROM tasks
@@ -68,6 +72,8 @@ export class SqliteTaskRepository implements TaskRepository {
           deadline: number | null;
           finalizationPolicy: string;
           metadataVariableName: string | null;
+          finalizationRequestCount: number;
+          nextFinalizationAttemptAt: number | null;
           createdAt: number;
           finalizedAt: number | null;
         }
@@ -90,10 +96,12 @@ export class SqliteTaskRepository implements TaskRepository {
         deadline,
         finalizationPolicy,
         metadataVariableName,
+        finalizationRequestCount,
+        nextFinalizationAttemptAt,
         createdAt,
         finalizedAt
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
     statement.run(
       task.id,
@@ -107,18 +115,40 @@ export class SqliteTaskRepository implements TaskRepository {
       task.deadline,
       task.finalizationPolicy,
       task.metadataVariableName,
+      task.finalizationRequestCount,
+      task.nextFinalizationAttemptAt,
       task.createdAt,
       task.finalizedAt
     );
   }
 
-  public async update(_: AbortSignal, task: Task): Promise<void> {
+  public async finalize(_: AbortSignal, id: string, time: number): Promise<void> {
     const statement = this.db.prepare(`
       UPDATE tasks
-      SET finalizedAt = ?
+      SET
+        finalizedAt = ?,
+        finalizationRequestCount = 0
       WHERE id = ?
     `);
-    statement.run(task.finalizedAt, task.id);
+    statement.run(time, id);
+  }
+
+  public async incrementFinalizationRequestCount(_: AbortSignal, id: string, delta: number): Promise<void> {
+    const statement = this.db.prepare(`
+      UPDATE tasks
+      SET finalizationRequestCount = finalizationRequestCount + ?
+      WHERE id = ?
+    `);
+    statement.run(delta, id);
+  }
+
+  public async setNextFinalizationAttemptAt(_: AbortSignal, id: string, time: number): Promise<void> {
+    const statement = this.db.prepare(`
+      UPDATE tasks
+      SET nextFinalizationAttemptAt = ?
+      WHERE id = ?
+    `);
+    statement.run(time, id);
   }
 
   public async delete(_: AbortSignal, id: string): Promise<boolean> {
@@ -142,6 +172,8 @@ function deserializeTask(row: {
   deadline: number | null;
   finalizationPolicy: string;
   metadataVariableName: string | null;
+  finalizationRequestCount: number;
+  nextFinalizationAttemptAt: number | null;
   createdAt: number;
   finalizedAt: number | null;
 }): Task {
@@ -157,6 +189,8 @@ function deserializeTask(row: {
     row.deadline,
     taskFinalizationPolicySchema.parse(row.finalizationPolicy),
     row.metadataVariableName,
+    row.finalizationRequestCount,
+    row.nextFinalizationAttemptAt,
     row.createdAt,
     row.finalizedAt
   );

@@ -2,9 +2,10 @@ import { ProcessExecutionVariableValues } from '@ailaflow/shared';
 import { UserChatSessionProvider } from '../chat-session/user-chat-session-provider';
 import { AssignedTaskRepository } from '../repositories/task/assigned-task-repository';
 import { UserAssignedTaskProvider } from './user-assigned-task-provider';
-import { TaskFinalizer } from './task-finalizer';
 import { Logger } from '../core/logger';
 import { ChatSession } from '@aibindkit/llm';
+import { TaskRepository } from '../repositories/task/task-repository';
+import { TaskFinalizationWorker } from './task-finalization-worker';
 
 export class AssignedTaskCompleterError extends Error {
   public constructor(message: string) {
@@ -19,7 +20,8 @@ export class AssignedTaskCompleter {
     private readonly userAssignedTaskProvider: UserAssignedTaskProvider,
     private readonly userChatSessionProvider: UserChatSessionProvider,
     private readonly assignedTaskRepository: AssignedTaskRepository,
-    private readonly taskFinalizer: TaskFinalizer
+    private readonly taskRepository: TaskRepository,
+    private readonly finalizationWorker: TaskFinalizationWorker
   ) {}
 
   /**
@@ -49,8 +51,11 @@ export class AssignedTaskCompleter {
     }
 
     await this.assignedTaskRepository.upsert(abortSignal, assignedTask);
+    await this.taskRepository.incrementFinalizationRequestCount(abortSignal, assignedTask.taskId, 1);
+
     void this.updateChatSessionOnBackground(chatSession, assignedTask.taskId);
-    void this.tryFinalizeOnBackground(assignedTask.taskId);
+
+    this.finalizationWorker.trigger();
   }
 
   private async updateChatSessionOnBackground(chatSession: ChatSession, taskId: string) {
@@ -61,15 +66,6 @@ export class AssignedTaskCompleter {
       }
     } catch (e) {
       this.logger.warn(`Failed to update chat session metadata: ${(e as Error)?.message ?? e}`);
-    }
-  }
-
-  private async tryFinalizeOnBackground(taskId: string) {
-    const abortSignal = AbortSignal.timeout(10_000);
-    try {
-      await this.taskFinalizer.tryFinalize(abortSignal, taskId, null);
-    } catch (e) {
-      this.logger.warn(`Failed to finalize task: ${(e as Error)?.message ?? e}`);
     }
   }
 }

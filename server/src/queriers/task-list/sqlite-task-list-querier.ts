@@ -58,9 +58,7 @@ export class SqliteTaskListQuerier implements TaskListQuerier {
           t.createdBy,
           t.executionId,
           t.isTest,
-          CASE WHEN COUNT(at.taskId) > 0 AND COUNT(at.completedAt) = COUNT(at.taskId)
-            THEN MAX(at.completedAt)
-          END AS completedAt,
+          t.finalizedAt AS completedAt,
           t.deadline,
           COUNT(at.taskId) AS assignedCount,
           COUNT(at.completedAt) AS completedCount,

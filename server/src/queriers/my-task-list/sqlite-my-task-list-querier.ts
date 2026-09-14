@@ -21,7 +21,7 @@ export class SqliteMyTaskListQuerier implements MyTaskListQuerier {
     page: number,
     pageSize: number
   ): Promise<GetMyTasksResponse> {
-    const statusCondition = onlyOpen ? 'AND at.completedAt IS NULL' : '';
+    const statusCondition = onlyOpen ? 'AND at.completedAt IS NULL AND t.finalizedAt IS NULL' : '';
     const countStatement = this.db.prepare(`
       SELECT COUNT(*) AS totalCount
       FROM assigned_tasks at
@@ -39,7 +39,7 @@ export class SqliteMyTaskListQuerier implements MyTaskListQuerier {
         t.title,
         t.deadline,
         t.createdAt,
-        at.completedAt
+        COALESCE(at.completedAt, t.finalizedAt) AS completedAt
       FROM assigned_tasks at
       JOIN tasks t
         ON t.id = at.taskId

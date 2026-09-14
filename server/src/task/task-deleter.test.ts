@@ -20,6 +20,8 @@ test('deletes the persisted execution and task', async () => {
     null,
     TaskFinalizationPolicy.ALL_ASSIGNEES,
     null,
+    0,
+    null,
     1000,
     null
   );
@@ -56,7 +58,9 @@ function createTaskRepository(task: Task | null, deleteTask: (id: string) => Pro
     setup: async () => undefined,
     tryGet: async () => task,
     insert: async () => undefined,
-    update: async () => undefined,
+    finalize: async () => undefined,
+    incrementFinalizationRequestCount: async () => undefined,
+    setNextFinalizationAttemptAt: async () => undefined,
     delete: async (_, id) => deleteTask(id)
   };
 }

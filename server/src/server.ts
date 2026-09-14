@@ -128,6 +128,8 @@ import { Scheduler } from './schedulers/scheduler';
 import { AuthTokenCleanupScheduler } from './schedulers/auth-token-cleanup-scheduler';
 import { IncompleteAssignedTaskCountQuerier } from './queriers/task/incomplete-assigned-task-count-querier';
 import { SqliteIncompleteAssignedTaskCountQuerier } from './queriers/task/sqlite-incomplete-assigned-task-count-querier';
+import { TaskFinalizationCandidateQuerier } from './queriers/task/task-finalization-candidate-querier';
+import { SqliteTaskFinalizationCandidateQuerier } from './queriers/task/sqlite-task-finalization-candidate-querier';
 import { LlmConfigurationRepository } from './repositories/configuration/llm/llm-configuration-repository';
 import { SqliteLlmConfigurationRepository } from './repositories/configuration/llm/sqlite-llm-configuration-repository';
 import { LlmClientFactory } from './llm/llm-client-factory';
@@ -153,6 +155,7 @@ import { GetStartedByRpcHandler } from './process-executor/rpc-handlers/get-star
 import { ProcessExecutionResumeListenerStore } from './process-executor/process-execution-resume-listener-store';
 import { AssignedTaskCompleter } from './task/assigned-task-completer';
 import { TaskFinalizer } from './task/task-finalizer';
+import { TaskFinalizationWorker } from './task/task-finalization-worker';
 import { SubmitMyTaskTool } from './chat-session/user-tools/submit-my-task-tool';
 import { ProcessManager } from './process/process-manager';
 import { ProcessDefinitionUpgrader } from './process/process-definition-upgrader';
@@ -219,6 +222,7 @@ export class Server {
     let tableListQuerier: TableListQuerier;
     let tableDataListQuerier: TableDataListQuerier;
     let incompleteAssignedTaskCountQuerier: IncompleteAssignedTaskCountQuerier;
+    let taskFinalizationCandidateQuerier: TaskFinalizationCandidateQuerier;
     let taskListQuerier: TaskListQuerier;
 
     const sqliteDatabases = new SqliteDatabases(serverPaths);
@@ -253,6 +257,7 @@ export class Server {
     tableListQuerier = new SqliteTableListQuerier(sqliteDatabases);
     tableDataListQuerier = new SqliteTableDataListQuerier(sqliteDatabases, tableSchemaManager);
     incompleteAssignedTaskCountQuerier = new SqliteIncompleteAssignedTaskCountQuerier(sqliteDatabases);
+    taskFinalizationCandidateQuerier = new SqliteTaskFinalizationCandidateQuerier(sqliteDatabases);
     taskListQuerier = new SqliteTaskListQuerier(sqliteDatabases);
 
     await Promise.all([
@@ -350,11 +355,13 @@ export class Server {
       incompleteAssignedTaskCountQuerier,
       processExecutionResumer
     );
+    const taskFinalizationWorker = new TaskFinalizationWorker(taskFinalizationCandidateQuerier, taskFinalizer, taskRepository);
     const assignedTaskCompleter = new AssignedTaskCompleter(
       userAssignedTaskProvider,
       userChatSessionProvider,
       assignedTaskRepository,
-      taskFinalizer
+      taskRepository,
+      taskFinalizationWorker
     );
     const taskDeleter = new TaskDeleter(taskRepository, persistedExecutionRepository);
 
@@ -462,9 +469,17 @@ export class Server {
     for (const scheduler of schedulers) {
       scheduler.start();
     }
+    taskFinalizationWorker.start();
 
     await httpServer.start();
-    return new Server(httpServer, sandboxInstanceManager, sqliteDatabases, schedulers, telegramSynchronizationManager);
+    return new Server(
+      httpServer,
+      sandboxInstanceManager,
+      sqliteDatabases,
+      schedulers,
+      telegramSynchronizationManager,
+      taskFinalizationWorker
+    );
   }
 
   public constructor(
@@ -472,7 +487,8 @@ export class Server {
     private readonly sandboxInstanceManager: SandboxInstanceManager,
     private readonly sqliteDatabases: SqliteDatabases,
     private readonly schedulers: Scheduler[],
-    private readonly telegramSynchronizationManager: TelegramSynchronizationManager
+    private readonly telegramSynchronizationManager: TelegramSynchronizationManager,
+    private readonly taskFinalizationWorker: TaskFinalizationWorker
   ) {}
 
   public async close() {
@@ -487,6 +503,7 @@ export class Server {
     for (const scheduler of this.schedulers) {
       scheduler.stop();
     }
+    this.taskFinalizationWorker.stop();
     this.sqliteDatabases.dispose();
 
     await this.httpServer.close();

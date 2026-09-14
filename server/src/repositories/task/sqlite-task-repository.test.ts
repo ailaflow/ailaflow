@@ -32,6 +32,8 @@ test('task insert does not overwrite an existing task', async () => {
       null,
       TaskFinalizationPolicy.ALL_ASSIGNEES,
       'originalMetadata',
+      2,
+      1500,
       1000,
       null
     )
@@ -52,6 +54,8 @@ test('task insert does not overwrite an existing task', async () => {
         null,
         TaskFinalizationPolicy.ANY_ASSIGNEE,
         null,
+        0,
+        null,
         2000,
         null
       )
@@ -62,7 +66,7 @@ test('task insert does not overwrite an existing task', async () => {
     ...db
       .prepare(
         `
-        SELECT title, isTest, createdBy, executionId, inputVariableNames, outputVariableSchemas, finalizationPolicy, metadataVariableName, createdAt, finalizedAt
+        SELECT title, isTest, createdBy, executionId, inputVariableNames, outputVariableSchemas, finalizationPolicy, metadataVariableName, finalizationRequestCount, nextFinalizationAttemptAt, createdAt, finalizedAt
         FROM tasks
         WHERE id = ?
       `
@@ -77,6 +81,8 @@ test('task insert does not overwrite an existing task', async () => {
     outputVariableSchemas: string | null;
     finalizationPolicy: string;
     metadataVariableName: string | null;
+    finalizationRequestCount: number;
+    nextFinalizationAttemptAt: number | null;
     createdAt: number;
     finalizedAt: number | null;
   };
@@ -89,6 +95,8 @@ test('task insert does not overwrite an existing task', async () => {
     outputVariableSchemas: null,
     finalizationPolicy: TaskFinalizationPolicy.ALL_ASSIGNEES,
     metadataVariableName: 'originalMetadata',
+    finalizationRequestCount: 2,
+    nextFinalizationAttemptAt: 1500,
     createdAt: 1000,
     finalizedAt: null
   });
@@ -96,7 +104,7 @@ test('task insert does not overwrite an existing task', async () => {
   db.close();
 });
 
-test('task update persists only the finalization timestamp', async () => {
+test('task can be finalized', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
   const dbs = { modelDb: db } as SqliteDatabases;
   const abortSignal = new AbortController().signal;
@@ -113,6 +121,8 @@ test('task update persists only the finalization timestamp', async () => {
     2000,
     TaskFinalizationPolicy.ANY_ASSIGNEE,
     'taskMetadata',
+    3,
+    null,
     1000,
     null
   );
@@ -121,14 +131,68 @@ test('task update persists only the finalization timestamp', async () => {
   await repository.insert(abortSignal, task);
   const rowBeforeUpdate = { ...db.prepare(`SELECT * FROM tasks WHERE id = ?`).get(task.id) };
 
-  task.finalize();
-  await repository.update(abortSignal, task);
+  await repository.finalize(abortSignal, task.id, 2500);
 
-  assert.deepEqual({ ...db.prepare(`SELECT * FROM tasks WHERE id = ?`).get(task.id) }, {
-    ...rowBeforeUpdate,
-    finalizedAt: task.finalizedAt
-  });
-  assert.deepEqual(await repository.tryGet(abortSignal, task.id), task);
+  assert.deepEqual(
+    { ...db.prepare(`SELECT * FROM tasks WHERE id = ?`).get(task.id) },
+    {
+      ...rowBeforeUpdate,
+      finalizationRequestCount: 0,
+      finalizedAt: 2500
+    }
+  );
+  const finalizedTask = await repository.tryGet(abortSignal, task.id);
+  assert.equal(finalizedTask?.finalizationRequestCount, 0);
+  assert.equal(finalizedTask?.finalizedAt, 2500);
+
+  db.close();
+});
+
+test('task finalization request count can be incremented and decremented', async () => {
+  const db = new DatabaseSync(':memory:', { open: true });
+  const dbs = { modelDb: db } as SqliteDatabases;
+  const abortSignal = new AbortController().signal;
+  const repository = new SqliteTaskRepository(dbs);
+  const task = new Task(
+    'task_1',
+    'Task',
+    false,
+    'creator_1',
+    'execution_1',
+    [],
+    null,
+    null,
+    null,
+    TaskFinalizationPolicy.ALL_ASSIGNEES,
+    null,
+    0,
+    null,
+    1000,
+    null
+  );
+
+  await repository.setup(abortSignal);
+  await repository.insert(abortSignal, task);
+  await repository.incrementFinalizationRequestCount(abortSignal, task.id, 3);
+  await repository.incrementFinalizationRequestCount(abortSignal, task.id, -1);
+
+  assert.equal((await repository.tryGet(abortSignal, task.id))?.finalizationRequestCount, 2);
+
+  db.close();
+});
+
+test('next task finalization attempt can be scheduled', async () => {
+  const db = new DatabaseSync(':memory:', { open: true });
+  const dbs = { modelDb: db } as SqliteDatabases;
+  const abortSignal = new AbortController().signal;
+  const repository = new SqliteTaskRepository(dbs);
+  const task = Task.create('Task', false, 'creator_1', 'execution_1', [], null, null, null, TaskFinalizationPolicy.ALL_ASSIGNEES, null);
+
+  await repository.setup(abortSignal);
+  await repository.insert(abortSignal, task);
+  await repository.setNextFinalizationAttemptAt(abortSignal, task.id, 5000);
+
+  assert.equal((await repository.tryGet(abortSignal, task.id))?.nextFinalizationAttemptAt, 5000);
 
   db.close();
 });
@@ -155,6 +219,8 @@ test('task can be fetched by id', async () => {
     2000,
     TaskFinalizationPolicy.ANY_ASSIGNEE,
     'taskMetadata',
+    0,
+    null,
     1000,
     null
   );
@@ -194,6 +260,8 @@ test('task can be deleted with its assignments', async () => {
       null,
       null,
       TaskFinalizationPolicy.ALL_ASSIGNEES,
+      null,
+      0,
       null,
       1000,
       null

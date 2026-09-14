@@ -29,6 +29,8 @@ export class Task {
       deadline,
       finalizationPolicy,
       metadataVariableName,
+      0,
+      null,
       createdAt,
       null
     );
@@ -48,16 +50,14 @@ export class Task {
     public readonly deadline: number | null,
     public readonly finalizationPolicy: TaskFinalizationPolicy,
     public readonly metadataVariableName: string | null,
+    public readonly finalizationRequestCount: number,
+    public readonly nextFinalizationAttemptAt: number | null,
     public readonly createdAt: number,
-    public finalizedAt: number | null
+    public readonly finalizedAt: number | null
   ) {}
 
   public canReadInputVariable(variableName: string): boolean {
     return this.inputVariableNames.includes(variableName);
-  }
-
-  public finalize() {
-    this.finalizedAt = Date.now();
   }
 
   public get variables(): TaskVariables {

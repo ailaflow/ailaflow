@@ -40,6 +40,8 @@ test('assigned tasks can be upserted and queried by task and user', async () => 
     null,
     TaskFinalizationPolicy.ALL_ASSIGNEES,
     null,
+    0,
+    null,
     1000,
     null
   );
@@ -54,6 +56,8 @@ test('assigned tasks can be upserted and queried by task and user', async () => 
     null,
     null,
     TaskFinalizationPolicy.ANY_ASSIGNEE,
+    null,
+    0,
     null,
     1001,
     null

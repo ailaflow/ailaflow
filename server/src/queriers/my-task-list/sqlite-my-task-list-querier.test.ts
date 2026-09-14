@@ -42,6 +42,8 @@ test('queries tasks assigned to the current user', async () => {
       4000,
       TaskFinalizationPolicy.ALL_ASSIGNEES,
       null,
+      0,
+      null,
       1000,
       null
     )
@@ -59,6 +61,8 @@ test('queries tasks assigned to the current user', async () => {
       null,
       6000,
       TaskFinalizationPolicy.ALL_ASSIGNEES,
+      null,
+      0,
       null,
       1001,
       null
@@ -78,8 +82,10 @@ test('queries tasks assigned to the current user', async () => {
       3000,
       TaskFinalizationPolicy.ALL_ASSIGNEES,
       null,
+      0,
+      null,
       1002,
-      null
+      4500
     )
   );
   await taskRepository.insert(
@@ -95,6 +101,8 @@ test('queries tasks assigned to the current user', async () => {
       null,
       3000,
       TaskFinalizationPolicy.ALL_ASSIGNEES,
+      null,
+      0,
       null,
       1003,
       null
@@ -114,6 +122,8 @@ test('queries tasks assigned to the current user', async () => {
       null,
       TaskFinalizationPolicy.ALL_ASSIGNEES,
       null,
+      0,
+      null,
       1004,
       null
     )
@@ -132,6 +142,8 @@ test('queries tasks assigned to the current user', async () => {
       null,
       TaskFinalizationPolicy.ALL_ASSIGNEES,
       null,
+      0,
+      null,
       1005,
       null
     )
@@ -140,9 +152,9 @@ test('queries tasks assigned to the current user', async () => {
   await assignedTaskRepository.upsertMultiple(abortSignal, [
     AssignedTask.create('task_1', 'alice', 'default'),
     AssignedTask.create('task_2', 'alice', 'default'),
-    new AssignedTask('task_3', 'alice', 'default', 4500, null),
+    AssignedTask.create('task_3', 'alice', 'default'),
     AssignedTask.create('task_4', 'bob', 'default'),
-    AssignedTask.create('task_5', 'alice', 'default'),
+    new AssignedTask('task_5', 'alice', 'default', 4700, null),
     AssignedTask.create('task_6', 'alice', 'default')
   ]);
 
@@ -171,7 +183,8 @@ test('queries tasks assigned to the current user', async () => {
       },
       {
         id: 'task_5',
-        title: 'No deadline'
+        title: 'No deadline',
+        completedAt: 4700
       }
     ],
     totalCount: 4,
@@ -188,13 +201,9 @@ test('queries tasks assigned to the current user', async () => {
       {
         id: 'task_2',
         title: 'Open current'
-      },
-      {
-        id: 'task_5',
-        title: 'No deadline'
       }
     ],
-    totalCount: 3,
+    totalCount: 2,
     page: 1,
     pageSize: 20
   });

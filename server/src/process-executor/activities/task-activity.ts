@@ -12,7 +12,10 @@ function evaluateDeadline(step: TaskStep, variables: ProcessVariableManager): nu
     } else if (step.properties.deadline.type === 'variable') {
       const value = variables.get(step.properties.deadline.name);
       if (typeof value === 'string') {
-        deadline = new Date(value).getTime() + now;
+        deadline = new Date(value).getTime();
+        if (isNaN(deadline)) {
+          throw new Error(`Invalid deadline value: ${value}`);
+        }
       }
     }
     if (deadline !== null && deadline <= now) {

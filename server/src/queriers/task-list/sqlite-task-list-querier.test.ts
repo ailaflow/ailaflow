@@ -27,16 +27,16 @@ test('queries newest tasks with pagination and an open filter', async () => {
   await userRepository.insert(abortSignal, new User('alice', 'hash', false));
   await userRepository.insert(abortSignal, new User('bob', 'hash', false));
 
-  await insertTask(taskRepository, abortSignal, 'open', 1000, null, false);
-  await insertTask(taskRepository, abortSignal, 'outdated', 2000, 2000, true);
-  await insertTask(taskRepository, abortSignal, 'completed', 3000, null, false);
-  await insertTask(taskRepository, abortSignal, 'unassigned', 4000, null, false);
+  await insertTask(taskRepository, abortSignal, 'open', 1000, null, false, null);
+  await insertTask(taskRepository, abortSignal, 'outdated', 2000, 2000, true, null);
+  await insertTask(taskRepository, abortSignal, 'completed', 3000, null, false, 3200);
+  await insertTask(taskRepository, abortSignal, 'unassigned', 4000, null, false, null);
 
-  await assignedTaskRepository.upsert(abortSignal, AssignedTask.create('open', 'alice', 'default'));
+  await assignedTaskRepository.upsert(abortSignal, new AssignedTask('open', 'alice', 'default', 1100, {}));
   await assignedTaskRepository.upsert(abortSignal, AssignedTask.create('outdated', 'alice', 'default'));
   await assignedTaskRepository.upsertMultiple(abortSignal, [
     new AssignedTask('completed', 'alice', 'default', 3100, {}),
-    new AssignedTask('completed', 'bob', 'default', 3200, {})
+    AssignedTask.create('completed', 'bob', 'default')
   ]);
 
   assert.deepEqual(await querier.query(abortSignal, true, 1, 2), {
@@ -88,7 +88,7 @@ test('queries newest tasks with pagination and an open filter', async () => {
         isTest: false,
         completedAt: 3200,
         assignedCount: 2,
-        completedCount: 2,
+        completedCount: 1,
         createdAt: 3000
       }
     ],
@@ -106,7 +106,8 @@ async function insertTask(
   id: string,
   createdAt: number,
   deadline: number | null,
-  isTest: boolean
+  isTest: boolean,
+  finalizedAt: number | null
 ): Promise<void> {
   await repository.insert(
     abortSignal,
@@ -122,8 +123,10 @@ async function insertTask(
       deadline,
       TaskFinalizationPolicy.ALL_ASSIGNEES,
       null,
+      0,
+      null,
       createdAt,
-      null
+      finalizedAt
     )
   );
 }
