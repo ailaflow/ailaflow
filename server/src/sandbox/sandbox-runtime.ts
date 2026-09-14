@@ -2,10 +2,10 @@ import { ExecuteCommandRequest, ExecuteCommandUpdate, BridgeClient, ListenRpcUpd
 import { Docker } from './docker';
 import { Logger } from '../core/logger';
 import { HttpSseHandler } from '../core/http-client';
-import { abortableSleep } from '../utilities/abortable-sleep';
 import { SandboxHostPaths } from './sandbox-host-paths';
 import { SimpleEvent } from '@aibindkit/core';
 import { SandboxRpcHandlerProvider } from './sandbox-rpc-handler-provider';
+import { abortableSleep } from '../core/abortable-sleep';
 
 const BRIDGE_PORT = 4096;
 

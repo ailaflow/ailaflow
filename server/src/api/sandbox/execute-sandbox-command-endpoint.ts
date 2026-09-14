@@ -1,9 +1,9 @@
 import { executeSandboxCommandRequestSchema, ExecuteSandboxCommandUpdate } from '@ailaflow/shared';
 import { Request, Response } from 'express';
 import { SandboxInstanceManager } from '../../sandbox/sandbox-instance-manager';
-import { SseResponse } from '../../utilities/sse-response';
 import { Endpoint } from '../framework/endpoint';
 import { parseBody } from '../framework/parse-request';
+import { SseResponse } from '../../core/sse-response';
 
 export class ExecuteSandboxCommandEndpoint implements Endpoint {
   public readonly method = 'post';
