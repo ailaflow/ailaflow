@@ -1,12 +1,9 @@
-import { DatabaseSync } from 'node:sqlite';
-import { SqliteDatabases } from '../../core/sqlite-databases';
+import { SqliteDatabase, SqliteDatabases } from '../../core/sqlite-databases';
 import { Repository } from '../repository';
 import { PersistedExecution } from './persisted-execution';
 import { SerializedWorkflowMachineSnapshot } from 'sequential-workflow-machine';
 import { SerializedProcessExecutionGlobalState } from '../../process-executor/process-execution-global-state';
 import { ProcessExecutionContext } from '../../process-executor/process-execution-context';
-import { AsyncMutex } from '../../core/async-mutex';
-import { SqliteTransaction } from '../../core/sqlite-transaction';
 import { Transaction } from '../../core/transaction';
 
 export interface PersistedExecutionRepository extends Repository {
@@ -16,32 +13,31 @@ export interface PersistedExecutionRepository extends Repository {
 }
 
 export class SqlitePersistedExecutionRepository implements PersistedExecutionRepository {
-  private readonly db: DatabaseSync;
-  private readonly dbMutex: AsyncMutex;
+  private readonly db: SqliteDatabase;
 
   public constructor(dbs: SqliteDatabases) {
     this.db = dbs.dataDb;
-    this.dbMutex = dbs.dataDbMutex;
   }
 
   public async setup(_: AbortSignal): Promise<void> {
-    this.db.exec(`
-      CREATE TABLE IF NOT EXISTS persisted_executions (
-        executionId TEXT PRIMARY KEY,
-        context TEXT NOT NULL,
-        processName TEXT NOT NULL,
-        processHash TEXT NOT NULL,
-        state TEXT NOT NULL,
-        createdAt INTEGER NOT NULL,
-        updatedAt INTEGER NOT NULL
-      ) STRICT
-    `);
+    await this.db.write(db => {
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS persisted_executions (
+          executionId TEXT PRIMARY KEY,
+          context TEXT NOT NULL,
+          processName TEXT NOT NULL,
+          processHash TEXT NOT NULL,
+          state TEXT NOT NULL,
+          createdAt INTEGER NOT NULL,
+          updatedAt INTEGER NOT NULL
+        ) STRICT
+      `);
+    });
   }
 
   public async upsert(_: AbortSignal, execution: PersistedExecution, transaction?: Transaction): Promise<void> {
-    const t = await SqliteTransaction.begin(this.db, this.dbMutex, transaction);
-    try {
-      const statement = this.db.prepare(`
+    await this.db.write(db => {
+      const statement = db.prepare(`
         INSERT INTO persisted_executions (executionId, context, processName, processHash, state, createdAt, updatedAt)
         VALUES (?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT(executionId) DO UPDATE SET
@@ -60,57 +56,50 @@ export class SqlitePersistedExecutionRepository implements PersistedExecutionRep
         execution.createdAt,
         execution.updatedAt
       );
-      await t.commit();
-    } catch (e) {
-      await t.rollback();
-      throw e;
-    }
+    }, transaction);
   }
 
   public async tryGet(_: AbortSignal, executionId: string): Promise<PersistedExecution | null> {
-    const statement = this.db.prepare(`
-      SELECT executionId, context, processName, processHash, state, createdAt, updatedAt
-      FROM persisted_executions
-      WHERE executionId = ?
-      LIMIT 1
-    `);
-    const row = statement.get(executionId) as
-      | {
-          executionId: string;
-          context: string;
-          processName: string;
-          processHash: string;
-          state: string;
-          createdAt: number;
-          updatedAt: number;
-        }
-      | undefined;
+    return this.db.read(db => {
+      const statement = db.prepare(`
+        SELECT executionId, context, processName, processHash, state, createdAt, updatedAt
+        FROM persisted_executions
+        WHERE executionId = ?
+        LIMIT 1
+      `);
+      const row = statement.get(executionId) as
+        | {
+            executionId: string;
+            context: string;
+            processName: string;
+            processHash: string;
+            state: string;
+            createdAt: number;
+            updatedAt: number;
+          }
+        | undefined;
 
-    return row
-      ? new PersistedExecution(
-          row.executionId,
-          JSON.parse(row.context) as ProcessExecutionContext,
-          row.processName,
-          row.processHash,
-          JSON.parse(row.state) as SerializedWorkflowMachineSnapshot<SerializedProcessExecutionGlobalState>,
-          row.createdAt,
-          row.updatedAt
-        )
-      : null;
+      return row
+        ? new PersistedExecution(
+            row.executionId,
+            JSON.parse(row.context) as ProcessExecutionContext,
+            row.processName,
+            row.processHash,
+            JSON.parse(row.state) as SerializedWorkflowMachineSnapshot<SerializedProcessExecutionGlobalState>,
+            row.createdAt,
+            row.updatedAt
+          )
+        : null;
+    });
   }
 
   public async delete(_: AbortSignal, executionId: string, transaction?: Transaction): Promise<void> {
-    const t = await SqliteTransaction.begin(this.db, this.dbMutex, transaction);
-    try {
-      const statement = this.db.prepare(`
+    await this.db.write(db => {
+      const statement = db.prepare(`
         DELETE FROM persisted_executions
         WHERE executionId = ?
       `);
       statement.run(executionId);
-      await t.commit();
-    } catch (e) {
-      await t.rollback();
-      throw e;
-    }
+    }, transaction);
   }
 }

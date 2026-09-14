@@ -2,14 +2,13 @@ import { ChatMessageType } from '@aibindkit/core';
 import { DatabaseSync } from 'node:sqlite';
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { SqliteDatabases } from '../../core/sqlite-databases';
-import { AsyncMutex } from '../../core/async-mutex';
+import { SqliteDatabase, SqliteDatabases } from '../../core/sqlite-databases';
 import { Transaction } from '../../core/transaction';
 import { SqliteChatSessionRepository } from './sqlite-chat-session-repository';
 
 test('upserts and restores chat-session snapshots', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
-  const repository = new SqliteChatSessionRepository({ dataDb: db, dataDbMutex: new AsyncMutex() } as SqliteDatabases);
+  const repository = new SqliteChatSessionRepository({ dataDb: new SqliteDatabase(db) } as SqliteDatabases);
   const abortSignal = new AbortController().signal;
   await repository.setup(abortSignal);
 
@@ -51,7 +50,7 @@ test('upserts and restores chat-session snapshots', async () => {
 
 test('serializes data writes behind an externally owned transaction', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
-  const repository = new SqliteChatSessionRepository({ dataDb: db, dataDbMutex: new AsyncMutex() } as SqliteDatabases);
+  const repository = new SqliteChatSessionRepository({ dataDb: new SqliteDatabase(db) } as SqliteDatabases);
   const abortSignal = new AbortController().signal;
   await repository.setup(abortSignal);
 

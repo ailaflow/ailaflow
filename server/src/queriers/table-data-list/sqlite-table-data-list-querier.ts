@@ -1,6 +1,5 @@
 import { GetTableDataResponse, TableColumnTypePolicy, TableRow } from '@ailaflow/shared';
-import { DatabaseSync } from 'node:sqlite';
-import { SqliteDatabases } from '../../core/sqlite-databases';
+import { SqliteDatabase, SqliteDatabases } from '../../core/sqlite-databases';
 import { SqliteTableDataNameProvider } from '../../repositories/table/sqlite-table-data-name-provider';
 import { TableDataRepositoryError } from '../../repositories/table/table-data-repository';
 import { TableRowSqliteCodec } from '../../repositories/table/table-row-sqlite-codec';
@@ -9,7 +8,7 @@ import { TableSchema } from '../../repositories/table/table-schema';
 import { TableDataListQuerier } from './table-data-list-querier';
 
 export class SqliteTableDataListQuerier implements TableDataListQuerier {
-  private readonly db: DatabaseSync;
+  private readonly db: SqliteDatabase;
 
   public constructor(
     dbs: SqliteDatabases,
@@ -31,24 +30,26 @@ export class SqliteTableDataListQuerier implements TableDataListQuerier {
       const schema = await this.tableSchemaManager.get(abortSignal, tableName);
       const orderBy = resolveOrderBy(schema, orderByColumn);
       const direction = ascending ? 'ASC' : 'DESC';
-      const { totalCount } = this.db.prepare(`SELECT COUNT(*) AS totalCount FROM ${dataTableName}`).get() as {
-        totalCount: number;
-      };
-      const statement = this.db.prepare(`
+      return this.db.read(db => {
+        const { totalCount } = db.prepare(`SELECT COUNT(*) AS totalCount FROM ${dataTableName}`).get() as {
+          totalCount: number;
+        };
+        const statement = db.prepare(`
         SELECT *
         FROM ${dataTableName}
         ORDER BY ${orderBy} IS NULL, ${orderBy} ${direction}, _id ASC
         LIMIT ? OFFSET ?
       `);
-      const rows = statement.all(pageSize, (page - 1) * pageSize) as unknown as TableDataRow[];
+        const rows = statement.all(pageSize, (page - 1) * pageSize) as unknown as TableDataRow[];
 
-      return {
-        rows: mapRows(schema, rows),
-        totalCount,
-        page,
-        pageSize,
-        hasMore: page * pageSize < totalCount
-      };
+        return {
+          rows: mapRows(schema, rows),
+          totalCount,
+          page,
+          pageSize,
+          hasMore: page * pageSize < totalCount
+        };
+      });
     } catch (error) {
       throw mapSqliteError(error, tableName);
     }

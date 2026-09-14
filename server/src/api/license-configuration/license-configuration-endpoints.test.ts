@@ -7,8 +7,7 @@ import { LicenseType } from '@ailaflow/shared';
 import { LicenseManager } from '../../configuration/license/license-manager';
 import { LicenseValidator } from '../../configuration/license/license-validator';
 import { KvConfigurationManager } from '../../configuration/kv/kv-configuration-manager';
-import { SqliteDatabases } from '../../core/sqlite-databases';
-import { AsyncMutex } from '../../core/async-mutex';
+import { SqliteDatabase, SqliteDatabases } from '../../core/sqlite-databases';
 import { SqliteKvConfigurationRepository } from '../../repositories/configuration/kv/sqlite-kv-configuration-repository';
 import { EndpointError } from '../framework/endpoint-error';
 import { LicenseEndpoint } from './license-status-endpoint';
@@ -19,7 +18,7 @@ const signal = new AbortController().signal;
 async function fixture(t: TestContext) {
   const db = new DatabaseSync(':memory:');
   t.after(() => db.close());
-  const repository = new SqliteKvConfigurationRepository({ modelDb: db, modelDbMutex: new AsyncMutex() } as SqliteDatabases);
+  const repository = new SqliteKvConfigurationRepository({ modelDb: new SqliteDatabase(db) } as SqliteDatabases);
   await repository.setup(signal);
   const configuration = new KvConfigurationManager(repository);
   const validator = new LicenseValidator();

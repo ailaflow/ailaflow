@@ -1,5 +1,6 @@
 import { TableRow } from '@ailaflow/shared';
 import { Transaction } from '../../core/transaction';
+import { TableSchema } from './table-schema';
 
 export class TableDataRepositoryError extends Error {
   public constructor(message: string) {
@@ -9,10 +10,10 @@ export class TableDataRepositoryError extends Error {
 }
 
 export interface TableDataRepository {
-  tryGet(abortSignal: AbortSignal, tableName: string, _id: string): Promise<TableRow | null>;
+  tryGet(abortSignal: AbortSignal, schema: TableSchema, _id: string): Promise<TableRow | null>;
   upsert(
     abortSignal: AbortSignal,
-    tableName: string,
+    schema: TableSchema,
     row: Record<string, unknown> & { _id: string },
     transaction?: Transaction
   ): Promise<void>;

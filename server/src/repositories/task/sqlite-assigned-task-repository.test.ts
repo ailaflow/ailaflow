@@ -2,8 +2,7 @@ import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
 import test from 'node:test';
 import { TaskFinalizationPolicy } from '@ailaflow/shared';
-import { SqliteDatabases } from '../../core/sqlite-databases';
-import { AsyncMutex } from '../../core/async-mutex';
+import { SqliteDatabase, SqliteDatabases } from '../../core/sqlite-databases';
 import { User } from '../user/user';
 import { SqliteUserRepository } from '../user/sqlite-user-repository';
 import { Task } from './task';
@@ -14,7 +13,7 @@ import { SqliteAssignedTaskRepository } from './sqlite-assigned-task-repository'
 test('assigned tasks can be upserted and queried by task and user', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
   db.exec(`PRAGMA foreign_keys = ON`);
-  const dbs = { modelDb: db, modelDbMutex: new AsyncMutex() } as SqliteDatabases;
+  const dbs = { modelDb: new SqliteDatabase(db) } as SqliteDatabases;
   const abortSignal = new AbortController().signal;
 
   const userRepository = new SqliteUserRepository(dbs);

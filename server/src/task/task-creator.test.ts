@@ -3,8 +3,7 @@ import { DatabaseSync } from 'node:sqlite';
 import test from 'node:test';
 import { TaskFinalizationPolicy } from '@ailaflow/shared';
 import { UserChatSessionProvider } from '../chat-session/user-chat-session-provider';
-import { AsyncMutex } from '../core/async-mutex';
-import { SqliteDatabases } from '../core/sqlite-databases';
+import { SqliteDatabase, SqliteDatabases } from '../core/sqlite-databases';
 import { UserAccessExpressionUserQuerier } from '../queriers/user-access-expression/user-access-expression-user-querier';
 import { SqliteAssignedTaskRepository } from '../repositories/task/sqlite-assigned-task-repository';
 import { SqliteTaskRepository } from '../repositories/task/sqlite-task-repository';
@@ -14,7 +13,7 @@ import { TaskCreator } from './task-creator';
 test('rolls back task creation when assignment creation fails', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
   db.exec(`PRAGMA foreign_keys = ON`);
-  const dbs = { modelDb: db, modelDbMutex: new AsyncMutex() } as SqliteDatabases;
+  const dbs = { modelDb: new SqliteDatabase(db) } as SqliteDatabases;
   const abortSignal = new AbortController().signal;
   const taskRepository = new SqliteTaskRepository(dbs);
   const assignedTaskRepository = new SqliteAssignedTaskRepository(dbs);

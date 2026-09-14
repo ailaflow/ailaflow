@@ -2,8 +2,7 @@ import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
 import test from 'node:test';
 import { TaskFinalizationPolicy } from '@ailaflow/shared';
-import { SqliteDatabases } from '../../core/sqlite-databases';
-import { AsyncMutex } from '../../core/async-mutex';
+import { SqliteDatabase, SqliteDatabases } from '../../core/sqlite-databases';
 import { Task } from './task';
 import { SqliteTaskRepository } from './sqlite-task-repository';
 import { SqliteAssignedTaskRepository } from './sqlite-assigned-task-repository';
@@ -13,7 +12,7 @@ import { User } from '../user/user';
 
 test('task insert does not overwrite an existing task', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
-  const dbs = { modelDb: db, modelDbMutex: new AsyncMutex() } as SqliteDatabases;
+  const dbs = { modelDb: new SqliteDatabase(db) } as SqliteDatabases;
   const abortSignal = new AbortController().signal;
   const repository = new SqliteTaskRepository(dbs);
 
@@ -107,7 +106,7 @@ test('task insert does not overwrite an existing task', async () => {
 
 test('task can be finalized', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
-  const dbs = { modelDb: db, modelDbMutex: new AsyncMutex() } as SqliteDatabases;
+  const dbs = { modelDb: new SqliteDatabase(db) } as SqliteDatabases;
   const abortSignal = new AbortController().signal;
   const repository = new SqliteTaskRepository(dbs);
   const task = new Task(
@@ -151,7 +150,7 @@ test('task can be finalized', async () => {
 
 test('task finalization request count can be incremented and decremented', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
-  const dbs = { modelDb: db, modelDbMutex: new AsyncMutex() } as SqliteDatabases;
+  const dbs = { modelDb: new SqliteDatabase(db) } as SqliteDatabases;
   const abortSignal = new AbortController().signal;
   const repository = new SqliteTaskRepository(dbs);
   const task = new Task(
@@ -184,7 +183,7 @@ test('task finalization request count can be incremented and decremented', async
 
 test('concurrent task finalization request increments are serialized', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
-  const dbs = { modelDb: db, modelDbMutex: new AsyncMutex() } as SqliteDatabases;
+  const dbs = { modelDb: new SqliteDatabase(db) } as SqliteDatabases;
   const abortSignal = new AbortController().signal;
   const repository = new SqliteTaskRepository(dbs);
   const task = Task.create('Task', false, 'creator_1', 'execution_1', [], null, null, null, TaskFinalizationPolicy.ALL_ASSIGNEES, null);
@@ -204,7 +203,7 @@ test('concurrent task finalization request increments are serialized', async () 
 
 test('next task finalization attempt can be scheduled', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
-  const dbs = { modelDb: db, modelDbMutex: new AsyncMutex() } as SqliteDatabases;
+  const dbs = { modelDb: new SqliteDatabase(db) } as SqliteDatabases;
   const abortSignal = new AbortController().signal;
   const repository = new SqliteTaskRepository(dbs);
   const task = Task.create('Task', false, 'creator_1', 'execution_1', [], null, null, null, TaskFinalizationPolicy.ALL_ASSIGNEES, null);
@@ -220,7 +219,7 @@ test('next task finalization attempt can be scheduled', async () => {
 
 test('task can be fetched by id', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
-  const dbs = { modelDb: db, modelDbMutex: new AsyncMutex() } as SqliteDatabases;
+  const dbs = { modelDb: new SqliteDatabase(db) } as SqliteDatabases;
   const abortSignal = new AbortController().signal;
   const repository = new SqliteTaskRepository(dbs);
   const task = new Task(
@@ -258,7 +257,7 @@ test('task can be fetched by id', async () => {
 test('task can be deleted with its assignments', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
   db.exec(`PRAGMA foreign_keys = ON`);
-  const dbs = { modelDb: db, modelDbMutex: new AsyncMutex() } as SqliteDatabases;
+  const dbs = { modelDb: new SqliteDatabase(db) } as SqliteDatabases;
   const abortSignal = new AbortController().signal;
   const userRepository = new SqliteUserRepository(dbs);
   const taskRepository = new SqliteTaskRepository(dbs);

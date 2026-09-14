@@ -2,8 +2,7 @@ import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
 import test from 'node:test';
 import { UserAccessExpressionParser } from '@ailaflow/shared';
-import { SqliteDatabases } from '../../core/sqlite-databases';
-import { AsyncMutex } from '../../core/async-mutex';
+import { SqliteDatabase, SqliteDatabases } from '../../core/sqlite-databases';
 import { UserAttributes } from '../../repositories/user-attributes/user-attributes';
 import { SqliteUserAttributesRepository } from '../../repositories/user-attributes/sqlite-user-attributes-repository';
 import { User } from '../../repositories/user/user';
@@ -12,7 +11,7 @@ import { SqliteUserAccessExpressionUserQuerier } from './sqlite-user-access-expr
 
 test('queries user names matching a user access expression', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
-  const dbs = { modelDb: db, modelDbMutex: new AsyncMutex() } as SqliteDatabases;
+  const dbs = { modelDb: new SqliteDatabase(db) } as SqliteDatabases;
   const abortSignal = new AbortController().signal;
 
   const userRepository = new SqliteUserRepository(dbs);

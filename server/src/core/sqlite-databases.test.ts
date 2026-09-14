@@ -1,10 +1,10 @@
 import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
 import test from 'node:test';
-import { AsyncMutex } from './async-mutex';
-import { SqliteTransaction } from './sqlite-transaction';
+import { SqliteDatabase } from './sqlite-databases';
+import { Transaction } from './transaction';
 
-test('sqlite transaction holds the mutex after a failed commit until rollback', { timeout: 1000 }, async () => {
+test('sqlite database holds the mutex after a failed commit until rollback', { timeout: 1000 }, async () => {
   const db = new DatabaseSync(':memory:', { open: true });
   db.exec('PRAGMA foreign_keys = ON');
   db.exec('CREATE TABLE parents (id INTEGER PRIMARY KEY) STRICT');
@@ -13,26 +13,25 @@ test('sqlite transaction holds the mutex after a failed commit until rollback', 
       parentId INTEGER REFERENCES parents(id) DEFERRABLE INITIALLY DEFERRED
     ) STRICT
   `);
-  const mutex = new AsyncMutex();
-  const transaction = await SqliteTransaction.begin(db, mutex);
+  const sqliteDb = new SqliteDatabase(db);
+  const transaction = Transaction.begin();
 
-  db.prepare('INSERT INTO children (parentId) VALUES (?)').run(1);
+  await sqliteDb.write(db => {
+    db.prepare('INSERT INTO children (parentId) VALUES (?)').run(1);
+  }, transaction);
 
   await assert.rejects(() => transaction.commit());
 
   let nextTransactionStarted = false;
-  const nextTransactionPromise = SqliteTransaction.begin(db, mutex).then(nextTransaction => {
+  const nextTransactionPromise = sqliteDb.write(() => {
     nextTransactionStarted = true;
-    return nextTransaction;
   });
   await Promise.resolve();
 
   assert.equal(nextTransactionStarted, false);
 
   await transaction.rollback();
-
-  const nextTransaction = await nextTransactionPromise;
-  await nextTransaction.rollback();
+  await nextTransactionPromise;
 
   db.close();
 });

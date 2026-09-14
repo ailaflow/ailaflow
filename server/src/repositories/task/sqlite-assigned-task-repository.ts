@@ -1,93 +1,90 @@
 import { DatabaseSync } from 'node:sqlite';
 import { ProcessExecutionVariableValues } from '@ailaflow/shared';
-import { SqliteDatabases } from '../../core/sqlite-databases';
+import { SqliteDatabase, SqliteDatabases } from '../../core/sqlite-databases';
 import { AssignedTaskRepository } from './assigned-task-repository';
 import { AssignedTask } from './assigned-task';
 import { Transaction } from '../../core/transaction';
-import { SqliteTransaction } from '../../core/sqlite-transaction';
-import { AsyncMutex } from '../../core/async-mutex';
 
 export class SqliteAssignedTaskRepository implements AssignedTaskRepository {
-  private readonly db: DatabaseSync;
-  private readonly dbMutex: AsyncMutex;
+  private readonly db: SqliteDatabase;
 
   public constructor(dbs: SqliteDatabases) {
     this.db = dbs.modelDb;
-    this.dbMutex = dbs.modelDbMutex;
   }
 
   public async setup(_: AbortSignal): Promise<void> {
-    this.db.exec(`
-      CREATE TABLE IF NOT EXISTS assigned_tasks (
-        taskId TEXT NOT NULL,
-        userName TEXT NOT NULL,
-        channelName TEXT NOT NULL,
-        completedAt INTEGER,
-        outputValues TEXT,
+    await this.db.write(db => {
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS assigned_tasks (
+          taskId TEXT NOT NULL,
+          userName TEXT NOT NULL,
+          channelName TEXT NOT NULL,
+          completedAt INTEGER,
+          outputValues TEXT,
 
-        PRIMARY KEY (taskId, userName),
+          PRIMARY KEY (taskId, userName),
 
-        FOREIGN KEY (taskId)
-          REFERENCES tasks(id)
-          ON DELETE CASCADE,
+          FOREIGN KEY (taskId)
+            REFERENCES tasks(id)
+            ON DELETE CASCADE,
 
-        FOREIGN KEY (userName)
-          REFERENCES users(name)
-          ON DELETE CASCADE,
+          FOREIGN KEY (userName)
+            REFERENCES users(name)
+            ON DELETE CASCADE,
 
-        CHECK (completedAt IS NULL OR completedAt >= 0)
-      ) STRICT
-    `);
-    this.db.exec(`
-      CREATE INDEX IF NOT EXISTS assigned_tasks_user_name_idx
-      ON assigned_tasks(userName)
-    `);
+          CHECK (completedAt IS NULL OR completedAt >= 0)
+        ) STRICT
+      `);
+      db.exec(`
+        CREATE INDEX IF NOT EXISTS assigned_tasks_user_name_idx
+        ON assigned_tasks(userName)
+      `);
+    });
   }
 
   public async tryGet(_: AbortSignal, taskId: string, userName: string): Promise<AssignedTask | null> {
-    const statement = this.db.prepare(`
-      SELECT taskId, userName, channelName, completedAt, outputValues
-      FROM assigned_tasks
-      WHERE taskId = ?
-        AND userName = ?
-      LIMIT 1
-    `);
-    const row = statement.get(taskId, userName) as
-      | {
-          taskId: string;
-          userName: string;
-          channelName: string;
-          completedAt: number | null;
-          outputValues: string | null;
-        }
-      | undefined;
+    return this.db.read(db => {
+      const statement = db.prepare(`
+        SELECT taskId, userName, channelName, completedAt, outputValues
+        FROM assigned_tasks
+        WHERE taskId = ?
+          AND userName = ?
+        LIMIT 1
+      `);
+      const row = statement.get(taskId, userName) as
+        | {
+            taskId: string;
+            userName: string;
+            channelName: string;
+            completedAt: number | null;
+            outputValues: string | null;
+          }
+        | undefined;
 
-    return row ? mapAssignedTask(row) : null;
+      return row ? mapAssignedTask(row) : null;
+    });
   }
 
   public async getAllCompleted(_: AbortSignal, taskId: string): Promise<AssignedTask[]> {
-    const statement = this.db.prepare(`
-      SELECT taskId, userName, channelName, completedAt, outputValues
-      FROM assigned_tasks
-      WHERE taskId = ?
-        AND completedAt IS NOT NULL
-      ORDER BY userName
-    `);
-    const rows = statement.all(taskId) as unknown as AssignedTaskRow[];
+    return this.db.read(db => {
+      const statement = db.prepare(`
+        SELECT taskId, userName, channelName, completedAt, outputValues
+        FROM assigned_tasks
+        WHERE taskId = ?
+          AND completedAt IS NOT NULL
+        ORDER BY userName
+      `);
+      const rows = statement.all(taskId) as unknown as AssignedTaskRow[];
 
-    return rows.map(mapAssignedTask);
+      return rows.map(mapAssignedTask);
+    });
   }
 
   public async upsert(_: AbortSignal, assignedTask: AssignedTask, transaction?: Transaction): Promise<void> {
-    const t = await SqliteTransaction.begin(this.db, this.dbMutex, transaction);
-    try {
-      const statement = this.createUpsertStatement();
+    await this.db.write(db => {
+      const statement = this.createUpsertStatement(db);
       this.runUpsert(statement, assignedTask);
-      await t.commit();
-    } catch (e) {
-      await t.rollback();
-      throw e;
-    }
+    }, transaction);
   }
 
   public async upsertMultiple(_: AbortSignal, assignedTasks: AssignedTask[], transaction?: Transaction): Promise<void> {
@@ -95,21 +92,16 @@ export class SqliteAssignedTaskRepository implements AssignedTaskRepository {
       return;
     }
 
-    const t = await SqliteTransaction.begin(this.db, this.dbMutex, transaction);
-    try {
-      const statement = this.createUpsertStatement();
+    await this.db.write(db => {
+      const statement = this.createUpsertStatement(db);
       for (const assignedTask of assignedTasks) {
         this.runUpsert(statement, assignedTask);
       }
-      await t.commit();
-    } catch (e) {
-      await t.rollback();
-      throw e;
-    }
+    }, transaction);
   }
 
-  private createUpsertStatement(): ReturnType<DatabaseSync['prepare']> {
-    return this.db.prepare(`
+  private createUpsertStatement(db: DatabaseSync): ReturnType<DatabaseSync['prepare']> {
+    return db.prepare(`
       INSERT INTO assigned_tasks (taskId, userName, channelName, completedAt, outputValues)
       VALUES (?, ?, ?, ?, ?)
       ON CONFLICT(taskId, userName) DO UPDATE SET

@@ -1,60 +1,59 @@
 import { TableColumn, TableColumnNameValidator, TableColumnType, TableSchemaError } from '@ailaflow/shared';
 import { DatabaseSync } from 'node:sqlite';
-import { SqliteDatabases } from '../../core/sqlite-databases';
+import { SqliteDatabase, SqliteDatabases } from '../../core/sqlite-databases';
 import { SqliteTableDataNameProvider } from './sqlite-table-data-name-provider';
 import { TableDataRepositoryError } from './table-data-repository';
 import { TableSchemaConcurrencyError, TableSchemaRepository } from './table-schema-repository';
 import { TableSchema } from './table-schema';
-import { AsyncMutex } from '../../core/async-mutex';
-import { SqliteTransaction } from '../../core/sqlite-transaction';
 import { Transaction } from '../../core/transaction';
 
 export class SqliteTableSchemaRepository implements TableSchemaRepository {
-  private readonly db: DatabaseSync;
-  private readonly dbMutex: AsyncMutex;
+  private readonly db: SqliteDatabase;
 
   public constructor(dbs: SqliteDatabases) {
     this.db = dbs.dataDb;
-    this.dbMutex = dbs.dataDbMutex;
   }
 
   public async get(_: AbortSignal, tableName: string): Promise<TableSchema> {
+    return this.db.read(db => this.getFromDb(db, tableName));
+  }
+
+  public async save(_: AbortSignal, schema: TableSchema, transaction?: Transaction): Promise<TableSchema> {
+    if (schema.newColumns.length === 0) {
+      return schema.asPersisted();
+    }
+
+    try {
+      return await this.db.write(db => {
+        const dataTableName = SqliteTableDataNameProvider.getName(schema.tableName);
+        for (const column of schema.newColumns) {
+          const validationError = TableColumnNameValidator.validate(column.name);
+          if (validationError) {
+            throw new TableSchemaError(validationError);
+          }
+          const columnName = `"${column.name}"`;
+          const columnType = mapColumnTypeToSqlite(column.type);
+          db.exec(`ALTER TABLE ${dataTableName} ADD COLUMN ${columnName} ${columnType}`);
+        }
+        return this.getFromDb(db, schema.tableName);
+      }, transaction);
+    } catch (error) {
+      if (isDuplicateColumnError(error)) {
+        throw new TableSchemaConcurrencyError();
+      }
+      throw mapSqliteError(error, schema.tableName);
+    }
+  }
+
+  private getFromDb(db: DatabaseSync, tableName: string): TableSchema {
     const dataTableName = SqliteTableDataNameProvider.getName(tableName);
-    const rows = this.db.prepare(`PRAGMA table_info(${dataTableName})`).all() as unknown as SqliteTableColumnRow[];
+    const rows = db.prepare(`PRAGMA table_info(${dataTableName})`).all() as unknown as SqliteTableColumnRow[];
     if (rows.length === 0) {
       throw new TableDataRepositoryError(`Table "${tableName}" does not exist`);
     }
 
     const columns = rows.filter(row => !row.name.startsWith('_')).map(mapColumn);
     return new TableSchema(tableName, columns);
-  }
-
-  public async save(abortSignal: AbortSignal, schema: TableSchema, transaction?: Transaction): Promise<TableSchema> {
-    if (schema.newColumns.length === 0) {
-      return schema.asPersisted();
-    }
-
-    const dataTableName = SqliteTableDataNameProvider.getName(schema.tableName);
-    const t = await SqliteTransaction.begin(this.db, this.dbMutex, transaction);
-    try {
-      for (const column of schema.newColumns) {
-        const validationError = TableColumnNameValidator.validate(column.name);
-        if (validationError) {
-          throw new TableSchemaError(validationError);
-        }
-        const columnName = `"${column.name}"`;
-        const columnType = mapColumnTypeToSqlite(column.type);
-        this.db.exec(`ALTER TABLE ${dataTableName} ADD COLUMN ${columnName} ${columnType}`);
-      }
-      await t.commit();
-    } catch (error) {
-      await t.rollback();
-      if (isDuplicateColumnError(error)) {
-        throw new TableSchemaConcurrencyError();
-      }
-      throw mapSqliteError(error, schema.tableName);
-    }
-    return this.get(abortSignal, schema.tableName);
   }
 }
 

@@ -1,8 +1,7 @@
 import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
 import test from 'node:test';
-import { SqliteDatabases } from '../../../core/sqlite-databases';
-import { AsyncMutex } from '../../../core/async-mutex';
+import { SqliteDatabase, SqliteDatabases } from '../../../core/sqlite-databases';
 import { LlmProviderConfiguration } from './llm-provider-configuration';
 import { LlmProviderType, LlmUseCase } from '@ailaflow/shared';
 import { LlmUseCaseConfiguration } from './llm-use-case-configuration';
@@ -72,7 +71,7 @@ test('domain validates provider and use-case invariants', () => {
 test('persists LLM providers and use-case configurations', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
   db.exec(`PRAGMA foreign_keys = ON`);
-  const repository = new SqliteLlmConfigurationRepository({ modelDb: db, modelDbMutex: new AsyncMutex() } as SqliteDatabases);
+  const repository = new SqliteLlmConfigurationRepository({ modelDb: new SqliteDatabase(db) } as SqliteDatabases);
   const abortSignal = new AbortController().signal;
   await repository.setup(abortSignal);
 
@@ -119,7 +118,7 @@ test('persists LLM providers and use-case configurations', async () => {
 test('updates provider data while retaining its stable ID', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
   db.exec(`PRAGMA foreign_keys = ON`);
-  const repository = new SqliteLlmConfigurationRepository({ modelDb: db, modelDbMutex: new AsyncMutex() } as SqliteDatabases);
+  const repository = new SqliteLlmConfigurationRepository({ modelDb: new SqliteDatabase(db) } as SqliteDatabases);
   const abortSignal = new AbortController().signal;
   await repository.setup(abortSignal);
 

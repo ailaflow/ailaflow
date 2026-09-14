@@ -1,14 +1,13 @@
 import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
 import test from 'node:test';
-import { SqliteDatabases } from '../../core/sqlite-databases';
-import { AsyncMutex } from '../../core/async-mutex';
+import { SqliteDatabase, SqliteDatabases } from '../../core/sqlite-databases';
 import { SqliteProcessRepository } from '../../repositories/process/sqlite-process-repository';
 import { SqliteProcessListQuerier } from './sqlite-process-list-querier';
 
 test('queries a name-ordered page of processes', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
-  const dbs = { modelDb: db, modelDbMutex: new AsyncMutex() } as SqliteDatabases;
+  const dbs = { modelDb: new SqliteDatabase(db) } as SqliteDatabases;
   const abortSignal = new AbortController().signal;
   const processRepository = new SqliteProcessRepository(dbs);
   const querier = new SqliteProcessListQuerier(dbs);
@@ -38,7 +37,7 @@ test('queries a name-ordered page of processes', async () => {
 
 test('filters process names before counting and paginating, with the same matching as user search', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
-  const dbs = { modelDb: db, modelDbMutex: new AsyncMutex() } as SqliteDatabases;
+  const dbs = { modelDb: new SqliteDatabase(db) } as SqliteDatabases;
   const abortSignal = new AbortController().signal;
   const repository = new SqliteProcessRepository(dbs);
   const querier = new SqliteProcessListQuerier(dbs);
@@ -76,7 +75,7 @@ test('filters process names before counting and paginating, with the same matchi
 
 test('treats SQL wildcards and quotes as literal process search text', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
-  const dbs = { modelDb: db, modelDbMutex: new AsyncMutex() } as SqliteDatabases;
+  const dbs = { modelDb: new SqliteDatabase(db) } as SqliteDatabases;
   const abortSignal = new AbortController().signal;
   const repository = new SqliteProcessRepository(dbs);
   const querier = new SqliteProcessListQuerier(dbs);

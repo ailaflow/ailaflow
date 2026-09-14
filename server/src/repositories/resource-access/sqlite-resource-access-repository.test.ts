@@ -2,15 +2,14 @@ import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
 import test from 'node:test';
 import { UserAccessComparisonOperator, UserAttributeValueType } from '@ailaflow/shared';
-import { SqliteDatabases } from '../../core/sqlite-databases';
-import { AsyncMutex } from '../../core/async-mutex';
+import { SqliteDatabase, SqliteDatabases } from '../../core/sqlite-databases';
 import { ResourceAccess } from './resource-access-repository';
 import { SqliteResourceAccessRepository } from './sqlite-resource-access-repository';
 
 test('resource access rules are replaced as grouped conditions', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
   db.exec(`PRAGMA foreign_keys = ON`);
-  const dbs = { modelDb: db, modelDbMutex: new AsyncMutex() } as SqliteDatabases;
+  const dbs = { modelDb: new SqliteDatabase(db) } as SqliteDatabases;
   const abortSignal = new AbortController().signal;
   const repository = new SqliteResourceAccessRepository(dbs);
 

@@ -1,8 +1,7 @@
 import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
 import test from 'node:test';
-import { SqliteDatabases } from '../../core/sqlite-databases';
-import { AsyncMutex } from '../../core/async-mutex';
+import { SqliteDatabase, SqliteDatabases } from '../../core/sqlite-databases';
 import { Notification } from '../../repositories/notification/notification';
 import { SqliteNotificationRepository } from '../../repositories/notification/sqlite-notification-repository';
 import { SqliteUserRepository } from '../../repositories/user/sqlite-user-repository';
@@ -12,7 +11,7 @@ import { SqliteMyNotificationListQuerier } from './sqlite-my-notification-list-q
 test('queries a newest-first page of notifications for the current user', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
   db.exec(`PRAGMA foreign_keys = ON`);
-  const dbs = { modelDb: db, modelDbMutex: new AsyncMutex() } as SqliteDatabases;
+  const dbs = { modelDb: new SqliteDatabase(db) } as SqliteDatabases;
   const abortSignal = new AbortController().signal;
   const userRepository = new SqliteUserRepository(dbs);
   const notificationRepository = new SqliteNotificationRepository(dbs);

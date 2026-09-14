@@ -1,10 +1,9 @@
-import { DatabaseSync } from 'node:sqlite';
 import { GetMyTasksResponse } from '@ailaflow/shared';
-import { SqliteDatabases } from '../../core/sqlite-databases';
+import { SqliteDatabase, SqliteDatabases } from '../../core/sqlite-databases';
 import { MyTaskListQuerier } from './my-task-list-querier';
 
 export class SqliteMyTaskListQuerier implements MyTaskListQuerier {
-  private readonly db: DatabaseSync;
+  private readonly db: SqliteDatabase;
 
   public constructor(
     dbs: SqliteDatabases,
@@ -21,8 +20,9 @@ export class SqliteMyTaskListQuerier implements MyTaskListQuerier {
     page: number,
     pageSize: number
   ): Promise<GetMyTasksResponse> {
-    const statusCondition = onlyOpen ? 'AND at.completedAt IS NULL AND t.finalizedAt IS NULL' : '';
-    const countStatement = this.db.prepare(`
+    return this.db.read(db => {
+      const statusCondition = onlyOpen ? 'AND at.completedAt IS NULL AND t.finalizedAt IS NULL' : '';
+      const countStatement = db.prepare(`
       SELECT COUNT(*) AS totalCount
       FROM assigned_tasks at
       JOIN tasks t
@@ -31,9 +31,9 @@ export class SqliteMyTaskListQuerier implements MyTaskListQuerier {
         AND at.userName = ?
       ${statusCondition}
     `);
-    const { totalCount } = countStatement.get(isTest ? 1 : 0, userName) as { totalCount: number };
+      const { totalCount } = countStatement.get(isTest ? 1 : 0, userName) as { totalCount: number };
 
-    const statement = this.db.prepare(`
+      const statement = db.prepare(`
       SELECT
         t.id,
         t.title,
@@ -49,25 +49,26 @@ export class SqliteMyTaskListQuerier implements MyTaskListQuerier {
       ORDER BY t.createdAt, t.id
       LIMIT ? OFFSET ?
     `);
-    const rows = statement.all(isTest ? 1 : 0, userName, pageSize, (page - 1) * pageSize) as {
-      id: string;
-      title: string;
-      deadline: number | null;
-      createdAt: number;
-      completedAt: number | null;
-    }[];
-    const now = this.now();
+      const rows = statement.all(isTest ? 1 : 0, userName, pageSize, (page - 1) * pageSize) as {
+        id: string;
+        title: string;
+        deadline: number | null;
+        createdAt: number;
+        completedAt: number | null;
+      }[];
+      const now = this.now();
 
-    return {
-      tasks: rows.map(row => ({
-        id: row.id,
-        title: row.title,
-        ...(row.completedAt === null ? {} : { completedAt: row.completedAt }),
-        ...(row.completedAt === null && row.deadline !== null && now > row.deadline ? { isOutdated: true } : {})
-      })),
-      totalCount,
-      page,
-      pageSize
-    };
+      return {
+        tasks: rows.map(row => ({
+          id: row.id,
+          title: row.title,
+          ...(row.completedAt === null ? {} : { completedAt: row.completedAt }),
+          ...(row.completedAt === null && row.deadline !== null && now > row.deadline ? { isOutdated: true } : {})
+        })),
+        totalCount,
+        page,
+        pageSize
+      };
+    });
   }
 }

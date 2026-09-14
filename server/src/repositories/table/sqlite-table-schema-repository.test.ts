@@ -2,8 +2,7 @@ import { TableColumnType } from '@ailaflow/shared';
 import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
 import test from 'node:test';
-import { SqliteDatabases } from '../../core/sqlite-databases';
-import { AsyncMutex } from '../../core/async-mutex';
+import { SqliteDatabase, SqliteDatabases } from '../../core/sqlite-databases';
 import { SqliteTableRepository } from './sqlite-table-repository';
 import { SqliteTableSchemaRepository } from './sqlite-table-schema-repository';
 import { TableSchemaManager } from './table-schema-manager';
@@ -11,8 +10,9 @@ import { TableSchemaConcurrencyError } from './table-schema-repository';
 import { Table } from './table';
 
 test('loads and saves an append-only SQLite table schema', async () => {
-  const db = new DatabaseSync(':memory:', { open: true });
-  const dbs = { modelDb: db, modelDbMutex: new AsyncMutex(), dataDb: db, dataDbMutex: new AsyncMutex() } as SqliteDatabases;
+  const modelDb = new DatabaseSync(':memory:', { open: true });
+  const dataDb = new DatabaseSync(':memory:', { open: true });
+  const dbs = { modelDb: new SqliteDatabase(modelDb), dataDb: new SqliteDatabase(dataDb) } as SqliteDatabases;
   const abortSignal = new AbortController().signal;
   const tableRepository = new SqliteTableRepository(dbs, { invalidate() {} });
   const schemaRepository = new SqliteTableSchemaRepository(dbs);
@@ -32,7 +32,7 @@ test('loads and saves an append-only SQLite table schema', async () => {
   ]);
   assert.deepEqual(saved.newColumns, []);
   assert.deepEqual(
-    db
+    dataDb
       .prepare('PRAGMA table_info(data_customers)')
       .all()
       .map(column => ({ name: column.name, type: column.type })),
@@ -47,12 +47,14 @@ test('loads and saves an append-only SQLite table schema', async () => {
   );
 
   await assert.rejects(() => schemaRepository.save(abortSignal, extended), TableSchemaConcurrencyError);
-  db.close();
+  modelDb.close();
+  dataDb.close();
 });
 
 test('reloads after another schema manager creates the same column', async () => {
-  const db = new DatabaseSync(':memory:', { open: true });
-  const dbs = { modelDb: db, modelDbMutex: new AsyncMutex(), dataDb: db, dataDbMutex: new AsyncMutex() } as SqliteDatabases;
+  const modelDb = new DatabaseSync(':memory:', { open: true });
+  const dataDb = new DatabaseSync(':memory:', { open: true });
+  const dbs = { modelDb: new SqliteDatabase(modelDb), dataDb: new SqliteDatabase(dataDb) } as SqliteDatabases;
   const abortSignal = new AbortController().signal;
   const firstManager = new TableSchemaManager(new SqliteTableSchemaRepository(dbs));
   const secondManager = new TableSchemaManager(new SqliteTableSchemaRepository(dbs));
@@ -66,5 +68,6 @@ test('reloads after another schema manager creates the same column', async () =>
 
   assert.deepEqual(schema.columns, [{ name: 'score', type: TableColumnType.NUMBER }]);
   assert.deepEqual(schema.newColumns, []);
-  db.close();
+  modelDb.close();
+  dataDb.close();
 });

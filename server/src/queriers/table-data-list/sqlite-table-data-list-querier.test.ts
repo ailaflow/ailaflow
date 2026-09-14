@@ -1,8 +1,7 @@
 import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
 import test from 'node:test';
-import { SqliteDatabases } from '../../core/sqlite-databases';
-import { AsyncMutex } from '../../core/async-mutex';
+import { SqliteDatabase, SqliteDatabases } from '../../core/sqlite-databases';
 import { SqliteTableDataRepository } from '../../repositories/table/sqlite-table-data-repository';
 import { SqliteTableRepository } from '../../repositories/table/sqlite-table-repository';
 import { SqliteTableSchemaRepository } from '../../repositories/table/sqlite-table-schema-repository';
@@ -12,21 +11,22 @@ import { Table } from '../../repositories/table/table';
 import { SqliteTableDataListQuerier } from './sqlite-table-data-list-querier';
 
 test('queries a primary-key-ordered page of table data', async t => {
-  const db = new DatabaseSync(':memory:', { open: true });
-  const dbs = { modelDb: db, modelDbMutex: new AsyncMutex(), dataDb: db, dataDbMutex: new AsyncMutex() } as SqliteDatabases;
+  const modelDb = new DatabaseSync(':memory:', { open: true });
+  const dataDb = new DatabaseSync(':memory:', { open: true });
+  const dbs = { modelDb: new SqliteDatabase(modelDb), dataDb: new SqliteDatabase(dataDb) } as SqliteDatabases;
   const abortSignal = new AbortController().signal;
   const schemaManager = new TableSchemaManager(new SqliteTableSchemaRepository(dbs));
   const tableRepository = new SqliteTableRepository(dbs, schemaManager);
   const timestamps = [3000, 1000, 2000];
   t.mock.method(Date, 'now', () => timestamps.shift() ?? 0);
-  const tableDataRepository = new SqliteTableDataRepository(dbs, schemaManager);
+  const tableDataRepository = new SqliteTableDataRepository(dbs);
   const querier = new SqliteTableDataListQuerier(dbs, schemaManager);
 
   await tableRepository.setup(abortSignal);
   await tableRepository.insert(abortSignal, new Table('customers', 'Customer records'));
-  await tableDataRepository.upsert(abortSignal, 'customers', { _id: 'charlie', x: 3, info: ['third'] });
-  await tableDataRepository.upsert(abortSignal, 'customers', { _id: 'alpha', x: 1, active: true });
-  await tableDataRepository.upsert(abortSignal, 'customers', { _id: 'bravo', x: 2 });
+  await upsertTableData(abortSignal, schemaManager, tableDataRepository, 'customers', { _id: 'charlie', x: 3, info: ['third'] });
+  await upsertTableData(abortSignal, schemaManager, tableDataRepository, 'customers', { _id: 'alpha', x: 1, active: true });
+  await upsertTableData(abortSignal, schemaManager, tableDataRepository, 'customers', { _id: 'bravo', x: 2 });
 
   assert.deepEqual(await querier.query(abortSignal, 'customers', 1, 2, 'x', false), {
     rows: [
@@ -51,5 +51,17 @@ test('queries a primary-key-ordered page of table data', async t => {
     error => error instanceof TableDataRepositoryError && error.message.includes('cannot be sorted')
   );
 
-  db.close();
+  modelDb.close();
+  dataDb.close();
 });
+
+async function upsertTableData(
+  abortSignal: AbortSignal,
+  schemaManager: TableSchemaManager,
+  repository: SqliteTableDataRepository,
+  tableName: string,
+  row: Record<string, unknown> & { _id: string }
+): Promise<void> {
+  const schema = await schemaManager.ensureCompatible(abortSignal, tableName, row);
+  await repository.upsert(abortSignal, schema, row);
+}

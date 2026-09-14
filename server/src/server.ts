@@ -241,7 +241,7 @@ export class Server {
     notificationRepository = new SqliteNotificationRepository(sqliteDatabases);
     const tableSchemaManager = new TableSchemaManager(new SqliteTableSchemaRepository(sqliteDatabases));
     tableRepository = new SqliteTableRepository(sqliteDatabases, tableSchemaManager);
-    tableDataRepository = new SqliteTableDataRepository(sqliteDatabases, tableSchemaManager);
+    tableDataRepository = new SqliteTableDataRepository(sqliteDatabases);
     llmConfigurationRepository = new SqliteLlmConfigurationRepository(sqliteDatabases);
     telegramConfigurationRepository = new SqliteTelegramConfigurationRepository(sqliteDatabases);
     kvConfigurationRepository = new SqliteKvConfigurationRepository(sqliteDatabases);
@@ -284,8 +284,8 @@ export class Server {
       new ReadVariableRpcHandler(processExecutionStore),
       new WriteVariableRpcHandler(processExecutionStore),
       new ReadTablePageRpcHandler(tableDataListQuerier),
-      new WriteTableRpcHandler(tableDataRepository),
-      new TryReadTableRpcHandler(tableDataRepository),
+      new WriteTableRpcHandler(tableDataRepository, tableSchemaManager),
+      new TryReadTableRpcHandler(tableDataRepository, tableSchemaManager),
       new GetStartedByRpcHandler(processExecutionStore)
     ]);
 

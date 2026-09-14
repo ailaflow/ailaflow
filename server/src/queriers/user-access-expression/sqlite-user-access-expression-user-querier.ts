@@ -1,6 +1,6 @@
 import { DatabaseSync } from 'node:sqlite';
 import { UserAccessCondition, UserAccessExpression, UserAttributeValueType } from '@ailaflow/shared';
-import { SqliteDatabases } from '../../core/sqlite-databases';
+import { SqliteDatabase, SqliteDatabases } from '../../core/sqlite-databases';
 import { UserAccessExpressionUserQuerier } from './user-access-expression-user-querier';
 
 const MATCHING_USER_ACCESS_CONDITION = `
@@ -26,7 +26,7 @@ const MATCHING_USER_ACCESS_CONDITION = `
 `;
 
 export class SqliteUserAccessExpressionUserQuerier implements UserAccessExpressionUserQuerier {
-  private readonly db: DatabaseSync;
+  private readonly db: SqliteDatabase;
 
   public constructor(dbs: SqliteDatabases) {
     this.db = dbs.modelDb;
@@ -37,11 +37,12 @@ export class SqliteUserAccessExpressionUserQuerier implements UserAccessExpressi
     if (serializedExpression.groups.length === 0) {
       return [];
     }
-    if (serializedExpression.groups.some(group => group.conditionCount === 0)) {
-      return this.queryAllUserNames();
-    }
+    return this.db.read(db => {
+      if (serializedExpression.groups.some(group => group.conditionCount === 0)) {
+        return this.queryAllUserNames(db);
+      }
 
-    const statement = this.db.prepare(`
+      const statement = db.prepare(`
       WITH
       expression_groups(group_id, condition_count) AS (
         VALUES ${buildValuesPlaceholders(serializedExpression.groups.length, 2)}
@@ -81,12 +82,13 @@ ${MATCHING_USER_ACCESS_CONDITION}
        AND mc.matched_count = g.condition_count
       ORDER BY mc.user_name
     `);
-    const rows = statement.all(...serializedExpression.parameters) as { user_name: string }[];
-    return rows.map(row => row.user_name);
+      const rows = statement.all(...serializedExpression.parameters) as { user_name: string }[];
+      return rows.map(row => row.user_name);
+    });
   }
 
-  private queryAllUserNames(): string[] {
-    const statement = this.db.prepare(`
+  private queryAllUserNames(db: DatabaseSync): string[] {
+    const statement = db.prepare(`
       SELECT name
       FROM users
       ORDER BY name

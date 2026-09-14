@@ -1,12 +1,12 @@
 import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
 import test from 'node:test';
-import { SqliteDatabases } from '../../core/sqlite-databases';
+import { SqliteDatabase, SqliteDatabases } from '../../core/sqlite-databases';
 import { SqliteIncompleteAssignedTaskCountQuerier } from './sqlite-incomplete-assigned-task-count-querier';
 
 test('counts incomplete assigned tasks for a task', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
-  const dbs = { modelDb: db } as SqliteDatabases;
+  const dbs = { modelDb: new SqliteDatabase(db) } as SqliteDatabases;
   const abortSignal = new AbortController().signal;
   const querier = new SqliteIncompleteAssignedTaskCountQuerier(dbs);
 

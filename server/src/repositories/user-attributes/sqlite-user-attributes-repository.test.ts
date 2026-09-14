@@ -3,15 +3,14 @@ import { DatabaseSync } from 'node:sqlite';
 import test from 'node:test';
 import { UserAttributesRepositoryError } from './user-attributes-repository';
 import { SqliteUserAttributesRepository } from './sqlite-user-attributes-repository';
-import { SqliteDatabases } from '../../core/sqlite-databases';
-import { AsyncMutex } from '../../core/async-mutex';
+import { SqliteDatabase, SqliteDatabases } from '../../core/sqlite-databases';
 import { SqliteUserRepository } from '../user/sqlite-user-repository';
 import { User } from '../user/user';
 import { UserAttributes } from './user-attributes';
 
 test('user attributes keep one value type per attribute name across users', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
-  const dbs = { modelDb: db, modelDbMutex: new AsyncMutex() } as SqliteDatabases;
+  const dbs = { modelDb: new SqliteDatabase(db) } as SqliteDatabases;
   const abortSignal = new AbortController().signal;
 
   const userRepository = new SqliteUserRepository(dbs);

@@ -1,39 +1,36 @@
-import { DatabaseSync } from 'node:sqlite';
-import { SqliteDatabases } from '../../core/sqlite-databases';
+import { SqliteDatabase, SqliteDatabases } from '../../core/sqlite-databases';
 import { Notification } from './notification';
 import { NotificationRepository } from './notification-repository';
-import { AsyncMutex } from '../../core/async-mutex';
-import { SqliteTransaction } from '../../core/sqlite-transaction';
 import { Transaction } from '../../core/transaction';
 
 export class SqliteNotificationRepository implements NotificationRepository {
-  private readonly db: DatabaseSync;
-  private readonly dbMutex: AsyncMutex;
+  private readonly db: SqliteDatabase;
 
   public constructor(dbs: SqliteDatabases) {
     this.db = dbs.modelDb;
-    this.dbMutex = dbs.modelDbMutex;
   }
 
   public async setup(_: AbortSignal): Promise<void> {
-    this.db.exec(`
-      CREATE TABLE IF NOT EXISTS notifications (
-        id TEXT PRIMARY KEY,
-        userName TEXT NOT NULL,
-        message TEXT NOT NULL,
-        createdAt INTEGER NOT NULL,
+    await this.db.write(db => {
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS notifications (
+          id TEXT PRIMARY KEY,
+          userName TEXT NOT NULL,
+          message TEXT NOT NULL,
+          createdAt INTEGER NOT NULL,
 
-        FOREIGN KEY (userName)
-          REFERENCES users(name)
-          ON DELETE CASCADE,
+          FOREIGN KEY (userName)
+            REFERENCES users(name)
+            ON DELETE CASCADE,
 
-        CHECK (createdAt >= 0)
-      ) STRICT
-    `);
-    this.db.exec(`
-      CREATE INDEX IF NOT EXISTS notifications_user_created_at_idx
-      ON notifications(userName, createdAt DESC, id DESC)
-    `);
+          CHECK (createdAt >= 0)
+        ) STRICT
+      `);
+      db.exec(`
+        CREATE INDEX IF NOT EXISTS notifications_user_created_at_idx
+        ON notifications(userName, createdAt DESC, id DESC)
+      `);
+    });
   }
 
   public async insertMultiple(_: AbortSignal, notifications: Notification[], transaction?: Transaction): Promise<void> {
@@ -41,31 +38,21 @@ export class SqliteNotificationRepository implements NotificationRepository {
       return;
     }
 
-    const t = await SqliteTransaction.begin(this.db, this.dbMutex, transaction);
-    try {
-      const statement = this.db.prepare(`
+    await this.db.write(db => {
+      const statement = db.prepare(`
         INSERT INTO notifications (id, userName, message, createdAt)
         VALUES (?, ?, ?, ?)
       `);
       for (const notification of notifications) {
         statement.run(notification.id, notification.userName, notification.message, notification.createdAt);
       }
-      await t.commit();
-    } catch (e) {
-      await t.rollback();
-      throw e;
-    }
+    }, transaction);
   }
 
   public async delete(_: AbortSignal, userName: string, id: string, transaction?: Transaction): Promise<boolean> {
-    const t = await SqliteTransaction.begin(this.db, this.dbMutex, transaction);
-    try {
-      const result = this.db.prepare(`DELETE FROM notifications WHERE userName = ? AND id = ?`).run(userName, id).changes > 0;
-      await t.commit();
-      return result;
-    } catch (e) {
-      await t.rollback();
-      throw e;
-    }
+    return this.db.write(
+      db => db.prepare(`DELETE FROM notifications WHERE userName = ? AND id = ?`).run(userName, id).changes > 0,
+      transaction
+    );
   }
 }

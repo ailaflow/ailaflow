@@ -1,10 +1,9 @@
-import { DatabaseSync } from 'node:sqlite';
-import { SqliteDatabases } from '../../core/sqlite-databases';
+import { SqliteDatabase, SqliteDatabases } from '../../core/sqlite-databases';
 import { SqliteResourceAccessQueryBuilder } from '../../core/sqlite-resource-access-query-builder';
 import { MyProcessAccessQuerier } from './my-process-access-querier';
 
 export class SqliteMyProcessAccessQuerier implements MyProcessAccessQuerier {
-  private readonly db: DatabaseSync;
+  private readonly db: SqliteDatabase;
 
   public constructor(
     dbs: SqliteDatabases,
@@ -14,7 +13,8 @@ export class SqliteMyProcessAccessQuerier implements MyProcessAccessQuerier {
   }
 
   public async hasAccess(_: AbortSignal, userName: string, processName: string): Promise<boolean> {
-    const statement = this.db.prepare(`
+    return this.db.read(db => {
+      const statement = db.prepare(`
       WITH ${this.resourceAccessQueryBuilder.buildAccessibleResourcesCte()}
       SELECT 1
       FROM processes p
@@ -23,6 +23,7 @@ export class SqliteMyProcessAccessQuerier implements MyProcessAccessQuerier {
       WHERE p.name = ?
       LIMIT 1
     `);
-    return Boolean(statement.get(userName, processName));
+      return Boolean(statement.get(userName, processName));
+    });
   }
 }

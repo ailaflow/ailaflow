@@ -1,22 +1,18 @@
-import { DatabaseSync } from 'node:sqlite';
 import { UserAccessCondition, UserAttributeValueType } from '@ailaflow/shared';
-import { SqliteDatabases } from '../../core/sqlite-databases';
+import { SqliteDatabase, SqliteDatabases } from '../../core/sqlite-databases';
 import { ResourceAccess, ResourceAccessRepository } from './resource-access-repository';
-import { AsyncMutex } from '../../core/async-mutex';
-import { SqliteTransaction } from '../../core/sqlite-transaction';
 import { Transaction } from '../../core/transaction';
 
 export class SqliteResourceAccessRepository implements ResourceAccessRepository {
-  private readonly db: DatabaseSync;
-  private readonly dbMutex: AsyncMutex;
+  private readonly db: SqliteDatabase;
 
   public constructor(dbs: SqliteDatabases) {
     this.db = dbs.modelDb;
-    this.dbMutex = dbs.modelDbMutex;
   }
 
   public async setup(_: AbortSignal): Promise<void> {
-    this.db.exec(`
+    await this.db.write(db => {
+      db.exec(`
       CREATE TABLE IF NOT EXISTS resource_access_rule_groups (
         resource_id TEXT NOT NULL,
         group_id INTEGER NOT NULL,
@@ -27,7 +23,7 @@ export class SqliteResourceAccessRepository implements ResourceAccessRepository 
         CHECK (condition_count > 0)
       ) STRICT
     `);
-    this.db.exec(`
+      db.exec(`
       CREATE TABLE IF NOT EXISTS resource_access_rule_conditions (
         resource_id TEXT NOT NULL,
         group_id INTEGER NOT NULL,
@@ -71,28 +67,28 @@ export class SqliteResourceAccessRepository implements ResourceAccessRepository 
         )
       ) STRICT
     `);
-    this.db.exec(`
+      db.exec(`
       CREATE INDEX IF NOT EXISTS resource_access_rule_conditions_lookup_idx
       ON resource_access_rule_conditions(attribute_name, attribute_type, operator)
     `);
-    this.db.exec(`
+      db.exec(`
       CREATE INDEX IF NOT EXISTS resource_access_rule_conditions_value_lookup_idx
       ON resource_access_rule_conditions(attribute_name, attribute_type, operator, value_string, value_integer, value_boolean)
-    `);
+      `);
+    });
   }
 
   public async replace(_: AbortSignal, resourceAccess: ResourceAccess, transaction?: Transaction): Promise<void> {
-    const t = await SqliteTransaction.begin(this.db, this.dbMutex, transaction);
-    try {
-      const deleteGroupsStatement = this.db.prepare(`
+    await this.db.write(db => {
+      const deleteGroupsStatement = db.prepare(`
         DELETE FROM resource_access_rule_groups
         WHERE resource_id = ?
       `);
-      const insertGroupStatement = this.db.prepare(`
+      const insertGroupStatement = db.prepare(`
         INSERT INTO resource_access_rule_groups (resource_id, group_id, condition_count)
         VALUES (?, ?, ?)
       `);
-      const insertConditionStatement = this.db.prepare(`
+      const insertConditionStatement = db.prepare(`
         INSERT INTO resource_access_rule_conditions (
           resource_id,
           group_id,
@@ -126,12 +122,7 @@ export class SqliteResourceAccessRepository implements ResourceAccessRepository 
           );
         });
       });
-
-      await t.commit();
-    } catch (e) {
-      await t.rollback();
-      throw e;
-    }
+    }, transaction);
   }
 }
 

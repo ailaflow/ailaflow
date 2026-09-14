@@ -2,8 +2,7 @@ import { TableSchemaError } from '@ailaflow/shared';
 import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
 import test from 'node:test';
-import { SqliteDatabases } from '../../core/sqlite-databases';
-import { AsyncMutex } from '../../core/async-mutex';
+import { SqliteDatabase, SqliteDatabases } from '../../core/sqlite-databases';
 import { SqliteTableDataRepository } from './sqlite-table-data-repository';
 import { SqliteTableRepository } from './sqlite-table-repository';
 import { SqliteTableSchemaRepository } from './sqlite-table-schema-repository';
@@ -12,29 +11,30 @@ import { TableSchemaManager } from './table-schema-manager';
 import { Table } from './table';
 
 test('upserts and deletes data in a table-specific data table', async t => {
-  const db = new DatabaseSync(':memory:', { open: true });
-  const dbs = { modelDb: db, modelDbMutex: new AsyncMutex(), dataDb: db, dataDbMutex: new AsyncMutex() } as SqliteDatabases;
+  const modelDb = new DatabaseSync(':memory:', { open: true });
+  const dataDb = new DatabaseSync(':memory:', { open: true });
+  const dbs = { modelDb: new SqliteDatabase(modelDb), dataDb: new SqliteDatabase(dataDb) } as SqliteDatabases;
   const abortSignal = new AbortController().signal;
   const tableRepository = new SqliteTableRepository(dbs, { invalidate() {} });
   const timestamps = [1000, 2000, 3000];
   t.mock.method(Date, 'now', () => timestamps.shift() ?? 0);
-  const repository = createDataRepository(dbs);
+  const { repository, schemaManager } = createTableDataDependencies(dbs);
 
   await tableRepository.setup(abortSignal);
   await tableRepository.insert(abortSignal, new Table('customers', 'Customer records'));
 
-  assert.equal(await repository.tryGet(abortSignal, 'customers', 'customer_1'), null);
-  await repository.upsert(abortSignal, 'customers', {
+  assert.equal(await tryGetTableData(abortSignal, schemaManager, repository, 'customers', 'customer_1'), null);
+  await upsertTableData(abortSignal, schemaManager, repository, 'customers', {
     _id: 'customer_1',
     name: 'Alice',
     score: 10,
     active: true,
     details: { tags: ['new'] }
   });
-  await repository.upsert(abortSignal, 'customers', { _id: 'customer_2', name: 'Bob', score: 2.5 });
-  await repository.upsert(abortSignal, 'customers', { _id: 'customer_1', name: 'Alicia', active: false });
+  await upsertTableData(abortSignal, schemaManager, repository, 'customers', { _id: 'customer_2', name: 'Bob', score: 2.5 });
+  await upsertTableData(abortSignal, schemaManager, repository, 'customers', { _id: 'customer_1', name: 'Alicia', active: false });
 
-  assert.deepEqual(await repository.tryGet(abortSignal, 'customers', 'customer_1'), {
+  assert.deepEqual(await tryGetTableData(abortSignal, schemaManager, repository, 'customers', 'customer_1'), {
     _id: 'customer_1',
     _updatedAt: 3000,
     name: 'Alicia',
@@ -42,7 +42,7 @@ test('upserts and deletes data in a table-specific data table', async t => {
   });
 
   assert.deepEqual(
-    toPlainRows(db.prepare(`SELECT _id, _updatedAt, name, score, active, details FROM data_customers ORDER BY _id`)).map(row => ({
+    toPlainRows(dataDb.prepare(`SELECT _id, _updatedAt, name, score, active, details FROM data_customers ORDER BY _id`)).map(row => ({
       ...row,
       details: row.details === null ? null : JSON.parse(Buffer.from(row.details as Uint8Array).toString('utf8'))
     })),
@@ -53,56 +53,91 @@ test('upserts and deletes data in a table-specific data table', async t => {
   );
 
   await repository.delete(abortSignal, 'customers', 'customer_1');
-  assert.equal(await repository.tryGet(abortSignal, 'customers', 'customer_1'), null);
-  assert.deepEqual(toPlainRows(db.prepare(`SELECT _id FROM data_customers`)), [{ _id: 'customer_2' }]);
+  assert.equal(await tryGetTableData(abortSignal, schemaManager, repository, 'customers', 'customer_1'), null);
+  assert.deepEqual(toPlainRows(dataDb.prepare(`SELECT _id FROM data_customers`)), [{ _id: 'customer_2' }]);
 
-  db.close();
+  modelDb.close();
+  dataDb.close();
 });
 
 test('reports a repository error when the data table does not exist', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
-  const dbs = { dataDb: db, dataDbMutex: new AsyncMutex() } as SqliteDatabases;
+  const dbs = { dataDb: new SqliteDatabase(db) } as SqliteDatabases;
   const abortSignal = new AbortController().signal;
-  const repository = createDataRepository(dbs);
+  const { repository, schemaManager } = createTableDataDependencies(dbs);
 
-  await assertMissingTableError(() => repository.tryGet(abortSignal, 'missing', 'id'));
-  await assertMissingTableError(() => repository.upsert(abortSignal, 'missing', { _id: 'id' }));
+  await assertMissingTableError(() => tryGetTableData(abortSignal, schemaManager, repository, 'missing', 'id'));
+  await assertMissingTableError(() => upsertTableData(abortSignal, schemaManager, repository, 'missing', { _id: 'id' }));
   await assertMissingTableError(() => repository.delete(abortSignal, 'missing', 'id'));
 
   db.close();
 });
 
 test('rejects null values and changes to established column types', async t => {
-  const db = new DatabaseSync(':memory:', { open: true });
-  const dbs = { modelDb: db, modelDbMutex: new AsyncMutex(), dataDb: db, dataDbMutex: new AsyncMutex() } as SqliteDatabases;
+  const modelDb = new DatabaseSync(':memory:', { open: true });
+  const dataDb = new DatabaseSync(':memory:', { open: true });
+  const dbs = { modelDb: new SqliteDatabase(modelDb), dataDb: new SqliteDatabase(dataDb) } as SqliteDatabases;
   const abortSignal = new AbortController().signal;
   t.mock.method(Date, 'now', () => 1000);
   const tableRepository = new SqliteTableRepository(dbs, { invalidate() {} });
-  const repository = createDataRepository(dbs);
+  const { repository, schemaManager } = createTableDataDependencies(dbs);
   await tableRepository.setup(abortSignal);
   await tableRepository.insert(abortSignal, new Table('customers', 'Customer records'));
-  await repository.upsert(abortSignal, 'customers', { _id: 'customer_1', score: 1 });
+  await upsertTableData(abortSignal, schemaManager, repository, 'customers', { _id: 'customer_1', score: 1 });
 
   await assert.rejects(
-    () => repository.upsert(abortSignal, 'customers', { _id: 'customer_1', score: 'one' }),
+    () => upsertTableData(abortSignal, schemaManager, repository, 'customers', { _id: 'customer_1', score: 'one' }),
     error => error instanceof TableSchemaError && error.message === 'Column "score" expects type NUMBER but received STRING'
   );
   await assert.rejects(
-    () => repository.upsert(abortSignal, 'customers', { _id: 'customer_1', score: null }),
+    () => upsertTableData(abortSignal, schemaManager, repository, 'customers', { _id: 'customer_1', score: null }),
     error => error instanceof TableSchemaError && error.message === 'Column "score" is not allowed to have a null value'
   );
-  assert.deepEqual(await repository.tryGet(abortSignal, 'customers', 'customer_1'), { _id: 'customer_1', _updatedAt: 1000, score: 1 });
+  assert.deepEqual(await tryGetTableData(abortSignal, schemaManager, repository, 'customers', 'customer_1'), {
+    _id: 'customer_1',
+    _updatedAt: 1000,
+    score: 1
+  });
 
-  db.close();
+  modelDb.close();
+  dataDb.close();
 });
 
 function toPlainRows(statement: ReturnType<DatabaseSync['prepare']>): Record<string, unknown>[] {
   return statement.all().map(row => ({ ...row }));
 }
 
-function createDataRepository(dbs: SqliteDatabases): SqliteTableDataRepository {
+function createTableDataDependencies(dbs: SqliteDatabases): {
+  repository: SqliteTableDataRepository;
+  schemaManager: TableSchemaManager;
+} {
   const schemaManager = new TableSchemaManager(new SqliteTableSchemaRepository(dbs));
-  return new SqliteTableDataRepository(dbs, schemaManager);
+  return {
+    repository: new SqliteTableDataRepository(dbs),
+    schemaManager
+  };
+}
+
+async function tryGetTableData(
+  abortSignal: AbortSignal,
+  schemaManager: TableSchemaManager,
+  repository: SqliteTableDataRepository,
+  tableName: string,
+  _id: string
+) {
+  const schema = await schemaManager.get(abortSignal, tableName);
+  return repository.tryGet(abortSignal, schema, _id);
+}
+
+async function upsertTableData(
+  abortSignal: AbortSignal,
+  schemaManager: TableSchemaManager,
+  repository: SqliteTableDataRepository,
+  tableName: string,
+  row: Record<string, unknown> & { _id: string }
+): Promise<void> {
+  const schema = await schemaManager.ensureCompatible(abortSignal, tableName, row);
+  await repository.upsert(abortSignal, schema, row);
 }
 
 async function assertMissingTableError(action: () => Promise<unknown>): Promise<void> {

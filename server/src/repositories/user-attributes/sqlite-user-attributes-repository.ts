@@ -1,29 +1,26 @@
 import { DatabaseSync } from 'node:sqlite';
 import { UserAttributeValueType } from '@ailaflow/shared';
-import { SqliteDatabases } from '../../core/sqlite-databases';
+import { SqliteDatabase, SqliteDatabases } from '../../core/sqlite-databases';
 import { UserAttributesRepository, UserAttributesRepositoryError } from './user-attributes-repository';
 import { UserAttributes } from './user-attributes';
 import { Transaction } from '../../core/transaction';
-import { AsyncMutex } from '../../core/async-mutex';
-import { SqliteTransaction } from '../../core/sqlite-transaction';
 
 export class SqliteUserAttributesRepository implements UserAttributesRepository {
-  private readonly db: DatabaseSync;
-  private readonly dbMutex: AsyncMutex;
+  private readonly db: SqliteDatabase;
 
   public constructor(dbs: SqliteDatabases) {
     this.db = dbs.modelDb;
-    this.dbMutex = dbs.modelDbMutex;
   }
 
   public async setup(_: AbortSignal) {
-    this.db.exec(`
+    await this.db.write(db => {
+      db.exec(`
       CREATE TABLE IF NOT EXISTS user_attribute_definitions (
         attribute_name TEXT PRIMARY KEY,
         attribute_type INTEGER NOT NULL
       ) STRICT
     `);
-    this.db.exec(`
+      db.exec(`
       CREATE TABLE IF NOT EXISTS user_attributes (
         user_name TEXT NOT NULL,
         attribute_name TEXT NOT NULL,
@@ -62,7 +59,7 @@ export class SqliteUserAttributesRepository implements UserAttributesRepository 
         )
       ) STRICT
     `);
-    this.db.exec(`
+      db.exec(`
       CREATE TRIGGER IF NOT EXISTS user_attributes_type_matches_definition_insert
       BEFORE INSERT ON user_attributes
       WHEN NOT EXISTS (
@@ -75,7 +72,7 @@ export class SqliteUserAttributesRepository implements UserAttributesRepository 
         SELECT RAISE(ABORT, 'User attribute type does not match definition');
       END
     `);
-    this.db.exec(`
+      db.exec(`
       CREATE TRIGGER IF NOT EXISTS user_attributes_type_matches_definition_update
       BEFORE UPDATE ON user_attributes
       WHEN NOT EXISTS (
@@ -87,67 +84,69 @@ export class SqliteUserAttributesRepository implements UserAttributesRepository 
       BEGIN
         SELECT RAISE(ABORT, 'User attribute type does not match definition');
       END
-    `);
+      `);
+    });
   }
 
   public async get(_: AbortSignal, userName: string): Promise<UserAttributes> {
-    const statement = this.db.prepare(`
-      SELECT attribute_name, attribute_type, value_string, value_integer, value_boolean
-      FROM user_attributes
-      WHERE user_name = ?
-    `);
-    const rows = statement.all(userName) as {
-      attribute_name: string;
-      attribute_type: UserAttributeValueType;
-      value_string: string | null;
-      value_integer: number | null;
-      value_boolean: number | null;
-    }[];
+    return this.db.read(db => {
+      const statement = db.prepare(`
+        SELECT attribute_name, attribute_type, value_string, value_integer, value_boolean
+        FROM user_attributes
+        WHERE user_name = ?
+      `);
+      const rows = statement.all(userName) as {
+        attribute_name: string;
+        attribute_type: UserAttributeValueType;
+        value_string: string | null;
+        value_integer: number | null;
+        value_boolean: number | null;
+      }[];
 
-    const attributes = Object.fromEntries(
-      rows.map(row => {
-        switch (row.attribute_type) {
-          case UserAttributeValueType.STRING:
-            return [row.attribute_name, row.value_string!];
-          case UserAttributeValueType.INTEGER:
-            return [row.attribute_name, row.value_integer!];
-          case UserAttributeValueType.BOOLEAN:
-            return [row.attribute_name, row.value_boolean === 1];
-          default:
-            throw new UserAttributesRepositoryError(`Unsupported user attribute type: ${row.attribute_type}`);
-        }
-      })
-    );
-    return new UserAttributes(userName, attributes);
+      const attributes = Object.fromEntries(
+        rows.map(row => {
+          switch (row.attribute_type) {
+            case UserAttributeValueType.STRING:
+              return [row.attribute_name, row.value_string!];
+            case UserAttributeValueType.INTEGER:
+              return [row.attribute_name, row.value_integer!];
+            case UserAttributeValueType.BOOLEAN:
+              return [row.attribute_name, row.value_boolean === 1];
+            default:
+              throw new UserAttributesRepositoryError(`Unsupported user attribute type: ${row.attribute_type}`);
+          }
+        })
+      );
+      return new UserAttributes(userName, attributes);
+    });
   }
 
   public async replace(_: AbortSignal, attributes: UserAttributes, transaction?: Transaction): Promise<void> {
-    const t = await SqliteTransaction.begin(this.db, this.dbMutex, transaction);
     try {
-      const deleteAttributesStatement = this.db.prepare(`
-        DELETE FROM user_attributes
-        WHERE user_name = ?
-      `);
-      const insertAttributeStatement = this.db.prepare(`
-        INSERT INTO user_attributes (user_name, attribute_name, attribute_type, value_string, value_integer, value_boolean)
-        VALUES (?, ?, ?, ?, ?, ?)
-      `);
-      deleteAttributesStatement.run(attributes.userName);
-      for (const [name, value] of Object.entries(attributes.attributes)) {
-        const attribute = serializeAttributeValue(value);
-        this.ensureDefinition(name, attribute.type);
-        insertAttributeStatement.run(
-          attributes.userName,
-          name,
-          attribute.type,
-          attribute.valueString,
-          attribute.valueInteger,
-          attribute.valueBoolean
-        );
-      }
-      await t.commit();
+      await this.db.write(db => {
+        const deleteAttributesStatement = db.prepare(`
+          DELETE FROM user_attributes
+          WHERE user_name = ?
+        `);
+        const insertAttributeStatement = db.prepare(`
+          INSERT INTO user_attributes (user_name, attribute_name, attribute_type, value_string, value_integer, value_boolean)
+          VALUES (?, ?, ?, ?, ?, ?)
+        `);
+        deleteAttributesStatement.run(attributes.userName);
+        for (const [name, value] of Object.entries(attributes.attributes)) {
+          const attribute = serializeAttributeValue(value);
+          this.ensureDefinition(db, name, attribute.type);
+          insertAttributeStatement.run(
+            attributes.userName,
+            name,
+            attribute.type,
+            attribute.valueString,
+            attribute.valueInteger,
+            attribute.valueBoolean
+          );
+        }
+      }, transaction);
     } catch (e) {
-      await t.rollback();
       if (e instanceof UserAttributesRepositoryError) {
         throw e;
       }
@@ -155,15 +154,15 @@ export class SqliteUserAttributesRepository implements UserAttributesRepository 
     }
   }
 
-  private ensureDefinition(name: string, type: UserAttributeValueType): void {
-    const insertDefinitionStatement = this.db.prepare(`
+  private ensureDefinition(db: DatabaseSync, name: string, type: UserAttributeValueType): void {
+    const insertDefinitionStatement = db.prepare(`
       INSERT INTO user_attribute_definitions (attribute_name, attribute_type)
       VALUES (?, ?)
       ON CONFLICT(attribute_name) DO NOTHING
     `);
     insertDefinitionStatement.run(name, type);
 
-    const getDefinitionStatement = this.db.prepare(`
+    const getDefinitionStatement = db.prepare(`
       SELECT attribute_type
       FROM user_attribute_definitions
       WHERE attribute_name = ?

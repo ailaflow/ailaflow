@@ -1,37 +1,33 @@
-import { DatabaseSync } from 'node:sqlite';
-import { SqliteDatabases } from '../../core/sqlite-databases';
+import { SqliteDatabase, SqliteDatabases } from '../../core/sqlite-databases';
 import { SandboxRepository } from './sandbox-repository';
 import { Sandbox } from './sandbox';
-import { AsyncMutex } from '../../core/async-mutex';
-import { SqliteTransaction } from '../../core/sqlite-transaction';
 import { Transaction } from '../../core/transaction';
 
 export class SqliteSandboxRepository implements SandboxRepository {
-  private readonly db: DatabaseSync;
-  private readonly dbMutex: AsyncMutex;
+  private readonly db: SqliteDatabase;
 
   public constructor(dbs: SqliteDatabases) {
     this.db = dbs.modelDb;
-    this.dbMutex = dbs.modelDbMutex;
   }
 
   public async setup(_: AbortSignal) {
-    this.db.exec(`
-      CREATE TABLE IF NOT EXISTS sandboxes (
-        name TEXT PRIMARY KEY,
-        isEnabled INTEGER NOT NULL,
-        description TEXT NOT NULL,
-        configuration TEXT NOT NULL,
-        serializedSecrets TEXT NOT NULL,
-        hash TEXT NOT NULL
-      ) STRICT
-    `);
+    await this.db.write(db => {
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS sandboxes (
+          name TEXT PRIMARY KEY,
+          isEnabled INTEGER NOT NULL,
+          description TEXT NOT NULL,
+          configuration TEXT NOT NULL,
+          serializedSecrets TEXT NOT NULL,
+          hash TEXT NOT NULL
+        ) STRICT
+      `);
+    });
   }
 
   public async upsert(_: AbortSignal, sandbox: Sandbox, transaction?: Transaction): Promise<void> {
-    const t = await SqliteTransaction.begin(this.db, this.dbMutex, transaction);
-    try {
-      const statement = this.db.prepare(`
+    await this.db.write(db => {
+      const statement = db.prepare(`
         INSERT INTO sandboxes (name, isEnabled, description, configuration, serializedSecrets, hash)
         VALUES (?, ?, ?, ?, ?, ?)
         ON CONFLICT(name) DO UPDATE SET
@@ -49,40 +45,38 @@ export class SqliteSandboxRepository implements SandboxRepository {
         JSON.stringify(sandbox.secrets),
         sandbox.hash
       );
-      await t.commit();
-    } catch (e) {
-      await t.rollback();
-      throw e;
-    }
+    }, transaction);
   }
 
   public async tryGet(_: AbortSignal, name: string): Promise<Sandbox | null> {
-    const statement = this.db.prepare(`
-      SELECT name, isEnabled, description, configuration, serializedSecrets, hash
-      FROM sandboxes
-      WHERE name = ?
-      LIMIT 1
-    `);
-    const row = statement.get(name) as
-      | {
-          name: string;
-          isEnabled: number;
-          description: string;
-          configuration: string;
-          serializedSecrets: string;
-          hash: string;
-        }
-      | undefined;
+    return this.db.read(db => {
+      const statement = db.prepare(`
+        SELECT name, isEnabled, description, configuration, serializedSecrets, hash
+        FROM sandboxes
+        WHERE name = ?
+        LIMIT 1
+      `);
+      const row = statement.get(name) as
+        | {
+            name: string;
+            isEnabled: number;
+            description: string;
+            configuration: string;
+            serializedSecrets: string;
+            hash: string;
+          }
+        | undefined;
 
-    return row
-      ? new Sandbox(
-          row.name,
-          row.isEnabled === 1,
-          row.description,
-          row.configuration,
-          JSON.parse(row.serializedSecrets) as Record<string, string>,
-          row.hash
-        )
-      : null;
+      return row
+        ? new Sandbox(
+            row.name,
+            row.isEnabled === 1,
+            row.description,
+            row.configuration,
+            JSON.parse(row.serializedSecrets) as Record<string, string>,
+            row.hash
+          )
+        : null;
+    });
   }
 }

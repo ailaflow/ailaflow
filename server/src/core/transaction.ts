@@ -3,10 +3,7 @@ export class Transaction {
     return new Transaction(null);
   }
 
-  public static nop: Transaction = new Transaction({
-    commit: async () => {},
-    rollback: async () => {}
-  });
+  public db: unknown | null = null;
 
   public constructor(
     public handler: {

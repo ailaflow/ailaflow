@@ -2,8 +2,7 @@ import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
 import test, { TestContext } from 'node:test';
 import { LicenseType } from '@ailaflow/shared';
-import { SqliteDatabases } from '../../../core/sqlite-databases';
-import { AsyncMutex } from '../../../core/async-mutex';
+import { SqliteDatabase, SqliteDatabases } from '../../../core/sqlite-databases';
 import { SqliteKvConfigurationRepository } from './sqlite-kv-configuration-repository';
 
 const signal = new AbortController().signal;
@@ -11,7 +10,7 @@ const signal = new AbortController().signal;
 async function fixture(t: TestContext) {
   const db = new DatabaseSync(':memory:');
   t.after(() => db.close());
-  const dbs = { modelDb: db, modelDbMutex: new AsyncMutex() } as SqliteDatabases;
+  const dbs = { modelDb: new SqliteDatabase(db) } as SqliteDatabases;
   const repository = new SqliteKvConfigurationRepository(dbs);
   await repository.setup(signal);
   return { db, dbs, repository };

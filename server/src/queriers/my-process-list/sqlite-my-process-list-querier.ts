@@ -1,11 +1,10 @@
-import { DatabaseSync } from 'node:sqlite';
 import { GetMyProcessesResponse, MyProcessLiteDto } from '@ailaflow/shared';
-import { SqliteDatabases } from '../../core/sqlite-databases';
+import { SqliteDatabase, SqliteDatabases } from '../../core/sqlite-databases';
 import { SqliteResourceAccessQueryBuilder } from '../../core/sqlite-resource-access-query-builder';
 import { MyProcessListQuerier } from './my-process-list-querier';
 
 export class SqliteMyProcessListQuerier implements MyProcessListQuerier {
-  private readonly db: DatabaseSync;
+  private readonly db: SqliteDatabase;
 
   public constructor(
     dbs: SqliteDatabases,
@@ -15,16 +14,17 @@ export class SqliteMyProcessListQuerier implements MyProcessListQuerier {
   }
 
   public async query(_: AbortSignal, userName: string, page: number, pageSize: number): Promise<GetMyProcessesResponse> {
-    const countStatement = this.db.prepare(`
+    return this.db.read(db => {
+      const countStatement = db.prepare(`
       WITH ${this.resourceAccessQueryBuilder.buildAccessibleResourcesCte()}
       SELECT COUNT(*) AS totalCount
       FROM processes p
       JOIN accessible_resources ar
         ON ar.resource_id = 'process:' || p.name
     `);
-    const { totalCount } = countStatement.get(userName) as { totalCount: number };
+      const { totalCount } = countStatement.get(userName) as { totalCount: number };
 
-    const statement = this.db.prepare(`
+      const statement = db.prepare(`
       WITH ${this.resourceAccessQueryBuilder.buildAccessibleResourcesCte()}
       SELECT p.name, p.description, p.startVariableSchemas
       FROM processes p
@@ -34,12 +34,13 @@ export class SqliteMyProcessListQuerier implements MyProcessListQuerier {
       LIMIT ? OFFSET ?
     `);
 
-    return {
-      processes: mapRows(statement.all(userName, pageSize, (page - 1) * pageSize) as unknown as MyProcessRow[]),
-      totalCount,
-      page,
-      pageSize
-    };
+      return {
+        processes: mapRows(statement.all(userName, pageSize, (page - 1) * pageSize) as unknown as MyProcessRow[]),
+        totalCount,
+        page,
+        pageSize
+      };
+    });
   }
 }
 

@@ -1,10 +1,9 @@
 import { GetTasksResponse, TaskLiteDto } from '@ailaflow/shared';
-import { DatabaseSync } from 'node:sqlite';
-import { SqliteDatabases } from '../../core/sqlite-databases';
+import { SqliteDatabase, SqliteDatabases } from '../../core/sqlite-databases';
 import { TaskListQuerier } from './task-list-querier';
 
 export class SqliteTaskListQuerier implements TaskListQuerier {
-  private readonly db: DatabaseSync;
+  private readonly db: SqliteDatabase;
 
   public constructor(
     dbs: SqliteDatabases,
@@ -14,23 +13,24 @@ export class SqliteTaskListQuerier implements TaskListQuerier {
   }
 
   public async query(_: AbortSignal, onlyOpen: boolean, page: number, pageSize: number): Promise<GetTasksResponse> {
-    const taskDetailsCte = this.createTaskDetailsCte();
-    const completedCondition = onlyOpen ? `WHERE completedAt IS NULL` : '';
-    const now = this.now();
-    const { totalCount } = this.db
-      .prepare(
-        `
+    return this.db.read(db => {
+      const taskDetailsCte = this.createTaskDetailsCte();
+      const completedCondition = onlyOpen ? `WHERE completedAt IS NULL` : '';
+      const now = this.now();
+      const { totalCount } = db
+        .prepare(
+          `
         ${taskDetailsCte}
         SELECT COUNT(*) AS totalCount
         FROM task_details
         ${completedCondition}
       `
-      )
-      .get() as { totalCount: number };
+        )
+        .get() as { totalCount: number };
 
-    const rows = this.db
-      .prepare(
-        `
+      const rows = db
+        .prepare(
+          `
         ${taskDetailsCte}
         SELECT id, title, createdBy, executionId, isTest, completedAt, deadline, assignedCount, completedCount, createdAt
         FROM task_details
@@ -38,15 +38,16 @@ export class SqliteTaskListQuerier implements TaskListQuerier {
         ORDER BY createdAt DESC, id DESC
         LIMIT ? OFFSET ?
       `
-      )
-      .all(pageSize, (page - 1) * pageSize) as unknown as TaskRow[];
+        )
+        .all(pageSize, (page - 1) * pageSize) as unknown as TaskRow[];
 
-    return {
-      tasks: rows.map(row => mapTask(row, now)),
-      totalCount,
-      page,
-      pageSize
-    };
+      return {
+        tasks: rows.map(row => mapTask(row, now)),
+        totalCount,
+        page,
+        pageSize
+      };
+    });
   }
 
   private createTaskDetailsCte(): string {

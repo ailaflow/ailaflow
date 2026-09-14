@@ -1,12 +1,12 @@
 import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
 import test from 'node:test';
-import { SqliteDatabases } from '../../core/sqlite-databases';
+import { SqliteDatabase, SqliteDatabases } from '../../core/sqlite-databases';
 import { SqliteTaskFinalizationCandidateQuerier } from './sqlite-task-finalization-candidate-querier';
 
 test('queries only task finalization candidates eligible for an attempt', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
-  const dbs = { modelDb: db } as SqliteDatabases;
+  const dbs = { modelDb: new SqliteDatabase(db) } as SqliteDatabases;
   const abortSignal = new AbortController().signal;
   const querier = new SqliteTaskFinalizationCandidateQuerier(dbs);
 

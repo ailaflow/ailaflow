@@ -3,8 +3,7 @@ import { EventEmitter } from 'node:events';
 import { DatabaseSync } from 'node:sqlite';
 import test from 'node:test';
 import { Request } from 'express';
-import { SqliteDatabases } from '../../core/sqlite-databases';
-import { AsyncMutex } from '../../core/async-mutex';
+import { SqliteDatabase, SqliteDatabases } from '../../core/sqlite-databases';
 import { SqliteTableRepository } from '../../repositories/table/sqlite-table-repository';
 import { EndpointError } from '../framework/endpoint-error';
 import { DeleteTableEndpoint } from './delete-table-endpoint';
@@ -12,8 +11,9 @@ import { GetTableEndpoint } from './get-table-endpoint';
 import { SaveTableEndpoint } from './save-table-endpoint';
 
 test('creates, reads, updates, and deletes a table definition', async () => {
-  const db = new DatabaseSync(':memory:', { open: true });
-  const dbs = { modelDb: db, modelDbMutex: new AsyncMutex(), dataDb: db, dataDbMutex: new AsyncMutex() } as SqliteDatabases;
+  const modelDb = new DatabaseSync(':memory:', { open: true });
+  const dataDb = new DatabaseSync(':memory:', { open: true });
+  const dbs = { modelDb: new SqliteDatabase(modelDb), dataDb: new SqliteDatabase(dataDb) } as SqliteDatabases;
   const abortSignal = new AbortController().signal;
   const repository = new SqliteTableRepository(dbs, { invalidate() {} });
   const saveEndpoint = new SaveTableEndpoint(repository);
@@ -38,12 +38,14 @@ test('creates, reads, updates, and deletes a table definition', async () => {
   await assertEndpointError(() => getEndpoint.handle(createRequest({ name: 'customers' })), 404, 'Table not found');
   await assertEndpointError(() => deleteEndpoint.handle(createRequest({ name: 'customers' })), 404, 'Table not found');
 
-  db.close();
+  modelDb.close();
+  dataDb.close();
 });
 
 test('rejects invalid, duplicate, and missing table saves', async () => {
-  const db = new DatabaseSync(':memory:', { open: true });
-  const dbs = { modelDb: db, modelDbMutex: new AsyncMutex(), dataDb: db, dataDbMutex: new AsyncMutex() } as SqliteDatabases;
+  const modelDb = new DatabaseSync(':memory:', { open: true });
+  const dataDb = new DatabaseSync(':memory:', { open: true });
+  const dbs = { modelDb: new SqliteDatabase(modelDb), dataDb: new SqliteDatabase(dataDb) } as SqliteDatabases;
   const abortSignal = new AbortController().signal;
   const repository = new SqliteTableRepository(dbs, { invalidate() {} });
   const endpoint = new SaveTableEndpoint(repository);
@@ -66,7 +68,8 @@ test('rejects invalid, duplicate, and missing table saves', async () => {
     'Table not found'
   );
 
-  db.close();
+  modelDb.close();
+  dataDb.close();
 });
 
 function createRequest(options: { name?: string; body?: unknown }): Request {

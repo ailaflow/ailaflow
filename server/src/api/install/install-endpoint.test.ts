@@ -7,8 +7,7 @@ import { Request } from 'express';
 import { LicenseType } from '@ailaflow/shared';
 import { LicenseManager } from '../../configuration/license/license-manager';
 import { LicenseValidator } from '../../configuration/license/license-validator';
-import { SqliteDatabases } from '../../core/sqlite-databases';
-import { AsyncMutex } from '../../core/async-mutex';
+import { SqliteDatabase, SqliteDatabases } from '../../core/sqlite-databases';
 import { SqliteKvConfigurationRepository } from '../../repositories/configuration/kv/sqlite-kv-configuration-repository';
 import { SqliteSandboxRepository } from '../../repositories/sandbox/sqlite-sandbox-repository';
 import { SqliteUserAttributesRepository } from '../../repositories/user-attributes/sqlite-user-attributes-repository';
@@ -27,7 +26,7 @@ async function fixture(t: TestContext) {
   const db = new DatabaseSync(':memory:');
   db.exec('PRAGMA foreign_keys = ON');
   t.after(() => db.close());
-  const dbs = { modelDb: db, modelDbMutex: new AsyncMutex() } as SqliteDatabases;
+  const dbs = { modelDb: new SqliteDatabase(db) } as SqliteDatabases;
   const users = new SqliteUserRepository(dbs);
   const attributes = new SqliteUserAttributesRepository(dbs);
   const sandboxes = new SqliteSandboxRepository(dbs);
