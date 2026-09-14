@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
 import test from 'node:test';
 import { SqliteDatabases } from '../../core/sqlite-databases';
+import { AsyncMutex } from '../../core/async-mutex';
 import { SqliteProcessRepository } from '../process/sqlite-process-repository';
 import { SqliteResourceAccessRepository } from '../resource-access/sqlite-resource-access-repository';
 import { ProcessCronJob } from './process-cron-job';
@@ -78,7 +79,7 @@ test('deletes jobs when their process is deleted', async () => {
 async function setup() {
   const db = new DatabaseSync(':memory:', { open: true });
   db.exec(`PRAGMA foreign_keys = ON`);
-  const dbs = { modelDb: db } as SqliteDatabases;
+  const dbs = { modelDb: db, modelDbMutex: new AsyncMutex() } as SqliteDatabases;
   const abortSignal = new AbortController().signal;
   const processRepository = new SqliteProcessRepository(dbs);
   const repository = new SqliteProcessCronJobRepository(dbs);

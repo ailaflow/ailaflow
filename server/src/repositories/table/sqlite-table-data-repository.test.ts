@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
 import test from 'node:test';
 import { SqliteDatabases } from '../../core/sqlite-databases';
+import { AsyncMutex } from '../../core/async-mutex';
 import { SqliteTableDataRepository } from './sqlite-table-data-repository';
 import { SqliteTableRepository } from './sqlite-table-repository';
 import { SqliteTableSchemaRepository } from './sqlite-table-schema-repository';
@@ -12,7 +13,7 @@ import { Table } from './table';
 
 test('upserts and deletes data in a table-specific data table', async t => {
   const db = new DatabaseSync(':memory:', { open: true });
-  const dbs = { modelDb: db, dataDb: db } as SqliteDatabases;
+  const dbs = { modelDb: db, modelDbMutex: new AsyncMutex(), dataDb: db, dataDbMutex: new AsyncMutex() } as SqliteDatabases;
   const abortSignal = new AbortController().signal;
   const tableRepository = new SqliteTableRepository(dbs, { invalidate() {} });
   const timestamps = [1000, 2000, 3000];
@@ -60,7 +61,7 @@ test('upserts and deletes data in a table-specific data table', async t => {
 
 test('reports a repository error when the data table does not exist', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
-  const dbs = { dataDb: db } as SqliteDatabases;
+  const dbs = { dataDb: db, dataDbMutex: new AsyncMutex() } as SqliteDatabases;
   const abortSignal = new AbortController().signal;
   const repository = createDataRepository(dbs);
 
@@ -73,7 +74,7 @@ test('reports a repository error when the data table does not exist', async () =
 
 test('rejects null values and changes to established column types', async t => {
   const db = new DatabaseSync(':memory:', { open: true });
-  const dbs = { modelDb: db, dataDb: db } as SqliteDatabases;
+  const dbs = { modelDb: db, modelDbMutex: new AsyncMutex(), dataDb: db, dataDbMutex: new AsyncMutex() } as SqliteDatabases;
   const abortSignal = new AbortController().signal;
   t.mock.method(Date, 'now', () => 1000);
   const tableRepository = new SqliteTableRepository(dbs, { invalidate() {} });

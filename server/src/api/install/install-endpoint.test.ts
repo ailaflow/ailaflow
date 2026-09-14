@@ -8,6 +8,7 @@ import { LicenseType } from '@ailaflow/shared';
 import { LicenseManager } from '../../configuration/license/license-manager';
 import { LicenseValidator } from '../../configuration/license/license-validator';
 import { SqliteDatabases } from '../../core/sqlite-databases';
+import { AsyncMutex } from '../../core/async-mutex';
 import { SqliteKvConfigurationRepository } from '../../repositories/configuration/kv/sqlite-kv-configuration-repository';
 import { SqliteSandboxRepository } from '../../repositories/sandbox/sqlite-sandbox-repository';
 import { SqliteUserAttributesRepository } from '../../repositories/user-attributes/sqlite-user-attributes-repository';
@@ -26,7 +27,7 @@ async function fixture(t: TestContext) {
   const db = new DatabaseSync(':memory:');
   db.exec('PRAGMA foreign_keys = ON');
   t.after(() => db.close());
-  const dbs = { modelDb: db } as SqliteDatabases;
+  const dbs = { modelDb: db, modelDbMutex: new AsyncMutex() } as SqliteDatabases;
   const users = new SqliteUserRepository(dbs);
   const attributes = new SqliteUserAttributesRepository(dbs);
   const sandboxes = new SqliteSandboxRepository(dbs);
@@ -102,14 +103,19 @@ for (const unavailable of [false, true]) {
 test('waits for validation before writing and rejects concurrent installation attempts', async t => {
   const f = await fixture(t);
   let resolve!: (value: { isValid: boolean; proof: string }) => void;
+  let validationStartedResolve!: () => void;
+  const validationStarted = new Promise<void>(done => {
+    validationStartedResolve = done;
+  });
   f.validate.mock.mockImplementation(
     () =>
       new Promise<{ isValid: boolean; proof: string }>(done => {
         resolve = done;
+        validationStartedResolve();
       })
   );
   const installing = f.endpoint.handle(request(business));
-  await Promise.resolve();
+  await validationStarted;
   assert.equal(await f.users.count(signal), 0);
   assert.equal((await f.configuration.get(signal)).licenseType, null);
   await assert.rejects(f.endpoint.handle(request(home)), /already in progress/);

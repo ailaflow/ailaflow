@@ -3,11 +3,13 @@ import { DatabaseSync } from 'node:sqlite';
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { SqliteDatabases } from '../../core/sqlite-databases';
+import { AsyncMutex } from '../../core/async-mutex';
+import { Transaction } from '../../core/transaction';
 import { SqliteChatSessionRepository } from './sqlite-chat-session-repository';
 
 test('upserts and restores chat-session snapshots', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
-  const repository = new SqliteChatSessionRepository({ dataDb: db } as SqliteDatabases);
+  const repository = new SqliteChatSessionRepository({ dataDb: db, dataDbMutex: new AsyncMutex() } as SqliteDatabases);
   const abortSignal = new AbortController().signal;
   await repository.setup(abortSignal);
 
@@ -44,5 +46,30 @@ test('upserts and restores chat-session snapshots', async () => {
       }
     ]
   });
+  db.close();
+});
+
+test('serializes data writes behind an externally owned transaction', async () => {
+  const db = new DatabaseSync(':memory:', { open: true });
+  const repository = new SqliteChatSessionRepository({ dataDb: db, dataDbMutex: new AsyncMutex() } as SqliteDatabases);
+  const abortSignal = new AbortController().signal;
+  await repository.setup(abortSignal);
+
+  const transaction = Transaction.begin();
+  await repository.upsert(abortSignal, 'rolled-back', { totalTokens: 0, messages: [] }, transaction);
+
+  let standaloneWriteCompleted = false;
+  const standaloneWrite = repository.upsert(abortSignal, 'committed', { totalTokens: 0, messages: [] }).then(() => {
+    standaloneWriteCompleted = true;
+  });
+  await Promise.resolve();
+
+  assert.equal(standaloneWriteCompleted, false);
+
+  await transaction.rollback();
+  await standaloneWrite;
+
+  assert.equal(await repository.tryGet(abortSignal, 'rolled-back'), null);
+  assert.notEqual(await repository.tryGet(abortSignal, 'committed'), null);
   db.close();
 });

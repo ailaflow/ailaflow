@@ -4,10 +4,15 @@ import { SqliteTableDataNameProvider } from './sqlite-table-data-name-provider';
 import { TableSchemaManager } from './table-schema-manager';
 import { TableRepository, TableRepositoryError } from './table-repository';
 import { Table } from './table';
+import { AsyncMutex } from '../../core/async-mutex';
+import { SqliteTransaction } from '../../core/sqlite-transaction';
+import { Transaction } from '../../core/transaction';
 
 export class SqliteTableRepository implements TableRepository {
   private readonly modelDb: DatabaseSync;
   private readonly dataDb: DatabaseSync;
+  private readonly modelDbMutex: AsyncMutex;
+  private readonly dataDbMutex: AsyncMutex;
 
   public constructor(
     dbs: SqliteDatabases,
@@ -15,6 +20,8 @@ export class SqliteTableRepository implements TableRepository {
   ) {
     this.modelDb = dbs.modelDb;
     this.dataDb = dbs.dataDb;
+    this.modelDbMutex = dbs.modelDbMutex;
+    this.dataDbMutex = dbs.dataDbMutex;
   }
 
   public async setup(_: AbortSignal): Promise<void> {
@@ -26,25 +33,26 @@ export class SqliteTableRepository implements TableRepository {
     `);
   }
 
-  public async insert(_: AbortSignal, table: Table): Promise<void> {
-    const insertTableStatement = this.modelDb.prepare(`
-      INSERT INTO tables (name, description)
-      VALUES (?, ?)
-    `);
-
+  public async insert(_: AbortSignal, table: Table, transaction?: Transaction): Promise<void> {
+    const t = await SqliteTransaction.begin(this.modelDb, this.modelDbMutex, transaction);
     try {
-      this.modelDb.exec(`BEGIN`);
-      insertTableStatement.run(table.name, table.description);
-      this.dataDb.exec(`
-        CREATE TABLE ${SqliteTableDataNameProvider.getName(table.name)} (
-          _id TEXT PRIMARY KEY,
-          _updatedAt INTEGER NOT NULL
-        ) STRICT
+      const insertTableStatement = this.modelDb.prepare(`
+        INSERT INTO tables (name, description)
+        VALUES (?, ?)
       `);
-      this.modelDb.exec(`COMMIT`);
+      insertTableStatement.run(table.name, table.description);
+      await this.writeDataDb(() => {
+        this.dataDb.exec(`
+          CREATE TABLE ${SqliteTableDataNameProvider.getName(table.name)} (
+            _id TEXT PRIMARY KEY,
+            _updatedAt INTEGER NOT NULL
+          ) STRICT
+        `);
+      });
+      await t.commit();
       this.tableSchemaManager.invalidate(table.name);
     } catch (e) {
-      this.modelDb.exec(`ROLLBACK`);
+      await t.rollback();
       if (isDuplicateTableNameSqliteError(e)) {
         throw new TableRepositoryError('A table name is already in use');
       }
@@ -52,32 +60,40 @@ export class SqliteTableRepository implements TableRepository {
     }
   }
 
-  public async update(_: AbortSignal, table: Table): Promise<void> {
-    const statement = this.modelDb.prepare(`
-      UPDATE tables
-      SET description = ?
-      WHERE name = ?
-    `);
-    statement.run(table.description, table.name);
+  public async update(_: AbortSignal, table: Table, transaction?: Transaction): Promise<void> {
+    const t = await SqliteTransaction.begin(this.modelDb, this.modelDbMutex, transaction);
+    try {
+      const statement = this.modelDb.prepare(`
+        UPDATE tables
+        SET description = ?
+        WHERE name = ?
+      `);
+      statement.run(table.description, table.name);
+      await t.commit();
+    } catch (e) {
+      await t.rollback();
+      throw e;
+    }
   }
 
-  public async delete(_: AbortSignal, tableName: string): Promise<boolean> {
-    const deleteTableStatement = this.modelDb.prepare(`
-      DELETE FROM tables
-      WHERE name = ?
-    `);
-
+  public async delete(_: AbortSignal, tableName: string, transaction?: Transaction): Promise<boolean> {
+    const t = await SqliteTransaction.begin(this.modelDb, this.modelDbMutex, transaction);
     try {
-      this.modelDb.exec(`BEGIN`);
+      const deleteTableStatement = this.modelDb.prepare(`
+        DELETE FROM tables
+        WHERE name = ?
+      `);
       const deleted = deleteTableStatement.run(tableName).changes > 0;
       if (deleted) {
-        this.dataDb.exec(`DROP TABLE IF EXISTS ${SqliteTableDataNameProvider.getName(tableName)}`);
+        await this.writeDataDb(() => {
+          this.dataDb.exec(`DROP TABLE IF EXISTS ${SqliteTableDataNameProvider.getName(tableName)}`);
+        });
         this.tableSchemaManager.invalidate(tableName);
       }
-      this.modelDb.exec(`COMMIT`);
+      await t.commit();
       return deleted;
     } catch (e) {
-      this.modelDb.exec(`ROLLBACK`);
+      await t.rollback();
       throw e;
     }
   }
@@ -91,6 +107,15 @@ export class SqliteTableRepository implements TableRepository {
     `);
     const row = statement.get(tableName) as { name: string; description: string } | undefined;
     return row ? new Table(row.name, row.description) : null;
+  }
+
+  private async writeDataDb(write: () => void): Promise<void> {
+    const release = await this.dataDbMutex.acquire();
+    try {
+      write();
+    } finally {
+      release();
+    }
   }
 }
 

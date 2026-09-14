@@ -1,4 +1,5 @@
 import { UserAccessExpression, UserAccessExpressionParser } from '@ailaflow/shared';
+import { Transaction } from '../../core/transaction';
 import { Repository } from '../repository';
 
 export class ResourceAccess {
@@ -14,5 +15,5 @@ export class ResourceAccess {
 }
 
 export interface ResourceAccessRepository extends Repository {
-  replace(abortSignal: AbortSignal, resourceAccess: ResourceAccess): Promise<void>;
+  replace(abortSignal: AbortSignal, resourceAccess: ResourceAccess, transaction?: Transaction): Promise<void>;
 }

@@ -1,3 +1,4 @@
+import { Transaction } from '../../core/transaction';
 import { Repository } from '../repository';
 import { User } from './user';
 
@@ -10,7 +11,7 @@ export class UserRepositoryError extends Error {
 
 export interface UserRepository extends Repository {
   tryGetUser(abortSignal: AbortSignal, userName: string): Promise<User | null>;
-  insert(abortSignal: AbortSignal, user: User): Promise<void>;
-  update(abortSignal: AbortSignal, user: User): Promise<void>;
   count(abortSignal: AbortSignal): Promise<number>;
+  insert(abortSignal: AbortSignal, user: User, transaction?: Transaction): Promise<void>;
+  update(abortSignal: AbortSignal, user: User, transaction?: Transaction): Promise<void>;
 }

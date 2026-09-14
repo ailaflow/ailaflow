@@ -5,6 +5,9 @@ import { LlmConfigurationRepository, LlmConfigurationRepositoryError } from './l
 import { LlmModelProviderConfiguration, LlmProviderConfiguration } from './llm-provider-configuration';
 import { LlmProviderType, LlmUseCase } from '@ailaflow/shared';
 import { LlmUseCaseConfiguration } from './llm-use-case-configuration';
+import { AsyncMutex } from '../../../core/async-mutex';
+import { SqliteTransaction } from '../../../core/sqlite-transaction';
+import { Transaction } from '../../../core/transaction';
 
 interface ProviderRow {
   id: string;
@@ -25,9 +28,11 @@ interface UseCaseRow {
 
 export class SqliteLlmConfigurationRepository implements LlmConfigurationRepository {
   private readonly db: DatabaseSync;
+  private readonly dbMutex: AsyncMutex;
 
   public constructor(dbs: SqliteDatabases) {
     this.db = dbs.modelDb;
+    this.dbMutex = dbs.modelDbMutex;
   }
 
   public async setup(_: AbortSignal): Promise<void> {
@@ -75,12 +80,15 @@ export class SqliteLlmConfigurationRepository implements LlmConfigurationReposit
     return row ? mapProvider(row) : null;
   }
 
-  public async insertProvider(_: AbortSignal, provider: LlmProviderConfiguration): Promise<void> {
+  public async insertProvider(_: AbortSignal, provider: LlmProviderConfiguration, transaction?: Transaction): Promise<void> {
+    const t = await SqliteTransaction.begin(this.db, this.dbMutex, transaction);
     try {
       this.db
         .prepare(`INSERT INTO llm_providers (id, name, type, url, apiKey, serializedModels) VALUES (?, ?, ?, ?, ?, ?)`)
         .run(provider.id, provider.name, provider.type, provider.url, provider.apiKey, JSON.stringify(provider.models));
+      await t.commit();
     } catch (error) {
+      await t.rollback();
       if (isUniqueNameError(error)) {
         throw new LlmConfigurationRepositoryError('An LLM provider name is already in use');
       }
@@ -88,12 +96,15 @@ export class SqliteLlmConfigurationRepository implements LlmConfigurationReposit
     }
   }
 
-  public async updateProvider(_: AbortSignal, provider: LlmProviderConfiguration): Promise<void> {
+  public async updateProvider(_: AbortSignal, provider: LlmProviderConfiguration, transaction?: Transaction): Promise<void> {
+    const t = await SqliteTransaction.begin(this.db, this.dbMutex, transaction);
     try {
       this.db
         .prepare(`UPDATE llm_providers SET name = ?, type = ?, url = ?, apiKey = ?, serializedModels = ? WHERE id = ?`)
         .run(provider.name, provider.type, provider.url, provider.apiKey, JSON.stringify(provider.models), provider.id);
+      await t.commit();
     } catch (error) {
+      await t.rollback();
       if (isUniqueNameError(error)) {
         throw new LlmConfigurationRepositoryError('An LLM provider name is already in use');
       }
@@ -101,10 +112,14 @@ export class SqliteLlmConfigurationRepository implements LlmConfigurationReposit
     }
   }
 
-  public async deleteProvider(_: AbortSignal, id: string): Promise<boolean> {
+  public async deleteProvider(_: AbortSignal, id: string, transaction?: Transaction): Promise<boolean> {
+    const t = await SqliteTransaction.begin(this.db, this.dbMutex, transaction);
     try {
-      return this.db.prepare(`DELETE FROM llm_providers WHERE id = ?`).run(id).changes > 0;
+      const result = this.db.prepare(`DELETE FROM llm_providers WHERE id = ?`).run(id).changes > 0;
+      await t.commit();
+      return result;
     } catch (error) {
+      await t.rollback();
       if (isForeignKeyError(error)) {
         throw new LlmConfigurationRepositoryError('The LLM provider is assigned to a use case');
       }
@@ -112,18 +127,23 @@ export class SqliteLlmConfigurationRepository implements LlmConfigurationReposit
     }
   }
 
-  public async saveUseCases(_: AbortSignal, configurations: LlmUseCaseConfiguration[], removedUseCases: LlmUseCase[]): Promise<void> {
-    const statement = this.db.prepare(`
-      INSERT INTO llm_use_case_configurations (useCase, providerId, modelName, modelContextWindow, effectiveContextWindowPercent)
-      VALUES (?, ?, ?, ?, ?)
-      ON CONFLICT(useCase) DO UPDATE SET
-        providerId = excluded.providerId,
-        modelName = excluded.modelName,
-        modelContextWindow = excluded.modelContextWindow,
-        effectiveContextWindowPercent = excluded.effectiveContextWindowPercent
-    `);
+  public async saveUseCases(
+    _: AbortSignal,
+    configurations: LlmUseCaseConfiguration[],
+    removedUseCases: LlmUseCase[],
+    transaction?: Transaction
+  ): Promise<void> {
+    const t = await SqliteTransaction.begin(this.db, this.dbMutex, transaction);
     try {
-      this.db.exec(`BEGIN`);
+      const statement = this.db.prepare(`
+        INSERT INTO llm_use_case_configurations (useCase, providerId, modelName, modelContextWindow, effectiveContextWindowPercent)
+        VALUES (?, ?, ?, ?, ?)
+        ON CONFLICT(useCase) DO UPDATE SET
+          providerId = excluded.providerId,
+          modelName = excluded.modelName,
+          modelContextWindow = excluded.modelContextWindow,
+          effectiveContextWindowPercent = excluded.effectiveContextWindowPercent
+      `);
       const deleteStatement = this.db.prepare(`DELETE FROM llm_use_case_configurations WHERE useCase = ?`);
       for (const useCase of removedUseCases) {
         deleteStatement.run(useCase);
@@ -137,9 +157,9 @@ export class SqliteLlmConfigurationRepository implements LlmConfigurationReposit
           configuration.effectiveContextWindowPercent
         );
       }
-      this.db.exec(`COMMIT`);
+      await t.commit();
     } catch (error) {
-      this.db.exec(`ROLLBACK`);
+      await t.rollback();
       if (isForeignKeyError(error)) {
         throw new LlmConfigurationRepositoryError('An assigned LLM provider does not exist');
       }

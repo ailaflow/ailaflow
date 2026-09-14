@@ -4,6 +4,9 @@ import { Process } from './process';
 import { SqliteDatabases } from '../../core/sqlite-databases';
 import { DatabaseSync } from 'node:sqlite';
 import { ProcessResourceId } from './process-resource-id';
+import { AsyncMutex } from '../../core/async-mutex';
+import { SqliteTransaction } from '../../core/sqlite-transaction';
+import { Transaction } from '../../core/transaction';
 
 interface ProcessRow {
   name: string;
@@ -18,9 +21,11 @@ interface ProcessRow {
 
 export class SqliteProcessRepository implements ProcessRepository {
   private readonly db: DatabaseSync;
+  private readonly dbMutex: AsyncMutex;
 
   public constructor(dbs: SqliteDatabases) {
     this.db = dbs.modelDb;
+    this.dbMutex = dbs.modelDbMutex;
   }
 
   public async setup(_: AbortSignal) {
@@ -38,14 +43,15 @@ export class SqliteProcessRepository implements ProcessRepository {
     `);
   }
 
-  public async insert(_: AbortSignal, process: Process): Promise<void> {
-    const statement = this.db.prepare(`
-      INSERT INTO processes (
-        name, description, userAccessExpression, nSteps, isPausable, startVariableSchemas, serializedDefinition, definitionHash
-      )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    `);
+  public async insert(_: AbortSignal, process: Process, transaction?: Transaction): Promise<void> {
+    const t = await SqliteTransaction.begin(this.db, this.dbMutex, transaction);
     try {
+      const statement = this.db.prepare(`
+        INSERT INTO processes (
+          name, description, userAccessExpression, nSteps, isPausable, startVariableSchemas, serializedDefinition, definitionHash
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      `);
       statement.run(
         process.name,
         process.description,
@@ -56,7 +62,9 @@ export class SqliteProcessRepository implements ProcessRepository {
         JSON.stringify(process.definition),
         process.hash
       );
+      await t.commit();
     } catch (e) {
+      await t.rollback();
       if (isDuplicateProcessNameSqliteError(e)) {
         throw new ProcessRepositoryError('A process name is already in use');
       }
@@ -64,51 +72,56 @@ export class SqliteProcessRepository implements ProcessRepository {
     }
   }
 
-  public async update(_: AbortSignal, process: Process): Promise<void> {
-    const statement = this.db.prepare(`
-      UPDATE processes
-      SET
-        description = ?,
-        userAccessExpression = ?,
-        nSteps = ?,
-        isPausable = ?,
-        startVariableSchemas = ?,
-        serializedDefinition = ?,
-        definitionHash = ?
-      WHERE name = ?
-    `);
-    statement.run(
-      process.description,
-      process.userAccessExpression,
-      process.nSteps,
-      process.isPausable ? 1 : 0,
-      serializeStartVariableSchemas(process.startVariableSchemas),
-      JSON.stringify(process.definition),
-      process.hash,
-      process.name
-    );
+  public async update(_: AbortSignal, process: Process, transaction?: Transaction): Promise<void> {
+    const t = await SqliteTransaction.begin(this.db, this.dbMutex, transaction);
+    try {
+      const statement = this.db.prepare(`
+        UPDATE processes
+        SET
+          description = ?,
+          userAccessExpression = ?,
+          nSteps = ?,
+          isPausable = ?,
+          startVariableSchemas = ?,
+          serializedDefinition = ?,
+          definitionHash = ?
+        WHERE name = ?
+      `);
+      statement.run(
+        process.description,
+        process.userAccessExpression,
+        process.nSteps,
+        process.isPausable ? 1 : 0,
+        serializeStartVariableSchemas(process.startVariableSchemas),
+        JSON.stringify(process.definition),
+        process.hash,
+        process.name
+      );
+      await t.commit();
+    } catch (e) {
+      await t.rollback();
+      throw e;
+    }
   }
 
-  public async delete(abortSignal: AbortSignal, name: string): Promise<boolean> {
+  public async delete(abortSignal: AbortSignal, name: string, transaction?: Transaction): Promise<boolean> {
     abortSignal.throwIfAborted();
-
-    const deleteAccessStatement = this.db.prepare(`
-      DELETE FROM resource_access_rule_groups
-      WHERE resource_id = ?
-    `);
-    const deleteProcessStatement = this.db.prepare(`
-      DELETE FROM processes
-      WHERE name = ?
-    `);
-
+    const t = await SqliteTransaction.begin(this.db, this.dbMutex, transaction);
     try {
-      this.db.exec(`BEGIN`);
+      const deleteAccessStatement = this.db.prepare(`
+        DELETE FROM resource_access_rule_groups
+        WHERE resource_id = ?
+      `);
+      const deleteProcessStatement = this.db.prepare(`
+        DELETE FROM processes
+        WHERE name = ?
+      `);
       deleteAccessStatement.run(ProcessResourceId.create(name));
       const deleted = deleteProcessStatement.run(name).changes > 0;
-      this.db.exec(`COMMIT`);
+      await t.commit();
       return deleted;
     } catch (e) {
-      this.db.exec(`ROLLBACK`);
+      await t.rollback();
       throw e;
     }
   }

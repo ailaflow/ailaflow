@@ -79,10 +79,9 @@ export class SqliteAssignedTaskRepository implements AssignedTaskRepository {
   }
 
   public async upsert(_: AbortSignal, assignedTask: AssignedTask, transaction?: Transaction): Promise<void> {
-    const statement = this.createUpsertStatement();
-
     const t = await SqliteTransaction.begin(this.db, this.dbMutex, transaction);
     try {
+      const statement = this.createUpsertStatement();
       this.runUpsert(statement, assignedTask);
       await t.commit();
     } catch (e) {
@@ -96,9 +95,9 @@ export class SqliteAssignedTaskRepository implements AssignedTaskRepository {
       return;
     }
 
-    const statement = this.createUpsertStatement();
     const t = await SqliteTransaction.begin(this.db, this.dbMutex, transaction);
     try {
+      const statement = this.createUpsertStatement();
       for (const assignedTask of assignedTasks) {
         this.runUpsert(statement, assignedTask);
       }

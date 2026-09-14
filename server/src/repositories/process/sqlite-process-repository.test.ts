@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
 import test from 'node:test';
 import { SqliteDatabases } from '../../core/sqlite-databases';
+import { AsyncMutex } from '../../core/async-mutex';
 import { ResourceAccess } from '../resource-access/resource-access-repository';
 import { SqliteResourceAccessRepository } from '../resource-access/sqlite-resource-access-repository';
 import { ProcessResourceId } from './process-resource-id';
@@ -64,7 +65,7 @@ test('rolls back access-rule deletion when process deletion fails', async () => 
 async function setup() {
   const db = new DatabaseSync(':memory:', { open: true });
   db.exec(`PRAGMA foreign_keys = ON`);
-  const dbs = { modelDb: db } as SqliteDatabases;
+  const dbs = { modelDb: db, modelDbMutex: new AsyncMutex() } as SqliteDatabases;
   const abortSignal = new AbortController().signal;
   const processRepository = new SqliteProcessRepository(dbs);
   const resourceAccessRepository = new SqliteResourceAccessRepository(dbs);

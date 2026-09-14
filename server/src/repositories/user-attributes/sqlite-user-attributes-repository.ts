@@ -3,12 +3,17 @@ import { UserAttributeValueType } from '@ailaflow/shared';
 import { SqliteDatabases } from '../../core/sqlite-databases';
 import { UserAttributesRepository, UserAttributesRepositoryError } from './user-attributes-repository';
 import { UserAttributes } from './user-attributes';
+import { Transaction } from '../../core/transaction';
+import { AsyncMutex } from '../../core/async-mutex';
+import { SqliteTransaction } from '../../core/sqlite-transaction';
 
 export class SqliteUserAttributesRepository implements UserAttributesRepository {
   private readonly db: DatabaseSync;
+  private readonly dbMutex: AsyncMutex;
 
   public constructor(dbs: SqliteDatabases) {
     this.db = dbs.modelDb;
+    this.dbMutex = dbs.modelDbMutex;
   }
 
   public async setup(_: AbortSignal) {
@@ -116,18 +121,17 @@ export class SqliteUserAttributesRepository implements UserAttributesRepository 
     return new UserAttributes(userName, attributes);
   }
 
-  public async replace(_: AbortSignal, attributes: UserAttributes): Promise<void> {
-    const deleteAttributesStatement = this.db.prepare(`
-      DELETE FROM user_attributes
-      WHERE user_name = ?
-    `);
-    const insertAttributeStatement = this.db.prepare(`
-      INSERT INTO user_attributes (user_name, attribute_name, attribute_type, value_string, value_integer, value_boolean)
-      VALUES (?, ?, ?, ?, ?, ?)
-    `);
-
+  public async replace(_: AbortSignal, attributes: UserAttributes, transaction?: Transaction): Promise<void> {
+    const t = await SqliteTransaction.begin(this.db, this.dbMutex, transaction);
     try {
-      this.db.exec(`BEGIN`);
+      const deleteAttributesStatement = this.db.prepare(`
+        DELETE FROM user_attributes
+        WHERE user_name = ?
+      `);
+      const insertAttributeStatement = this.db.prepare(`
+        INSERT INTO user_attributes (user_name, attribute_name, attribute_type, value_string, value_integer, value_boolean)
+        VALUES (?, ?, ?, ?, ?, ?)
+      `);
       deleteAttributesStatement.run(attributes.userName);
       for (const [name, value] of Object.entries(attributes.attributes)) {
         const attribute = serializeAttributeValue(value);
@@ -141,9 +145,9 @@ export class SqliteUserAttributesRepository implements UserAttributesRepository 
           attribute.valueBoolean
         );
       }
-      this.db.exec(`COMMIT`);
+      await t.commit();
     } catch (e) {
-      this.db.exec(`ROLLBACK`);
+      await t.rollback();
       if (e instanceof UserAttributesRepositoryError) {
         throw e;
       }

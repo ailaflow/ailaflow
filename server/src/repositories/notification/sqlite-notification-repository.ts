@@ -2,12 +2,17 @@ import { DatabaseSync } from 'node:sqlite';
 import { SqliteDatabases } from '../../core/sqlite-databases';
 import { Notification } from './notification';
 import { NotificationRepository } from './notification-repository';
+import { AsyncMutex } from '../../core/async-mutex';
+import { SqliteTransaction } from '../../core/sqlite-transaction';
+import { Transaction } from '../../core/transaction';
 
 export class SqliteNotificationRepository implements NotificationRepository {
   private readonly db: DatabaseSync;
+  private readonly dbMutex: AsyncMutex;
 
   public constructor(dbs: SqliteDatabases) {
     this.db = dbs.modelDb;
+    this.dbMutex = dbs.modelDbMutex;
   }
 
   public async setup(_: AbortSignal): Promise<void> {
@@ -31,30 +36,36 @@ export class SqliteNotificationRepository implements NotificationRepository {
     `);
   }
 
-  public async insertMultiple(_: AbortSignal, notifications: Notification[]): Promise<void> {
+  public async insertMultiple(_: AbortSignal, notifications: Notification[], transaction?: Transaction): Promise<void> {
     if (notifications.length === 0) {
       return;
     }
 
-    const statement = this.db.prepare(`
-      INSERT INTO notifications (id, userName, message, createdAt)
-      VALUES (?, ?, ?, ?)
-    `);
-
+    const t = await SqliteTransaction.begin(this.db, this.dbMutex, transaction);
     try {
-      this.db.exec(`BEGIN`);
+      const statement = this.db.prepare(`
+        INSERT INTO notifications (id, userName, message, createdAt)
+        VALUES (?, ?, ?, ?)
+      `);
       for (const notification of notifications) {
         statement.run(notification.id, notification.userName, notification.message, notification.createdAt);
       }
-      this.db.exec(`COMMIT`);
+      await t.commit();
     } catch (e) {
-      this.db.exec(`ROLLBACK`);
+      await t.rollback();
       throw e;
     }
   }
 
-  public async delete(_: AbortSignal, userName: string, id: string): Promise<boolean> {
-    const result = this.db.prepare(`DELETE FROM notifications WHERE userName = ? AND id = ?`).run(userName, id);
-    return result.changes > 0;
+  public async delete(_: AbortSignal, userName: string, id: string, transaction?: Transaction): Promise<boolean> {
+    const t = await SqliteTransaction.begin(this.db, this.dbMutex, transaction);
+    try {
+      const result = this.db.prepare(`DELETE FROM notifications WHERE userName = ? AND id = ?`).run(userName, id).changes > 0;
+      await t.commit();
+      return result;
+    } catch (e) {
+      await t.rollback();
+      throw e;
+    }
   }
 }

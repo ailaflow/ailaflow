@@ -1,3 +1,4 @@
+import { Transaction } from '../../core/transaction';
 import { Repository } from '../repository';
 import { Sandbox } from './sandbox';
 
@@ -9,6 +10,6 @@ export class SandboxRepositoryError extends Error {
 }
 
 export interface SandboxRepository extends Repository {
-  upsert(abortSignal: AbortSignal, sandbox: Sandbox): Promise<void>;
+  upsert(abortSignal: AbortSignal, sandbox: Sandbox, transaction?: Transaction): Promise<void>;
   tryGet(abortSignal: AbortSignal, name: string): Promise<Sandbox | null>;
 }

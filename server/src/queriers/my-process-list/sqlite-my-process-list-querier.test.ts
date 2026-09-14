@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
 import test from 'node:test';
 import { SqliteDatabases } from '../../core/sqlite-databases';
+import { AsyncMutex } from '../../core/async-mutex';
 import { ProcessResourceId } from '../../repositories/process/process-resource-id';
 import { SqliteProcessRepository } from '../../repositories/process/sqlite-process-repository';
 import { ResourceAccess } from '../../repositories/resource-access/resource-access-repository';
@@ -15,7 +16,7 @@ import { SqliteMyProcessListQuerier } from './sqlite-my-process-list-querier';
 test('queries a page containing only processes accessible to the current user', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
   db.exec(`PRAGMA foreign_keys = ON`);
-  const dbs = { modelDb: db } as SqliteDatabases;
+  const dbs = { modelDb: db, modelDbMutex: new AsyncMutex() } as SqliteDatabases;
   const abortSignal = new AbortController().signal;
   const processRepository = new SqliteProcessRepository(dbs);
   const userRepository = new SqliteUserRepository(dbs);

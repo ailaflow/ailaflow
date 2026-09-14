@@ -5,12 +5,17 @@ import { SqliteTableDataNameProvider } from './sqlite-table-data-name-provider';
 import { TableDataRepositoryError } from './table-data-repository';
 import { TableSchemaConcurrencyError, TableSchemaRepository } from './table-schema-repository';
 import { TableSchema } from './table-schema';
+import { AsyncMutex } from '../../core/async-mutex';
+import { SqliteTransaction } from '../../core/sqlite-transaction';
+import { Transaction } from '../../core/transaction';
 
 export class SqliteTableSchemaRepository implements TableSchemaRepository {
   private readonly db: DatabaseSync;
+  private readonly dbMutex: AsyncMutex;
 
   public constructor(dbs: SqliteDatabases) {
     this.db = dbs.dataDb;
+    this.dbMutex = dbs.dataDbMutex;
   }
 
   public async get(_: AbortSignal, tableName: string): Promise<TableSchema> {
@@ -24,14 +29,14 @@ export class SqliteTableSchemaRepository implements TableSchemaRepository {
     return new TableSchema(tableName, columns);
   }
 
-  public async save(abortSignal: AbortSignal, schema: TableSchema): Promise<TableSchema> {
+  public async save(abortSignal: AbortSignal, schema: TableSchema, transaction?: Transaction): Promise<TableSchema> {
     if (schema.newColumns.length === 0) {
       return schema.asPersisted();
     }
 
     const dataTableName = SqliteTableDataNameProvider.getName(schema.tableName);
+    const t = await SqliteTransaction.begin(this.db, this.dbMutex, transaction);
     try {
-      this.db.exec('BEGIN IMMEDIATE');
       for (const column of schema.newColumns) {
         const validationError = TableColumnNameValidator.validate(column.name);
         if (validationError) {
@@ -41,17 +46,15 @@ export class SqliteTableSchemaRepository implements TableSchemaRepository {
         const columnType = mapColumnTypeToSqlite(column.type);
         this.db.exec(`ALTER TABLE ${dataTableName} ADD COLUMN ${columnName} ${columnType}`);
       }
-      this.db.exec('COMMIT');
-      return this.get(abortSignal, schema.tableName);
+      await t.commit();
     } catch (error) {
-      if (this.db.isTransaction) {
-        this.db.exec('ROLLBACK');
-      }
+      await t.rollback();
       if (isDuplicateColumnError(error)) {
         throw new TableSchemaConcurrencyError();
       }
       throw mapSqliteError(error, schema.tableName);
     }
+    return this.get(abortSignal, schema.tableName);
   }
 }
 

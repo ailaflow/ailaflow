@@ -1,4 +1,5 @@
 import { TableSchema } from './table-schema';
+import { Transaction } from '../../core/transaction';
 
 export class TableSchemaConcurrencyError extends Error {
   public constructor() {
@@ -9,5 +10,5 @@ export class TableSchemaConcurrencyError extends Error {
 
 export interface TableSchemaRepository {
   get(abortSignal: AbortSignal, tableName: string): Promise<TableSchema>;
-  save(abortSignal: AbortSignal, schema: TableSchema): Promise<TableSchema>;
+  save(abortSignal: AbortSignal, schema: TableSchema, transaction?: Transaction): Promise<TableSchema>;
 }

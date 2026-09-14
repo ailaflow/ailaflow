@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
 import test from 'node:test';
 import { SqliteDatabases } from '../../core/sqlite-databases';
+import { AsyncMutex } from '../../core/async-mutex';
 import { SqliteTableRepository } from './sqlite-table-repository';
 import { SqliteTableSchemaRepository } from './sqlite-table-schema-repository';
 import { TableSchemaManager } from './table-schema-manager';
@@ -11,7 +12,7 @@ import { Table } from './table';
 
 test('loads and saves an append-only SQLite table schema', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
-  const dbs = { modelDb: db, dataDb: db } as SqliteDatabases;
+  const dbs = { modelDb: db, modelDbMutex: new AsyncMutex(), dataDb: db, dataDbMutex: new AsyncMutex() } as SqliteDatabases;
   const abortSignal = new AbortController().signal;
   const tableRepository = new SqliteTableRepository(dbs, { invalidate() {} });
   const schemaRepository = new SqliteTableSchemaRepository(dbs);
@@ -51,7 +52,7 @@ test('loads and saves an append-only SQLite table schema', async () => {
 
 test('reloads after another schema manager creates the same column', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
-  const dbs = { modelDb: db, dataDb: db } as SqliteDatabases;
+  const dbs = { modelDb: db, modelDbMutex: new AsyncMutex(), dataDb: db, dataDbMutex: new AsyncMutex() } as SqliteDatabases;
   const abortSignal = new AbortController().signal;
   const firstManager = new TableSchemaManager(new SqliteTableSchemaRepository(dbs));
   const secondManager = new TableSchemaManager(new SqliteTableSchemaRepository(dbs));

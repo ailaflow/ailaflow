@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
 import test from 'node:test';
 import { SqliteDatabases } from '../../core/sqlite-databases';
+import { AsyncMutex } from '../../core/async-mutex';
 import { SqliteTableDataRepository } from '../../repositories/table/sqlite-table-data-repository';
 import { SqliteTableRepository } from '../../repositories/table/sqlite-table-repository';
 import { SqliteTableSchemaRepository } from '../../repositories/table/sqlite-table-schema-repository';
@@ -12,7 +13,7 @@ import { SqliteTableDataListQuerier } from './sqlite-table-data-list-querier';
 
 test('queries a primary-key-ordered page of table data', async t => {
   const db = new DatabaseSync(':memory:', { open: true });
-  const dbs = { modelDb: db, dataDb: db } as SqliteDatabases;
+  const dbs = { modelDb: db, modelDbMutex: new AsyncMutex(), dataDb: db, dataDbMutex: new AsyncMutex() } as SqliteDatabases;
   const abortSignal = new AbortController().signal;
   const schemaManager = new TableSchemaManager(new SqliteTableSchemaRepository(dbs));
   const tableRepository = new SqliteTableRepository(dbs, schemaManager);

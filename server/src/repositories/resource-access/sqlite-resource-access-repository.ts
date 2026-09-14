@@ -2,12 +2,17 @@ import { DatabaseSync } from 'node:sqlite';
 import { UserAccessCondition, UserAttributeValueType } from '@ailaflow/shared';
 import { SqliteDatabases } from '../../core/sqlite-databases';
 import { ResourceAccess, ResourceAccessRepository } from './resource-access-repository';
+import { AsyncMutex } from '../../core/async-mutex';
+import { SqliteTransaction } from '../../core/sqlite-transaction';
+import { Transaction } from '../../core/transaction';
 
 export class SqliteResourceAccessRepository implements ResourceAccessRepository {
   private readonly db: DatabaseSync;
+  private readonly dbMutex: AsyncMutex;
 
   public constructor(dbs: SqliteDatabases) {
     this.db = dbs.modelDb;
+    this.dbMutex = dbs.modelDbMutex;
   }
 
   public async setup(_: AbortSignal): Promise<void> {
@@ -76,32 +81,31 @@ export class SqliteResourceAccessRepository implements ResourceAccessRepository 
     `);
   }
 
-  public async replace(_: AbortSignal, resourceAccess: ResourceAccess): Promise<void> {
-    const deleteGroupsStatement = this.db.prepare(`
-      DELETE FROM resource_access_rule_groups
-      WHERE resource_id = ?
-    `);
-    const insertGroupStatement = this.db.prepare(`
-      INSERT INTO resource_access_rule_groups (resource_id, group_id, condition_count)
-      VALUES (?, ?, ?)
-    `);
-    const insertConditionStatement = this.db.prepare(`
-      INSERT INTO resource_access_rule_conditions (
-        resource_id,
-        group_id,
-        condition_id,
-        attribute_name,
-        operator,
-        attribute_type,
-        value_string,
-        value_integer,
-        value_boolean
-      )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `);
-
+  public async replace(_: AbortSignal, resourceAccess: ResourceAccess, transaction?: Transaction): Promise<void> {
+    const t = await SqliteTransaction.begin(this.db, this.dbMutex, transaction);
     try {
-      this.db.exec(`BEGIN`);
+      const deleteGroupsStatement = this.db.prepare(`
+        DELETE FROM resource_access_rule_groups
+        WHERE resource_id = ?
+      `);
+      const insertGroupStatement = this.db.prepare(`
+        INSERT INTO resource_access_rule_groups (resource_id, group_id, condition_count)
+        VALUES (?, ?, ?)
+      `);
+      const insertConditionStatement = this.db.prepare(`
+        INSERT INTO resource_access_rule_conditions (
+          resource_id,
+          group_id,
+          condition_id,
+          attribute_name,
+          operator,
+          attribute_type,
+          value_string,
+          value_integer,
+          value_boolean
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `);
       deleteGroupsStatement.run(resourceAccess.resourceId);
 
       resourceAccess.expression.groups.forEach((group, groupId) => {
@@ -123,9 +127,9 @@ export class SqliteResourceAccessRepository implements ResourceAccessRepository 
         });
       });
 
-      this.db.exec(`COMMIT`);
+      await t.commit();
     } catch (e) {
-      this.db.exec(`ROLLBACK`);
+      await t.rollback();
       throw e;
     }
   }

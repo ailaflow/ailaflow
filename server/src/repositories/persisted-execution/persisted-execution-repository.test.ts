@@ -2,12 +2,13 @@ import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
 import test from 'node:test';
 import { SqliteDatabases } from '../../core/sqlite-databases';
+import { AsyncMutex } from '../../core/async-mutex';
 import { PersistedExecution } from './persisted-execution';
 import { SqlitePersistedExecutionRepository } from './persisted-execution-repository';
 
 test('persisted execution repository upserts, gets, and deletes an execution', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
-  const dbs = { dataDb: db } as SqliteDatabases;
+  const dbs = { dataDb: db, dataDbMutex: new AsyncMutex() } as SqliteDatabases;
   const abortSignal = new AbortController().signal;
   const repository = new SqlitePersistedExecutionRepository(dbs);
 

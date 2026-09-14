@@ -2,12 +2,17 @@ import { DatabaseSync } from 'node:sqlite';
 import { UserRepository, UserRepositoryError } from './user-repository';
 import { User } from './user';
 import { SqliteDatabases } from '../../core/sqlite-databases';
+import { Transaction } from '../../core/transaction';
+import { SqliteTransaction } from '../../core/sqlite-transaction';
+import { AsyncMutex } from '../../core/async-mutex';
 
 export class SqliteUserRepository implements UserRepository {
   private readonly db: DatabaseSync;
+  private readonly dbMutex: AsyncMutex;
 
   public constructor(dbs: SqliteDatabases) {
     this.db = dbs.modelDb;
+    this.dbMutex = dbs.modelDbMutex;
   }
 
   public async setup(_: AbortSignal) {
@@ -40,14 +45,17 @@ export class SqliteUserRepository implements UserRepository {
     return new User(row.name, row.passwordHash, row.isAdmin === 1);
   }
 
-  public async insert(_: AbortSignal, user: User): Promise<void> {
-    const statement = this.db.prepare(`
+  public async insert(_: AbortSignal, user: User, transaction?: Transaction): Promise<void> {
+    const t = await SqliteTransaction.begin(this.db, this.dbMutex, transaction);
+    try {
+      const statement = this.db.prepare(`
       INSERT INTO users (name, passwordHash, isAdmin)
       VALUES (?, ?, ?)
     `);
-    try {
       statement.run(user.name, user.passwordHash, user.isAdmin ? 1 : 0);
+      await t.commit();
     } catch (e) {
+      await t.rollback();
       if (isDuplicateUserNameSqliteError(e)) {
         throw new UserRepositoryError('A user name is already in use');
       }
@@ -55,15 +63,22 @@ export class SqliteUserRepository implements UserRepository {
     }
   }
 
-  public async update(_: AbortSignal, user: User): Promise<void> {
-    const statement = this.db.prepare(`
+  public async update(_: AbortSignal, user: User, transaction?: Transaction): Promise<void> {
+    const t = await SqliteTransaction.begin(this.db, this.dbMutex, transaction);
+    try {
+      const statement = this.db.prepare(`
       UPDATE users
       SET
         passwordHash = ?,
         isAdmin = ?
       WHERE name = ?
     `);
-    statement.run(user.passwordHash, user.isAdmin ? 1 : 0, user.name);
+      statement.run(user.passwordHash, user.isAdmin ? 1 : 0, user.name);
+      await t.commit();
+    } catch (e) {
+      await t.rollback();
+      throw e;
+    }
   }
 
   public async count(_: AbortSignal): Promise<number> {

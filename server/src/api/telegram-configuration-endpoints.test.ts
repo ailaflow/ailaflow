@@ -4,6 +4,7 @@ import { DatabaseSync } from 'node:sqlite';
 import test from 'node:test';
 import { Request } from 'express';
 import { SqliteDatabases } from '../core/sqlite-databases';
+import { AsyncMutex } from '../core/async-mutex';
 import { EventBus } from '../events/event-bus';
 import { AuthToken } from '../repositories/auth-token/auth-token';
 import { SqliteTelegramConfigurationRepository } from '../repositories/configuration/telegram/sqlite-telegram-configuration-repository';
@@ -22,7 +23,7 @@ import { SaveUserTelegramBotEndpoint } from './user/save-user-telegram-bot-endpo
 test('self endpoints use the authenticated user and admin endpoints use the route user', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
   db.exec(`PRAGMA foreign_keys = ON`);
-  const dbs = { modelDb: db } as SqliteDatabases;
+  const dbs = { modelDb: db, modelDbMutex: new AsyncMutex() } as SqliteDatabases;
   const userRepository = new SqliteUserRepository(dbs);
   const repository = new SqliteTelegramConfigurationRepository(dbs);
   const api = new TelegramConfigurationApi(repository, new FakeTelegramBotApiClient(), new EventBus());

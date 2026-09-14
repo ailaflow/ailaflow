@@ -5,18 +5,23 @@ import { PersistedExecution } from './persisted-execution';
 import { SerializedWorkflowMachineSnapshot } from 'sequential-workflow-machine';
 import { SerializedProcessExecutionGlobalState } from '../../process-executor/process-execution-global-state';
 import { ProcessExecutionContext } from '../../process-executor/process-execution-context';
+import { AsyncMutex } from '../../core/async-mutex';
+import { SqliteTransaction } from '../../core/sqlite-transaction';
+import { Transaction } from '../../core/transaction';
 
 export interface PersistedExecutionRepository extends Repository {
-  upsert(abortSignal: AbortSignal, execution: PersistedExecution): Promise<void>;
+  upsert(abortSignal: AbortSignal, execution: PersistedExecution, transaction?: Transaction): Promise<void>;
   tryGet(abortSignal: AbortSignal, executionId: string): Promise<PersistedExecution | null>;
-  delete(abortSignal: AbortSignal, executionId: string): Promise<void>;
+  delete(abortSignal: AbortSignal, executionId: string, transaction?: Transaction): Promise<void>;
 }
 
 export class SqlitePersistedExecutionRepository implements PersistedExecutionRepository {
   private readonly db: DatabaseSync;
+  private readonly dbMutex: AsyncMutex;
 
   public constructor(dbs: SqliteDatabases) {
     this.db = dbs.dataDb;
+    this.dbMutex = dbs.dataDbMutex;
   }
 
   public async setup(_: AbortSignal): Promise<void> {
@@ -33,26 +38,33 @@ export class SqlitePersistedExecutionRepository implements PersistedExecutionRep
     `);
   }
 
-  public async upsert(_: AbortSignal, execution: PersistedExecution): Promise<void> {
-    const statement = this.db.prepare(`
-      INSERT INTO persisted_executions (executionId, context, processName, processHash, state, createdAt, updatedAt)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
-      ON CONFLICT(executionId) DO UPDATE SET
-        context = excluded.context,
-        processName = excluded.processName,
-        processHash = excluded.processHash,
-        state = excluded.state,
-        updatedAt = excluded.updatedAt
-    `);
-    statement.run(
-      execution.executionId,
-      JSON.stringify(execution.context),
-      execution.processName,
-      execution.processHash,
-      JSON.stringify(execution.state),
-      execution.createdAt,
-      execution.updatedAt
-    );
+  public async upsert(_: AbortSignal, execution: PersistedExecution, transaction?: Transaction): Promise<void> {
+    const t = await SqliteTransaction.begin(this.db, this.dbMutex, transaction);
+    try {
+      const statement = this.db.prepare(`
+        INSERT INTO persisted_executions (executionId, context, processName, processHash, state, createdAt, updatedAt)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT(executionId) DO UPDATE SET
+          context = excluded.context,
+          processName = excluded.processName,
+          processHash = excluded.processHash,
+          state = excluded.state,
+          updatedAt = excluded.updatedAt
+      `);
+      statement.run(
+        execution.executionId,
+        JSON.stringify(execution.context),
+        execution.processName,
+        execution.processHash,
+        JSON.stringify(execution.state),
+        execution.createdAt,
+        execution.updatedAt
+      );
+      await t.commit();
+    } catch (e) {
+      await t.rollback();
+      throw e;
+    }
   }
 
   public async tryGet(_: AbortSignal, executionId: string): Promise<PersistedExecution | null> {
@@ -87,11 +99,18 @@ export class SqlitePersistedExecutionRepository implements PersistedExecutionRep
       : null;
   }
 
-  public async delete(_: AbortSignal, executionId: string): Promise<void> {
-    const statement = this.db.prepare(`
-      DELETE FROM persisted_executions
-      WHERE executionId = ?
-    `);
-    statement.run(executionId);
+  public async delete(_: AbortSignal, executionId: string, transaction?: Transaction): Promise<void> {
+    const t = await SqliteTransaction.begin(this.db, this.dbMutex, transaction);
+    try {
+      const statement = this.db.prepare(`
+        DELETE FROM persisted_executions
+        WHERE executionId = ?
+      `);
+      statement.run(executionId);
+      await t.commit();
+    } catch (e) {
+      await t.rollback();
+      throw e;
+    }
   }
 }

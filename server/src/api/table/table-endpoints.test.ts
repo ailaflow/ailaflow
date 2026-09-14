@@ -4,6 +4,7 @@ import { DatabaseSync } from 'node:sqlite';
 import test from 'node:test';
 import { Request } from 'express';
 import { SqliteDatabases } from '../../core/sqlite-databases';
+import { AsyncMutex } from '../../core/async-mutex';
 import { SqliteTableRepository } from '../../repositories/table/sqlite-table-repository';
 import { EndpointError } from '../framework/endpoint-error';
 import { DeleteTableEndpoint } from './delete-table-endpoint';
@@ -12,7 +13,7 @@ import { SaveTableEndpoint } from './save-table-endpoint';
 
 test('creates, reads, updates, and deletes a table definition', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
-  const dbs = { modelDb: db, dataDb: db } as SqliteDatabases;
+  const dbs = { modelDb: db, modelDbMutex: new AsyncMutex(), dataDb: db, dataDbMutex: new AsyncMutex() } as SqliteDatabases;
   const abortSignal = new AbortController().signal;
   const repository = new SqliteTableRepository(dbs, { invalidate() {} });
   const saveEndpoint = new SaveTableEndpoint(repository);
@@ -42,7 +43,7 @@ test('creates, reads, updates, and deletes a table definition', async () => {
 
 test('rejects invalid, duplicate, and missing table saves', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
-  const dbs = { modelDb: db, dataDb: db } as SqliteDatabases;
+  const dbs = { modelDb: db, modelDbMutex: new AsyncMutex(), dataDb: db, dataDbMutex: new AsyncMutex() } as SqliteDatabases;
   const abortSignal = new AbortController().signal;
   const repository = new SqliteTableRepository(dbs, { invalidate() {} });
   const endpoint = new SaveTableEndpoint(repository);

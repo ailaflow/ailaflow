@@ -1,3 +1,4 @@
+import { Transaction } from '../../core/transaction';
 import { Repository } from '../repository';
 import { UserAttributes } from './user-attributes';
 
@@ -10,5 +11,5 @@ export class UserAttributesRepositoryError extends Error {
 
 export interface UserAttributesRepository extends Repository {
   get(abortSignal: AbortSignal, userName: string): Promise<UserAttributes>;
-  replace(abortSignal: AbortSignal, attributes: UserAttributes): Promise<void>;
+  replace(abortSignal: AbortSignal, attributes: UserAttributes, transaction?: Transaction): Promise<void>;
 }

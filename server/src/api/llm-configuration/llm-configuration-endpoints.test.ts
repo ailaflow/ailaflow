@@ -6,6 +6,7 @@ import { Request } from 'express';
 import { LlmProviderType, LlmUseCase } from '@ailaflow/shared';
 import type { LlmClient } from '@aibindkit/llm';
 import { SqliteDatabases } from '../../core/sqlite-databases';
+import { AsyncMutex } from '../../core/async-mutex';
 import { EventBus } from '../../events/event-bus';
 import { Event } from '../../events/event';
 import { LlmConfigurationChangedEvent } from '../../events/llm-configuration/llm-configuration-changed-event';
@@ -21,7 +22,7 @@ import { SaveLlmUseCaseAssignmentsEndpoint } from './save-llm-use-case-assignmen
 test('configures providers and use cases without exposing API keys', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
   db.exec(`PRAGMA foreign_keys = ON`);
-  const repository = new SqliteLlmConfigurationRepository({ modelDb: db } as SqliteDatabases);
+  const repository = new SqliteLlmConfigurationRepository({ modelDb: db, modelDbMutex: new AsyncMutex() } as SqliteDatabases);
   const eventBus = new RecordingEventBus();
   const saveProvider = new SaveLlmProviderEndpoint(repository, eventBus);
   const saveUseCases = new SaveLlmUseCaseAssignmentsEndpoint(repository, eventBus);

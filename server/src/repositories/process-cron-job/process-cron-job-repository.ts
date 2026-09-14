@@ -1,4 +1,5 @@
 import { ProcessCronJobRun } from '@ailaflow/shared';
+import { Transaction } from '../../core/transaction';
 import { Repository } from '../repository';
 import { ProcessCronJob } from './process-cron-job';
 
@@ -10,10 +11,10 @@ export class ProcessCronJobRepositoryError extends Error {
 }
 
 export interface ProcessCronJobRepository extends Repository {
-  insert(abortSignal: AbortSignal, job: ProcessCronJob): Promise<void>;
-  updateConfiguration(abortSignal: AbortSignal, job: ProcessCronJob): Promise<void>;
-  updateLastRun(abortSignal: AbortSignal, id: string, lastRun: ProcessCronJobRun): Promise<boolean>;
-  delete(abortSignal: AbortSignal, id: string): Promise<boolean>;
+  insert(abortSignal: AbortSignal, job: ProcessCronJob, transaction?: Transaction): Promise<void>;
+  updateConfiguration(abortSignal: AbortSignal, job: ProcessCronJob, transaction?: Transaction): Promise<void>;
+  updateLastRun(abortSignal: AbortSignal, id: string, lastRun: ProcessCronJobRun, transaction?: Transaction): Promise<boolean>;
+  delete(abortSignal: AbortSignal, id: string, transaction?: Transaction): Promise<boolean>;
   tryGet(abortSignal: AbortSignal, id: string): Promise<ProcessCronJob | null>;
   getByProcessName(abortSignal: AbortSignal, processName: string): Promise<ProcessCronJob[]>;
   getDue(abortSignal: AbortSignal, now: number, limit: number): Promise<ProcessCronJob[]>;
@@ -21,6 +22,7 @@ export interface ProcessCronJobRepository extends Repository {
     abortSignal: AbortSignal,
     id: string,
     expectedNextExecutionAt: number,
-    nextExecutionAt: number
+    nextExecutionAt: number,
+    transaction?: Transaction
   ): Promise<boolean>;
 }

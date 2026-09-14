@@ -3,6 +3,7 @@ import { DatabaseSync } from 'node:sqlite';
 import test, { TestContext } from 'node:test';
 import { LicenseType } from '@ailaflow/shared';
 import { SqliteDatabases } from '../../../core/sqlite-databases';
+import { AsyncMutex } from '../../../core/async-mutex';
 import { SqliteKvConfigurationRepository } from './sqlite-kv-configuration-repository';
 
 const signal = new AbortController().signal;
@@ -10,13 +11,14 @@ const signal = new AbortController().signal;
 async function fixture(t: TestContext) {
   const db = new DatabaseSync(':memory:');
   t.after(() => db.close());
-  const repository = new SqliteKvConfigurationRepository({ modelDb: db } as SqliteDatabases);
+  const dbs = { modelDb: db, modelDbMutex: new AsyncMutex() } as SqliteDatabases;
+  const repository = new SqliteKvConfigurationRepository(dbs);
   await repository.setup(signal);
-  return { db, repository };
+  return { db, dbs, repository };
 }
 
 test('updates only changed fields so independent stale snapshots do not overwrite each other', async t => {
-  const { repository, db } = await fixture(t);
+  const { repository, db, dbs } = await fixture(t);
   const url = await repository.get(signal);
   const license = await repository.get(signal);
   const instance = await repository.get(signal);
@@ -28,7 +30,7 @@ test('updates only changed fields so independent stale snapshots do not overwrit
   await repository.updateChanged(signal, url);
   await repository.updateChanged(signal, license);
   await repository.updateChanged(signal, instance);
-  const restored = await new SqliteKvConfigurationRepository({ modelDb: db } as SqliteDatabases).get(signal);
+  const restored = await new SqliteKvConfigurationRepository(dbs).get(signal);
   assert.equal(restored.publicUrl, 'https://ailaflow.example.com');
   assert.equal(restored.instanceId, 'instance-id');
   assert.equal(restored.licenseType, LicenseType.BUSINESS);

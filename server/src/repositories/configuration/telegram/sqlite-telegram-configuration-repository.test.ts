@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
 import test from 'node:test';
 import { SqliteDatabases } from '../../../core/sqlite-databases';
+import { AsyncMutex } from '../../../core/async-mutex';
 import { SqliteUserRepository } from '../../user/sqlite-user-repository';
 import { User } from '../../user/user';
 import { SqliteTelegramConfigurationRepository } from './sqlite-telegram-configuration-repository';
@@ -10,7 +11,7 @@ import { TelegramBotConfiguration } from './telegram-bot-configuration';
 test('persists Telegram bot configurations per user and channel', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
   db.exec(`PRAGMA foreign_keys = ON`);
-  const dbs = { modelDb: db } as SqliteDatabases;
+  const dbs = { modelDb: db, modelDbMutex: new AsyncMutex() } as SqliteDatabases;
   const userRepository = new SqliteUserRepository(dbs);
   const repository = new SqliteTelegramConfigurationRepository(dbs);
   const abortSignal = new AbortController().signal;

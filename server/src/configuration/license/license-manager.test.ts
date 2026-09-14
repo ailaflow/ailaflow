@@ -3,6 +3,7 @@ import { DatabaseSync } from 'node:sqlite';
 import test, { TestContext } from 'node:test';
 import { LicenseType } from '@ailaflow/shared';
 import { SqliteDatabases } from '../../core/sqlite-databases';
+import { AsyncMutex } from '../../core/async-mutex';
 import { SqliteKvConfigurationRepository } from '../../repositories/configuration/kv/sqlite-kv-configuration-repository';
 import { KvConfigurationManager } from '../kv/kv-configuration-manager';
 import { LicenseManager } from './license-manager';
@@ -13,7 +14,7 @@ const signal = new AbortController().signal;
 async function fixture(t: TestContext) {
   const db = new DatabaseSync(':memory:');
   t.after(() => db.close());
-  const repository = new SqliteKvConfigurationRepository({ modelDb: db } as SqliteDatabases);
+  const repository = new SqliteKvConfigurationRepository({ modelDb: db, modelDbMutex: new AsyncMutex() } as SqliteDatabases);
   await repository.setup(signal);
   const validator = new LicenseValidator();
   const validate = t.mock.method(validator, 'validate');

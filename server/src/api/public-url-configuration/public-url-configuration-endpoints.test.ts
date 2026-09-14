@@ -6,6 +6,7 @@ import test from 'node:test';
 import { Request } from 'express';
 import { PublicUrlTester } from '../../configuration/public-url/public-url-tester';
 import { SqliteDatabases } from '../../core/sqlite-databases';
+import { AsyncMutex } from '../../core/async-mutex';
 import { SqliteKvConfigurationRepository } from '../../repositories/configuration/kv/sqlite-kv-configuration-repository';
 import { GetPublicUrlConfigurationEndpoint } from './get-public-url-configuration-endpoint';
 import { SavePublicUrlConfigurationEndpoint } from './save-public-url-configuration-endpoint';
@@ -13,7 +14,7 @@ import { TestPublicUrlEndpoint } from './test-public-url-endpoint';
 
 test('gets, saves, clears, and tests the Public URL configuration', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
-  const repository = new SqliteKvConfigurationRepository({ modelDb: db } as SqliteDatabases);
+  const repository = new SqliteKvConfigurationRepository({ modelDb: db, modelDbMutex: new AsyncMutex() } as SqliteDatabases);
   const manager = new KvConfigurationManager(repository);
   const tester = new PublicUrlTester();
   const getEndpoint = new GetPublicUrlConfigurationEndpoint(manager);

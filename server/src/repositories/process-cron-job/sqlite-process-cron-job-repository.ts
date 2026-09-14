@@ -3,6 +3,9 @@ import { DatabaseSync } from 'node:sqlite';
 import { SqliteDatabases } from '../../core/sqlite-databases';
 import { ProcessCronJob } from './process-cron-job';
 import { ProcessCronJobRepository } from './process-cron-job-repository';
+import { AsyncMutex } from '../../core/async-mutex';
+import { SqliteTransaction } from '../../core/sqlite-transaction';
+import { Transaction } from '../../core/transaction';
 
 interface ProcessCronJobRow {
   id: string;
@@ -17,9 +20,11 @@ interface ProcessCronJobRow {
 
 export class SqliteProcessCronJobRepository implements ProcessCronJobRepository {
   private readonly db: DatabaseSync;
+  private readonly dbMutex: AsyncMutex;
 
   public constructor(dbs: SqliteDatabases) {
     this.db = dbs.modelDb;
+    this.dbMutex = dbs.modelDbMutex;
   }
 
   public async setup(_: AbortSignal): Promise<void> {
@@ -40,36 +45,66 @@ export class SqliteProcessCronJobRepository implements ProcessCronJobRepository 
     `);
   }
 
-  public async insert(_: AbortSignal, job: ProcessCronJob): Promise<void> {
-    this.db
-      .prepare(
+  public async insert(_: AbortSignal, job: ProcessCronJob, transaction?: Transaction): Promise<void> {
+    const t = await SqliteTransaction.begin(this.db, this.dbMutex, transaction);
+    try {
+      this.db
+        .prepare(
+          `
+          INSERT INTO process_cron_jobs (
+            id, processName, expression, timeZone, inputValues, isEnabled, nextExecutionAt, lastRun
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         `
-        INSERT INTO process_cron_jobs (
-          id, processName, expression, timeZone, inputValues, isEnabled, nextExecutionAt, lastRun
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-      `
-      )
-      .run(...serialize(job));
+        )
+        .run(...serialize(job));
+      await t.commit();
+    } catch (e) {
+      await t.rollback();
+      throw e;
+    }
   }
 
-  public async updateConfiguration(_: AbortSignal, job: ProcessCronJob): Promise<void> {
-    this.db
-      .prepare(
+  public async updateConfiguration(_: AbortSignal, job: ProcessCronJob, transaction?: Transaction): Promise<void> {
+    const t = await SqliteTransaction.begin(this.db, this.dbMutex, transaction);
+    try {
+      this.db
+        .prepare(
+          `
+          UPDATE process_cron_jobs
+          SET expression = ?, timeZone = ?, inputValues = ?, isEnabled = ?, nextExecutionAt = ?
+          WHERE id = ?
         `
-        UPDATE process_cron_jobs
-        SET expression = ?, timeZone = ?, inputValues = ?, isEnabled = ?, nextExecutionAt = ?
-        WHERE id = ?
-      `
-      )
-      .run(job.expression, job.timeZone, JSON.stringify(job.inputValues), job.isEnabled ? 1 : 0, job.nextExecutionAt, job.id);
+        )
+        .run(job.expression, job.timeZone, JSON.stringify(job.inputValues), job.isEnabled ? 1 : 0, job.nextExecutionAt, job.id);
+      await t.commit();
+    } catch (e) {
+      await t.rollback();
+      throw e;
+    }
   }
 
-  public async updateLastRun(_: AbortSignal, id: string, lastRun: ProcessCronJobRun): Promise<boolean> {
-    return this.db.prepare(`UPDATE process_cron_jobs SET lastRun = ? WHERE id = ?`).run(JSON.stringify(lastRun), id).changes > 0;
+  public async updateLastRun(_: AbortSignal, id: string, lastRun: ProcessCronJobRun, transaction?: Transaction): Promise<boolean> {
+    const t = await SqliteTransaction.begin(this.db, this.dbMutex, transaction);
+    try {
+      const result = this.db.prepare(`UPDATE process_cron_jobs SET lastRun = ? WHERE id = ?`).run(JSON.stringify(lastRun), id).changes > 0;
+      await t.commit();
+      return result;
+    } catch (e) {
+      await t.rollback();
+      throw e;
+    }
   }
 
-  public async delete(_: AbortSignal, id: string): Promise<boolean> {
-    return this.db.prepare(`DELETE FROM process_cron_jobs WHERE id = ?`).run(id).changes > 0;
+  public async delete(_: AbortSignal, id: string, transaction?: Transaction): Promise<boolean> {
+    const t = await SqliteTransaction.begin(this.db, this.dbMutex, transaction);
+    try {
+      const result = this.db.prepare(`DELETE FROM process_cron_jobs WHERE id = ?`).run(id).changes > 0;
+      await t.commit();
+      return result;
+    } catch (e) {
+      await t.rollback();
+      throw e;
+    }
   }
 
   public async tryGet(_: AbortSignal, id: string): Promise<ProcessCronJob | null> {
@@ -119,19 +154,27 @@ export class SqliteProcessCronJobRepository implements ProcessCronJobRepository 
     _: AbortSignal,
     id: string,
     expectedNextExecutionAt: number,
-    nextExecutionAt: number
+    nextExecutionAt: number,
+    transaction?: Transaction
   ): Promise<boolean> {
-    return (
-      this.db
-        .prepare(
+    const t = await SqliteTransaction.begin(this.db, this.dbMutex, transaction);
+    try {
+      const result =
+        this.db
+          .prepare(
+            `
+            UPDATE process_cron_jobs
+            SET nextExecutionAt = ?
+            WHERE id = ? AND isEnabled = 1 AND nextExecutionAt = ?
           `
-          UPDATE process_cron_jobs
-          SET nextExecutionAt = ?
-          WHERE id = ? AND isEnabled = 1 AND nextExecutionAt = ?
-        `
-        )
-        .run(nextExecutionAt, id, expectedNextExecutionAt).changes > 0
-    );
+          )
+          .run(nextExecutionAt, id, expectedNextExecutionAt).changes > 0;
+      await t.commit();
+      return result;
+    } catch (e) {
+      await t.rollback();
+      throw e;
+    }
   }
 }
 

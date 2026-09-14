@@ -1,5 +1,6 @@
 import { TableSchemaConcurrencyError, TableSchemaRepository } from './table-schema-repository';
 import { TableSchema } from './table-schema';
+import { Transaction } from '../../core/transaction';
 
 export class TableSchemaManager {
   private readonly cache = new Map<string, TableSchema>();
@@ -17,7 +18,12 @@ export class TableSchemaManager {
     return schema;
   }
 
-  public async ensureCompatible(abortSignal: AbortSignal, tableName: string, row: Record<string, unknown>): Promise<TableSchema> {
+  public async ensureCompatible(
+    abortSignal: AbortSignal,
+    tableName: string,
+    row: Record<string, unknown>,
+    transaction?: Transaction
+  ): Promise<TableSchema> {
     let schema = await this.get(abortSignal, tableName);
 
     while (true) {
@@ -28,7 +34,7 @@ export class TableSchemaManager {
       }
 
       try {
-        const saved = await this.repository.save(abortSignal, extended);
+        const saved = await this.repository.save(abortSignal, extended, transaction);
         this.cache.set(tableName, saved);
         return saved;
       } catch (error) {

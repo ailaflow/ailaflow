@@ -2,12 +2,13 @@ import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
 import test from 'node:test';
 import { SqliteDatabases } from '../../core/sqlite-databases';
+import { AsyncMutex } from '../../core/async-mutex';
 import { AuthToken } from './auth-token';
 import { SqliteAuthTokenRepository } from './sqlite-auth-token-repository';
 
 test('upserts auth tokens', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
-  const dbs = { modelDb: db } as SqliteDatabases;
+  const dbs = { modelDb: db, modelDbMutex: new AsyncMutex() } as SqliteDatabases;
   const abortSignal = new AbortController().signal;
   const repository = new SqliteAuthTokenRepository(dbs);
 
@@ -22,7 +23,7 @@ test('upserts auth tokens', async () => {
 
 test('deletes only outdated auth tokens', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
-  const dbs = { modelDb: db } as SqliteDatabases;
+  const dbs = { modelDb: db, modelDbMutex: new AsyncMutex() } as SqliteDatabases;
   const abortSignal = new AbortController().signal;
   const repository = new SqliteAuthTokenRepository(dbs);
 

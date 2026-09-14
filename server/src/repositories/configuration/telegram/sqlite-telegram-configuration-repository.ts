@@ -2,6 +2,9 @@ import { DatabaseSync } from 'node:sqlite';
 import { SqliteDatabases } from '../../../core/sqlite-databases';
 import { TelegramBotConfiguration } from './telegram-bot-configuration';
 import { TelegramConfigurationRepository, TelegramConfigurationRepositoryError } from './telegram-configuration-repository';
+import { AsyncMutex } from '../../../core/async-mutex';
+import { SqliteTransaction } from '../../../core/sqlite-transaction';
+import { Transaction } from '../../../core/transaction';
 
 interface TelegramConfigurationRow {
   userName: string;
@@ -16,9 +19,11 @@ interface TelegramConfigurationRow {
 
 export class SqliteTelegramConfigurationRepository implements TelegramConfigurationRepository {
   private readonly db: DatabaseSync;
+  private readonly dbMutex: AsyncMutex;
 
   public constructor(dbs: SqliteDatabases) {
     this.db = dbs.modelDb;
+    this.dbMutex = dbs.modelDbMutex;
   }
 
   public async setup(_: AbortSignal): Promise<void> {
@@ -87,7 +92,8 @@ export class SqliteTelegramConfigurationRepository implements TelegramConfigurat
     return row ? mapConfiguration(row) : null;
   }
 
-  public async upsert(_: AbortSignal, configuration: TelegramBotConfiguration): Promise<void> {
+  public async upsert(_: AbortSignal, configuration: TelegramBotConfiguration, transaction?: Transaction): Promise<void> {
+    const t = await SqliteTransaction.begin(this.db, this.dbMutex, transaction);
     try {
       this.db
         .prepare(
@@ -115,7 +121,9 @@ export class SqliteTelegramConfigurationRepository implements TelegramConfigurat
           configuration.linkCode,
           configuration.lastUpdateId
         );
+      await t.commit();
     } catch (error) {
+      await t.rollback();
       if (isDuplicateBotIdError(error)) {
         throw new TelegramConfigurationRepositoryError('This Telegram bot is already configured');
       }
@@ -123,23 +131,56 @@ export class SqliteTelegramConfigurationRepository implements TelegramConfigurat
     }
   }
 
-  public async connectTelegramChat(_: AbortSignal, userName: string, channelName: string, telegramChatId: string): Promise<void> {
-    this.db
-      .prepare(`UPDATE telegram_bot_configurations SET telegramChatId = ?, linkCode = NULL WHERE userName = ? AND channelName = ?`)
-      .run(telegramChatId, userName, channelName);
+  public async connectTelegramChat(
+    _: AbortSignal,
+    userName: string,
+    channelName: string,
+    telegramChatId: string,
+    transaction?: Transaction
+  ): Promise<void> {
+    const t = await SqliteTransaction.begin(this.db, this.dbMutex, transaction);
+    try {
+      this.db
+        .prepare(`UPDATE telegram_bot_configurations SET telegramChatId = ?, linkCode = NULL WHERE userName = ? AND channelName = ?`)
+        .run(telegramChatId, userName, channelName);
+      await t.commit();
+    } catch (e) {
+      await t.rollback();
+      throw e;
+    }
   }
 
-  public async updateLastUpdateId(_: AbortSignal, userName: string, channelName: string, lastUpdateId: number): Promise<void> {
-    this.db
-      .prepare(`UPDATE telegram_bot_configurations SET lastUpdateId = ? WHERE userName = ? AND channelName = ?`)
-      .run(lastUpdateId, userName, channelName);
+  public async updateLastUpdateId(
+    _: AbortSignal,
+    userName: string,
+    channelName: string,
+    lastUpdateId: number,
+    transaction?: Transaction
+  ): Promise<void> {
+    const t = await SqliteTransaction.begin(this.db, this.dbMutex, transaction);
+    try {
+      this.db
+        .prepare(`UPDATE telegram_bot_configurations SET lastUpdateId = ? WHERE userName = ? AND channelName = ?`)
+        .run(lastUpdateId, userName, channelName);
+      await t.commit();
+    } catch (e) {
+      await t.rollback();
+      throw e;
+    }
   }
 
-  public async delete(_: AbortSignal, userName: string, channelName: string): Promise<boolean> {
-    return (
-      this.db.prepare(`DELETE FROM telegram_bot_configurations WHERE userName = ? AND channelName = ?`).run(userName, channelName).changes >
-      0
-    );
+  public async delete(_: AbortSignal, userName: string, channelName: string, transaction?: Transaction): Promise<boolean> {
+    const t = await SqliteTransaction.begin(this.db, this.dbMutex, transaction);
+    try {
+      const result =
+        this.db.prepare(`DELETE FROM telegram_bot_configurations WHERE userName = ? AND channelName = ?`).run(userName, channelName)
+          .changes > 0;
+      await t.commit();
+      return result;
+    } catch (e) {
+      await t.rollback();
+      throw e;
+    }
   }
 }
 

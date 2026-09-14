@@ -5,15 +5,20 @@ import { SqliteTableDataNameProvider } from './sqlite-table-data-name-provider';
 import { TableRowSqliteCodec } from './table-row-sqlite-codec';
 import { TableSchemaManager } from './table-schema-manager';
 import { TableDataRepository, TableDataRepositoryError } from './table-data-repository';
+import { AsyncMutex } from '../../core/async-mutex';
+import { SqliteTransaction } from '../../core/sqlite-transaction';
+import { Transaction } from '../../core/transaction';
 
 export class SqliteTableDataRepository implements TableDataRepository {
   private readonly db: DatabaseSync;
+  private readonly dbMutex: AsyncMutex;
 
   public constructor(
     dbs: SqliteDatabases,
     private readonly tableSchemaManager: TableSchemaManager
   ) {
     this.db = dbs.dataDb;
+    this.dbMutex = dbs.dataDbMutex;
   }
 
   public async tryGet(abortSignal: AbortSignal, tableName: string, _id: string): Promise<TableRow | null> {
@@ -32,9 +37,16 @@ export class SqliteTableDataRepository implements TableDataRepository {
     }
   }
 
-  public async upsert(abortSignal: AbortSignal, tableName: string, row: Record<string, unknown> & { _id: string }): Promise<void> {
+  public async upsert(
+    abortSignal: AbortSignal,
+    tableName: string,
+    row: Record<string, unknown> & { _id: string },
+    transaction?: Transaction
+  ): Promise<void> {
+    let t: Transaction | null = null;
     try {
-      const schema = await this.tableSchemaManager.ensureCompatible(abortSignal, tableName, row);
+      const schema = await this.tableSchemaManager.ensureCompatible(abortSignal, tableName, row, transaction);
+      t = await SqliteTransaction.begin(this.db, this.dbMutex, transaction);
       const userColumnNames = schema.columns.map(column => `"${column.name}"`);
       const columnNames = ['_id', '_updatedAt', ...userColumnNames];
       const updatedColumnNames = ['_updatedAt', ...userColumnNames];
@@ -45,19 +57,26 @@ export class SqliteTableDataRepository implements TableDataRepository {
           ${updatedColumnNames.map(columnName => `${columnName} = excluded.${columnName}`).join(', ')}
       `);
       statement.run(row._id, Date.now(), ...TableRowSqliteCodec.encode(schema, row));
+      await t.commit();
     } catch (e) {
+      if (t) {
+        await t.rollback();
+      }
       throw mapSqliteError(e, tableName);
     }
   }
 
-  public async delete(_: AbortSignal, tableName: string, _id: string): Promise<void> {
+  public async delete(_: AbortSignal, tableName: string, _id: string, transaction?: Transaction): Promise<void> {
+    const t = await SqliteTransaction.begin(this.db, this.dbMutex, transaction);
     try {
       const statement = this.db.prepare(`
         DELETE FROM ${SqliteTableDataNameProvider.getName(tableName)}
         WHERE _id = ?
       `);
       statement.run(_id);
+      await t.commit();
     } catch (e) {
+      await t.rollback();
       throw mapSqliteError(e, tableName);
     }
   }
