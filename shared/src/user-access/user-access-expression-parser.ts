@@ -41,6 +41,10 @@ export class UserAccessExpressionParserError extends Error {
 }
 
 export class UserAccessExpressionParser {
+  /**
+   * Parses a user access expression string into a structured UserAccessExpression object.
+   * If the expression is empty it selects all users.
+   */
   public static parse(expression: string): UserAccessExpression {
     if (expression.trim().length === 0) {
       return {

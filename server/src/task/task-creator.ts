@@ -5,6 +5,7 @@ import { UserAccessExpressionUserQuerier } from '../queriers/user-access-express
 import { AssignedTask } from '../repositories/task/assigned-task';
 import { Task } from '../repositories/task/task';
 import { UserChatSessionProvider } from '../chat-session/user-chat-session-provider';
+import { Transaction } from '../core/transaction';
 
 export class TaskCreator {
   public constructor(
@@ -51,8 +52,15 @@ export class TaskCreator {
       assignedTasks[i] = AssignedTask.create(task.id, userNames[i], channelName);
     }
 
-    await this.taskRepository.insert(abortSignal, task);
-    await this.assignedTaskRepository.upsertMultiple(abortSignal, assignedTasks);
+    const transaction = Transaction.begin();
+    try {
+      await this.taskRepository.insert(abortSignal, task, transaction);
+      await this.assignedTaskRepository.upsertMultiple(abortSignal, assignedTasks, transaction);
+      await transaction.commit();
+    } catch (e) {
+      await transaction.rollback();
+      throw e;
+    }
 
     for (const userName of userNames) {
       const session = await this.userChatSessionProvider.get(abortSignal, isTest, userName, channelName);

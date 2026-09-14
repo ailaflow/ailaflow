@@ -87,7 +87,7 @@ export class SqliteTaskRepository implements TaskRepository {
     return row ? deserializeTask(row) : null;
   }
 
-  public async insert(_: AbortSignal, task: Task): Promise<void> {
+  public async insert(_: AbortSignal, task: Task, transaction?: Transaction): Promise<void> {
     const statement = this.db.prepare(`
       INSERT INTO tasks (
         id,
@@ -108,23 +108,30 @@ export class SqliteTaskRepository implements TaskRepository {
       )
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
-    statement.run(
-      task.id,
-      task.title,
-      task.isTest ? 1 : 0,
-      task.createdBy,
-      task.executionId,
-      JSON.stringify(task.inputVariableNames),
-      serializeOutputVariableSchemas(task.outputVariableSchemas),
-      serializeForm(task.form),
-      task.deadline,
-      task.finalizationPolicy,
-      task.metadataVariableName,
-      task.finalizationRequestCount,
-      task.nextFinalizationAttemptAt,
-      task.createdAt,
-      task.finalizedAt
-    );
+    const t = await SqliteTransaction.begin(this.db, this.dbMutex, transaction);
+    try {
+      statement.run(
+        task.id,
+        task.title,
+        task.isTest ? 1 : 0,
+        task.createdBy,
+        task.executionId,
+        JSON.stringify(task.inputVariableNames),
+        serializeOutputVariableSchemas(task.outputVariableSchemas),
+        serializeForm(task.form),
+        task.deadline,
+        task.finalizationPolicy,
+        task.metadataVariableName,
+        task.finalizationRequestCount,
+        task.nextFinalizationAttemptAt,
+        task.createdAt,
+        task.finalizedAt
+      );
+      await t.commit();
+    } catch (e) {
+      await t.rollback();
+      throw e;
+    }
   }
 
   public async finalize(_: AbortSignal, id: string, time: number): Promise<void> {
