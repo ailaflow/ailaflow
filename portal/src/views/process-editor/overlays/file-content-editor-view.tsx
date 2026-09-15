@@ -1,3 +1,5 @@
+import { CodeMirror } from '../../common/codemirror';
+
 export interface FileContentEditorViewProps {
   path?: string;
   content: string;
@@ -12,12 +14,7 @@ export function FileContentEditorView(props: FileContentEditorViewProps) {
       </div>
 
       {props.path ? (
-        <textarea
-          value={props.content}
-          onChange={e => props.onContentChange(e.target.value)}
-          spellCheck={false}
-          className="min-h-0 flex-1 resize-none overflow-auto border-0 bg-white p-4 font-mono text-sm leading-6 text-slate-900 outline-none"
-        />
+        <CodeMirror value={props.content} filePath={props.path} ariaLabel={`Edit ${props.path}`} onChange={props.onContentChange} />
       ) : (
         <div className="flex min-h-0 flex-1 items-center justify-center p-6 text-sm text-slate-500">Select or create a file.</div>
       )}

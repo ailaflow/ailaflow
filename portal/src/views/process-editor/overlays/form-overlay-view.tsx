@@ -1,6 +1,7 @@
 import type { FormDefinition, FormInputExample } from '@ailaflow/shared';
 import { IframeForm } from '../../../routes/common/form-renderer/iframe-form';
 import { FormAdapter } from '../../../routes/common/form-renderer/form-adapter';
+import { CodeMirror, type CodeMirrorLanguage } from '../../common/codemirror';
 
 export const formEditorTabs = ['Example Inputs', 'HTML', 'CSS', 'JS', 'Preview'] as const;
 export type FormEditorTab = (typeof formEditorTabs)[number];
@@ -58,9 +59,11 @@ export function FormOverlayView(props: FormOverlayViewProps) {
             onSetInputExampleValue={props.onSetInputExampleValue}
           />
         )}
-        {props.selectedTab === 'HTML' && <CodeEditor label="HTML" value={props.form.html} onChange={props.onHtmlChange} />}
-        {props.selectedTab === 'CSS' && <CodeEditor label="CSS" value={props.form.css} onChange={props.onCssChange} />}
-        {props.selectedTab === 'JS' && <CodeEditor label="JavaScript" value={props.form.js} onChange={props.onJsChange} />}
+        {props.selectedTab === 'HTML' && <CodeEditor label="HTML" language="html" value={props.form.html} onChange={props.onHtmlChange} />}
+        {props.selectedTab === 'CSS' && <CodeEditor label="CSS" language="css" value={props.form.css} onChange={props.onCssChange} />}
+        {props.selectedTab === 'JS' && (
+          <CodeEditor label="JavaScript" language="javascript" value={props.form.js} onChange={props.onJsChange} />
+        )}
         {props.selectedTab === 'Preview' && <IframeForm form={props.form} adapter={props.formAdapter} />}
       </div>
     </div>
@@ -131,18 +134,12 @@ function InputExampleRow(props: InputExampleRowProps) {
   );
 }
 
-function CodeEditor(props: { label: string; value: string; onChange: (value: string) => void }) {
+function CodeEditor(props: { label: string; language: CodeMirrorLanguage; value: string; onChange: (value: string) => void }) {
   const lineCount = props.value.length === 0 ? 0 : props.value.split(/\r\n|\r|\n/).length;
 
   return (
     <section className="flex h-full min-h-0 flex-col bg-white">
-      <textarea
-        value={props.value}
-        onChange={event => props.onChange(event.target.value)}
-        spellCheck={false}
-        aria-label={`${props.label} source`}
-        className="min-h-0 flex-1 resize-none overflow-auto border-0 bg-white p-4 font-mono text-sm leading-6 text-slate-900 outline-none"
-      />
+      <CodeMirror value={props.value} language={props.language} ariaLabel={`${props.label} source`} onChange={props.onChange} />
       <div className="flex h-7 shrink-0 items-center justify-end gap-4 border-t border-slate-200 bg-slate-50 px-4 text-xs text-slate-500">
         <span>
           {lineCount} {lineCount === 1 ? 'line' : 'lines'}
