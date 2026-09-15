@@ -142,16 +142,22 @@ const processEditorRoute = route('processEditor')
     ),
 
     agentStep_setPrompt: tool('Set the agent prompt text').input(
-      z.object({
-        stepId: z.string().describe('The agent step ID'),
-        prompt: z.string().describe('The prompt text')
-      })
-    ),
-    agentStep_setPromptVariableName: tool('Set the string variable containing the agent prompt').input(
-      z.object({
-        stepId: z.string().describe('The agent step ID'),
-        variableName: z.string().describe('The string variable name')
-      })
+      z.discriminatedUnion('action', [
+        z
+          .object({
+            stepId: z.string().describe('The agent step ID'),
+            action: z.literal('string').describe('Set a literal prompt'),
+            prompt: z.string().describe('The prompt text')
+          })
+          .strict(),
+        z
+          .object({
+            stepId: z.string().describe('The agent step ID'),
+            action: z.literal('variable').describe('Set the prompt from a string variable'),
+            variableName: z.string().describe('The string variable name containing the prompt')
+          })
+          .strict()
+      ])
     ),
     agentStep_setAllowedProcesses: tool('Set which processes the agent can run').input(
       z.object({
@@ -188,6 +194,24 @@ const processEditorRoute = route('processEditor')
         stepId: z.string().describe('The ID of the task step to edit')
       })
     ),
+    taskStep_setTitle: tool('Set the title for a specific task step').input(
+      z.discriminatedUnion('action', [
+        z
+          .object({
+            stepId: z.string().describe('The ID of the task step to update'),
+            action: z.literal('string').describe('Set a literal title'),
+            title: z.string().describe('The new task title')
+          })
+          .strict(),
+        z
+          .object({
+            stepId: z.string().describe('The ID of the task step to update'),
+            action: z.literal('variable').describe('Set the title from a string variable'),
+            variableName: z.string().describe('The string variable name containing the task title')
+          })
+          .strict()
+      ])
+    ),
     taskStep_setInputVariables: tool('Set the list of input variable names for a specific task step').input(
       z.object({
         stepId: z.string().describe('The ID of the task step to update'),
@@ -201,16 +225,22 @@ const processEditorRoute = route('processEditor')
       })
     ),
     taskStep_setUserExpression: tool('Set the user expression for a specific task step').input(
-      z.object({
-        stepId: z.string().describe('The ID of the task step to update'),
-        userExpression: z.string().describe('The new user expression for the task step')
-      })
-    ),
-    taskStep_setUserExpressionVariableName: tool('Set the variable name that contains the user expression for a specific task step').input(
-      z.object({
-        stepId: z.string().describe('The ID of the task step to update'),
-        variableName: z.string().describe('The variable name that contains the user expression for the task step')
-      })
+      z.discriminatedUnion('action', [
+        z
+          .object({
+            stepId: z.string().describe('The ID of the task step to update'),
+            action: z.literal('string').describe('Set a literal user expression'),
+            userExpression: z.string().describe('The new user expression')
+          })
+          .strict(),
+        z
+          .object({
+            stepId: z.string().describe('The ID of the task step to update'),
+            action: z.literal('variable').describe('Set the user expression from a string variable'),
+            variableName: z.string().describe('The string variable name containing the user expression')
+          })
+          .strict()
+      ])
     ),
     taskStep_setMetadataVariableName: tool('Set or clear the task metadata variable').input(
       z.object({
@@ -252,32 +282,40 @@ const processEditorRoute = route('processEditor')
     ),
 
     notificationStep_setUserExpression: tool('Set the user expression for a specific notification step').input(
-      z.object({
-        stepId: z.string().describe('The ID of the notification step to update'),
-        userExpression: z.string().describe('The new user expression for the notification step')
-      })
-    ),
-    notificationStep_setUserExpressionVariableName: tool(
-      'Set the variable name that contains the user expression for a specific notification step'
-    ).input(
-      z.object({
-        stepId: z.string().describe('The ID of the notification step to update'),
-        variableName: z.string().describe('The variable name that contains the user expression for the notification step')
-      })
+      z.discriminatedUnion('action', [
+        z
+          .object({
+            stepId: z.string().describe('The ID of the notification step to update'),
+            action: z.literal('string').describe('Set a literal user expression'),
+            userExpression: z.string().describe('The new user expression')
+          })
+          .strict(),
+        z
+          .object({
+            stepId: z.string().describe('The ID of the notification step to update'),
+            action: z.literal('variable').describe('Set the user expression from a string variable'),
+            variableName: z.string().describe('The string variable name containing the user expression')
+          })
+          .strict()
+      ])
     ),
     notificationStep_setNotification: tool('Set the notification for a specific notification step').input(
-      z.object({
-        stepId: z.string().describe('The ID of the notification step to update'),
-        notification: z.string().describe('The new notification for the notification step')
-      })
-    ),
-    notificationStep_setNotificationVariableName: tool(
-      'Set the variable name that contains the notification for a specific notification step'
-    ).input(
-      z.object({
-        stepId: z.string().describe('The ID of the notification step to update'),
-        variableName: z.string().describe('The variable name that contains the notification for the notification step')
-      })
+      z.discriminatedUnion('action', [
+        z
+          .object({
+            stepId: z.string().describe('The ID of the notification step to update'),
+            action: z.literal('string').describe('Set a literal notification'),
+            notification: z.string().describe('The new notification')
+          })
+          .strict(),
+        z
+          .object({
+            stepId: z.string().describe('The ID of the notification step to update'),
+            action: z.literal('variable').describe('Set the notification from a string variable'),
+            variableName: z.string().describe('The string variable name containing the notification')
+          })
+          .strict()
+      ])
     ),
 
     branchStep_setSelectorVariableName: tool('Set the string variable that selects a branch').input(

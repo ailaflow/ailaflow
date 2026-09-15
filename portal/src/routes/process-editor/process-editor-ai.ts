@@ -278,17 +278,20 @@ export function useProcessEditorAi(state: ProcessEditorState, save: () => Promis
 
         async agentStep_setPrompt(arg) {
           const step = state.getStep<AgentStep>(arg.stepId, 'agent');
-          step.properties.prompt = { type: 'string', value: arg.prompt };
-          state.notifyDefinitionChange();
-          return toolSuccess('Prompt was updated');
-        },
-        async agentStep_setPromptVariableName(arg) {
-          const step = state.getStep<AgentStep>(arg.stepId, 'agent');
-          const error = state.variableValidator.validateVariableType(arg.variableName, 'string', state.definition.value);
-          if (error) {
-            return toolError(error);
+          switch (arg.action) {
+            case 'string': {
+              step.properties.prompt = { type: 'string', value: arg.prompt };
+              break;
+            }
+            case 'variable': {
+              const error = state.variableValidator.validateVariableType(arg.variableName, 'string', state.definition.value);
+              if (error) {
+                return toolError(error);
+              }
+              step.properties.prompt = { type: 'variable', name: arg.variableName };
+              break;
+            }
           }
-          step.properties.prompt = { type: 'variable', name: arg.variableName };
           state.notifyDefinitionChange();
           return toolSuccess('Prompt was updated');
         },
@@ -336,6 +339,25 @@ export function useProcessEditorAi(state: ProcessEditorState, save: () => Promis
           state.openOverlay(ProcessEditorOverlayType.FORM_EDITOR, path);
           return toolSuccess('Task step form editor overlay was opened');
         },
+        async taskStep_setTitle(arg) {
+          const step = state.getStep<TaskStep>(arg.stepId, 'task');
+          switch (arg.action) {
+            case 'string': {
+              step.properties.title = { type: 'string', value: arg.title };
+              break;
+            }
+            case 'variable': {
+              const error = state.variableValidator.validateVariableType(arg.variableName, 'string', state.definition.value);
+              if (error) {
+                return toolError(error);
+              }
+              step.properties.title = { type: 'variable', name: arg.variableName };
+              break;
+            }
+          }
+          state.notifyDefinitionChange();
+          return toolSuccess('Task title was updated');
+        },
         async taskStep_setInputVariables(arg) {
           const step = state.getStep<TaskStep>(arg.stepId, 'task');
           step.properties.inputVariableNames = arg.variableNames;
@@ -355,21 +377,24 @@ export function useProcessEditorAi(state: ProcessEditorState, save: () => Promis
         },
         async taskStep_setUserExpression(arg) {
           const step = state.getStep<TaskStep>(arg.stepId, 'task');
-          const error = UserAccessExpressionParser.validate(arg.userExpression);
-          if (error) {
-            return toolError(`${error}; the user expression was not updated`);
+          switch (arg.action) {
+            case 'string': {
+              const error = UserAccessExpressionParser.validate(arg.userExpression);
+              if (error) {
+                return toolError(`${error}; the user expression was not updated`);
+              }
+              step.properties.userExpression = { type: 'string', value: arg.userExpression };
+              break;
+            }
+            case 'variable': {
+              const error = state.variableValidator.validateVariableType(arg.variableName, 'string', state.definition.value);
+              if (error) {
+                return toolError(error);
+              }
+              step.properties.userExpression = { type: 'variable', name: arg.variableName };
+              break;
+            }
           }
-          step.properties.userExpression = { type: 'string', value: arg.userExpression };
-          state.notifyDefinitionChange();
-          return toolSuccess('User expression was updated');
-        },
-        async taskStep_setUserExpressionVariableName(arg) {
-          const step = state.getStep<TaskStep>(arg.stepId, 'task');
-          const error = state.variableValidator.validateVariableType(arg.variableName, 'string', state.definition.value);
-          if (error) {
-            return toolError(error);
-          }
-          step.properties.userExpression = { type: 'variable', name: arg.variableName };
           state.notifyDefinitionChange();
           return toolSuccess('User expression was updated');
         },
@@ -388,16 +413,23 @@ export function useProcessEditorAi(state: ProcessEditorState, save: () => Promis
         },
         async taskStep_setDeadline(arg) {
           const step = state.getStep<TaskStep>(arg.stepId, 'task');
-          if (arg.action === 'preset') {
-            step.properties.deadline = { type: 'string', value: arg.preset };
-          } else if (arg.action === 'variable') {
-            const error = state.variableValidator.validateVariableType(arg.variableName, 'string', state.definition.value);
-            if (error) {
-              return toolError(error);
+          switch (arg.action) {
+            case 'preset': {
+              step.properties.deadline = { type: 'string', value: arg.preset };
+              break;
             }
-            step.properties.deadline = { type: 'variable', name: arg.variableName };
-          } else {
-            step.properties.deadline = undefined;
+            case 'variable': {
+              const error = state.variableValidator.validateVariableType(arg.variableName, 'string', state.definition.value);
+              if (error) {
+                return toolError(error);
+              }
+              step.properties.deadline = { type: 'variable', name: arg.variableName };
+              break;
+            }
+            case 'unset': {
+              step.properties.deadline = undefined;
+              break;
+            }
           }
           state.notifyDefinitionChange();
           return toolSuccess('Deadline was updated');
@@ -411,37 +443,43 @@ export function useProcessEditorAi(state: ProcessEditorState, save: () => Promis
 
         async notificationStep_setUserExpression(arg) {
           const step = state.getStep<NotificationStep>(arg.stepId, 'notification');
-          const error = UserAccessExpressionParser.validate(arg.userExpression);
-          if (error) {
-            return toolError(`${error}; the user expression was not updated`);
+          switch (arg.action) {
+            case 'string': {
+              const error = UserAccessExpressionParser.validate(arg.userExpression);
+              if (error) {
+                return toolError(`${error}; the user expression was not updated`);
+              }
+              step.properties.userExpression = { type: 'string', value: arg.userExpression };
+              break;
+            }
+            case 'variable': {
+              const error = state.variableValidator.validateVariableType(arg.variableName, 'string', state.definition.value);
+              if (error) {
+                return toolError(error);
+              }
+              step.properties.userExpression = { type: 'variable', name: arg.variableName };
+              break;
+            }
           }
-          step.properties.userExpression = { type: 'string', value: arg.userExpression };
-          state.notifyDefinitionChange();
-          return toolSuccess('User expression was updated');
-        },
-        async notificationStep_setUserExpressionVariableName(arg) {
-          const step = state.getStep<NotificationStep>(arg.stepId, 'notification');
-          const error = state.variableValidator.validateVariableType(arg.variableName, 'string', state.definition.value);
-          if (error) {
-            return toolError(error);
-          }
-          step.properties.userExpression = { type: 'variable', name: arg.variableName };
           state.notifyDefinitionChange();
           return toolSuccess('User expression was updated');
         },
         async notificationStep_setNotification(arg) {
           const step = state.getStep<NotificationStep>(arg.stepId, 'notification');
-          step.properties.notification = { type: 'string', value: arg.notification };
-          state.notifyDefinitionChange();
-          return toolSuccess('Notification was updated');
-        },
-        async notificationStep_setNotificationVariableName(arg) {
-          const step = state.getStep<NotificationStep>(arg.stepId, 'notification');
-          const error = state.variableValidator.validateVariableType(arg.variableName, 'string', state.definition.value);
-          if (error) {
-            return toolError(error);
+          switch (arg.action) {
+            case 'string': {
+              step.properties.notification = { type: 'string', value: arg.notification };
+              break;
+            }
+            case 'variable': {
+              const error = state.variableValidator.validateVariableType(arg.variableName, 'string', state.definition.value);
+              if (error) {
+                return toolError(error);
+              }
+              step.properties.notification = { type: 'variable', name: arg.variableName };
+              break;
+            }
           }
-          step.properties.notification = { type: 'variable', name: arg.variableName };
           state.notifyDefinitionChange();
           return toolSuccess('Notification was updated');
         },
