@@ -10,7 +10,7 @@ test('manages table definitions and their data tables', async () => {
   const dataDb = new DatabaseSync(':memory:', { open: true });
   const dbs = { modelDb: new SqliteDatabase(modelDb), dataDb: new SqliteDatabase(dataDb) } as SqliteDatabases;
   const abortSignal = new AbortController().signal;
-  const repository = new SqliteTableRepository(dbs, { invalidate() {} });
+  const repository = new SqliteTableRepository(dbs);
 
   await repository.setup(abortSignal);
   await repository.insert(abortSignal, new Table('customers', 'Customer records'));
@@ -52,7 +52,7 @@ test('rolls back a definition insert when its data table cannot be created', asy
   const dataDb = new DatabaseSync(':memory:', { open: true });
   const dbs = { modelDb: new SqliteDatabase(modelDb), dataDb: new SqliteDatabase(dataDb) } as SqliteDatabases;
   const abortSignal = new AbortController().signal;
-  const repository = new SqliteTableRepository(dbs, { invalidate() {} });
+  const repository = new SqliteTableRepository(dbs);
 
   await repository.setup(abortSignal);
   dataDb.exec(`CREATE TABLE data_customers (legacyId TEXT PRIMARY KEY)`);

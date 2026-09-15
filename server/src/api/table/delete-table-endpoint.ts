@@ -1,6 +1,6 @@
 import { DeleteTableResponse } from '@ailaflow/shared';
 import { Request } from 'express';
-import { TableRepository } from '../../repositories/table/table-repository';
+import { TableManager } from '../../table/table-manager';
 import { Endpoint } from '../framework/endpoint';
 import { getEndpointAbortSignal } from '../framework/endpoint-abort-signal';
 import { EndpointError } from '../framework/endpoint-error';
@@ -11,12 +11,12 @@ export class DeleteTableEndpoint implements Endpoint {
   public readonly auth = true;
   public readonly admin = true;
 
-  public constructor(private readonly repository: TableRepository) {}
+  public constructor(private readonly tableManager: Pick<TableManager, 'delete'>) {}
 
   public async handle(req: Request): Promise<DeleteTableResponse> {
     const abortSignal = getEndpointAbortSignal(req);
     const tableName = String(req.params.name);
-    const deleted = await this.repository.delete(abortSignal, tableName);
+    const deleted = await this.tableManager.delete(abortSignal, tableName);
     if (!deleted) {
       throw new EndpointError('Table not found', 404);
     }

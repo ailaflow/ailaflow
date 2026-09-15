@@ -7,7 +7,7 @@ import { SqliteTableDataRepository } from './sqlite-table-data-repository';
 import { SqliteTableRepository } from './sqlite-table-repository';
 import { SqliteTableSchemaRepository } from './sqlite-table-schema-repository';
 import { TableDataRepositoryError } from './table-data-repository';
-import { TableSchemaManager } from './table-schema-manager';
+import { TableSchemaManager } from '../../table/table-schema-manager';
 import { Table } from './table';
 
 test('upserts and deletes data in a table-specific data table', async t => {
@@ -15,7 +15,7 @@ test('upserts and deletes data in a table-specific data table', async t => {
   const dataDb = new DatabaseSync(':memory:', { open: true });
   const dbs = { modelDb: new SqliteDatabase(modelDb), dataDb: new SqliteDatabase(dataDb) } as SqliteDatabases;
   const abortSignal = new AbortController().signal;
-  const tableRepository = new SqliteTableRepository(dbs, { invalidate() {} });
+  const tableRepository = new SqliteTableRepository(dbs);
   const timestamps = [1000, 2000, 3000];
   t.mock.method(Date, 'now', () => timestamps.shift() ?? 0);
   const { repository, schemaManager } = createTableDataDependencies(dbs);
@@ -79,7 +79,7 @@ test('rejects null values and changes to established column types', async t => {
   const dbs = { modelDb: new SqliteDatabase(modelDb), dataDb: new SqliteDatabase(dataDb) } as SqliteDatabases;
   const abortSignal = new AbortController().signal;
   t.mock.method(Date, 'now', () => 1000);
-  const tableRepository = new SqliteTableRepository(dbs, { invalidate() {} });
+  const tableRepository = new SqliteTableRepository(dbs);
   const { repository, schemaManager } = createTableDataDependencies(dbs);
   await tableRepository.setup(abortSignal);
   await tableRepository.insert(abortSignal, new Table('customers', 'Customer records'));

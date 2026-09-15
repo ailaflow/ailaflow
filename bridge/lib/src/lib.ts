@@ -25,6 +25,29 @@ export interface TableRowInput extends Record<string, unknown> {
   _id: string;
 }
 
+export type TableWhereValue = string | number | boolean;
+
+export interface TableWhereOperators {
+  /** Matches values equal to this value. */
+  $eq?: TableWhereValue;
+  /** Matches values not equal to this value. */
+  $neq?: TableWhereValue;
+  /** Matches values less than this value. */
+  $lt?: TableWhereValue;
+  /** Matches values greater than this value. */
+  $gt?: TableWhereValue;
+  /** Matches values less than or equal to this value. */
+  $lte?: TableWhereValue;
+  /** Matches values greater than or equal to this value. */
+  $gte?: TableWhereValue;
+}
+
+export type TableWhereCondition = {
+  [Operator in keyof TableWhereOperators]: Required<Pick<TableWhereOperators, Operator>> & Partial<Omit<TableWhereOperators, Operator>>;
+}[keyof TableWhereOperators];
+
+export type TableWhere = Record<string, TableWhereCondition>;
+
 export interface ReadTablePageOptions {
   /** The one-based page number. Defaults to `1`. */
   page?: number;
@@ -34,6 +57,8 @@ export interface ReadTablePageOptions {
   orderBy?: string;
   /** Whether to sort in ascending order. Defaults to `true`. */
   ascending?: boolean;
+  /** Exact and range conditions joined using AND. Each column condition must contain at least one operator. */
+  where?: TableWhere;
 }
 
 /**
@@ -65,8 +90,8 @@ export async function writeVariable(name: string, value: unknown, rpcConfig?: Rp
  * @param name The name of the table to read from.
  * @param _id The identifier of the row to read.
  * @param rpcConfig Optional configuration for the RPC call.
- * @returns The stored value or `null` if the row is not found.
- * @throws If the table does not exist or if the RPC call fails.
+ * @returns The stored value or `null` if the table or row is not found.
+ * @throws If the RPC call fails.
  */
 export async function tryReadTable<Row extends TableRow = TableRow>(name: string, _id: string, rpcConfig?: RpcConfig): Promise<Row | null> {
   name = normalizeName(name, '#');
@@ -76,10 +101,10 @@ export async function tryReadTable<Row extends TableRow = TableRow>(name: string
 /**
  * Reads one ordered page of rows from a table.
  * @param name The name of the table to read from.
- * @param options Pagination and ordering options.
+ * @param options Pagination, ordering, and filtering options. All `where` conditions are combined using AND.
  * @param rpcConfig Optional configuration for the RPC call.
  * @returns The requested page. Each row includes `_id` and `_updatedAt` system fields.
- * @throws If pagination or ordering is invalid, the table does not exist, or the RPC call fails.
+ * @throws If pagination, ordering, or filtering is invalid, or if the RPC call fails.
  */
 export async function readTablePage<Row extends TableRow = TableRow>(
   name: string,
@@ -94,18 +119,19 @@ export async function readTablePage<Row extends TableRow = TableRow>(
       page: options.page ?? 1,
       pageSize: options.pageSize ?? 100,
       orderBy: options.orderBy ?? '_id',
-      ascending: options.ascending ?? true
+      ascending: options.ascending ?? true,
+      where: options.where
     },
     rpcConfig
   );
 }
 
 /**
- * Writes a value to a table row, inserting or updating it by primary key.
+ * Writes a value to a table row, creating the table if needed and inserting or updating the row by primary key.
  * @param name The name of the table to write to.
  * @param row The identifier and user-defined columns to write. AilaFlow overrides `_updatedAt` when supplied.
  * @param rpcConfig Optional configuration for the RPC call.
- * @throws If the table does not exist or if the RPC call fails.
+ * @throws If the table name or row schema is invalid, or if the RPC call fails.
  */
 export async function writeTable(name: string, row: TableRowInput, rpcConfig?: RpcConfig): Promise<void> {
   name = normalizeName(name, '#');

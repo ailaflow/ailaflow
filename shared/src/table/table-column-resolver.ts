@@ -12,20 +12,25 @@ export class TableColumnResolver {
     if (value === undefined) {
       return null;
     }
+
+    return { name, type: this.resolveValueType(name, value) };
+  }
+
+  public static resolveValueType(name: string, value: unknown): TableColumnType {
     if (typeof value === 'string') {
-      return { name, type: TableColumnType.STRING };
+      return TableColumnType.STRING;
     }
     if (typeof value === 'number') {
       if (!Number.isFinite(value)) {
         throw new TableSchemaError(`Column "${name}" is not allowed to contain a non-finite number`);
       }
-      return { name, type: TableColumnType.NUMBER };
+      return TableColumnType.NUMBER;
     }
     if (typeof value === 'boolean') {
-      return { name, type: TableColumnType.BOOLEAN };
+      return TableColumnType.BOOLEAN;
     }
     if (value !== null && typeof value === 'object') {
-      return { name, type: TableColumnType.JSON };
+      return TableColumnType.JSON;
     }
     if (value === null) {
       throw new TableSchemaError(`Column "${name}" is not allowed to have a null value`);

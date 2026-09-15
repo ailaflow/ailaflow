@@ -5,7 +5,7 @@ import test from 'node:test';
 import { SqliteDatabase, SqliteDatabases } from '../../core/sqlite-databases';
 import { SqliteTableRepository } from './sqlite-table-repository';
 import { SqliteTableSchemaRepository } from './sqlite-table-schema-repository';
-import { TableSchemaManager } from './table-schema-manager';
+import { TableSchemaManager } from '../../table/table-schema-manager';
 import { TableSchemaConcurrencyError } from './table-schema-repository';
 import { Table } from './table';
 
@@ -14,9 +14,10 @@ test('loads and saves an append-only SQLite table schema', async () => {
   const dataDb = new DatabaseSync(':memory:', { open: true });
   const dbs = { modelDb: new SqliteDatabase(modelDb), dataDb: new SqliteDatabase(dataDb) } as SqliteDatabases;
   const abortSignal = new AbortController().signal;
-  const tableRepository = new SqliteTableRepository(dbs, { invalidate() {} });
+  const tableRepository = new SqliteTableRepository(dbs);
   const schemaRepository = new SqliteTableSchemaRepository(dbs);
   await tableRepository.setup(abortSignal);
+  assert.equal(await schemaRepository.tryGet(abortSignal, 'missing'), null);
   await tableRepository.insert(abortSignal, new Table('customers', 'Customer records'));
 
   const initial = await schemaRepository.get(abortSignal, 'customers');
@@ -58,7 +59,7 @@ test('reloads after another schema manager creates the same column', async () =>
   const abortSignal = new AbortController().signal;
   const firstManager = new TableSchemaManager(new SqliteTableSchemaRepository(dbs));
   const secondManager = new TableSchemaManager(new SqliteTableSchemaRepository(dbs));
-  const tableRepository = new SqliteTableRepository(dbs, firstManager);
+  const tableRepository = new SqliteTableRepository(dbs);
   await tableRepository.setup(abortSignal);
   await tableRepository.insert(abortSignal, new Table('customers', 'Customer records'));
   await secondManager.get(abortSignal, 'customers');

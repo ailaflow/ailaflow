@@ -1,7 +1,8 @@
 import { saveTableRequestSchema, SaveTableResponse } from '@ailaflow/shared';
 import { Request } from 'express';
-import { TableRepository, TableRepositoryError } from '../../repositories/table/table-repository';
+import { TableRepositoryError } from '../../repositories/table/table-repository';
 import { Table } from '../../repositories/table/table';
+import { TableManager } from '../../table/table-manager';
 import { Endpoint } from '../framework/endpoint';
 import { getEndpointAbortSignal } from '../framework/endpoint-abort-signal';
 import { EndpointError } from '../framework/endpoint-error';
@@ -13,25 +14,25 @@ export class SaveTableEndpoint implements Endpoint {
   public readonly auth = true;
   public readonly admin = true;
 
-  public constructor(private readonly repository: TableRepository) {}
+  public constructor(private readonly tableManager: Pick<TableManager, 'tryGetByName' | 'insert' | 'update'>) {}
 
   public async handle(req: Request): Promise<SaveTableResponse> {
     const abortSignal = getEndpointAbortSignal(req);
     const request = parseBody(saveTableRequestSchema, req.body);
 
     try {
-      const existingTable = await this.repository.tryGetByName(abortSignal, request.name);
+      const existingTable = await this.tableManager.tryGetByName(abortSignal, request.name);
       if (request.insert) {
         if (existingTable) {
           throw new EndpointError('Table already exists', 400);
         }
-        await this.repository.insert(abortSignal, Table.create(request.name, request.description));
+        await this.tableManager.insert(abortSignal, Table.create(request.name, request.description));
       } else {
         if (!existingTable) {
           throw new EndpointError('Table not found', 404);
         }
         existingTable.update(request.description);
-        await this.repository.update(abortSignal, existingTable);
+        await this.tableManager.update(abortSignal, existingTable);
       }
     } catch (e) {
       if (e instanceof TableRepositoryError) {

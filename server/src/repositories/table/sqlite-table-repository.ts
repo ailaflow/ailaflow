@@ -1,6 +1,5 @@
 import { SqliteDatabase, SqliteDatabases } from '../../core/sqlite-databases';
 import { SqliteTableDataNameProvider } from './sqlite-table-data-name-provider';
-import { TableSchemaManager } from './table-schema-manager';
 import { TableRepository, TableRepositoryError } from './table-repository';
 import { Table } from './table';
 import { Transaction } from '../../core/transaction';
@@ -9,10 +8,7 @@ export class SqliteTableRepository implements TableRepository {
   private readonly modelDb: SqliteDatabase;
   private readonly dataDb: SqliteDatabase;
 
-  public constructor(
-    dbs: SqliteDatabases,
-    private readonly tableSchemaManager: Pick<TableSchemaManager, 'invalidate'>
-  ) {
+  public constructor(dbs: SqliteDatabases) {
     this.modelDb = dbs.modelDb;
     this.dataDb = dbs.dataDb;
   }
@@ -45,7 +41,6 @@ export class SqliteTableRepository implements TableRepository {
           `);
         });
       }, transaction);
-      this.tableSchemaManager.invalidate(table.name);
     } catch (e) {
       if (isDuplicateTableNameSqliteError(e)) {
         throw new TableRepositoryError('A table name is already in use');
@@ -79,9 +74,6 @@ export class SqliteTableRepository implements TableRepository {
       }
       return result;
     }, transaction);
-    if (deleted) {
-      this.tableSchemaManager.invalidate(tableName);
-    }
     return deleted;
   }
 

@@ -18,6 +18,10 @@ export class SqliteTableSchemaRepository implements TableSchemaRepository {
     return this.db.read(db => this.getFromDb(db, tableName));
   }
 
+  public async tryGet(_: AbortSignal, tableName: string): Promise<TableSchema | null> {
+    return this.db.read(db => this.tryGetFromDb(db, tableName));
+  }
+
   public async save(_: AbortSignal, schema: TableSchema, transaction?: Transaction): Promise<TableSchema> {
     if (schema.newColumns.length === 0) {
       return schema.asPersisted();
@@ -46,10 +50,18 @@ export class SqliteTableSchemaRepository implements TableSchemaRepository {
   }
 
   private getFromDb(db: DatabaseSync, tableName: string): TableSchema {
+    const schema = this.tryGetFromDb(db, tableName);
+    if (schema === null) {
+      throw new TableDataRepositoryError(`Table "${tableName}" does not exist`);
+    }
+    return schema;
+  }
+
+  private tryGetFromDb(db: DatabaseSync, tableName: string): TableSchema | null {
     const dataTableName = SqliteTableDataNameProvider.getName(tableName);
     const rows = db.prepare(`PRAGMA table_info(${dataTableName})`).all() as unknown as SqliteTableColumnRow[];
     if (rows.length === 0) {
-      throw new TableDataRepositoryError(`Table "${tableName}" does not exist`);
+      return null;
     }
 
     const columns = rows.filter(row => !row.name.startsWith('_')).map(mapColumn);

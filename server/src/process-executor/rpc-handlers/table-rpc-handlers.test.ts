@@ -5,10 +5,11 @@ import { SqliteDatabase, SqliteDatabases } from '../../core/sqlite-databases';
 import { SqliteTableDataRepository } from '../../repositories/table/sqlite-table-data-repository';
 import { SqliteTableRepository } from '../../repositories/table/sqlite-table-repository';
 import { SqliteTableSchemaRepository } from '../../repositories/table/sqlite-table-schema-repository';
-import { TableDataRepository, TableDataRepositoryError } from '../../repositories/table/table-data-repository';
-import { TableSchemaManager } from '../../repositories/table/table-schema-manager';
+import { TableDataRepository } from '../../repositories/table/table-data-repository';
 import { Table } from '../../repositories/table/table';
 import { SqliteTableDataListQuerier } from '../../queriers/table-data-list/sqlite-table-data-list-querier';
+import { TableManager } from '../../table/table-manager';
+import { TableSchemaManager } from '../../table/table-schema-manager';
 import { ReadTablePageRpcHandler } from './read-table-page-rpc-handler';
 import { TryReadTableRpcHandler } from './try-read-table-rpc-handler';
 import { WriteTableRpcHandler } from './write-table-rpc-handler';
@@ -19,10 +20,11 @@ test('writes and reads table data through RPC handlers', async () => {
   const dbs = { modelDb: new SqliteDatabase(modelDb), dataDb: new SqliteDatabase(dataDb) } as SqliteDatabases;
   const abortSignal = new AbortController().signal;
   const schemaManager = new TableSchemaManager(new SqliteTableSchemaRepository(dbs));
-  const tableRepository = new SqliteTableRepository(dbs, schemaManager);
+  const tableRepository = new SqliteTableRepository(dbs);
   const tableDataRepository = new SqliteTableDataRepository(dbs);
-  const readHandler = new TryReadTableRpcHandler(tableDataRepository, schemaManager);
-  const writeHandler = new WriteTableRpcHandler(tableDataRepository, schemaManager);
+  const tableManager = new TableManager(tableRepository, tableDataRepository, schemaManager, new SqliteTableDataListQuerier(dbs));
+  const readHandler = new TryReadTableRpcHandler(tableManager);
+  const writeHandler = new WriteTableRpcHandler(tableManager);
   await tableRepository.setup(abortSignal);
   await tableRepository.insert(abortSignal, new Table('customers', 'Customer records'));
 
@@ -74,11 +76,12 @@ test('reads paginated table values through an RPC handler', async t => {
   const dbs = { modelDb: new SqliteDatabase(modelDb), dataDb: new SqliteDatabase(dataDb) } as SqliteDatabases;
   const abortSignal = new AbortController().signal;
   const schemaManager = new TableSchemaManager(new SqliteTableSchemaRepository(dbs));
-  const tableRepository = new SqliteTableRepository(dbs, schemaManager);
+  const tableRepository = new SqliteTableRepository(dbs);
   const timestamps = [3000, 1000, 2000];
   t.mock.method(Date, 'now', () => timestamps.shift() ?? 0);
   const tableDataRepository = new SqliteTableDataRepository(dbs);
-  const handler = new ReadTablePageRpcHandler(new SqliteTableDataListQuerier(dbs, schemaManager));
+  const tableManager = new TableManager(tableRepository, tableDataRepository, schemaManager, new SqliteTableDataListQuerier(dbs));
+  const handler = new ReadTablePageRpcHandler(tableManager);
   await tableRepository.setup(abortSignal);
   await tableRepository.insert(abortSignal, new Table('customers', 'Customer records'));
   await upsertTableData(abortSignal, schemaManager, tableDataRepository, 'customers', {
@@ -124,6 +127,25 @@ test('reads paginated table values through an RPC handler', async t => {
       hasMore: false
     }
   );
+  assert.deepEqual(
+    await handler.handle(abortSignal, 'sandbox', 'execution', {
+      name: 'customers',
+      page: 1,
+      pageSize: 10,
+      orderBy: '_id',
+      ascending: true,
+      where: {
+        priority: { $gte: 2, $lt: 3 }
+      }
+    }),
+    {
+      rows: [{ _id: 'bravo', _updatedAt: 2000, name: 'Bob', priority: 2 }],
+      totalCount: 1,
+      page: 1,
+      pageSize: 10,
+      hasMore: false
+    }
+  );
   await assert.rejects(() =>
     handler.handle(abortSignal, 'sandbox', 'execution', {
       name: 'customers',
@@ -142,33 +164,112 @@ test('reads paginated table values through an RPC handler', async t => {
       ascending: true
     })
   );
+  await assert.rejects(() =>
+    handler.handle(abortSignal, 'sandbox', 'execution', {
+      name: 'customers',
+      page: 1,
+      pageSize: 10,
+      orderBy: '_id',
+      ascending: true,
+      where: { priority: 2 }
+    })
+  );
+  await assert.rejects(() =>
+    handler.handle(abortSignal, 'sandbox', 'execution', {
+      name: 'customers',
+      page: 1,
+      pageSize: 10,
+      orderBy: '_id',
+      ascending: true,
+      where: { priority: {} }
+    })
+  );
+  await assert.rejects(() =>
+    handler.handle(abortSignal, 'sandbox', 'execution', {
+      name: 'customers',
+      page: 1,
+      pageSize: 10,
+      orderBy: '_id',
+      ascending: true,
+      where: { priority: { $in: [1, 2] } }
+    })
+  );
+  for (const value of [null, [2], { nested: 2 }]) {
+    await assert.rejects(() =>
+      handler.handle(abortSignal, 'sandbox', 'execution', {
+        name: 'customers',
+        page: 1,
+        pageSize: 10,
+        orderBy: '_id',
+        ascending: true,
+        where: { priority: { $eq: value } }
+      })
+    );
+  }
 
   modelDb.close();
   dataDb.close();
 });
 
-test('propagates missing-table errors and validates RPC requests', async () => {
+test('hides table existence from scripts and validates RPC requests', async () => {
   const modelDb = new DatabaseSync(':memory:', { open: true });
   const dataDb = new DatabaseSync(':memory:', { open: true });
   const dbs = { modelDb: new SqliteDatabase(modelDb), dataDb: new SqliteDatabase(dataDb) } as SqliteDatabases;
   const abortSignal = new AbortController().signal;
   const schemaManager = new TableSchemaManager(new SqliteTableSchemaRepository(dbs));
-  const repository = new SqliteTableDataRepository(dbs);
-  const readHandler = new TryReadTableRpcHandler(repository, schemaManager);
-  const writeHandler = new WriteTableRpcHandler(repository, schemaManager);
+  const tableRepository = new SqliteTableRepository(dbs);
+  const tableDataRepository = new SqliteTableDataRepository(dbs);
+  const tableManager = new TableManager(tableRepository, tableDataRepository, schemaManager, new SqliteTableDataListQuerier(dbs));
+  const readHandler = new TryReadTableRpcHandler(tableManager);
+  const writeHandler = new WriteTableRpcHandler(tableManager);
+  const pageHandler = new ReadTablePageRpcHandler(tableManager);
+  await tableRepository.setup(abortSignal);
 
-  await assert.rejects(
-    () => readHandler.handle(abortSignal, 'sandbox', 'execution', { name: 'missing', _id: 'id' }),
-    error => error instanceof TableDataRepositoryError && error.message === 'Table "missing" does not exist'
+  assert.equal(await readHandler.handle(abortSignal, 'sandbox', 'execution', { name: 'missing', _id: 'id' }), null);
+  assert.deepEqual(
+    await pageHandler.handle(abortSignal, 'sandbox', 'execution', {
+      name: 'missing',
+      page: 2,
+      pageSize: 10,
+      orderBy: '_id',
+      ascending: true
+    }),
+    { rows: [], totalCount: 0, page: 2, pageSize: 10, hasMore: false }
   );
-  await assert.rejects(
-    () => writeHandler.handle(abortSignal, 'sandbox', 'execution', { name: 'missing', row: { _id: 'id' } }),
-    error => error instanceof TableDataRepositoryError && error.message === 'Table "missing" does not exist'
+  assert.equal(await tableRepository.tryGetByName(abortSignal, 'missing'), null);
+  assert.equal(
+    await writeHandler.handle(abortSignal, 'sandbox', 'execution', {
+      name: 'missing',
+      row: { _id: 'id', status: 'active' }
+    }),
+    true
+  );
+  assert.deepEqual(await tableRepository.tryGetByName(abortSignal, 'missing'), new Table('missing', ''));
+  const createdRow = await readHandler.handle(abortSignal, 'sandbox', 'execution', { name: 'missing', _id: 'id' });
+  assert.ok(createdRow);
+  assert.equal(createdRow._id, 'id');
+  assert.equal(createdRow.status, 'active');
+  assert.ok(createdRow._updatedAt > 0);
+  await assert.rejects(() =>
+    writeHandler.handle(abortSignal, 'sandbox', 'execution', {
+      name: 'missing',
+      row: { _id: 'id', status: false }
+    })
+  );
+  assert.equal(await tableManager.delete(abortSignal, 'missing'), true);
+  assert.equal(await readHandler.handle(abortSignal, 'sandbox', 'execution', { name: 'missing', _id: 'id' }), null);
+  assert.equal(
+    await writeHandler.handle(abortSignal, 'sandbox', 'execution', {
+      name: 'missing',
+      row: { _id: 'new_id', amount: 10 }
+    }),
+    true
   );
   await assert.rejects(() => readHandler.handle(abortSignal, 'sandbox', 'execution', { name: 'customers', _id: 1 }));
   await assert.rejects(() => writeHandler.handle(abortSignal, 'sandbox', 'execution', { name: 'customers', row: { _id: 1 } }));
   await assert.rejects(() => readHandler.handle(abortSignal, 'sandbox', 'execution', { name: 'customers', pk: 'id' }));
   await assert.rejects(() => writeHandler.handle(abortSignal, 'sandbox', 'execution', { name: 'customers', pk: 'id', row: {} }));
+  assert.equal(await tableRepository.tryGetByName(abortSignal, 'customers'), null);
 
   modelDb.close();
   dataDb.close();

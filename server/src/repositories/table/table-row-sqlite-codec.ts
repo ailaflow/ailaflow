@@ -4,22 +4,22 @@ import { TableSchema } from './table-schema';
 
 export class TableRowSqliteCodec {
   public static encode(schema: TableSchema, row: Record<string, unknown>): SQLInputValue[] {
-    return schema.columns.map(column => {
-      const value = row[column.name];
-      if (value === undefined) {
-        return null;
-      }
+    return schema.columns.map(column => TableRowSqliteCodec.encodeValue(column.type, row[column.name]));
+  }
 
-      switch (column.type) {
-        case TableColumnType.STRING:
-        case TableColumnType.NUMBER:
-          return value as string | number;
-        case TableColumnType.BOOLEAN:
-          return value ? 1 : 0;
-        case TableColumnType.JSON:
-          return Buffer.from(JSON.stringify(value), 'utf8');
-      }
-    });
+  public static encodeValue(type: TableColumnType, value: unknown): SQLInputValue {
+    if (value === undefined) {
+      return null;
+    }
+    switch (type) {
+      case TableColumnType.STRING:
+      case TableColumnType.NUMBER:
+        return value as string | number;
+      case TableColumnType.BOOLEAN:
+        return value ? 1 : 0;
+      case TableColumnType.JSON:
+        return Buffer.from(JSON.stringify(value), 'utf8');
+    }
   }
 
   public static decode(schema: TableSchema, values: Record<string, unknown>): TableRow {

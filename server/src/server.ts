@@ -108,7 +108,7 @@ import { SqliteTableRepository } from './repositories/table/sqlite-table-reposit
 import { TableDataRepository } from './repositories/table/table-data-repository';
 import { SqliteTableDataRepository } from './repositories/table/sqlite-table-data-repository';
 import { SqliteTableSchemaRepository } from './repositories/table/sqlite-table-schema-repository';
-import { TableSchemaManager } from './repositories/table/table-schema-manager';
+import { TableSchemaManager } from './table/table-schema-manager';
 import { TableListQuerier } from './queriers/table-list/table-list-querier';
 import { SqliteTableListQuerier } from './queriers/table-list/sqlite-table-list-querier';
 import { GetTablesEndpoint } from './api/table/get-tables-endpoint';
@@ -117,8 +117,8 @@ import { SaveTableEndpoint } from './api/table/save-table-endpoint';
 import { DeleteTableEndpoint } from './api/table/delete-table-endpoint';
 import { WriteTableRpcHandler } from './process-executor/rpc-handlers/write-table-rpc-handler';
 import { TryReadTableRpcHandler } from './process-executor/rpc-handlers/try-read-table-rpc-handler';
-import { TableDataListQuerier } from './queriers/table-data-list/table-data-list-querier';
 import { SqliteTableDataListQuerier } from './queriers/table-data-list/sqlite-table-data-list-querier';
+import { TableManager } from './table/table-manager';
 import { GetTableDataEndpoint } from './api/table/get-table-data-endpoint';
 import { ReadTablePageRpcHandler } from './process-executor/rpc-handlers/read-table-page-rpc-handler';
 import { AgentSessionRunner } from './process-executor/services/agent-session-runner';
@@ -221,7 +221,6 @@ export class Server {
     let myTaskListQuerier: MyTaskListQuerier;
     let myNotificationListQuerier: MyNotificationListQuerier;
     let tableListQuerier: TableListQuerier;
-    let tableDataListQuerier: TableDataListQuerier;
     let incompleteAssignedTaskCountQuerier: IncompleteAssignedTaskCountQuerier;
     let taskFinalizationCandidateQuerier: TaskFinalizationCandidateQuerier;
     let taskListQuerier: TaskListQuerier;
@@ -241,7 +240,7 @@ export class Server {
     assignedTaskRepository = new SqliteAssignedTaskRepository(sqliteDatabases);
     notificationRepository = new SqliteNotificationRepository(sqliteDatabases);
     const tableSchemaManager = new TableSchemaManager(new SqliteTableSchemaRepository(sqliteDatabases));
-    tableRepository = new SqliteTableRepository(sqliteDatabases, tableSchemaManager);
+    tableRepository = new SqliteTableRepository(sqliteDatabases);
     tableDataRepository = new SqliteTableDataRepository(sqliteDatabases);
     llmConfigurationRepository = new SqliteLlmConfigurationRepository(sqliteDatabases);
     telegramConfigurationRepository = new SqliteTelegramConfigurationRepository(sqliteDatabases);
@@ -256,7 +255,8 @@ export class Server {
     myTaskListQuerier = new SqliteMyTaskListQuerier(sqliteDatabases);
     myNotificationListQuerier = new SqliteMyNotificationListQuerier(sqliteDatabases);
     tableListQuerier = new SqliteTableListQuerier(sqliteDatabases);
-    tableDataListQuerier = new SqliteTableDataListQuerier(sqliteDatabases, tableSchemaManager);
+    const tableDataListQuerier = new SqliteTableDataListQuerier(sqliteDatabases);
+    const tableManager = new TableManager(tableRepository, tableDataRepository, tableSchemaManager, tableDataListQuerier);
     incompleteAssignedTaskCountQuerier = new SqliteIncompleteAssignedTaskCountQuerier(sqliteDatabases);
     taskFinalizationCandidateQuerier = new SqliteTaskFinalizationCandidateQuerier(sqliteDatabases);
     taskListQuerier = new SqliteTaskListQuerier(sqliteDatabases);
@@ -284,9 +284,9 @@ export class Server {
     const rpcHandler = new SandboxRpcHandlerProvider([
       new ReadVariableRpcHandler(processExecutionStore),
       new WriteVariableRpcHandler(processExecutionStore),
-      new ReadTablePageRpcHandler(tableDataListQuerier),
-      new WriteTableRpcHandler(tableDataRepository, tableSchemaManager),
-      new TryReadTableRpcHandler(tableDataRepository, tableSchemaManager),
+      new ReadTablePageRpcHandler(tableManager),
+      new WriteTableRpcHandler(tableManager),
+      new TryReadTableRpcHandler(tableManager),
       new GetStartedByRpcHandler(processExecutionStore),
       new UserExistsRpcHandler(userRepository)
     ]);
@@ -445,10 +445,10 @@ export class Server {
       new SaveProcessCronJobEndpoint(processManager, processCronJobRepository),
       new DeleteProcessCronJobEndpoint(processCronJobRepository),
       new GetTablesEndpoint(tableListQuerier),
-      new GetTableEndpoint(tableRepository),
-      new GetTableDataEndpoint(tableDataListQuerier),
-      new SaveTableEndpoint(tableRepository),
-      new DeleteTableEndpoint(tableRepository),
+      new GetTableEndpoint(tableManager),
+      new GetTableDataEndpoint(tableManager),
+      new SaveTableEndpoint(tableManager),
+      new DeleteTableEndpoint(tableManager),
       new GetSandboxesEndpoint(sandboxListQuerier),
       new DiagnoseHostEndpoint(sandboxHostDiagnostician),
       new GetSandboxEndpoint(sandboxRepository),

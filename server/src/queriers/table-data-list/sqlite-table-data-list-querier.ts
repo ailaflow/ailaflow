@@ -1,46 +1,57 @@
-import { GetTableDataResponse, TableColumnTypePolicy, TableRow } from '@ailaflow/shared';
+import { GetTableDataResponse, TableColumnResolver, TableColumnType, TableColumnTypePolicy, TableRow } from '@ailaflow/shared';
+import { SQLInputValue } from 'node:sqlite';
 import { SqliteDatabase, SqliteDatabases } from '../../core/sqlite-databases';
 import { SqliteTableDataNameProvider } from '../../repositories/table/sqlite-table-data-name-provider';
 import { TableDataRepositoryError } from '../../repositories/table/table-data-repository';
 import { TableRowSqliteCodec } from '../../repositories/table/table-row-sqlite-codec';
-import { TableSchemaManager } from '../../repositories/table/table-schema-manager';
 import { TableSchema } from '../../repositories/table/table-schema';
-import { TableDataListQuerier } from './table-data-list-querier';
+import {
+  TableDataListQuerier,
+  TableDataPageQuery,
+  TableDataWhere,
+  TableDataWhereCondition,
+  TableDataWhereValue
+} from './table-data-list-querier';
 
 export class SqliteTableDataListQuerier implements TableDataListQuerier {
   private readonly db: SqliteDatabase;
 
-  public constructor(
-    dbs: SqliteDatabases,
-    private readonly tableSchemaManager: TableSchemaManager
-  ) {
+  public constructor(dbs: SqliteDatabases) {
     this.db = dbs.dataDb;
   }
 
-  public async query(
-    abortSignal: AbortSignal,
-    tableName: string,
-    page: number,
-    pageSize: number,
-    orderByColumn: string,
-    ascending: boolean
-  ): Promise<GetTableDataResponse> {
+  public async query(_: AbortSignal, schema: TableSchema, query: TableDataPageQuery): Promise<GetTableDataResponse> {
+    const { page, pageSize, orderBy: orderByColumn, ascending, where = {} } = query;
+    const tableName = schema.tableName;
     const dataTableName = SqliteTableDataNameProvider.getName(tableName);
     try {
-      const schema = await this.tableSchemaManager.get(abortSignal, tableName);
-      const orderBy = resolveOrderBy(schema, orderByColumn);
+      const orderBy = tryResolveColumn(schema, orderByColumn);
+      if (orderBy === null) {
+        return createEmptyResponse(page, pageSize);
+      }
+
+      const resolvedWhere = tryResolveWhere(schema, where);
+      if (resolvedWhere === null) {
+        return createEmptyResponse(page, pageSize);
+      }
+      if (!TableColumnTypePolicy.isSortable(orderBy.type)) {
+        throw new TableDataRepositoryError(`Column "${orderByColumn}" cannot be sorted because it contains JSON values`);
+      }
+
+      const whereSql = resolvedWhere.conditions.length > 0 ? `WHERE ${resolvedWhere.conditions.join(' AND ')}` : '';
       const direction = ascending ? 'ASC' : 'DESC';
       return this.db.read(db => {
-        const { totalCount } = db.prepare(`SELECT COUNT(*) AS totalCount FROM ${dataTableName}`).get() as {
-          totalCount: number;
-        };
+        const { totalCount } = db
+          .prepare(`SELECT COUNT(*) AS totalCount FROM ${dataTableName} ${whereSql}`)
+          .get(...resolvedWhere.values) as { totalCount: number };
         const statement = db.prepare(`
         SELECT *
         FROM ${dataTableName}
-        ORDER BY ${orderBy} IS NULL, ${orderBy} ${direction}, _id ASC
+        ${whereSql}
+        ORDER BY ${orderBy.sqlName} IS NULL, ${orderBy.sqlName} ${direction}, _id ASC
         LIMIT ? OFFSET ?
       `);
-        const rows = statement.all(pageSize, (page - 1) * pageSize) as unknown as TableDataRow[];
+        const rows = statement.all(...resolvedWhere.values, pageSize, (page - 1) * pageSize) as unknown as TableDataRow[];
 
         return {
           rows: mapRows(schema, rows),
@@ -62,19 +73,103 @@ function mapRows(schema: TableSchema, rows: TableDataRow[]): TableRow[] {
   return rows.map(row => TableRowSqliteCodec.decode(schema, row));
 }
 
-function resolveOrderBy(schema: TableSchema, orderBy: string): string {
-  if (orderBy === '_id' || orderBy === '_updatedAt') {
-    return orderBy;
+interface ResolvedColumn {
+  sqlName: string;
+  type: TableColumnType;
+}
+
+interface ResolvedWhere {
+  conditions: string[];
+  values: SQLInputValue[];
+}
+
+const sqlOperators = {
+  $eq: '=',
+  $neq: '<>',
+  $lt: '<',
+  $gt: '>',
+  $lte: '<=',
+  $gte: '>='
+} as const;
+
+function tryResolveColumn(schema: TableSchema, columnName: string): ResolvedColumn | null {
+  if (columnName === '_id') {
+    return { sqlName: '_id', type: TableColumnType.STRING };
+  }
+  if (columnName === '_updatedAt') {
+    return { sqlName: '_updatedAt', type: TableColumnType.NUMBER };
   }
 
-  const columnType = schema.getColumnType(orderBy);
+  const columnType = schema.getColumnType(columnName);
   if (columnType === undefined) {
-    throw new TableDataRepositoryError(`Column "${orderBy}" does not exist in table "${schema.tableName}"`);
+    return null;
   }
-  if (!TableColumnTypePolicy.isSortable(columnType)) {
-    throw new TableDataRepositoryError(`Column "${orderBy}" cannot be sorted because it contains JSON values`);
+  return { sqlName: `"${columnName}"`, type: columnType };
+}
+
+function tryResolveWhere(schema: TableSchema, where: TableDataWhere): ResolvedWhere | null {
+  const resolvedColumns = new Map<string, ResolvedColumn>();
+  for (const columnName of Object.keys(where)) {
+    const column = tryResolveColumn(schema, columnName);
+    if (column === null) {
+      return null;
+    }
+    resolvedColumns.set(columnName, column);
   }
-  return `"${orderBy}"`;
+
+  const conditions: string[] = [];
+  const values: SQLInputValue[] = [];
+  for (const [columnName, condition] of Object.entries(where)) {
+    const column = resolvedColumns.get(columnName);
+    if (column === undefined) {
+      throw new Error(`Column "${columnName}" was not resolved`);
+    }
+    if (column.type === TableColumnType.JSON) {
+      throw new TableDataRepositoryError(`Column "${columnName}" cannot be filtered because it contains JSON values`);
+    }
+    appendCondition(schema, columnName, column, condition, conditions, values);
+  }
+
+  return { conditions, values };
+}
+
+function appendCondition(
+  schema: TableSchema,
+  columnName: string,
+  column: ResolvedColumn,
+  condition: Readonly<TableDataWhereCondition>,
+  conditions: string[],
+  values: SQLInputValue[]
+): void {
+  const operators = Object.entries(condition) as [keyof TableDataWhereCondition, TableDataWhereValue][];
+  if (operators.length === 0) {
+    throw new TableDataRepositoryError(`Where condition for column "${columnName}" must contain at least one operator`);
+  }
+
+  for (const [operator, value] of operators) {
+    validateValueType(schema, columnName, column.type, value);
+    conditions.push(`${column.sqlName} ${sqlOperators[operator]} ?`);
+    values.push(TableRowSqliteCodec.encodeValue(column.type, value));
+  }
+}
+
+function validateValueType(schema: TableSchema, columnName: string, expectedType: TableColumnType, value: TableDataWhereValue): void {
+  const receivedType = TableColumnResolver.resolveValueType(columnName, value);
+  if (receivedType !== expectedType) {
+    throw new TableDataRepositoryError(
+      `Column "${columnName}" in table "${schema.tableName}" expects type ${TableColumnType[expectedType]} but received ${TableColumnType[receivedType]}`
+    );
+  }
+}
+
+function createEmptyResponse(page: number, pageSize: number): GetTableDataResponse {
+  return {
+    rows: [],
+    totalCount: 0,
+    page,
+    pageSize,
+    hasMore: false
+  };
 }
 
 function mapSqliteError(error: unknown, tableName: string): unknown {

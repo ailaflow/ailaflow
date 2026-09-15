@@ -1,6 +1,6 @@
-import { TableSchemaConcurrencyError, TableSchemaRepository } from './table-schema-repository';
-import { TableSchema } from './table-schema';
-import { Transaction } from '../../core/transaction';
+import { Transaction } from '../core/transaction';
+import { TableSchemaConcurrencyError, TableSchemaRepository } from '../repositories/table/table-schema-repository';
+import { TableSchema } from '../repositories/table/table-schema';
 
 export class TableSchemaManager {
   private readonly cache = new Map<string, TableSchema>();
@@ -15,6 +15,19 @@ export class TableSchemaManager {
 
     const schema = await this.repository.get(abortSignal, tableName);
     this.cache.set(tableName, schema);
+    return schema;
+  }
+
+  public async tryGet(abortSignal: AbortSignal, tableName: string): Promise<TableSchema | null> {
+    const cached = this.cache.get(tableName);
+    if (cached) {
+      return cached;
+    }
+
+    const schema = await this.repository.tryGet(abortSignal, tableName);
+    if (schema) {
+      this.cache.set(tableName, schema);
+    }
     return schema;
   }
 
