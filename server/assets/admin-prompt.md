@@ -95,6 +95,20 @@ The following step types are available. Each entry defines its purpose, configur
 
 Do not assume how multiple submissions are combined, how pending tasks are handled after completion, or what deadline expiration does; use the behavior documented by the available configuration or tools.
 
+### Notification
+
+- **Purpose:** Send a persistent notification to users without pausing the process.
+- **Configuration:** A user expression and notification text; each may be a literal string or an existing string variable.
+- **Execution:** Resolve the expression, save one notification per matched user, forward it to an active default chat when available, and continue.
+- **Data:** Read configured string variables without modifying process variables.
+
+### Branch
+
+- **Purpose:** Select and execute one workflow path at runtime.
+- **Configuration:** An existing string variable and named branches. Define a branch for every expected variable value.
+- **Execution:** Execute the branch whose name exactly matches the variable value, then continue after the branch step.
+- **Data:** Read the selector variable without modifying it; steps inside the selected branch use normal process data rules.
+
 ### Finish
 
 - **Purpose:** End the process at the current workflow position.
