@@ -223,39 +223,42 @@ export function useProcessEditorAi(state: ProcessEditorState, save: () => Promis
           state.notifyDefinitionChange();
           return toolSuccess('Process start variable names were updated');
         },
-        async setRootVariable(arg) {
-          const nameError = ProcessRootVariableValidator.validateName(arg.name);
-          if (nameError) {
-            return toolError(`Invalid name: ${nameError}; the variable was not set`);
-          }
-          const schemaError = ProcessRootVariableValidator.validateSchema(arg.schema);
-          if (schemaError) {
-            return toolError(`Invalid schema: ${schemaError}; the variable was not set`);
-          }
-
+        async modifyRootVariable(arg) {
           const variables = state.definition.value.properties.variables;
-          const variable: VariableDefinition = {
-            name: arg.name,
-            description: arg.description,
-            schema: arg.schema
-          };
-          const index = variables.findIndex(v => v.name === arg.name);
-          if (index < 0) {
-            variables.push(variable);
-          } else {
-            variables[index] = variable;
+          switch (arg.action) {
+            case 'set': {
+              const nameError = ProcessRootVariableValidator.validateName(arg.name);
+              if (nameError) {
+                return toolError(`Invalid name: ${nameError}; the variable was not set`);
+              }
+              const schemaError = ProcessRootVariableValidator.validateSchema(arg.schema);
+              if (schemaError) {
+                return toolError(`Invalid schema: ${schemaError}; the variable was not set`);
+              }
+              const variable: VariableDefinition = {
+                name: arg.name,
+                description: arg.description,
+                schema: arg.schema
+              };
+              const index = variables.findIndex(v => v.name === arg.name);
+              if (index < 0) {
+                variables.push(variable);
+              } else {
+                variables[index] = variable;
+              }
+              state.notifyDefinitionChange();
+              return toolSuccess('Variable was set');
+            }
+            case 'delete': {
+              const index = variables.findIndex(v => v.name === arg.name);
+              if (index < 0) {
+                return toolError(`Cannot find the \$${arg.name} variable`);
+              }
+              variables.splice(index, 1);
+              state.notifyDefinitionChange();
+              return toolSuccess('Variable was deleted');
+            }
           }
-          state.notifyDefinitionChange();
-          return toolSuccess('Variable was set');
-        },
-        async deleteRootVariable(arg) {
-          const index = state.definition.value.properties.variables.findIndex(v => v.name === arg.name);
-          if (index < 0) {
-            return toolError(`Cannot find the \$${arg.name} variable`);
-          }
-          state.definition.value.properties.variables.splice(index, 1);
-          state.notifyDefinitionChange();
-          return toolSuccess('Variable was deleted');
         },
 
         // steps
@@ -645,25 +648,29 @@ export function useProcessEditorAi(state: ProcessEditorState, save: () => Promis
           const content = ScriptEditorOverlayUtils.tryGetFileContent(data, arg.filePath);
           return content === null ? toolError('File not found') : { content };
         },
-        async scriptEditor_setContent(arg) {
+        async scriptEditor_modifyFile(arg) {
           const data = ScriptEditorOverlayUtils.getData(state);
-          const result = ScriptEditorOverlayUtils.setFileContent(data, arg.filePath, arg.content, arg.mode);
-          if (result === 'fileNotFound') {
-            return toolError('File not found');
+          switch (arg.action) {
+            case 'create':
+            case 'edit': {
+              const result = ScriptEditorOverlayUtils.setFileContent(data, arg.filePath, arg.content, arg.action);
+              if (result === 'fileNotFound') {
+                return toolError('File not found');
+              }
+              if (result === 'fileAlreadyExists') {
+                return toolError('File already exists');
+              }
+              state.notifyDefinitionChange();
+              return toolSuccess('File content was updated');
+            }
+            case 'delete': {
+              if (!ScriptEditorOverlayUtils.deleteFile(data, arg.filePath)) {
+                return toolError('File not found');
+              }
+              state.notifyDefinitionChange();
+              return toolSuccess('File was deleted');
+            }
           }
-          if (result === 'fileAlreadyExists') {
-            return toolError('File already exists');
-          }
-          state.notifyDefinitionChange();
-          return toolSuccess('File content was updated');
-        },
-        async scriptEditor_deleteFile(arg) {
-          const data = ScriptEditorOverlayUtils.getData(state);
-          if (!ScriptEditorOverlayUtils.deleteFile(data, arg.filePath)) {
-            return toolError('File not found');
-          }
-          state.notifyDefinitionChange();
-          return toolSuccess('File was deleted');
         }
       }),
     [state, save]

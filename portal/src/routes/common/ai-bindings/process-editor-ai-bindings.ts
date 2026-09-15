@@ -112,19 +112,23 @@ const processEditorRoute = route('processEditor')
         filter: z.string().optional().describe('Optional filter for variable names')
       })
     ),
-    setRootVariable: tool(
-      'Sets a process variable. The variable must have a name and a valid JSON schema. If it does not exist, it is created. If it already exists, it is overwritten.'
-    ).input(
-      z.object({
-        name: z.string().min(1).describe('The name of the variable'),
-        description: z.string().min(1).describe('The description of the variable'),
-        schema: jsonSchema
-      })
-    ),
-    deleteRootVariable: tool('Deletes a process variable by name').input(
-      z.object({
-        name: z.string().min(1).describe('The name of the variable')
-      })
+    modifyRootVariable: tool('Set or delete a process variable').input(
+      z.discriminatedUnion('action', [
+        z
+          .object({
+            action: z.literal('set').describe('Create or update a process variable'),
+            name: z.string().min(1).describe('The name of the variable'),
+            description: z.string().min(1).describe('The description of the variable'),
+            schema: jsonSchema
+          })
+          .strict(),
+        z
+          .object({
+            action: z.literal('delete').describe('Delete a process variable'),
+            name: z.string().min(1).describe('The name of the variable')
+          })
+          .strict()
+      ])
     ),
 
     // steps
@@ -402,17 +406,29 @@ const processEditorRoute = route('processEditor')
         filePath: z.string().min(1).describe('The path of the file to read')
       })
     ),
-    scriptEditor_setContent: tool('Set the content of a specific file').input(
-      z.object({
-        filePath: z.string().min(1).describe('The path of the file to update'),
-        content: z.string().describe('The new content for the file'),
-        mode: z.enum(['edit', 'create']).describe('Set "edit" to update the file, "create" to create a new file')
-      })
-    ),
-    scriptEditor_deleteFile: tool('Delete a specific file').input(
-      z.object({
-        filePath: z.string().min(1).describe('The path of the file to delete')
-      })
+    scriptEditor_modifyFile: tool('Create, edit, or delete a script file').input(
+      z.discriminatedUnion('action', [
+        z
+          .object({
+            action: z.literal('create').describe('Create a new file'),
+            filePath: z.string().min(1).describe('The path of the new file'),
+            content: z.string().describe('The file content')
+          })
+          .strict(),
+        z
+          .object({
+            action: z.literal('edit').describe('Edit an existing file'),
+            filePath: z.string().min(1).describe('The path of the file to edit'),
+            content: z.string().describe('The new file content')
+          })
+          .strict(),
+        z
+          .object({
+            action: z.literal('delete').describe('Delete an existing file'),
+            filePath: z.string().min(1).describe('The path of the file to delete')
+          })
+          .strict()
+      ])
     )
   })
   .currentPageField('overlay', 'getCurrentOverlay')

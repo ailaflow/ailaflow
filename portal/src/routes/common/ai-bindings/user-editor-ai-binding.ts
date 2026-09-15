@@ -24,16 +24,22 @@ const userEditorRoute = route('userEditor')
       })
     ),
     getAttributes: tool('Get all user attributes as name-value pairs'),
-    setAttribute: tool('Create or update a user attribute').input(
-      z.object({
-        name: z.string().describe('The attribute name'),
-        value: userAttributeValue.describe('The attribute value')
-      })
-    ),
-    removeAttribute: tool('Remove a user attribute').input(
-      z.object({
-        name: z.string().describe('The attribute name')
-      })
+    modifyAttribute: tool('Set or remove a user attribute').input(
+      z.discriminatedUnion('action', [
+        z
+          .object({
+            action: z.literal('set').describe('Create or update a user attribute'),
+            name: z.string().describe('The attribute name'),
+            value: userAttributeValue.describe('The attribute value')
+          })
+          .strict(),
+        z
+          .object({
+            action: z.literal('remove').describe('Remove a user attribute'),
+            name: z.string().describe('The attribute name')
+          })
+          .strict()
+      ])
     ),
     getValidationErrors: tool('Get current validation errors for the user editor'),
     hasUnsavedChanges: tool('Check whether there are unsaved user editor changes'),

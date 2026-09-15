@@ -35,20 +35,24 @@ export function useUserEditorAi(state: UserEditorState, save: () => Promise<void
         async getAttributes() {
           return state.getAttributes();
         },
-        async setAttribute(arg) {
-          const error = UserAttributesValidator.validateName(arg.name);
-          if (error) {
-            return toolError(error);
+        async modifyAttribute(arg) {
+          switch (arg.action) {
+            case 'set': {
+              const error = UserAttributesValidator.validateName(arg.name);
+              if (error) {
+                return toolError(error);
+              }
+              state.setAttribute(arg.name, arg.value);
+              return toolSuccess('User attribute updated');
+            }
+            case 'remove': {
+              if (!(arg.name in state.getAttributes())) {
+                return toolError(`Cannot find user attribute "${arg.name}"`);
+              }
+              state.removeAttributeByName(arg.name);
+              return toolSuccess('User attribute removed');
+            }
           }
-          state.setAttribute(arg.name, arg.value);
-          return toolSuccess('User attribute updated');
-        },
-        async removeAttribute(arg) {
-          if (!(arg.name in state.getAttributes())) {
-            return toolError(`Cannot find user attribute "${arg.name}"`);
-          }
-          state.removeAttributeByName(arg.name);
-          return toolSuccess('User attribute removed');
         },
         async getValidationErrors() {
           return {
