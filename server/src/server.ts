@@ -185,6 +185,7 @@ import { GetProcessesTool } from './chat-session/admin-tools/get-processes-tool'
 import { GetTablesTool } from './chat-session/admin-tools/get-tables-tool';
 import { TestProcessTool } from './chat-session/admin-tools/test-process-tool';
 import { Installer } from './install/installer';
+import { UserExistsRpcHandler } from './process-executor/rpc-handlers/user-exists-rpc-handler';
 
 export class Server {
   private isClosed = false;
@@ -286,7 +287,8 @@ export class Server {
       new ReadTablePageRpcHandler(tableDataListQuerier),
       new WriteTableRpcHandler(tableDataRepository, tableSchemaManager),
       new TryReadTableRpcHandler(tableDataRepository, tableSchemaManager),
-      new GetStartedByRpcHandler(processExecutionStore)
+      new GetStartedByRpcHandler(processExecutionStore),
+      new UserExistsRpcHandler(userRepository)
     ]);
 
     const sessionManager = new ChatSessionManager();

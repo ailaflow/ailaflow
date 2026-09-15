@@ -130,6 +130,18 @@ export async function getStartedBy(): Promise<string> {
   return '@' + name;
 }
 
+/**
+ * Checks whether a user exists.
+ * @param name The name of the user to check.
+ * @param rpcConfig Optional configuration for the RPC call.
+ * @returns Whether the user exists.
+ * @throws If the RPC call fails.
+ */
+export function userExists(name: string, rpcConfig?: RpcConfig): Promise<boolean> {
+  name = normalizeName(name, '@');
+  return rpc<boolean>('userExists', { name }, rpcConfig);
+}
+
 function normalizeName(name: string, prefix: string): string {
   if (name.startsWith(prefix)) {
     return name.substring(1);
