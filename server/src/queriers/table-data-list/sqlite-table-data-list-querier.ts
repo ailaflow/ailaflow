@@ -170,7 +170,7 @@ function createEmptyResponse(page: number, pageSize: number): GetTableDataRespon
 
 function mapSqliteError(error: unknown, tableName: string): unknown {
   if (error instanceof Error && 'code' in error && error.code === 'ERR_SQLITE_ERROR' && error.message.includes('no such table')) {
-    return new TableDataRepositoryError(`Table "${tableName}" does not exist`);
+    return new TableDataRepositoryError(`Table #${tableName} does not exist`);
   }
   return error;
 }

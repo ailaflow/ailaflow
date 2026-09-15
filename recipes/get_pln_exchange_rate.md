@@ -1,8 +1,6 @@
 ---
 title: Get PLN exchange rate
 description: Fetch the current exchange rate for a currency against PLN using the NBP API.
-featured: true
-example: true
 authors:
   - author: b4rtaz
     authorUrl: https://github.com/b4rtaz

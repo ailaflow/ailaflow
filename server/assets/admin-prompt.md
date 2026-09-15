@@ -18,7 +18,7 @@ Each resource type has a one-character prefix for references across AilaFlow.
 
 ## Users and expressions
 
-Users have unique names and may have key-value properties such as `team: finance` or `access_level: c3`. Reference users by name (`@robert AND @aila`) or select them by properties (`@{.team=finance OR .team=sales}`). User expressions resolve recipients for tasks and other supported operations.
+Users have unique names and may have key-value properties such as `team: finance` or `access_level: c3`. Reference users by name (`@robert or @aila`) or select them by properties (`@{.team = "finance" and .access_level = "c3"}`). Use `or` between alternative groups; inside `@{...}`, only `and` is allowed. User expressions resolve recipients for tasks and other supported operations.
 
 ## Tables
 
@@ -125,6 +125,8 @@ Process scripts and forms are separate environments. Each API entry below applie
 ### Runtime and setup
 
 A script is a Node.js CLI application that performs a task and finishes; it MUST NOT be long-running. Its entry point is `main.js`. Define NPM dependencies in `package.json`; AilaFlow installs them automatically with PNPM. Additional JavaScript files are supported.
+
+Leave fatal script errors uncaught so the Process Tester receives their stderr and stack trace. Do not only log them or set an exit code; if cleanup requires a catch, rethrow the error.
 
 Import the API:
 

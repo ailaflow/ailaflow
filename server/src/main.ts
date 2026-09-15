@@ -16,6 +16,7 @@ async function main() {
 
   process.once('SIGINT', () => void close());
   process.once('SIGTERM', () => void close());
+  process.once('disconnect', () => void close());
 
   try {
     server = await Server.create(initAbortController.signal);

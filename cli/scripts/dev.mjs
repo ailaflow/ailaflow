@@ -40,7 +40,7 @@ async function restartServer() {
   ];
   serverProcess = spawn(process.execPath, nodeArguments, {
     cwd: rootDirectory,
-    stdio: 'inherit',
+    stdio: ['inherit', 'inherit', 'inherit', 'ipc'],
     env: {
       ...process.env,
       AILAFLOW_DATA_DIR: dataDirectory,
