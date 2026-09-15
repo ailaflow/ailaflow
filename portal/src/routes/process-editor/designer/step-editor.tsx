@@ -6,6 +6,7 @@ import { TaskStepEditor } from './task-step-editor';
 import { Fragment } from 'react';
 import { ProcessEditorState } from '../process-editor-context';
 import { ReturnStepEditor } from './return-step-editor';
+import { BranchStepEditor } from './branch-step-editor';
 
 export interface StepEditorProps {
   state: ProcessEditorState;
@@ -28,6 +29,9 @@ export function StepEditor(props: StepEditorProps) {
   }
   if (type === 'return') {
     return <ReturnStepEditor state={props.state} />;
+  }
+  if (type === 'branch') {
+    return <BranchStepEditor state={props.state} />;
   }
   return <Fragment />;
 }

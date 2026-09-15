@@ -1,4 +1,5 @@
 export * from './base-step-model';
+export * from './branch-name-validator';
 export * from './form-definition-validator';
 export * from './form-definition';
 export * from './process-validator';

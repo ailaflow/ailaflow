@@ -1,5 +1,5 @@
 import { Definition, Sequence, Step } from 'sequential-workflow-model';
-import { AgentStep, NotificationStep, ReturnStep, ScriptStep, StringOrVariable, TaskStep } from './process-steps';
+import { AgentStep, BranchStep, NotificationStep, ReturnStep, ScriptStep, StringOrVariable, TaskStep } from './process-steps';
 import { VariableCachedValidator } from './variable-cached-validator';
 import { FormDefinitionValidator } from './form-definition-validator';
 import { ProcessDefinition } from './process-definition';
@@ -35,6 +35,9 @@ export class ProcessStepValidator {
         break;
       case 'return':
         this.validateReturn(step as ReturnStep, definition, errors);
+        break;
+      case 'branch':
+        this.validateBranch(step as BranchStep, definition, errors);
         break;
     }
     return errors;
@@ -137,6 +140,13 @@ export class ProcessStepValidator {
     const ovError = this.variableValidator.validateVariablesReference(step.properties.outputVariableNames, definition);
     if (ovError) {
       errors['properties.outputVariableNames'] = ovError;
+    }
+  }
+
+  private validateBranch(step: BranchStep, definition: ProcessDefinition, errors: Record<string, string>) {
+    const selectorError = this.variableValidator.validateVariableType(step.properties.branchSelectorVariableName, 'string', definition);
+    if (selectorError) {
+      errors['properties.branchSelectorVariableName'] = selectorError;
     }
   }
 

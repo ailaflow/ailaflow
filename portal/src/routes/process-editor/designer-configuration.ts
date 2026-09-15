@@ -10,7 +10,8 @@ import {
   ReturnStep,
   ProcessDefinition,
   PROCESS_VERSION,
-  TaskFinalizationPolicy
+  TaskFinalizationPolicy,
+  BranchStep
 } from '@ailaflow/shared';
 
 export function createBlankDefinition(): ProcessDefinition {
@@ -133,11 +134,24 @@ const returnStep: Omit<ReturnStep, 'id'> = {
   }
 };
 
+const branchStep: Omit<BranchStep, 'id'> = {
+  type: 'branch',
+  name: 'Branch',
+  componentType: 'switch',
+  properties: {
+    branchSelectorVariableName: ''
+  },
+  branches: {
+    true: [],
+    false: []
+  }
+};
+
 export const toolboxConfiguration: ToolboxConfiguration = {
   groups: [
     {
       name: 'Steps',
-      steps: [scriptStep, agentStep, taskStep, notificationStep, returnStep]
+      steps: [scriptStep, agentStep, taskStep, notificationStep, returnStep, branchStep]
     }
   ]
 };

@@ -104,6 +104,33 @@ export const returnStepSchema = baseStepSchema.extend({
 
 export type ReturnStep = z.infer<typeof returnStepSchema>;
 
+// branch step
+
+const branchStepPropertiesSchema = z.object({
+  branchSelectorVariableName: z.string()
+});
+
+type NonBranchStep = ScriptStep | AgentStep | NotificationStep | TaskStep | ReturnStep;
+
+export type AnyStep = NonBranchStep | BranchStep;
+
+export interface BranchStep extends z.infer<typeof baseStepSchema> {
+  type: 'branch';
+  componentType: 'switch';
+  properties: z.infer<typeof branchStepPropertiesSchema>;
+  branches: Record<string, AnyStep[]>;
+}
+
+export const branchStepSchema = baseStepSchema.extend({
+  type: z.literal('branch'),
+  componentType: z.literal('switch'),
+  properties: branchStepPropertiesSchema,
+  branches: z.record(
+    z.string().min(1),
+    z.lazy((): z.ZodType<AnyStep[]> => z.array(anyStepSchema))
+  )
+}) satisfies z.ZodType<BranchStep>;
+
 // union of all step types
 
 export const anyStepSchema = z.discriminatedUnion('type', [
@@ -111,7 +138,8 @@ export const anyStepSchema = z.discriminatedUnion('type', [
   agentStepSchema,
   notificationStepSchema,
   taskStepSchema,
-  returnStepSchema
+  returnStepSchema,
+  branchStepSchema
 ]);
 
 export const sequenceSchema = z.array(anyStepSchema);

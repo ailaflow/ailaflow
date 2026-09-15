@@ -6,6 +6,8 @@ import { ObjectCloner, Sequence, Step, Uid } from 'sequential-workflow-designer'
 import {
   AgentStep,
   anyStepSchema,
+  BranchNameValidator,
+  BranchStep,
   NotificationStep,
   ProcessRootVariableValidator,
   ReturnStep,
@@ -442,6 +444,43 @@ export function useProcessEditorAi(state: ProcessEditorState, save: () => Promis
           step.properties.notification = { type: 'variable', name: arg.variableName };
           state.notifyDefinitionChange();
           return toolSuccess('Notification was updated');
+        },
+
+        async branchStep_setSelectorVariableName(arg) {
+          const error = state.variableValidator.validateVariableType(arg.variableName, 'string', state.definition.value);
+          if (error) {
+            return toolError(error);
+          }
+          const step = state.getStep<BranchStep>(arg.stepId, 'branch');
+          step.properties.branchSelectorVariableName = arg.variableName;
+          state.notifyDefinitionChange();
+          return toolSuccess('Branch selector variable was updated');
+        },
+        async branchStep_modifyBranches(arg) {
+          const step = state.getStep<BranchStep>(arg.stepId, 'branch');
+          switch (arg.action) {
+            case 'add':
+              const nameError = BranchNameValidator.validateName(arg.name);
+              if (nameError) {
+                return toolError(`${nameError} The branch was not added`);
+              }
+              if (step.branches[arg.name]) {
+                return toolError(`Branch ${arg.name} already exists`);
+              }
+              step.branches[arg.name] = [];
+              state.notifyDefinitionChange();
+              return toolSuccess('Branch was added');
+            case 'delete':
+              if (!step.branches[arg.name]) {
+                return toolError(`Branch ${arg.name} does not exist`);
+              }
+              if (Object.keys(step.branches).length <= 1) {
+                return toolError('The last branch cannot be deleted');
+              }
+              delete step.branches[arg.name];
+              state.notifyDefinitionChange();
+              return toolSuccess('Branch was deleted');
+          }
         },
 
         async returnStep_isOutputFormEnabled(arg) {

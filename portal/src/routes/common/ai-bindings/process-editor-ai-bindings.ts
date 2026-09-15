@@ -280,6 +280,31 @@ const processEditorRoute = route('processEditor')
       })
     ),
 
+    branchStep_setSelectorVariableName: tool('Set the string variable that selects a branch').input(
+      z.object({
+        stepId: z.string().describe('The ID of the branch step to update'),
+        variableName: z.string().describe('The string variable name containing the branch name')
+      })
+    ),
+    branchStep_modifyBranches: tool('Add or delete a branch').input(
+      z.discriminatedUnion('action', [
+        z
+          .object({
+            stepId: z.string().describe('The ID of the branch step to update'),
+            action: z.literal('add').describe('Add an empty branch'),
+            name: z.string().describe('The new branch name')
+          })
+          .strict(),
+        z
+          .object({
+            stepId: z.string().describe('The ID of the branch step to update'),
+            action: z.literal('delete').describe('Delete an existing branch and all steps inside it'),
+            name: z.string().describe('The branch name to delete')
+          })
+          .strict()
+      ])
+    ),
+
     returnStep_isOutputFormEnabled: tool('Check whether the output form is enabled'),
     returnStep_setOutputFormEnabled: tool('Enable or disable the output form').input(
       z.object({
