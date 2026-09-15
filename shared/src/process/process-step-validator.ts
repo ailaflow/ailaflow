@@ -17,8 +17,8 @@ export class ProcessStepValidator {
 
   public validate(step: Step, definition: ProcessDefinition): Record<string, string> {
     const errors: Record<string, string> = {};
-    if (step.name.length < 1 || step.name.length > 24) {
-      errors['name'] = 'Name must be between 1 and 24 characters.';
+    if (step.name.length < 1 || step.name.length > 32) {
+      errors['name'] = 'Name must be between 1 and 32 characters.';
     }
     switch (step.type) {
       case 'script':

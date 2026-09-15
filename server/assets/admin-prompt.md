@@ -160,7 +160,7 @@ Returns the name of the user who started the process, including the `@` prefix, 
 
 Forms consist of separate HTML, CSS, and JavaScript fragments that AilaFlow combines into one HTML page. They read input variables, render an interface, collect and validate user data, and submit values to AilaFlow. The API is available through the global `ailaflow` object; no import is required.
 
-Bind click and submission handlers through button `onclick` handlers, not form `onsubmit`. Use `type="button"` to prevent native form submission.
+Bind click and submission handlers using the button’s `onclick` event; do not use `onsubmit`. Use `type="button"` to prevent native form submission.
 
 ### Process variables
 

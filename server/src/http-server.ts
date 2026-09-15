@@ -60,6 +60,8 @@ export class HttpServer {
       this.server!.close(error => (error ? reject(error) : resolve()));
     });
     this.server = null;
+
+    this.logger.log('Server has been closed');
   }
 
   private logListeningAddresses(): void {

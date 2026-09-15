@@ -3,7 +3,7 @@ import { sendFrontendToolResultRequestSchema } from '@aibindkit/core';
 import { FrontendToolBus } from '@aibindkit/llm';
 import { Endpoint } from './endpoint';
 
-const WAIT_TIME = 1_000;
+const WAIT_TIME = 2_500;
 
 export class SendFrontendToolResultEndpoint implements Endpoint {
   public readonly method = 'post';
@@ -19,8 +19,20 @@ export class SendFrontendToolResultEndpoint implements Endpoint {
     }
 
     const abortController = new AbortController();
-    const onAborted = () => abortController.abort();
-    req.on('close', onAborted);
+
+    const onRequestClosed = () => {
+      if (!req.complete) {
+        abortController.abort();
+      }
+    };
+    const onResponseClosed = () => {
+      if (!res.writableEnded) {
+        abortController.abort();
+      }
+    };
+
+    req.on('close', onRequestClosed);
+    res.on('close', onResponseClosed);
 
     let success: boolean;
     try {
@@ -31,7 +43,8 @@ export class SendFrontendToolResultEndpoint implements Endpoint {
       }
       throw e;
     } finally {
-      req.off('close', onAborted);
+      req.off('close', onRequestClosed);
+      res.off('close', onResponseClosed);
     }
 
     if (!success) {

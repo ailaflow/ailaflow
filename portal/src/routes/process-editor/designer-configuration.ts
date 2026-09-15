@@ -46,11 +46,10 @@ function createEmptyScriptDefinition(): ScriptDefinition {
     2
   );
   const SCRIPT_MAIN_JS = [
-    `const { readInput, writeOutput } = require('@ailaflow/bridge-lib');`,
+    `const ailaflow = require('@ailaflow/bridge-lib');`,
     ``,
     `async function main() {`,
-    `  const input = readInput();`,
-    `  writeOutput({ /* Output here */ });`,
+    `  // const test = await ailaflow.readVariable('$test');`,
     `}`,
     `main();`
   ].join('\n');
