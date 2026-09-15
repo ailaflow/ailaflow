@@ -36,14 +36,12 @@ test('queries a primary-key-ordered page of table data', async t => {
       { _id: 'charlie', _updatedAt: 3000, x: 3, info: ['third'] },
       { _id: 'bravo', _updatedAt: 2000, x: 2 }
     ],
-    totalCount: 3,
     page: 1,
     pageSize: 2,
     hasMore: true
   });
   assert.deepEqual(await queryPage(createQuery({ page: 2, pageSize: 2, orderBy: 'x', ascending: false })), {
     rows: [{ _id: 'alpha', _updatedAt: 1000, x: 1, active: true }],
-    totalCount: 3,
     page: 2,
     pageSize: 2,
     hasMore: false
@@ -59,7 +57,6 @@ test('queries a primary-key-ordered page of table data', async t => {
     ),
     {
       rows: [{ _id: 'bravo', _updatedAt: 2000, x: 2 }],
-      totalCount: 1,
       page: 1,
       pageSize: 100,
       hasMore: false
@@ -70,7 +67,6 @@ test('queries a primary-key-ordered page of table data', async t => {
       { _id: 'alpha', _updatedAt: 1000, x: 1, active: true },
       { _id: 'bravo', _updatedAt: 2000, x: 2 }
     ],
-    totalCount: 3,
     page: 1,
     pageSize: 2,
     hasMore: true
@@ -86,7 +82,6 @@ test('queries a primary-key-ordered page of table data', async t => {
     ),
     {
       rows: [{ _id: 'alpha', _updatedAt: 1000, x: 1, active: true }],
-      totalCount: 1,
       page: 1,
       pageSize: 100,
       hasMore: false
@@ -94,14 +89,12 @@ test('queries a primary-key-ordered page of table data', async t => {
   );
   assert.deepEqual(await queryPage(createQuery({ where: { future_column: { $eq: 'value' } } })), {
     rows: [],
-    totalCount: 0,
     page: 1,
     pageSize: 100,
     hasMore: false
   });
   assert.deepEqual(await queryPage(createQuery({ page: 3, pageSize: 5, orderBy: 'future_column' })), {
     rows: [],
-    totalCount: 0,
     page: 3,
     pageSize: 5,
     hasMore: false

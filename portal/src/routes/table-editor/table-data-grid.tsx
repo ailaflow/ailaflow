@@ -45,8 +45,7 @@ export function TableDataGrid(props: { tableName: string }) {
       rows={grid.rows}
       pagination={{
         page: loader.data.page,
-        pageSize: loader.data.pageSize,
-        totalCount: loader.data.totalCount,
+        hasMore: loader.data.hasMore,
         onPageChange: changePage
       }}
     />

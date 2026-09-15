@@ -41,9 +41,6 @@ export class SqliteTableDataListQuerier implements TableDataListQuerier {
       const whereSql = resolvedWhere.conditions.length > 0 ? `WHERE ${resolvedWhere.conditions.join(' AND ')}` : '';
       const direction = ascending ? 'ASC' : 'DESC';
       return this.db.read(db => {
-        const { totalCount } = db
-          .prepare(`SELECT COUNT(*) AS totalCount FROM ${dataTableName} ${whereSql}`)
-          .get(...resolvedWhere.values) as { totalCount: number };
         const statement = db.prepare(`
         SELECT *
         FROM ${dataTableName}
@@ -51,14 +48,14 @@ export class SqliteTableDataListQuerier implements TableDataListQuerier {
         ORDER BY ${orderBy.sqlName} IS NULL, ${orderBy.sqlName} ${direction}, _id ASC
         LIMIT ? OFFSET ?
       `);
-        const rows = statement.all(...resolvedWhere.values, pageSize, (page - 1) * pageSize) as unknown as TableDataRow[];
+        const rows = statement.all(...resolvedWhere.values, pageSize + 1, (page - 1) * pageSize) as unknown as TableDataRow[];
+        const hasMore = rows.length > pageSize;
 
         return {
-          rows: mapRows(schema, rows),
-          totalCount,
+          rows: mapRows(schema, rows.slice(0, pageSize)),
           page,
           pageSize,
-          hasMore: page * pageSize < totalCount
+          hasMore
         };
       });
     } catch (error) {
@@ -165,7 +162,6 @@ function validateValueType(schema: TableSchema, columnName: string, expectedType
 function createEmptyResponse(page: number, pageSize: number): GetTableDataResponse {
   return {
     rows: [],
-    totalCount: 0,
     page,
     pageSize,
     hasMore: false

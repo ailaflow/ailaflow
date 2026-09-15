@@ -14,14 +14,12 @@ export interface TableDataGridViewProps {
   rows: TableDataGridRow[];
   pagination: {
     page: number;
-    pageSize: number;
-    totalCount: number;
+    hasMore: boolean;
     onPageChange(page: number): void;
   };
 }
 
 export function TableDataGridView(props: TableDataGridViewProps) {
-  const totalPages = Math.max(1, Math.ceil(props.pagination.totalCount / props.pagination.pageSize));
   const nColumns = props.columns.length + 2;
 
   return (
@@ -68,17 +66,12 @@ export function TableDataGridView(props: TableDataGridViewProps) {
       </div>
 
       <div className="flex shrink-0 flex-col gap-3 border-t border-slate-200 bg-white px-3 py-3 text-sm text-slate-600 sm:flex-row sm:items-center sm:justify-between">
-        <span>
-          Page {props.pagination.page} of {totalPages} · {props.pagination.totalCount} {props.pagination.totalCount === 1 ? 'row' : 'rows'}
-        </span>
+        <span>Page {props.pagination.page}</span>
         <div className="flex gap-2">
           <PaginationButton disabled={props.pagination.page <= 1} onClick={() => props.pagination.onPageChange(props.pagination.page - 1)}>
             Previous
           </PaginationButton>
-          <PaginationButton
-            disabled={props.pagination.page >= totalPages}
-            onClick={() => props.pagination.onPageChange(props.pagination.page + 1)}
-          >
+          <PaginationButton disabled={!props.pagination.hasMore} onClick={() => props.pagination.onPageChange(props.pagination.page + 1)}>
             Next
           </PaginationButton>
         </div>

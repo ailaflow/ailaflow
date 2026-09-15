@@ -105,7 +105,6 @@ test('reads paginated table values through an RPC handler', async t => {
         { _id: 'charlie', _updatedAt: 3000, name: 'Charlie', priority: 3 },
         { _id: 'bravo', _updatedAt: 2000, name: 'Bob', priority: 2 }
       ],
-      totalCount: 3,
       page: 1,
       pageSize: 2,
       hasMore: true
@@ -121,7 +120,6 @@ test('reads paginated table values through an RPC handler', async t => {
     }),
     {
       rows: [{ _id: 'alpha', _updatedAt: 1000, name: 'Alice', priority: 1 }],
-      totalCount: 3,
       page: 2,
       pageSize: 2,
       hasMore: false
@@ -140,7 +138,6 @@ test('reads paginated table values through an RPC handler', async t => {
     }),
     {
       rows: [{ _id: 'bravo', _updatedAt: 2000, name: 'Bob', priority: 2 }],
-      totalCount: 1,
       page: 1,
       pageSize: 10,
       hasMore: false
@@ -234,7 +231,7 @@ test('hides table existence from scripts and validates RPC requests', async () =
       orderBy: '_id',
       ascending: true
     }),
-    { rows: [], totalCount: 0, page: 2, pageSize: 10, hasMore: false }
+    { rows: [], page: 2, pageSize: 10, hasMore: false }
   );
   assert.equal(await tableRepository.tryGetByName(abortSignal, 'missing'), null);
   assert.equal(

@@ -7,8 +7,6 @@ export interface TablePage<Row extends TableRow = TableRow> {
   page: number;
   /** The number of rows requested per page. */
   pageSize: number;
-  /** The total number of rows in the table. */
-  totalCount: number;
   /** Whether another page is available. */
   hasMore: boolean;
 }

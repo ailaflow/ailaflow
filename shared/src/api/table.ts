@@ -40,8 +40,10 @@ export const getTableDataRequestSchema = paginationRequestSchema.extend({
   ascending: z.union([z.boolean(), z.enum(['true', 'false']).transform(value => value === 'true')]).default(true)
 });
 
-export const getTableDataResponseSchema = paginationResponseSchema.extend({
+export const getTableDataResponseSchema = z.object({
   rows: z.array(tableRowSchema),
+  page: z.number().int().positive(),
+  pageSize: z.number().int().positive(),
   hasMore: z.boolean()
 });
 

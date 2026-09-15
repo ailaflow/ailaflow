@@ -17,7 +17,6 @@ test('validates flattened table rows', () => {
       rows: [{ _id: 'customer_1', _updatedAt: 1000, name: 'Alice' }],
       page: 1,
       pageSize: 100,
-      totalCount: 1,
       hasMore: false
     }).rows,
     [{ _id: 'customer_1', _updatedAt: 1000, name: 'Alice' }]
@@ -27,7 +26,6 @@ test('validates flattened table rows', () => {
       data: [{ pk: 'customer_1', row: { name: 'Alice' }, updatedAt: 1000 }],
       page: 1,
       pageSize: 100,
-      totalCount: 1,
       hasMore: false
     })
   );

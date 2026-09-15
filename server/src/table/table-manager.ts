@@ -47,7 +47,6 @@ export class TableManager {
     if (!schema) {
       return {
         rows: [],
-        totalCount: 0,
         page: query.page,
         pageSize: query.pageSize,
         hasMore: false

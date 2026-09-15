@@ -140,7 +140,7 @@ Returns the stored row, including `_id` and `_updatedAt`, or `null` if the table
 
 #### `await ailaflow.readTablePage('#customers', options?)`
 
-Returns `{ rows, page, pageSize, totalCount, hasMore }`; every row includes `_id` and `_updatedAt`. Options are `{ page, pageSize, orderBy, ascending, where }`, defaulting to page `1`, page size `100`, order by `_id`, ascending, and no filters.
+Returns `{ rows, page, pageSize, hasMore }`; every row includes `_id` and `_updatedAt`. Options are `{ page, pageSize, orderBy, ascending, where }`, defaulting to page `1`, page size `100`, order by `_id`, ascending, and no filters.
 
 ```js
 await ailaflow.readTablePage('#customers', {
