@@ -1,7 +1,7 @@
 import { LicenseManager } from '../configuration/license/license-manager';
 import { Scheduler } from './scheduler';
 
-const INTERVAL_MS = 12 * 60 * 60 * 1_000;
+const INTERVAL_MS = 24 * 60 * 60 * 1_000;
 
 export class LicenseCheckScheduler implements Scheduler {
   private interval?: ReturnType<typeof setInterval>;

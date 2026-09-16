@@ -79,7 +79,7 @@ export function LicenseConfigurationView(props: LicenseConfigurationViewProps) {
           ) : (
             <p className="mt-3 text-sm text-slate-500">License status data is not available yet.</p>
           )}
-          <p className="mt-4 text-xs text-slate-500">Status is checked at server startup and every 12 hours.</p>
+          <p className="mt-4 text-xs text-slate-500">Status is checked at server startup and approximately once per day.</p>
         </section>
       </div>
     </div>
