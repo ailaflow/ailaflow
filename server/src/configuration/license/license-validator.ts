@@ -5,16 +5,18 @@ export class LicenseValidator {
     abortSignal: AbortSignal,
     _instanceId: string,
     type: LicenseType,
-    key: string | null
+    key: string | null,
+    _users: number,
+    _activeUsers: number
   ): Promise<{
-    isValid: boolean;
+    validationError: string | null;
     proof: string | null;
   }> {
     abortSignal.throwIfAborted();
     if (type !== LicenseType.BUSINESS) {
-      return { isValid: true, proof: null };
+      return { validationError: null, proof: null };
     }
     // TODO:
-    return key?.includes('valid') ? { isValid: true, proof: 'proof' } : { isValid: false, proof: '' };
+    return key?.includes('valid') ? { validationError: null, proof: 'proof' } : { validationError: 'Invalid license key', proof: null };
   }
 }

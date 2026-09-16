@@ -41,9 +41,9 @@ export class Installer {
         return 'Installation is not allowed because the system is already initialized';
       }
 
-      const isLicenseValid = await this.licenseManager.tryValidateAndSet(abortSignal, licenseType, licenseKey);
-      if (!isLicenseValid) {
-        return 'License validation failed';
+      const licenseValidationError = await this.licenseManager.tryValidateAndSet(abortSignal, licenseType, licenseKey);
+      if (licenseValidationError !== null) {
+        return `License validation failed: ${licenseValidationError}`;
       }
 
       const user = await User.create(rootUserName, rootPassword, true, this.passwordHasher);

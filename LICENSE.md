@@ -42,7 +42,7 @@ For purposes of Starter Use, Authorized Users of the Licensee and its Affiliates
 
 A Subscription may specify the permitted number of Authorized Users, covered entities, billing period, fees, and other commercial terms.
 
-Current public pricing is available at [https://ailaflow.com/pricing](https://ailaflow.com/pricing).
+Current public pricing is available at [https://ailaflow.com/pricing/](https://ailaflow.com/pricing/).
 
 The terms applicable to a particular Subscription may also be stated on the checkout page, invoice, order form, or another commercial agreement applicable to that Subscription.
 
@@ -198,11 +198,13 @@ a. a pseudonymous identifier assigned to the Software installation;
 
 b. the selected license type; and
 
-c. the applicable license key, if a license key has been issued or configured for that installation.
+c. the applicable license key, if a license key has been issued or configured for that installation; and
+
+d. the aggregate numbers of active users and total users for that installation.
 
 The Licensee must not intentionally disable, block, bypass, falsify, or materially interfere with this required communication.
 
-For this purpose, the Software does not transmit workflow contents, scripts, forms, table contents, credentials, secrets, user names, user email addresses, customer data, or other User Content.
+For this purpose, active-user and total-user counts are transmitted only as aggregate numbers. The Software does not transmit any individual user details, including user names or user email addresses, or any workflow contents, scripts, forms, table contents, credentials, secrets, customer data, or other User Content.
 
 Additional information about processing of data may be provided in the Licensor's applicable privacy policy.
 
@@ -408,7 +410,7 @@ This Section is provided for convenience. If it conflicts with another provision
 - active paid Subscription required;
 - Authorized User allowance determined by the applicable Subscription;
 - license key or other activation credential required;
-- current public pricing: [https://ailaflow.com/pricing](https://ailaflow.com/pricing).
+- current public pricing: [https://ailaflow.com/pricing/](https://ailaflow.com/pricing/).
 
 ### Separate Commercial Agreement
 

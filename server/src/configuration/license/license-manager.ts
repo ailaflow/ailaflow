@@ -3,6 +3,7 @@ import { KvConfigurationManager } from '../kv/kv-configuration-manager';
 import { LicenseValidator } from './license-validator';
 import { Logger } from '../../core/logger';
 import { randomUUID } from 'crypto';
+import { UserRepository } from '../../repositories/user/user-repository';
 
 export class LicenseManager {
   private readonly logger = new Logger(LicenseManager.name);
@@ -12,7 +13,8 @@ export class LicenseManager {
 
   public constructor(
     private readonly licenseValidator: LicenseValidator,
-    private readonly configurationManager: KvConfigurationManager
+    private readonly configurationManager: KvConfigurationManager,
+    private readonly userRepository: UserRepository
   ) {}
 
   public getStatus(): LicenseStatus | null {
@@ -32,26 +34,28 @@ export class LicenseManager {
 
   public async validate(abortSignal: AbortSignal, type: LicenseType, key: string | null): Promise<LicenseStatus> {
     const instanceId = await this.getInstanceId(abortSignal);
-    const response = await this.licenseValidator.validate(abortSignal, instanceId, type, key);
+    const users = await this.userRepository.count(abortSignal);
+    const activeUsers = users;
+    const response = await this.licenseValidator.validate(abortSignal, instanceId, type, key, users, activeUsers);
     return {
       type,
-      isValid: response.isValid,
+      validationError: response.validationError,
       proof: response.proof,
       checkedAt: Date.now()
     };
   }
 
-  public async tryValidateAndSet(abortSignal: AbortSignal, type: LicenseType, key: string | null): Promise<boolean> {
+  public async tryValidateAndSet(abortSignal: AbortSignal, type: LicenseType, key: string | null): Promise<string | null> {
     const status = await this.validate(abortSignal, type, key);
-    if (!status.isValid) {
-      return false;
+    if (status.validationError !== null) {
+      return status.validationError;
     }
 
     const config = await this.configurationManager.get(abortSignal);
     config.setLicenseType(type, key);
     await this.configurationManager.update(abortSignal, config);
     this.statusCache = status;
-    return true;
+    return null;
   }
 
   public async validateOnBackground(): Promise<void> {

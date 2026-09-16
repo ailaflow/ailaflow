@@ -7,19 +7,24 @@ import { SqliteKvConfigurationRepository } from '../../repositories/configuratio
 import { KvConfigurationManager } from '../kv/kv-configuration-manager';
 import { LicenseManager } from './license-manager';
 import { LicenseValidator } from './license-validator';
+import { SqliteUserRepository } from '../../repositories/user/sqlite-user-repository';
+import { User } from '../../repositories/user/user';
 
 const signal = new AbortController().signal;
 
 async function fixture(t: TestContext) {
   const db = new DatabaseSync(':memory:');
   t.after(() => db.close());
-  const repository = new SqliteKvConfigurationRepository({ modelDb: new SqliteDatabase(db) } as SqliteDatabases);
+  const databases = { modelDb: new SqliteDatabase(db) } as SqliteDatabases;
+  const repository = new SqliteKvConfigurationRepository(databases);
+  const users = new SqliteUserRepository(databases);
   await repository.setup(signal);
+  await users.setup(signal);
   const validator = new LicenseValidator();
   const validate = t.mock.method(validator, 'validate');
   const configurationManager = new KvConfigurationManager(repository);
-  const manager = new LicenseManager(validator, configurationManager);
-  return { db, repository, validator, validate, manager, configurationManager };
+  const manager = new LicenseManager(validator, configurationManager, users);
+  return { db, repository, users, validator, validate, manager, configurationManager };
 }
 
 test('Home and Starter validate without a key and status starts unavailable', async t => {
@@ -27,31 +32,42 @@ test('Home and Starter validate without a key and status starts unavailable', as
   assert.equal(manager.getStatus(), null);
   await manager.validateOnBackground();
   assert.equal(manager.getStatus(), null);
-  assert.equal(await manager.tryValidateAndSet(signal, LicenseType.HOME, null), true);
-  assert.equal(manager.getStatus()!.isValid, true);
+  assert.equal(await manager.tryValidateAndSet(signal, LicenseType.HOME, null), null);
+  assert.equal(manager.getStatus()!.validationError, null);
   assert.equal(manager.getStatus()!.proof, null);
   assert.equal((await repository.get(signal)).licenseType, LicenseType.HOME);
   await manager.validateOnBackground();
   assert.equal(manager.getStatus()!.type, LicenseType.HOME);
-  assert.equal(await manager.tryValidateAndSet(signal, LicenseType.STARTER, null), true);
+  assert.equal(await manager.tryValidateAndSet(signal, LicenseType.STARTER, null), null);
   assert.equal(manager.getStatus()!.type, LicenseType.STARTER);
   assert.equal(manager.getStatus()!.proof, null);
 });
 
 test('validate returns status without saving license selection or replacing cached status', async t => {
   const { manager, repository, validate } = await fixture(t);
-  validate.mock.mockImplementation(async () => ({ isValid: false, proof: null }));
+  validate.mock.mockImplementation(async () => ({ validationError: 'License expired', proof: null }));
   const status = await manager.validate(signal, LicenseType.BUSINESS, 'missing');
   assert.equal(status.type, LicenseType.BUSINESS);
-  assert.equal(status.isValid, false);
+  assert.equal(status.validationError, 'License expired');
   assert.equal(status.proof, null);
   assert.ok(status.checkedAt > 0);
   assert.equal(manager.getStatus(), null);
   assert.equal((await repository.get(signal)).licenseType, null);
 });
 
+test('sends the total user count as both total and active users', async t => {
+  const { manager, users, validate } = await fixture(t);
+  await users.insert(signal, new User('first', 'hash', true));
+  await users.insert(signal, new User('second', 'hash', false));
+
+  await manager.validate(signal, LicenseType.HOME, null);
+
+  assert.equal(validate.mock.calls[0].arguments[4], 2);
+  assert.equal(validate.mock.calls[0].arguments[5], 2);
+});
+
 test('persists instance ID and license selection and reuses them after restart', async t => {
-  const { manager, repository, validator, validate, db } = await fixture(t);
+  const { manager, repository, users, validator, validate, db } = await fixture(t);
   await manager.tryValidateAndSet(signal, LicenseType.BUSINESS, 'valid-key');
   assert.equal((await repository.get(signal)).licenseKey, 'valid-key');
   const instanceId = (await repository.get(signal)).instanceId;
@@ -65,11 +81,11 @@ test('persists instance ID and license selection and reuses them after restart',
       .map(row => row.key),
     ['instanceId', 'licenseKey', 'licenseType']
   );
-  const restarted = new LicenseManager(validator, new KvConfigurationManager(repository));
+  const restarted = new LicenseManager(validator, new KvConfigurationManager(repository), users);
   assert.equal(restarted.getStatus(), null);
   await restarted.validateOnBackground();
   assert.equal(validate.mock.calls[1].arguments[1], instanceId);
-  assert.equal(restarted.getStatus()!.isValid, true);
+  assert.equal(restarted.getStatus()!.validationError, null);
   await manager.tryValidateAndSet(signal, LicenseType.HOME, null);
   assert.equal((await repository.get(signal)).licenseKey, null);
 });
@@ -79,7 +95,7 @@ test('invalid, missing, and blank Business keys cannot change configuration or c
   await manager.tryValidateAndSet(signal, LicenseType.HOME, null);
   const status = manager.getStatus();
   for (const key of ['missing', '', '   ', null]) {
-    assert.equal(await manager.tryValidateAndSet(signal, LicenseType.BUSINESS, key), false);
+    assert.equal(await manager.tryValidateAndSet(signal, LicenseType.BUSINESS, key), 'Invalid license key');
   }
   assert.equal((await repository.get(signal)).licenseType, LicenseType.HOME);
   assert.deepEqual(manager.getStatus(), status);
@@ -108,14 +124,14 @@ test('service and database failures leave saved configuration and status unchang
 test('background rejection updates status and failures release the guard for later checks', async t => {
   const { manager, validate } = await fixture(t);
   await manager.tryValidateAndSet(signal, LicenseType.BUSINESS, 'valid-key');
-  validate.mock.mockImplementation(async () => ({ isValid: false, proof: null }));
+  validate.mock.mockImplementation(async () => ({ validationError: 'License expired', proof: null }));
   await manager.validateOnBackground();
-  assert.equal(manager.getStatus()!.isValid, false);
+  assert.equal(manager.getStatus()!.validationError, 'License expired');
   validate.mock.mockImplementation(async () => {
     throw new Error('service failed');
   });
   await manager.validateOnBackground();
-  validate.mock.mockImplementation(async () => ({ isValid: true, proof: 'new-proof' }));
+  validate.mock.mockImplementation(async () => ({ validationError: null, proof: 'new-proof' }));
   await manager.validateOnBackground();
   assert.equal(manager.getStatus()!.proof, 'new-proof');
 });
@@ -123,14 +139,14 @@ test('background rejection updates status and failures release the guard for lat
 test('skips overlapping background checks', async t => {
   const { manager, validate } = await fixture(t);
   await manager.tryValidateAndSet(signal, LicenseType.BUSINESS, 'valid-key');
-  let resolve!: (value: { isValid: boolean; proof: string | null }) => void;
+  let resolve!: (value: { validationError: string | null; proof: string | null }) => void;
   let started!: () => void;
   const checking = new Promise<void>(done => {
     started = done;
   });
   validate.mock.mockImplementation(
     () =>
-      new Promise<{ isValid: boolean; proof: string | null }>(done => {
+      new Promise<{ validationError: string | null; proof: string | null }>(done => {
         resolve = done;
         started();
       })
@@ -139,7 +155,7 @@ test('skips overlapping background checks', async t => {
   await checking;
   await manager.validateOnBackground();
   assert.equal(validate.mock.callCount(), 2);
-  resolve({ isValid: true, proof: 'new-proof' });
+  resolve({ validationError: null, proof: 'new-proof' });
   await background;
   assert.equal(manager.getStatus()!.proof, 'new-proof');
 });
@@ -169,5 +185,5 @@ test('stopping background validation aborts the validator and permits a subseque
   assert.deepEqual(manager.getStatus(), status);
   validate.mock.restore();
   await manager.validateOnBackground();
-  assert.equal(manager.getStatus()!.isValid, true);
+  assert.equal(manager.getStatus()!.validationError, null);
 });

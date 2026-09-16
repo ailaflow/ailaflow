@@ -35,10 +35,10 @@ async function fixture(t: TestContext) {
   const validator = new LicenseValidator();
   const validate = t.mock.method(validator, 'validate');
   validate.mock.mockImplementation(async (_signal, _instanceId, type, key) => ({
-    isValid: type !== LicenseType.BUSINESS || key === 'accepted-key',
+    validationError: type !== LicenseType.BUSINESS || key === 'accepted-key' ? null : 'Invalid license key',
     proof: type === LicenseType.BUSINESS ? 'proof' : null
   }));
-  const manager = new LicenseManager(validator, new KvConfigurationManager(configuration));
+  const manager = new LicenseManager(validator, new KvConfigurationManager(configuration), users);
   const installer = new Installer(users, attributes, sandboxes, new PasswordHasher(), manager);
   const endpoint = new InstallEndpoint(installer);
   const canInstallEndpoint = new CanInstallEndpoint(installer);
@@ -60,7 +60,7 @@ for (const license of [home, starter, business]) {
     assert.ok(await f.sandboxes.tryGet(signal, 'default'));
     assert.equal((await f.configuration.get(signal)).licenseType, license.licenseType);
     assert.equal((await f.configuration.get(signal)).licenseKey, license.licenseKey);
-    assert.equal(f.manager.getStatus()!.isValid, true);
+    assert.equal(f.manager.getStatus()!.validationError, null);
     assert.equal(f.validate.mock.callCount(), 1);
     assert.deepEqual(await f.canInstallEndpoint.handle(request(undefined)), { canInstall: false });
     await assert.rejects(f.endpoint.handle(request(business)), /already initialized/);
@@ -73,14 +73,17 @@ for (const unavailable of [false, true]) {
     const f = await fixture(t);
     f.validate.mock.mockImplementation(async (_signal, _instanceId, type) => {
       if (type !== LicenseType.BUSINESS) {
-        return { isValid: true, proof: null };
+        return { validationError: null, proof: null };
       }
       if (unavailable) {
         throw new Error('service failed');
       }
-      return { isValid: false, proof: '' };
+      return { validationError: 'License expired', proof: null };
     });
-    await assert.rejects(f.endpoint.handle(request(business)), unavailable ? /service failed/ : /License validation failed/);
+    await assert.rejects(
+      f.endpoint.handle(request(business)),
+      unavailable ? /service failed/ : /License validation failed: License expired/
+    );
     for (const table of ['users', 'user_attributes', 'user_attribute_definitions', 'sandboxes']) {
       assert.equal((f.db.prepare(`SELECT COUNT(*) AS count FROM ${table}`).get() as { count: number }).count, 0);
     }
@@ -101,14 +104,14 @@ for (const unavailable of [false, true]) {
 
 test('waits for validation before writing and rejects concurrent installation attempts', async t => {
   const f = await fixture(t);
-  let resolve!: (value: { isValid: boolean; proof: string }) => void;
+  let resolve!: (value: { validationError: string | null; proof: string }) => void;
   let validationStartedResolve!: () => void;
   const validationStarted = new Promise<void>(done => {
     validationStartedResolve = done;
   });
   f.validate.mock.mockImplementation(
     () =>
-      new Promise<{ isValid: boolean; proof: string }>(done => {
+      new Promise<{ validationError: string | null; proof: string }>(done => {
         resolve = done;
         validationStartedResolve();
       })
@@ -118,7 +121,7 @@ test('waits for validation before writing and rejects concurrent installation at
   assert.equal(await f.users.count(signal), 0);
   assert.equal((await f.configuration.get(signal)).licenseType, null);
   await assert.rejects(f.endpoint.handle(request(home)), /already in progress/);
-  resolve({ isValid: true, proof: 'proof' });
+  resolve({ validationError: null, proof: 'proof' });
   assert.deepEqual(await installing, {});
 });
 

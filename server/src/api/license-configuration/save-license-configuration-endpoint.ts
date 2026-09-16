@@ -16,9 +16,9 @@ export class SaveLicenseConfigurationEndpoint implements Endpoint {
 
   public async handle(req: Request): Promise<object> {
     const request = parseBody(saveLicenseConfigurationRequestSchema, req.body);
-    const isValid = await this.manager.tryValidateAndSet(getEndpointAbortSignal(req), request.type, request.licenseKey);
-    if (!isValid) {
-      throw new EndpointError('Invalid license key', 400);
+    const validationError = await this.manager.tryValidateAndSet(getEndpointAbortSignal(req), request.type, request.licenseKey);
+    if (validationError !== null) {
+      throw new EndpointError(validationError, 400);
     }
     return {};
   }

@@ -9,6 +9,7 @@ import { LicenseValidator } from '../../configuration/license/license-validator'
 import { KvConfigurationManager } from '../../configuration/kv/kv-configuration-manager';
 import { SqliteDatabase, SqliteDatabases } from '../../core/sqlite-databases';
 import { SqliteKvConfigurationRepository } from '../../repositories/configuration/kv/sqlite-kv-configuration-repository';
+import { SqliteUserRepository } from '../../repositories/user/sqlite-user-repository';
 import { EndpointError } from '../framework/endpoint-error';
 import { LicenseEndpoint } from './license-status-endpoint';
 import { GetLicenseConfigurationEndpoint } from './get-license-configuration-endpoint';
@@ -18,12 +19,15 @@ const signal = new AbortController().signal;
 async function fixture(t: TestContext) {
   const db = new DatabaseSync(':memory:');
   t.after(() => db.close());
-  const repository = new SqliteKvConfigurationRepository({ modelDb: new SqliteDatabase(db) } as SqliteDatabases);
+  const databases = { modelDb: new SqliteDatabase(db) } as SqliteDatabases;
+  const repository = new SqliteKvConfigurationRepository(databases);
+  const users = new SqliteUserRepository(databases);
   await repository.setup(signal);
+  await users.setup(signal);
   const configuration = new KvConfigurationManager(repository);
   const validator = new LicenseValidator();
   const validate = t.mock.method(validator, 'validate');
-  const manager = new LicenseManager(validator, configuration);
+  const manager = new LicenseManager(validator, configuration, users);
   return {
     repository,
     validate,
@@ -46,7 +50,7 @@ test('returns public status separately and exposes key presence only to administ
   assert.deepEqual(await f.save.handle(request({ type: LicenseType.BUSINESS, licenseKey: 'valid-secret' })), {});
   assert.deepEqual(await f.get.handle(request()), { type: LicenseType.BUSINESS, hasLicenseKey: true });
   const status = await f.status.handle();
-  assert.equal(status.status!.isValid, true);
+  assert.equal(status.status!.validationError, null);
   assert.equal(status.status!.type, LicenseType.BUSINESS);
   assert.equal(JSON.stringify(status).includes('valid-secret'), false);
   assert.equal(JSON.stringify(await f.get.handle(request())).includes('valid-secret'), false);
@@ -65,7 +69,7 @@ test('validation rejection and service failure preserve stored selection and sta
   for (const licenseKey of [null, '', '   ', 'missing']) {
     await assert.rejects(
       f.save.handle(request({ type: LicenseType.BUSINESS, licenseKey })),
-      (error: unknown) => error instanceof EndpointError && error.status === 400
+      (error: unknown) => error instanceof EndpointError && error.status === 400 && error.message === 'Invalid license key'
     );
   }
   f.validate.mock.mockImplementation(async () => {

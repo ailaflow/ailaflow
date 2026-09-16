@@ -40,7 +40,10 @@ function LoadedLicenseConfigurationPage(props: { initial: GetLicenseConfiguratio
     licenseKey: licenseType === LicenseType.BUSINESS ? licenseKey.trim() : null
   };
   const isChanged = draft.type !== saved.type || Boolean(draft.licenseKey);
-  const canSave = !isSaving && (draft.type !== LicenseType.BUSINESS || Boolean(draft.licenseKey)) && (isChanged || !status?.isValid);
+  const canSave =
+    !isSaving &&
+    (draft.type !== LicenseType.BUSINESS || Boolean(draft.licenseKey)) &&
+    (isChanged || status === null || status.validationError !== null);
 
   async function save(event: SubmitEvent): Promise<void> {
     event.preventDefault();

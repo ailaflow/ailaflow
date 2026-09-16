@@ -33,12 +33,19 @@ test('uses numeric license types with flat license fields during installation', 
   }
 });
 
-test('configuration exposes only key presence while status and proof can be null', () => {
+test('configuration exposes only key presence while status validation error and proof can be null', () => {
   assert.deepEqual(getLicenseConfigurationResponseSchema.parse({ type: LicenseType.BUSINESS, hasLicenseKey: true }), {
     type: LicenseType.BUSINESS,
     hasLicenseKey: true
   });
   assert.deepEqual(getLicenseStatusResponseSchema.parse({ status: null }), { status: null });
-  const status = { type: LicenseType.HOME, isValid: true, proof: null, checkedAt: 123 };
+  const status = { type: LicenseType.HOME, validationError: null, proof: null, checkedAt: 123 };
   assert.deepEqual(getLicenseStatusResponseSchema.parse({ status }), { status });
+  assert.equal(getLicenseStatusResponseSchema.safeParse({ status: { ...status, validationError: 'License expired' } }).success, true);
+  assert.equal(
+    getLicenseStatusResponseSchema.safeParse({
+      status: { type: LicenseType.HOME, isValid: true, proof: null, checkedAt: 123 }
+    }).success,
+    false
+  );
 });

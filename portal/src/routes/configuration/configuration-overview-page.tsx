@@ -96,12 +96,12 @@ export function ConfigurationOverviewPage() {
       id: 'license',
       label: 'License',
       value: licenseStatus
-        ? `${getLicenseTypeLabel(licenseStatus.type)} · ${licenseStatus.isValid ? 'Valid' : 'Invalid'}`
+        ? `${getLicenseTypeLabel(licenseStatus.type)} · ${licenseStatus.validationError === null ? 'Valid' : 'Invalid'}`
         : 'Not available',
       detail: licenseStatus ? `Last checked: ${new Date(licenseStatus.checkedAt).toLocaleString()}` : undefined,
-      isHealthy: licenseStatus?.isValid ?? false,
+      isHealthy: licenseStatus?.validationError === null,
       remediation: licenseStatus
-        ? 'Review your license configuration and validate your license key.'
+        ? (licenseStatus.validationError ?? 'Review your license configuration and validate your license key.')
         : 'License status data is not available yet.',
       action: { label: 'Configure license', href: '/admin/configuration?tab=license' }
     }

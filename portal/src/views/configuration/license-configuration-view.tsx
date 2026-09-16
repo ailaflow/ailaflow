@@ -57,10 +57,16 @@ export function LicenseConfigurationView(props: LicenseConfigurationViewProps) {
               </div>
               <div className="flex justify-between gap-3">
                 <dt className="text-slate-500">Validation</dt>
-                <dd className={props.status.isValid ? 'text-emerald-700' : 'text-red-700'}>
-                  {props.status.isValid ? 'Valid' : 'Invalid or unavailable'}
+                <dd className={props.status.validationError === null ? 'text-emerald-700' : 'text-red-700'}>
+                  {props.status.validationError === null ? 'Valid' : 'Invalid'}
                 </dd>
               </div>
+              {props.status.validationError !== null ? (
+                <div>
+                  <dt className="text-slate-500">Validation error</dt>
+                  <dd className="mt-1 break-words text-red-700">{props.status.validationError}</dd>
+                </div>
+              ) : null}
               <div className="flex flex-wrap justify-between gap-3">
                 <dt className="text-slate-500">Last checked</dt>
                 <dd>{props.checkedAt}</dd>

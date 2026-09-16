@@ -475,7 +475,7 @@ export class Server {
     });
 
     const kvConfigurationManager = new KvConfigurationManager(kvConfigurationRepository);
-    const licenseManager = new LicenseManager(new LicenseValidator(), kvConfigurationManager);
+    const licenseManager = new LicenseManager(new LicenseValidator(), kvConfigurationManager, userRepository);
     const installer = new Installer(userRepository, userAttributesRepository, sandboxRepository, passwordHasher, licenseManager);
 
     const schedulers: Scheduler[] = [

@@ -3,7 +3,7 @@ import { LicenseType } from './license-type';
 
 export const licenseStatusSchema = z.object({
   type: z.enum(LicenseType),
-  isValid: z.boolean(),
+  validationError: z.string().nullable(),
   proof: z.string().nullable(),
   checkedAt: z.number().int().nonnegative()
 });
