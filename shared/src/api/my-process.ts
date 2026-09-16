@@ -38,11 +38,13 @@ export type GetMyProcessStartFormResponse = z.infer<typeof getMyProcessStartForm
 
 export const startMyProcessRequestSchema = z.object({
   startValues: z.record(z.string(), z.any()),
-  chatSession: z.object({
-    token: z.string(),
-    messageId: z.number(),
-    completedMessageIndex: z.number()
-  })
+  chatSession: z
+    .object({
+      token: z.string(),
+      messageId: z.number(),
+      completedMessageIndex: z.number()
+    })
+    .optional()
 });
 
 export const startMyProcessResponseSchema = z.object({

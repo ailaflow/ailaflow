@@ -2,6 +2,7 @@ import { ToolContext, ZodTool, ZodToolExecutionResult } from '@aibindkit/llm';
 import z from 'zod/v4';
 import { ChatSessionId } from '../chat-session-id';
 import { UserProcessProvider } from '../../process/user-process-provider';
+import { ResourceNameNormalizer } from '@ailaflow/shared';
 
 const inputSchema = z.object({
   name: z.string()
@@ -17,22 +18,24 @@ export class OpenMyProcessStartFormTool extends ZodTool<Arg> {
   protected async handle(abortSignal: AbortSignal, { sessionId }: ToolContext, arg: Arg): Promise<ZodToolExecutionResult> {
     const { userName } = ChatSessionId.decode(sessionId);
 
-    const process = await this.userProcessProvider.tryGet(abortSignal, userName, arg.name);
+    const processName = ResourceNameNormalizer.removePrefix(arg.name, '/');
+
+    const process = await this.userProcessProvider.tryGet(abortSignal, userName, processName);
     if (!process) {
       return {
         content: {
-          error: `Cannot find the "${arg.name}" process, or you do not have access to it`
+          error: `Cannot find /${processName} process, or you do not have access to it`
         }
       };
     }
 
     return {
       content: {
-        success: `The start form of the "${arg.name}" process is displayed after this message. This form is visible only by the user.`
+        success: `The start form of /${processName} process is displayed after this message. This form is visible only by the user.`
       },
       metadata: {
         startForm: {
-          processName: process.name
+          processName
         }
       }
     };

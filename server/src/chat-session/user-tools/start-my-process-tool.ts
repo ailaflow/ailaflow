@@ -4,6 +4,7 @@ import z from 'zod/v4';
 import { ChatSessionId } from '../chat-session-id';
 import { UserProcessProvider } from '../../process/user-process-provider';
 import { ProcessExecutionContext } from '../../process-executor/process-execution-context';
+import { ResourceNameNormalizer } from '@ailaflow/shared';
 
 const FAST_TIMEOUT = 3_000;
 
@@ -27,11 +28,13 @@ export class StartMyProcessTool extends ZodTool<Arg> {
     const userName = chatSession.userName;
     const isTest = chatSession.isTest();
 
-    const process = await this.userProcessProvider.tryGet(abortSignal, userName, arg.name);
+    const processName = ResourceNameNormalizer.removePrefix(arg.name, '/');
+
+    const process = await this.userProcessProvider.tryGet(abortSignal, userName, processName);
     if (!process) {
       return {
         content: {
-          error: `Cannot find the "${arg.name}" process, or you do not have access to it`
+          error: `Cannot find /${processName} process, or you do not have access to it`
         }
       };
     }
@@ -67,7 +70,7 @@ export class StartMyProcessTool extends ZodTool<Arg> {
     }
     return {
       content: {
-        success: `Process "${arg.name}" started successfully. It is running in the background, and you will be notified when it finishes, execution id: ${result.executionId}. The system will notify you when it finishes.`
+        success: `Process /${processName} started successfully. It is running in the background, and you will be notified when it finishes, execution id: ${result.executionId}. The system will notify you when it finishes.`
       }
     };
   }

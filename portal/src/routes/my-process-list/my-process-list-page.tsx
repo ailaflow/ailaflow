@@ -63,6 +63,13 @@ export function MyProcessListPage() {
         rows={data.processes}
         getRowKey={process => process.name}
         emptyMessage="No processes found."
+        actions={[
+          {
+            label: 'Start',
+            ariaLabel: process => `Start process ${process.name}`,
+            getTo: process => `/my-processes/${encodeURIComponent(process.name)}/start`
+          }
+        ]}
         pagination={{
           page: data.page,
           pageSize: data.pageSize,

@@ -9,6 +9,7 @@ import { LazyProcessExecutor } from '../../process-executor/lazy-process-executo
 import { EndpointError } from '../framework/endpoint-error';
 import { ChatSessionManager } from '@aibindkit/express';
 import { ProcessExecutionContext } from '../../process-executor/process-execution-context';
+import { ChatSession } from '@aibindkit/llm';
 
 export class StartMyProcessEndpoint implements Endpoint {
   public readonly method = 'post';
@@ -37,22 +38,28 @@ export class StartMyProcessEndpoint implements Endpoint {
       throw new EndpointError(startValuesError, 400);
     }
 
-    const chatSession = this.chatSessionManager.tryGetByToken(request.chatSession.token);
-    if (!chatSession) {
-      throw new EndpointError('Chat session not found', 404);
-    }
-
     const context: ProcessExecutionContext = {
       startedBy: authToken.userName,
-      chatSessionId: chatSession.id,
       isTest: false
     };
+
+    let chatSession: ChatSession | undefined;
+    if (request.chatSession) {
+      chatSession = this.chatSessionManager.tryGetByToken(request.chatSession.token);
+      if (!chatSession) {
+        throw new EndpointError('Chat session not found', 400);
+      }
+      context.chatSessionId = chatSession.id;
+    }
+
     const result = await this.lazyProcessExecutor.execute(abortSignal, null, context, process, request.startValues);
     if (result.finished) {
       throw new Error('Unexpected behavior');
     }
 
-    await chatSession.setMetadata(request.chatSession.messageId, request.chatSession.completedMessageIndex, 'finished', true);
+    if (request.chatSession && chatSession) {
+      await chatSession.setMetadata(request.chatSession.messageId, request.chatSession.completedMessageIndex, 'finished', true);
+    }
 
     return {
       executionId: result.executionId

@@ -13,9 +13,10 @@ import { AdminPortal } from './common/admin-portal';
 import { MyChatPage } from './my-chat/my-chat-page';
 import { MyConfigurationPage } from './my-configuration/my-configuration-page';
 import { MyProcessListPage } from './my-process-list/my-process-list-page';
+import { MyProcessPage } from './my-process/my-process-page';
 import { MyNotificationsPage } from './my-notifications/my-notifications-page';
 import { MyTasksPage } from './my-tasks/my-tasks-page';
-import { MyTaskPage } from './my-tasks/my-task-page';
+import { MyTaskPage } from './my-task/my-task-page';
 import { UserListPage } from './user-list/user-list-page';
 import { UserEditorPage } from './user-editor/user-editor-page';
 import { UserTelegramConfigurationPage } from './user-telegram-configuration/user-telegram-configuration-page';
@@ -62,6 +63,10 @@ export const routes = [
   {
     path: '/my-processes',
     element: <AuthGate route={<MyProcessListPage />} />
+  },
+  {
+    path: '/my-processes/:name/start',
+    element: <AuthGate route={<MyProcessPage />} />
   },
   {
     element: <AuthGate route={<AdminPortal />} />,
