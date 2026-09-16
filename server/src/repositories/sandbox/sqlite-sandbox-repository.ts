@@ -2,11 +2,15 @@ import { SqliteDatabase, SqliteDatabases } from '../../core/sqlite-databases';
 import { SandboxRepository } from './sandbox-repository';
 import { Sandbox } from './sandbox';
 import { Transaction } from '../../core/transaction';
+import { Cipher } from '../../core/cipher/cipher';
 
 export class SqliteSandboxRepository implements SandboxRepository {
   private readonly db: SqliteDatabase;
 
-  public constructor(dbs: SqliteDatabases) {
+  public constructor(
+    dbs: SqliteDatabases,
+    private readonly cipher: Cipher
+  ) {
     this.db = dbs.modelDb;
   }
 
@@ -26,6 +30,7 @@ export class SqliteSandboxRepository implements SandboxRepository {
   }
 
   public async upsert(_: AbortSignal, sandbox: Sandbox, transaction?: Transaction): Promise<void> {
+    const encryptedSecrets = await this.encryptSecrets(sandbox.secrets);
     await this.db.write(db => {
       const statement = db.prepare(`
         INSERT INTO sandboxes (name, isEnabled, description, configuration, serializedSecrets, hash)
@@ -42,14 +47,14 @@ export class SqliteSandboxRepository implements SandboxRepository {
         sandbox.isEnabled ? 1 : 0,
         sandbox.description,
         sandbox.configuration,
-        JSON.stringify(sandbox.secrets),
+        JSON.stringify(encryptedSecrets),
         sandbox.hash
       );
     }, transaction);
   }
 
   public async tryGet(_: AbortSignal, name: string): Promise<Sandbox | null> {
-    return this.db.read(db => {
+    const row = await this.db.read(db => {
       const statement = db.prepare(`
         SELECT name, isEnabled, description, configuration, serializedSecrets, hash
         FROM sandboxes
@@ -67,16 +72,37 @@ export class SqliteSandboxRepository implements SandboxRepository {
           }
         | undefined;
 
-      return row
-        ? new Sandbox(
-            row.name,
-            row.isEnabled === 1,
-            row.description,
-            row.configuration,
-            JSON.parse(row.serializedSecrets) as Record<string, string>,
-            row.hash
-          )
-        : null;
+      return row ?? null;
     });
+
+    if (row === null) {
+      return null;
+    }
+
+    const encryptedSecrets = JSON.parse(row.serializedSecrets) as Record<string, string>;
+    return new Sandbox(
+      row.name,
+      row.isEnabled === 1,
+      row.description,
+      row.configuration,
+      await this.decryptSecrets(encryptedSecrets),
+      row.hash
+    );
+  }
+
+  private async encryptSecrets(secrets: Record<string, string>): Promise<Record<string, string>> {
+    const encryptedSecrets: Record<string, string> = {};
+    for (const [key, value] of Object.entries(secrets)) {
+      encryptedSecrets[key] = await this.cipher.encryptData(value);
+    }
+    return encryptedSecrets;
+  }
+
+  private async decryptSecrets(secrets: Record<string, string>): Promise<Record<string, string>> {
+    const decryptedSecrets: Record<string, string> = {};
+    for (const [key, value] of Object.entries(secrets)) {
+      decryptedSecrets[key] = await this.cipher.decryptData(value);
+    }
+    return decryptedSecrets;
   }
 }

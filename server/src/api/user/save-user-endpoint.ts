@@ -5,7 +5,7 @@ import { parseBody } from '../framework/parse-request';
 import { UserRepository, UserRepositoryError } from '../../repositories/user/user-repository';
 import { UserAttributesRepository, UserAttributesRepositoryError } from '../../repositories/user-attributes/user-attributes-repository';
 import { UserAttributes } from '../../repositories/user-attributes/user-attributes';
-import { PasswordHasher } from '../../repositories/user/password-hasher';
+import { Cipher } from '../../core/cipher/cipher';
 import { EndpointError } from '../framework/endpoint-error';
 import { User } from '../../repositories/user/user';
 import { getEndpointAbortSignal } from '../framework/endpoint-abort-signal';
@@ -19,7 +19,7 @@ export class SaveUserEndpoint implements Endpoint {
   public constructor(
     private readonly userRepository: UserRepository,
     private readonly userAttributesRepository: UserAttributesRepository,
-    private readonly passwordHasher: PasswordHasher
+    private readonly cipher: Cipher
   ) {}
 
   public async handle(req: Request): Promise<SaveUserResponse> {
@@ -36,7 +36,7 @@ export class SaveUserEndpoint implements Endpoint {
         throw new EndpointError('Password is required to create a user', 400);
       }
       try {
-        user = await User.create(request.name, request.password, request.isAdmin, this.passwordHasher);
+        user = await User.create(request.name, request.password, request.isAdmin, this.cipher);
       } catch (e) {
         if (e instanceof UserRepositoryError) {
           throw new EndpointError(e.message, 400);
@@ -51,7 +51,7 @@ export class SaveUserEndpoint implements Endpoint {
     }
 
     if (request.password) {
-      await user.setPassword(request.password, this.passwordHasher);
+      await user.setPassword(request.password, this.cipher);
     }
     user.setIsAdmin(request.isAdmin);
 

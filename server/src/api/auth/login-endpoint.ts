@@ -2,7 +2,7 @@ import { Request } from 'express';
 import { Endpoint } from '../framework/endpoint';
 import { UserRepository } from '../../repositories/user/user-repository';
 import { loginRequestSchema, LoginResponse } from '@ailaflow/shared';
-import { PasswordHasher } from '../../repositories/user/password-hasher';
+import { Cipher } from '../../core/cipher/cipher';
 import { AuthTokenRepository } from '../../repositories/auth-token/auth-token-repository';
 import { AuthToken } from '../../repositories/auth-token/auth-token';
 import { EndpointError } from '../framework/endpoint-error';
@@ -16,7 +16,7 @@ export class LoginEndpoint implements Endpoint {
   public constructor(
     private readonly userRepository: UserRepository,
     private readonly authTokenRepository: AuthTokenRepository,
-    private readonly passwordHasher: PasswordHasher
+    private readonly cipher: Cipher
   ) {}
 
   public async handle(req: Request): Promise<LoginResponse> {
@@ -24,7 +24,7 @@ export class LoginEndpoint implements Endpoint {
     const request = parseBody(loginRequestSchema, req.body);
 
     const user = await this.userRepository.tryGetUser(abortSignal, request.userName);
-    if (!user || !(await user.comparePassword(request.password, this.passwordHasher))) {
+    if (!user || !(await user.comparePassword(request.password, this.cipher))) {
       throw new EndpointError('Invalid username or password', 401);
     }
 

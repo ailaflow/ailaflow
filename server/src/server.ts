@@ -6,6 +6,8 @@ import { LicenseEndpoint } from './api/license-configuration/license-status-endp
 import { GetLicenseConfigurationEndpoint } from './api/license-configuration/get-license-configuration-endpoint';
 import { SaveLicenseConfigurationEndpoint } from './api/license-configuration/save-license-configuration-endpoint';
 import { ServerPaths } from './core/server-paths';
+import { Cipher } from './core/cipher/cipher';
+import { FileSystemCipherKeyStore } from './core/cipher/file-system-cipher-key-store';
 import { SandboxInstanceManager } from './sandbox/sandbox-instance-manager';
 import { ChatSessionManager, setupServer } from '@aibindkit/express';
 import { LoginEndpoint } from './api/auth/login-endpoint';
@@ -14,7 +16,6 @@ import { UserRepository } from './repositories/user/user-repository';
 import { SqliteUserRepository } from './repositories/user/sqlite-user-repository';
 import { UserAttributesRepository } from './repositories/user-attributes/user-attributes-repository';
 import { SqliteUserAttributesRepository } from './repositories/user-attributes/sqlite-user-attributes-repository';
-import { PasswordHasher } from './repositories/user/password-hasher';
 import { SqliteAuthTokenRepository } from './repositories/auth-token/sqlite-auth-token-repository';
 import { AuthTokenRepository } from './repositories/auth-token/auth-token-repository';
 import { RefreshAuthTokenEndpoint } from './api/auth/refresh-auth-token-endpoint';
@@ -217,6 +218,11 @@ export class Server {
 
   public static async create(abortSignal: AbortSignal): Promise<Server> {
     const serverPaths = new ServerPaths();
+
+    const cipherKeyStore = new FileSystemCipherKeyStore(serverPaths);
+    await cipherKeyStore.tryLoad();
+    const cipher = new Cipher(cipherKeyStore);
+
     const httpServer = new HttpServer(serverPaths);
     const sandboxHostDiagnostician = new SandboxHostDiagnostician(serverPaths);
     let userRepository: UserRepository;
@@ -262,7 +268,7 @@ export class Server {
     authTokenRepository = new SqliteAuthTokenRepository(sqliteDatabases);
     processRepository = new SqliteProcessRepository(sqliteDatabases);
     processCronJobRepository = new SqliteProcessCronJobRepository(sqliteDatabases);
-    sandboxRepository = new SqliteSandboxRepository(sqliteDatabases);
+    sandboxRepository = new SqliteSandboxRepository(sqliteDatabases, cipher);
     chatSessionRepository = new SqliteChatSessionRepository(sqliteDatabases);
     persistedExecutionRepository = new SqlitePersistedExecutionRepository(sqliteDatabases);
     taskRepository = new SqliteTaskRepository(sqliteDatabases);
@@ -426,7 +432,6 @@ export class Server {
       eventBus
     );
 
-    const passwordHasher = new PasswordHasher();
     const userProcessProvider = new UserProcessProvider(myProcessAccessQuerier, processManager);
     const userAssignedTaskProvider = new UserAssignedTaskProvider(taskRepository, assignedTaskRepository);
     const userTaskDetailsProvider = new UserTaskDetailsProvider(userAssignedTaskProvider, persistedExecutionRepository);
@@ -476,7 +481,7 @@ export class Server {
 
     const kvConfigurationManager = new KvConfigurationManager(kvConfigurationRepository);
     const licenseManager = new LicenseManager(new LicenseValidator(), kvConfigurationManager, userRepository);
-    const installer = new Installer(userRepository, userAttributesRepository, sandboxRepository, passwordHasher, licenseManager);
+    const installer = new Installer(cipherKeyStore, cipher, userRepository, userAttributesRepository, sandboxRepository, licenseManager);
 
     const schedulers: Scheduler[] = [
       new LicenseCheckScheduler(licenseManager),
@@ -491,7 +496,7 @@ export class Server {
       new SaveLicenseConfigurationEndpoint(licenseManager),
       new CanInstallEndpoint(installer),
       new InstallEndpoint(installer),
-      new LoginEndpoint(userRepository, authTokenRepository, passwordHasher),
+      new LoginEndpoint(userRepository, authTokenRepository, cipher),
       new RefreshAuthTokenEndpoint(authTokenRepository),
       new GetLlmConfigurationEndpoint(llmConfigurationRepository),
       new SaveLlmProviderEndpoint(llmConfigurationRepository, eventBus),
@@ -542,7 +547,7 @@ export class Server {
       new ExecuteSandboxCommandEndpoint(sandboxInstanceManager),
       new GetUsersEndpoint(userListQuerier),
       new GetUserEndpoint(userRepository, userAttributesRepository),
-      new SaveUserEndpoint(userRepository, userAttributesRepository, passwordHasher),
+      new SaveUserEndpoint(userRepository, userAttributesRepository, cipher),
       new GetUserTelegramConfigurationEndpoint(userRepository, telegramConfigurationApi),
       new SaveUserTelegramBotEndpoint(userRepository, telegramConfigurationApi),
       new DeleteUserTelegramBotEndpoint(userRepository, telegramConfigurationApi)

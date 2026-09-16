@@ -1,6 +1,9 @@
 import { KvConfigurationManager } from '../../configuration/kv/kv-configuration-manager';
 import assert from 'node:assert/strict';
 import { EventEmitter } from 'node:events';
+import { mkdtemp, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 import test, { TestContext } from 'node:test';
 import { Request } from 'express';
@@ -11,11 +14,12 @@ import { SqliteDatabase, SqliteDatabases } from '../../core/sqlite-databases';
 import { SqliteKvConfigurationRepository } from '../../repositories/configuration/kv/sqlite-kv-configuration-repository';
 import { SqliteSandboxRepository } from '../../repositories/sandbox/sqlite-sandbox-repository';
 import { SqliteUserAttributesRepository } from '../../repositories/user-attributes/sqlite-user-attributes-repository';
-import { PasswordHasher } from '../../repositories/user/password-hasher';
 import { SqliteUserRepository } from '../../repositories/user/sqlite-user-repository';
 import { InstallEndpoint } from './install-endpoint';
 import { Installer } from '../../install/installer';
 import { CanInstallEndpoint } from './can-install-endpoint';
+import { FileSystemCipherKeyStore } from '../../core/cipher/file-system-cipher-key-store';
+import { Cipher } from '../../core/cipher/cipher';
 
 const signal = new AbortController().signal;
 const home = { licenseType: LicenseType.HOME, licenseKey: null } as const;
@@ -23,13 +27,17 @@ const starter = { licenseType: LicenseType.STARTER, licenseKey: null } as const;
 const business = { licenseType: LicenseType.BUSINESS, licenseKey: 'accepted-key' } as const;
 
 async function fixture(t: TestContext) {
+  const folderPath = await mkdtemp(join(tmpdir(), 'aila-installer-'));
+  t.after(() => rm(folderPath, { recursive: true, force: true }));
   const db = new DatabaseSync(':memory:');
   db.exec('PRAGMA foreign_keys = ON');
   t.after(() => db.close());
   const dbs = { modelDb: new SqliteDatabase(db) } as SqliteDatabases;
+  const cipherKeyStore = new FileSystemCipherKeyStore({ getAppDataFolderPath: () => folderPath });
+  const cipher = new Cipher(cipherKeyStore);
   const users = new SqliteUserRepository(dbs);
   const attributes = new SqliteUserAttributesRepository(dbs);
-  const sandboxes = new SqliteSandboxRepository(dbs);
+  const sandboxes = new SqliteSandboxRepository(dbs, cipher);
   const configuration = new SqliteKvConfigurationRepository(dbs);
   for (const repository of [users, attributes, sandboxes, configuration]) await repository.setup(signal);
   const validator = new LicenseValidator();
@@ -39,7 +47,7 @@ async function fixture(t: TestContext) {
     proof: type === LicenseType.BUSINESS ? 'proof' : null
   }));
   const manager = new LicenseManager(validator, new KvConfigurationManager(configuration), users);
-  const installer = new Installer(users, attributes, sandboxes, new PasswordHasher(), manager);
+  const installer = new Installer(cipherKeyStore, cipher, users, attributes, sandboxes, manager);
   const endpoint = new InstallEndpoint(installer);
   const canInstallEndpoint = new CanInstallEndpoint(installer);
   return { db, users, attributes, sandboxes, configuration, manager, endpoint, canInstallEndpoint, validate };

@@ -2,20 +2,22 @@ import { LicenseType } from '@ailaflow/shared';
 import { LicenseManager } from '../configuration/license/license-manager';
 import { SandboxRepository } from '../repositories/sandbox/sandbox-repository';
 import { UserAttributesRepository } from '../repositories/user-attributes/user-attributes-repository';
-import { PasswordHasher } from '../repositories/user/password-hasher';
 import { UserRepository } from '../repositories/user/user-repository';
 import { User } from '../repositories/user/user';
 import { UserAttributes } from '../repositories/user-attributes/user-attributes';
 import { Sandbox } from '../repositories/sandbox/sandbox';
+import { Cipher } from '../core/cipher/cipher';
+import { FileSystemCipherKeyStore } from '../core/cipher/file-system-cipher-key-store';
 
 export class Installer {
   private isInstalling = false;
 
   public constructor(
+    private readonly cipherKeyStore: FileSystemCipherKeyStore,
+    private readonly cipher: Cipher,
     private readonly userRepository: UserRepository,
     private readonly userAttributesRepository: UserAttributesRepository,
     private readonly sandboxRepository: SandboxRepository,
-    private readonly passwordHasher: PasswordHasher,
     private readonly licenseManager: LicenseManager
   ) {}
 
@@ -46,7 +48,9 @@ export class Installer {
         return `License validation failed: ${licenseValidationError}`;
       }
 
-      const user = await User.create(rootUserName, rootPassword, true, this.passwordHasher);
+      await this.cipherKeyStore.install();
+
+      const user = await User.create(rootUserName, rootPassword, true, this.cipher);
       const attributes = UserAttributes.create(user, {});
       const defaultSandbox = Sandbox.create({
         name: 'default',

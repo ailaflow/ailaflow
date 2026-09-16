@@ -1,14 +1,14 @@
-import { PasswordHasher } from './password-hasher';
 import { UserValidator } from '@ailaflow/shared';
+import { Cipher } from '../../core/cipher/cipher';
 import { UserRepositoryError } from './user-repository';
 
 export class User {
-  public static async create(name: string, password: string, isAdmin: boolean, hasher: PasswordHasher): Promise<User> {
+  public static async create(name: string, password: string, isAdmin: boolean, cipher: Cipher): Promise<User> {
     const nameError = UserValidator.validateName(name);
     if (nameError) {
       throw new UserRepositoryError(nameError);
     }
-    return new User(name, await hasher.hash(password), isAdmin);
+    return new User(name, await cipher.hashPassword(password), isAdmin);
   }
 
   public constructor(
@@ -17,12 +17,12 @@ export class User {
     public isAdmin: boolean
   ) {}
 
-  public async comparePassword(password: string, hasher: PasswordHasher): Promise<boolean> {
-    return this.passwordHash === (await hasher.hash(password));
+  public comparePassword(password: string, cipher: Cipher): Promise<boolean> {
+    return cipher.verifyPassword(password, this.passwordHash);
   }
 
-  public async setPassword(password: string, hasher: PasswordHasher) {
-    this.passwordHash = await hasher.hash(password);
+  public async setPassword(password: string, cipher: Cipher): Promise<void> {
+    this.passwordHash = await cipher.hashPassword(password);
   }
 
   public setIsAdmin(isAdmin: boolean) {

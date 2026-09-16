@@ -7,7 +7,7 @@ export class SandboxHostPaths {
     public readonly sandboxName: string
   ) {}
 
-  public readonly dataFolderAbsolutePath = join(this.appDataFolderAbsolutePath, `data/sandbox_${this.sandboxName}`);
-  public readonly appFolderAbsolutePath = join(this.appDataFolderAbsolutePath, `temp/sandbox_${this.sandboxName}`);
-  public readonly dockerfileAbsolutePath = join(this.appDataFolderAbsolutePath, `temp/sandbox_${this.sandboxName}/Dockerfile`);
+  public readonly dataFolderAbsolutePath = join(this.appDataFolderAbsolutePath, `sandbox/${this.sandboxName}/data`);
+  public readonly appFolderAbsolutePath = join(this.appDataFolderAbsolutePath, `sandbox/${this.sandboxName}/temp`);
+  public readonly dockerfileAbsolutePath = join(this.appDataFolderAbsolutePath, `sandbox/${this.sandboxName}/temp/Dockerfile`);
 }
