@@ -1,6 +1,6 @@
 import { Request } from 'express';
 
-export function getEndpointAbortSignal(req: Request): AbortSignal {
+export function getEndpointAbortSignal(req: Request, timeoutMs = 8_000): AbortSignal {
   const abortController = new AbortController();
   req.on('close', () => {
     if (!req.complete) {
@@ -12,6 +12,6 @@ export function getEndpointAbortSignal(req: Request): AbortSignal {
       abortController.abort();
     }
   });
-  const timeout = AbortSignal.timeout(8_000);
+  const timeout = AbortSignal.timeout(timeoutMs);
   return AbortSignal.any([abortController.signal, timeout]);
 }

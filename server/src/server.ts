@@ -186,6 +186,31 @@ import { GetTablesTool } from './chat-session/admin-tools/get-tables-tool';
 import { TestProcessTool } from './chat-session/admin-tools/test-process-tool';
 import { Installer } from './install/installer';
 import { UserExistsRpcHandler } from './process-executor/rpc-handlers/user-exists-rpc-handler';
+import { SlackConfigurationRepository } from './repositories/configuration/slack/slack-configuration-repository';
+import { SqliteSlackConfigurationRepository } from './repositories/configuration/slack/sqlite-slack-configuration-repository';
+import { SlackUserDirectoryRepository } from './repositories/configuration/slack/slack-user-directory-repository';
+import { SqliteSlackUserDirectoryRepository } from './repositories/configuration/slack/sqlite-slack-user-directory-repository';
+import { SlackUserMappingRepository } from './repositories/configuration/slack/slack-user-mapping-repository';
+import { SqliteSlackUserMappingRepository } from './repositories/configuration/slack/sqlite-slack-user-mapping-repository';
+import { SlackInboundEventRepository } from './repositories/configuration/slack/slack-inbound-event-repository';
+import { SqliteSlackInboundEventRepository } from './repositories/configuration/slack/sqlite-slack-inbound-event-repository';
+import { SlackBotApiClient } from './slack/slack-bot-api-client';
+import { OfficialSlackSocketClient } from './slack/slack-socket-client';
+import { SlackSynchronizationManager } from './slack/slack-synchronization-manager';
+import { SlackUserDirectoryRefresher } from './slack/slack-user-directory-refresher';
+import { SlackConfigurationManager } from './slack/slack-configuration-manager';
+import { SlackMappingManager } from './slack/slack-mapping-manager';
+import { SlackStatusProvider } from './slack/slack-status-provider';
+import { SlackConfigurationChangedEventHandler } from './events/slack-configuration/slack-configuration-changed-event-handler';
+import { SlackMappingsChangedEventHandler } from './events/slack-configuration/slack-mappings-changed-event-handler';
+import { GetSlackConfigurationEndpoint } from './api/slack-configuration/get-slack-configuration-endpoint';
+import { SaveSlackConfigurationEndpoint } from './api/slack-configuration/save-slack-configuration-endpoint';
+import { DeleteSlackConfigurationEndpoint } from './api/slack-configuration/delete-slack-configuration-endpoint';
+import { GetSlackUsersEndpoint } from './api/slack-configuration/get-slack-users-endpoint';
+import { RefreshSlackUsersEndpoint } from './api/slack-configuration/refresh-slack-users-endpoint';
+import { SaveSlackMappingsEndpoint } from './api/slack-configuration/save-slack-mappings-endpoint';
+import { GetMySlackConfigurationEndpoint } from './api/my-slack-configuration/get-my-slack-configuration-endpoint';
+import { SqliteSlackUserListQuerier } from './queriers/slack-user-list/sqlite-slack-user-list-querier';
 
 export class Server {
   private isClosed = false;
@@ -210,6 +235,10 @@ export class Server {
     let tableDataRepository: TableDataRepository;
     let llmConfigurationRepository: LlmConfigurationRepository;
     let telegramConfigurationRepository: TelegramConfigurationRepository;
+    let slackConfigurationRepository: SlackConfigurationRepository;
+    let slackUserDirectoryRepository: SlackUserDirectoryRepository;
+    let slackUserMappingRepository: SlackUserMappingRepository;
+    let slackInboundEventRepository: SlackInboundEventRepository;
     let kvConfigurationRepository: KvConfigurationRepository;
 
     let processListQuerier: ProcessListQuerier;
@@ -244,6 +273,10 @@ export class Server {
     tableDataRepository = new SqliteTableDataRepository(sqliteDatabases);
     llmConfigurationRepository = new SqliteLlmConfigurationRepository(sqliteDatabases);
     telegramConfigurationRepository = new SqliteTelegramConfigurationRepository(sqliteDatabases);
+    slackConfigurationRepository = new SqliteSlackConfigurationRepository(sqliteDatabases);
+    slackUserDirectoryRepository = new SqliteSlackUserDirectoryRepository(sqliteDatabases);
+    slackUserMappingRepository = new SqliteSlackUserMappingRepository(sqliteDatabases);
+    slackInboundEventRepository = new SqliteSlackInboundEventRepository(sqliteDatabases);
     kvConfigurationRepository = new SqliteKvConfigurationRepository(sqliteDatabases);
 
     processListQuerier = new SqliteProcessListQuerier(sqliteDatabases);
@@ -260,6 +293,7 @@ export class Server {
     incompleteAssignedTaskCountQuerier = new SqliteIncompleteAssignedTaskCountQuerier(sqliteDatabases);
     taskFinalizationCandidateQuerier = new SqliteTaskFinalizationCandidateQuerier(sqliteDatabases);
     taskListQuerier = new SqliteTaskListQuerier(sqliteDatabases);
+    const slackUserListQuerier = new SqliteSlackUserListQuerier(sqliteDatabases);
 
     await Promise.all([
       userRepository.setup(abortSignal),
@@ -277,6 +311,10 @@ export class Server {
       tableRepository.setup(abortSignal),
       llmConfigurationRepository.setup(abortSignal),
       telegramConfigurationRepository.setup(abortSignal),
+      slackConfigurationRepository.setup(abortSignal),
+      slackUserDirectoryRepository.setup(abortSignal),
+      slackUserMappingRepository.setup(abortSignal),
+      slackInboundEventRepository.setup(abortSignal),
       kvConfigurationRepository.setup(abortSignal)
     ]);
 
@@ -317,6 +355,47 @@ export class Server {
       userChatSessionProvider
     );
     eventBus.registerHandler(new TelegramConfigurationChangedEventHandler(telegramSynchronizationManager));
+
+    const slackClient = new SlackBotApiClient();
+    const slackSynchronizationManager = new SlackSynchronizationManager(
+      slackConfigurationRepository,
+      slackUserDirectoryRepository,
+      slackUserMappingRepository,
+      slackInboundEventRepository,
+      slackClient,
+      new OfficialSlackSocketClient(),
+      userChatSessionProvider
+    );
+    const slackDirectoryRefresher = new SlackUserDirectoryRefresher(
+      slackConfigurationRepository,
+      slackUserDirectoryRepository,
+      slackClient,
+      eventBus
+    );
+    const slackConfigurationManager = new SlackConfigurationManager(
+      slackConfigurationRepository,
+      slackUserDirectoryRepository,
+      slackUserMappingRepository,
+      slackClient,
+      slackSynchronizationManager,
+      eventBus
+    );
+    const slackMappingManager = new SlackMappingManager(
+      slackConfigurationRepository,
+      slackUserDirectoryRepository,
+      slackUserMappingRepository,
+      slackUserListQuerier,
+      userRepository,
+      eventBus
+    );
+    const slackStatusProvider = new SlackStatusProvider(
+      slackConfigurationRepository,
+      slackUserDirectoryRepository,
+      slackUserMappingRepository,
+      slackSynchronizationManager
+    );
+    eventBus.registerHandler(new SlackConfigurationChangedEventHandler(slackSynchronizationManager));
+    eventBus.registerHandler(new SlackMappingsChangedEventHandler(slackSynchronizationManager));
 
     const processExecutionPersister = new ProcessExecutionPersister(persistedExecutionRepository);
     const processDefinitionUpgrader = new ProcessDefinitionUpgrader();
@@ -425,6 +504,13 @@ export class Server {
       new GetMyTelegramConfigurationEndpoint(telegramConfigurationApi),
       new SaveMyTelegramBotEndpoint(telegramConfigurationApi),
       new DeleteMyTelegramBotEndpoint(telegramConfigurationApi),
+      new GetSlackConfigurationEndpoint(slackConfigurationManager),
+      new SaveSlackConfigurationEndpoint(slackConfigurationManager),
+      new DeleteSlackConfigurationEndpoint(slackConfigurationManager),
+      new GetSlackUsersEndpoint(slackMappingManager),
+      new RefreshSlackUsersEndpoint(slackDirectoryRefresher),
+      new SaveSlackMappingsEndpoint(slackMappingManager),
+      new GetMySlackConfigurationEndpoint(slackStatusProvider),
       new GetMyNotificationsEndpoint(myNotificationListQuerier),
       new DeleteMyNotificationEndpoint(notificationRepository),
       new GetMyProcessesEndpoint(myProcessListQuerier),
@@ -474,12 +560,14 @@ export class Server {
     taskFinalizationWorker.start();
 
     await httpServer.start();
+    slackSynchronizationManager.start();
     return new Server(
       httpServer,
       sandboxInstanceManager,
       sqliteDatabases,
       schedulers,
       telegramSynchronizationManager,
+      slackSynchronizationManager,
       taskFinalizationWorker
     );
   }
@@ -490,6 +578,7 @@ export class Server {
     private readonly sqliteDatabases: SqliteDatabases,
     private readonly schedulers: Scheduler[],
     private readonly telegramSynchronizationManager: TelegramSynchronizationManager,
+    private readonly slackSynchronizationManager: SlackSynchronizationManager,
     private readonly taskFinalizationWorker: TaskFinalizationWorker
   ) {}
 
@@ -501,6 +590,7 @@ export class Server {
     const abortSignal = new AbortController().signal;
 
     this.telegramSynchronizationManager.stop();
+    await this.slackSynchronizationManager.stop();
     await this.sandboxInstanceManager.stopAll(abortSignal);
     for (const scheduler of this.schedulers) {
       scheduler.stop();

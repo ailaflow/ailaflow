@@ -1,13 +1,23 @@
 import { useLoader } from '@aibindkit/react';
 import { useApiClient } from '../../auth/auth-context';
 import { ConfigurationOverviewView } from '../../views/configuration/configuration-overview-view';
+import { SlackConnectionStatus } from '@ailaflow/shared';
 import type { ConfigurationStatus } from '../../views/configuration/configuration-overview-view';
 import { PortalErrorView } from '../../views/portal/portal-error-view';
 import { PortalLoadingView } from '../../views/portal/portal-loading-view';
 
 export function MyConfigurationOverview() {
   const apiClient = useApiClient();
-  const loader = useLoader(abortSignal => apiClient.telegramConfiguration.get(abortSignal), [apiClient]);
+  const loader = useLoader(
+    async abortSignal => {
+      const [telegram, slack] = await Promise.all([
+        apiClient.telegramConfiguration.get(abortSignal),
+        apiClient.mySlackConfiguration.get(abortSignal)
+      ]);
+      return { telegram, slack };
+    },
+    [apiClient]
+  );
 
   if (loader.isLoading) {
     return <PortalLoadingView />;
@@ -16,7 +26,7 @@ export function MyConfigurationOverview() {
     return <PortalErrorView error={loader.error} />;
   }
 
-  const configuredBotCount = loader.data.bots.filter(bot => bot.hasBotToken).length;
+  const configuredBotCount = loader.data.telegram.bots.filter(bot => bot.hasBotToken).length;
   const telegramConfigured = configuredBotCount > 0;
   const statuses: ConfigurationStatus[] = [
     {
@@ -26,6 +36,22 @@ export function MyConfigurationOverview() {
       isHealthy: telegramConfigured,
       remediation: 'Configure a Telegram bot to chat with Aila through Telegram.',
       action: { label: 'Configure Telegram', href: '/my-configuration?tab=telegram' }
+    },
+    {
+      id: 'slack',
+      label: 'Slack',
+      value:
+        loader.data.slack.status === SlackConnectionStatus.CONNECTED
+          ? 'Connected'
+          : loader.data.slack.status === SlackConnectionStatus.UNAVAILABLE
+            ? 'Unavailable'
+            : 'Not connected',
+      isHealthy: loader.data.slack.status === SlackConnectionStatus.CONNECTED,
+      remediation:
+        loader.data.slack.status === SlackConnectionStatus.UNAVAILABLE
+          ? 'Contact your administrator about the unavailable Slack integration.'
+          : 'Contact your administrator to map your Slack account.',
+      action: { label: 'View Slack status', href: '/my-configuration?tab=slack' }
     }
   ];
 

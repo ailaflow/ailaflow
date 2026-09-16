@@ -6,12 +6,15 @@ import type { ConfigurationTab } from '../../views/configuration/configuration-v
 import { ConfigurationOverviewPage } from './configuration-overview-page';
 import { LlmConfigurationPage } from './llm-configuration-page';
 import { PublicUrlConfigurationPage } from './public-url-configuration-page';
+import { SlackConfigurationPage } from './slack-configuration-page';
 
 export function ConfigurationPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const requestedTab = searchParams.get('tab');
   const activeTab: ConfigurationTab =
-    requestedTab === 'llm' || requestedTab === 'public-url' || requestedTab === 'license' ? requestedTab : 'overview';
+    requestedTab === 'llm' || requestedTab === 'public-url' || requestedTab === 'license' || requestedTab === 'slack'
+      ? requestedTab
+      : 'overview';
 
   useEffect(() => {
     if (requestedTab !== activeTab) {
@@ -31,6 +34,8 @@ export function ConfigurationPage() {
         <LlmConfigurationPage />
       ) : activeTab === 'public-url' ? (
         <PublicUrlConfigurationPage />
+      ) : activeTab === 'slack' ? (
+        <SlackConfigurationPage />
       ) : (
         <LicenseConfigurationPage />
       )}

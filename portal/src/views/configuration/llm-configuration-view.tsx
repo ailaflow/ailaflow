@@ -1,6 +1,7 @@
 import { LlmProviderPolicy, LlmProviderType } from '@ailaflow/shared';
 import type { LlmModelDto, LlmProviderDto, LlmUseCase } from '@ailaflow/shared';
 import { useState } from 'react';
+import { ExpandableTip } from '../common/expandable-tip';
 
 export interface LlmProviderDraft {
   id: string;
@@ -296,15 +297,19 @@ function ProviderEditor(props: {
           </label>
         )}
         {props.draft.type === LlmProviderType.CODEX_APP_SERVER && (
-          <div className="min-w-0 rounded-md border border-sky-200 bg-sky-50 p-3 text-sm text-sky-900 md:col-span-2">
-            <p className="font-medium">Start the Codex WebSocket server</p>
-            <p className="mt-1">Run this command in a terminal on the machine running the AilaFlow server:</p>
-            <pre className="mt-2 overflow-x-auto rounded border border-sky-100 bg-white p-2 text-xs">
-              <code>codex app-server --listen ws://127.0.0.1:4500</code>
-            </pre>
-            <p className="mt-2">
-              Keep it running and set the WebSocket URL above to <code>ws://127.0.0.1:4500</code>.
-            </p>
+          <div className="min-w-0 md:col-span-2">
+            <ExpandableTip
+              title="Start the Codex WebSocket server"
+              summary="Run Codex app-server on the machine hosting AilaFlow, keep it running, and use its WebSocket URL above."
+            >
+              <p>Run this command in a terminal on the machine running the AilaFlow server:</p>
+              <pre className="mt-2 overflow-x-auto rounded border border-sky-100 bg-white p-2 text-xs">
+                <code>codex app-server --listen ws://127.0.0.1:4500</code>
+              </pre>
+              <p className="mt-2">
+                Keep it running and set the WebSocket URL above to <code>ws://127.0.0.1:4500</code>.
+              </p>
+            </ExpandableTip>
           </div>
         )}
         {LlmProviderPolicy.requiresApiKey(props.draft.type) && (

@@ -1,5 +1,6 @@
-export function abortableSleep(abortSignal: AbortSignal, ms: number): Promise<void> {
-  return new Promise((resolve, reject) => {
+export function abortableSleep(abortSignal: AbortSignal, ms: number) {
+  abortSignal.throwIfAborted();
+  return new Promise<void>((resolve, reject) => {
     const timeout = setTimeout(() => {
       abortSignal.removeEventListener('abort', onAbort);
       resolve();

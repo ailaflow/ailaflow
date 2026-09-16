@@ -30,7 +30,9 @@ export function ProcessTesterChats() {
       {isFindUserPopupOpen && (
         <FindUserPopup
           apiClient={apiClient}
-          openedUserNames={state.chatUserNames}
+          disabledUserNames={state.chatUserNames}
+          title="Open user chat"
+          description="Find a user to add to the test chat panel."
           onSelectUser={openUserChat}
           onClose={() => setIsFindUserPopupOpen(false)}
         />

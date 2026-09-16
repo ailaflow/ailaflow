@@ -1,4 +1,4 @@
-export type ConfigurationTab = 'overview' | 'llm' | 'public-url' | 'license';
+export type ConfigurationTab = 'overview' | 'llm' | 'public-url' | 'slack' | 'license';
 
 export interface ConfigurationViewProps {
   activeTab: ConfigurationTab;
@@ -10,6 +10,7 @@ const tabs: ReadonlyArray<{ id: ConfigurationTab; label: string }> = [
   { id: 'overview', label: 'Overview' },
   { id: 'llm', label: 'LLM' },
   { id: 'public-url', label: 'Public URL' },
+  { id: 'slack', label: 'Slack' },
   { id: 'license', label: 'License' }
 ];
 

@@ -5,11 +5,12 @@ import type { MyConfigurationTab } from '../../views/my-configuration/my-configu
 import { Portal } from '../common/portal';
 import { TelegramConfiguration } from '../common/telegram-configuration';
 import { MyConfigurationOverview } from './my-configuration-overview';
+import { MySlackConfiguration } from './my-slack-configuration';
 
 export function MyConfigurationPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const requestedTab = searchParams.get('tab');
-  const activeTab: MyConfigurationTab = requestedTab === 'telegram' ? 'telegram' : 'overview';
+  const activeTab: MyConfigurationTab = requestedTab === 'telegram' || requestedTab === 'slack' ? requestedTab : 'overview';
 
   useEffect(() => {
     if (requestedTab !== activeTab) {
@@ -24,7 +25,13 @@ export function MyConfigurationPage() {
   return (
     <Portal>
       <MyConfigurationView activeTab={activeTab} onTabChange={selectTab}>
-        {activeTab === 'overview' ? <MyConfigurationOverview /> : <TelegramConfiguration />}
+        {activeTab === 'overview' ? (
+          <MyConfigurationOverview />
+        ) : activeTab === 'telegram' ? (
+          <TelegramConfiguration />
+        ) : (
+          <MySlackConfiguration />
+        )}
       </MyConfigurationView>
     </Portal>
   );

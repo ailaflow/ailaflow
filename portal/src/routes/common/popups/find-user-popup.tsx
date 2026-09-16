@@ -8,13 +8,16 @@ const USER_SEARCH_DEBOUNCE_MS = 300;
 
 export interface FindUserPopupProps {
   apiClient: ApiClient;
-  openedUserNames: string[];
+  disabledUserNames: string[];
+  initialSearch?: string;
+  title: string;
+  description: string;
   onSelectUser(userName: string): void;
   onClose(): void;
 }
 
 export function FindUserPopup(props: FindUserPopupProps) {
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState(props.initialSearch ?? '');
   const [result, setResult] = useState<GetUsersResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -61,8 +64,8 @@ export function FindUserPopup(props: FindUserPopupProps) {
 
   return (
     <SimpleItemSearchPopupView
-      title="Open user chat"
-      description="Find a user to add to the test chat panel."
+      title={props.title}
+      description={props.description}
       closeLabel="Close user search"
       searchLabel="Search users"
       searchPlaceholder="Enter a user name..."
@@ -75,15 +78,19 @@ export function FindUserPopup(props: FindUserPopupProps) {
           id: user.name,
           label: `@${user.name}`,
           description: user.isAdmin ? 'Admin' : 'User',
-          actionLabel: props.openedUserNames.includes(user.name) ? 'Opened' : 'Open chat',
-          isActionMuted: props.openedUserNames.includes(user.name)
+          actionLabel: props.disabledUserNames.includes(user.name) ? 'Selected' : 'Select',
+          isActionMuted: props.disabledUserNames.includes(user.name)
         })) ?? []
       }
       resultHint={result && result.totalCount > result.users.length ? 'Refine your search to see more users.' : undefined}
       isLoading={isLoading}
       error={error}
       onSearchChange={setSearch}
-      onSelectItem={props.onSelectUser}
+      onSelectItem={userName => {
+        if (!props.disabledUserNames.includes(userName)) {
+          props.onSelectUser(userName);
+        }
+      }}
       onClose={props.onClose}
     />
   );

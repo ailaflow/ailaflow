@@ -13,6 +13,8 @@ import { LlmConfigurationApiClient } from './llm-configuration-api-client';
 import { TelegramConfigurationApiClient } from './telegram-configuration-api-client';
 import { TaskApiClient } from './task-api-client';
 import { PublicUrlConfigurationApiClient } from './public-url-configuration-api-client';
+import { SlackConfigurationApiClient } from './slack-configuration-api-client';
+import { MySlackConfigurationApiClient } from './my-slack-configuration-api-client';
 
 export class ApiClient {
   private readonly client: HttpClient;
@@ -31,6 +33,8 @@ export class ApiClient {
   public readonly telegramConfiguration: TelegramConfigurationApiClient;
   public readonly task: TaskApiClient;
   public readonly publicUrlConfiguration: PublicUrlConfigurationApiClient;
+  public readonly slackConfiguration: SlackConfigurationApiClient;
+  public readonly mySlackConfiguration: MySlackConfigurationApiClient;
 
   public constructor(authToken: string | null) {
     this.client = new HttpClient(this.createHeaders(authToken));
@@ -49,6 +53,8 @@ export class ApiClient {
     this.telegramConfiguration = new TelegramConfigurationApiClient(this.client);
     this.task = new TaskApiClient(this.client);
     this.publicUrlConfiguration = new PublicUrlConfigurationApiClient(this.client);
+    this.slackConfiguration = new SlackConfigurationApiClient(this.client);
+    this.mySlackConfiguration = new MySlackConfigurationApiClient(this.client);
   }
 
   public get onUnauthorized() {
