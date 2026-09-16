@@ -37,14 +37,17 @@ function ProcessTesterStartForm(props: { definition: ProcessDefinition; onSubmit
       allowedToReadVariableNames: null,
       outputVariableNames: props.definition.properties.startVariableNames,
 
+      assertVariableValue(name: string, value: unknown) {
+        variableValidator.assertVariableValueIsValid(name, value, props.definition);
+      },
       async readVariable() {
         throw new Error('Start form does not have any variables to read');
       },
-      async submit(_, data: Record<string, unknown>) {
+      async submitForm(_, data: Record<string, unknown>) {
         props.onSubmit(data);
       },
-      assertVariableValue(name: string, value: unknown) {
-        variableValidator.assertVariableValueIsValid(name, value, props.definition);
+      async startProcess() {
+        throw new Error('Not implemented');
       }
     }),
     [props.definition, props.onSubmit, variableValidator]
@@ -58,14 +61,17 @@ function ProcessTesterOutputForm(props: { form: FormDefinition; output: ProcessE
       allowedToReadVariableNames: Object.keys(props.output),
       outputVariableNames: [],
 
+      assertVariableValue() {
+        // Nothing
+      },
       async readVariable(_, name: string) {
         return props.output[name];
       },
-      async submit() {
+      async submitForm() {
         // Nothing
       },
-      assertVariableValue() {
-        // Nothing
+      async startProcess() {
+        throw new Error('Not implemented');
       }
     }),
     [props.output]

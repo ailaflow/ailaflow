@@ -35,6 +35,9 @@ export function FormEditorOverlay() {
       allowedToReadVariableNames: null,
       outputVariableNames: formState.outputVariableNames,
 
+      assertVariableValue(name: string, value: unknown) {
+        variableValidator.assertVariableValueIsValid(name, value, state.definition.value);
+      },
       async readVariable(_: AbortSignal, name: string) {
         const example = formState.form.inputExamples.find(example => example.variableName === name);
         if (!example || !example.exampleValue) {
@@ -42,11 +45,11 @@ export function FormEditorOverlay() {
         }
         return JSON.parse(example.exampleValue);
       },
-      async submit() {
-        throw new Error('This is preview only');
+      async submitForm() {
+        window.alert('Form was submitted correctly');
       },
-      assertVariableValue(name: string, value: unknown) {
-        variableValidator.assertVariableValueIsValid(name, value, state.definition.value);
+      async startProcess() {
+        throw new Error('Not implemented');
       }
     }),
     [state, formState, variableValidator]

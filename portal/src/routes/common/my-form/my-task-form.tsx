@@ -26,6 +26,9 @@ export function MyTaskForm({ args, onSubmitted }: MyTaskFormProps) {
   const formAdapter = useMemo<FormAdapter>(
     () => ({
       allowedToReadVariableNames: data?.inputVariableNames ?? [],
+      outputVariableNames: data?.outputVariableSchemas ? Object.keys(data.outputVariableSchemas) : [],
+
+      assertVariableValue() {},
       async readVariable(abortSignal: AbortSignal, variableName: string) {
         const response = await apiClient.myTask.getTaskVariableValue(abortSignal, {
           taskId: args.taskId,
@@ -34,9 +37,7 @@ export function MyTaskForm({ args, onSubmitted }: MyTaskFormProps) {
         });
         return response.value;
       },
-      outputVariableNames: data?.outputVariableSchemas ? Object.keys(data.outputVariableSchemas) : [],
-      assertVariableValue() {},
-      async submit(abortSignal: AbortSignal, outputValues: Record<string, unknown>) {
+      async submitForm(abortSignal: AbortSignal, outputValues: Record<string, unknown>) {
         const response = await apiClient.myTask.submitMyTask(abortSignal, {
           taskId: args.taskId,
           outputValues,
@@ -46,6 +47,9 @@ export function MyTaskForm({ args, onSubmitted }: MyTaskFormProps) {
           throw new Error('Task could not be submitted');
         }
         await onSubmitted?.();
+      },
+      async startProcess() {
+        throw new Error('Not implemented');
       }
     }),
     [apiClient, args, data, onSubmitted]

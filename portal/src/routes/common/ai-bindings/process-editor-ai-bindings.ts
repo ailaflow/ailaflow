@@ -87,7 +87,7 @@ const processEditorRoute = route('processEditor')
           .string()
           .nullable()
           .describe(`ID of the step whose sequence should receive the new step. Pass null to append to the root sequence.`),
-        branchName: z.string().optional().describe('Branch name to append to when the target step contains multiple branches.')
+        branchName: z.string().optional().nullable().describe('Branch name to append to when the target step contains multiple branches.')
       })
     ),
 
@@ -109,7 +109,7 @@ const processEditorRoute = route('processEditor')
     ),
     getRootVariables: tool('List process variables with their names and JSON schemas').input(
       z.object({
-        filter: z.string().optional().describe('Optional filter for variable names')
+        filter: z.string().optional().nullable().describe('Optional filter for variable names')
       })
     ),
     modifyRootVariable: tool('Set or delete a process variable').input(

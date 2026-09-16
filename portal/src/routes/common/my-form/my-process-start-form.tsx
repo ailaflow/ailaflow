@@ -33,12 +33,15 @@ export function MyProcessStartForm({ args, onStarted }: MyProcessStartFormProps)
       },
       outputVariableNames: data?.startVariableSchemas ? Object.keys(data.startVariableSchemas) : [],
       assertVariableValue() {},
-      async submit(abortSignal: AbortSignal, startValues: Record<string, unknown>) {
+      async submitForm(abortSignal: AbortSignal, startValues: Record<string, unknown>) {
         const response = await apiClient.myProcess.startMyProcess(abortSignal, args.processName, {
           startValues,
           chatSession: args.chatSession
         });
         await onStarted?.(response.executionId);
+      },
+      async startProcess() {
+        throw new Error('Not implemented');
       }
     }),
     [apiClient, args, data, onStarted]

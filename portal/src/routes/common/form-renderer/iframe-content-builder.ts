@@ -8,9 +8,6 @@ body {
   width: 100%;
   min-height: 100%;
 }
-* {
-  box-sizing: border-box;
-}
 `;
 
 const frameworkScript = `
@@ -48,16 +45,28 @@ const frameworkScript = `
     });
   }
 
-  function normalizeVariableName(name) {
-    if (name.startsWith('$')) {
+  function normalizeResourceName(name, prefix) {
+    if (name.startsWith(prefix)) {
       return name.substring(1);
     }
     return name;
   }
 
   window.ailaflow = {
-    submitForm: (data) => request('submitForm', data),
-    readVariable: (name) => request('readVariable', { name: normalizeVariableName(name) }),
+    submitForm: (data) => {
+      return request('submitForm', data);
+    },
+    readVariable: (name) => {
+      name = normalizeResourceName(name, '$');
+      return request('readVariable', { name });
+    },
+    startCurrentProcess: (input) => {
+      return request('startCurrentProcess', { name: null, input });
+    },
+    startProcess: (processName, input) => {
+      const name = normalizeResourceName(name, '/');
+      return request('startProcess', { name, input });
+    }
   };
 }());
 `;
