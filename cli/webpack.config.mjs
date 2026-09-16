@@ -10,8 +10,19 @@ import webpack from 'webpack';
 const cliDirectory = dirname(fileURLToPath(import.meta.url));
 const rootDirectory = resolve(cliDirectory, '..');
 const outputDirectory = resolve(cliDirectory, 'dist');
-const packageJson = JSON.parse(readFileSync(resolve(cliDirectory, 'package.json'), 'utf8'));
-const serverExternalPackages = new Set(Object.keys(packageJson.dependencies ?? {}));
+const cliPackageJson = JSON.parse(readFileSync(resolve(cliDirectory, 'package.json'), 'utf8'));
+const serverPackageJson = JSON.parse(readFileSync(resolve(rootDirectory, 'server/package.json'), 'utf8'));
+const cliRuntimePackages = new Set(Object.keys(cliPackageJson.dependencies ?? {}));
+const serverExternalPackages = new Set(
+  Object.entries(serverPackageJson.dependencies ?? {})
+    .filter(([, version]) => !version.startsWith('workspace:'))
+    .map(([name]) => name)
+);
+
+const missingServerRuntimePackages = [...serverExternalPackages].filter(name => !cliRuntimePackages.has(name));
+if (missingServerRuntimePackages.length > 0) {
+  throw new Error(`CLI dependencies are missing server runtime packages: ${missingServerRuntimePackages.join(', ')}`);
+}
 
 const aliases = {
   '@ailaflow/shared$': resolve(rootDirectory, 'shared/src/index.ts'),
