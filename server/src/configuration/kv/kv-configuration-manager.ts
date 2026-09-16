@@ -17,6 +17,7 @@ export class KvConfigurationManager {
     if (configuration.getChangedKeys().length === 0) {
       return;
     }
+    abortSignal.throwIfAborted();
     await this.repository.updateChanged(abortSignal, configuration);
     this.cache = null;
   }

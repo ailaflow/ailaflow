@@ -64,7 +64,7 @@ test('returns all task input values, output schemas, and no other execution valu
 
 test('returns an error when the task is not assigned to the user', async () => {
   const userAssignedTaskProvider = {
-    tryGet: async () => null
+    tryGetCompletable: async () => null
   } as unknown as UserAssignedTaskProvider;
   const persistedExecutionRepository = {
     tryGet: async () => assert.fail('execution should not be queried')
