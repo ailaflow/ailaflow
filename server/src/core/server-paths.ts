@@ -30,8 +30,4 @@ export class ServerPaths {
   public getAppDataFolderPath(): string {
     return this.appDataFolderPath;
   }
-
-  public getDatabaseFolderPath(): string {
-    return path.join(this.getAppDataFolderPath(), 'data', 'database');
-  }
 }

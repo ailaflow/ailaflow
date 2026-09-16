@@ -11,7 +11,7 @@ export class SqliteDatabases {
   private readonly dbs: DatabaseSync[] = [];
 
   public constructor(serverPaths: ServerPaths) {
-    const dataFolderPath = serverPaths.getDatabaseFolderPath();
+    const dataFolderPath = serverPaths.getAppDataFolderPath();
     mkdirSync(dataFolderPath, { recursive: true });
 
     try {
