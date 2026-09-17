@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { ProcessExecutionVariableValues } from '@ailaflow/shared';
+import { ProcessExecutionOutcomeType, ProcessExecutionVariableValues } from '@ailaflow/shared';
 import { createActivitySet, createSignalActivity, createWorkflowMachineBuilder } from 'sequential-workflow-machine';
 import { Definition, Step } from 'sequential-workflow-model';
 import { ProcessExecution } from './process-execution';
@@ -42,11 +42,13 @@ test('process execution signals the first wait and pauses on a later wait', asyn
     properties: {}
   };
   const machine = createWorkflowMachineBuilder(activitySet).build(definition);
+  const stopController = new AbortController();
   const $logger = new ProcessLogger();
   const $variables = new ProcessVariableManager({} as ProcessExecutionVariableValues, new ProcessVariables([], []));
   const interpreter = machine.create({
     init: () =>
       new ProcessExecutionGlobalState(
+        stopController.signal,
         'execution_1',
         { startedBy: 'user_1', isTest: false },
         {} as Process,
@@ -65,6 +67,7 @@ test('process execution signals the first wait and pauses on a later wait', asyn
     const execution = new ProcessExecution(
       'execution_1',
       { startedBy: 'user_1', isTest: false },
+      stopController,
       {} as Process,
       interpreter,
       $logger,
@@ -78,9 +81,7 @@ test('process execution signals the first wait and pauses on a later wait', asyn
       {} as ProcessExecutor
     );
 
-    execution.run(new AbortController().signal, {
-      signalOnFirstWait: {}
-    });
+    execution.run({});
   });
 
   assert.equal(pausedStepId, 'task_2');
@@ -107,11 +108,13 @@ test('process execution fails when pause persistence fails', async () => {
     ],
     properties: {}
   });
+  const stopController = new AbortController();
   const $logger = new ProcessLogger();
   const $variables = new ProcessVariableManager({} as ProcessExecutionVariableValues, new ProcessVariables([], []));
   const interpreter = machine.create({
     init: () =>
       new ProcessExecutionGlobalState(
+        stopController.signal,
         'execution_1',
         { startedBy: 'user_1', isTest: false },
         {} as Process,
@@ -130,6 +133,7 @@ test('process execution fails when pause persistence fails', async () => {
     const execution = new ProcessExecution(
       'execution_1',
       { startedBy: 'user_1', isTest: false },
+      stopController,
       {} as Process,
       interpreter,
       $logger,
@@ -142,15 +146,15 @@ test('process execution fails when pause persistence fails', async () => {
       {} as ProcessExecutor
     );
 
-    execution.onFinished.subscribe(value => {
+    execution.onOutcome.subscribe(value => {
       clearTimeout(timeout);
       resolve(value);
     });
-    execution.run(new AbortController().signal);
+    execution.run();
   });
 
   assert.deepEqual(result, {
-    success: false,
+    type: ProcessExecutionOutcomeType.FAILED,
     error: 'Could not persist paused execution: Storage unavailable',
     stepId: 'task_1'
   });

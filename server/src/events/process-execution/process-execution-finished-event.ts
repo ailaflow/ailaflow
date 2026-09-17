@@ -1,6 +1,6 @@
-import { ProcessExecutionResult } from '@ailaflow/shared';
 import { Event } from '../event';
 import { ProcessExecutionContext } from '../../process-executor/process-execution-context';
+import { ProcessExecutionOutcome } from '@ailaflow/shared';
 
 export class ProcessExecutionFinishedEvent implements Event {
   public readonly name = ProcessExecutionFinishedEvent.name;
@@ -9,6 +9,6 @@ export class ProcessExecutionFinishedEvent implements Event {
     public readonly executionId: string,
     public readonly context: ProcessExecutionContext,
     public readonly processName: string,
-    public readonly result: ProcessExecutionResult
+    public readonly outcome: ProcessExecutionOutcome
   ) {}
 }

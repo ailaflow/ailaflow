@@ -21,6 +21,7 @@ export class ProcessExecutionSnapshotTransformer {
   }
 
   public static deserialize(
+    abortSignal: AbortSignal,
     executionId: string,
     context: ProcessExecutionContext,
     process: Process,
@@ -31,7 +32,14 @@ export class ProcessExecutionSnapshotTransformer {
       ...snapshot,
       context: {
         ...snapshot.context,
-        globalState: ProcessExecutionGlobalState.deserialize(executionId, context, snapshot.context.globalState, process, services)
+        globalState: ProcessExecutionGlobalState.deserialize(
+          abortSignal,
+          executionId,
+          context,
+          snapshot.context.globalState,
+          process,
+          services
+        )
       }
     } as unknown as SerializedWorkflowMachineSnapshot<ProcessExecutionGlobalState>;
 

@@ -5,11 +5,13 @@ import { Endpoint } from '../framework/endpoint';
 import { getEndpointAbortSignal } from '../framework/endpoint-abort-signal';
 import { parseBody } from '../framework/parse-request';
 import { startMyProcessRequestSchema, StartMyProcessResponse } from '@ailaflow/shared';
-import { LazyProcessExecutor } from '../../process-executor/lazy-process-executor';
 import { EndpointError } from '../framework/endpoint-error';
 import { ChatSessionManager } from '@aibindkit/express';
 import { ProcessExecutionContext } from '../../process-executor/process-execution-context';
 import { ChatSession } from '@aibindkit/llm';
+import { ProcessExecutor } from '../../process-executor/process-executor';
+import { EventBus } from '../../events/event-bus';
+import { ProcessExecutionFinishedEvent } from '../../events/process-execution/process-execution-finished-event';
 
 export class StartMyProcessEndpoint implements Endpoint {
   public readonly method = 'post';
@@ -18,8 +20,9 @@ export class StartMyProcessEndpoint implements Endpoint {
 
   public constructor(
     private readonly userProcessProvider: UserProcessProvider,
-    private readonly lazyProcessExecutor: LazyProcessExecutor,
-    private readonly chatSessionManager: ChatSessionManager
+    private readonly processExecutor: ProcessExecutor,
+    private readonly chatSessionManager: ChatSessionManager,
+    private readonly eventBus: EventBus
   ) {}
 
   public async handle(req: Request): Promise<StartMyProcessResponse> {
@@ -52,17 +55,21 @@ export class StartMyProcessEndpoint implements Endpoint {
       context.chatSessionId = chatSession.id;
     }
 
-    const result = await this.lazyProcessExecutor.execute(abortSignal, null, context, process, request.startValues);
-    if (result.finished) {
-      throw new Error('Unexpected behavior');
-    }
+    const execution = this.processExecutor.initialize(context, process, request.startValues);
+
+    // TODO: this is duplicated
+    execution.onOutcome.subscribe(outcome => {
+      this.eventBus.publish(new ProcessExecutionFinishedEvent(execution.id, context, process.name, outcome));
+    });
+
+    execution.run();
 
     if (request.chatSession && chatSession) {
       await chatSession.setMetadata(request.chatSession.messageId, request.chatSession.completedMessageIndex, 'finished', true);
     }
 
     return {
-      executionId: result.executionId
+      executionId: execution.id
     };
   }
 }

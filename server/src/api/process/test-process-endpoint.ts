@@ -1,4 +1,10 @@
-import { ProcessExecutionResult, ProcessLog, testProcessRequestSchema, TestProcessUpdate } from '@ailaflow/shared';
+import {
+  ProcessExecutionOutcome,
+  ProcessExecutionOutcomeType,
+  ProcessLog,
+  testProcessRequestSchema,
+  TestProcessUpdate
+} from '@ailaflow/shared';
 import { Endpoint } from '../framework/endpoint';
 import { Request, Response } from 'express';
 import { ProcessManager } from '../../process/process-manager';
@@ -41,10 +47,20 @@ export class TestProcessEndpoint implements Endpoint {
     // We need to initialize the workflow machine before sending SSE headers.
     // If the workflow machine fails, the user will receive the expected HTTP 500 response.
     const execution = this.processExecutor.initialize(context, process, request.input);
+    let current: {
+      exec: ProcessExecution;
+      unsubscribeAll: () => void;
+    } | null = null;
 
-    const abortController = new AbortController();
     const sseResponse = new SseResponse<TestProcessUpdate>(res);
-    sseResponse.onClose(() => abortController.abort());
+    sseResponse.onClose(() => {
+      if (current) {
+        this.resumeListenerStore.delete(current.exec.id);
+        current.unsubscribeAll();
+        current.exec.tryStop();
+        current = null;
+      }
+    });
 
     let lastStepId: string | null = null;
 
@@ -60,35 +76,38 @@ export class TestProcessEndpoint implements Endpoint {
       const onLog = (log: ProcessLog) => {
         sseResponse.send({ log });
       };
-      const onPaused = () => {
-        unsubscribeAll();
-      };
-      const onFinished = (result: ProcessExecutionResult) => {
-        this.resumeListenerStore.delete(exec.id);
-        unsubscribeAll();
+      const onOutcome = (outcome: ProcessExecutionOutcome) => {
+        sseResponse.send({ outcome });
 
-        sseResponse.send({ result });
-        res.end();
+        if (outcome.type === ProcessExecutionOutcomeType.PAUSED) {
+          unsubscribeAll();
+        } else {
+          this.resumeListenerStore.delete(exec.id);
+          unsubscribeAll();
+          res.end();
+        }
       };
       const unsubscribeAll = () => {
         if (!unsubscribed) {
           unsubscribed = true;
           exec.onCurrentStepChanged.unsubscribe(onCurrentStepChanged);
           exec.onLog.unsubscribe(onLog);
-          exec.onPaused.unsubscribe(onPaused);
-          exec.onFinished.unsubscribe(onFinished);
+          exec.onOutcome.unsubscribe(onOutcome);
         }
       };
 
       exec.onCurrentStepChanged.subscribe(onCurrentStepChanged);
       exec.onLog.subscribe(onLog);
-      exec.onPaused.subscribe(onPaused);
-      exec.onFinished.subscribe(onFinished);
+      exec.onOutcome.subscribe(onOutcome);
+      current = {
+        exec,
+        unsubscribeAll
+      };
     };
 
     listen(execution);
     this.resumeListenerStore.set(execution.id, listen);
 
-    execution.run(abortController.signal);
+    execution.run();
   }
 }

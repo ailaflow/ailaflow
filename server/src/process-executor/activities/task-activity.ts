@@ -28,8 +28,6 @@ function evaluateDeadline(step: TaskStep, variables: ProcessVariableManager): nu
 export const taskStepActivity = createSignalActivity<TaskStep, ProcessExecutionGlobalState>('task', {
   init: () => ({}),
   beforeSignal: async (step: TaskStep, globalState: ProcessExecutionGlobalState) => {
-    const abortSignal = AbortSignal.timeout(5_000);
-
     const title = globalState.variableEvaluator.evaluateStringOrVariable(step.properties.title);
     const userExpression = globalState.variableEvaluator.evaluateStringOrVariable(step.properties.userExpression);
 
@@ -40,8 +38,10 @@ export const taskStepActivity = createSignalActivity<TaskStep, ProcessExecutionG
 
     const deadline = evaluateDeadline(step, globalState.variables);
 
+    const createSignal = AbortSignal.any([globalState.stopSignal, AbortSignal.timeout(5_000)]);
+
     await globalState.taskCreator.create(
-      abortSignal,
+      createSignal,
       globalState.context.isTest,
       globalState.context.startedBy,
       globalState.executionId,

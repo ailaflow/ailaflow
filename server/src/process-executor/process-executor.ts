@@ -24,13 +24,15 @@ export class ProcessExecutor {
     const executionId = randomUUID();
 
     const machine = this.builder.build(process.definition);
-    const globalState = ProcessExecutionGlobalState.create(executionId, context, input, process, this.services);
+
+    const stopController = new AbortController();
+    const globalState = ProcessExecutionGlobalState.create(stopController.signal, executionId, context, input, process, this.services);
 
     const interpreter = machine.create({
       init: () => globalState
     });
 
-    return this.createExecution(executionId, context, process, interpreter, globalState);
+    return this.createExecution(stopController, executionId, context, process, interpreter, globalState);
   }
 
   public restore(
@@ -39,14 +41,23 @@ export class ProcessExecutor {
     process: Process,
     snapshot: SerializedWorkflowMachineSnapshot<SerializedProcessExecutionGlobalState>
   ): ProcessExecution {
-    const restoredSnapshot = ProcessExecutionSnapshotTransformer.deserialize(executionId, context, process, snapshot, this.services);
+    const stopController = new AbortController();
+    const restoredSnapshot = ProcessExecutionSnapshotTransformer.deserialize(
+      stopController.signal,
+      executionId,
+      context,
+      process,
+      snapshot,
+      this.services
+    );
     const machine = this.builder.build(process.definition);
     const interpreter = machine.deserializeSnapshot(restoredSnapshot);
     const globalState = restoredSnapshot.context.globalState;
-    return this.createExecution(executionId, context, process, interpreter, globalState);
+    return this.createExecution(stopController, executionId, context, process, interpreter, globalState);
   }
 
   private createExecution(
+    stopController: AbortController,
     executionId: string,
     context: ProcessExecutionContext,
     process: Process,
@@ -56,6 +67,7 @@ export class ProcessExecutor {
     const execution = new ProcessExecution(
       executionId,
       context,
+      stopController,
       process,
       interpreter,
       globalState.logger,
@@ -65,12 +77,8 @@ export class ProcessExecutor {
     );
     this.processExecutionStore.set(executionId, execution);
 
-    const deleteFromStore = () => {
-      this.processExecutionStore.delete(executionId);
-    };
-
-    execution.onFinished.subscribe(deleteFromStore);
-    execution.onPaused.subscribe(deleteFromStore);
+    const cleanup = () => this.processExecutionStore.delete(executionId);
+    execution.onOutcome.subscribe(cleanup);
     return execution;
   }
 }

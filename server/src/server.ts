@@ -65,7 +65,6 @@ import { ResourceAccessRepository } from './repositories/resource-access/resourc
 import { SqliteResourceAccessRepository } from './repositories/resource-access/sqlite-resource-access-repository';
 import { GetMyProcessesTool } from './chat-session/user-tools/get-my-processes-tool';
 import { StartMyProcessTool } from './chat-session/user-tools/start-my-process-tool';
-import { LazyProcessExecutor } from './process-executor/lazy-process-executor';
 import { EventBus } from './events/event-bus';
 import { ProcessExecutionFinishedEventHandler } from './events/process-execution/process-execution-finished-event-handler';
 import { ChatSessionStorage } from './chat-session/chat-session-storage';
@@ -422,7 +421,6 @@ export class Server {
     };
 
     const processExecutor = new ProcessExecutor(processExecutionStore, processExecutionPersister, processExecutionServices);
-    const lazyProcessExecutor = new LazyProcessExecutor(processExecutor, eventBus);
     const processExecutionResumeListenerStore = new ProcessExecutionResumeListenerStore();
     const processExecutionResumer = new ProcessExecutionResumer(
       processManager,
@@ -455,7 +453,7 @@ export class Server {
       new GetMyProcessesTool(myProcessListQuerier),
       new GetMyTasksTool(myTaskListQuerier),
       new GetMyTaskDetailsTool(userTaskDetailsProvider),
-      new StartMyProcessTool(userProcessProvider, lazyProcessExecutor),
+      new StartMyProcessTool(userProcessProvider, processExecutor, eventBus),
       new OpenMyProcessStartFormTool(userProcessProvider),
       new SubmitMyTaskTool(assignedTaskCompleter)
     ]);
@@ -464,7 +462,7 @@ export class Server {
       new GetSandboxesTool(sandboxListQuerier),
       new GetProcessesTool(processListQuerier),
       new GetTablesTool(tableListQuerier),
-      new TestProcessTool(processManager, lazyProcessExecutor)
+      new TestProcessTool(processManager, processExecutor, eventBus)
     ]);
 
     const authMiddleware = new AuthMiddleware(authTokenRepository);
@@ -486,7 +484,7 @@ export class Server {
     const schedulers: Scheduler[] = [
       new LicenseCheckScheduler(licenseManager),
       new AuthTokenCleanupScheduler(authTokenRepository),
-      new ProcessCronJobScheduler(processCronJobRepository, processManager, lazyProcessExecutor)
+      new ProcessCronJobScheduler(processCronJobRepository, processManager, processExecutor)
     ];
 
     const endpoints = [
@@ -526,7 +524,7 @@ export class Server {
       new GetTaskVariableValueEndpoint(userTaskDetailsProvider),
       new SubmitMyTaskEndpoint(assignedTaskCompleter),
       new GetMyProcessStartFormEndpoint(userProcessProvider),
-      new StartMyProcessEndpoint(userProcessProvider, lazyProcessExecutor, sessionManager),
+      new StartMyProcessEndpoint(userProcessProvider, processExecutor, sessionManager, eventBus),
       new GetProcessesEndpoint(processListQuerier),
       new GetProcessEndpoint(processManager),
       new DeleteProcessEndpoint(processManager),

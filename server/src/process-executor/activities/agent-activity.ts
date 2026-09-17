@@ -5,8 +5,6 @@ import { ProcessExecutionGlobalState } from '../process-execution-global-state';
 export const agentStepActivity = createAtomActivityFromHandler<AgentStep, ProcessExecutionGlobalState>(
   'agent',
   async (step: AgentStep, state: ProcessExecutionGlobalState) => {
-    // TODO: Handle the process abort signal here.
-    const abortSignal = new AbortController().signal;
-    await state.agentSessionRunner.run(abortSignal, step, state);
+    await state.agentSessionRunner.run(state.stopSignal, step, state);
   }
 );

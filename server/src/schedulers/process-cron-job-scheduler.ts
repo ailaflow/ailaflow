@@ -1,11 +1,12 @@
-import { ProcessCronJobRunStatus } from '@ailaflow/shared';
+import { ProcessCronJobRunStatus, ProcessExecutionOutcomeType } from '@ailaflow/shared';
 import { Logger } from '../core/logger';
 import { ProcessCronJobExpressionParser } from '../crons/process-cron-job-expression-parser';
 import { ProcessCronJob } from '../repositories/process-cron-job/process-cron-job';
 import { ProcessCronJobRepository } from '../repositories/process-cron-job/process-cron-job-repository';
 import { Scheduler } from './scheduler';
-import { LazyProcessExecutor } from '../process-executor/lazy-process-executor';
 import { ProcessManager } from '../process/process-manager';
+import { ProcessExecutor } from '../process-executor/process-executor';
+import { ProcessExecutionContext } from '../process-executor/process-execution-context';
 
 const INTERVAL_MS = 60_000;
 const BATCH_SIZE = 100;
@@ -18,7 +19,7 @@ export class ProcessCronJobScheduler implements Scheduler {
   public constructor(
     private readonly repository: ProcessCronJobRepository,
     private readonly processManager: ProcessManager,
-    private readonly lazyProcessExecutor: LazyProcessExecutor
+    private readonly processExecutor: ProcessExecutor
   ) {}
 
   public start(): void {
@@ -39,10 +40,12 @@ export class ProcessCronJobScheduler implements Scheduler {
     const now = Date.now();
     this.isWorking = true;
     try {
-      const abortSignal = AbortSignal.timeout(50_000);
-      const jobs = await this.repository.getDue(abortSignal, now, BATCH_SIZE);
+      const getSignal = AbortSignal.timeout(5_000);
+      const jobs = await this.repository.getDue(getSignal, now, BATCH_SIZE);
+
       for (const job of jobs) {
-        await this.handleJob(abortSignal, job, now);
+        const jobSignal = AbortSignal.timeout(60_000);
+        await this.handleJob(jobSignal, job, now);
       }
     } catch (e) {
       const error = (e as Error)?.message ?? String(e);
@@ -52,14 +55,17 @@ export class ProcessCronJobScheduler implements Scheduler {
     }
   };
 
-  private async handleJob(abortSignal: AbortSignal, job: ProcessCronJob, now: number): Promise<void> {
+  private async handleJob(jobSignal: AbortSignal, job: ProcessCronJob, now: number): Promise<void> {
     const updater = new LastRunUpdater(this.repository, job.id);
     try {
       const nextExecutionAt = ProcessCronJobExpressionParser.getNextExecutionAt(job.expression, job.timeZone, now);
-      const claimed = await this.repository.tryAdvanceNextExecutionAt(abortSignal, job.id, job.nextExecutionAt, nextExecutionAt);
+
+      const claimSignal = AbortSignal.any([jobSignal, AbortSignal.timeout(4_000)]);
+      const claimed = await this.repository.tryAdvanceNextExecutionAt(claimSignal, job.id, job.nextExecutionAt, nextExecutionAt);
+
       if (claimed) {
         updater.update(ProcessCronJobRunStatus.RUNNING, null);
-        await this.handleProcess(abortSignal, job, updater);
+        await this.handleProcess(jobSignal, job);
         updater.update(ProcessCronJobRunStatus.SUCCEEDED, null);
       }
     } catch (e) {
@@ -69,22 +75,34 @@ export class ProcessCronJobScheduler implements Scheduler {
     }
   }
 
-  private async handleProcess(abortSignal: AbortSignal, job: ProcessCronJob, updater: LastRunUpdater): Promise<void> {
-    const process = await this.processManager.tryGetByName(abortSignal, job.processName);
+  private async handleProcess(jobSignal: AbortSignal, job: ProcessCronJob) {
+    const processSignal = AbortSignal.any([jobSignal, AbortSignal.timeout(4_000)]);
+    const process = await this.processManager.tryGetByName(processSignal, job.processName);
     if (!process) {
       throw new Error(`Process ${job.processName} not found`);
     }
 
-    await this.lazyProcessExecutor.execute(
-      abortSignal,
-      null,
-      {
-        isTest: false,
-        startedBy: '_system'
-      },
-      process,
-      job.inputValues
-    );
+    const context: ProcessExecutionContext = {
+      isTest: false,
+      startedBy: '_system'
+    };
+
+    return new Promise<unknown>((resolve, reject) => {
+      const execution = this.processExecutor.initialize(context, process, job.inputValues);
+
+      jobSignal.addEventListener('abort', () => execution.tryStop(), {
+        once: true
+      });
+
+      execution.onOutcome.subscribe(outcome => {
+        if (outcome.type === ProcessExecutionOutcomeType.FAILED) {
+          reject(new Error(outcome.error));
+        } else {
+          resolve(outcome);
+        }
+      });
+      execution.run();
+    });
   }
 }
 

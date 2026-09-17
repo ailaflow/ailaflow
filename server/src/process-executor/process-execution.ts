@@ -1,14 +1,9 @@
-import {
-  SerializedWorkflowMachineSnapshot,
-  SignalPayload,
-  WorkflowMachineInterpreter,
-  signalSignalActivity
-} from 'sequential-workflow-machine';
+import { SignalPayload, WorkflowMachineInterpreter, signalSignalActivity } from 'sequential-workflow-machine';
 import { ProcessLogger } from './services/process-logger';
 import { ProcessExecutionGlobalState } from './process-execution-global-state';
 import { SimpleEvent } from '@aibindkit/core';
 import { ProcessVariableManager } from './services/process-variable-manager';
-import { ProcessExecutionResult, ProcessLog } from '@ailaflow/shared';
+import { ProcessExecutionOutcome, ProcessExecutionOutcomeType, ProcessLog } from '@ailaflow/shared';
 import { ProcessExecutionPersister } from './process-execution-persister';
 import type { Process } from '../repositories/process/process';
 import { ProcessExecutionContext } from './process-execution-context';
@@ -18,20 +13,24 @@ const WAIT_FOR_SIGNAL_STATE = 'WAIT_FOR_SIGNAL';
 
 type ProcessExecutionSnapshot = ReturnType<WorkflowMachineInterpreter<ProcessExecutionGlobalState>['getSnapshot']>;
 
-export interface ProcessExecutionRunOptions {
-  signalOnFirstWait?: SignalPayload;
+enum ProcessExecutionState {
+  IDLE,
+  RUNNING,
+  COMPLETED
 }
 
 export class ProcessExecution {
   public readonly onCurrentStepChanged = new SimpleEvent<string | null>();
-  public readonly onFinished = new SimpleEvent<ProcessExecutionResult>();
-  public readonly onPaused = new SimpleEvent<void>();
+  public readonly onOutcome = new SimpleEvent<ProcessExecutionOutcome>();
   public readonly onLog = new SimpleEvent<ProcessLog>();
-  private paused = false;
+
+  private signalOnFirstWait?: SignalPayload;
+  private state = ProcessExecutionState.IDLE;
 
   public constructor(
     public readonly id: string,
     public readonly context: ProcessExecutionContext,
+    private readonly stopController: AbortController,
     private readonly process: Process,
     private readonly interpreter: WorkflowMachineInterpreter<ProcessExecutionGlobalState>,
     private readonly logger: ProcessLogger,
@@ -40,106 +39,74 @@ export class ProcessExecution {
     private readonly processExecutor: ProcessExecutor
   ) {}
 
-  private resolveResult(): ProcessExecutionResult {
-    const snapshot = this.interpreter.getSnapshot();
-    if (snapshot.isFailed()) {
-      if (snapshot.unhandledError) {
-        return {
-          success: false,
-          error: snapshot.unhandledError.message,
-          stepId: snapshot.unhandledError.stepId
-        };
-      }
-      return {
-        success: false,
-        error: 'Unknown unhandled error'
-      };
+  // control
+
+  public run(signalOnFirstWait?: SignalPayload) {
+    if (this.state !== ProcessExecutionState.IDLE) {
+      throw new Error('The execution is not idle');
     }
-    if (snapshot.isInterrupted()) {
-      if (snapshot.globalState.result) {
-        return {
-          success: true,
-          output: this.variableManager.getMultiple(snapshot.globalState.result.outputVariableNames),
-          stepId: snapshot.globalState.result.stepId
-        };
-      }
-      return {
-        success: false,
-        error: 'Unknown interrupted error'
-      };
-    }
-    if (snapshot.isFinished()) {
-      return {
-        success: true,
-        output: {}
-      };
-    }
-    return {
-      success: false,
-      error: 'Maximum allowed time exceeded'
-    };
-  }
 
-  private isWaitingForSignal(snapshot: ProcessExecutionSnapshot): boolean {
-    return snapshot.getStatePaths().some(path => path.includes(WAIT_FOR_SIGNAL_STATE));
-  }
+    this.signalOnFirstWait = signalOnFirstWait;
+    this.state = ProcessExecutionState.RUNNING;
 
-  private async pause(
-    currentStepId: string | null,
-    serializedSnapshot: SerializedWorkflowMachineSnapshot<ProcessExecutionGlobalState>
-  ): Promise<void> {
-    if (this.paused) {
-      return;
-    }
-    this.paused = true;
-    try {
-      await this.processExecutionPersister.persist(this.process, this, serializedSnapshot);
-      this.onPaused.emit();
-    } catch (e) {
-      this.onFinished.emit({
-        success: false,
-        error: `Could not persist paused execution: ${(e as Error).message}`,
-        stepId: currentStepId
-      });
-    } finally {
-      this.interpreter.tryStop();
-    }
-  }
-
-  public run(abortSignal: AbortSignal, options: ProcessExecutionRunOptions = {}) {
-    let signalOnFirstWait = options.signalOnFirstWait;
-
-    this.interpreter.onChange(() => {
-      if (abortSignal.aborted) {
-        this.interpreter.tryStop();
-      } else {
-        const snapshot = this.interpreter.getSnapshot();
-        const currentStepId = snapshot.tryGetCurrentStepId();
-        this.onCurrentStepChanged.emit(currentStepId);
-
-        if (this.isWaitingForSignal(snapshot)) {
-          if (signalOnFirstWait) {
-            const payload = signalOnFirstWait;
-            signalOnFirstWait = undefined;
-            signalSignalActivity(this.interpreter, payload);
-            return;
-          }
-          void this.pause(currentStepId, this.interpreter.serializeSnapshot());
-        }
-      }
-    });
-
-    this.interpreter.onDone(() => {
-      if (this.paused) {
-        return;
-      }
-      const result = this.resolveResult();
-      this.onFinished.emit(result);
-    });
-
+    this.interpreter.onChange(this.onChange);
+    this.interpreter.onDone(this.onDone);
     this.logger.onLog.subscribe(this.onLog.emit);
     this.interpreter.start();
   }
+
+  /**
+   * Runs the execution. The soft signal DOES NOT stop the execution but only the waiting for an outcome.
+   * @returns `null` if the waiting for an outcome was interrupted by the soft signal, otherwise the outcome of the process execution.
+   */
+  public runAndWaitForOutcome(softSignal: AbortSignal): Promise<ProcessExecutionOutcome | null> {
+    return new Promise(resolve => {
+      if (softSignal.aborted) {
+        this.run();
+        resolve(null);
+        return;
+      }
+
+      const onOutcome = (outcome: ProcessExecutionOutcome) => {
+        softSignal.removeEventListener('abort', onSoftTimeout);
+        resolve(outcome);
+      };
+      const onSoftTimeout = () => {
+        this.onOutcome.unsubscribe(onOutcome);
+        resolve(null);
+      };
+
+      softSignal.addEventListener('abort', onSoftTimeout, {
+        once: true
+      });
+      this.onOutcome.subscribe(onOutcome);
+      this.run();
+    });
+  }
+
+  public isWorking(): boolean {
+    return this.state === ProcessExecutionState.RUNNING;
+  }
+
+  /**
+   * Starts the stop procedure.
+   */
+  public stop() {
+    if (this.state !== ProcessExecutionState.RUNNING) {
+      throw new Error('The execution is not running');
+    }
+    this.stopController.abort();
+  }
+
+  public tryStop(): boolean {
+    if (this.state === ProcessExecutionState.RUNNING && !this.stopController.signal.aborted) {
+      this.stopController.abort();
+      return true;
+    }
+    return false;
+  }
+
+  // state api
 
   public readVariable(name: string): unknown | null {
     return this.variableManager.get(name);
@@ -163,5 +130,116 @@ export class ProcessExecution {
       process,
       input
     );
+  }
+
+  // private methods
+
+  private complete(outcome: ProcessExecutionOutcome) {
+    this.state = ProcessExecutionState.COMPLETED;
+    this.onOutcome.emit(outcome);
+  }
+
+  private readonly onChange = () => {
+    if (!this.isWorking()) {
+      return;
+    }
+
+    if (this.stopController.signal.aborted) {
+      this.interpreter.tryStop();
+    } else {
+      const snapshot = this.interpreter.getSnapshot();
+      const currentStepId = snapshot.tryGetCurrentStepId();
+      this.onCurrentStepChanged.emit(currentStepId);
+
+      if (this.isWaitingForSignal(snapshot)) {
+        if (this.signalOnFirstWait) {
+          const payload = this.signalOnFirstWait;
+          this.signalOnFirstWait = undefined;
+          signalSignalActivity(this.interpreter, payload);
+          return;
+        }
+        void this.pause(currentStepId);
+      }
+    }
+  };
+
+  private readonly onDone = () => {
+    if (!this.isWorking()) {
+      return;
+    }
+
+    if (this.stopController.signal.aborted) {
+      this.complete({
+        type: ProcessExecutionOutcomeType.FAILED,
+        error: 'The execution was manually stopped'
+      });
+      return;
+    }
+
+    const snapshot = this.interpreter.getSnapshot();
+    if (snapshot.isFailed()) {
+      this.complete({
+        type: ProcessExecutionOutcomeType.FAILED,
+        error: snapshot.unhandledError?.message ?? 'Unknown unhandled error',
+        stepId: snapshot.unhandledError?.stepId
+      });
+      return;
+    }
+    if (snapshot.isInterrupted()) {
+      if (snapshot.globalState.result) {
+        this.complete({
+          type: ProcessExecutionOutcomeType.FINISHED,
+          output: this.variableManager.getMultiple(snapshot.globalState.result.outputVariableNames),
+          interruptedStepId: snapshot.globalState.result.stepId
+        });
+        return;
+      }
+
+      this.complete({
+        type: ProcessExecutionOutcomeType.FAILED,
+        error: 'Unknown interrupted error'
+      });
+      return;
+    }
+    if (snapshot.isFinished()) {
+      this.complete({
+        type: ProcessExecutionOutcomeType.FINISHED,
+        output: {}
+      });
+      return;
+    }
+
+    this.complete({
+      type: ProcessExecutionOutcomeType.FAILED,
+      error: 'Unknown error'
+    });
+  };
+
+  private isWaitingForSignal(snapshot: ProcessExecutionSnapshot): boolean {
+    return snapshot.getStatePaths().some(path => path.includes(WAIT_FOR_SIGNAL_STATE));
+  }
+
+  private async pause(currentStepId: string | null): Promise<void> {
+    if (!this.isWorking()) {
+      return;
+    }
+    this.state = ProcessExecutionState.COMPLETED;
+
+    const serializedSnapshot = this.interpreter.serializeSnapshot();
+    try {
+      await this.processExecutionPersister.persist(this.process, this, serializedSnapshot);
+      this.complete({
+        type: ProcessExecutionOutcomeType.PAUSED,
+        stepId: currentStepId
+      });
+    } catch (e) {
+      this.complete({
+        type: ProcessExecutionOutcomeType.FAILED,
+        error: `Could not persist paused execution: ${(e as Error).message}`,
+        stepId: currentStepId
+      });
+    } finally {
+      this.interpreter.tryStop();
+    }
   }
 }

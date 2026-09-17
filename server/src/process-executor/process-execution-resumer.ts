@@ -49,9 +49,9 @@ export class ProcessExecutionResumer {
       process,
       persistedExecution.state
     );
-    execution.onFinished.subscribe(result => {
+    execution.onOutcome.subscribe(outcome => {
       this.eventBus.publish(
-        new ProcessExecutionFinishedEvent(persistedExecution.executionId, execution.context, persistedExecution.processName, result)
+        new ProcessExecutionFinishedEvent(persistedExecution.executionId, execution.context, persistedExecution.processName, outcome)
       );
     });
 
@@ -62,9 +62,7 @@ export class ProcessExecutionResumer {
       listener(execution);
     }
 
-    execution.run(abortSignal, {
-      signalOnFirstWait: payload
-    });
+    execution.run(payload);
 
     return execution;
   }

@@ -1,7 +1,15 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { resolve } from 'node:path';
-import { AgentStep, ProcessDefinition, LlmUseCase, PROCESS_VERSION, ProcessLiteDto, ProcessExecutionResult } from '@ailaflow/shared';
+import {
+  AgentStep,
+  ProcessDefinition,
+  LlmUseCase,
+  PROCESS_VERSION,
+  ProcessLiteDto,
+  ProcessExecutionOutcome,
+  ProcessExecutionOutcomeType
+} from '@ailaflow/shared';
 import { LlmClient } from '@aibindkit/llm';
 import { AgentToolSetProviderFactory } from '../chat-session/agent-tool-set-provider-factory';
 import { Process } from '../repositories/process/process';
@@ -134,10 +142,7 @@ function createHarness(
   );
   function run(abortSignal: AbortSignal, runContext: ProcessExecutionContext, process: Process, input: Record<string, unknown>) {
     const execution = executor.initialize(runContext, process, input);
-    return new Promise<ProcessExecutionResult>(resolve => {
-      execution.onFinished.subscribe(resolve);
-      execution.run(abortSignal);
-    });
+    return execution.runAndWaitForOutcome(abortSignal) as Promise<ProcessExecutionOutcome>;
   }
 
   let caller: ProcessExecution | undefined;
@@ -205,7 +210,11 @@ test('agent evaluates its prompt, runs variable tools, logs summaries, and conti
     }
   });
   const result = await harness.run(signal, context, process, { prompt: 'Set the answer' });
-  assert.deepEqual(result, { success: true, output: { answer: 42 }, stepId: 'return' });
+  assert.deepEqual(result, {
+    type: ProcessExecutionOutcomeType.FINISHED,
+    output: { answer: 42 },
+    interruptedStepId: 'return'
+  });
   assert.equal(turn, 5);
   assert.ok(harness.logs.includes('Agent tool: setVariable'));
   assert.ok(harness.logs.includes('Agent: Answer saved'));
@@ -240,7 +249,11 @@ for (const allowedVariableNames of [[], ['answer']]) {
     });
 
     const result = await harness.run(signal, context, process, { prompt: 'Original' });
-    assert.deepEqual(result, { success: true, output: { prompt: 'Original' }, stepId: 'return' });
+    assert.deepEqual(result, {
+      type: ProcessExecutionOutcomeType.FINISHED,
+      output: { prompt: 'Original' },
+      interruptedStepId: 'return'
+    });
     assert.equal(turn, 3);
   });
 }
@@ -288,7 +301,7 @@ test('child process tools wait for results, bypass user access, and extend ances
   const result = await harness.run(signal, { ...context, parentProcessNames: ['ancestor'], chatSessionId: 'user:chat' }, parent, {
     prompt: ''
   });
-  assert.equal(result.success, true);
+  assert.equal(result.type, ProcessExecutionOutcomeType.FINISHED);
   assert.deepEqual(harness.contexts[1], { ...context, parentProcessNames: ['ancestor', 'parent'] });
   for (const id of harness.executionIds) {
     assert.throws(() => harness.store.get(id), /Cannot find/);
@@ -366,7 +379,7 @@ test('terminal commands use the selected sandbox and return output to the agent'
       return { message: { role: 'assistant', content: 'Command finished' } };
     }
   });
-  assert.equal((await harness.run(signal, context, parent, { prompt: '' })).success, true);
+  assert.equal((await harness.run(signal, context, parent, { prompt: '' })).type, ProcessExecutionOutcomeType.FINISHED);
   assert.equal(commands, 1);
 });
 
@@ -406,7 +419,8 @@ test(
       assert.equal(harness.store.get(harness.executionIds[1]).id, harness.executionIds[1]);
       finishRequest();
       const result = await pendingResult;
-      assert.match(result.content, /Maximum allowed time exceeded/);
+      assert.match(result.content, /The process execution took too long and was stopped/);
+      await new Promise(resolve => setImmediate(resolve));
       assert.throws(() => harness.store.get(harness.executionIds[1]), /Cannot find/);
     } finally {
       // Activity cancellation is deferred, so let the in-flight request finish.
@@ -423,8 +437,8 @@ test('LLM failures fail the agent step', async () => {
     }
   });
   const result = await harness.run(signal, context, createProcess('parent', [createAgent()]), { prompt: '' });
-  assert.equal(result.success, false);
-  if (!result.success) {
+  assert.equal(result.type, ProcessExecutionOutcomeType.FAILED);
+  if (result.type === ProcessExecutionOutcomeType.FAILED) {
     assert.match(result.error, /Provider unavailable/);
     assert.equal(result.stepId, 'agent_step');
   }
@@ -442,7 +456,10 @@ test('repeated agent invocations get fresh conversation history', async () => {
   });
   const parent = createProcess('parent', [createAgent()]);
   for (let index = 1; index <= 2; index++) {
-    assert.equal((await harness.run(signal, context, parent, { prompt: `invocation ${index}` })).success, true);
+    assert.equal(
+      (await harness.run(signal, context, parent, { prompt: `invocation ${index}` })).type,
+      ProcessExecutionOutcomeType.FINISHED
+    );
   }
   assert.equal(turns, 2);
 });
@@ -487,8 +504,8 @@ test('agent runtime timeout fails the step and interrupts the session', async t 
     }
   });
   const result = await harness.run(signal, context, createProcess('parent', [createAgent()]), { prompt: '' });
-  assert.equal(result.success, false);
-  if (!result.success) {
+  assert.equal(result.type, ProcessExecutionOutcomeType.FAILED);
+  if (result.type === ProcessExecutionOutcomeType.FAILED) {
     assert.equal(result.error, timeoutError.message);
     assert.equal(result.stepId, 'agent_step');
   }

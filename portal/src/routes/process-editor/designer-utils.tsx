@@ -7,7 +7,7 @@ export class DesignerUtils {
     return fnv1a(definition);
   }
 
-  public static getStepSequence(step: Step, branchName?: string): Sequence {
+  public static getStepSequence(step: Step, branchName?: string | null): Sequence {
     if (branchName) {
       const b = step as BranchedStep;
       if (typeof b.branches === 'object') {

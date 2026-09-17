@@ -1,4 +1,5 @@
 import {
+  ProcessExecutionOutcomeType,
   ProcessLogLevel,
   VariableCachedValidator,
   type ProcessDefinition,
@@ -213,16 +214,20 @@ function createProcessTesterTimelineItems(
     items.push(new LogProcessTesterTimelineItem(time, level, message));
   }
 
-  if (!update.result) {
+  const outcome = update.outcome;
+  if (!outcome) {
     return items;
   }
-  if (!update.result.success) {
-    items.push(new ErrorProcessTesterTimelineItem(receivedAt, 'Process failed', update.result.error));
+  if (outcome.type === ProcessExecutionOutcomeType.FAILED) {
+    items.push(new ErrorProcessTesterTimelineItem(receivedAt, 'Process failed', outcome.error));
+    return items;
+  }
+  if (outcome.type === ProcessExecutionOutcomeType.PAUSED) {
+    items.push(new LogProcessTesterTimelineItem(receivedAt, ProcessLogLevel.INFO, 'Process paused'));
     return items;
   }
 
-  const result = update.result;
-  const step = result.stepId ? new DefinitionWalker().findById(definition, result.stepId) : null;
+  const step = outcome.interruptedStepId ? new DefinitionWalker().findById(definition, outcome.interruptedStepId) : null;
   const returnStep = step?.type === 'return' ? (step as ReturnStep) : null;
   if (returnStep?.properties.outputForm) {
     items.push(
@@ -231,11 +236,11 @@ function createProcessTesterTimelineItems(
         ProcessTesterTimelineFormType.OUTPUT,
         ProcessTesterTimelineFormStatus.COMPLETED,
         returnStep.properties.outputForm,
-        result.output
+        outcome.output
       )
     );
   } else {
-    items.push(new OutputProcessTesterTimelineItem(receivedAt, result.output));
+    items.push(new OutputProcessTesterTimelineItem(receivedAt, outcome.output));
   }
 
   return items;

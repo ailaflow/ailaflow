@@ -17,6 +17,7 @@ const context: ProcessExecutionContext = {
   startedBy: 'user_1',
   isTest: true
 };
+const stopSignal = new AbortController().signal;
 
 test('process execution global state serializes variables and recreates runtime services', () => {
   const process = createTestProcess();
@@ -32,7 +33,7 @@ test('process execution global state serializes variables and recreates runtime 
     }
   });
 
-  const deserialized = ProcessExecutionGlobalState.deserialize('execution_1', context, serialized, process, {
+  const deserialized = ProcessExecutionGlobalState.deserialize(stopSignal, 'execution_1', context, serialized, process, {
     sandboxInstanceManager: {} as SandboxInstanceManager,
     taskCreator: {} as TaskCreator,
     notifier: {} as Notifier,
@@ -42,6 +43,7 @@ test('process execution global state serializes variables and recreates runtime 
   assert.equal(deserialized.process, process);
   assert.equal(deserialized.executionId, 'execution_1');
   assert.equal(deserialized.context, context);
+  assert.equal(deserialized.stopSignal, stopSignal);
   assert.equal(deserialized.variables.get('answer'), 123);
   assert.equal(deserialized.logger instanceof ProcessLogger, true);
   assert.equal(deserialized.scriptExecutor instanceof ProcessScriptExecutor, true);
@@ -75,7 +77,7 @@ test('process execution snapshot transformer converts current and history global
   });
   assert.equal((serialized as { history?: unknown }).history, undefined);
 
-  const deserialized = ProcessExecutionSnapshotTransformer.deserialize('execution_1', context, process, serialized, {
+  const deserialized = ProcessExecutionSnapshotTransformer.deserialize(stopSignal, 'execution_1', context, process, serialized, {
     sandboxInstanceManager: {} as SandboxInstanceManager,
     taskCreator: {} as TaskCreator,
     notifier: {} as Notifier,
@@ -83,6 +85,7 @@ test('process execution snapshot transformer converts current and history global
   });
 
   assert.equal(deserialized.context.globalState.process, process);
+  assert.equal(deserialized.context.globalState.stopSignal, stopSignal);
   assert.equal(deserialized.context.globalState.variables.get('answer'), 123);
   assert.equal(deserialized.context.globalState.logger instanceof ProcessLogger, true);
 });
@@ -116,7 +119,7 @@ function createTestProcess(): Process {
 }
 
 function createGlobalState(process: Process, values: Record<string, unknown>): ProcessExecutionGlobalState {
-  return ProcessExecutionGlobalState.create('execution_1', context, values, process, {
+  return ProcessExecutionGlobalState.create(stopSignal, 'execution_1', context, values, process, {
     sandboxInstanceManager: {} as SandboxInstanceManager,
     taskCreator: {} as TaskCreator,
     notifier: {} as Notifier,

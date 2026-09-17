@@ -1,5 +1,5 @@
 import { ToolContext, ZodTool, ZodToolExecutionResult } from '@aibindkit/llm';
-import { JsonSchema, ProcessExecutionResult } from '@ailaflow/shared';
+import { JsonSchema, ProcessExecutionOutcomeType } from '@ailaflow/shared';
 import { Process } from '../../repositories/process/process';
 import z from 'zod/v4';
 import { ProcessExecutionStore } from '../../process-executor/process-execution-store';
@@ -36,19 +36,25 @@ export class RunProcessTool extends ZodTool<Record<string, unknown>> {
       throw new Error(error);
     }
 
-    const signal = AbortSignal.any([abortSignal, AbortSignal.timeout(60_000)]);
+    const softSignal = AbortSignal.any([abortSignal, AbortSignal.timeout(60_000)]);
 
     const subExecution = execution.initializeSubExecution(this.process, input);
 
-    const result = await new Promise<ProcessExecutionResult>(resolve => {
-      const onFinished = (result: ProcessExecutionResult) => {
-        subExecution.onFinished.unsubscribe(onFinished);
-        resolve(result);
-      };
-      subExecution.onFinished.subscribe(onFinished);
-      subExecution.run(signal);
-    });
+    const outcome = await subExecution.runAndWaitForOutcome(softSignal);
 
-    return { content: result.success ? { outputValues: result.output } : { error: result.error } };
+    if (outcome === null) {
+      subExecution.tryStop();
+      abortSignal.throwIfAborted();
+      return { content: { error: 'The process execution took too long and was stopped' } };
+    }
+    if (outcome.type === ProcessExecutionOutcomeType.FINISHED) {
+      return { content: { outputValues: outcome.output } };
+    }
+    if (outcome.type === ProcessExecutionOutcomeType.FAILED) {
+      return { content: { error: outcome.error } };
+    }
+
+    // Pausable processes should not reach this point.
+    throw new Error('Invalid execution outcome');
   }
 }

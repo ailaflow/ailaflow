@@ -1,16 +1,26 @@
 export type ProcessExecutionVariableValues = Record<string, unknown>;
 
-export type ProcessExecutionResult =
+export enum ProcessExecutionOutcomeType {
+  FAILED,
+  FINISHED,
+  PAUSED
+}
+
+export type ProcessExecutionOutcome =
   | {
-      success: false;
+      type: ProcessExecutionOutcomeType.FAILED;
       error: string;
       stepId?: string | null;
       interruptedCode?: number;
     }
   | {
-      success: true;
+      type: ProcessExecutionOutcomeType.FINISHED;
       output: ProcessExecutionVariableValues;
-      stepId?: string;
+      interruptedStepId?: string;
+    }
+  | {
+      type: ProcessExecutionOutcomeType.PAUSED;
+      stepId: string | null;
     };
 
 export enum ProcessLogLevel {

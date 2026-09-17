@@ -4,9 +4,7 @@ import { ProcessExecutionGlobalState } from '../process-execution-global-state';
 
 export const scriptStepActivity = createAtomActivity<ScriptStep, ProcessExecutionGlobalState>('script', {
   init: () => ({}),
-  handler: async (step: ScriptStep, { scriptExecutor }: ProcessExecutionGlobalState) => {
-    // TODO: Handle the process abort signal here.
-    const abortSignal = new AbortController().signal;
-    await scriptExecutor.execute(abortSignal, step.id, step.properties.script);
+  handler: async (step: ScriptStep, { stopSignal, scriptExecutor }: ProcessExecutionGlobalState) => {
+    await scriptExecutor.execute(stopSignal, step.id, step.properties.script);
   }
 });

@@ -16,6 +16,7 @@ export interface SerializedProcessExecutionGlobalState {
 
 export class ProcessExecutionGlobalState {
   public static create(
+    stopSignal: AbortSignal,
     executionId: string,
     context: ProcessExecutionContext,
     variableValues: ProcessExecutionVariableValues,
@@ -28,6 +29,7 @@ export class ProcessExecutionGlobalState {
     const scriptExecutor = new ProcessScriptExecutor(executionId, process, logger, services.sandboxInstanceManager);
 
     return new ProcessExecutionGlobalState(
+      stopSignal,
       executionId,
       context,
       process,
@@ -42,13 +44,14 @@ export class ProcessExecutionGlobalState {
   }
 
   public static deserialize(
+    stopSignal: AbortSignal,
     executionId: string,
     context: ProcessExecutionContext,
     serialized: SerializedProcessExecutionGlobalState,
     process: Process,
     services: ProcessExecutionServices
   ): ProcessExecutionGlobalState {
-    return this.create(executionId, context, serialized.variableValues, process, services);
+    return this.create(stopSignal, executionId, context, serialized.variableValues, process, services);
   }
 
   public result?: {
@@ -57,6 +60,7 @@ export class ProcessExecutionGlobalState {
   };
 
   public constructor(
+    public readonly stopSignal: AbortSignal,
     public readonly executionId: string,
     public readonly context: ProcessExecutionContext,
     public readonly process: Process,

@@ -19,9 +19,9 @@ test('process execution resumer continues when the process hash changed', async 
   let runPayload: unknown;
   const execution = {
     context: { startedBy: 'user_1', isTest: false },
-    onFinished: { subscribe: () => undefined },
-    run: (_abortSignal: AbortSignal, options: { signalOnFirstWait?: unknown }) => {
-      runPayload = options.signalOnFirstWait;
+    onOutcome: { subscribe: () => undefined },
+    run: (payload: unknown) => {
+      runPayload = payload;
     }
   } as unknown as ProcessExecution;
   const resumer = new ProcessExecutionResumer(

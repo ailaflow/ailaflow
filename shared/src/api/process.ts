@@ -1,5 +1,5 @@
 import * as z from 'zod/v4';
-import { jsonSchema, processDefinitionSchema, ProcessExecutionResult, ProcessLog } from '../process';
+import { jsonSchema, processDefinitionSchema, ProcessExecutionOutcome, ProcessLog } from '../process';
 import { paginationRequestSchema, paginationResponseSchema } from './pagination';
 
 // getProcesses
@@ -75,6 +75,6 @@ export type TestProcessRequest = z.infer<typeof testProcessRequestSchema>;
 
 export interface TestProcessUpdate {
   log?: ProcessLog;
-  result?: ProcessExecutionResult;
+  outcome?: ProcessExecutionOutcome;
   currentStepId?: string;
 }
