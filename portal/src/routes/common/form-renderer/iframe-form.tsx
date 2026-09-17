@@ -71,10 +71,8 @@ export function IframeForm({ form, adapter }: IframeFormProps) {
       return adapter.readVariable(abortSignal, name);
     };
 
-    const startProcess = async (abortSignal: AbortSignal, payload: Record<string, unknown>) => {
-      const processName = payload.name as string | null;
-      const input = payload.input as Record<string, unknown>;
-      return adapter.startProcess(abortSignal, processName, input);
+    const openStartForm = async (abortSignal: AbortSignal) => {
+      return adapter.openStartForm(abortSignal);
     };
 
     const onMessage = (event: MessageEvent) => {
@@ -87,13 +85,12 @@ export function IframeForm({ form, adapter }: IframeFormProps) {
       }
       handle(message, async abortSignal => {
         switch (message.type) {
+          case 'openStartForm':
+            return openStartForm(abortSignal);
           case 'submitForm':
             return submitForm(message.payload);
           case 'readVariable':
             return readVariable(abortSignal, message.payload);
-          case 'startCurrentProcess':
-          case 'startProcess':
-            return startProcess(abortSignal, message.payload);
           default:
             throw new Error('Unknown message type');
         }

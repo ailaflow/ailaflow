@@ -1,9 +1,9 @@
 export type ProcessExecutionVariableValues = Record<string, unknown>;
 
 export enum ProcessExecutionOutcomeType {
-  FAILED,
-  FINISHED,
-  PAUSED
+  FAILED = 1,
+  FINISHED = 2,
+  PAUSED = 3
 }
 
 export type ProcessExecutionOutcome =

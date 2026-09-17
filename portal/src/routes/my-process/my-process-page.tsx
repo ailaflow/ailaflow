@@ -18,7 +18,7 @@ export function MyProcessPage() {
   return (
     <Portal>
       <MyFormView icon="/" title="Start process" description={name} backLabel="Back to processes" onBack={goToProcesses}>
-        <MyProcessStartForm args={{ processName: name }} onStarted={goToProcesses} />
+        <MyProcessStartForm args={{ processName: name }} onEnded={goToProcesses} />
       </MyFormView>
     </Portal>
   );

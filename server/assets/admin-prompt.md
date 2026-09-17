@@ -206,6 +206,18 @@ Reads a process variable for use in the form.
 
 ### Submission
 
+You MUST wrap calls to any of the methods below in `try/catch` blocks and handle failures, including network errors and invalid data.
+
 #### `await ailaflow.submitForm({ variableX: valueX, variableY: valueY })`
 
-Submits values for every variable the form needs to set. Values must match the variables' JSON Schemas. You MUST wrap this call in `try/catch` and handle failures, including network errors and invalid data.
+Submits the form. Its behavior depends on the form's context:
+
+- In a process start form, it starts a new process execution using the submitted values as the process's start variables.
+- In a task form, it completes the task using the submitted values as the task's output variables.
+- In a return step form, it starts a new execution of the same process using the submitted values as its start variables. This enables a continuous form experience in which each process execution can produce another return step form.
+
+Submit every value required by that context. Values must match the corresponding variables' JSON Schemas.
+
+#### `await ailaflow.openStartForm()`
+
+Opens the process start form when called from a return step form. Use it when the user should enter the process's start values through the original start form instead of submitting them directly from the return step form.

@@ -53,19 +53,15 @@ const frameworkScript = `
   }
 
   window.ailaflow = {
-    submitForm: (data) => {
-      return request('submitForm', data);
+    openStartForm: () => {
+      return request('openStartForm', {});
+    },
+    submitForm: (values) => {
+      return request('submitForm', values);
     },
     readVariable: (name) => {
       name = normalizeResourceName(name, '$');
       return request('readVariable', { name });
-    },
-    startCurrentProcess: (input) => {
-      return request('startCurrentProcess', { name: null, input });
-    },
-    startProcess: (processName, input) => {
-      const name = normalizeResourceName(name, '/');
-      return request('startProcess', { name, input });
     }
   };
 }());

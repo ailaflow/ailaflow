@@ -19,15 +19,28 @@ const compiler = webpack(createConfigurations({}, { mode: 'development' }));
 let serverProcess = null;
 let serverHash = null;
 let restartQueue = Promise.resolve();
+const gracefulShutdownTimeoutMs = 5_000;
 
 function stopServer() {
   return new Promise(resolveStop => {
-    if (!serverProcess || serverProcess.exitCode !== null || serverProcess.signalCode !== null) {
+    const processToStop = serverProcess;
+    if (!processToStop || processToStop.exitCode !== null || processToStop.signalCode !== null) {
       resolveStop();
       return;
     }
-    serverProcess.once('exit', resolveStop);
-    serverProcess.kill('SIGTERM');
+
+    const forceStopTimer = setTimeout(() => {
+      process.stderr.write('Server did not stop within 5 seconds; forcing restart.\n');
+      processToStop.kill('SIGKILL');
+    }, gracefulShutdownTimeoutMs);
+    processToStop.once('exit', () => {
+      clearTimeout(forceStopTimer);
+      resolveStop();
+    });
+    processToStop.kill('SIGTERM');
+    if (processToStop.connected) {
+      processToStop.disconnect();
+    }
   });
 }
 

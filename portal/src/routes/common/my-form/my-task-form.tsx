@@ -29,13 +29,8 @@ export function MyTaskForm({ args, onSubmitted }: MyTaskFormProps) {
       outputVariableNames: data?.outputVariableSchemas ? Object.keys(data.outputVariableSchemas) : [],
 
       assertVariableValue() {},
-      async readVariable(abortSignal: AbortSignal, variableName: string) {
-        const response = await apiClient.myTask.getTaskVariableValue(abortSignal, {
-          taskId: args.taskId,
-          variableName,
-          testUserName: args.testUserName
-        });
-        return response.value;
+      async openStartForm() {
+        throw new Error('Task does not support opening a start form');
       },
       async submitForm(abortSignal: AbortSignal, outputValues: Record<string, unknown>) {
         const response = await apiClient.myTask.submitMyTask(abortSignal, {
@@ -48,8 +43,13 @@ export function MyTaskForm({ args, onSubmitted }: MyTaskFormProps) {
         }
         await onSubmitted?.();
       },
-      async startProcess() {
-        throw new Error('Not implemented');
+      async readVariable(abortSignal: AbortSignal, variableName: string) {
+        const response = await apiClient.myTask.getTaskVariableValue(abortSignal, {
+          taskId: args.taskId,
+          variableName,
+          testUserName: args.testUserName
+        });
+        return response.value;
       }
     }),
     [apiClient, args, data, onSubmitted]

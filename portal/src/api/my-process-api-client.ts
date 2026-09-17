@@ -1,11 +1,11 @@
-import { HttpClient } from '@aibindkit/react';
+import { HttpClient, HttpClientSseListener } from '@aibindkit/react';
 import type {
   GetMyProcessesRequest,
   GetMyProcessesResponse,
   GetMyProcessStartFormRequest,
   GetMyProcessStartFormResponse,
   StartMyProcessRequest,
-  StartMyProcessResponse
+  StartMyProcessUpdate
 } from '@ailaflow/shared';
 
 export class MyProcessApiClient {
@@ -31,7 +31,12 @@ export class MyProcessApiClient {
     return this.client.json(abortSignal, 'GET', `/api/my-processes/${name}/start-form?${query}`);
   }
 
-  public startMyProcess(abortSignal: AbortSignal, name: string, request: StartMyProcessRequest): Promise<StartMyProcessResponse> {
-    return this.client.json(abortSignal, 'POST', `/api/my-processes/${name}/start`, request);
+  public startMyProcess(
+    abortSignal: AbortSignal,
+    listener: HttpClientSseListener<StartMyProcessUpdate>,
+    name: string,
+    request: StartMyProcessRequest
+  ) {
+    return this.client.sse(abortSignal, listener, 'POST', `/api/my-processes/${name}/start`, request);
   }
 }

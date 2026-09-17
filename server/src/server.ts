@@ -524,7 +524,7 @@ export class Server {
       new GetTaskVariableValueEndpoint(userTaskDetailsProvider),
       new SubmitMyTaskEndpoint(assignedTaskCompleter),
       new GetMyProcessStartFormEndpoint(userProcessProvider),
-      new StartMyProcessEndpoint(userProcessProvider, processExecutor, sessionManager, eventBus),
+      new StartMyProcessEndpoint(userProcessProvider, processExecutor, sessionManager),
       new GetProcessesEndpoint(processListQuerier),
       new GetProcessEndpoint(processManager),
       new DeleteProcessEndpoint(processManager),

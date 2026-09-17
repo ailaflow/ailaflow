@@ -43,11 +43,11 @@ function ProcessTesterStartForm(props: { definition: ProcessDefinition; onSubmit
       async readVariable() {
         throw new Error('Start form does not have any variables to read');
       },
+      async openStartForm() {
+        throw new Error('Opening the start form is not supported in the tester');
+      },
       async submitForm(_, data: Record<string, unknown>) {
         props.onSubmit(data);
-      },
-      async startProcess() {
-        throw new Error('Not implemented');
       }
     }),
     [props.definition, props.onSubmit, variableValidator]
@@ -60,18 +60,13 @@ function ProcessTesterOutputForm(props: { form: FormDefinition; output: ProcessE
     () => ({
       allowedToReadVariableNames: Object.keys(props.output),
       outputVariableNames: [],
-
-      assertVariableValue() {
-        // Nothing
-      },
-      async readVariable(_, name: string) {
-        return props.output[name];
+      assertVariableValue: () => {},
+      readVariable: async (_, name: string) => props.output[name],
+      async openStartForm() {
+        throw new Error('Opening the start form is not supported in the tester');
       },
       async submitForm() {
-        // Nothing
-      },
-      async startProcess() {
-        throw new Error('Not implemented');
+        throw new Error('Submitting the form is not supported in the tester');
       }
     }),
     [props.output]

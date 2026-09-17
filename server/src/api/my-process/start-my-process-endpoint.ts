@@ -1,19 +1,29 @@
-import { Request } from 'express';
+import { Request, Response } from 'express';
 import { UserProcessProvider } from '../../process/user-process-provider';
 import { getAuthToken } from '../auth/auth-middleware';
 import { Endpoint } from '../framework/endpoint';
 import { getEndpointAbortSignal } from '../framework/endpoint-abort-signal';
 import { parseBody } from '../framework/parse-request';
-import { startMyProcessRequestSchema, StartMyProcessResponse } from '@ailaflow/shared';
+import {
+  FormDefinition,
+  ProcessExecutionOutcomeType,
+  ReturnStep,
+  StartMyProcessRequest,
+  startMyProcessRequestSchema,
+  StartMyProcessUpdate
+} from '@ailaflow/shared';
 import { EndpointError } from '../framework/endpoint-error';
 import { ChatSessionManager } from '@aibindkit/express';
 import { ProcessExecutionContext } from '../../process-executor/process-execution-context';
 import { ChatSession } from '@aibindkit/llm';
 import { ProcessExecutor } from '../../process-executor/process-executor';
-import { EventBus } from '../../events/event-bus';
-import { ProcessExecutionFinishedEvent } from '../../events/process-execution/process-execution-finished-event';
+import { SseResponse } from '../../core/sse-response';
+import { Logger } from '../../core/logger';
+import { DefinitionWalker } from 'sequential-workflow-model';
 
 export class StartMyProcessEndpoint implements Endpoint {
+  private readonly logger = new Logger(StartMyProcessEndpoint.name);
+
   public readonly method = 'post';
   public readonly path = '/api/my-processes/:name/start';
   public readonly auth = true;
@@ -21,11 +31,10 @@ export class StartMyProcessEndpoint implements Endpoint {
   public constructor(
     private readonly userProcessProvider: UserProcessProvider,
     private readonly processExecutor: ProcessExecutor,
-    private readonly chatSessionManager: ChatSessionManager,
-    private readonly eventBus: EventBus
+    private readonly chatSessionManager: ChatSessionManager
   ) {}
 
-  public async handle(req: Request): Promise<StartMyProcessResponse> {
+  public async handle(req: Request, res: Response) {
     const abortSignal = getEndpointAbortSignal(req);
     const authToken = getAuthToken(req);
     const request = parseBody(startMyProcessRequestSchema, req.body);
@@ -56,20 +65,40 @@ export class StartMyProcessEndpoint implements Endpoint {
     }
 
     const execution = this.processExecutor.initialize(context, process, request.startValues);
+    const sseResponse = new SseResponse<StartMyProcessUpdate>(res);
+    sseResponse.onClose(() => execution.tryStop());
 
-    // TODO: this is duplicated
+    execution.onCurrentStepChanged.subscribe(_ => {
+      sseResponse.send({ stepChanged: true });
+    });
     execution.onOutcome.subscribe(outcome => {
-      this.eventBus.publish(new ProcessExecutionFinishedEvent(execution.id, context, process.name, outcome));
+      let form: FormDefinition | undefined;
+      if (outcome.type === ProcessExecutionOutcomeType.FINISHED && outcome.interruptedStepId) {
+        const walker = new DefinitionWalker();
+        const step = walker.findById(process.definition, outcome.interruptedStepId);
+        if (step && step.type === 'return') {
+          form = (step as ReturnStep).properties.outputForm;
+        }
+      }
+
+      sseResponse.send({ outcome, form });
+      res.end();
+
+      if (chatSession && request.chatSession) {
+        void this.finishMessageOnBackground(chatSession, request);
+      }
     });
 
     execution.run();
+  }
 
-    if (request.chatSession && chatSession) {
-      await chatSession.setMetadata(request.chatSession.messageId, request.chatSession.completedMessageIndex, 'finished', true);
+  private async finishMessageOnBackground(chatSession: ChatSession, request: StartMyProcessRequest) {
+    if (request.chatSession) {
+      try {
+        await chatSession.setMetadata(request.chatSession.messageId, request.chatSession.completedMessageIndex, 'finished', true);
+      } catch (e) {
+        this.logger.error(`Failed to finish message on background: ${(e as Error)?.message ?? e}`);
+      }
     }
-
-    return {
-      executionId: execution.id
-    };
   }
 }

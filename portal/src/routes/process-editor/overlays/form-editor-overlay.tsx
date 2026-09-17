@@ -38,18 +38,16 @@ export function FormEditorOverlay() {
       assertVariableValue(name: string, value: unknown) {
         variableValidator.assertVariableValueIsValid(name, value, state.definition.value);
       },
+      async openStartForm() {},
+      async submitForm() {
+        window.alert('Form was submitted correctly');
+      },
       async readVariable(_: AbortSignal, name: string) {
         const example = formState.form.inputExamples.find(example => example.variableName === name);
         if (!example || !example.exampleValue) {
           throw new Error(`Not found example value for variable \$${name}`);
         }
         return JSON.parse(example.exampleValue);
-      },
-      async submitForm() {
-        window.alert('Form was submitted correctly');
-      },
-      async startProcess() {
-        throw new Error('Not implemented');
       }
     }),
     [state, formState, variableValidator]

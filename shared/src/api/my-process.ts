@@ -1,5 +1,5 @@
 import * as z from 'zod/v4';
-import { formDefinitionSchema, jsonSchema } from '../process';
+import { FormDefinition, formDefinitionSchema, jsonSchema, ProcessExecutionOutcome, ProcessLog } from '../process';
 import { paginationRequestSchema, paginationResponseSchema } from './pagination';
 
 // getMyProcesses
@@ -47,9 +47,10 @@ export const startMyProcessRequestSchema = z.object({
     .optional()
 });
 
-export const startMyProcessResponseSchema = z.object({
-  executionId: z.string()
-});
-
 export type StartMyProcessRequest = z.infer<typeof startMyProcessRequestSchema>;
-export type StartMyProcessResponse = z.infer<typeof startMyProcessResponseSchema>;
+
+export interface StartMyProcessUpdate {
+  stepChanged?: true;
+  outcome?: ProcessExecutionOutcome;
+  form?: FormDefinition;
+}
