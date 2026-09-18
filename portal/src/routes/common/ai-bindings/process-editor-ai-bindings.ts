@@ -23,7 +23,7 @@ const processEditorRoute = route('processEditor')
     ),
     setProcessDescription: tool('Update the process description').input(
       z.object({
-        name: z.string().describe('The new process description')
+        description: z.string().describe('The new process description')
       })
     ),
     getProcessUserAccessExpression: tool('Get the process user access expression'),

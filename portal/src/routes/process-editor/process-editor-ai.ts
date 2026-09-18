@@ -10,6 +10,7 @@ import {
   BranchStep,
   NotificationStep,
   ProcessRootVariableValidator,
+  ResourceNameNormalizer,
   ReturnStep,
   ScriptStep,
   TaskStep,
@@ -38,11 +39,12 @@ export function useProcessEditorAi(state: ProcessEditorState, save: () => Promis
           if (!state.isNew) {
             return toolError('The name of a saved process cannot be changed');
           }
-          state.setName(arg.name, true);
+          const name = ResourceNameNormalizer.removePrefix(arg.name, '/');
+          state.setName(name, true);
           return toolSuccess('Process name was updated');
         },
         async setProcessDescription(arg) {
-          state.setDescription(arg.name, true);
+          state.setDescription(arg.description, true);
           return toolSuccess('Process description was updated');
         },
         async getProcessUserAccessExpression() {
@@ -109,6 +111,10 @@ export function useProcessEditorAi(state: ProcessEditorState, save: () => Promis
           if (!step) {
             return toolError('No workflow step was found with the provided ID; no step was renamed');
           }
+          const nameError = state.stepValidator.validateName(arg.newName);
+          if (nameError) {
+            return toolError(nameError);
+          }
           step.name = arg.newName;
           state.notifyDefinitionChange();
           return toolSuccess('Workflow step was renamed');
@@ -157,14 +163,14 @@ export function useProcessEditorAi(state: ProcessEditorState, save: () => Promis
             return toolError(`Invalid step JSON: ${parseResult.error.message}; no step was added`);
           }
           let sequence: Sequence;
-          if (!arg.targetStepId) {
-            sequence = state.definition.value.sequence;
-          } else {
-            const found = state.walker.findParentSequence(state.definition.value, arg.step.id);
+          if (arg.targetStepId) {
+            const found = state.walker.findParentSequence(state.definition.value, arg.targetStepId);
             if (!found) {
-              return toolError('Cannot find the target step; no step was added');
+              return toolError(`Cannot find the target step with ID "${arg.targetStepId}"; no step was added`);
             }
             sequence = DesignerUtils.getStepSequence(found.step, arg.branchName);
+          } else {
+            sequence = state.definition.value.sequence;
           }
           sequence.push(parseResult.data);
           state.notifyDefinitionChange();
@@ -213,10 +219,11 @@ export function useProcessEditorAi(state: ProcessEditorState, save: () => Promis
           };
         },
         async setRootStartVariables(arg) {
-          for (const name of arg.variableNames) {
+          for (const rawName of arg.variableNames) {
+            const name = ResourceNameNormalizer.removePrefix(rawName, '$');
             const variable = state.definition.value.properties.variables.find(v => v.name === name);
             if (!variable) {
-              return toolError(`Cannot find the \$${name} variable; process start variable names were not updated`);
+              return toolError(`Cannot find variable "\$${name}"; process start variable names were not updated`);
             }
           }
           state.definition.value.properties.startVariableNames = arg.variableNames;
@@ -227,7 +234,8 @@ export function useProcessEditorAi(state: ProcessEditorState, save: () => Promis
           const variables = state.definition.value.properties.variables;
           switch (arg.action) {
             case 'set': {
-              const nameError = ProcessRootVariableValidator.validateName(arg.name);
+              const name = ResourceNameNormalizer.removePrefix(arg.name, '$');
+              const nameError = ProcessRootVariableValidator.validateName(name);
               if (nameError) {
                 return toolError(`Invalid name: ${nameError}; the variable was not set`);
               }
@@ -236,11 +244,11 @@ export function useProcessEditorAi(state: ProcessEditorState, save: () => Promis
                 return toolError(`Invalid schema: ${schemaError}; the variable was not set`);
               }
               const variable: VariableDefinition = {
-                name: arg.name,
+                name,
                 description: arg.description,
                 schema: arg.schema
               };
-              const index = variables.findIndex(v => v.name === arg.name);
+              const index = variables.findIndex(v => v.name === name);
               if (index < 0) {
                 variables.push(variable);
               } else {
@@ -250,9 +258,10 @@ export function useProcessEditorAi(state: ProcessEditorState, save: () => Promis
               return toolSuccess('Variable was set');
             }
             case 'delete': {
-              const index = variables.findIndex(v => v.name === arg.name);
+              const name = ResourceNameNormalizer.removePrefix(arg.name, '$');
+              const index = variables.findIndex(v => v.name === name);
               if (index < 0) {
-                return toolError(`Cannot find the \$${arg.name} variable`);
+                return toolError(`Cannot find variable "\$${name}"`);
               }
               variables.splice(index, 1);
               state.notifyDefinitionChange();
@@ -362,6 +371,10 @@ export function useProcessEditorAi(state: ProcessEditorState, save: () => Promis
           return toolSuccess('Task title was updated');
         },
         async taskStep_setInputVariables(arg) {
+          const error = state.variableValidator.validateVariablesReference(arg.variableNames, state.definition.value);
+          if (error) {
+            return toolError(error);
+          }
           const step = state.getStep<TaskStep>(arg.stepId, 'task');
           step.properties.inputVariableNames = arg.variableNames;
           state.notifyDefinitionChange();
@@ -506,14 +519,14 @@ export function useProcessEditorAi(state: ProcessEditorState, save: () => Promis
                 return toolError(`${nameError} The branch was not added`);
               }
               if (step.branches[arg.name]) {
-                return toolError(`Branch ${arg.name} already exists`);
+                return toolError(`Branch "${arg.name}" already exists`);
               }
               step.branches[arg.name] = [];
               state.notifyDefinitionChange();
               return toolSuccess('Branch was added');
             case 'delete':
               if (!step.branches[arg.name]) {
-                return toolError(`Branch ${arg.name} does not exist`);
+                return toolError(`Branch "${arg.name}" does not exist`);
               }
               if (Object.keys(step.branches).length <= 1) {
                 return toolError('The last branch cannot be deleted');
@@ -543,9 +556,13 @@ export function useProcessEditorAi(state: ProcessEditorState, save: () => Promis
           }
           const path = DefinitionPath.createStepPath(step.id, 'properties.outputForm');
           state.openOverlay(ProcessEditorOverlayType.FORM_EDITOR, path);
-          return toolSuccess('The form editor overlay is opened');
+          return toolSuccess('Form editor overlay was opened');
         },
         async returnStep_setOutputVariables(arg) {
+          const error = state.variableValidator.validateVariablesReference(arg.variableNames, state.definition.value);
+          if (error) {
+            return toolError(error);
+          }
           const step = state.getStep<ReturnStep>(arg.stepId, 'return');
           step.properties.outputVariableNames = arg.variableNames;
           state.notifyDefinitionChange();
@@ -607,7 +624,7 @@ export function useProcessEditorAi(state: ProcessEditorState, save: () => Promis
             return toolError('Cannot find the input variable attached to this form');
           }
           if (!example.exampleValue) {
-            return toolError(`No example value is set for \$${arg.variableName}`);
+            return toolError(`No example value is set for variable "\$${arg.variableName}"`);
           }
           return {
             content: example.exampleValue
@@ -617,7 +634,7 @@ export function useProcessEditorAi(state: ProcessEditorState, save: () => Promis
           const data = FormEditorOverlayUtils.getData(state);
           const result = FormEditorOverlayUtils.setInputJsonExample(state, data, arg.variableName, arg.content);
           if (result === 'notInputVariable') {
-            return toolError(`The \$${arg.variableName} variable is not defined as an input variable for this form`);
+            return toolError(`Variable "\$${arg.variableName}" is not defined as an input variable for this form`);
           }
           if (result === 'undefinedVariable') {
             return toolError('Cannot find the variable');

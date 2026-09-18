@@ -71,7 +71,7 @@ export interface ProcessEditorState extends ProcessEditorData {
 export function useProcessEditor(): ProcessEditorState {
   const context = useContext(processEditorContext);
   if (!context) {
-    throw new Error('Cannot find process editor context');
+    throw new Error('Cannot find the process editor context');
   }
   return context;
 }
@@ -211,10 +211,10 @@ export function ProcessEditorContext(props: ProcessEditorContextProps) {
     function getStep<S extends Step>(id: string, requiredType?: S['type']): S {
       const step = state.walker.findById(state.definition.value, id);
       if (!step) {
-        throw new Error(`Cannot find step with id: ${id}`);
+        throw new Error(`Cannot find a step with ID "${id}"`);
       }
       if (requiredType && step.type !== requiredType) {
-        throw new Error(`Step with id: ${id} is not of type: ${requiredType}`);
+        throw new Error(`Step with ID "${id}" is not of type "${requiredType}"`);
       }
       return step as S;
     }
@@ -239,7 +239,7 @@ export function ProcessEditorContext(props: ProcessEditorContextProps) {
 
     function getOverlayObject<T>(assertType: ProcessEditorOverlayType): DefinitionPathValue<T> {
       if (!data.overlay || data.overlay.type !== assertType) {
-        throw new Error(`${assertType} is not opened`);
+        throw new Error(`The ${assertType} overlay is not open`);
       }
       return DefinitionPath.readPath<T>(data.definition.value, data.overlay.path);
     }

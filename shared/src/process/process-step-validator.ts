@@ -15,10 +15,18 @@ export class ProcessStepValidator {
     private readonly variableValidator: VariableCachedValidator
   ) {}
 
+  public validateName(name: string): string | null {
+    if (name.length < 1 || name.length > 32) {
+      return 'Name must be between 1 and 32 characters.';
+    }
+    return null;
+  }
+
   public validate(step: Step, definition: ProcessDefinition): Record<string, string> {
     const errors: Record<string, string> = {};
-    if (step.name.length < 1 || step.name.length > 32) {
-      errors['name'] = 'Name must be between 1 and 32 characters.';
+    const nameError = this.validateName(step.name);
+    if (nameError) {
+      errors['name'] = nameError;
     }
     switch (step.type) {
       case 'script':

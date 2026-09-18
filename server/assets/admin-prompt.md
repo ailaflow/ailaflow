@@ -71,6 +71,10 @@ A process coordinates users, AI, scripts, integrations, and data through a neste
 
 Variables are global within one process execution. Each variable has a JSON Schema and may hold a simple value (`string`, `number`, `boolean`) or nested JSON data. Values must match the schema. Variable state is removed when execution ends; use tables for persistent data.
 
+### Variable schemas
+
+When creating a process variable, define a detailed, self-contained schema because later AI may see only that schema. Define object properties and array items recursively; a bare `{ "type": "object" }` is forbidden.
+
 ## Starting a process
 
 Variables marked as **start variables** are required inputs. Provide all required values in JSON matching their schemas. An admin-created form or user-side AI assistance may collect and prepare these inputs.
@@ -197,6 +201,10 @@ Returns `true` if the user exists and `false` otherwise. The `@` prefix is optio
 Forms consist of separate HTML, CSS, and JavaScript fragments that AilaFlow combines into one HTML page. They read input variables, render an interface, collect and validate user data, and submit values to AilaFlow. The API is available through the global `ailaflow` object; no import is required.
 
 Bind click and submission handlers using the button’s `onclick` event; do not use `onsubmit`. Use `type="button"` to prevent native form submission.
+
+### Iframe restrictions
+
+Forms run in an iframe with an opaque origin. Do not use `localStorage`, `sessionStorage`, IndexedDB, cookies, Cache Storage, service workers, or direct access to `window.parent` or `window.top`. Use the documented `ailaflow` APIs for storage and host interaction, and do not rely on authenticated same-origin `fetch` or XHR.
 
 ### Process variables
 
