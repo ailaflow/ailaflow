@@ -204,6 +204,18 @@ Bind click and submission handlers using the button’s `onclick` event; do not 
 
 Reads a process variable for use in the form.
 
+### Temporary user storage
+
+This browser-only storage is associated with the current user. Use it for temporary string values shared between forms; values are not guaranteed to persist between sessions. Keys must be strings of 1–32 characters.
+
+#### `await ailaflow.tryReadUserStorage('key')`
+
+Returns the stored string, or `null` if the key is not set.
+
+#### `await ailaflow.writeUserStorage('key', 'value')`
+
+Stores a string for the current user.
+
 ### Submission
 
 You MUST wrap calls to any of the methods below in `try/catch` blocks and handle failures, including network errors and invalid data.

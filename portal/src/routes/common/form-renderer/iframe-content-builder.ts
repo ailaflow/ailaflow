@@ -59,6 +59,12 @@ const frameworkScript = `
     submitForm: (values) => {
       return request('submitForm', values);
     },
+    tryReadUserStorage: (key) => {
+      return request('tryReadUserStorage', { key });
+    },
+    writeUserStorage: (key, value) => {
+      return request('writeUserStorage', { key, value });
+    },
     readVariable: (name) => {
       name = normalizeResourceName(name, '$');
       return request('readVariable', { name });

@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { IframeContentBuilder } from './iframe-content-builder';
 import { IframeFormView } from '../../../views/form-renderer/iframe-form-view';
 import { FormAdapter } from './form-adapter';
+import { FormUserStorage } from './form-user-storage';
 
 export interface IframeFormProps {
   form: FormDefinition;
@@ -24,6 +25,7 @@ interface ResponseMessage {
 
 export function IframeForm({ form, adapter }: IframeFormProps) {
   const [iframe, setIframe] = useState<HTMLIFrameElement | null>(null);
+  const userStorage = useMemo(() => new FormUserStorage(), []);
   const content = useMemo(() => IframeContentBuilder.build(form), [form]);
 
   useEffect(() => {
@@ -91,6 +93,10 @@ export function IframeForm({ form, adapter }: IframeFormProps) {
             return submitForm(message.payload);
           case 'readVariable':
             return readVariable(abortSignal, message.payload);
+          case 'tryReadUserStorage':
+            return userStorage.tryReadUserStorage(message.payload);
+          case 'writeUserStorage':
+            return userStorage.writeUserStorage(message.payload);
           default:
             throw new Error('Unknown message type');
         }
