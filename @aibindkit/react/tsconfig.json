@@ -1,16 +1,4 @@
 {
-  "compilerOptions": {
-    "target": "ES2021",
-    "lib": ["DOM", "DOM.Iterable", "ES2021"],
-    "strict": true,
-    "module": "ESNext",
-    "moduleResolution": "Bundler",
-    "declaration": true,
-    "declarationDir": "build",
-    "outDir": "build",
-    "rootDir": "src",
-    "skipLibCheck": true,
-    "jsx": "react-jsx"
-  },
+  "extends": "../../tsconfig.json",
   "include": ["src"]
 }
