@@ -6,7 +6,11 @@ export class CurrentTimeTool implements Tool {
     type: 'function',
     function: {
       name: 'get_current_time',
-      description: 'Gets the current time in ISO 8601 format'
+      description: 'Gets the current time in ISO 8601 format',
+      parameters: {
+        type: 'object',
+        properties: {}
+      }
     }
   };
 

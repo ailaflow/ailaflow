@@ -24,11 +24,12 @@ export class AiToolBuilder<Input = any> {
   }
 
   public build<Name extends string>(name: Name): AiBinding<Input, Name> {
+    const schema = this.state.inputZod?.toJSONSchema();
     return {
       name,
       description: this.state.description,
       inputZod: this.state.inputZod,
-      inputSchema: this.state.inputZod?.toJSONSchema()
+      inputSchema: schema ? { ...schema, type: 'object' } : { type: 'object', properties: {} }
     };
   }
 }

@@ -9,7 +9,7 @@ export interface AiBinding<Input = any, Name extends string = string> {
   name: Name;
   description: string;
   inputZod?: AiToolInputZod;
-  inputSchema?: ToolDescriptor['function']['parameters'];
+  inputSchema: ToolDescriptor['function']['parameters'];
 }
 
 export type AiBindingHandlers<Bindings extends readonly AiBinding[]> = {

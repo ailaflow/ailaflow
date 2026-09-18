@@ -76,7 +76,7 @@ export class AiRouteBuilder<Input = void, Bindings extends readonly AiBinding[] 
       name: this.state.name,
       paths: this.state.paths,
       notAvailableMessage: this.state.unavailableMessage,
-      paramsSchema: params.toJSONSchema(),
+      paramsSchema: params.toJSONSchema({ target: 'json-schema' }),
       bindings: this.bindings,
       currentPageFields: this.state.currentPageFields
     };

@@ -23,7 +23,11 @@ export class ToolCallHandler<Stores extends Record<string, AiBindingsStore>> {
       type: 'function',
       function: {
         name: 'navigation_getCurrentPage',
-        description: 'Gets the current page in the browser'
+        description: 'Gets the current page in the browser',
+        parameters: {
+          type: 'object',
+          properties: {}
+        }
       }
     });
 

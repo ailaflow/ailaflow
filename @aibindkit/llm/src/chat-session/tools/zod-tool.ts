@@ -13,13 +13,19 @@ export abstract class ZodTool<T = void> implements Tool {
 
   public constructor(name: string, description: string, inputZod?: z.ZodObject, inputJsonSchema?: Record<string, unknown>) {
     this.inputZod = inputZod;
+
+    // We should pass `inputJsonSchema` to the constructor if we don't want to perform the conversion to JSON Schema using `toJSONSchema()`.
+    const schema =
+      inputJsonSchema ??
+      inputZod?.toJSONSchema({
+        target: 'json-schema'
+      });
     this.descriptor = {
       type: 'function',
       function: {
         name,
         description,
-        // We should pass `inputJsonSchema` if we don't want to perform the conversion to JSON Schema using `toJSONSchema()`.
-        parameters: inputJsonSchema ?? inputZod?.toJSONSchema()
+        parameters: schema ?? { type: 'object', properties: {} }
       }
     };
   }
