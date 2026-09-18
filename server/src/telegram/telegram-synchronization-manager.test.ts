@@ -3,6 +3,9 @@ import { SimpleEvent } from '@aibindkit/core';
 import { ChatSession, ChatSessionUpdate } from '@aibindkit/llm';
 import test from 'node:test';
 import { UserChatSessionProvider } from '../chat-session/user-chat-session-provider';
+import { KvConfigurationManager } from '../configuration/kv/kv-configuration-manager';
+import { PublicFormUrlGenerator } from '../configuration/public-url/public-form-url-generator';
+import { KvConfiguration } from '../repositories/configuration/kv/kv-configuration';
 import { TelegramBotConfiguration } from '../repositories/configuration/telegram/telegram-bot-configuration';
 import { TelegramConfigurationRepository } from '../repositories/configuration/telegram/telegram-configuration-repository';
 import { TelegramBotApiClient } from './telegram-bot-api-client';
@@ -12,7 +15,7 @@ test('starts, reloads, removes, and stops Telegram channel synchronizers', async
   const repository = new FakeRepository();
   repository.configuration = createConfiguration('token-1');
   const client = new FakeClient();
-  const manager = new TelegramSynchronizationManager(repository, client, createSessionProvider());
+  const manager = new TelegramSynchronizationManager(repository, client, createSessionProvider(), createPublicFormUrlGenerator());
 
   await manager.start(new AbortController().signal);
   assert.equal(client.pollSignals.length, 1);
@@ -79,6 +82,13 @@ function createSessionProvider(): UserChatSessionProvider {
     getAll: () => []
   } as unknown as ChatSession;
   return { get: async () => session } as unknown as UserChatSessionProvider;
+}
+
+function createPublicFormUrlGenerator(): PublicFormUrlGenerator {
+  const manager = {
+    get: async () => new KvConfiguration()
+  } as unknown as KvConfigurationManager;
+  return new PublicFormUrlGenerator(manager);
 }
 
 function createConfiguration(botToken: string): TelegramBotConfiguration {

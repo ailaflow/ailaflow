@@ -3,6 +3,9 @@ import { ChatMessage, ChatMessageType, SimpleEvent } from '@aibindkit/core';
 import { ChatSession, ChatSessionUpdate } from '@aibindkit/llm';
 import test from 'node:test';
 import { UserChatSessionProvider } from '../chat-session/user-chat-session-provider';
+import { KvConfigurationManager } from '../configuration/kv/kv-configuration-manager';
+import { PublicFormUrlGenerator } from '../configuration/public-url/public-form-url-generator';
+import { KvConfiguration } from '../repositories/configuration/kv/kv-configuration';
 import { TelegramBotConfiguration } from '../repositories/configuration/telegram/telegram-bot-configuration';
 import { TelegramConfigurationRepository } from '../repositories/configuration/telegram/telegram-configuration-repository';
 import { TelegramChannelSynchronizer } from './telegram-channel-synchronizer';
@@ -65,7 +68,8 @@ test('replays eligible session messages, resumes chunks, and stores numeric sent
     }),
     new FakeTelegramConfigurationRepository(),
     client,
-    createSessionProvider(session)
+    createSessionProvider(session),
+    createPublicFormUrlGenerator()
   );
 
   await synchronizer.start();
@@ -86,6 +90,56 @@ test('replays eligible session messages, resumes chunks, and stores numeric sent
   assert.equal(resumedDelivery?.status, TelegramMessageStatus.SENT);
   assert.deepEqual(resumedDelivery?.telegramMessageIds, [7, 2, 3]);
   assert.equal(resumedDelivery?.nextChunkIndex, 3);
+});
+
+test('sends links for task and process start form metadata', async () => {
+  const messages: ChatMessage[] = [
+    {
+      id: 1,
+      type: ChatMessageType.USER,
+      completedMessages: [
+        {
+          message: { role: 'user', content: 'Internal task notification' },
+          metadata: { internal: true, taskForm: { id: 'task-123' } }
+        }
+      ]
+    },
+    {
+      id: 2,
+      type: ChatMessageType.TOOL,
+      completedMessages: [
+        {
+          message: { role: 'tool', tool_call_id: 'call-1', content: '{"success":true}' },
+          metadata: { processStartForm: { name: 'employee-onboarding' } }
+        }
+      ]
+    }
+  ];
+  const session = new FakeChatSession(messages);
+  const client = new FakeTelegramBotApiClient();
+  const synchronizer = new TelegramChannelSynchronizer(
+    TelegramBotConfiguration.create('alice', 'default', 'token', {
+      botId: 'bot',
+      botUserName: 'aila_bot',
+      telegramChatId: '42'
+    }),
+    new FakeTelegramConfigurationRepository(),
+    client,
+    createSessionProvider(session),
+    createPublicFormUrlGenerator('https://aila.example/')
+  );
+
+  await synchronizer.start();
+  await waitFor(() => client.sentTexts.length === 2);
+  synchronizer.destroy();
+
+  assert.deepEqual(client.sentTexts, [
+    '📗 To open the task, please click here: https://aila.example/public-form/tasks/task-123\n' +
+      'This link will be active for the next 2 hours.',
+    '💼 To open the start form for /employee-onboarding, please click here: ' +
+      'https://aila.example/public-form/processes/employee-onboarding\n' +
+      'This link will be active for the next 2 hours.'
+  ]);
 });
 
 test('links a private Telegram chat and queues Telegram text with origin metadata', async () => {
@@ -109,7 +163,8 @@ test('links a private Telegram chat and queues Telegram text with origin metadat
     }),
     repository,
     client,
-    createSessionProvider(session)
+    createSessionProvider(session),
+    createPublicFormUrlGenerator()
   );
 
   await synchronizer.start();
@@ -144,7 +199,8 @@ test('reconnects polling after a transient Telegram failure', async () => {
     }),
     repository,
     client,
-    createSessionProvider(session)
+    createSessionProvider(session),
+    createPublicFormUrlGenerator()
   );
 
   await synchronizer.start();
@@ -163,7 +219,8 @@ test('starts once and cannot restart after being destroyed', async () => {
     }),
     new FakeTelegramConfigurationRepository(),
     new FakeTelegramBotApiClient(),
-    createSessionProvider(new FakeChatSession([]))
+    createSessionProvider(new FakeChatSession([])),
+    createPublicFormUrlGenerator()
   );
 
   await synchronizer.start();
@@ -281,6 +338,13 @@ class FakeTelegramConfigurationRepository implements TelegramConfigurationReposi
 
 function createSessionProvider(session: FakeChatSession): UserChatSessionProvider {
   return { get: async () => session as unknown as ChatSession } as unknown as UserChatSessionProvider;
+}
+
+function createPublicFormUrlGenerator(publicUrl: string | null = null): PublicFormUrlGenerator {
+  const manager = {
+    get: async () => new KvConfiguration(publicUrl)
+  } as unknown as KvConfigurationManager;
+  return new PublicFormUrlGenerator(manager);
 }
 
 async function waitFor(predicate: () => boolean): Promise<void> {

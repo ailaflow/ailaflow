@@ -2,6 +2,7 @@ import type { CompletedChatMessage } from '@aibindkit/core';
 import { FormMessageView } from '../../../views/my-chat/form-message-view';
 import { MyProcessStartForm, type MyProcessStartFormArgs } from '../my-form/my-process-start-form';
 import { MyTaskForm, type MyTaskFormArgs } from '../my-form/my-task-form';
+import { ProcessStartFormMessageMetadata, TaskFormMessageMetadata } from '@ailaflow/shared';
 
 export interface MyChatMessageActions {
   openProcessStartForm(args: MyProcessStartFormArgs): void;
@@ -17,14 +18,14 @@ export function messageRenderer(
   testUserName?: string
 ) {
   const finished = completedMessage.metadata?.['finished'] === true;
-  const startForm = completedMessage.metadata?.['startForm'] as { processName: string } | undefined;
+  const startForm = completedMessage.metadata?.['processStartForm'] as ProcessStartFormMessageMetadata | undefined;
   if (typeof startForm === 'object' && startForm) {
     if (finished) {
       return <FormMessageView title="Form">Finished</FormMessageView>;
     }
 
     const args: MyProcessStartFormArgs = {
-      processName: startForm.processName,
+      processName: startForm.name,
       testUserName,
       chatSession: {
         token: sessionToken,
@@ -35,7 +36,7 @@ export function messageRenderer(
     return (
       <FormMessageView
         title="Form"
-        lockedClickLabel={`Open start form for process ${startForm.processName}`}
+        lockedClickLabel={`Open start form for process ${startForm.name}`}
         onLockedClick={() => actions.openProcessStartForm(args)}
       >
         <MyProcessStartForm args={args} />
@@ -43,13 +44,13 @@ export function messageRenderer(
     );
   }
 
-  const taskId = completedMessage.metadata?.['taskId'] as string | undefined;
-  if (taskId) {
+  const taskForm = completedMessage.metadata?.['taskForm'] as TaskFormMessageMetadata | undefined;
+  if (taskForm) {
     if (finished) {
       return <FormMessageView title="Form">Finished</FormMessageView>;
     }
 
-    const args: MyTaskFormArgs = { taskId, testUserName };
+    const args: MyTaskFormArgs = { taskId: taskForm.id, testUserName };
     return (
       <FormMessageView title="Form" lockedClickLabel="Open task form" onLockedClick={() => actions.openTaskForm(args)}>
         <MyTaskForm args={args} />

@@ -1,4 +1,4 @@
-import { FormDefinition, JsonSchema, TaskFinalizationPolicy, UserAccessExpressionParser } from '@ailaflow/shared';
+import { FormDefinition, JsonSchema, TaskFinalizationPolicy, TaskFormMessageMetadata, UserAccessExpressionParser } from '@ailaflow/shared';
 import { AssignedTaskRepository } from '../repositories/task/assigned-task-repository';
 import { TaskRepository } from '../repositories/task/task-repository';
 import { UserAccessExpressionUserQuerier } from '../queriers/user-access-expression/user-access-expression-user-querier';
@@ -67,7 +67,9 @@ export class TaskCreator {
       if (session) {
         session.queueUserMessage(`>>>>>>>>\nYou have a new task assigned: "${title}", id: ${task.id}\n<<<<<<<<`, {
           internal: true,
-          taskId: task.id
+          taskForm: {
+            id: task.id
+          } satisfies TaskFormMessageMetadata
         });
       }
     }

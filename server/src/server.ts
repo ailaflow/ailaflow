@@ -169,6 +169,7 @@ import { TaskDeleter } from './task/task-deleter';
 import { KvConfigurationRepository } from './repositories/configuration/kv/kv-configuration-repository';
 import { SqliteKvConfigurationRepository } from './repositories/configuration/kv/sqlite-kv-configuration-repository';
 import { PublicUrlTester } from './configuration/public-url/public-url-tester';
+import { PublicFormUrlGenerator } from './configuration/public-url/public-form-url-generator';
 import { HealthEndpoint } from './api/health/health-endpoint';
 import { GetPublicUrlConfigurationEndpoint } from './api/public-url-configuration/get-public-url-configuration-endpoint';
 import { SavePublicUrlConfigurationEndpoint } from './api/public-url-configuration/save-public-url-configuration-endpoint';
@@ -349,7 +350,9 @@ export class Server {
 
     const llmClientFactory = new LlmClientFactory();
     const llmClientProvider = new LlmClientProvider(llmConfigurationRepository, llmClientFactory);
+    const kvConfigurationManager = new KvConfigurationManager(kvConfigurationRepository);
     const publicUrlTester = new PublicUrlTester();
+    const publicFormUrlGenerator = new PublicFormUrlGenerator(kvConfigurationManager);
 
     const eventBus = new EventBus();
     eventBus.registerHandler(new ProcessExecutionFinishedEventHandler(userChatSessionProvider, adminChatSessionProvider));
@@ -360,7 +363,8 @@ export class Server {
     const telegramSynchronizationManager = new TelegramSynchronizationManager(
       telegramConfigurationRepository,
       telegramClient,
-      userChatSessionProvider
+      userChatSessionProvider,
+      publicFormUrlGenerator
     );
     eventBus.registerHandler(new TelegramConfigurationChangedEventHandler(telegramSynchronizationManager));
 
@@ -481,7 +485,6 @@ export class Server {
       logger: new Logger('AiBindKit')
     });
 
-    const kvConfigurationManager = new KvConfigurationManager(kvConfigurationRepository);
     const licenseManager = new LicenseManager(new LicenseValidator(), kvConfigurationManager, userRepository, versionProvider);
     const installer = new Installer(cipherKeyStore, cipher, userRepository, userAttributesRepository, sandboxRepository, licenseManager);
 
@@ -627,5 +630,6 @@ export class Server {
     this.sqliteDatabases.dispose();
 
     await this.httpServer.close();
+    console.log('Server closed');
   }
 }

@@ -1,4 +1,5 @@
 import { UserChatSessionProvider } from '../chat-session/user-chat-session-provider';
+import { PublicFormUrlGenerator } from '../configuration/public-url/public-form-url-generator';
 import { Logger } from '../core/logger';
 import { TelegramConfigurationRepository } from '../repositories/configuration/telegram/telegram-configuration-repository';
 import { TelegramChannelSynchronizer } from './telegram-channel-synchronizer';
@@ -12,7 +13,8 @@ export class TelegramSynchronizationManager {
   public constructor(
     private readonly repository: TelegramConfigurationRepository,
     private readonly client: TelegramBotApiClient,
-    private readonly userChatSessionProvider: UserChatSessionProvider
+    private readonly userChatSessionProvider: UserChatSessionProvider,
+    private readonly publicFormUrlGenerator: PublicFormUrlGenerator
   ) {}
 
   public async start(abortSignal: AbortSignal): Promise<void> {
@@ -49,7 +51,13 @@ export class TelegramSynchronizationManager {
       return;
     }
     const synchronizerKey = createSynchronizerKey(userName, channelName);
-    const synchronizer = new TelegramChannelSynchronizer(configuration, this.repository, this.client, this.userChatSessionProvider);
+    const synchronizer = new TelegramChannelSynchronizer(
+      configuration,
+      this.repository,
+      this.client,
+      this.userChatSessionProvider,
+      this.publicFormUrlGenerator
+    );
     this.synchronizers.set(synchronizerKey, synchronizer);
     try {
       await synchronizer.start();

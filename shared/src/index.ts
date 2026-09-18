@@ -1,5 +1,6 @@
 export * from './sandbox';
 export * from './api';
+export * from './chat-session';
 export * from './configuration';
 export * from './process';
 export * from './resource';
