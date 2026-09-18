@@ -212,6 +212,7 @@ import { SaveSlackMappingsEndpoint } from './api/slack-configuration/save-slack-
 import { GetMySlackConfigurationEndpoint } from './api/my-slack-configuration/get-my-slack-configuration-endpoint';
 import { SqliteSlackUserListQuerier } from './queriers/slack-user-list/sqlite-slack-user-list-querier';
 import { VersionProvider } from './core/version-provider';
+import { Logger } from './core/logger';
 
 export class Server {
   private isClosed = false;
@@ -278,7 +279,7 @@ export class Server {
     const tableSchemaManager = new TableSchemaManager(new SqliteTableSchemaRepository(sqliteDatabases));
     tableRepository = new SqliteTableRepository(sqliteDatabases);
     tableDataRepository = new SqliteTableDataRepository(sqliteDatabases);
-    llmConfigurationRepository = new SqliteLlmConfigurationRepository(sqliteDatabases);
+    llmConfigurationRepository = new SqliteLlmConfigurationRepository(sqliteDatabases, cipher);
     telegramConfigurationRepository = new SqliteTelegramConfigurationRepository(sqliteDatabases);
     slackConfigurationRepository = new SqliteSlackConfigurationRepository(sqliteDatabases);
     slackUserDirectoryRepository = new SqliteSlackUserDirectoryRepository(sqliteDatabases);
@@ -476,7 +477,8 @@ export class Server {
       sessionStorage,
       sessionManager,
       authContextResolver,
-      middleware: authMiddleware.user
+      middleware: authMiddleware.user,
+      logger: new Logger('AiBindKit')
     });
 
     const kvConfigurationManager = new KvConfigurationManager(kvConfigurationRepository);

@@ -17,11 +17,14 @@ import { FetchLlmProviderModelsEndpoint } from './fetch-llm-provider-models-endp
 import { GetLlmConfigurationEndpoint } from './get-llm-configuration-endpoint';
 import { SaveLlmProviderEndpoint } from './save-llm-provider-endpoint';
 import { SaveLlmUseCaseAssignmentsEndpoint } from './save-llm-use-case-assignments-endpoint';
+import { Cipher } from '../../core/cipher/cipher';
+import { SeedCipherKeyStore } from '../../core/cipher/seed-cipher-key-store';
 
 test('configures providers and use cases without exposing API keys', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
   db.exec(`PRAGMA foreign_keys = ON`);
-  const repository = new SqliteLlmConfigurationRepository({ modelDb: new SqliteDatabase(db) } as SqliteDatabases);
+  const cipher = new Cipher(new SeedCipherKeyStore('llm-configuration-endpoints-test'));
+  const repository = new SqliteLlmConfigurationRepository({ modelDb: new SqliteDatabase(db) } as SqliteDatabases, cipher);
   const eventBus = new RecordingEventBus();
   const saveProvider = new SaveLlmProviderEndpoint(repository, eventBus);
   const saveUseCases = new SaveLlmUseCaseAssignmentsEndpoint(repository, eventBus);

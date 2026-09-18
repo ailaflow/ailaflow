@@ -30,9 +30,10 @@ test('repository stores sandbox secrets encrypted and returns plaintext values',
   });
   await repository.upsert(signal, sandbox);
 
-  const serializedSecrets = (db.prepare('SELECT serializedSecrets FROM sandboxes').get() as { serializedSecrets: string })
-    .serializedSecrets;
-  assert.equal(serializedSecrets.includes('secret-value'), false);
+  const encryptedSecrets = (db.prepare('SELECT secrets FROM sandboxes').get() as { secrets: string }).secrets;
+  assert.match(encryptedSecrets, /^v1\./);
+  assert.equal(encryptedSecrets.includes('API_KEY'), false);
+  assert.equal(encryptedSecrets.includes('secret-value'), false);
 
   const restored = await repository.tryGet(signal, sandbox.name);
   assert.deepEqual(restored?.secrets, secrets);

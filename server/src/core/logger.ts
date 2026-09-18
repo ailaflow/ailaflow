@@ -1,4 +1,5 @@
-export class Logger {
+import type { Logger as AiBindKitLogger } from '@aibindkit/express';
+export class Logger implements AiBindKitLogger {
   public constructor(private readonly tag: string) {}
 
   public log(message: string) {

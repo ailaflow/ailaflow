@@ -11,6 +11,7 @@ import { RestartChatEndpoint } from './endpoints/restart-chat-endpoint';
 import { LiveChatSessionStore } from './live-chat-session-store';
 import { ChatAuthContextResolver, DefaultChatAuthContextResolver } from './chat-auth-context-resolver';
 import { ChatSessionManager } from './chat-session-manager';
+import { Logger } from './logger';
 
 export interface ChatServerConfiguration {
   sessionResolver: ChatSessionResolver;
@@ -21,6 +22,7 @@ export interface ChatServerConfiguration {
   sessionStorage?: ChatSessionStorage;
   sessionManager?: ChatSessionManager;
   middleware?: RequestHandler;
+  logger?: Logger;
 }
 
 export function setupServer(app: Express, config: ChatServerConfiguration): void {
@@ -37,6 +39,7 @@ export function setupServer(app: Express, config: ChatServerConfiguration): void
     sessionFactory,
     frontendToolFactory
   );
+  const logger = config.logger ?? console;
 
   const endpoints: Endpoint[] = [
     new RestoreChatEndpoint(authContextResolver, chatSessionActivator),
@@ -55,7 +58,7 @@ export function setupServer(app: Express, config: ChatServerConfiguration): void
         }
       } catch (e) {
         const error = e instanceof Error ? e : new Error(String(e));
-        console.error(`Error occurred while handling ${endpoint.path}: ${error.message}`);
+        logger.error(`Error occurred while handling ${endpoint.path}: ${error.message}`);
         res.status(500).json({ error: 'Internal Server Error' });
       }
     };

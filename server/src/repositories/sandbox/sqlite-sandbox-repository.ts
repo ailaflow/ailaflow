@@ -22,7 +22,7 @@ export class SqliteSandboxRepository implements SandboxRepository {
           isEnabled INTEGER NOT NULL,
           description TEXT NOT NULL,
           configuration TEXT NOT NULL,
-          serializedSecrets TEXT NOT NULL,
+          secrets TEXT NOT NULL,
           hash TEXT NOT NULL
         ) STRICT
       `);
@@ -30,33 +30,26 @@ export class SqliteSandboxRepository implements SandboxRepository {
   }
 
   public async upsert(_: AbortSignal, sandbox: Sandbox, transaction?: Transaction): Promise<void> {
-    const encryptedSecrets = await this.encryptSecrets(sandbox.secrets);
+    const encryptedSecrets = await this.cipher.encryptData(JSON.stringify(sandbox.secrets));
     await this.db.write(db => {
       const statement = db.prepare(`
-        INSERT INTO sandboxes (name, isEnabled, description, configuration, serializedSecrets, hash)
+        INSERT INTO sandboxes (name, isEnabled, description, configuration, secrets, hash)
         VALUES (?, ?, ?, ?, ?, ?)
         ON CONFLICT(name) DO UPDATE SET
           isEnabled = excluded.isEnabled,
           description = excluded.description,
           configuration = excluded.configuration,
-          serializedSecrets = excluded.serializedSecrets,
+          secrets = excluded.secrets,
           hash = excluded.hash
       `);
-      statement.run(
-        sandbox.name,
-        sandbox.isEnabled ? 1 : 0,
-        sandbox.description,
-        sandbox.configuration,
-        JSON.stringify(encryptedSecrets),
-        sandbox.hash
-      );
+      statement.run(sandbox.name, sandbox.isEnabled ? 1 : 0, sandbox.description, sandbox.configuration, encryptedSecrets, sandbox.hash);
     }, transaction);
   }
 
   public async tryGet(_: AbortSignal, name: string): Promise<Sandbox | null> {
     const row = await this.db.read(db => {
       const statement = db.prepare(`
-        SELECT name, isEnabled, description, configuration, serializedSecrets, hash
+        SELECT name, isEnabled, description, configuration, secrets, hash
         FROM sandboxes
         WHERE name = ?
         LIMIT 1
@@ -67,7 +60,7 @@ export class SqliteSandboxRepository implements SandboxRepository {
             isEnabled: number;
             description: string;
             configuration: string;
-            serializedSecrets: string;
+            secrets: string;
             hash: string;
           }
         | undefined;
@@ -79,30 +72,7 @@ export class SqliteSandboxRepository implements SandboxRepository {
       return null;
     }
 
-    const encryptedSecrets = JSON.parse(row.serializedSecrets) as Record<string, string>;
-    return new Sandbox(
-      row.name,
-      row.isEnabled === 1,
-      row.description,
-      row.configuration,
-      await this.decryptSecrets(encryptedSecrets),
-      row.hash
-    );
-  }
-
-  private async encryptSecrets(secrets: Record<string, string>): Promise<Record<string, string>> {
-    const encryptedSecrets: Record<string, string> = {};
-    for (const [key, value] of Object.entries(secrets)) {
-      encryptedSecrets[key] = await this.cipher.encryptData(value);
-    }
-    return encryptedSecrets;
-  }
-
-  private async decryptSecrets(secrets: Record<string, string>): Promise<Record<string, string>> {
-    const decryptedSecrets: Record<string, string> = {};
-    for (const [key, value] of Object.entries(secrets)) {
-      decryptedSecrets[key] = await this.cipher.decryptData(value);
-    }
-    return decryptedSecrets;
+    const secrets = JSON.parse(await this.cipher.decryptData(row.secrets)) as Record<string, string>;
+    return new Sandbox(row.name, row.isEnabled === 1, row.description, row.configuration, secrets, row.hash);
   }
 }

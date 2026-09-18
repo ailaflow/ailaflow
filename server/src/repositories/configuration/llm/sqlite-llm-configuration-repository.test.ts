@@ -6,6 +6,8 @@ import { LlmProviderConfiguration } from './llm-provider-configuration';
 import { LlmProviderType, LlmUseCase } from '@ailaflow/shared';
 import { LlmUseCaseConfiguration } from './llm-use-case-configuration';
 import { SqliteLlmConfigurationRepository } from './sqlite-llm-configuration-repository';
+import { Cipher } from '../../../core/cipher/cipher';
+import { SeedCipherKeyStore } from '../../../core/cipher/seed-cipher-key-store';
 
 test('domain validates provider and use-case invariants', () => {
   assert.throws(
@@ -71,7 +73,7 @@ test('domain validates provider and use-case invariants', () => {
 test('persists LLM providers and use-case configurations', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
   db.exec(`PRAGMA foreign_keys = ON`);
-  const repository = new SqliteLlmConfigurationRepository({ modelDb: new SqliteDatabase(db) } as SqliteDatabases);
+  const repository = createRepository(db);
   const abortSignal = new AbortController().signal;
   await repository.setup(abortSignal);
 
@@ -83,6 +85,9 @@ test('persists LLM providers and use-case configurations', async () => {
     models: [{ name: 'gpt-model', contextWindow: 131_072 }]
   });
   await repository.insertProvider(abortSignal, provider);
+  const providerRow = db.prepare(`SELECT apiKey FROM llm_providers WHERE id = ?`).get(provider.id) as { apiKey: string };
+  assert.notEqual(providerRow.apiKey, provider.apiKey);
+  assert.match(providerRow.apiKey, /^v1\./);
   const codexProvider = LlmProviderConfiguration.create({
     name: 'Local Codex',
     type: LlmProviderType.CODEX_APP_SERVER,
@@ -91,9 +96,16 @@ test('persists LLM providers and use-case configurations', async () => {
     models: [{ name: 'codex-model' }]
   });
   await repository.insertProvider(abortSignal, codexProvider);
-  const codexRow = db.prepare(`SELECT apiKey FROM llm_providers WHERE id = ?`).get(codexProvider.id) as { apiKey: string | null };
+  const codexRow = db.prepare(`SELECT url, apiKey FROM llm_providers WHERE id = ?`).get(codexProvider.id) as {
+    url: string;
+    apiKey: string | null;
+  };
+  assert.notEqual(codexRow.url, codexProvider.url);
+  assert.match(codexRow.url, /^v1\./);
   assert.equal(codexRow.apiKey, null);
-  assert.equal((await repository.tryGetProvider(abortSignal, codexProvider.id))?.apiKey, null);
+  const restoredCodexProvider = await repository.tryGetProvider(abortSignal, codexProvider.id);
+  assert.equal(restoredCodexProvider?.url, codexProvider.url);
+  assert.equal(restoredCodexProvider?.apiKey, null);
   await repository.saveUseCases(
     abortSignal,
     [new LlmUseCaseConfiguration(LlmUseCase.ADMIN_CHAT, provider.id, 'gpt-model', 120_000, 90)],
@@ -118,7 +130,7 @@ test('persists LLM providers and use-case configurations', async () => {
 test('updates provider data while retaining its stable ID', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
   db.exec(`PRAGMA foreign_keys = ON`);
-  const repository = new SqliteLlmConfigurationRepository({ modelDb: new SqliteDatabase(db) } as SqliteDatabases);
+  const repository = createRepository(db);
   const abortSignal = new AbortController().signal;
   await repository.setup(abortSignal);
 
@@ -157,3 +169,8 @@ test('updates provider data while retaining its stable ID', async () => {
   assert.deepEqual(restored?.models, [{ name: 'new-model' }]);
   db.close();
 });
+
+function createRepository(db: DatabaseSync): SqliteLlmConfigurationRepository {
+  const cipher = new Cipher(new SeedCipherKeyStore('llm-configuration-test'));
+  return new SqliteLlmConfigurationRepository({ modelDb: new SqliteDatabase(db) } as SqliteDatabases, cipher);
+}

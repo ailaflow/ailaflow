@@ -5,6 +5,7 @@ import { LlmModelProviderConfiguration, LlmProviderConfiguration } from './llm-p
 import { LlmProviderType, LlmUseCase } from '@ailaflow/shared';
 import { LlmUseCaseConfiguration } from './llm-use-case-configuration';
 import { Transaction } from '../../../core/transaction';
+import { Cipher } from '../../../core/cipher/cipher';
 
 interface ProviderRow {
   id: string;
@@ -12,7 +13,7 @@ interface ProviderRow {
   type: number;
   url: string | null;
   apiKey: string | null;
-  serializedModels: string;
+  models: string;
 }
 
 interface UseCaseRow {
@@ -26,7 +27,10 @@ interface UseCaseRow {
 export class SqliteLlmConfigurationRepository implements LlmConfigurationRepository {
   private readonly db: SqliteDatabase;
 
-  public constructor(dbs: SqliteDatabases) {
+  public constructor(
+    dbs: SqliteDatabases,
+    private readonly cipher: Cipher
+  ) {
     this.db = dbs.modelDb;
   }
 
@@ -39,7 +43,7 @@ export class SqliteLlmConfigurationRepository implements LlmConfigurationReposit
           type INTEGER NOT NULL,
           url TEXT,
           apiKey TEXT,
-          serializedModels TEXT NOT NULL
+          models TEXT NOT NULL
         ) STRICT
       `);
       db.exec(`
@@ -59,37 +63,42 @@ export class SqliteLlmConfigurationRepository implements LlmConfigurationReposit
   }
 
   public async get(_: AbortSignal): Promise<LlmConfiguration> {
-    return this.db.read(db => {
+    const { providerRows, useCaseRows } = await this.db.read(db => {
       const providerRows = db
-        .prepare(`SELECT id, name, type, url, apiKey, serializedModels FROM llm_providers ORDER BY name, id`)
+        .prepare(`SELECT id, name, type, url, apiKey, models FROM llm_providers ORDER BY name, id`)
         .all() as unknown as ProviderRow[];
       const useCaseRows = db
         .prepare(
           `SELECT useCase, providerId, modelName, modelContextWindow, effectiveContextWindowPercent FROM llm_use_case_configurations ORDER BY useCase`
         )
         .all() as unknown as UseCaseRow[];
-      return new LlmConfiguration(providerRows.map(mapProvider), useCaseRows.map(mapUseCase));
+      return { providerRows, useCaseRows };
     });
+
+    return new LlmConfiguration(await Promise.all(providerRows.map(row => this.mapProvider(row))), useCaseRows.map(mapUseCase));
   }
 
   public async tryGetProvider(_: AbortSignal, id: string): Promise<LlmProviderConfiguration | null> {
-    return this.db.read(db => {
-      const row = db.prepare(`SELECT id, name, type, url, apiKey, serializedModels FROM llm_providers WHERE id = ? LIMIT 1`).get(id) as
-        | ProviderRow
-        | undefined;
-      return row ? mapProvider(row) : null;
-    });
+    const row = await this.db.read(
+      db =>
+        db.prepare(`SELECT id, name, type, url, apiKey, models FROM llm_providers WHERE id = ? LIMIT 1`).get(id) as ProviderRow | undefined
+    );
+    return row ? this.mapProvider(row) : null;
   }
 
   public async insertProvider(_: AbortSignal, provider: LlmProviderConfiguration, transaction?: Transaction): Promise<void> {
+    const [encryptedUrl, encryptedApiKey] = await Promise.all([
+      this.encryptWhenPresent(provider.url),
+      this.encryptWhenPresent(provider.apiKey)
+    ]);
     try {
       await this.db.write(db => {
-        db.prepare(`INSERT INTO llm_providers (id, name, type, url, apiKey, serializedModels) VALUES (?, ?, ?, ?, ?, ?)`).run(
+        db.prepare(`INSERT INTO llm_providers (id, name, type, url, apiKey, models) VALUES (?, ?, ?, ?, ?, ?)`).run(
           provider.id,
           provider.name,
           provider.type,
-          provider.url,
-          provider.apiKey,
+          encryptedUrl,
+          encryptedApiKey,
           JSON.stringify(provider.models)
         );
       }, transaction);
@@ -102,13 +111,17 @@ export class SqliteLlmConfigurationRepository implements LlmConfigurationReposit
   }
 
   public async updateProvider(_: AbortSignal, provider: LlmProviderConfiguration, transaction?: Transaction): Promise<void> {
+    const [encryptedUrl, encryptedApiKey] = await Promise.all([
+      this.encryptWhenPresent(provider.url),
+      this.encryptWhenPresent(provider.apiKey)
+    ]);
     try {
       await this.db.write(db => {
-        db.prepare(`UPDATE llm_providers SET name = ?, type = ?, url = ?, apiKey = ?, serializedModels = ? WHERE id = ?`).run(
+        db.prepare(`UPDATE llm_providers SET name = ?, type = ?, url = ?, apiKey = ?, models = ? WHERE id = ?`).run(
           provider.name,
           provider.type,
-          provider.url,
-          provider.apiKey,
+          encryptedUrl,
+          encryptedApiKey,
           JSON.stringify(provider.models),
           provider.id
         );
@@ -170,18 +183,20 @@ export class SqliteLlmConfigurationRepository implements LlmConfigurationReposit
       throw error;
     }
   }
-}
 
-function mapProvider(row: ProviderRow): LlmProviderConfiguration {
-  const type = row.type as LlmProviderType;
-  return new LlmProviderConfiguration(
-    row.id,
-    row.name,
-    type,
-    row.url,
-    row.apiKey,
-    JSON.parse(row.serializedModels) as LlmModelProviderConfiguration[]
-  );
+  private async mapProvider(row: ProviderRow): Promise<LlmProviderConfiguration> {
+    const type = row.type as LlmProviderType;
+    const [url, apiKey] = await Promise.all([this.decryptWhenPresent(row.url), this.decryptWhenPresent(row.apiKey)]);
+    return new LlmProviderConfiguration(row.id, row.name, type, url, apiKey, JSON.parse(row.models) as LlmModelProviderConfiguration[]);
+  }
+
+  private encryptWhenPresent(value: string | null): Promise<string | null> {
+    return value === null ? Promise.resolve(null) : this.cipher.encryptData(value);
+  }
+
+  private decryptWhenPresent(value: string | null): Promise<string | null> {
+    return value === null ? Promise.resolve(null) : this.cipher.decryptData(value);
+  }
 }
 
 function mapUseCase(row: UseCaseRow): LlmUseCaseConfiguration {
