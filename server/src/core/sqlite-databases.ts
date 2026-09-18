@@ -32,12 +32,12 @@ export class SqliteDatabases {
     return new SqliteDatabase(db);
   }
 
-  public dispose() {
+  public readonly dispose = () => {
     for (const db of this.dbs) {
       db.close();
     }
     this.dbs.length = 0;
-  }
+  };
 }
 
 export class SqliteDatabase {

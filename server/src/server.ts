@@ -218,20 +218,22 @@ import { GetMySlackConfigurationEndpoint } from './api/my-slack-configuration/ge
 import { SqliteSlackUserListQuerier } from './queriers/slack-user-list/sqlite-slack-user-list-querier';
 import { VersionProvider } from './core/version-provider';
 import { Logger } from './core/logger';
+import { TableDataListQuerier } from './queriers/table-data-list/table-data-list-querier';
+import { SlackUserListQuerier } from './queriers/slack-user-list/slack-user-list-querier';
+import { TableSchemaRepository } from './repositories/table/table-schema-repository';
+
+const DB_TYPE = 'sqlite';
 
 export class Server {
   private isClosed = false;
 
   public static async create(abortSignal: AbortSignal): Promise<Server> {
     const serverPaths = new ServerPaths();
-    const versionProvider = new VersionProvider(serverPaths);
 
     const cipherKeyStore = new FileSystemCipherKeyStore(serverPaths);
     await cipherKeyStore.tryLoad();
     const cipher = new Cipher(cipherKeyStore);
 
-    const httpServer = new HttpServer(serverPaths);
-    const sandboxHostDiagnostician = new SandboxHostDiagnostician(serverPaths);
     let userRepository: UserRepository;
     let userAttributesRepository: UserAttributesRepository;
     let resourceAccessRepository: ResourceAccessRepository;
@@ -254,6 +256,7 @@ export class Server {
     let slackUserMappingRepository: SlackUserMappingRepository;
     let slackInboundEventRepository: SlackInboundEventRepository;
     let kvConfigurationRepository: KvConfigurationRepository;
+    let tableSchemaRepository: TableSchemaRepository;
 
     let processListQuerier: ProcessListQuerier;
     let myProcessListQuerier: MyProcessListQuerier;
@@ -264,51 +267,58 @@ export class Server {
     let myTaskListQuerier: MyTaskListQuerier;
     let myNotificationListQuerier: MyNotificationListQuerier;
     let tableListQuerier: TableListQuerier;
+    let tableDataListQuerier: TableDataListQuerier;
     let incompleteAssignedTaskCountQuerier: IncompleteAssignedTaskCountQuerier;
     let taskFinalizationCandidateQuerier: TaskFinalizationCandidateQuerier;
     let taskListQuerier: TaskListQuerier;
+    let slackUserListQuerier: SlackUserListQuerier;
+    let disposeDatabase: () => void;
 
-    const sqliteDatabases = new SqliteDatabases(serverPaths);
+    if (DB_TYPE === 'sqlite') {
+      const sqliteDatabases = new SqliteDatabases(serverPaths);
+      disposeDatabase = sqliteDatabases.dispose;
 
-    userRepository = new SqliteUserRepository(sqliteDatabases);
-    userAttributesRepository = new SqliteUserAttributesRepository(sqliteDatabases);
-    resourceAccessRepository = new SqliteResourceAccessRepository(sqliteDatabases);
-    authTokenRepository = new SqliteAuthTokenRepository(sqliteDatabases);
-    magicLinkRepository = new SqliteMagicLinkRepository(sqliteDatabases);
-    processRepository = new SqliteProcessRepository(sqliteDatabases);
-    processCronJobRepository = new SqliteProcessCronJobRepository(sqliteDatabases);
-    sandboxRepository = new SqliteSandboxRepository(sqliteDatabases, cipher);
-    chatSessionRepository = new SqliteChatSessionRepository(sqliteDatabases);
-    persistedExecutionRepository = new SqlitePersistedExecutionRepository(sqliteDatabases);
-    taskRepository = new SqliteTaskRepository(sqliteDatabases);
-    assignedTaskRepository = new SqliteAssignedTaskRepository(sqliteDatabases);
-    notificationRepository = new SqliteNotificationRepository(sqliteDatabases);
-    const tableSchemaManager = new TableSchemaManager(new SqliteTableSchemaRepository(sqliteDatabases));
-    tableRepository = new SqliteTableRepository(sqliteDatabases);
-    tableDataRepository = new SqliteTableDataRepository(sqliteDatabases);
-    llmConfigurationRepository = new SqliteLlmConfigurationRepository(sqliteDatabases, cipher);
-    telegramConfigurationRepository = new SqliteTelegramConfigurationRepository(sqliteDatabases);
-    slackConfigurationRepository = new SqliteSlackConfigurationRepository(sqliteDatabases);
-    slackUserDirectoryRepository = new SqliteSlackUserDirectoryRepository(sqliteDatabases);
-    slackUserMappingRepository = new SqliteSlackUserMappingRepository(sqliteDatabases);
-    slackInboundEventRepository = new SqliteSlackInboundEventRepository(sqliteDatabases);
-    kvConfigurationRepository = new SqliteKvConfigurationRepository(sqliteDatabases);
+      userRepository = new SqliteUserRepository(sqliteDatabases);
+      userAttributesRepository = new SqliteUserAttributesRepository(sqliteDatabases);
+      resourceAccessRepository = new SqliteResourceAccessRepository(sqliteDatabases);
+      authTokenRepository = new SqliteAuthTokenRepository(sqliteDatabases);
+      magicLinkRepository = new SqliteMagicLinkRepository(sqliteDatabases);
+      processRepository = new SqliteProcessRepository(sqliteDatabases);
+      processCronJobRepository = new SqliteProcessCronJobRepository(sqliteDatabases);
+      sandboxRepository = new SqliteSandboxRepository(sqliteDatabases, cipher);
+      chatSessionRepository = new SqliteChatSessionRepository(sqliteDatabases);
+      persistedExecutionRepository = new SqlitePersistedExecutionRepository(sqliteDatabases);
+      taskRepository = new SqliteTaskRepository(sqliteDatabases);
+      assignedTaskRepository = new SqliteAssignedTaskRepository(sqliteDatabases);
+      notificationRepository = new SqliteNotificationRepository(sqliteDatabases);
+      tableRepository = new SqliteTableRepository(sqliteDatabases);
+      tableDataRepository = new SqliteTableDataRepository(sqliteDatabases);
+      llmConfigurationRepository = new SqliteLlmConfigurationRepository(sqliteDatabases, cipher);
+      telegramConfigurationRepository = new SqliteTelegramConfigurationRepository(sqliteDatabases);
+      slackConfigurationRepository = new SqliteSlackConfigurationRepository(sqliteDatabases);
+      slackUserDirectoryRepository = new SqliteSlackUserDirectoryRepository(sqliteDatabases);
+      slackUserMappingRepository = new SqliteSlackUserMappingRepository(sqliteDatabases);
+      slackInboundEventRepository = new SqliteSlackInboundEventRepository(sqliteDatabases);
+      kvConfigurationRepository = new SqliteKvConfigurationRepository(sqliteDatabases);
+      tableSchemaRepository = new SqliteTableSchemaRepository(sqliteDatabases);
 
-    processListQuerier = new SqliteProcessListQuerier(sqliteDatabases);
-    myProcessListQuerier = new SqliteMyProcessListQuerier(sqliteDatabases);
-    myProcessAccessQuerier = new SqliteMyProcessAccessQuerier(sqliteDatabases);
-    sandboxListQuerier = new SqliteSandboxListQuerier(sqliteDatabases);
-    userListQuerier = new SqliteUserListQuerier(sqliteDatabases);
-    userAccessExpressionUserQuerier = new SqliteUserAccessExpressionUserQuerier(sqliteDatabases);
-    myTaskListQuerier = new SqliteMyTaskListQuerier(sqliteDatabases);
-    myNotificationListQuerier = new SqliteMyNotificationListQuerier(sqliteDatabases);
-    tableListQuerier = new SqliteTableListQuerier(sqliteDatabases);
-    const tableDataListQuerier = new SqliteTableDataListQuerier(sqliteDatabases);
-    const tableManager = new TableManager(tableRepository, tableDataRepository, tableSchemaManager, tableDataListQuerier);
-    incompleteAssignedTaskCountQuerier = new SqliteIncompleteAssignedTaskCountQuerier(sqliteDatabases);
-    taskFinalizationCandidateQuerier = new SqliteTaskFinalizationCandidateQuerier(sqliteDatabases);
-    taskListQuerier = new SqliteTaskListQuerier(sqliteDatabases);
-    const slackUserListQuerier = new SqliteSlackUserListQuerier(sqliteDatabases);
+      processListQuerier = new SqliteProcessListQuerier(sqliteDatabases);
+      myProcessListQuerier = new SqliteMyProcessListQuerier(sqliteDatabases);
+      myProcessAccessQuerier = new SqliteMyProcessAccessQuerier(sqliteDatabases);
+      sandboxListQuerier = new SqliteSandboxListQuerier(sqliteDatabases);
+      userListQuerier = new SqliteUserListQuerier(sqliteDatabases);
+      userAccessExpressionUserQuerier = new SqliteUserAccessExpressionUserQuerier(sqliteDatabases);
+      myTaskListQuerier = new SqliteMyTaskListQuerier(sqliteDatabases);
+      myNotificationListQuerier = new SqliteMyNotificationListQuerier(sqliteDatabases);
+      tableListQuerier = new SqliteTableListQuerier(sqliteDatabases);
+      tableDataListQuerier = new SqliteTableDataListQuerier(sqliteDatabases);
+      incompleteAssignedTaskCountQuerier = new SqliteIncompleteAssignedTaskCountQuerier(sqliteDatabases);
+      taskFinalizationCandidateQuerier = new SqliteTaskFinalizationCandidateQuerier(sqliteDatabases);
+      taskListQuerier = new SqliteTaskListQuerier(sqliteDatabases);
+      slackUserListQuerier = new SqliteSlackUserListQuerier(sqliteDatabases);
+    } else {
+      throw new Error('Unsupported database type');
+    }
 
     await Promise.all([
       userRepository.setup(abortSignal),
@@ -334,6 +344,8 @@ export class Server {
       kvConfigurationRepository.setup(abortSignal)
     ]);
 
+    const tableSchemaManager = new TableSchemaManager(tableSchemaRepository);
+    const tableManager = new TableManager(tableRepository, tableDataRepository, tableSchemaManager, tableDataListQuerier);
     const processExecutionStore = new ProcessExecutionStore();
     const rpcHandler = new SandboxRpcHandlerProvider([
       new ReadVariableRpcHandler(processExecutionStore),
@@ -484,6 +496,9 @@ export class Server {
     const sessionResolver = new ChatSessionResolver(llmClientProvider, userToolSetProvider, adminToolSetProvider, serverPaths);
     const authContextResolver = new ChatAuthContextResolver();
 
+    const httpServer = new HttpServer(serverPaths);
+    const sandboxHostDiagnostician = new SandboxHostDiagnostician(serverPaths);
+
     setupServer(httpServer.app, {
       sessionResolver,
       sessionStorage,
@@ -493,6 +508,7 @@ export class Server {
       logger: new Logger('AiBindKit')
     });
 
+    const versionProvider = new VersionProvider(serverPaths);
     const licenseManager = new LicenseManager(new LicenseValidator(), kvConfigurationManager, userRepository, versionProvider);
     const installer = new Installer(cipherKeyStore, cipher, userRepository, userAttributesRepository, sandboxRepository, licenseManager);
 
@@ -584,7 +600,7 @@ export class Server {
       serverPaths,
       httpServer,
       sandboxInstanceManager,
-      sqliteDatabases,
+      disposeDatabase,
       schedulers,
       telegramSynchronizationManager,
       slackSynchronizationManager,
@@ -597,7 +613,7 @@ export class Server {
     private readonly serverPaths: ServerPaths,
     private readonly httpServer: HttpServer,
     private readonly sandboxInstanceManager: SandboxInstanceManager,
-    private readonly sqliteDatabases: SqliteDatabases,
+    private readonly disposeDatabase: () => void,
     private readonly schedulers: Scheduler[],
     private readonly telegramSynchronizationManager: TelegramSynchronizationManager,
     private readonly slackSynchronizationManager: SlackSynchronizationManager,
@@ -636,7 +652,7 @@ export class Server {
       scheduler.stop();
     }
     this.taskFinalizationWorker.stop();
-    this.sqliteDatabases.dispose();
+    this.disposeDatabase();
 
     await this.httpServer.close();
     console.log('Server closed');
