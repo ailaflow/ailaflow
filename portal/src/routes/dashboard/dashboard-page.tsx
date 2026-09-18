@@ -6,8 +6,10 @@ import { DashboardPanelView } from '../../views/dashboard/dashboard-panel-view';
 import { DashboardView } from '../../views/dashboard/dashboard-view';
 import { PortalErrorView } from '../../views/portal/portal-error-view';
 import { PortalLoadingView } from '../../views/portal/portal-loading-view';
+import { ProcessIconGridView } from '../../views/common/process-icon-grid-view';
 import { MyChat } from '../common/my-chat/my-chat';
 import { MyProcessStartFormPopup } from '../common/popups/my-process-start-form-popup';
+import { MyTaskFormPopup } from '../common/popups/my-task-form-popup';
 import { Portal } from '../common/portal';
 
 const PANEL_ITEM_LIMIT = 6;
@@ -16,6 +18,8 @@ const PANEL_PAGE_SIZE = PANEL_ITEM_LIMIT + 1;
 export function DashboardPage() {
   const apiClient = useApiClient();
   const [startedProcessName, setStartedProcessName] = useState<string | null>(null);
+  const [openedTaskId, setOpenedTaskId] = useState<string | null>(null);
+  const [reloadToken, setReloadToken] = useState(0);
   const { data, isLoading, error } = useLoader(
     async abortSignal => {
       const [tasks, processes, notifications] = await Promise.all([
@@ -26,7 +30,7 @@ export function DashboardPage() {
 
       return { tasks, processes, notifications };
     },
-    [apiClient]
+    [apiClient, reloadToken]
   );
 
   if (isLoading) {
@@ -57,8 +61,9 @@ export function DashboardPage() {
             items={data.tasks.tasks.slice(0, PANEL_ITEM_LIMIT).map(task => ({
               key: task.id,
               title: task.title,
-              description: task.isOutdated ? 'Outdated' : 'Open',
-              badge: 'T'
+              createdAt: task.createdAt,
+              ariaLabel: `Open task ${task.title}`,
+              onClick: () => setOpenedTaskId(task.id)
             }))}
             emptyMessage="You have no open tasks."
           />
@@ -74,8 +79,7 @@ export function DashboardPage() {
             items={data.notifications.notifications.slice(0, PANEL_ITEM_LIMIT).map(notification => ({
               key: notification.id,
               title: notification.message,
-              meta: formatDate(notification.createdAt),
-              badge: 'N'
+              createdAt: notification.createdAt
             }))}
             emptyMessage="You have no notifications."
           />
@@ -86,17 +90,12 @@ export function DashboardPage() {
           scrollable
           action={data.processes.processes.length > PANEL_ITEM_LIMIT ? { label: 'View all', href: '/my-processes' } : undefined}
         >
-          <DashboardListView
+          <ProcessIconGridView
+            variant="dashboard"
             items={data.processes.processes.slice(0, PANEL_ITEM_LIMIT).map(process => ({
-              key: process.name,
-              title: process.name,
+              name: process.name,
               description: process.description,
-              badge: 'P',
-              action: {
-                label: 'Start',
-                ariaLabel: `Start process ${process.name}`,
-                onClick: () => setStartedProcessName(process.name)
-              }
+              onClick: () => setStartedProcessName(process.name)
             }))}
             emptyMessage="No processes are available."
           />
@@ -105,10 +104,13 @@ export function DashboardPage() {
       {startedProcessName ? (
         <MyProcessStartFormPopup args={{ processName: startedProcessName }} onClose={() => setStartedProcessName(null)} />
       ) : null}
+      {openedTaskId ? (
+        <MyTaskFormPopup
+          args={{ taskId: openedTaskId }}
+          onSubmitted={() => setReloadToken(current => current + 1)}
+          onClose={() => setOpenedTaskId(null)}
+        />
+      ) : null}
     </Portal>
   );
-}
-
-function formatDate(timestamp: number): string {
-  return new Date(timestamp).toLocaleDateString();
 }

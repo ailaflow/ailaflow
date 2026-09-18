@@ -96,7 +96,6 @@ export function TaskListPage() {
           id: 'title',
           title: 'Title',
           width: '18%',
-          leadingBadge: 'T',
           getValue: task => task.title
         },
         {

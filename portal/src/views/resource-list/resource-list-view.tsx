@@ -1,6 +1,5 @@
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
-import { ResourceIcon } from '../common/resource-icon';
 import { PaginationView, type PaginationViewProps } from '../common/pagination-view';
 
 export interface ResourceListColumn<T> {
@@ -9,7 +8,7 @@ export interface ResourceListColumn<T> {
   width?: string;
   align?: 'left' | 'right';
   wrap?: boolean;
-  leadingBadge?: string;
+  getLeadingVisual?(item: T): ReactNode;
   getValue(item: T): ReactNode;
 }
 
@@ -85,12 +84,16 @@ export function ResourceListView<T>(props: ResourceListViewProps<T>) {
                               column.align === 'right' ? 'text-right' : ''
                             } ${column.id === 'name' ? 'font-medium text-slate-900' : 'text-slate-600'}`}
                           >
-                            {column.leadingBadge ? (
-                              <ResourceIcon size="md" className="mr-2">
-                                {column.leadingBadge}
-                              </ResourceIcon>
-                            ) : null}
-                            {column.getValue(row)}
+                            {column.getLeadingVisual ? (
+                              <div className={`flex min-w-0 items-center gap-2 ${column.align === 'right' ? 'justify-end' : ''}`}>
+                                {column.getLeadingVisual(row)}
+                                <span className={column.wrap ? 'whitespace-pre-wrap break-words' : 'min-w-0 truncate'}>
+                                  {column.getValue(row)}
+                                </span>
+                              </div>
+                            ) : (
+                              column.getValue(row)
+                            )}
                           </td>
                         ))}
                         {props.actions && props.actions.length > 0 ? (

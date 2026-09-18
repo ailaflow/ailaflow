@@ -163,11 +163,13 @@ test('queries tasks assigned to the current user', async () => {
       {
         id: 'task_1',
         title: 'Open outdated',
+        createdAt: 1000,
         isOutdated: true
       },
       {
         id: 'task_2',
-        title: 'Open current'
+        title: 'Open current',
+        createdAt: 1001
       }
     ],
     totalCount: 4,
@@ -179,11 +181,13 @@ test('queries tasks assigned to the current user', async () => {
       {
         id: 'task_3',
         title: 'Completed outdated',
+        createdAt: 1002,
         completedAt: 4500
       },
       {
         id: 'task_5',
         title: 'No deadline',
+        createdAt: 1004,
         completedAt: 4700
       }
     ],
@@ -196,11 +200,13 @@ test('queries tasks assigned to the current user', async () => {
       {
         id: 'task_1',
         title: 'Open outdated',
+        createdAt: 1000,
         isOutdated: true
       },
       {
         id: 'task_2',
-        title: 'Open current'
+        title: 'Open current',
+        createdAt: 1001
       }
     ],
     totalCount: 2,
@@ -211,7 +217,8 @@ test('queries tasks assigned to the current user', async () => {
     tasks: [
       {
         id: 'task_6',
-        title: 'Test task'
+        title: 'Test task',
+        createdAt: 1005
       }
     ],
     totalCount: 1,

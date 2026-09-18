@@ -60,8 +60,7 @@ export function SandboxListPage() {
           id: 'name',
           title: 'Name',
           width: '24%',
-          leadingBadge: '+',
-          getValue: sandbox => sandbox.name
+          getValue: sandbox => `+${sandbox.name}`
         },
         {
           id: 'isEnabled',

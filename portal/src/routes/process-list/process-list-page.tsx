@@ -3,6 +3,7 @@ import { useLoader } from '@aibindkit/react';
 import { ResourceListView } from '../../views/resource-list/resource-list-view';
 import { ResourceHeaderButtonView } from '../../views/resource-list/resource-header-button-view';
 import { SvgIcon } from '../../views/common/svg-icons';
+import { ProcessIcon } from '../../views/common/process-icon';
 import { PortalLoadingView } from '../../views/portal/portal-loading-view';
 import { PortalErrorView } from '../../views/portal/portal-error-view';
 import { toolError, toolSuccess, toolWait } from '@aibindkit/react';
@@ -90,8 +91,8 @@ export function ProcessListPage() {
           id: 'name',
           title: 'Name',
           width: '22%',
-          leadingBadge: '/',
-          getValue: process => process.name
+          getLeadingVisual: process => <ProcessIcon name={process.name} className="h-8 w-8" />,
+          getValue: process => `/${process.name}`
         },
         {
           id: 'description',

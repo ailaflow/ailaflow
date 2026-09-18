@@ -85,8 +85,7 @@ export function TableListPage() {
           id: 'name',
           title: 'Name',
           width: '30%',
-          leadingBadge: '#',
-          getValue: table => table.name
+          getValue: table => `#${table.name}`
         },
         {
           id: 'description',

@@ -69,8 +69,7 @@ export function UserListPage() {
           id: 'name',
           title: 'Name',
           width: '42%',
-          leadingBadge: '@',
-          getValue: user => user.name
+          getValue: user => `@${user.name}`
         },
         {
           id: 'role',

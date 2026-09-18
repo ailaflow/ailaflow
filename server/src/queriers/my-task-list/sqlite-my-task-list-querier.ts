@@ -62,6 +62,7 @@ export class SqliteMyTaskListQuerier implements MyTaskListQuerier {
         tasks: rows.map(row => ({
           id: row.id,
           title: row.title,
+          createdAt: row.createdAt,
           ...(row.completedAt === null ? {} : { completedAt: row.completedAt }),
           ...(row.completedAt === null && row.deadline !== null && now > row.deadline ? { isOutdated: true } : {})
         })),

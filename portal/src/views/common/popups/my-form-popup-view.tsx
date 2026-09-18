@@ -4,6 +4,7 @@ import { SvgIcon } from '../svg-icons';
 
 export interface MyFormPopupViewProps {
   title: string;
+  titleIcon?: ReactNode;
   description?: string;
   closeLabel: string;
   children: ReactNode;
@@ -35,14 +36,17 @@ export function MyFormPopupView(props: MyFormPopupViewProps) {
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="relative flex h-full w-full flex-col overflow-hidden bg-white shadow-xl sm:rounded-lg sm:border sm:border-slate-200"
+        className="relative flex h-full w-full flex-col overflow-hidden bg-white shadow-xl sm:rounded-lg sm:border sm:border-slate-200 lg:max-w-5xl"
       >
         <div className="flex shrink-0 items-center justify-between gap-3 border-b border-slate-200 px-4 py-3">
-          <div className="min-w-0">
-            <h2 id={titleId} className="text-lg font-semibold text-slate-900">
-              {props.title}
-            </h2>
-            {props.description ? <p className="truncate text-sm text-slate-500">{props.description}</p> : null}
+          <div className="flex min-w-0 items-center gap-3">
+            {props.titleIcon}
+            <div className="min-w-0">
+              <h2 id={titleId} className="truncate text-lg font-semibold text-slate-900">
+                {props.title}
+              </h2>
+              {props.description ? <p className="truncate text-sm text-slate-500">{props.description}</p> : null}
+            </div>
           </div>
           <button
             type="button"

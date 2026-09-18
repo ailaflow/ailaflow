@@ -62,7 +62,6 @@ export function MyNotificationsPage() {
             id: 'message',
             title: 'Message',
             width: '58%',
-            leadingBadge: 'N',
             getValue: notification => notification.message
           },
           {

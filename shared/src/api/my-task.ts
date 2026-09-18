@@ -7,6 +7,7 @@ import { paginationRequestSchema, paginationResponseSchema } from './pagination'
 const myTaskLiteDtoSchema = z.object({
   id: z.string(),
   title: z.string(),
+  createdAt: z.number(),
   completedAt: z.number().optional(),
   isOutdated: z.boolean().optional()
 });

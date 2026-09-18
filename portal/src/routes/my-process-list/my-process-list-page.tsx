@@ -1,9 +1,11 @@
 import { useApiClient } from '../../auth/auth-context';
 import { useLoader } from '@aibindkit/react';
+import { useState } from 'react';
 import { useSearchParams } from 'react-router';
 import { PortalErrorView } from '../../views/portal/portal-error-view';
 import { PortalLoadingView } from '../../views/portal/portal-loading-view';
-import { ResourceListView } from '../../views/resource-list/resource-list-view';
+import { ProcessListView } from '../../views/process-list-view/process-list-view';
+import { MyProcessStartFormPopup } from '../common/popups/my-process-start-form-popup';
 import { Portal } from '../common/portal';
 
 const PAGE_SIZE = 20;
@@ -11,6 +13,7 @@ const PAGE_SIZE = 20;
 export function MyProcessListPage() {
   const apiClient = useApiClient();
   const [searchParams, setSearchParams] = useSearchParams();
+  const [startedProcessName, setStartedProcessName] = useState<string | null>(null);
   const page = Number(searchParams.get('page') ?? 1);
   const { data, isLoading, error } = useLoader(
     abortSignal => apiClient.myProcess.getMyProcesses(abortSignal, { page, pageSize: PAGE_SIZE }),
@@ -42,34 +45,14 @@ export function MyProcessListPage() {
 
   return (
     <Portal>
-      <ResourceListView
+      <ProcessListView
         title="My Processes"
-        columns={[
-          {
-            id: 'name',
-            title: 'Name',
-            width: '28%',
-            leadingBadge: '/',
-            getValue: process => process.name
-          },
-          {
-            id: 'description',
-            title: 'Description',
-            width: '52%',
-            wrap: true,
-            getValue: process => process.description
-          }
-        ]}
-        rows={data.processes}
-        getRowKey={process => process.name}
+        items={data.processes.map(process => ({
+          name: process.name,
+          description: process.description,
+          onClick: () => setStartedProcessName(process.name)
+        }))}
         emptyMessage="No processes found."
-        actions={[
-          {
-            label: 'Start',
-            ariaLabel: process => `Start process ${process.name}`,
-            getTo: process => `/my-processes/${encodeURIComponent(process.name)}/start`
-          }
-        ]}
         pagination={{
           page: data.page,
           pageSize: data.pageSize,
@@ -77,6 +60,9 @@ export function MyProcessListPage() {
           onPageChange: changePage
         }}
       />
+      {startedProcessName ? (
+        <MyProcessStartFormPopup args={{ processName: startedProcessName }} onClose={() => setStartedProcessName(null)} />
+      ) : null}
     </Portal>
   );
 }
