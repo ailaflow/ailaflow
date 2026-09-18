@@ -140,7 +140,7 @@ test('sends links for task and process start form metadata', async () => {
   );
   assert.match(
     client.sentTexts[1],
-    /^💼 To open the start form for \/employee-onboarding, please click here: https:\/\/aila\.example\/magic-link\?t=%2Fmy-processes%2Femployee-onboarding%2Fstart#token=[\w-]{43}\nThis link will be active for the next 2 hours\.$/
+    /^💼 To open the start form for \/employee-onboarding, please click here: https:\/\/aila\.example\/magic-link\?t=%2Fmy-processes%2Femployee-onboarding#token=[\w-]{43}\nThis link will be active for the next 2 hours\.$/
   );
 });
 

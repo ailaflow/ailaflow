@@ -23,7 +23,7 @@ test('generates and stores magic links with centralized form targets', async () 
 
   assert.ok(processResult);
   const processUrl = new URL(processResult);
-  assert.equal(processUrl.searchParams.get('t'), '/my-processes/employee%20onboarding/start');
+  assert.equal(processUrl.searchParams.get('t'), '/my-processes/employee%20onboarding');
   assert.equal(new URLSearchParams(processUrl.hash.slice(1)).get('token'), inserted[1].token);
   assert.equal(inserted[1].userName, 'alice');
   assert.equal(generator.getValidityHours(), 2);

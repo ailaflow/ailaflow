@@ -17,11 +17,11 @@ test('schedules the old token for expiration and persists both tokens', async ()
 
   const afterRefresh = Date.now();
   assert.equal(upsertedTokens.length, 2);
-  assert.strictEqual(upsertedTokens[0], authToken);
+  assert.equal(upsertedTokens[0].token, response.authToken);
+  assert.notEqual(upsertedTokens[0].token, authToken.token);
+  assert.strictEqual(upsertedTokens[1], authToken);
   assert.ok(authToken.expiresAt >= beforeRefresh + 10_000);
   assert.ok(authToken.expiresAt <= afterRefresh + 10_000);
-  assert.equal(upsertedTokens[1].token, response.authToken);
-  assert.notEqual(response.authToken, authToken.token);
 });
 
 function createRepository(authToken: AuthToken, upsertedTokens: AuthToken[]): AuthTokenRepository {

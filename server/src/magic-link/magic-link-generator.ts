@@ -17,7 +17,7 @@ export class MagicLinkGenerator {
   }
 
   public tryGenerateProcessStartForm(abortSignal: AbortSignal, userName: string, processName: string): Promise<string | null> {
-    return this.tryGenerate(abortSignal, userName, `/my-processes/${encodeURIComponent(processName)}/start`);
+    return this.tryGenerate(abortSignal, userName, `/my-processes/${encodeURIComponent(processName)}`);
   }
 
   private async tryGenerate(abortSignal: AbortSignal, userName: string, target: string): Promise<string | null> {

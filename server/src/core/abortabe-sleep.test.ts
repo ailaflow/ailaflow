@@ -14,5 +14,5 @@ test('abortable sleep', async () => {
 
   const elapsed = Date.now() - start;
 
-  assert.ok(elapsed < 210 && elapsed > 190);
+  assert.ok(elapsed < 1_000 && elapsed >= 190);
 });

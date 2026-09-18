@@ -70,7 +70,7 @@ export const routes = [
     element: <AuthGate route={<MyProcessListPage />} />
   },
   {
-    path: '/my-processes/:name/start',
+    path: '/my-processes/:name',
     element: <AuthGate route={<MyProcessPage />} />
   },
   {
