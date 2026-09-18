@@ -1,5 +1,6 @@
 import type { TelegramBotConfigurationDto } from '@ailaflow/shared';
 import { useState } from 'react';
+import { ExpandableTip } from './expandable-tip';
 import { SvgIcon } from './svg-icons';
 
 export interface TelegramBotDraft {
@@ -43,6 +44,35 @@ export function TelegramConfigurationView(props: TelegramConfigurationViewProps)
             >
               Add bot
             </button>
+          </div>
+
+          <div className="border-b border-slate-200 p-4">
+            <ExpandableTip
+              title="Set up a Telegram bot"
+              summary="Create a bot with BotFather, paste its API token here, then connect your Telegram chat after saving."
+            >
+              <ol className="list-decimal space-y-1 pl-5">
+                <li>
+                  Open the official{' '}
+                  <a
+                    href="https://t.me/BotFather"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="font-medium text-sky-800 underline decoration-sky-400 underline-offset-2"
+                  >
+                    @BotFather
+                  </a>{' '}
+                  chat in Telegram.
+                </li>
+                <li>
+                  Send <code className="rounded bg-white px-1 py-0.5 text-xs">/newbot</code>, then choose a display name and a unique
+                  username ending in <code className="rounded bg-white px-1 py-0.5 text-xs">bot</code>.
+                </li>
+                <li>Copy the HTTP API token returned by BotFather.</li>
+                <li>Click “Add bot”, select the AilaFlow channel, paste the token into “Bot token”, and save.</li>
+                <li>Click “Connect Telegram” in the saved row and press Start in Telegram to link that chat.</li>
+              </ol>
+            </ExpandableTip>
           </div>
 
           {props.draft && (
