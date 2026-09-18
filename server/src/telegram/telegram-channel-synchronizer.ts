@@ -2,8 +2,8 @@ import { ChatMessageMetadata, ChatMessageType } from '@aibindkit/core';
 import { ChatSession, ChatSessionUpdate } from '@aibindkit/llm';
 import { ProcessStartFormMessageMetadata, TaskFormMessageMetadata } from '@ailaflow/shared';
 import { UserChatSessionProvider } from '../chat-session/user-chat-session-provider';
-import { PublicFormUrlGenerator } from '../configuration/public-url/public-form-url-generator';
 import { Logger } from '../core/logger';
+import { MagicLinkGenerator } from '../magic-link/magic-link-generator';
 import { TelegramBotConfiguration } from '../repositories/configuration/telegram/telegram-bot-configuration';
 import { TelegramConfigurationRepository } from '../repositories/configuration/telegram/telegram-configuration-repository';
 import { TelegramBotApiClient, TelegramBotApiError, TelegramUpdate } from './telegram-bot-api-client';
@@ -33,7 +33,7 @@ export class TelegramChannelSynchronizer {
     private readonly repository: TelegramConfigurationRepository,
     private readonly client: TelegramBotApiClient,
     private readonly userChatSessionProvider: UserChatSessionProvider,
-    private readonly publicFormUrlGenerator: PublicFormUrlGenerator,
+    private readonly magicLinkGenerator: MagicLinkGenerator,
     private readonly messageFormatter: TelegramMessageFormatter = new TelegramMessageFormatter()
   ) {
     this.telegramChatId = configuration.telegramChatId;
@@ -281,12 +281,12 @@ export class TelegramChannelSynchronizer {
   private async createFormLinkMessages(metadata: ChatMessageMetadata | undefined): Promise<string[]> {
     const messages: string[] = [];
     const abortSignal = AbortSignal.any([AbortSignal.timeout(10_000), this.destroyAbortController.signal]);
-    const linkLifetimeHours = this.publicFormUrlGenerator.getLinkValidityHours();
+    const linkLifetimeHours = this.magicLinkGenerator.getValidityHours();
     const linkLifetimeMessage = `This link will be active for the next ${linkLifetimeHours} hours.`;
 
     const taskForm = metadata?.['taskForm'] as TaskFormMessageMetadata | undefined;
     if (typeof taskForm?.id === 'string') {
-      const url = await this.publicFormUrlGenerator.generateTaskFormUrl(abortSignal, this.configuration.userName, taskForm.id);
+      const url = await this.magicLinkGenerator.tryGenerateTaskForm(abortSignal, this.configuration.userName, taskForm.id);
       if (url) {
         messages.push(`📗 To open the task, please click here: ${url}\n${linkLifetimeMessage}`);
       }
@@ -294,7 +294,7 @@ export class TelegramChannelSynchronizer {
 
     const processStartForm = metadata?.['processStartForm'] as ProcessStartFormMessageMetadata | undefined;
     if (typeof processStartForm?.name === 'string') {
-      const url = await this.publicFormUrlGenerator.generateProcessStartFormUrl(
+      const url = await this.magicLinkGenerator.tryGenerateProcessStartForm(
         abortSignal,
         this.configuration.userName,
         processStartForm.name

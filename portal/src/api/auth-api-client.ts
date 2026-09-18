@@ -1,5 +1,12 @@
 import { HttpClient } from '@aibindkit/react';
-import type { LoginRequest, LoginResponse, RefreshTokenRequest, RefreshTokenResponse } from '@ailaflow/shared';
+import type {
+  ExchangeMagicLinkRequest,
+  ExchangeMagicLinkResponse,
+  LoginRequest,
+  LoginResponse,
+  RefreshTokenRequest,
+  RefreshTokenResponse
+} from '@ailaflow/shared';
 
 export class AuthApiClient {
   public constructor(private readonly client: HttpClient) {}
@@ -10,5 +17,9 @@ export class AuthApiClient {
 
   public refreshToken(abortSignal: AbortSignal, request: RefreshTokenRequest): Promise<RefreshTokenResponse> {
     return this.client.json(abortSignal, 'POST', '/api/auth/token/refresh', request);
+  }
+
+  public exchangeMagicLink(abortSignal: AbortSignal, request: ExchangeMagicLinkRequest): Promise<ExchangeMagicLinkResponse> {
+    return this.client.json(abortSignal, 'POST', '/api/auth/magic-link/exchange', request);
   }
 }

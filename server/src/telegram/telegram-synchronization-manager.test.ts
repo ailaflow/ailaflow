@@ -4,7 +4,8 @@ import { ChatSession, ChatSessionUpdate } from '@aibindkit/llm';
 import test from 'node:test';
 import { UserChatSessionProvider } from '../chat-session/user-chat-session-provider';
 import { KvConfigurationManager } from '../configuration/kv/kv-configuration-manager';
-import { PublicFormUrlGenerator } from '../configuration/public-url/public-form-url-generator';
+import { MagicLinkGenerator } from '../magic-link/magic-link-generator';
+import { MagicLinkRepository } from '../repositories/auth-token/magic-link-repository';
 import { KvConfiguration } from '../repositories/configuration/kv/kv-configuration';
 import { TelegramBotConfiguration } from '../repositories/configuration/telegram/telegram-bot-configuration';
 import { TelegramConfigurationRepository } from '../repositories/configuration/telegram/telegram-configuration-repository';
@@ -15,7 +16,7 @@ test('starts, reloads, removes, and stops Telegram channel synchronizers', async
   const repository = new FakeRepository();
   repository.configuration = createConfiguration('token-1');
   const client = new FakeClient();
-  const manager = new TelegramSynchronizationManager(repository, client, createSessionProvider(), createPublicFormUrlGenerator());
+  const manager = new TelegramSynchronizationManager(repository, client, createSessionProvider(), createMagicLinkGenerator());
 
   await manager.start(new AbortController().signal);
   assert.equal(client.pollSignals.length, 1);
@@ -84,11 +85,17 @@ function createSessionProvider(): UserChatSessionProvider {
   return { get: async () => session } as unknown as UserChatSessionProvider;
 }
 
-function createPublicFormUrlGenerator(): PublicFormUrlGenerator {
+function createMagicLinkGenerator(): MagicLinkGenerator {
   const manager = {
     get: async () => new KvConfiguration()
   } as unknown as KvConfigurationManager;
-  return new PublicFormUrlGenerator(manager);
+  const repository: MagicLinkRepository = {
+    setup: async () => {},
+    insert: async () => {},
+    consume: async () => null,
+    deleteExpired: async () => {}
+  };
+  return new MagicLinkGenerator(manager, repository);
 }
 
 function createConfiguration(botToken: string): TelegramBotConfiguration {

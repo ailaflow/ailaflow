@@ -24,3 +24,12 @@ export const refreshTokenResponseSchema = z.object({
 });
 export type RefreshTokenRequest = z.infer<typeof refreshTokenRequestSchema>;
 export type RefreshTokenResponse = z.infer<typeof refreshTokenResponseSchema>;
+
+// magic link
+
+export const exchangeMagicLinkRequestSchema = z.object({
+  token: z.string().min(1)
+});
+export const exchangeMagicLinkResponseSchema = loginResponseSchema;
+export type ExchangeMagicLinkRequest = z.infer<typeof exchangeMagicLinkRequestSchema>;
+export type ExchangeMagicLinkResponse = z.infer<typeof exchangeMagicLinkResponseSchema>;

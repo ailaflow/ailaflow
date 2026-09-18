@@ -26,6 +26,7 @@ import { ConfigurationPage } from './configuration/configuration-page';
 import { TaskListPage } from './task-list/task-list-page';
 import { ProcessCronJobsPage } from './process-cron-jobs/process-cron-jobs-page';
 import { NotFoundPage } from './not-found/not-found-page';
+import { MagicLinkPage } from './magic-link/magic-link';
 
 export const routes = [
   {
@@ -35,6 +36,10 @@ export const routes = [
   {
     path: '/install',
     element: <InstallPage />
+  },
+  {
+    path: '/magic-link',
+    element: <MagicLinkPage />
   },
   {
     path: '/',

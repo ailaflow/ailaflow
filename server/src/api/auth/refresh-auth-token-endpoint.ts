@@ -23,8 +23,8 @@ export class RefreshAuthTokenEndpoint implements Endpoint {
     }
 
     const newAuthToken = await AuthToken.refresh(authToken);
-    await this.authTokenRepository.upsert(abortSignal, authToken);
     await this.authTokenRepository.upsert(abortSignal, newAuthToken);
+    await this.authTokenRepository.upsert(abortSignal, authToken);
 
     return {
       authToken: newAuthToken.token

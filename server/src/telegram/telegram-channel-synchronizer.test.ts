@@ -4,7 +4,8 @@ import { ChatSession, ChatSessionUpdate } from '@aibindkit/llm';
 import test from 'node:test';
 import { UserChatSessionProvider } from '../chat-session/user-chat-session-provider';
 import { KvConfigurationManager } from '../configuration/kv/kv-configuration-manager';
-import { PublicFormUrlGenerator } from '../configuration/public-url/public-form-url-generator';
+import { MagicLinkGenerator } from '../magic-link/magic-link-generator';
+import { MagicLinkRepository } from '../repositories/auth-token/magic-link-repository';
 import { KvConfiguration } from '../repositories/configuration/kv/kv-configuration';
 import { TelegramBotConfiguration } from '../repositories/configuration/telegram/telegram-bot-configuration';
 import { TelegramConfigurationRepository } from '../repositories/configuration/telegram/telegram-configuration-repository';
@@ -69,7 +70,7 @@ test('replays eligible session messages, resumes chunks, and stores numeric sent
     new FakeTelegramConfigurationRepository(),
     client,
     createSessionProvider(session),
-    createPublicFormUrlGenerator()
+    createMagicLinkGenerator()
   );
 
   await synchronizer.start();
@@ -126,20 +127,21 @@ test('sends links for task and process start form metadata', async () => {
     new FakeTelegramConfigurationRepository(),
     client,
     createSessionProvider(session),
-    createPublicFormUrlGenerator('https://aila.example/')
+    createMagicLinkGenerator('https://aila.example')
   );
 
   await synchronizer.start();
   await waitFor(() => client.sentTexts.length === 2);
   synchronizer.destroy();
 
-  assert.deepEqual(client.sentTexts, [
-    '📗 To open the task, please click here: https://aila.example/public-form/tasks/task-123\n' +
-      'This link will be active for the next 2 hours.',
-    '💼 To open the start form for /employee-onboarding, please click here: ' +
-      'https://aila.example/public-form/processes/employee-onboarding\n' +
-      'This link will be active for the next 2 hours.'
-  ]);
+  assert.match(
+    client.sentTexts[0],
+    /^📗 To open the task, please click here: https:\/\/aila\.example\/magic-link\?t=%2Fmy-tasks%2Ftask-123#token=[\w-]{43}\nThis link will be active for the next 2 hours\.$/
+  );
+  assert.match(
+    client.sentTexts[1],
+    /^💼 To open the start form for \/employee-onboarding, please click here: https:\/\/aila\.example\/magic-link\?t=%2Fmy-processes%2Femployee-onboarding%2Fstart#token=[\w-]{43}\nThis link will be active for the next 2 hours\.$/
+  );
 });
 
 test('links a private Telegram chat and queues Telegram text with origin metadata', async () => {
@@ -164,7 +166,7 @@ test('links a private Telegram chat and queues Telegram text with origin metadat
     repository,
     client,
     createSessionProvider(session),
-    createPublicFormUrlGenerator()
+    createMagicLinkGenerator()
   );
 
   await synchronizer.start();
@@ -200,7 +202,7 @@ test('reconnects polling after a transient Telegram failure', async () => {
     repository,
     client,
     createSessionProvider(session),
-    createPublicFormUrlGenerator()
+    createMagicLinkGenerator()
   );
 
   await synchronizer.start();
@@ -220,7 +222,7 @@ test('starts once and cannot restart after being destroyed', async () => {
     new FakeTelegramConfigurationRepository(),
     new FakeTelegramBotApiClient(),
     createSessionProvider(new FakeChatSession([])),
-    createPublicFormUrlGenerator()
+    createMagicLinkGenerator()
   );
 
   await synchronizer.start();
@@ -340,11 +342,17 @@ function createSessionProvider(session: FakeChatSession): UserChatSessionProvide
   return { get: async () => session as unknown as ChatSession } as unknown as UserChatSessionProvider;
 }
 
-function createPublicFormUrlGenerator(publicUrl: string | null = null): PublicFormUrlGenerator {
+function createMagicLinkGenerator(publicUrl: string | null = null): MagicLinkGenerator {
   const manager = {
     get: async () => new KvConfiguration(publicUrl)
   } as unknown as KvConfigurationManager;
-  return new PublicFormUrlGenerator(manager);
+  const repository: MagicLinkRepository = {
+    setup: async () => {},
+    insert: async () => {},
+    consume: async () => null,
+    deleteExpired: async () => {}
+  };
+  return new MagicLinkGenerator(manager, repository);
 }
 
 async function waitFor(predicate: () => boolean): Promise<void> {

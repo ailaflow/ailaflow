@@ -125,7 +125,7 @@ import { AgentSessionRunner } from './process-executor/services/agent-session-ru
 import { AgentToolSetProviderFactory } from './chat-session/agent-tool-set-provider-factory';
 import { ProcessExecutionServices } from './process-executor/services/services';
 import { Scheduler } from './schedulers/scheduler';
-import { AuthTokenCleanupScheduler } from './schedulers/auth-token-cleanup-scheduler';
+import { AuthCleanupScheduler } from './schedulers/auth-cleanup-scheduler';
 import { IncompleteAssignedTaskCountQuerier } from './queriers/task/incomplete-assigned-task-count-querier';
 import { SqliteIncompleteAssignedTaskCountQuerier } from './queriers/task/sqlite-incomplete-assigned-task-count-querier';
 import { TaskFinalizationCandidateQuerier } from './queriers/task/task-finalization-candidate-querier';
@@ -169,7 +169,11 @@ import { TaskDeleter } from './task/task-deleter';
 import { KvConfigurationRepository } from './repositories/configuration/kv/kv-configuration-repository';
 import { SqliteKvConfigurationRepository } from './repositories/configuration/kv/sqlite-kv-configuration-repository';
 import { PublicUrlTester } from './configuration/public-url/public-url-tester';
-import { PublicFormUrlGenerator } from './configuration/public-url/public-form-url-generator';
+import { MagicLinkGenerator } from './magic-link/magic-link-generator';
+import { MagicLinkExchanger } from './magic-link/magic-link-exchanger';
+import { MagicLinkRepository } from './repositories/auth-token/magic-link-repository';
+import { SqliteMagicLinkRepository } from './repositories/auth-token/sqlite-magic-link-repository';
+import { ExchangeMagicLinkEndpoint } from './api/auth/exchange-magic-link-endpoint';
 import { HealthEndpoint } from './api/health/health-endpoint';
 import { GetPublicUrlConfigurationEndpoint } from './api/public-url-configuration/get-public-url-configuration-endpoint';
 import { SavePublicUrlConfigurationEndpoint } from './api/public-url-configuration/save-public-url-configuration-endpoint';
@@ -232,6 +236,7 @@ export class Server {
     let userAttributesRepository: UserAttributesRepository;
     let resourceAccessRepository: ResourceAccessRepository;
     let authTokenRepository: AuthTokenRepository;
+    let magicLinkRepository: MagicLinkRepository;
     let processRepository: ProcessRepository;
     let processCronJobRepository: ProcessCronJobRepository;
     let sandboxRepository: SandboxRepository;
@@ -269,6 +274,7 @@ export class Server {
     userAttributesRepository = new SqliteUserAttributesRepository(sqliteDatabases);
     resourceAccessRepository = new SqliteResourceAccessRepository(sqliteDatabases);
     authTokenRepository = new SqliteAuthTokenRepository(sqliteDatabases);
+    magicLinkRepository = new SqliteMagicLinkRepository(sqliteDatabases);
     processRepository = new SqliteProcessRepository(sqliteDatabases);
     processCronJobRepository = new SqliteProcessCronJobRepository(sqliteDatabases);
     sandboxRepository = new SqliteSandboxRepository(sqliteDatabases, cipher);
@@ -309,6 +315,7 @@ export class Server {
       userAttributesRepository.setup(abortSignal),
       resourceAccessRepository.setup(abortSignal),
       authTokenRepository.setup(abortSignal),
+      magicLinkRepository.setup(abortSignal),
       processRepository.setup(abortSignal),
       processCronJobRepository.setup(abortSignal),
       sandboxRepository.setup(abortSignal),
@@ -352,7 +359,8 @@ export class Server {
     const llmClientProvider = new LlmClientProvider(llmConfigurationRepository, llmClientFactory);
     const kvConfigurationManager = new KvConfigurationManager(kvConfigurationRepository);
     const publicUrlTester = new PublicUrlTester();
-    const publicFormUrlGenerator = new PublicFormUrlGenerator(kvConfigurationManager);
+    const magicLinkGenerator = new MagicLinkGenerator(kvConfigurationManager, magicLinkRepository);
+    const magicLinkExchanger = new MagicLinkExchanger(magicLinkRepository, userRepository, authTokenRepository);
 
     const eventBus = new EventBus();
     eventBus.registerHandler(new ProcessExecutionFinishedEventHandler(userChatSessionProvider, adminChatSessionProvider));
@@ -364,7 +372,7 @@ export class Server {
       telegramConfigurationRepository,
       telegramClient,
       userChatSessionProvider,
-      publicFormUrlGenerator
+      magicLinkGenerator
     );
     eventBus.registerHandler(new TelegramConfigurationChangedEventHandler(telegramSynchronizationManager));
 
@@ -490,7 +498,7 @@ export class Server {
 
     const schedulers: Scheduler[] = [
       new LicenseCheckScheduler(licenseManager),
-      new AuthTokenCleanupScheduler(authTokenRepository),
+      new AuthCleanupScheduler(authTokenRepository, magicLinkRepository),
       new ProcessCronJobScheduler(processCronJobRepository, processManager, processExecutor)
     ];
 
@@ -503,6 +511,7 @@ export class Server {
       new InstallEndpoint(installer),
       new LoginEndpoint(userRepository, authTokenRepository, cipher),
       new RefreshAuthTokenEndpoint(authTokenRepository),
+      new ExchangeMagicLinkEndpoint(magicLinkExchanger),
       new GetLlmConfigurationEndpoint(llmConfigurationRepository),
       new SaveLlmProviderEndpoint(llmConfigurationRepository, eventBus),
       new FetchLlmProviderModelsEndpoint(llmConfigurationRepository, llmClientFactory),
