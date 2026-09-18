@@ -73,7 +73,7 @@ export class VariableCachedValidator {
     return null;
   }
 
-  public validateVariablesValue(names: string[], values: Record<string, unknown>, definition: ProcessDefinition): string | null {
+  public validateVariablesValue(values: Record<string, unknown>, names: string[], definition: ProcessDefinition): string | null {
     if (!values || typeof values !== 'object' || Array.isArray(values)) {
       return 'Input values must be a JSON object';
     }

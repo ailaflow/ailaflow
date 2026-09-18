@@ -1,5 +1,6 @@
 import {
   ProcessExecutionOutcomeType,
+  ProcessExecutionVariableValues,
   ProcessLogLevel,
   VariableCachedValidator,
   type ProcessDefinition,
@@ -24,7 +25,7 @@ import {
 
 export interface ProcessTesterData {
   process: ProcessDto;
-  startFormData: Record<string, unknown> | null;
+  values: ProcessExecutionVariableValues | null;
   timelineItems: ProcessTesterTimelineItem[];
   isRunning: boolean;
   currentUserName: string;
@@ -33,7 +34,8 @@ export interface ProcessTesterData {
 }
 
 export interface ProcessTesterState extends ProcessTesterData {
-  submitStartForm(data: Record<string, unknown>): void;
+  submitForm(values: ProcessExecutionVariableValues): void;
+  openStartForm(): void;
   openUserChat(userName: string): void;
   selectUserChat(userName: string): void;
   closeUserChat(userName: string): void;
@@ -66,15 +68,10 @@ export function ProcessTesterContext(props: ProcessTesterContextProps) {
   }, [data.chatUserNames, preferencesStorage]);
 
   useEffect(() => {
-    if (!data.startFormData) {
-      return;
-    }
-    const abortController = new AbortController();
-
-    async function test() {
+    async function test(signal: AbortSignal, values: ProcessExecutionVariableValues) {
       try {
         await apiClient.process.testProcess(
-          abortController.signal,
+          signal,
           {
             onMessage(testUpdate) {
               update(state => {
@@ -91,10 +88,10 @@ export function ProcessTesterContext(props: ProcessTesterContextProps) {
             }
           },
           data.process.name,
-          { input: data.startFormData! }
+          { input: values }
         );
       } catch (e) {
-        if (!abortController.signal.aborted) {
+        if (!signal.aborted) {
           update(state => {
             const item = new ErrorProcessTesterTimelineItem(Date.now(), 'Connection error', String(e));
             return { timelineItems: [...state.timelineItems, item], isRunning: false };
@@ -103,29 +100,35 @@ export function ProcessTesterContext(props: ProcessTesterContextProps) {
       }
     }
 
-    test();
-    return () => abortController.abort();
-  }, [apiClient, data.process.name, data.startFormData]);
+    if (data.values) {
+      const abortController = new AbortController();
+      test(abortController.signal, data.values);
+      return () => abortController.abort();
+    }
+  }, [apiClient, data.process.name, data.values]);
 
   const state = useMemo<ProcessTesterState>(() => {
-    function submitStartForm(startFormData: Record<string, unknown>) {
-      if (data.startFormData) {
-        throw new Error('The process test has already started');
-      }
+    function submitForm(values: ProcessExecutionVariableValues) {
       const error = variableValidator.validateVariablesValue(
+        values,
         data.process.definition.properties.startVariableNames,
-        startFormData,
         data.process.definition
       );
       if (error) {
         throw new Error(error);
       }
       update({
-        startFormData,
+        values,
         isRunning: true,
-        timelineItems: [
-          new FormProcessTesterTimelineItem(Date.now(), ProcessTesterTimelineFormType.START, ProcessTesterTimelineFormStatus.COMPLETED)
-        ]
+        timelineItems: [createStartTimelineItem(ProcessTesterTimelineFormStatus.COMPLETED)]
+      });
+    }
+
+    function openStartForm() {
+      update({
+        values: null,
+        timelineItems: [createStartTimelineItem(ProcessTesterTimelineFormStatus.ACTIVE)],
+        isRunning: false
       });
     }
 
@@ -161,7 +164,8 @@ export function ProcessTesterContext(props: ProcessTesterContextProps) {
 
     return {
       ...data,
-      submitStartForm,
+      submitForm,
+      openStartForm,
       openUserChat,
       selectUserChat,
       closeUserChat
@@ -184,15 +188,17 @@ function createData(process: ProcessDto, currentUserName: string, preferencesSto
 
   return {
     process,
-    startFormData: null,
-    timelineItems: [
-      new FormProcessTesterTimelineItem(Date.now(), ProcessTesterTimelineFormType.START, ProcessTesterTimelineFormStatus.ACTIVE)
-    ],
+    values: null,
+    timelineItems: [createStartTimelineItem(ProcessTesterTimelineFormStatus.ACTIVE)],
     isRunning: false,
     currentUserName,
     chatUserNames,
     activeChatUserName: currentUserName
   };
+}
+
+function createStartTimelineItem(status: ProcessTesterTimelineFormStatus) {
+  return new FormProcessTesterTimelineItem(Date.now(), ProcessTesterTimelineFormType.START, status);
 }
 
 function createProcessTesterTimelineItems(

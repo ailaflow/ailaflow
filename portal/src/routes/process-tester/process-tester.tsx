@@ -1,7 +1,7 @@
 import type { ProcessDto } from '@ailaflow/shared';
 import { ProcessTesterView } from '../../views/process-tester/process-tester-view';
 import { ProcessTesterChats } from './process-tester-chats';
-import { ProcessTesterTop } from './process-tester-top';
+import { ProcessTesterTimeline } from './process-tester-timeline';
 import { ResourceEditorView } from '../../views/resource-editor/resource-editor-view';
 import { useProcessTester } from './process-tester-context';
 import { useProcessTesterAi } from './process-tester-ai';
@@ -29,7 +29,7 @@ export function ProcessTester(props: ProcessTesterProps) {
       viewSwitcherDisabledReason={state.isRunning ? 'Test in progress.' : undefined}
     >
       <ProcessTesterView>
-        <ProcessTesterTop />
+        <ProcessTesterTimeline />
         <ProcessTesterChats />
       </ProcessTesterView>
     </ResourceEditorView>

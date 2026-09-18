@@ -6,7 +6,7 @@ import { FormAdapter } from '../common/form-renderer/form-adapter';
 import { FormRenderer } from '../common/form-renderer/form-renderer';
 import { useProcessTester } from './process-tester-context';
 
-export function ProcessTesterTop() {
+export function ProcessTesterTimeline() {
   const state = useProcessTester();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
@@ -24,8 +24,10 @@ export function ProcessTesterTop() {
     <ProcessTesterTimelineView
       items={state.timelineItems}
       scrollContainerRef={scrollContainerRef}
-      startForm={<ProcessTesterStartForm definition={state.process.definition} onSubmit={state.submitStartForm} />}
-      renderOutputForm={(form, output) => <ProcessTesterOutputForm form={form} output={output} />}
+      startForm={<ProcessTesterStartForm definition={state.process.definition} onSubmit={state.submitForm} />}
+      renderOutputForm={(form, output) => (
+        <ProcessTesterOutputForm form={form} output={output} onSubmitForm={state.submitForm} onOpenStartForm={state.openStartForm} />
+      )}
     />
   );
 }
@@ -55,7 +57,12 @@ function ProcessTesterStartForm(props: { definition: ProcessDefinition; onSubmit
   return <FormRenderer form={props.definition.properties.startForm} adapter={startFormAdapter} />;
 }
 
-function ProcessTesterOutputForm(props: { form: FormDefinition; output: ProcessExecutionVariableValues }) {
+function ProcessTesterOutputForm(props: {
+  form: FormDefinition;
+  output: ProcessExecutionVariableValues;
+  onOpenStartForm: () => void;
+  onSubmitForm: (values: ProcessExecutionVariableValues) => void;
+}) {
   const outputFormAdapter = useMemo<FormAdapter>(
     () => ({
       allowedToReadVariableNames: Object.keys(props.output),
@@ -63,13 +70,13 @@ function ProcessTesterOutputForm(props: { form: FormDefinition; output: ProcessE
       assertVariableValue: () => {},
       readVariable: async (_, name: string) => props.output[name],
       async openStartForm() {
-        throw new Error('Opening the start form is not supported in the tester');
+        props.onOpenStartForm();
       },
-      async submitForm() {
-        throw new Error('Submitting the form is not supported in the tester');
+      async submitForm(_, values) {
+        props.onSubmitForm(values);
       }
     }),
-    [props.output]
+    [props.output, props.onOpenStartForm, props.onSubmitForm]
   );
   return <FormRenderer form={props.form} adapter={outputFormAdapter} />;
 }

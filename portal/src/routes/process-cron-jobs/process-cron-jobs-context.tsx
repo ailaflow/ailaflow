@@ -150,6 +150,6 @@ function validateInputValues(input: string, process: ProcessDto, variableValidat
   }
 
   const inputValues = value as ProcessExecutionVariableValues;
-  const error = variableValidator.validateVariablesValue(process.definition.properties.startVariableNames, inputValues, process.definition);
+  const error = variableValidator.validateVariablesValue(inputValues, process.definition.properties.startVariableNames, process.definition);
   return { inputValues, error };
 }
