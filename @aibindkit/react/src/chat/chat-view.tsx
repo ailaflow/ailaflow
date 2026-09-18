@@ -337,14 +337,22 @@ function limitText(value: string, maxLength: number) {
 }
 
 function getContent(message: LlmMessage): string | null {
-  if (typeof message.content === 'string') {
-    return message.content;
+  if (message.content) {
+    if (typeof message.content === 'string' && message.content.length > 0) {
+      return message.content;
+    }
+    if (Array.isArray(message.content) && message.content?.[0].type === 'text') {
+      return message.content[0].text;
+    }
   }
-  if (message.role === 'assistant' && 'reasoning' in message && typeof message.reasoning === 'string') {
-    return message.reasoning;
-  }
-  if (message.content?.[0].type === 'text') {
-    return message.content[0].text;
+  if (message.role === 'assistant') {
+    const m = message as any;
+    for (const fieldName of ['reasoning', 'reasoning_content']) {
+      const value = m[fieldName];
+      if (typeof value === 'string' && value.length > 0) {
+        return value;
+      }
+    }
   }
   return null;
 }
