@@ -4,6 +4,7 @@ import { LicenseValidator } from './license-validator';
 import { Logger } from '../../core/logger';
 import { randomUUID } from 'crypto';
 import { UserRepository } from '../../repositories/user/user-repository';
+import { VersionProvider } from '../../core/version-provider';
 
 export class LicenseManager {
   private readonly logger = new Logger(LicenseManager.name);
@@ -14,7 +15,8 @@ export class LicenseManager {
   public constructor(
     private readonly licenseValidator: LicenseValidator,
     private readonly configurationManager: KvConfigurationManager,
-    private readonly userRepository: UserRepository
+    private readonly userRepository: UserRepository,
+    private readonly versionProvider: VersionProvider
   ) {}
 
   public getStatus(): LicenseStatus | null {
@@ -36,7 +38,8 @@ export class LicenseManager {
     const instanceId = await this.getInstanceId(abortSignal);
     const users = await this.userRepository.count(abortSignal);
     const activeUsers = users;
-    const response = await this.licenseValidator.validate(abortSignal, instanceId, type, key, users, activeUsers);
+    const version = this.versionProvider.get();
+    const response = await this.licenseValidator.validate(abortSignal, instanceId, type, key, users, activeUsers, version);
     return {
       type,
       validationError: response.validationError,

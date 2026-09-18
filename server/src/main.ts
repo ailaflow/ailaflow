@@ -20,13 +20,10 @@ async function main() {
 
   try {
     server = await Server.create(initAbortController.signal);
-    if (isClosing) {
-      await server.close();
-    }
-  } catch (error) {
+    server.printInfo();
+  } catch (e) {
     if (!initAbortController.signal.aborted) {
-      console.error(error);
-      process.exitCode = 1;
+      throw e;
     }
   }
 }

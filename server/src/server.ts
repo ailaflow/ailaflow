@@ -211,12 +211,14 @@ import { RefreshSlackUsersEndpoint } from './api/slack-configuration/refresh-sla
 import { SaveSlackMappingsEndpoint } from './api/slack-configuration/save-slack-mappings-endpoint';
 import { GetMySlackConfigurationEndpoint } from './api/my-slack-configuration/get-my-slack-configuration-endpoint';
 import { SqliteSlackUserListQuerier } from './queriers/slack-user-list/sqlite-slack-user-list-querier';
+import { VersionProvider } from './core/version-provider';
 
 export class Server {
   private isClosed = false;
 
   public static async create(abortSignal: AbortSignal): Promise<Server> {
     const serverPaths = new ServerPaths();
+    const versionProvider = new VersionProvider(serverPaths);
 
     const cipherKeyStore = new FileSystemCipherKeyStore(serverPaths);
     await cipherKeyStore.tryLoad();
@@ -478,7 +480,7 @@ export class Server {
     });
 
     const kvConfigurationManager = new KvConfigurationManager(kvConfigurationRepository);
-    const licenseManager = new LicenseManager(new LicenseValidator(), kvConfigurationManager, userRepository);
+    const licenseManager = new LicenseManager(new LicenseValidator(), kvConfigurationManager, userRepository, versionProvider);
     const installer = new Installer(cipherKeyStore, cipher, userRepository, userAttributesRepository, sandboxRepository, licenseManager);
 
     const schedulers: Scheduler[] = [
@@ -565,25 +567,46 @@ export class Server {
     await httpServer.start();
     slackSynchronizationManager.start();
     return new Server(
+      serverPaths,
       httpServer,
       sandboxInstanceManager,
       sqliteDatabases,
       schedulers,
       telegramSynchronizationManager,
       slackSynchronizationManager,
-      taskFinalizationWorker
+      taskFinalizationWorker,
+      versionProvider
     );
   }
 
   public constructor(
+    private readonly serverPaths: ServerPaths,
     private readonly httpServer: HttpServer,
     private readonly sandboxInstanceManager: SandboxInstanceManager,
     private readonly sqliteDatabases: SqliteDatabases,
     private readonly schedulers: Scheduler[],
     private readonly telegramSynchronizationManager: TelegramSynchronizationManager,
     private readonly slackSynchronizationManager: SlackSynchronizationManager,
-    private readonly taskFinalizationWorker: TaskFinalizationWorker
+    private readonly taskFinalizationWorker: TaskFinalizationWorker,
+    private readonly versionProvider: VersionProvider
   ) {}
+
+  public printInfo() {
+    console.log('\x1b[33m');
+    console.log(' ▄▀▄   ▀  ▀█        ▀█▀▀█ ▀█');
+    console.log('█   █ ▀█   █  ▀▀▀▄   █▄▄   █  ▄▀▀▀▄ █   █');
+    console.log('█▀▀▀█  █   █  ▄▀▀█   █     █  █   █ █ ▄ █');
+    console.log('▀   ▀ ▀▀▀ ▀▀▀  ▀▀ ▀ ▀▀▀   ▀▀▀  ▀▀▀   ▀ ▀ ');
+    console.log(`                `);
+    console.log('\x1b[0m');
+
+    console.log(`Data folder: ${this.serverPaths.getAppDataFolderPath()}`);
+    console.log(`Version: ${this.versionProvider.get()}`);
+    console.log(`Listening on:`);
+    for (const address of this.httpServer.getListeningAddresses()) {
+      console.log(`• ${address}`);
+    }
+  }
 
   public async close() {
     if (this.isClosed) {

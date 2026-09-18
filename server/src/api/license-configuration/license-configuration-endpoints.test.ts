@@ -14,6 +14,7 @@ import { EndpointError } from '../framework/endpoint-error';
 import { LicenseEndpoint } from './license-status-endpoint';
 import { GetLicenseConfigurationEndpoint } from './get-license-configuration-endpoint';
 import { SaveLicenseConfigurationEndpoint } from './save-license-configuration-endpoint';
+import { VersionProvider } from '../../core/version-provider';
 
 const signal = new AbortController().signal;
 async function fixture(t: TestContext) {
@@ -27,7 +28,8 @@ async function fixture(t: TestContext) {
   const configuration = new KvConfigurationManager(repository);
   const validator = new LicenseValidator();
   const validate = t.mock.method(validator, 'validate');
-  const manager = new LicenseManager(validator, configuration, users);
+  const versionProvider = { get: () => 'test-version' } as VersionProvider;
+  const manager = new LicenseManager(validator, configuration, users, versionProvider);
   return {
     repository,
     validate,

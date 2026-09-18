@@ -42,8 +42,6 @@ export class HttpServer {
 
     this.server = await new Promise((resolve, reject) => {
       const server = this.app.listen(PORT, () => {
-        this.logger.log(`Data folder: ${this.serverPaths.getAppDataFolderPath()}`);
-        this.logListeningAddresses();
         server.off('error', reject);
         resolve(server);
       });
@@ -51,27 +49,24 @@ export class HttpServer {
     });
   }
 
-  public async close(): Promise<void> {
-    if (!this.server?.listening) {
-      return;
-    }
-
-    await new Promise<void>((resolve, reject) => {
-      this.server!.close(error => (error ? reject(error) : resolve()));
-    });
-    this.server = null;
-
-    this.logger.log('Server has been closed');
-  }
-
-  private logListeningAddresses(): void {
-    this.logger.log('Server is listening on:');
-    for (const networkInterface of Object.values(networkInterfaces())) {
-      for (const interfaceAddress of networkInterface ?? []) {
-        if (interfaceAddress.family === 'IPv4') {
-          this.logger.log(`• http://${interfaceAddress.address}:${PORT}`);
-        }
+  public getListeningAddresses(): string[] {
+    const addresses: string[] = [];
+    for (const address of Object.values(networkInterfaces()).flatMap(f => f)) {
+      if (address && address.family === 'IPv4') {
+        addresses.push(`http://${address.address}:${PORT}`);
       }
     }
+    return addresses;
+  }
+
+  public async close(): Promise<void> {
+    const server = this.server;
+    if (!server || !server.listening) {
+      return;
+    }
+    this.server = null;
+    await new Promise<void>((resolve, reject) => {
+      server.close(error => (error ? reject(error) : resolve()));
+    });
   }
 }

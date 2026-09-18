@@ -7,7 +7,8 @@ export class LicenseValidator {
     type: LicenseType,
     key: string | null,
     _users: number,
-    _activeUsers: number
+    _activeUsers: number,
+    _version: string
   ): Promise<{
     validationError: string | null;
     proof: string | null;

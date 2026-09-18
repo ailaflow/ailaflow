@@ -3,6 +3,7 @@ import { DatabaseSync } from 'node:sqlite';
 import test, { TestContext } from 'node:test';
 import { LicenseType } from '@ailaflow/shared';
 import { SqliteDatabase, SqliteDatabases } from '../../core/sqlite-databases';
+import { VersionProvider } from '../../core/version-provider';
 import { SqliteKvConfigurationRepository } from '../../repositories/configuration/kv/sqlite-kv-configuration-repository';
 import { KvConfigurationManager } from '../kv/kv-configuration-manager';
 import { LicenseManager } from './license-manager';
@@ -11,6 +12,7 @@ import { SqliteUserRepository } from '../../repositories/user/sqlite-user-reposi
 import { User } from '../../repositories/user/user';
 
 const signal = new AbortController().signal;
+const version = 'test-version';
 
 async function fixture(t: TestContext) {
   const db = new DatabaseSync(':memory:');
@@ -23,8 +25,9 @@ async function fixture(t: TestContext) {
   const validator = new LicenseValidator();
   const validate = t.mock.method(validator, 'validate');
   const configurationManager = new KvConfigurationManager(repository);
-  const manager = new LicenseManager(validator, configurationManager, users);
-  return { db, repository, users, validator, validate, manager, configurationManager };
+  const versionProvider = { get: () => version } as VersionProvider;
+  const manager = new LicenseManager(validator, configurationManager, users, versionProvider);
+  return { db, repository, users, validator, validate, manager, configurationManager, versionProvider };
 }
 
 test('Home and Starter validate without a key and status starts unavailable', async t => {
@@ -55,7 +58,7 @@ test('validate returns status without saving license selection or replacing cach
   assert.equal((await repository.get(signal)).licenseType, null);
 });
 
-test('sends the total user count as both total and active users', async t => {
+test('sends the total user count as both total and active users together with the version', async t => {
   const { manager, users, validate } = await fixture(t);
   await users.insert(signal, new User('first', 'hash', true));
   await users.insert(signal, new User('second', 'hash', false));
@@ -64,10 +67,11 @@ test('sends the total user count as both total and active users', async t => {
 
   assert.equal(validate.mock.calls[0].arguments[4], 2);
   assert.equal(validate.mock.calls[0].arguments[5], 2);
+  assert.equal(validate.mock.calls[0].arguments[6], version);
 });
 
 test('persists instance ID and license selection and reuses them after restart', async t => {
-  const { manager, repository, users, validator, validate, db } = await fixture(t);
+  const { manager, repository, users, validator, validate, db, versionProvider } = await fixture(t);
   await manager.tryValidateAndSet(signal, LicenseType.BUSINESS, 'valid-key');
   assert.equal((await repository.get(signal)).licenseKey, 'valid-key');
   const instanceId = (await repository.get(signal)).instanceId;
@@ -81,7 +85,7 @@ test('persists instance ID and license selection and reuses them after restart',
       .map(row => row.key),
     ['instanceId', 'licenseKey', 'licenseType']
   );
-  const restarted = new LicenseManager(validator, new KvConfigurationManager(repository), users);
+  const restarted = new LicenseManager(validator, new KvConfigurationManager(repository), users, versionProvider);
   assert.equal(restarted.getStatus(), null);
   await restarted.validateOnBackground();
   assert.equal(validate.mock.calls[1].arguments[1], instanceId);

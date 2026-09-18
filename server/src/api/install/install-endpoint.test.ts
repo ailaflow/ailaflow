@@ -20,6 +20,7 @@ import { Installer } from '../../install/installer';
 import { CanInstallEndpoint } from './can-install-endpoint';
 import { FileSystemCipherKeyStore } from '../../core/cipher/file-system-cipher-key-store';
 import { Cipher } from '../../core/cipher/cipher';
+import { VersionProvider } from '../../core/version-provider';
 
 const signal = new AbortController().signal;
 const home = { licenseType: LicenseType.HOME, licenseKey: null } as const;
@@ -46,7 +47,8 @@ async function fixture(t: TestContext) {
     validationError: type !== LicenseType.BUSINESS || key === 'accepted-key' ? null : 'Invalid license key',
     proof: type === LicenseType.BUSINESS ? 'proof' : null
   }));
-  const manager = new LicenseManager(validator, new KvConfigurationManager(configuration), users);
+  const versionProvider = { get: () => 'test-version' } as VersionProvider;
+  const manager = new LicenseManager(validator, new KvConfigurationManager(configuration), users, versionProvider);
   const installer = new Installer(cipherKeyStore, cipher, users, attributes, sandboxes, manager);
   const endpoint = new InstallEndpoint(installer);
   const canInstallEndpoint = new CanInstallEndpoint(installer);
