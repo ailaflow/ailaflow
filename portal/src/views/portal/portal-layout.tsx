@@ -1,10 +1,8 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { AilaFlowLogo } from '../common/aila-flow-logo';
-import { ResourceIcon } from '../common/resource-icon';
 
 export type LinkMenuItem = {
-  icon: string;
   label: string;
   action: 'link';
   href: string;
@@ -12,7 +10,6 @@ export type LinkMenuItem = {
 };
 
 export type CommandMenuItem = {
-  icon: string;
   label: string;
   action: 'command';
   command: string;
@@ -26,12 +23,7 @@ function MenuItemView(props: { item: MenuItem; onCommand(command: string): void;
   const itemClassName = `flex w-full cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors ${
     isSelected ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-700 hover:bg-slate-100'
   }`;
-  const content = (
-    <>
-      <ResourceIcon>{item.icon}</ResourceIcon>
-      <span className="truncate">{item.label}</span>
-    </>
-  );
+  const content = <span className="truncate">{item.label}</span>;
 
   if (item.action === 'link') {
     return (
@@ -88,13 +80,13 @@ export function PortalLayout(props: PortalLayoutProps) {
           }`}
         >
           <div className="flex h-full flex-col">
-            <div className="border-b border-slate-200 pt-2 pb-6">
+            <div className="border-b border-slate-200 pt-1 pb-5">
               <Link to="/" onClick={closeSidebar} className="block transition-opacity hover:opacity-80">
-                <AilaFlowLogo className="mx-auto h-16 w-16 object-contain" />
+                <AilaFlowLogo className="mx-auto h-18 w-18 object-contain" />
               </Link>
             </div>
 
-            <div className="mt-4 px-2 text-xs font-medium text-slate-500">@{props.userName}</div>
+            <div className="mt-4 px-2 text-xs font-semibold tracking-wide text-slate-500">@{props.userName}</div>
 
             <div className="text-sm">
               <nav className="mt-4 flex flex-col gap-1.5">
@@ -121,7 +113,7 @@ export function PortalLayout(props: PortalLayoutProps) {
           <div className="flex h-full min-h-0 flex-col">
             <div className="flex h-12 shrink-0 items-center justify-between border-b border-slate-200 px-4 md:hidden">
               <Link to="/" aria-label="AilaFlow home">
-                <AilaFlowLogo className="h-8 w-8 object-contain" />
+                <AilaFlowLogo className="h-10 w-10 object-contain" />
               </Link>
               <button
                 type="button"

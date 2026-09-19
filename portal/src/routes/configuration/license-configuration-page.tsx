@@ -21,15 +21,19 @@ export function LicenseConfigurationPage() {
     [apiClient]
   );
 
-  if (loader.isLoading) return <PortalLoadingView />;
-  if (loader.error) return <PortalErrorView error={loader.error} />;
+  if (loader.isLoading) {
+    return <PortalLoadingView />;
+  }
+  if (loader.error) {
+    return <PortalErrorView error={loader.error} />;
+  }
   return <LoadedLicenseConfigurationPage initial={loader.data.configuration} initialStatus={loader.data.status} />;
 }
 
 function LoadedLicenseConfigurationPage(props: { initial: GetLicenseConfigurationResponse; initialStatus: GetLicenseStatusResponse }) {
   const apiClient = useApiClient();
   const [saved, setSaved] = useState(props.initial);
-  const [status, setStatus] = useState(props.initialStatus.status);
+  const [status, setStatus] = useState<GetLicenseStatusResponse | null>(props.initialStatus);
   const [licenseType, setLicenseType] = useState(props.initial.type);
   const [licenseKey, setLicenseKey] = useState('');
   const [isSaving, setIsSaving] = useState(false);
@@ -47,7 +51,9 @@ function LoadedLicenseConfigurationPage(props: { initial: GetLicenseConfiguratio
 
   async function save(event: SubmitEvent): Promise<void> {
     event.preventDefault();
-    if (!canSave) return;
+    if (!canSave) {
+      return;
+    }
     setIsSaving(true);
     setError(null);
     setSuccess(false);
@@ -59,7 +65,7 @@ function LoadedLicenseConfigurationPage(props: { initial: GetLicenseConfiguratio
       setStatus(null);
       try {
         const response = await apiClient.licenseConfiguration.getStatus(AbortSignal.timeout(10_000));
-        setStatus(response.status);
+        setStatus(response);
       } catch {
         setError('License saved, but its status could not be refreshed. Reload the tab to try again.');
       }
@@ -80,7 +86,7 @@ function LoadedLicenseConfigurationPage(props: { initial: GetLicenseConfiguratio
       error={error}
       success={success}
       status={status}
-      checkedAt={status ? new Date(status.checkedAt).toLocaleString() : null}
+      checkedAt={status?.checkedAt !== undefined ? new Date(status.checkedAt).toLocaleString() : null}
       onLicenseTypeChange={type => {
         setLicenseType(type);
         if (type !== LicenseType.BUSINESS) {

@@ -32,7 +32,7 @@ export function ConfigurationOverviewPage() {
   const adminChatConfigured = isLlmUseCaseConfigured(loader.data.llm, LlmUseCase.ADMIN_CHAT);
   const userChatConfigured = isLlmUseCaseConfigured(loader.data.llm, LlmUseCase.USER_CHAT);
   const agentStepConfigured = isLlmUseCaseConfigured(loader.data.llm, LlmUseCase.AGENT_STEP);
-  const licenseStatus = loader.data.license.status;
+  const licenseStatus = loader.data.license;
   const statuses: ConfigurationStatus[] = [
     {
       id: 'docker',
@@ -95,15 +95,30 @@ export function ConfigurationOverviewPage() {
     {
       id: 'license',
       label: 'License',
-      value: licenseStatus
-        ? `${getLicenseTypeLabel(licenseStatus.type)} · ${licenseStatus.validationError === null ? 'Valid' : 'Invalid'}`
-        : 'Not available',
-      detail: licenseStatus ? `Last checked: ${new Date(licenseStatus.checkedAt).toLocaleString()}` : undefined,
-      isHealthy: licenseStatus?.validationError === null,
-      remediation: licenseStatus
-        ? (licenseStatus.validationError ?? 'Review your license configuration and validate your license key.')
-        : 'License status data is not available yet.',
+      value:
+        licenseStatus.type !== undefined
+          ? `${getLicenseTypeLabel(licenseStatus.type)} · ${licenseStatus.validationError === null ? 'Valid' : 'Invalid'}`
+          : 'Not available',
+      detail: licenseStatus.checkedAt !== undefined ? `Last checked: ${new Date(licenseStatus.checkedAt).toLocaleString()}` : undefined,
+      isHealthy: licenseStatus.validationError === null,
+      remediation:
+        licenseStatus.type !== undefined
+          ? (licenseStatus.validationError ?? 'Review your license configuration and validate your license key.')
+          : 'License status data is not available yet.',
       action: { label: 'Configure license', href: '/admin/configuration?tab=license' }
+    },
+    {
+      id: 'version',
+      label: 'Application Version',
+      value: licenseStatus.version,
+      detail:
+        licenseStatus.canUpgrade === undefined
+          ? 'Upgrade availability has not been checked yet.'
+          : licenseStatus.canUpgrade
+            ? 'An upgrade is available.'
+            : 'No upgrade is available.',
+      isHealthy: licenseStatus.canUpgrade !== true,
+      remediation: 'Upgrade AilaFlow to the latest available version.'
     }
   ];
 

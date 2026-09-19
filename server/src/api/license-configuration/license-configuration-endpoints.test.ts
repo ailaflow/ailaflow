@@ -17,6 +17,9 @@ import { SaveLicenseConfigurationEndpoint } from './save-license-configuration-e
 import { VersionProvider } from '../../core/version-provider';
 
 const signal = new AbortController().signal;
+
+const validateSuccessfully: LicenseValidator['validate'] = async () => ({ validationError: null, canUpgrade: false });
+
 async function fixture(t: TestContext) {
   const db = new DatabaseSync(':memory:');
   t.after(() => db.close());
@@ -27,7 +30,7 @@ async function fixture(t: TestContext) {
   await users.setup(signal);
   const configuration = new KvConfigurationManager(repository);
   const validator = new LicenseValidator();
-  const validate = t.mock.method(validator, 'validate');
+  const validate = t.mock.method(validator, 'validate', validateSuccessfully);
   const versionProvider = { get: () => 'test-version' } as VersionProvider;
   const manager = new LicenseManager(validator, configuration, users, versionProvider);
   return {
@@ -35,25 +38,30 @@ async function fixture(t: TestContext) {
     validate,
     get: new GetLicenseConfigurationEndpoint(configuration),
     save: new SaveLicenseConfigurationEndpoint(manager),
-    status: new LicenseEndpoint(manager)
+    status: new LicenseEndpoint(manager, versionProvider)
   };
 }
 function request(body?: unknown): Request {
   return Object.assign(new EventEmitter(), { body }) as unknown as Request;
 }
 
-test('returns public status separately and exposes key presence only to administrators', async t => {
+test('returns authenticated status and exposes key presence only to administrators', async t => {
   const f = await fixture(t);
-  assert.equal('auth' in f.status, false);
+  assert.equal(f.status.auth, true);
   assert.equal(f.get.admin, true);
   assert.equal(f.save.admin, true);
-  assert.deepEqual(await f.status.handle(), { status: null });
+  const initialStatus = await f.status.handle(request());
+  assert.equal(initialStatus.version, 'test-version');
+  assert.ok(initialStatus.instanceId);
+  assert.equal(initialStatus.type, undefined);
   await assert.rejects(f.get.handle(request()), { name: 'Error', message: 'License type is not set' });
   assert.deepEqual(await f.save.handle(request({ type: LicenseType.BUSINESS, licenseKey: 'valid-secret' })), {});
   assert.deepEqual(await f.get.handle(request()), { type: LicenseType.BUSINESS, hasLicenseKey: true });
-  const status = await f.status.handle();
-  assert.equal(status.status!.validationError, null);
-  assert.equal(status.status!.type, LicenseType.BUSINESS);
+  const status = await f.status.handle(request());
+  assert.equal(status.validationError, null);
+  assert.equal(status.type, LicenseType.BUSINESS);
+  assert.equal(status.canUpgrade, false);
+  assert.equal(status.instanceId, initialStatus.instanceId);
   assert.equal(JSON.stringify(status).includes('valid-secret'), false);
   assert.equal(JSON.stringify(await f.get.handle(request())).includes('valid-secret'), false);
   assert.equal(f.validate.mock.callCount(), 1);
@@ -67,7 +75,8 @@ test('returns public status separately and exposes key presence only to administ
 test('validation rejection and service failure preserve stored selection and status', async t => {
   const f = await fixture(t);
   await f.save.handle(request({ type: LicenseType.HOME, licenseKey: null }));
-  const savedStatus = await f.status.handle();
+  const savedStatus = await f.status.handle(request());
+  f.validate.mock.mockImplementation(async () => ({ validationError: 'Invalid license key', canUpgrade: false }));
   for (const licenseKey of [null, '', '   ', 'missing']) {
     await assert.rejects(
       f.save.handle(request({ type: LicenseType.BUSINESS, licenseKey })),
@@ -79,5 +88,5 @@ test('validation rejection and service failure preserve stored selection and sta
   });
   await assert.rejects(f.save.handle(request({ type: LicenseType.BUSINESS, licenseKey: 'valid-secret' })), /License service unavailable/);
   assert.deepEqual(await f.get.handle(request()), { type: LicenseType.HOME, hasLicenseKey: false });
-  assert.deepEqual(await f.status.handle(), savedStatus);
+  assert.deepEqual(await f.status.handle(request()), savedStatus);
 });

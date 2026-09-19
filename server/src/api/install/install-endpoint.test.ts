@@ -43,9 +43,10 @@ async function fixture(t: TestContext) {
   for (const repository of [users, attributes, sandboxes, configuration]) await repository.setup(signal);
   const validator = new LicenseValidator();
   const validate = t.mock.method(validator, 'validate');
-  validate.mock.mockImplementation(async (_signal, _instanceId, type, key) => ({
-    validationError: type !== LicenseType.BUSINESS || key === 'accepted-key' ? null : 'Invalid license key',
-    proof: type === LicenseType.BUSINESS ? 'proof' : null
+  validate.mock.mockImplementation(async (_signal, request) => ({
+    validationError:
+      request.type !== LicenseType.BUSINESS || request.key === 'accepted-key' ? null : 'Invalid license key',
+    canUpgrade: false
   }));
   const versionProvider = { get: () => 'test-version' } as VersionProvider;
   const manager = new LicenseManager(validator, new KvConfigurationManager(configuration), users, versionProvider);
@@ -70,7 +71,7 @@ for (const license of [home, starter, business]) {
     assert.ok(await f.sandboxes.tryGet(signal, 'default'));
     assert.equal((await f.configuration.get(signal)).licenseType, license.licenseType);
     assert.equal((await f.configuration.get(signal)).licenseKey, license.licenseKey);
-    assert.equal(f.manager.getStatus()!.validationError, null);
+    assert.equal(f.manager.getStatus()!.validationResult.validationError, null);
     assert.equal(f.validate.mock.callCount(), 1);
     assert.deepEqual(await f.canInstallEndpoint.handle(request(undefined)), { canInstall: false });
     await assert.rejects(f.endpoint.handle(request(business)), /already initialized/);
@@ -81,14 +82,14 @@ for (const license of [home, starter, business]) {
 for (const unavailable of [false, true]) {
   test(`validation ${unavailable ? 'service error' : 'rejection'} saves only the instance ID and allows retry`, async t => {
     const f = await fixture(t);
-    f.validate.mock.mockImplementation(async (_signal, _instanceId, type) => {
-      if (type !== LicenseType.BUSINESS) {
-        return { validationError: null, proof: null };
+    f.validate.mock.mockImplementation(async (_signal, validationRequest) => {
+      if (validationRequest.type !== LicenseType.BUSINESS) {
+        return { validationError: null, canUpgrade: false };
       }
       if (unavailable) {
         throw new Error('service failed');
       }
-      return { validationError: 'License expired', proof: null };
+      return { validationError: 'License expired', canUpgrade: false };
     });
     await assert.rejects(
       f.endpoint.handle(request(business)),
@@ -114,14 +115,14 @@ for (const unavailable of [false, true]) {
 
 test('waits for validation before writing and rejects concurrent installation attempts', async t => {
   const f = await fixture(t);
-  let resolve!: (value: { validationError: string | null; proof: string }) => void;
+  let resolve!: (value: { validationError: string | null; canUpgrade: boolean }) => void;
   let validationStartedResolve!: () => void;
   const validationStarted = new Promise<void>(done => {
     validationStartedResolve = done;
   });
   f.validate.mock.mockImplementation(
     () =>
-      new Promise<{ validationError: string | null; proof: string }>(done => {
+      new Promise<{ validationError: string | null; canUpgrade: boolean }>(done => {
         resolve = done;
         validationStartedResolve();
       })
@@ -131,7 +132,7 @@ test('waits for validation before writing and rejects concurrent installation at
   assert.equal(await f.users.count(signal), 0);
   assert.equal((await f.configuration.get(signal)).licenseType, null);
   await assert.rejects(f.endpoint.handle(request(home)), /already in progress/);
-  resolve({ validationError: null, proof: 'proof' });
+  resolve({ validationError: null, canUpgrade: false });
   assert.deepEqual(await installing, {});
 });
 

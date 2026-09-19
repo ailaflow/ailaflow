@@ -15,7 +15,7 @@ test('uses numeric license types with flat license fields during installation', 
     {},
     { type: 'home', licenseKey: null },
     { type: 'business', licenseKey: 'key' },
-    { type: 1, licenseKey: null },
+    { type: 999, licenseKey: null },
     { type: LicenseType.BUSINESS }
   ]) {
     assert.equal(installRequestSchema.safeParse({ ...install, licenseType: license.type, licenseKey: license.licenseKey }).success, false);
@@ -33,19 +33,26 @@ test('uses numeric license types with flat license fields during installation', 
   }
 });
 
-test('configuration exposes only key presence while status validation error and proof can be null', () => {
+test('configuration exposes only key presence while status includes instance and upgrade information', () => {
   assert.deepEqual(getLicenseConfigurationResponseSchema.parse({ type: LicenseType.BUSINESS, hasLicenseKey: true }), {
     type: LicenseType.BUSINESS,
     hasLicenseKey: true
   });
-  assert.deepEqual(getLicenseStatusResponseSchema.parse({ status: null }), { status: null });
-  const status = { type: LicenseType.HOME, validationError: null, proof: null, checkedAt: 123 };
-  assert.deepEqual(getLicenseStatusResponseSchema.parse({ status }), { status });
-  assert.equal(getLicenseStatusResponseSchema.safeParse({ status: { ...status, validationError: 'License expired' } }).success, true);
+  const baseStatus = { instanceId: 'instance-id', version: '1.2.3' };
+  assert.deepEqual(getLicenseStatusResponseSchema.parse(baseStatus), baseStatus);
+  const status = { ...baseStatus, type: LicenseType.HOME, validationError: null, checkedAt: 123, canUpgrade: true };
+  assert.deepEqual(getLicenseStatusResponseSchema.parse(status), status);
+  assert.equal(getLicenseStatusResponseSchema.safeParse({ ...status, validationError: 'License expired' }).success, true);
   assert.equal(
-    getLicenseStatusResponseSchema.safeParse({
-      status: { type: LicenseType.HOME, isValid: true, proof: null, checkedAt: 123 }
-    }).success,
+    getLicenseStatusResponseSchema.safeParse({ version: '1.2.3' }).success,
+    false
+  );
+  assert.equal(
+    getLicenseStatusResponseSchema.safeParse({ instanceId: 'instance-id' }).success,
+    false
+  );
+  assert.equal(
+    getLicenseStatusResponseSchema.safeParse({ ...status, canUpgrade: 'yes' }).success,
     false
   );
 });

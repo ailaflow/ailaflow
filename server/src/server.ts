@@ -520,7 +520,7 @@ export class Server {
 
     const endpoints = [
       new HealthEndpoint(),
-      new LicenseEndpoint(licenseManager),
+      new LicenseEndpoint(licenseManager, versionProvider),
       new GetLicenseConfigurationEndpoint(kvConfigurationManager),
       new SaveLicenseConfigurationEndpoint(licenseManager),
       new CanInstallEndpoint(installer),

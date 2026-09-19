@@ -1,9 +1,16 @@
 import * as z from 'zod/v4';
-import { licenseStatusSchema, LicenseType } from '../configuration/license';
+import { LicenseType } from '../configuration/license';
 
 // getLicenseStatus
 
-export const getLicenseStatusResponseSchema = z.object({ status: licenseStatusSchema.nullable() });
+export const getLicenseStatusResponseSchema = z.object({
+  instanceId: z.string(),
+  version: z.string(),
+  type: z.enum(LicenseType).optional(),
+  validationError: z.string().nullable().optional(),
+  checkedAt: z.number().optional(),
+  canUpgrade: z.boolean().optional()
+});
 
 export type GetLicenseStatusResponse = z.infer<typeof getLicenseStatusResponseSchema>;
 

@@ -1,23 +1,27 @@
 import { LicenseType } from '@ailaflow/shared';
 
+export interface LicenseValidationRequest {
+  instanceId: string;
+  type: LicenseType;
+  key: string | null;
+  users: number;
+  version: string;
+}
+
+export interface LicenseValidationResult {
+  validationError: string | null;
+  canUpgrade: boolean;
+}
+
 export class LicenseValidator {
-  public async validate(
-    abortSignal: AbortSignal,
-    _instanceId: string,
-    type: LicenseType,
-    key: string | null,
-    _users: number,
-    _activeUsers: number,
-    _version: string
-  ): Promise<{
-    validationError: string | null;
-    proof: string | null;
-  }> {
-    abortSignal.throwIfAborted();
-    if (type !== LicenseType.BUSINESS) {
-      return { validationError: null, proof: null };
+  public async validate(signal: AbortSignal, request: LicenseValidationRequest): Promise<LicenseValidationResult> {
+    signal.throwIfAborted();
+    if (request.type !== LicenseType.BUSINESS) {
+      return { validationError: null, canUpgrade: false };
     }
     // TODO:
-    return key?.includes('valid') ? { validationError: null, proof: 'proof' } : { validationError: 'Invalid license key', proof: null };
+    return request.key?.includes('valid')
+      ? { validationError: null, canUpgrade: false }
+      : { validationError: 'Invalid license key', canUpgrade: false };
   }
 }

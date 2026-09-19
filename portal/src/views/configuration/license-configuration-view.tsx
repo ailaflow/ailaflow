@@ -1,5 +1,5 @@
 import { LicenseType } from '@ailaflow/shared';
-import type { LicenseStatus } from '@ailaflow/shared';
+import type { GetLicenseStatusResponse } from '@ailaflow/shared';
 import type { SubmitEvent } from 'react';
 import { LicenseSelectorView } from '../common/license-selector-view';
 import type { LicenseSelectorViewProps } from '../common/license-selector-view';
@@ -8,7 +8,7 @@ export interface LicenseConfigurationViewProps extends LicenseSelectorViewProps 
   canSave: boolean;
   error: string | null;
   success: boolean;
-  status: LicenseStatus | null;
+  status: GetLicenseStatusResponse | null;
   checkedAt: string | null;
   onSubmit(event: SubmitEvent): void | Promise<void>;
 }
@@ -47,7 +47,7 @@ export function LicenseConfigurationView(props: LicenseConfigurationViewProps) {
         </section>
         <section className="min-w-0 self-start rounded-lg border border-slate-200 bg-white p-4 shadow-sm" aria-label="Saved license status">
           <h2 className="text-lg font-semibold text-slate-900">License status</h2>
-          {props.status ? (
+          {props.status?.type !== undefined ? (
             <dl className="mt-4 space-y-3 text-sm">
               <div className="flex justify-between gap-3">
                 <dt className="text-slate-500">Saved license</dt>
@@ -70,10 +70,6 @@ export function LicenseConfigurationView(props: LicenseConfigurationViewProps) {
               <div className="flex flex-wrap justify-between gap-3">
                 <dt className="text-slate-500">Last checked</dt>
                 <dd>{props.checkedAt}</dd>
-              </div>
-              <div>
-                <dt className="text-slate-500">Proof</dt>
-                <dd className="mt-1 break-all font-mono text-xs">{props.status.proof || 'Not available'}</dd>
               </div>
             </dl>
           ) : (
