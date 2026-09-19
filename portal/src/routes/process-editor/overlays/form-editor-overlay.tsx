@@ -15,7 +15,7 @@ export function FormEditorOverlay() {
   const variableValidator = useMemo(() => new VariableCachedValidator(), []);
 
   const formState = useMemo(() => {
-    const { form, inputVariableNames, outputVariableNames } = FormEditorOverlayUtils.getData(state);
+    const { form, title, inputVariableNames, outputVariableNames } = FormEditorOverlayUtils.getData(state);
     const normalizedForm = {
       ...form,
       inputExamples: inputVariableNames.map(variableName => {
@@ -24,6 +24,7 @@ export function FormEditorOverlay() {
     };
     return {
       form: normalizedForm,
+      title,
       inputVariableNames,
       outputVariableNames,
       errors: FormDefinitionValidator.validate(normalizedForm, inputVariableNames, state.definition.value, state.variableValidator)
@@ -90,7 +91,7 @@ export function FormEditorOverlay() {
 
   return (
     <ProcessOverlayView
-      title="Form Editor"
+      title={formState.title}
       isOkVisible={state.isDirty}
       isOkEnabled={state.isDirty && Object.keys(formState.errors).length === 0}
       closeContent={state.isDirty ? 'Cancel' : <SvgIcon name="x" className="h-4 w-4" />}

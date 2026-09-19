@@ -79,7 +79,7 @@ export function ScriptEditorOverlay() {
 
   return (
     <ProcessOverlayView
-      title="Script Editor"
+      title={data.title}
       isOkVisible={state.isDirty}
       isOkEnabled={state.isDirty}
       closeContent={state.isDirty ? 'Cancel' : <SvgIcon name="x" className="h-4 w-4" />}

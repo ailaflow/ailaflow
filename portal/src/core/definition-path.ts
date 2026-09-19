@@ -6,11 +6,13 @@ const processWalker = new DefinitionWalker();
 export type DefinitionPathValue<T> =
   | {
       isRoot: true;
+      pathParts: string[];
       parent: ProcessDefinition;
       value: T;
     }
   | {
       isRoot: false;
+      pathParts: string[];
       parent: Step;
       value: T;
     };
@@ -60,12 +62,14 @@ export class DefinitionPath {
     if (stepId !== null) {
       return {
         isRoot: false,
+        pathParts,
         parent,
         value
       };
     }
     return {
       isRoot: true,
+      pathParts,
       parent,
       value
     };

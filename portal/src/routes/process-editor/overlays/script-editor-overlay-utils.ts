@@ -3,14 +3,19 @@ import { ProcessEditorOverlayType, ProcessEditorState } from '../process-editor-
 
 export interface ScriptEditorOverlayData {
   script: ScriptDefinition;
+  title: string;
   variableNames: string[];
 }
 
 export class ScriptEditorOverlayUtils {
   public static getData(state: ProcessEditorState): ScriptEditorOverlayData {
     const v = state.getOverlayObject<ScriptDefinition>(ProcessEditorOverlayType.SCRIPT_EDITOR);
+    if (v.isRoot) {
+      throw new Error('Invalid script editor overlay state');
+    }
     return {
       script: v.value,
+      title: `${v.parent.name} - Script Editor`,
       variableNames: state.definition.value.properties.variables.map(v => v.name)
     };
   }
