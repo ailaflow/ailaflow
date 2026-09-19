@@ -3,7 +3,7 @@ import { IframeForm } from '../../../routes/common/form-renderer/iframe-form';
 import { FormAdapter } from '../../../routes/common/form-renderer/form-adapter';
 import { CodeMirror, type CodeMirrorLanguage } from '../../common/codemirror';
 
-export const formEditorTabs = ['Example Inputs', 'HTML', 'CSS', 'JS', 'Preview'] as const;
+export const formEditorTabs = ['Preview', 'Example Inputs', 'HTML', 'CSS', 'JS'] as const;
 export type FormEditorTab = (typeof formEditorTabs)[number];
 
 export interface FormOverlayViewProps {

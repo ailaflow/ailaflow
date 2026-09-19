@@ -6,7 +6,6 @@ import type { FileContent } from '@ailaflow/shared';
 import { FolderTreeItem, FolderTreeView } from '../../../views/process-editor/overlays/folder-tree-view';
 import { FileContentEditorView } from '../../../views/process-editor/overlays/file-content-editor-view';
 import { ScriptEditorOverlayUtils } from './script-editor-overlay-utils';
-import { SvgIcon } from '../../../views/common/svg-icons';
 
 export interface ScriptEditorOverlayState {
   selectedFilePath: string | undefined;
@@ -73,20 +72,8 @@ export function ScriptEditorOverlay() {
     state.notifyDefinitionChange();
   }
 
-  function ok() {
-    state.closeOverlay();
-  }
-
   return (
-    <ProcessOverlayView
-      title={data.title}
-      isOkVisible={state.isDirty}
-      isOkEnabled={state.isDirty}
-      closeContent={state.isDirty ? 'Cancel' : <SvgIcon name="x" className="h-4 w-4" />}
-      closeAriaLabel={state.isDirty ? 'Cancel' : 'Back to designer'}
-      onClose={state.closeOverlay}
-      onOk={ok}
-    >
+    <ProcessOverlayView title={data.title} canClose={true} onClose={state.closeOverlay}>
       <ScriptOverlayView>
         <FolderTreeView
           items={folderItems}

@@ -1,11 +1,9 @@
+import { SvgIcon } from '../../common/svg-icons';
+
 export interface ProcessOverlayViewProps {
   title: string;
-  isOkVisible: boolean;
-  isOkEnabled: boolean;
-  closeContent: React.ReactNode;
-  closeAriaLabel: string;
+  canClose: boolean;
   onClose: () => void;
-  onOk: () => void;
   children: React.ReactNode;
 }
 
@@ -18,22 +16,13 @@ export function ProcessOverlayView(props: ProcessOverlayViewProps) {
           <div className="flex shrink-0 items-center gap-2">
             <button
               type="button"
+              disabled={!props.canClose}
               onClick={props.onClose}
-              aria-label={props.closeAriaLabel}
-              className="cursor-pointer inline-flex h-9 items-center justify-center rounded-md border border-slate-200 bg-white px-3 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-800"
+              aria-label="Back to designer"
+              className="cursor-pointer inline-flex h-9 items-center justify-center rounded-md border border-slate-200 bg-white px-3 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-800 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-300 disabled:hover:bg-slate-100 disabled:hover:text-slate-300"
             >
-              {props.closeContent}
+              <SvgIcon name="x" className="h-4 w-4" />
             </button>
-            {props.isOkVisible && (
-              <button
-                type="button"
-                disabled={!props.isOkEnabled}
-                onClick={props.onOk}
-                className="cursor-pointer inline-flex h-9 items-center justify-center rounded-md border border-slate-900 bg-slate-900 px-5 text-sm font-medium text-white transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:border-slate-300 disabled:bg-slate-300 disabled:text-white disabled:hover:bg-slate-300"
-              >
-                OK
-              </button>
-            )}
           </div>
         </div>
       </div>

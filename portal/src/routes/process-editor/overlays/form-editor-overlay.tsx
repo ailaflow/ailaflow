@@ -8,7 +8,6 @@ import { ProcessEditorOverlayType } from '../process-editor-context';
 import { useProcessEditor } from '../process-editor-context';
 import { FormEditorOverlayUtils } from './form-editor-overlay-utils';
 import { FormAdapter } from '../../common/form-renderer/form-adapter';
-import { SvgIcon } from '../../../views/common/svg-icons';
 
 export function FormEditorOverlay() {
   const state = useProcessEditor();
@@ -46,7 +45,7 @@ export function FormEditorOverlay() {
       async readVariable(_: AbortSignal, name: string) {
         const example = formState.form.inputExamples.find(example => example.variableName === name);
         if (!example || !example.exampleValue) {
-          throw new Error(`Not found example value for variable \$${name}`);
+          throw new Error(`Not found example value for \$${name} variable, you can add it in the Example Inputs tab`);
         }
         return JSON.parse(example.exampleValue);
       }
@@ -54,7 +53,7 @@ export function FormEditorOverlay() {
     [state, formState, variableValidator]
   );
 
-  const [selectedTab, setSelectedTab] = useState<FormEditorTab>(formState.inputVariableNames.length > 0 ? 'Example Inputs' : 'HTML');
+  const [selectedTab, setSelectedTab] = useState<FormEditorTab>('Preview');
   const selectedVisibleTab = selectedTab === 'Example Inputs' && formState.inputVariableNames.length === 0 ? 'HTML' : selectedTab;
 
   function setForm(form: FormDefinition) {
@@ -81,24 +80,8 @@ export function FormEditorOverlay() {
     });
   }
 
-  function ok() {
-    if (Object.keys(formState.errors).length > 0) {
-      return;
-    }
-
-    state.closeOverlay();
-  }
-
   return (
-    <ProcessOverlayView
-      title={formState.title}
-      isOkVisible={state.isDirty}
-      isOkEnabled={state.isDirty && Object.keys(formState.errors).length === 0}
-      closeContent={state.isDirty ? 'Cancel' : <SvgIcon name="x" className="h-4 w-4" />}
-      closeAriaLabel={state.isDirty ? 'Cancel' : 'Back to designer'}
-      onClose={state.closeOverlay}
-      onOk={ok}
-    >
+    <ProcessOverlayView title={formState.title} canClose={Object.keys(formState.errors).length === 0} onClose={state.closeOverlay}>
       <FormOverlayView
         selectedTab={selectedVisibleTab}
         showExampleInputs={formState.inputVariableNames.length > 0}

@@ -1,9 +1,7 @@
 import type { JsonSchema } from '@ailaflow/shared';
 import { ProcessEditorOverlayType, useProcessEditor } from '../process-editor-context';
 import { useState } from 'react';
-import { wrapDefinition } from 'sequential-workflow-designer-react';
 import { ProcessOverlayView } from '../../../views/process-editor/overlays/process-overlay-view';
-import { SvgIcon } from '../../../views/common/svg-icons';
 import { DefinitionPath } from '../../../core/definition-path';
 import { SchemaOverlayView } from '../../../views/process-editor/overlays/schema-overlay-view';
 
@@ -25,46 +23,30 @@ export function SchemaEditorOverlay() {
   });
 
   function setSchema(newSchema: string) {
-    let isValid = true;
-    try {
-      JSON.parse(newSchema);
-    } catch (e) {
-      isValid = false;
+    if (!state.overlay) {
+      throw new Error('Invalid state');
     }
+
+    let json: object | undefined = undefined;
+    try {
+      json = JSON.parse(newSchema);
+    } catch {
+      // Ignore
+    }
+    const isValid = Boolean(json);
     setData({
       ...data,
       schema: newSchema,
       isValid
     });
-    state.setDefinition(wrapDefinition(state.definition.value), true);
-  }
-
-  function ok() {
-    let newSchema: JsonSchema;
-    try {
-      newSchema = JSON.parse(data.schema) as JsonSchema;
-    } catch (e) {
-      return;
+    if (json) {
+      DefinitionPath.writePath(state.definition.value, state.overlay.path, json);
+      state.notifyDefinitionChange();
     }
-
-    if (!state.overlay) {
-      throw new Error('Schema editor overlay is not open');
-    }
-    DefinitionPath.writePath(state.definition.value, state.overlay.path, newSchema);
-    state.notifyDefinitionChange();
-    state.closeOverlay();
   }
 
   return (
-    <ProcessOverlayView
-      title={data.title}
-      isOkVisible={state.isDirty}
-      isOkEnabled={state.isDirty && data.isValid}
-      closeContent={state.isDirty ? 'Cancel' : <SvgIcon name="x" className="h-4 w-4" />}
-      closeAriaLabel={state.isDirty ? 'Cancel' : 'Back to designer'}
-      onClose={state.closeOverlay}
-      onOk={ok}
-    >
+    <ProcessOverlayView title={data.title} canClose={data.isValid} onClose={state.closeOverlay}>
       <SchemaOverlayView schema={data.schema} onSchemaChange={setSchema} />
     </ProcessOverlayView>
   );
