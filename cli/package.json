@@ -27,15 +27,6 @@
     "prettier:fix": "prettier --write ./src ./scripts webpack.config.mjs",
     "test": "node --test tests/*.test.mjs"
   },
-  "dependencies": {
-    "@slack/socket-mode": "^2.0.5",
-    "croner": "^10.0.1",
-    "express": "^5.2.1",
-    "sequential-workflow-machine": "^0.7.1",
-    "sequential-workflow-model": "^0.2.0",
-    "xstate": "^4.38.3",
-    "zod": "^4.4.3"
-  },
   "devDependencies": {
     "@swc/core": "^1.13.5",
     "@tailwindcss/postcss": "^4.3.0",

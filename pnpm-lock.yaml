@@ -123,28 +123,6 @@ importers:
         version: 6.0.3
 
   cli:
-    dependencies:
-      '@slack/socket-mode':
-        specifier: ^2.0.5
-        version: 2.0.7
-      croner:
-        specifier: ^10.0.1
-        version: 10.0.1
-      express:
-        specifier: ^5.2.1
-        version: 5.2.1
-      sequential-workflow-machine:
-        specifier: ^0.7.1
-        version: 0.7.1(sequential-workflow-model@0.2.0)(xstate@4.38.3)
-      sequential-workflow-model:
-        specifier: ^0.2.0
-        version: 0.2.0
-      xstate:
-        specifier: ^4.38.3
-        version: 4.38.3
-      zod:
-        specifier: ^4.4.3
-        version: 4.4.3
     devDependencies:
       '@swc/core':
         specifier: ^1.13.5

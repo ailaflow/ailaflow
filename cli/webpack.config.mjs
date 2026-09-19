@@ -10,19 +10,12 @@ import webpack from 'webpack';
 const cliDirectory = dirname(fileURLToPath(import.meta.url));
 const rootDirectory = resolve(cliDirectory, '..');
 const outputDirectory = resolve(cliDirectory, 'dist');
-const cliPackageJson = JSON.parse(readFileSync(resolve(cliDirectory, 'package.json'), 'utf8'));
-const serverPackageJson = JSON.parse(readFileSync(resolve(rootDirectory, 'server/package.json'), 'utf8'));
-const cliRuntimePackages = new Set(Object.keys(cliPackageJson.dependencies ?? {}));
-const serverExternalPackages = new Set(
-  Object.entries(serverPackageJson.dependencies ?? {})
-    .filter(([, version]) => !version.startsWith('workspace:'))
-    .map(([name]) => name)
-);
 
-const missingServerRuntimePackages = [...serverExternalPackages].filter(name => !cliRuntimePackages.has(name));
-if (missingServerRuntimePackages.length > 0) {
-  throw new Error(`CLI dependencies are missing server runtime packages: ${missingServerRuntimePackages.join(', ')}`);
-}
+const nodeBundleWarnings = [
+  { module: /express[\\/]lib[\\/]view\.js/, message: /Critical dependency/ },
+  { module: /ws[\\/]lib[\\/]buffer-util\.js/, message: /Can't resolve 'bufferutil'/ },
+  { module: /ws[\\/]lib[\\/]validation\.js/, message: /Can't resolve 'utf-8-validate'/ }
+];
 
 const aliases = {
   '@ailaflow/shared$': resolve(rootDirectory, 'shared/src/index.ts'),
@@ -73,21 +66,6 @@ function shared(name, mode) {
   };
 }
 
-function packageName(request) {
-  if (request.startsWith('@')) {
-    return request.split('/').slice(0, 2).join('/');
-  }
-  return request.split('/')[0];
-}
-
-function externalizeServerDependency({ request }, callback) {
-  if (request && serverExternalPackages.has(packageName(request))) {
-    callback(null, `commonjs ${request}`);
-    return;
-  }
-  callback();
-}
-
 function portalConfig(mode) {
   const config = shared('portal', mode);
   config.target = 'web';
@@ -123,7 +101,8 @@ function portalConfig(mode) {
       patterns: [
         {
           from: resolve(rootDirectory, 'portal/public'),
-          to: '.'
+          to: '.',
+          filter: resourcePath => !resourcePath.endsWith('.DS_Store')
         }
       ]
     })
@@ -141,8 +120,8 @@ function serverConfig(mode) {
     library: { type: 'commonjs2' }
   };
   config.externalsPresets = { node: true };
-  config.externals = [externalizeServerDependency];
-  config.optimization = { minimize: false };
+  config.optimization = { minimize: mode === 'production' };
+  config.ignoreWarnings = nodeBundleWarnings;
   return config;
 }
 
@@ -166,7 +145,7 @@ function cliConfig(mode) {
       entryOnly: true
     })
   ];
-  config.optimization = { minimize: false };
+  config.optimization = { minimize: mode === 'production' };
   return config;
 }
 
@@ -180,8 +159,8 @@ function bridgeServerConfig(mode) {
     library: { type: 'commonjs2' }
   };
   config.externalsPresets = { node: true };
-  config.optimization = { minimize: false };
-  config.ignoreWarnings = [{ module: /express[\\/]lib[\\/]view\.js/, message: /Critical dependency/ }];
+  config.optimization = { minimize: mode === 'production' };
+  config.ignoreWarnings = nodeBundleWarnings;
   config.plugins = [
     new CopyWebpackPlugin({
       patterns: [
