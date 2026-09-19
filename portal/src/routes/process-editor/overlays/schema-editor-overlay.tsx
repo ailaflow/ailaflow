@@ -15,7 +15,7 @@ export function SchemaEditorOverlay() {
       const name = parent.properties.variables[index].name;
       return {
         schema: JSON.stringify(value, null, 2),
-        title: `$${name} - Schema Editor`,
+        title: `$${name} - JSON Schema Editor`,
         isValid: true
       };
     }

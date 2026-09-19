@@ -28,9 +28,30 @@ export function createBlankDefinition(): ProcessDefinition {
 export function createEmptyFormDefinition(): FormDefinition {
   return {
     inputExamples: [],
-    html: '<form>\n<h3>Test Form</h3>\n</form>\n',
-    css: 'body {\n  font: 14px/1.3em Arial, Tahoma;\n  margin: 0;\n  padding: 20px;\n  background-color: white;\n}\n',
-    js: '// JS here'
+    html: `<p>Edit the HTML, CSS, and JavaScript tabs to build your form.</p>
+<button type="button" onclick="submitForm()">Submit</button>`,
+    css: `html {
+  margin: 0; 
+  padding: 0;
+}
+body {
+  font: 14px ui-sans-serif, system-ui, sans-serif;
+  margin: 0; 
+  padding: 15px;
+  background: #F2F5F9;
+}
+`,
+    js: `async function submitForm() {
+  try {
+    await ailaflow.submitForm({
+      // Add form data here
+    });
+  } catch (e) {
+    const error = e instanceof Error ? e.message : String(e);
+    // Display the error message to the user
+  }
+}
+`
   };
 }
 
