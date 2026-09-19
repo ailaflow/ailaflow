@@ -7,7 +7,8 @@ export enum ProcessTesterTimelineItemType {
   LOG = 2,
   ERROR = 3,
   OUTPUT = 4,
-  CURRENT_STEP = 5
+  CURRENT_STEP = 5,
+  FORM_ERROR = 6
 }
 
 export enum ProcessTesterTimelineFormType {
@@ -67,6 +68,20 @@ export class ErrorProcessTesterTimelineItem implements ProcessTesterTimelineItem
     public readonly time: number,
     public readonly title: string,
     public readonly message: string
+  ) {}
+}
+
+export class FormErrorProcessTesterTimelineItem implements ProcessTesterTimelineItem {
+  public readonly type = ProcessTesterTimelineItemType.FORM_ERROR;
+
+  public get id(): string {
+    return `form-error-${this.time}-${this.message}`;
+  }
+
+  public constructor(
+    public readonly time: number,
+    public readonly message: string,
+    public readonly stack?: string
   ) {}
 }
 
@@ -130,7 +145,9 @@ export function ProcessTesterTimelineView(props: ProcessTesterTimelineViewProps)
 
 function TimelineMarker(props: { item: ProcessTesterTimelineItem }) {
   let markerClassName = 'border-slate-300 bg-white';
-  if (props.item instanceof ErrorProcessTesterTimelineItem) {
+  if (props.item instanceof FormErrorProcessTesterTimelineItem) {
+    markerClassName = 'border-orange-600 bg-orange-200';
+  } else if (props.item instanceof ErrorProcessTesterTimelineItem) {
     markerClassName = 'border-red-500 bg-red-100';
   } else if (props.item instanceof LogProcessTesterTimelineItem) {
     if (props.item.level === ProcessLogLevel.ERROR) {
@@ -159,6 +176,9 @@ function TimelineItem(props: Pick<ProcessTesterTimelineViewProps, 'startForm' | 
   }
   if (item instanceof ErrorProcessTesterTimelineItem) {
     return <ErrorTimelineItem item={item} />;
+  }
+  if (item instanceof FormErrorProcessTesterTimelineItem) {
+    return <FormErrorTimelineItem item={item} />;
   }
   if (item instanceof OutputProcessTesterTimelineItem) {
     return <OutputTimelineItem item={item} />;
@@ -191,6 +211,20 @@ function ErrorTimelineItem(props: { item: ErrorProcessTesterTimelineItem }) {
       <pre className="mt-2 overflow-x-auto whitespace-pre-wrap break-words font-mono text-xs leading-5 text-red-800">
         {props.item.message}
       </pre>
+    </article>
+  );
+}
+
+function FormErrorTimelineItem(props: { item: FormErrorProcessTesterTimelineItem }) {
+  return (
+    <article className="w-full min-w-0 rounded-lg border border-orange-300 bg-orange-100 px-4 py-3 shadow-sm">
+      <TimelineItemHeader title="Form error" time={props.item.time} tone="error" />
+      <p className="mt-2 break-words text-sm text-orange-950">{props.item.message}</p>
+      {props.item.stack && (
+        <pre className="mt-2 overflow-x-auto whitespace-pre-wrap break-words border-t border-orange-300 pt-2 font-mono text-xs leading-5 text-orange-900">
+          {props.item.stack}
+        </pre>
+      )}
     </article>
   );
 }

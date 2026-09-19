@@ -1,5 +1,10 @@
 import { ProcessExecutionVariableValues } from '@ailaflow/shared';
 
+export interface FormError {
+  message: string;
+  stack?: string;
+}
+
 export interface FormAdapter {
   /**
    * If `null` then all variables are allowed to be read.
@@ -16,4 +21,6 @@ export interface FormAdapter {
   openStartForm(abortSignal: AbortSignal): Promise<void>;
   submitForm(abortSignal: AbortSignal, values: ProcessExecutionVariableValues): Promise<void>;
   readVariable(abortSignal: AbortSignal, variableName: string): Promise<unknown>;
+
+  collectFormError?: (error: FormError) => void;
 }

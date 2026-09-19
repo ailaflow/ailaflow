@@ -15,6 +15,7 @@ import { ProcessTesterPreferencesStorage } from './process-tester-preferences-st
 import {
   CurrentStepProcessTesterTimelineItem,
   ErrorProcessTesterTimelineItem,
+  FormErrorProcessTesterTimelineItem,
   FormProcessTesterTimelineItem,
   LogProcessTesterTimelineItem,
   OutputProcessTesterTimelineItem,
@@ -22,6 +23,7 @@ import {
   ProcessTesterTimelineFormType,
   type ProcessTesterTimelineItem
 } from '../../views/process-tester/process-tester-top-view';
+import { FormError } from '../common/form-renderer/form-adapter';
 
 export interface ProcessTesterData {
   process: ProcessDto;
@@ -36,6 +38,7 @@ export interface ProcessTesterData {
 export interface ProcessTesterState extends ProcessTesterData {
   submitForm(values: ProcessExecutionVariableValues): void;
   openStartForm(): void;
+  collectFormError(error: FormError): void;
   openUserChat(userName: string): void;
   selectUserChat(userName: string): void;
   closeUserChat(userName: string): void;
@@ -132,6 +135,13 @@ export function ProcessTesterContext(props: ProcessTesterContextProps) {
       });
     }
 
+    function collectFormError(error: FormError) {
+      update(state => {
+        const item = new FormErrorProcessTesterTimelineItem(Date.now(), error.message, error.stack);
+        return { timelineItems: [...state.timelineItems, item] };
+      });
+    }
+
     function openUserChat(userName: string) {
       update({
         chatUserNames: data.chatUserNames.includes(userName) ? data.chatUserNames : [...data.chatUserNames, userName],
@@ -166,6 +176,7 @@ export function ProcessTesterContext(props: ProcessTesterContextProps) {
       ...data,
       submitForm,
       openStartForm,
+      collectFormError,
       openUserChat,
       selectUserChat,
       closeUserChat

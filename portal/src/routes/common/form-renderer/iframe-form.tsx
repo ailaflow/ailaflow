@@ -77,6 +77,13 @@ export function IframeForm({ form, adapter }: IframeFormProps) {
       return adapter.openStartForm(abortSignal);
     };
 
+    const collectFormError = async (payload: Record<string, unknown>) => {
+      const message = payload.message as string;
+      const stack = payload.stack as string | undefined;
+      adapter.collectFormError?.({ message, stack });
+      return {};
+    };
+
     const onMessage = (event: MessageEvent) => {
       if (event.source !== iframe.contentWindow) {
         return;
@@ -97,6 +104,8 @@ export function IframeForm({ form, adapter }: IframeFormProps) {
             return userStorage.tryReadUserStorage(message.payload);
           case 'writeUserStorage':
             return userStorage.writeUserStorage(message.payload);
+          case 'collectFormError':
+            return collectFormError(message.payload);
           default:
             throw new Error('Unknown message type');
         }

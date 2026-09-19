@@ -2,7 +2,7 @@ import type { FormDefinition, ProcessDefinition, ProcessExecutionVariableValues 
 import { VariableCachedValidator } from '@ailaflow/shared';
 import { useEffect, useMemo, useRef } from 'react';
 import { ProcessTesterTimelineView } from '../../views/process-tester/process-tester-top-view';
-import { FormAdapter } from '../common/form-renderer/form-adapter';
+import { FormAdapter, FormError } from '../common/form-renderer/form-adapter';
 import { FormRenderer } from '../common/form-renderer/form-renderer';
 import { useProcessTester } from './process-tester-context';
 
@@ -24,15 +24,31 @@ export function ProcessTesterTimeline() {
     <ProcessTesterTimelineView
       items={state.timelineItems}
       scrollContainerRef={scrollContainerRef}
-      startForm={<ProcessTesterStartForm definition={state.process.definition} onSubmit={state.submitForm} />}
+      startForm={
+        <ProcessTesterStartForm
+          definition={state.process.definition}
+          submitForm={state.submitForm}
+          collectFormError={state.collectFormError}
+        />
+      }
       renderOutputForm={(form, output) => (
-        <ProcessTesterOutputForm form={form} output={output} onSubmitForm={state.submitForm} onOpenStartForm={state.openStartForm} />
+        <ProcessTesterOutputForm
+          form={form}
+          output={output}
+          submitForm={state.submitForm}
+          openStartForm={state.openStartForm}
+          collectFormError={state.collectFormError}
+        />
       )}
     />
   );
 }
 
-function ProcessTesterStartForm(props: { definition: ProcessDefinition; onSubmit: (data: Record<string, unknown>) => void }) {
+function ProcessTesterStartForm(props: {
+  definition: ProcessDefinition;
+  submitForm: (data: Record<string, unknown>) => void;
+  collectFormError: (error: FormError) => void;
+}) {
   const variableValidator = useMemo(() => new VariableCachedValidator(), []);
   const startFormAdapter = useMemo<FormAdapter>(
     () => ({
@@ -49,10 +65,11 @@ function ProcessTesterStartForm(props: { definition: ProcessDefinition; onSubmit
         throw new Error('Opening the start form is not supported in the tester');
       },
       async submitForm(_, data: Record<string, unknown>) {
-        props.onSubmit(data);
-      }
+        props.submitForm(data);
+      },
+      collectFormError: props.collectFormError
     }),
-    [props.definition, props.onSubmit, variableValidator]
+    [props.definition, props.submitForm, variableValidator]
   );
   return <FormRenderer form={props.definition.properties.startForm} adapter={startFormAdapter} />;
 }
@@ -60,8 +77,9 @@ function ProcessTesterStartForm(props: { definition: ProcessDefinition; onSubmit
 function ProcessTesterOutputForm(props: {
   form: FormDefinition;
   output: ProcessExecutionVariableValues;
-  onOpenStartForm: () => void;
-  onSubmitForm: (values: ProcessExecutionVariableValues) => void;
+  openStartForm: () => void;
+  submitForm: (values: ProcessExecutionVariableValues) => void;
+  collectFormError: (error: FormError) => void;
 }) {
   const outputFormAdapter = useMemo<FormAdapter>(
     () => ({
@@ -70,13 +88,14 @@ function ProcessTesterOutputForm(props: {
       assertVariableValue: () => {},
       readVariable: async (_, name: string) => props.output[name],
       async openStartForm() {
-        props.onOpenStartForm();
+        props.openStartForm();
       },
       async submitForm(_, values) {
-        props.onSubmitForm(values);
-      }
+        props.submitForm(values);
+      },
+      collectFormError: props.collectFormError
     }),
-    [props.output, props.onOpenStartForm, props.onSubmitForm]
+    [props.output, props.openStartForm, props.submitForm]
   );
   return <FormRenderer form={props.form} adapter={outputFormAdapter} />;
 }

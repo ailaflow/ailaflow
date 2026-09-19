@@ -67,6 +67,18 @@ const frameworkScript = `
       return request('readVariable', { name });
     }
   };
+
+  function collectFormError(e) {
+    const error = e instanceof Error ? e : new Error(String(e));
+    request('collectFormError', { message: error.message, stack: error.stack });
+  }
+
+  window.addEventListener('error', (event) => {
+    collectFormError(event.error ?? event.message);
+  });
+  window.addEventListener('unhandledrejection', (event) => {
+    collectFormError(event.reason);
+  });
 }());
 `;
 
