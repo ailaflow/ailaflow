@@ -1,11 +1,11 @@
-import type { Response } from 'express';
+import type { ServerResponse } from 'node:http';
 
 export class SseResponse<Update> {
-  public constructor(private readonly res: Response) {
+  public constructor(private readonly res: ServerResponse) {
     res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
     res.setHeader('Cache-Control', 'no-cache, no-transform');
     res.setHeader('Connection', 'keep-alive');
-    res.flushHeaders?.();
+    res.flushHeaders();
   }
 
   public write(update: Update): void {

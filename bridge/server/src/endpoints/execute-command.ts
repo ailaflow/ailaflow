@@ -1,5 +1,5 @@
 import { spawn } from 'node:child_process';
-import type { Express, Request, Response } from 'express';
+import type { HttpServer } from '../core/http-server';
 import { Logger } from '../core/logger';
 import { SseResponse } from '../core/sse-response';
 
@@ -11,10 +11,10 @@ interface ExecuteCommandRequest {
   env?: Record<string, string>;
 }
 
-export function setupExecuteCommandEndpoint(app: Express): void {
+export function setupExecuteCommandEndpoint(app: HttpServer): void {
   const logger = new Logger('CommandEndpoint');
 
-  app.post('/command', (req: Request<unknown, unknown, ExecuteCommandRequest>, res: Response) => {
+  app.post<ExecuteCommandRequest>('/command', (req, res) => {
     const cwd = req.body.cwd;
     const command = req.body.command;
     const args = req.body.args ?? [];

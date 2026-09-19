@@ -1,7 +1,7 @@
-import type { Express } from 'express';
+import type { HttpServer } from '../core/http-server';
 
-export function setupGetHealthEndpoint(app: Express): void {
-  app.get('/health', (_, res) => {
-    res.status(200).send({ status: 'ok' });
+export function setupGetHealthEndpoint(app: HttpServer): void {
+  app.get('/health', (_request, response) => {
+    response.json(200, { status: 'ok' });
   });
 }

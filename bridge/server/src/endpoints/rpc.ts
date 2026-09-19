@@ -1,11 +1,11 @@
-import type { Express, Request, Response } from 'express';
+import type { HttpResponse, HttpServer } from '../core/http-server';
 import { SseResponse } from '../core/sse-response';
 
 interface Rpc {
   callId: number;
   executionId: string;
   methodName: string;
-  res: Response;
+  res: HttpResponse;
   timeout: number;
   deadline: number;
 }
@@ -36,7 +36,7 @@ interface ListenRpcUpdate {
 
 const MAX_TIMEOUT = 60_000;
 
-export function setupRpcEndpoints(app: Express): void {
+export function setupRpcEndpoints(app: HttpServer): void {
   const rpcs = new Map<number, Rpc>();
   let lastCallId = 0;
   let listener: ((rpc: Rpc, data: unknown) => void) | null = null;
@@ -50,7 +50,7 @@ export function setupRpcEndpoints(app: Express): void {
         if (rpc.deadline < now) {
           rpcs.delete(id);
           if (!rpc.res.writableEnded) {
-            rpc.res.status(504).json({ error: 'Timeout' }).end();
+            rpc.res.json(504, { error: 'Timeout' });
           }
         }
       }
@@ -83,9 +83,9 @@ export function setupRpcEndpoints(app: Express): void {
     });
   });
 
-  app.post('/rpc', (req: Request<unknown, unknown, ExecuteRpcRequest>, res: Response) => {
+  app.post<ExecuteRpcRequest>('/rpc', (req, res) => {
     if (!listener) {
-      res.status(503).json({ error: 'No listener' });
+      res.json(503, { error: 'No listener' });
       return;
     }
 
@@ -98,11 +98,11 @@ export function setupRpcEndpoints(app: Express): void {
     listener(rpc, data);
   });
 
-  app.post('/rpc-reply', (req: Request<unknown, unknown, SendRpcReplyRequest>, res: Response) => {
+  app.post<SendRpcReplyRequest>('/rpc-reply', (req, res) => {
     const { callId, data, error } = req.body;
     const rpc = rpcs.get(callId);
     if (!rpc) {
-      res.status(404).json({ error: 'Not found' }).end();
+      res.json(404, { error: 'Not found' });
       return;
     }
 
@@ -110,15 +110,12 @@ export function setupRpcEndpoints(app: Express): void {
 
     if (!rpc.res.writableEnded) {
       if (data !== undefined) {
-        rpc.res.status(200).json(data).end();
+        rpc.res.json(200, data);
       } else {
-        rpc.res
-          .status(500)
-          .json({ error: error ?? 'Incorrect reply' })
-          .end();
+        rpc.res.json(500, { error: error ?? 'Incorrect reply' });
       }
     }
 
-    res.json({ ok: true }).end();
+    res.json(200, { ok: true });
   });
 }

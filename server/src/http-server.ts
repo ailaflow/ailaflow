@@ -5,7 +5,8 @@ import { extname, join } from 'node:path';
 import { Logger } from './core/logger';
 import { ServerPaths } from './core/server-paths';
 
-const PORT = process.env.PORT || 2048;
+const PORT = Number(process.env.PORT) || 2048;
+const HOST = process.env.HOST || '0.0.0.0';
 
 export class HttpServer {
   private readonly logger = new Logger(HttpServer.name);
@@ -41,7 +42,7 @@ export class HttpServer {
     }
 
     this.server = await new Promise((resolve, reject) => {
-      const server = this.app.listen(PORT, () => {
+      const server = this.app.listen(PORT, HOST, () => {
         server.off('error', reject);
         resolve(server);
       });
