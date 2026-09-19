@@ -5,6 +5,7 @@ import { StringEditorPropertyView } from '../../../views/process-editor/designer
 import { VariableNamePropertyView } from '../../../views/process-editor/designer/variable-name-property-view';
 import { BranchesPropertyView } from '../../../views/process-editor/designer/branches-property-view';
 import { StepEditorProps } from './step-editor';
+import { EditorHeaderView } from '../../../views/process-editor/designer/editor-header-view';
 
 export function BranchStepEditor(props: StepEditorProps) {
   const { name, step, properties, definition, setName, setProperty, notifyChildrenChanged } = useStepEditor<
@@ -33,6 +34,11 @@ export function BranchStepEditor(props: StepEditorProps) {
 
   return (
     <DesignerEditorView>
+      <EditorHeaderView
+        header="Branch"
+        explanation="Selects a workflow path using the value of a string variable, then continues after that branch."
+      />
+
       <StringEditorPropertyView label="Name" value={name} onValueChanged={setName} error={errors['name']} />
 
       <VariableNamePropertyView

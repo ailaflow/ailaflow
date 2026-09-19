@@ -9,6 +9,7 @@ import { DisabledSubValuePreviewView, EnabledSubValuePreviewView } from '../../.
 import { ProcessEditorOverlayType } from '../process-editor-context';
 import { DefinitionPath } from '../../../core/definition-path';
 import { createEmptyFormDefinition } from '../designer-configuration';
+import { EditorHeaderView } from '../../../views/process-editor/designer/editor-header-view';
 
 export function ReturnStepEditor(props: StepEditorProps) {
   const { name, step, properties, definition, setName, setProperty } = useStepEditor<ReturnStep, ProcessDefinition>();
@@ -29,6 +30,11 @@ export function ReturnStepEditor(props: StepEditorProps) {
 
   return (
     <DesignerEditorView>
+      <EditorHeaderView
+        header="Return"
+        explanation="Ends the current process execution and returns the selected variables as its result."
+      />
+
       <StringEditorPropertyView label="Name" value={name} onValueChanged={setName} error={errors['name']} />
 
       <EditorPropertyView label="Output Form">

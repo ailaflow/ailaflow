@@ -8,6 +8,7 @@ import { DisabledSubValuePreviewView, EnabledSubValuePreviewView } from '../../.
 import { VariableSelectorPropertyView } from '../../../views/process-editor/designer/variable-selector-property-view';
 import { VariableDefinitionsView } from '../../../views/process-editor/designer/variable-definitions-view';
 import { createEmptyFormDefinition } from '../designer-configuration';
+import { EditorHeaderView } from '../../../views/process-editor/designer/editor-header-view';
 
 export interface RootEditorProps {
   state: ProcessEditorState;
@@ -64,6 +65,11 @@ export function RootEditor(props: RootEditorProps) {
 
   return (
     <DesignerEditorView>
+      <EditorHeaderView
+        header="Process"
+        explanation="Configures how the process starts, including an optional form for collecting start variables, and defines the variables shared by its steps."
+      />
+
       <EditorPropertyView label="Start Form">
         {!properties.startForm && <DisabledSubValuePreviewView onEnable={addStartForm} label="Enable" />}
         {properties.startForm && (

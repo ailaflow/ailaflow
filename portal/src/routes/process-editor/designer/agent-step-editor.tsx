@@ -9,6 +9,7 @@ import { useState } from 'react';
 import { FindProcessesPopup } from '../../common/popups/find-processes-popup';
 import { AllowedProcessesPropertyView } from '../../../views/process-editor/designer/allowed-processes-property-view';
 import { VariableSelectorPropertyView } from '../../../views/process-editor/designer/variable-selector-property-view';
+import { EditorHeaderView } from '../../../views/process-editor/designer/editor-header-view';
 
 export function AgentStepEditor(props: StepEditorProps) {
   const { name, step, properties, definition, setName, setProperty } = useStepEditor<AgentStep, ProcessDefinition>();
@@ -22,6 +23,11 @@ export function AgentStepEditor(props: StepEditorProps) {
 
   return (
     <DesignerEditorView>
+      <EditorHeaderView
+        header="Agent"
+        explanation="Runs an AI agent with the configured prompt and access to selected processes, variables, and sandbox tools."
+      />
+
       {isFindProcessesPopupOpen && (
         <FindProcessesPopup
           apiClient={props.state.apiClient}

@@ -4,6 +4,7 @@ import { StepEditorProps } from './step-editor';
 import { StringEditorPropertyView } from '../../../views/process-editor/designer/string-editor-property-view';
 import { NotificationStep, ProcessDefinition } from '@ailaflow/shared';
 import { StringOrVariablePropertyView } from '../../../views/process-editor/designer/string-or-variable-property-view';
+import { EditorHeaderView } from '../../../views/process-editor/designer/editor-header-view';
 
 export function NotificationStepEditor(props: StepEditorProps) {
   const { name, step, definition, properties, setName, setProperty } = useStepEditor<NotificationStep, ProcessDefinition>();
@@ -11,6 +12,8 @@ export function NotificationStepEditor(props: StepEditorProps) {
 
   return (
     <DesignerEditorView>
+      <EditorHeaderView header="Notification" explanation="Sends a persistent notification to selected users." />
+
       <StringEditorPropertyView label="Name" value={name} onValueChanged={setName} error={errors['name']} />
 
       <StringOrVariablePropertyView

@@ -12,6 +12,7 @@ import { StringOrVariablePropertyView } from '../../../views/process-editor/desi
 import { DropdownPropertyView } from '../../../views/process-editor/designer/dropdown-property-view';
 import { VariableNamePropertyView } from '../../../views/process-editor/designer/variable-name-property-view';
 import { DropdownOrVariablePropertyView } from '../../../views/process-editor/designer/dropdown-or-variable-property-view';
+import { EditorHeaderView } from '../../../views/process-editor/designer/editor-header-view';
 
 export function TaskStepEditor(props: StepEditorProps) {
   const { id, name, step, properties, definition, setName, setProperty } = useStepEditor<TaskStep, ProcessDefinition>();
@@ -24,6 +25,11 @@ export function TaskStepEditor(props: StepEditorProps) {
 
   return (
     <DesignerEditorView>
+      <EditorHeaderView
+        header="Task"
+        explanation="Pauses the process for assigned users to complete an action or provide information using the configured form or their own AI assistant."
+      />
+
       <StringEditorPropertyView label="Name" value={name} onValueChanged={setName} error={errors['name']}></StringEditorPropertyView>
 
       <StringOrVariablePropertyView

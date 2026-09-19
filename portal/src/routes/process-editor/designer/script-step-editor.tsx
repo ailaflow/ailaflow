@@ -8,6 +8,7 @@ import { ProcessDefinition, ScriptStep } from '@ailaflow/shared';
 import { DefinitionPath } from '../../../core/definition-path';
 import { EnabledSubValuePreviewView } from '../../../views/process-editor/designer/sub-value-preview-view';
 import { ProcessEditorOverlayType } from '../process-editor-context';
+import { EditorHeaderView } from '../../../views/process-editor/designer/editor-header-view';
 
 export function ScriptStepEditor(props: StepEditorProps) {
   const { id, name, step, properties, definition, setName, setProperty } = useStepEditor<ScriptStep, ProcessDefinition>();
@@ -20,6 +21,8 @@ export function ScriptStepEditor(props: StepEditorProps) {
 
   return (
     <DesignerEditorView>
+      <EditorHeaderView header="Script" explanation="Runs a finite script in the selected sandbox." />
+
       <StringEditorPropertyView label="Name" value={name} onValueChanged={setName} error={errors['name']}></StringEditorPropertyView>
 
       <EditorPropertyView label="Script">
