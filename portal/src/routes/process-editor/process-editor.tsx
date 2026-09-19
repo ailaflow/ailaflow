@@ -11,6 +11,7 @@ import { ResourceSimpleDetailsView } from '../../views/resource-editor/resource-
 import { useUnsavedChangesController } from '../common/admin-portal';
 import { DesignerUtils } from './designer-utils';
 import { useProcessEditorAi } from './process-editor-ai';
+import { ProcessIcon } from '../../views/common/process-icon';
 
 export function ProcessEditor() {
   const state = useProcessEditor();
@@ -63,6 +64,7 @@ export function ProcessEditor() {
   return (
     <ResourceEditorView
       icon="/"
+      leadingVisual={<ProcessIcon name={state.name} className="h-9 w-9" />}
       name={state.name}
       isNameValid={state.nameError === null}
       isNameReadOnly={!isDesigner || !state.isNew}

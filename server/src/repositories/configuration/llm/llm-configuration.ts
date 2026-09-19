@@ -26,7 +26,9 @@ export class LlmConfiguration {
   public getUseCase(useCase: LlmUseCase): ResolvedLlmUseCaseConfiguration {
     const assignment = this.useCases.find(item => item.useCase === useCase);
     if (!assignment) {
-      throw new LlmProviderConfigurationError(`LLM use case "${strLlmUseCase(useCase)}" is not configured`);
+      throw new LlmProviderConfigurationError(
+        `LLM use case "${strLlmUseCase(useCase)}" is not configured, please contact your administrator to resolve this issue`
+      );
     }
     return this.resolveUseCase(assignment);
   }

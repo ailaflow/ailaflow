@@ -24,8 +24,11 @@ export class LoginEndpoint implements Endpoint {
     const request = parseBody(loginRequestSchema, req.body);
 
     const user = await this.userRepository.tryGetUser(abortSignal, request.userName);
-    if (!user || !user.isActive || !(await user.comparePassword(request.password, this.cipher))) {
+    if (!user || !(await user.comparePassword(request.password, this.cipher))) {
       throw new EndpointError('Invalid username or password', 401);
+    }
+    if (!user.isActive) {
+      throw new EndpointError('User account is deactivated', 403);
     }
 
     const authToken = await AuthToken.create(user.name, user.isAdmin);

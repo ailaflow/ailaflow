@@ -4,6 +4,7 @@ import { ResourceViewSwitcherView, type ResourceViewOption } from './resource-vi
 
 export interface ResourceEditorViewProps {
   icon: string;
+  leadingVisual?: React.ReactNode;
   name: string;
   isNameValid: boolean;
   isNameReadOnly: boolean;
@@ -30,19 +31,22 @@ export function ResourceEditorView(props: ResourceEditorViewProps) {
       <div className="flex shrink-0 items-stretch border-b border-slate-200">
         <div className="flex min-w-0 flex-1 flex-wrap items-start justify-between gap-4 px-3 py-3 sm:px-5">
           <div className="w-full min-w-0 space-y-1 sm:w-auto sm:flex-1">
-            <label className={nameInputLabelClassName}>
-              <span className="inline-flex h-full w-8 shrink-0 items-center justify-center border-r border-transparent bg-slate-50 text-lg font-semibold text-slate-600 transition-colors focus-within:border-slate-300 focus-within:bg-slate-50">
-                {props.icon}
-              </span>
-              <input
-                type="text"
-                value={props.name}
-                readOnly={props.isNameReadOnly}
-                onChange={e => props.onNameChange && props.onNameChange(e.target.value)}
-                aria-invalid={!props.isNameValid}
-                className="h-full min-w-0 flex-1 px-2 text-lg font-semibold tracking-tight text-slate-900 outline-none placeholder:text-slate-400"
-              />
-            </label>
+            <div className="flex min-w-0 items-center gap-2">
+              {props.leadingVisual}
+              <label className={nameInputLabelClassName}>
+                <span className="inline-flex h-full w-8 shrink-0 items-center justify-center border-r border-transparent bg-slate-50 text-lg font-semibold text-slate-600 transition-colors focus-within:border-slate-300 focus-within:bg-slate-50">
+                  {props.icon}
+                </span>
+                <input
+                  type="text"
+                  value={props.name}
+                  readOnly={props.isNameReadOnly}
+                  onChange={e => props.onNameChange && props.onNameChange(e.target.value)}
+                  aria-invalid={!props.isNameValid}
+                  className="h-full min-w-0 flex-1 px-2 text-lg font-semibold tracking-tight text-slate-900 outline-none placeholder:text-slate-400"
+                />
+              </label>
+            </div>
             {props.areDetailsVisible && isDetailsExpanded && props.details}
           </div>
 
