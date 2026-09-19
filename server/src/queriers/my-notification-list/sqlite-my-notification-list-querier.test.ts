@@ -19,8 +19,8 @@ test('queries a newest-first page of notifications for the current user', async 
 
   await userRepository.setup(abortSignal);
   await notificationRepository.setup(abortSignal);
-  await userRepository.insert(abortSignal, new User('alice', 'hash', false));
-  await userRepository.insert(abortSignal, new User('bob', 'hash', false));
+  await userRepository.insert(abortSignal, new User('alice', 'hash', true, false));
+  await userRepository.insert(abortSignal, new User('bob', 'hash', true, false));
   await notificationRepository.insertMultiple(abortSignal, [
     new Notification('notification_1', 'alice', 'Oldest', 1000),
     new Notification('notification_2', 'alice', 'Middle', 2000),

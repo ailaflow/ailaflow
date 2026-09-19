@@ -32,6 +32,7 @@ export function FindUserPopup(props: FindUserPopupProps) {
         const response = await props.apiClient.user.getUsers(abortController.signal, {
           page: 1,
           pageSize: USER_SEARCH_PAGE_SIZE,
+          onlyActive: true,
           search: search.trim() || undefined
         });
         setResult(response);

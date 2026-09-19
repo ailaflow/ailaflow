@@ -66,4 +66,14 @@ export class SqliteAuthTokenRepository implements AuthTokenRepository {
       statement.run(now);
     }, transaction);
   }
+
+  public async deleteForUser(_: AbortSignal, userName: string, transaction?: Transaction): Promise<void> {
+    await this.db.write(db => {
+      const statement = db.prepare(`
+        DELETE FROM auth_tokens
+        WHERE userName = ?
+      `);
+      statement.run(userName);
+    }, transaction);
+  }
 }

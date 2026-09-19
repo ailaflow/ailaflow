@@ -15,8 +15,8 @@ test('user attributes keep one value type per attribute name across users', asyn
 
   const userRepository = new SqliteUserRepository(dbs);
   await userRepository.setup(abortSignal);
-  const user1 = new User('user_1', 'hash', false);
-  const user2 = new User('user_2', 'hash', false);
+  const user1 = new User('user_1', 'hash', true, false);
+  const user2 = new User('user_2', 'hash', true, false);
   await userRepository.insert(abortSignal, user1);
   await userRepository.insert(abortSignal, user2);
 

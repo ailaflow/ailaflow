@@ -5,6 +5,7 @@ export interface LicenseValidationRequest {
   type: LicenseType;
   key: string | null;
   users: number;
+  activeUsers: number;
   version: string;
 }
 

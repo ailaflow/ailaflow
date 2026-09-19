@@ -16,6 +16,7 @@ export class SqliteUserRepository implements UserRepository {
         CREATE TABLE IF NOT EXISTS users (
           name TEXT PRIMARY KEY,
           passwordHash TEXT NOT NULL,
+          isActive INTEGER NOT NULL,
           isAdmin INTEGER NOT NULL
         ) STRICT
       `);
@@ -25,7 +26,7 @@ export class SqliteUserRepository implements UserRepository {
   public async tryGetUser(_: AbortSignal, userName: string): Promise<User | null> {
     return this.db.read(db => {
       const statement = db.prepare(`
-        SELECT name, passwordHash, isAdmin
+        SELECT name, passwordHash, isActive, isAdmin
         FROM users
         WHERE name = ?
         LIMIT 1
@@ -34,13 +35,14 @@ export class SqliteUserRepository implements UserRepository {
         | {
             name: string;
             passwordHash: string;
+            isActive: number;
             isAdmin: number;
           }
         | undefined;
       if (!row) {
         return null;
       }
-      return new User(row.name, row.passwordHash, row.isAdmin === 1);
+      return new User(row.name, row.passwordHash, row.isActive === 1, row.isAdmin === 1);
     });
   }
 
@@ -48,10 +50,10 @@ export class SqliteUserRepository implements UserRepository {
     try {
       await this.db.write(db => {
         const statement = db.prepare(`
-          INSERT INTO users (name, passwordHash, isAdmin)
-          VALUES (?, ?, ?)
+          INSERT INTO users (name, passwordHash, isActive, isAdmin)
+          VALUES (?, ?, ?, ?)
         `);
-        statement.run(user.name, user.passwordHash, user.isAdmin ? 1 : 0);
+        statement.run(user.name, user.passwordHash, user.isActive ? 1 : 0, user.isAdmin ? 1 : 0);
       }, transaction);
     } catch (e) {
       if (isDuplicateUserNameSqliteError(e)) {
@@ -67,20 +69,22 @@ export class SqliteUserRepository implements UserRepository {
         UPDATE users
         SET
           passwordHash = ?,
+          isActive = ?,
           isAdmin = ?
         WHERE name = ?
       `);
-      statement.run(user.passwordHash, user.isAdmin ? 1 : 0, user.name);
+      statement.run(user.passwordHash, user.isActive ? 1 : 0, user.isAdmin ? 1 : 0, user.name);
     }, transaction);
   }
 
-  public async count(_: AbortSignal): Promise<number> {
+  public async count(_: AbortSignal, onlyActive: boolean): Promise<number> {
     return this.db.read(db => {
       const statement = db.prepare(`
         SELECT COUNT(*) as count
         FROM users
+        WHERE (? = 0 OR isActive = 1)
       `);
-      const row = statement.get() as { count: number };
+      const row = statement.get(onlyActive ? 1 : 0) as { count: number };
       return row.count;
     });
   }

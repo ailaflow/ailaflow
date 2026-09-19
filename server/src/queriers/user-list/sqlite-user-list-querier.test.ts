@@ -6,7 +6,7 @@ import { SqliteUserRepository } from '../../repositories/user/sqlite-user-reposi
 import { User } from '../../repositories/user/user';
 import { SqliteUserListQuerier } from './sqlite-user-list-querier';
 
-test('queries name-ordered pages of users with an optional contains search', async () => {
+test('queries name-ordered pages of users with optional active and contains filters', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
   const dbs = { modelDb: new SqliteDatabase(db) } as SqliteDatabases;
   const abortSignal = new AbortController().signal;
@@ -14,24 +14,33 @@ test('queries name-ordered pages of users with an optional contains search', asy
   const querier = new SqliteUserListQuerier(dbs);
 
   await repository.setup(abortSignal);
-  await repository.insert(abortSignal, new User('charlie', 'hash', false));
-  await repository.insert(abortSignal, new User('alice', 'hash', true));
-  await repository.insert(abortSignal, new User('alicia', 'hash', false));
-  await repository.insert(abortSignal, new User('bob', 'hash', false));
+  await repository.insert(abortSignal, new User('charlie', 'hash', true, false));
+  await repository.insert(abortSignal, new User('alice', 'hash', true, true));
+  await repository.insert(abortSignal, new User('alicia', 'hash', false, false));
+  await repository.insert(abortSignal, new User('bob', 'hash', true, false));
 
-  assert.deepEqual(await querier.query(abortSignal, 2, 1, 'ali'), {
-    users: [{ name: 'alicia', isAdmin: false }],
+  assert.deepEqual(await querier.query(abortSignal, 2, 1, false, 'ali'), {
+    users: [{ name: 'alicia', isActive: false, isAdmin: false }],
     totalCount: 2,
     page: 2,
     pageSize: 1
   });
-  assert.deepEqual(await querier.query(abortSignal, 2, 2), {
+  assert.deepEqual(await querier.query(abortSignal, 2, 2, false), {
     users: [
-      { name: 'bob', isAdmin: false },
-      { name: 'charlie', isAdmin: false }
+      { name: 'bob', isActive: true, isAdmin: false },
+      { name: 'charlie', isActive: true, isAdmin: false }
     ],
     totalCount: 4,
     page: 2,
+    pageSize: 2
+  });
+  assert.deepEqual(await querier.query(abortSignal, 1, 2, true), {
+    users: [
+      { name: 'alice', isActive: true, isAdmin: true },
+      { name: 'bob', isActive: true, isAdmin: false }
+    ],
+    totalCount: 3,
+    page: 1,
     pageSize: 2
   });
 

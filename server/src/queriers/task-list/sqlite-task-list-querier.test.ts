@@ -24,8 +24,8 @@ test('queries newest tasks with pagination and an open filter', async () => {
   await userRepository.setup(abortSignal);
   await taskRepository.setup(abortSignal);
   await assignedTaskRepository.setup(abortSignal);
-  await userRepository.insert(abortSignal, new User('alice', 'hash', false));
-  await userRepository.insert(abortSignal, new User('bob', 'hash', false));
+  await userRepository.insert(abortSignal, new User('alice', 'hash', true, false));
+  await userRepository.insert(abortSignal, new User('bob', 'hash', true, false));
 
   await insertTask(taskRepository, abortSignal, 'open', 1000, null, false, null);
   await insertTask(taskRepository, abortSignal, 'outdated', 2000, 2000, true, null);

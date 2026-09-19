@@ -16,8 +16,8 @@ test('persists Telegram bot configurations per user and channel', async () => {
   const abortSignal = new AbortController().signal;
   await userRepository.setup(abortSignal);
   await repository.setup(abortSignal);
-  await userRepository.insert(abortSignal, new User('alice', 'hash', false));
-  await userRepository.insert(abortSignal, new User('bob', 'hash', false));
+  await userRepository.insert(abortSignal, new User('alice', 'hash', true, false));
+  await userRepository.insert(abortSignal, new User('bob', 'hash', true, false));
 
   await repository.upsert(
     abortSignal,

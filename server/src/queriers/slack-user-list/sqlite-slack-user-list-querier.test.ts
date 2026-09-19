@@ -24,7 +24,7 @@ test('queries Slack user DTOs with mappings, filtering, and literal search', asy
   await configuration.setup(signal);
   await directory.setup(signal);
   await mappings.setup(signal);
-  await users.insert(signal, new User('alice', 'hash', false));
+  await users.insert(signal, new User('alice', 'hash', true, false));
   await configuration.save(signal, {
     appToken: 'app-secret',
     botToken: 'bot-secret',

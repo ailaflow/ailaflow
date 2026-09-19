@@ -19,6 +19,9 @@ export class UserApiClient {
       page: String(request.page),
       pageSize: String(request.pageSize)
     });
+    if (request.onlyActive) {
+      query.set('onlyActive', '1');
+    }
     if (request.search !== undefined) {
       query.set('search', request.search);
     }

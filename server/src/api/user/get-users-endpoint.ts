@@ -15,7 +15,7 @@ export class GetUsersEndpoint implements Endpoint {
 
   public async handle(req: Request): Promise<GetUsersResponse> {
     const abortSignal = getEndpointAbortSignal(req);
-    const { page, pageSize, search } = parseQuery(getUsersRequestSchema, req.query);
-    return this.querier.query(abortSignal, page, pageSize, search);
+    const { page, pageSize, onlyActive, search } = parseQuery(getUsersRequestSchema, req.query);
+    return this.querier.query(abortSignal, page, pageSize, onlyActive ?? false, search);
   }
 }

@@ -16,7 +16,7 @@ test('consumes a valid magic link only once', async () => {
   const repository = new SqliteMagicLinkRepository(databases);
   await userRepository.setup(abortSignal);
   await repository.setup(abortSignal);
-  await userRepository.insert(abortSignal, new User('alice', 'hash', false));
+  await userRepository.insert(abortSignal, new User('alice', 'hash', true, false));
   await repository.insert(abortSignal, new MagicLink('secret-token', 'alice', 2_000));
 
   assert.equal(await repository.consume(abortSignal, 'wrong-token', 1_000), null);
@@ -35,7 +35,7 @@ test('rejects and deletes expired magic links', async () => {
   const repository = new SqliteMagicLinkRepository(databases);
   await userRepository.setup(abortSignal);
   await repository.setup(abortSignal);
-  await userRepository.insert(abortSignal, new User('alice', 'hash', false));
+  await userRepository.insert(abortSignal, new User('alice', 'hash', true, false));
   await repository.insert(abortSignal, new MagicLink('expired-token', 'alice', 1_000));
 
   assert.equal(await repository.consume(abortSignal, 'expired-token', 1_000), null);

@@ -55,5 +55,5 @@ export function MyConfigurationOverview() {
     }
   ];
 
-  return <ConfigurationOverviewView title="Configuration status" statuses={statuses} />;
+  return <ConfigurationOverviewView statuses={statuses} />;
 }

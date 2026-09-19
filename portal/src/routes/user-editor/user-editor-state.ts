@@ -1,10 +1,18 @@
-import { SaveUserRequest, UserAttributesValidator, UserAttributeValue, UserAttributeValueType, UserValidator, UserDto } from '@ailaflow/shared';
+import {
+  SaveUserRequest,
+  UserAttributesValidator,
+  UserAttributeValue,
+  UserAttributeValueType,
+  UserValidator,
+  UserDto
+} from '@ailaflow/shared';
 import { useMemo, useState } from 'react';
 import { UserAttributeEditorRow } from '../../views/user-editor/user-editor-view';
 
 export interface UserEditorData {
   name: string;
   password: string;
+  isActive: boolean;
   isAdmin: boolean;
   attributes: UserAttributeEditorRow[];
   isDirty: boolean;
@@ -18,6 +26,7 @@ export interface UserEditorState extends UserEditorData {
   canSave: boolean;
   setName(name: string): void;
   setPassword(password: string): void;
+  setIsActive(isActive: boolean): void;
   setIsAdmin(isAdmin: boolean): void;
   addAttribute(): void;
   updateAttribute(id: number, delta: Partial<UserAttributeEditorRow>): void;
@@ -51,6 +60,7 @@ export function useUserEditorState(user?: UserDto): UserEditorState {
     canSave,
     setName: name => update({ name }),
     setPassword: password => update({ password }),
+    setIsActive: isActive => update({ isActive }),
     setIsAdmin: isAdmin => update({ isAdmin }),
     addAttribute: () =>
       update(data => ({
@@ -90,6 +100,7 @@ export function useUserEditorState(user?: UserDto): UserEditorState {
       insert: data.isNew,
       name: data.name,
       password: data.password || undefined,
+      isActive: data.isActive,
       isAdmin: data.isAdmin,
       attributes: rowsToAttributes(data.attributes)
     })
@@ -104,6 +115,7 @@ function createData(user?: UserDto): UserEditorData {
   return {
     name: user?.name ?? '',
     password: '',
+    isActive: user?.isActive ?? true,
     isAdmin: user?.isAdmin ?? false,
     attributes: Object.entries(user?.attributes ?? {}).map(([name, value], id) => toAttributeRow(id, name, value)),
     isDirty: !user,

@@ -31,7 +31,8 @@ function createRepository(authToken: AuthToken, upsertedTokens: AuthToken[]): Au
       upsertedTokens.push(token);
     },
     tryGetByToken: async (_, token) => (token === authToken.token ? authToken : null),
-    deleteOutdated: async () => undefined
+    deleteOutdated: async () => undefined,
+    deleteForUser: async () => undefined
   };
 }
 

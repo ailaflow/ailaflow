@@ -25,8 +25,8 @@ test('queries tasks assigned to the current user', async () => {
   await taskRepository.setup(abortSignal);
   await assignedTaskRepository.setup(abortSignal);
 
-  await userRepository.insert(abortSignal, new User('alice', 'hash', false));
-  await userRepository.insert(abortSignal, new User('bob', 'hash', false));
+  await userRepository.insert(abortSignal, new User('alice', 'hash', true, false));
+  await userRepository.insert(abortSignal, new User('bob', 'hash', true, false));
 
   await taskRepository.insert(
     abortSignal,

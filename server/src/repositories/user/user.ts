@@ -8,12 +8,13 @@ export class User {
     if (nameError) {
       throw new UserRepositoryError(nameError);
     }
-    return new User(name, await cipher.hashPassword(password), isAdmin);
+    return new User(name, await cipher.hashPassword(password), true, isAdmin);
   }
 
   public constructor(
     public readonly name: string,
     public passwordHash: string,
+    public isActive: boolean,
     public isAdmin: boolean
   ) {}
 
@@ -23,6 +24,10 @@ export class User {
 
   public async setPassword(password: string, cipher: Cipher): Promise<void> {
     this.passwordHash = await cipher.hashPassword(password);
+  }
+
+  public setIsActive(isActive: boolean) {
+    this.isActive = isActive;
   }
 
   public setIsAdmin(isAdmin: boolean) {

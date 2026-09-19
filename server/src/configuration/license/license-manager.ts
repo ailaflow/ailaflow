@@ -48,13 +48,18 @@ export class LicenseManager {
   }
 
   private async validate(signal: AbortSignal, type: LicenseType, key: string | null): Promise<LicenseStatus> {
-    const [instanceId, users] = await Promise.all([this.getInstanceId(signal), this.userRepository.count(signal)]);
+    const [instanceId, users, activeUsers] = await Promise.all([
+      this.getInstanceId(signal),
+      this.userRepository.count(signal, false),
+      this.userRepository.count(signal, true)
+    ]);
     const version = this.versionProvider.get();
     const validationResult = await this.licenseValidator.validate(signal, {
       instanceId,
       type,
       key,
       users,
+      activeUsers,
       version
     });
     return {

@@ -266,7 +266,7 @@ test('task can be deleted with its assignments', async () => {
   await userRepository.setup(abortSignal);
   await taskRepository.setup(abortSignal);
   await assignedTaskRepository.setup(abortSignal);
-  await userRepository.insert(abortSignal, new User('user_1', 'hash', false));
+  await userRepository.insert(abortSignal, new User('user_1', 'hash', true, false));
   await taskRepository.insert(
     abortSignal,
     new Task(

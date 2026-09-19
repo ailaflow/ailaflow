@@ -65,7 +65,7 @@ for (const license of [home, starter, business]) {
     const f = await fixture(t);
     assert.deepEqual(await f.canInstallEndpoint.handle(request(undefined)), { canInstall: true });
     assert.deepEqual(await f.endpoint.handle(request(license)), {});
-    assert.equal(await f.users.count(signal), 1);
+    assert.equal(await f.users.count(signal, false), 1);
     assert.ok((await f.users.tryGetUser(signal, 'root'))!.isAdmin);
     assert.ok(Object.keys((await f.attributes.get(signal, 'root')).attributes).length > 0);
     assert.ok(await f.sandboxes.tryGet(signal, 'default'));
@@ -129,7 +129,7 @@ test('waits for validation before writing and rejects concurrent installation at
   );
   const installing = f.endpoint.handle(request(business));
   await validationStarted;
-  assert.equal(await f.users.count(signal), 0);
+  assert.equal(await f.users.count(signal, false), 0);
   assert.equal((await f.configuration.get(signal)).licenseType, null);
   await assert.rejects(f.endpoint.handle(request(home)), /already in progress/);
   resolve({ validationError: null, canUpgrade: false });
@@ -147,5 +147,5 @@ test('rejects malformed license requests without calling the service or writing'
     await assert.rejects(f.endpoint.handle(request(license)));
   }
   assert.equal(f.validate.mock.callCount(), 0);
-  assert.equal(await f.users.count(signal), 0);
+  assert.equal(await f.users.count(signal, false), 0);
 });

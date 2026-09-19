@@ -22,7 +22,7 @@ export class Installer {
   ) {}
 
   public async canInstall(abortSignal: AbortSignal): Promise<boolean> {
-    const userCount = await this.userRepository.count(abortSignal);
+    const userCount = await this.userRepository.count(abortSignal, false);
     return userCount === 0;
   }
 

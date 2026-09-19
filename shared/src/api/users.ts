@@ -5,11 +5,13 @@ import { paginationRequestSchema, paginationResponseSchema } from './pagination'
 
 const userLiteDtoSchema = z.object({
   name: z.string(),
+  isActive: z.boolean(),
   isAdmin: z.boolean()
 });
 
 export const getUsersRequestSchema = paginationRequestSchema.extend({
-  search: z.string().optional()
+  search: z.string().optional(),
+  onlyActive: z.coerce.number().int().min(0).max(1).transform(Boolean).default(false)
 });
 
 export const getUsersResponseSchema = paginationResponseSchema.extend({
@@ -24,6 +26,7 @@ export type GetUsersResponse = z.infer<typeof getUsersResponseSchema>;
 
 const userDtoSchema = z.object({
   name: z.string(),
+  isActive: z.boolean(),
   isAdmin: z.boolean(),
   attributes: z.record(z.string(), z.union([z.string(), z.number(), z.boolean()]))
 });
@@ -41,6 +44,7 @@ export const saveUserRequestSchema = z.object({
   insert: z.boolean(),
   name: z.string(),
   password: z.string().optional(),
+  isActive: z.boolean(),
   isAdmin: z.boolean(),
   attributes: z.record(z.string(), z.union([z.string(), z.number(), z.boolean()]))
 });

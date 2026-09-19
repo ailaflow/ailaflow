@@ -23,7 +23,7 @@ test('consumes a magic link and persists a non-admin auth token', async () => {
     deleteExpired: async () => {}
   };
   const users = {
-    tryGetUser: async () => new User('alice', 'hash', true)
+    tryGetUser: async () => new User('alice', 'hash', true, true)
   } as unknown as UserRepository;
   const authTokens = {
     upsert: async (_signal: AbortSignal, authToken: AuthToken) => {

@@ -1,6 +1,7 @@
 import { DockerfileContent } from '@ailaflow/shared';
 import { useLayoutEffect, useRef, useState } from 'react';
 import { SvgIcon } from '../common/svg-icons';
+import { SwitchView } from '../common/switch-view';
 
 export interface SandboxSecret {
   id: number;
@@ -64,24 +65,7 @@ export function SandboxEditorView(props: SandboxEditorViewProps) {
       <div className="mx-auto flex w-full max-w-5xl flex-col gap-5">
         <div>
           <span className="mb-1.5 block text-sm font-medium text-slate-700">Is sandbox enabled</span>
-          <button
-            type="button"
-            role="switch"
-            aria-checked={props.isEnabled}
-            onClick={() => props.onIsEnabledChange(!props.isEnabled)}
-            className="cursor-pointer inline-flex h-9 items-center gap-3 rounded-md border border-slate-200 px-3 text-sm text-slate-700 transition-colors hover:bg-slate-50"
-          >
-            <span
-              className={`flex h-5 w-9 items-center rounded-full p-0.5 transition-colors ${
-                props.isEnabled ? 'bg-slate-900' : 'bg-slate-300'
-              }`}
-            >
-              <span
-                className={`h-4 w-4 rounded-full bg-white transition-transform ${props.isEnabled ? 'translate-x-4' : 'translate-x-0'}`}
-              />
-            </span>
-            <span>{props.isEnabled ? 'True' : 'False'}</span>
-          </button>
+          <SwitchView label="Is sandbox enabled" value={props.isEnabled} onChange={props.onIsEnabledChange} />
         </div>
 
         <div>

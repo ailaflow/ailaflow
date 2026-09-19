@@ -1,4 +1,5 @@
 import { UserAttributeValueType } from '@ailaflow/shared';
+import { SwitchView } from '../common/switch-view';
 
 export interface UserAttributeEditorRow {
   id: number;
@@ -9,11 +10,13 @@ export interface UserAttributeEditorRow {
 
 export interface UserEditorViewProps {
   isNew: boolean;
+  isActive: boolean;
   isAdmin: boolean;
   password: string;
   passwordError: string | null;
   attributes: UserAttributeEditorRow[];
   attributeError: string | null;
+  onIsActiveChange(isActive: boolean): void;
   onIsAdminChange(isAdmin: boolean): void;
   onPasswordChange(password: string): void;
   onAttributeAdd(): void;
@@ -27,15 +30,14 @@ export function UserEditorView(props: UserEditorViewProps) {
       <div className="space-y-6">
         <section className="space-y-3">
           <h2 className="text-sm font-semibold text-slate-900">Access</h2>
-          <label className="flex items-center gap-2 text-sm text-slate-700">
-            <input
-              type="checkbox"
-              checked={props.isAdmin}
-              onChange={e => props.onIsAdminChange(e.target.checked)}
-              className="h-4 w-4 rounded border-slate-300"
-            />
-            Admin
-          </label>
+          <div>
+            <span className="mb-1.5 block text-sm font-medium text-slate-700">Active</span>
+            <SwitchView label="Active" value={props.isActive} onChange={props.onIsActiveChange} />
+          </div>
+          <div>
+            <span className="mb-1.5 block text-sm font-medium text-slate-700">Admin</span>
+            <SwitchView label="Admin" value={props.isAdmin} onChange={props.onIsAdminChange} />
+          </div>
           <label className="block max-w-sm">
             <span className="mb-1 block text-sm font-medium text-slate-700">{props.isNew ? 'Password' : 'New password'}</span>
             <input

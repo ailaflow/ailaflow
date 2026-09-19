@@ -9,6 +9,7 @@ import { Cipher } from '../../core/cipher/cipher';
 import { EndpointError } from '../framework/endpoint-error';
 import { User } from '../../repositories/user/user';
 import { getEndpointAbortSignal } from '../framework/endpoint-abort-signal';
+import { AuthTokenRepository } from '../../repositories/auth-token/auth-token-repository';
 
 export class SaveUserEndpoint implements Endpoint {
   public readonly method = 'post';
@@ -19,6 +20,7 @@ export class SaveUserEndpoint implements Endpoint {
   public constructor(
     private readonly userRepository: UserRepository,
     private readonly userAttributesRepository: UserAttributesRepository,
+    private readonly authTokenRepository: AuthTokenRepository,
     private readonly cipher: Cipher
   ) {}
 
@@ -54,6 +56,7 @@ export class SaveUserEndpoint implements Endpoint {
       await user.setPassword(request.password, this.cipher);
     }
     user.setIsAdmin(request.isAdmin);
+    user.setIsActive(request.isActive);
 
     let attributes: UserAttributes;
     try {
@@ -77,6 +80,10 @@ export class SaveUserEndpoint implements Endpoint {
         throw new EndpointError(e.message, 400);
       }
       throw e;
+    }
+
+    if (!request.isActive) {
+      await this.authTokenRepository.deleteForUser(abortSignal, user.name);
     }
 
     return {

@@ -39,3 +39,23 @@ test('deletes only outdated auth tokens', async () => {
 
   db.close();
 });
+
+test('deletes auth tokens only for the selected user', async () => {
+  const db = new DatabaseSync(':memory:', { open: true });
+  const dbs = { modelDb: new SqliteDatabase(db) } as SqliteDatabases;
+  const abortSignal = new AbortController().signal;
+  const repository = new SqliteAuthTokenRepository(dbs);
+
+  await repository.setup(abortSignal);
+  await repository.upsert(abortSignal, new AuthToken('alice-first', 'alice', 1000, false));
+  await repository.upsert(abortSignal, new AuthToken('alice-second', 'alice', 1000, false));
+  await repository.upsert(abortSignal, new AuthToken('bob-token', 'bob', 1000, false));
+
+  await repository.deleteForUser(abortSignal, 'alice');
+
+  assert.equal(await repository.tryGetByToken(abortSignal, 'alice-first'), null);
+  assert.equal(await repository.tryGetByToken(abortSignal, 'alice-second'), null);
+  assert.notEqual(await repository.tryGetByToken(abortSignal, 'bob-token'), null);
+
+  db.close();
+});

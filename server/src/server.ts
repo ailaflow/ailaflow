@@ -577,7 +577,7 @@ export class Server {
       new ExecuteSandboxCommandEndpoint(sandboxInstanceManager),
       new GetUsersEndpoint(userListQuerier),
       new GetUserEndpoint(userRepository, userAttributesRepository),
-      new SaveUserEndpoint(userRepository, userAttributesRepository, cipher),
+      new SaveUserEndpoint(userRepository, userAttributesRepository, authTokenRepository, cipher),
       new GetUserTelegramConfigurationEndpoint(userRepository, telegramConfigurationApi),
       new SaveUserTelegramBotEndpoint(userRepository, telegramConfigurationApi),
       new DeleteUserTelegramBotEndpoint(userRepository, telegramConfigurationApi)
@@ -627,7 +627,6 @@ export class Server {
     console.log('█   █ ▀█   █  ▀▀▀▄   █▄▄   █  ▄▀▀▀▄ █   █');
     console.log('█▀▀▀█  █   █  ▄▀▀█   █     █  █   █ █ ▄ █');
     console.log('▀   ▀ ▀▀▀ ▀▀▀  ▀▀ ▀ ▀▀▀   ▀▀▀  ▀▀▀   ▀ ▀ ');
-    console.log(`                `);
     console.log('\x1b[0m');
 
     console.log(`Data folder: ${this.serverPaths.getAppDataFolderPath()}`);
