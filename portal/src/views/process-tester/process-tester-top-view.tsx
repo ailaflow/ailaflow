@@ -1,9 +1,6 @@
-import {
-  ProcessLogLevel,
-  type FormDefinition,
-  type ProcessExecutionVariableValues
-} from '@ailaflow/shared';
+import { ProcessLogLevel, type FormDefinition, type ProcessExecutionVariableValues } from '@ailaflow/shared';
 import type { RefObject } from 'react';
+import { ProcessOutputValuesView } from '../common/process-output-values-view';
 
 export enum ProcessTesterTimelineItemType {
   FORM = 1,
@@ -80,7 +77,10 @@ export class OutputProcessTesterTimelineItem implements ProcessTesterTimelineIte
     return `output-${this.time}`;
   }
 
-  public constructor(public readonly time: number, public readonly output: ProcessExecutionVariableValues) {}
+  public constructor(
+    public readonly time: number,
+    public readonly output: ProcessExecutionVariableValues
+  ) {}
 }
 
 export class CurrentStepProcessTesterTimelineItem implements ProcessTesterTimelineItem {
@@ -152,9 +152,7 @@ function TimelineMarker(props: { item: ProcessTesterTimelineItem }) {
   return <span className={`absolute left-0 top-1.5 size-4 rounded-full border-2 ${markerClassName}`} aria-hidden="true" />;
 }
 
-function TimelineItem(
-  props: Pick<ProcessTesterTimelineViewProps, 'startForm' | 'renderOutputForm'> & { item: ProcessTesterTimelineItem }
-) {
+function TimelineItem(props: Pick<ProcessTesterTimelineViewProps, 'startForm' | 'renderOutputForm'> & { item: ProcessTesterTimelineItem }) {
   const { item } = props;
   if (item instanceof FormProcessTesterTimelineItem) {
     return <FormTimelineItem item={item} startForm={props.startForm} renderOutputForm={props.renderOutputForm} />;
@@ -202,14 +200,7 @@ function OutputTimelineItem(props: { item: OutputProcessTesterTimelineItem }) {
     <article className="w-full min-w-0 rounded-lg border border-emerald-200 bg-white px-4 py-3 shadow-sm">
       <TimelineItemHeader title="Process finished" time={props.item.time} tone="success" />
       {Object.keys(props.item.output).length > 0 ? (
-        <dl className="mt-3 divide-y divide-slate-100 overflow-hidden rounded-md border border-slate-200">
-          {Object.entries(props.item.output).map(([name, value]) => (
-            <div key={name} className="grid gap-1 px-3 py-2.5 sm:grid-cols-[minmax(7rem,0.35fr)_minmax(0,1fr)] sm:gap-4">
-              <dt className="text-xs font-medium text-slate-500">{name}</dt>
-              <dd className="min-w-0 whitespace-pre-wrap break-words font-mono text-xs text-slate-800">{formatValue(value)}</dd>
-            </div>
-          ))}
-        </dl>
+        <ProcessOutputValuesView outputValues={props.item.output} />
       ) : (
         <p className="mt-2 text-sm text-slate-500">No output values.</p>
       )}
@@ -223,11 +214,7 @@ function LogTimelineItem(props: { item: LogProcessTesterTimelineItem }) {
   return (
     <article
       className={`flex w-full min-w-0 items-start gap-3 rounded-lg border px-3.5 py-2.5 shadow-sm ${
-        isError
-          ? 'border-red-200 bg-red-50'
-          : isWarning
-            ? 'border-amber-200 bg-amber-50'
-            : 'border-slate-200 bg-white'
+        isError ? 'border-red-200 bg-red-50' : isWarning ? 'border-amber-200 bg-amber-50' : 'border-slate-200 bg-white'
       }`}
     >
       <p
@@ -249,11 +236,7 @@ function FormTimelineItem(
   const isCompleted = item.status === ProcessTesterTimelineFormStatus.COMPLETED;
   const isStartForm = item.formType === ProcessTesterTimelineFormType.START;
   const isDisabled = isStartForm && isCompleted;
-  const content = isStartForm
-    ? props.startForm
-    : item.form && item.output
-      ? props.renderOutputForm(item.form, item.output)
-      : null;
+  const content = isStartForm ? props.startForm : item.form && item.output ? props.renderOutputForm(item.form, item.output) : null;
   return (
     <article className="flex h-96 min-h-72 w-full min-w-0 resize-y flex-col overflow-auto rounded-xl border border-slate-200 bg-white shadow-sm">
       <header className="flex flex-none flex-wrap items-start justify-between gap-x-4 gap-y-2 border-b border-slate-100 px-4 py-3 sm:px-5">
@@ -269,7 +252,11 @@ function FormTimelineItem(
             </span>
           </div>
           <p className="mt-1 text-xs text-slate-500">
-            {isStartForm ? (isCompleted ? 'Submitted input' : 'Fill in the input to start this process.') : 'The process finished successfully.'}
+            {isStartForm
+              ? isCompleted
+                ? 'Submitted input'
+                : 'Fill in the input to start this process.'
+              : 'The process finished successfully.'}
           </p>
         </div>
         <TimelineTime time={item.time} />
@@ -300,16 +287,12 @@ function TimelineItemHeader(props: { title: string; time: number; tone: 'error' 
 function TimelineTime(props: { time: number }) {
   const date = new Date(props.time);
   return (
-    <time dateTime={date.toISOString()} title={date.toLocaleString()} className="shrink-0 font-mono text-[0.6875rem] tabular-nums text-slate-400">
+    <time
+      dateTime={date.toISOString()}
+      title={date.toLocaleString()}
+      className="shrink-0 font-mono text-[0.6875rem] tabular-nums text-slate-400"
+    >
       {date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
     </time>
   );
-}
-
-function formatValue(value: unknown): string {
-  if (typeof value === 'string') {
-    return value;
-  }
-  const json = JSON.stringify(value, null, 2);
-  return json ?? String(value);
 }

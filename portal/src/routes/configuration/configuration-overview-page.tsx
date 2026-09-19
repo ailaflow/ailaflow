@@ -122,7 +122,7 @@ export function ConfigurationOverviewPage() {
     }
   ];
 
-  return <ConfigurationOverviewView title="System status" statuses={statuses} />;
+  return <ConfigurationOverviewView statuses={statuses} />;
 }
 
 function publicUrlStatusValue(publicUrl: string | null, isAvailable: boolean): string {

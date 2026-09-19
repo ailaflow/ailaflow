@@ -13,6 +13,7 @@ import { MyFormErrorView } from '../../../views/common/my-form/my-form-error-vie
 import { MyFormLoadingView } from '../../../views/common/my-form/my-form-loading-view';
 import { FormAdapter } from '../form-renderer/form-adapter';
 import { FormRenderer } from '../form-renderer/form-renderer';
+import { MyFormOutputView } from '../../../views/common/my-form/my-form-output-view';
 
 enum StateType {
   LOADING_START_FORM,
@@ -218,9 +219,16 @@ export function MyProcessStartForm({ args, onEnded }: MyProcessStartFormProps) {
     return <MyFormErrorView error={state.error} />;
   }
 
-  if ((state.type === StateType.START_FORM || state.type === StateType.OUTPUT_FORM) && formAdapter) {
-    return <FormRenderer form={state.form} adapter={formAdapter} />;
+  if (formAdapter) {
+    if (state.type === StateType.START_FORM) {
+      return <FormRenderer form={state.form} adapter={formAdapter} />;
+    }
+    if (state.type === StateType.OUTPUT_FORM) {
+      if (!state.form) {
+        return <MyFormOutputView outputValues={state.outputValues} />;
+      }
+      return <FormRenderer form={state.form} adapter={formAdapter} />;
+    }
   }
-
   return <MyFormLoadingView />;
 }
