@@ -52,19 +52,22 @@ function useRouterAdapter(): RouterAdapter {
   const location = useLocation();
   const navigate = useNavigate();
   const currentRoute = useRef(resolveCurrentRoute(location));
+  const navigateRef = useRef(navigate);
 
   useEffect(() => {
     currentRoute.current = resolveCurrentRoute(location);
   }, [location]);
 
+  useEffect(() => {
+    navigateRef.current = navigate;
+  }, [navigate]);
+
   return useMemo(
     () => ({
       getCurrentRoute: () => currentRoute.current,
-      navigate: async path => {
-        await navigate(path);
-      }
+      navigate: async path => navigateRef.current(path)
     }),
-    [navigate]
+    []
   );
 }
 

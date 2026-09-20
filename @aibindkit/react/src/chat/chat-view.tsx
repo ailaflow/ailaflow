@@ -206,11 +206,13 @@ function SystemMessageView(props: { message: CompletedChatMessage }) {
 
 function ToolMessageView(props: { message: CompletedChatMessage }) {
   const content = getContent(props.message.message);
-  const label = getToolResponseLabel(content);
+  const parsedContent = parseMaybeJson(content);
+  const label = getToolResponseLabel(parsedContent);
+  const isError = hasRootError(parsedContent);
 
   return (
     <div className="abk-chat-row abk-chat-row-tool">
-      <details className="abk-chat-details">
+      <details className={`abk-chat-details${isError ? ' abk-chat-details-error' : ''}`}>
         <summary className="abk-chat-summary">
           <span className="abk-chat-toggle abk-chat-toggle-closed">
             <SvgIcon name="detailsClosed" />
@@ -227,7 +229,7 @@ function ToolMessageView(props: { message: CompletedChatMessage }) {
             )}
           </span>
         </summary>
-        <pre className="abk-chat-pre">{formatMaybeJson(content)}</pre>
+        <pre className="abk-chat-pre">{formatMaybeJson(content, parsedContent)}</pre>
       </details>
     </div>
   );
@@ -282,50 +284,56 @@ function formatToolArguments(argumentsJson: string) {
   }
 }
 
-function formatMaybeJson(content: string | null) {
+function parseMaybeJson(content: string | null): unknown {
   if (!content) {
-    return '';
+    return null;
   }
 
   try {
-    return JSON.stringify(JSON.parse(content), null, 2);
+    return JSON.parse(content);
   } catch {
-    return content;
+    return null;
   }
 }
 
-function getToolResponseLabel(content: string | null) {
-  if (!content) {
-    return null;
+function formatMaybeJson(content: string | null, parsedContent = parseMaybeJson(content)) {
+  if (parsedContent !== null) {
+    return JSON.stringify(parsedContent, null, 2);
   }
 
-  try {
-    const parsed = JSON.parse(content);
-    const value = getToolStatusField(parsed);
-    if (value) {
-      return limitText(value, 72);
-    }
-  } catch {
-    return null;
+  return content ?? '';
+}
+
+function getToolResponseLabel(parsedContent: unknown) {
+  const value = getToolStatusField(parsedContent);
+  if (value) {
+    return limitText(value, 72);
   }
 
   return null;
 }
 
+function hasRootError(value: unknown) {
+  return isRecord(value) && Object.prototype.hasOwnProperty.call(value, 'error');
+}
+
 function getToolStatusField(value: unknown): string | null {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+  if (!isRecord(value)) {
     return null;
   }
 
-  const object = value as Record<string, unknown>;
   for (const key of ['error', 'success']) {
-    const field = object[key];
+    const field = value[key];
     if (typeof field === 'string' && field.trim()) {
       return field;
     }
   }
 
   return null;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 }
 
 function limitText(value: string, maxLength: number) {

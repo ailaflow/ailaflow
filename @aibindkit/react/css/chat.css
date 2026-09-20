@@ -164,6 +164,7 @@
 .abk-chat-details {
   background: #f8fafc;
   color: #334155;
+  overflow: hidden;
 }
 
 .abk-chat-label {
@@ -203,6 +204,19 @@
   font-size: 12px;
   font-weight: 600;
   list-style: none;
+}
+
+.abk-chat-details-error {
+  border-color: #fecaca;
+}
+
+.abk-chat-details-error .abk-chat-summary {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.abk-chat-details-error .abk-chat-summary-strong {
+  color: #991b1b;
 }
 
 .abk-chat-summary::-webkit-details-marker {
