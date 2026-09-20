@@ -26,7 +26,8 @@
 
 .abk-chat-update,
 .abk-chat-status,
-.abk-chat-failure {
+.abk-chat-failure,
+.abk-chat-notification {
   box-sizing: border-box;
   width: 100%;
   max-width: 840px;
@@ -35,6 +36,24 @@
 
 .abk-chat-update + .abk-chat-update {
   margin-top: 12px;
+}
+
+.abk-chat-notification {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+  color: #94a3b8;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.abk-chat-notification::before,
+.abk-chat-notification::after {
+  height: 1px;
+  flex: 1 1 auto;
+  background: #e2e8f0;
+  content: '';
 }
 
 .abk-chat-status {

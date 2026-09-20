@@ -1,11 +1,12 @@
 import type { ChatMessageMetadata, ToolCall } from '@aibindkit/core';
 import { LlmClient, LlmModelSettings } from '../../client/llm-client';
 import { ToolSet } from '../tools/tool-set';
-import { AiMessage } from './ai-message';
+import { AssistantMessage } from './assistant-message';
 import { SystemMessage } from './system-message';
 import { ToolMessage } from './tool-message';
 import { UserMessage } from './user-message';
 import { ToolContext } from '../tools';
+import { CompactMessage } from './compact-message';
 
 export class MessageFactory {
   public constructor(
@@ -22,11 +23,15 @@ export class MessageFactory {
     return new UserMessage(id, content, metadata);
   }
 
-  public createAi(id: number): AiMessage {
-    return new AiMessage(id, this.llmClient, this.llmModelSettings, this.toolSet);
+  public createAssistant(id: number): AssistantMessage {
+    return new AssistantMessage(id, this.llmClient, this.llmModelSettings, this.toolSet);
   }
 
   public createTool(id: number, context: ToolContext, calls: ToolCall[]): ToolMessage {
     return new ToolMessage(id, context, calls, this.toolSet);
+  }
+
+  public createCompact(id: number): CompactMessage {
+    return new CompactMessage(id, this.llmClient, this.llmModelSettings, this.toolSet);
   }
 }

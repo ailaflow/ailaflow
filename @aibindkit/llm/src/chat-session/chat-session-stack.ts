@@ -1,4 +1,4 @@
-import type { ChatMessage, CompletedChatMessage, LlmMessage } from '@aibindkit/core';
+import { type ChatMessage, type CompletedChatMessage, type LlmMessage } from '@aibindkit/core';
 import { Message } from './messages/message';
 
 export interface CompletedChatMessagePointer {
@@ -83,6 +83,7 @@ export class ChatSessionStack {
 
   public getCompletedLlmMessagesBeforeLast(): LlmMessage[] {
     const result: LlmMessage[] = [];
+
     for (let i = 0; i < this.stack.length - 1; i++) {
       const item = this.stack[i];
       if (!item.completedMessages) {

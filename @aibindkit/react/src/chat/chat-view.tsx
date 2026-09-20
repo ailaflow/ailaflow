@@ -1,8 +1,8 @@
 import {
+  ChatMessageType,
   LlmMessageContentExtractor,
   type ChatContextUsageUpdate,
   type ChatMessageMetadata,
-  type ChatMessageType,
   type ChatMessageUpdate,
   type CompletedChatMessage,
   type LlmMessageContent,
@@ -130,6 +130,13 @@ function ChatUpdateView(props: {
   }
   if (props.update.isInterrupted) {
     return <li className="abk-chat-failure">Interrupted</li>;
+  }
+  if (props.update.type === ChatMessageType.COMPACT) {
+    return (
+      <li role="status" data-id={props.update.id} className="abk-chat-notification">
+        Context compacted
+      </li>
+    );
   }
   if (props.update.type && props.update.completedMessages) {
     const type = props.update.type;

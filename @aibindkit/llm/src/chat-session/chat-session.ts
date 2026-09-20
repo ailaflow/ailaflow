@@ -6,6 +6,7 @@ import { ChatSessionStack, CompletedChatMessagePointer } from './chat-session-st
 import { ChatSessionQueue } from './chat-session-queue';
 import { ToolContext } from './tools';
 import { ChatSessionStorage } from './chat-session-storage';
+import { UserMessageAction, UserMessageActionParser } from './messages';
 
 export interface ChatSessionUpdate {
   isWorking?: boolean;
@@ -81,11 +82,6 @@ export class ChatSession {
   public queueUserMessage(content: string, metadata?: ChatMessageMetadata): number {
     if (this.isDestroyed) {
       throw new Error('Session is destroyed');
-    }
-
-    if (this.effectiveContextWindowPercent <= this.contextUsage.percent) {
-      // TODO: we should replace this by compacting the session
-      throw new Error('Context window exceeded, please reset the session');
     }
 
     if (this.isInterrupted) {
@@ -202,28 +198,39 @@ export class ChatSession {
     await this.storage.save(abortSignal, this.id, this.export());
   }
 
+  private tryGetNextMessage(): Message | null {
+    if (this.effectiveContextWindowPercent <= this.contextUsage.percent) {
+      return this.messageFactory.createCompact(this.nextId());
+    }
+    const last = this.stack.tryGetLast();
+    if (last && last.type === ChatMessageType.TOOL) {
+      return this.messageFactory.createAssistant(this.nextId());
+    }
+    const nextMessage = this.queue.shift();
+    if (nextMessage) {
+      // TODO: now any action drops the whole content of the message with the action.
+      const action = UserMessageActionParser.tryParse(nextMessage);
+      if (action === UserMessageAction.COMPACT) {
+        return this.messageFactory.createCompact(this.nextId());
+      }
+      return nextMessage;
+    }
+    const isLastAi = last?.type === ChatMessageType.ASSISTANT;
+    if (isLastAi) {
+      return null;
+    }
+    return this.messageFactory.createAssistant(this.nextId());
+  }
+
   private tryNext() {
     if (this.isWorking) {
       return null;
     }
 
-    const last = this.stack.tryGetLast();
-    let message: Message;
-    if (last && last.type === ChatMessageType.TOOL) {
-      message = this.messageFactory.createAi(this.nextId());
-    } else {
-      const nextMessage = this.queue.shift();
-      if (nextMessage) {
-        message = nextMessage;
-      } else {
-        const isLastAi = last?.type === ChatMessageType.AI;
-        if (isLastAi) {
-          return false;
-        }
-        message = this.messageFactory.createAi(this.nextId());
-      }
+    const message = this.tryGetNextMessage();
+    if (!message) {
+      return false;
     }
-
     this.stack.push(message);
     this.isWorking = true;
     setTimeout(() => this.next(message), 0);

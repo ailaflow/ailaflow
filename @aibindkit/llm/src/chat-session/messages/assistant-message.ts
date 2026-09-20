@@ -4,8 +4,8 @@ import { ChatSessionStack } from '../chat-session-stack';
 import { LlmClient, LlmModelSettings } from '../../client/llm-client';
 import { ChatMessageType, CompletedChatMessage, type ToolCall } from '@aibindkit/core';
 
-export class AiMessage implements Message {
-  public readonly type = ChatMessageType.AI;
+export class AssistantMessage implements Message {
+  public readonly type = ChatMessageType.ASSISTANT;
 
   public constructor(
     public readonly id: number,
