@@ -1,3 +1,4 @@
+import { taskCompletionMetadataSchema } from '@ailaflow/shared';
 import { CodeMirror } from '../../common/codemirror';
 
 const schemaPresets = [
@@ -6,7 +7,13 @@ const schemaPresets = [
   { label: 'number', schema: { type: 'number' } },
   { label: 'number[]', schema: { type: 'array', items: { type: 'number' } } },
   { label: 'boolean', schema: { type: 'boolean' } },
-  { label: 'object', schema: { type: 'object', properties: {} } }
+  { label: 'object', schema: { type: 'object', properties: {} } },
+  {
+    label: 'Task metadata',
+    schema: taskCompletionMetadataSchema.toJSONSchema({
+      target: 'json-schema'
+    })
+  }
 ] as const;
 
 export interface SchemaOverlayViewProps {

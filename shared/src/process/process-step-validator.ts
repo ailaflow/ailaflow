@@ -6,8 +6,7 @@ import { ProcessDefinition } from './process-definition';
 import { UserAccessExpressionParser } from '../user-access';
 import { ScriptDefinitionValidator } from './script-definition-validator';
 import { TaskStepValidator } from './task-step-validator';
-import { TaskDeadlinePresetValidator } from '../task';
-import { TaskCompletionMetadataSchemaValidator } from '../task/task-completion-metadata';
+import { TaskCompletionMetadataSchemaValidator, TaskDeadlinePresetValidator } from '../task';
 
 export class ProcessStepValidator {
   public constructor(
