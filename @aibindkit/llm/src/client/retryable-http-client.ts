@@ -1,29 +1,46 @@
+import { Logger } from '@aibindkit/core';
+
 const maxRetryDelayMs = 60_000;
 const initialRetryDelayMs = 500;
 const maxDefaultRetryDelayMs = 8_000;
 
 export class RetryableHttpClient {
-  public constructor(private readonly maxRetries: number) {}
+  public constructor(
+    private readonly maxRetries: number,
+    private readonly logger?: Logger
+  ) {}
 
   public async fetch(url: string, init: RequestInit): Promise<Response> {
-    for (let retryCount = 0; ; retryCount++) {
+    for (let attempt = 0; ; attempt++) {
       let response: Response;
       try {
         response = await fetch(url, init);
-      } catch (error) {
-        if (init.signal?.aborted || retryCount >= this.maxRetries) {
-          throw error;
+      } catch (e) {
+        if (init.signal?.aborted || attempt >= this.maxRetries) {
+          throw e;
         }
-        await this.wait(this.calculateDefaultRetryDelay(retryCount), init.signal);
+        const delay = this.calculateDefaultRetryDelay(attempt);
+        if (this.logger) {
+          const error = e instanceof Error ? e.message : String(e);
+          this.logger.warn(`Request to ${url} failed: ${error}; attempt ${attempt + 1}; retrying in ${delay} ms`);
+        }
+        await this.wait(delay, init.signal);
         continue;
       }
 
-      if (!this.shouldRetry(response) || retryCount >= this.maxRetries) {
+      if (!this.shouldRetry(response) || attempt >= this.maxRetries) {
         return response;
       }
 
       await this.cancelResponseBody(response);
-      await this.wait(this.calculateRetryDelay(response.headers, retryCount), init.signal);
+
+      const delay = this.calculateRetryDelay(response.headers, attempt);
+      if (this.logger) {
+        this.logger.warn(
+          `Request to ${url} failed with retryable status ${response.status}; attempt ${attempt + 1}; retrying in ${delay} ms`
+        );
+      }
+      await this.wait(delay, init.signal);
     }
   }
 

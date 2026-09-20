@@ -11,7 +11,7 @@ import { RestartChatEndpoint } from './endpoints/restart-chat-endpoint';
 import { LiveChatSessionStore } from './live-chat-session-store';
 import { ChatAuthContextResolver, DefaultChatAuthContextResolver } from './chat-auth-context-resolver';
 import { ChatSessionManager } from './chat-session-manager';
-import { Logger } from './logger';
+import { Logger } from '@aibindkit/core';
 
 export interface ChatServerConfiguration {
   sessionResolver: ChatSessionResolver;

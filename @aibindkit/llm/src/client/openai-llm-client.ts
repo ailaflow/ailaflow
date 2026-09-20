@@ -1,4 +1,4 @@
-import type { LlmAssistantMessage, LlmCompletionUsage, LlmMessage, ToolDescriptor } from '@aibindkit/core';
+import type { LlmAssistantMessage, LlmCompletionUsage, LlmMessage, Logger, ToolDescriptor } from '@aibindkit/core';
 import { LlmCompleteResult, LlmClient, LlmClientError, LlmModel, LlmModelSettings } from './llm-client';
 import { LlmMessageSanitizer } from './llm-message-sanitizer';
 import { RetryableHttpClient } from './retryable-http-client';
@@ -36,10 +36,12 @@ export class OpenaiLlmClient implements LlmClient {
       url: string;
       apiKey: string;
       maxRetries?: number;
-    }
+      debugUsage?: boolean;
+    },
+    private readonly logger?: Logger
   ) {
     this.baseUrl = config.url.replace(/\/+$/, '');
-    this.httpClient = new RetryableHttpClient(config.maxRetries ?? defaultMaxRetries);
+    this.httpClient = new RetryableHttpClient(config.maxRetries ?? defaultMaxRetries, logger);
   }
 
   public async complete(
@@ -68,6 +70,9 @@ export class OpenaiLlmClient implements LlmClient {
     const choice = data.choices?.[0];
     if (!choice?.message) {
       throw new LlmClientError('No choices returned from AI API');
+    }
+    if (this.config.debugUsage && this.logger) {
+      this.logger.log(`Usage: ${JSON.stringify(data.usage)}`);
     }
 
     return {
