@@ -1,4 +1,4 @@
-import { ChatMessage, ChatMessageType, CompletedChatMessage } from '@aibindkit/core';
+import { ChatMessage, ChatMessageType, CompletedChatMessage, LlmMessageContentExtractor } from '@aibindkit/core';
 
 const SLACK_MESSAGE_MAX_LENGTH = 4_000;
 
@@ -23,19 +23,8 @@ export class SlackMessageFormatter {
     ) {
       return null;
     }
-    const content = completed.message.content;
-    let text: string;
-    if (typeof content === 'string') {
-      text = content;
-    } else if (Array.isArray(content)) {
-      text = content
-        .filter(part => 'type' in part && part.type === 'text' && 'text' in part)
-        .map(part => String(part.text))
-        .join('\n');
-    } else {
-      return null;
-    }
-    if (!text.trim()) {
+    const text = LlmMessageContentExtractor.tryExtract(completed.message)?.content;
+    if (!text?.trim()) {
       return null;
     }
     return messageType === ChatMessageType.USER ? `You in AilaFlow: ${text}` : text;

@@ -13,8 +13,16 @@ export class LlmMessageContentExtractor {
     if (message.content) {
       if (typeof message.content === 'string' && message.content.length > 0) {
         content = message.content;
-      } else if (Array.isArray(message.content) && message.content?.[0].type === 'text') {
-        content = message.content[0].text;
+      } else if (Array.isArray(message.content)) {
+        const parts: string[] = [];
+        for (const m of message.content) {
+          if (m.type === 'text' && m.text && m.text.length > 0) {
+            parts.push(m.text);
+          }
+        }
+        if (parts.length > 0) {
+          content = parts.join('\n');
+        }
       }
     }
     if (message.role === 'assistant') {
