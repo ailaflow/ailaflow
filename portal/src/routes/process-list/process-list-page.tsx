@@ -10,6 +10,7 @@ import { toolError, toolSuccess, toolWait } from '@aibindkit/react';
 import { useNavigate, useSearchParams } from 'react-router';
 import { useAiStore } from '../common/admin-portal';
 import { useState } from 'react';
+import { ProcessDisplay } from '@ailaflow/shared';
 
 const PAGE_SIZE = 20;
 
@@ -92,7 +93,14 @@ export function ProcessListPage() {
           title: 'Name',
           width: '22%',
           getLeadingVisual: process => <ProcessIcon name={process.name} className="h-8 w-8" />,
-          getValue: process => `/${process.name}`
+          getValue: process =>
+            process.display !== ProcessDisplay.HIDDEN ? (
+              `/${process.name}`
+            ) : (
+              <span className="text-gray-400">
+                /{process.name} <small>(Hidden)</small>
+              </span>
+            )
         },
         {
           id: 'description',

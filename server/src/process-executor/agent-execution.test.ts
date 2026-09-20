@@ -98,6 +98,7 @@ function createHarness(
           name: process.name,
           description: process.description,
           userAccessExpression: process.userAccessExpression,
+          display: process.display,
           isPausable: process.isPausable,
           startVariableSchemas: process.startVariableSchemas ?? {}
         }))

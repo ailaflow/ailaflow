@@ -24,6 +24,7 @@ test('queries a name-ordered page of processes', async () => {
         name: 'charlie',
         description: 'charlie description',
         userAccessExpression: '',
+        display: ProcessDisplay.HIDDEN,
         isPausable: true,
         startVariableSchemas: {}
       }
