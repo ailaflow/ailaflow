@@ -70,7 +70,7 @@ export class AssignedTaskCompleter {
     try {
       const pointer = chatSession.findByMetadata('taskId', taskId);
       if (pointer) {
-        await chatSession.setMetadata(pointer.id, pointer.completedMessageIndex, 'finished', true);
+        await chatSession.setMetadata(pointer, 'finished', true);
       }
     } catch (e) {
       this.logger.warn(`Failed to update chat session metadata: ${(e as Error)?.message ?? e}`);

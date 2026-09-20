@@ -4,26 +4,25 @@ import { ChatSessionStack } from '../chat-session-stack';
 import { LlmClient, LlmModelSettings } from '../../client/llm-client';
 import { ChatMessageType, CompletedChatMessage, LlmMessageContentExtractor } from '@aibindkit/core';
 
-const COMPACT_PROMPT = `Please stop all current actions.
+const COMPACT_PROMPT = `Do not call tools or continue the current task.
 
-Compact this session into a concise handoff for a new session.
+Create a concise handoff summary for a new session.
 
-Keep:
+Include only what is needed to continue:
 
-* Main goal and current state
-* Key context, constraints, and decisions
-* Work completed
-* Critical technical details
+* The main goal and current state
+* Important context, constraints, and decisions
+* Completed work and critical technical details
 * Failed approaches worth remembering
 * Open issues and next steps
 
-Remove repetition, filler, and obsolete exploration. Do not invent missing details.
+Remove repetition, filler, and obsolete exploration. Do not invent details.`;
 
-End with: **Continue from this state without redoing completed work.**`;
+const CONTINUE_PROMPT = `Continue the previous session from the compacted summary below. Resume any unfinished work directly without repeating completed work.
 
-const CONTINUE_PROMPT = `This session is being continued from a previous session. Please continue from the previous state without redoing completed work.
+Do not acknowledge or summarize these instructions. Do not respond with phrases such as "Got it" or "I understand." Continue the work instead.
 
-This is the previous session's compacted state:
+Compacted session summary:
 
 `;
 
@@ -38,7 +37,7 @@ export class CompactMessage implements Message {
   ) {}
 
   public async complete(abortSignal: AbortSignal, stack: ChatSessionStack): Promise<MessageCompletionResult> {
-    const llmMessages = stack.getCompletedLlmMessagesBeforeLast();
+    const llmMessages = stack.getRecentCompletedLlmMessagesBeforeLast();
     const toolDescriptors = this.toolSet.getDescriptorsOrUndefined();
 
     llmMessages.push({
@@ -46,7 +45,7 @@ export class CompactMessage implements Message {
       content: COMPACT_PROMPT
     });
 
-    const { message, usage } = await this.llmClient.complete(abortSignal, this.llmModelSettings, llmMessages, toolDescriptors);
+    const { message } = await this.llmClient.complete(abortSignal, this.llmModelSettings, llmMessages, toolDescriptors);
 
     const content = LlmMessageContentExtractor.tryExtract(message);
     if (!content) {
@@ -65,7 +64,12 @@ export class CompactMessage implements Message {
           }
         }
       ],
-      usage
+      // Reset token usage after compaction so the session does not immediately compact again.
+      usage: {
+        prompt_tokens: 0,
+        completion_tokens: 0,
+        total_tokens: 0
+      }
     };
   }
 
@@ -73,7 +77,7 @@ export class CompactMessage implements Message {
     return {
       message: {
         role: 'user',
-        content: `The request to LLM provider failed with reason: ${reason}`
+        content: `The request to LLM server failed with reason: ${reason}`
       }
     };
   }
@@ -82,7 +86,7 @@ export class CompactMessage implements Message {
     return {
       message: {
         role: 'user',
-        content: 'The request to LLM provider was interrupted by the user.'
+        content: 'The request to LLM server was interrupted by the user.'
       }
     };
   }

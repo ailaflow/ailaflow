@@ -18,6 +18,10 @@ export class ChatSessionQueue {
     this.queue.splice(index, 0, message);
   }
 
+  public peek(): Message | null {
+    return this.queue.length > 0 ? this.queue[0] : null;
+  }
+
   public shift(): Message | undefined {
     return this.queue.shift();
   }

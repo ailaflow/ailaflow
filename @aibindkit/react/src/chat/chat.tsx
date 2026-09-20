@@ -246,7 +246,7 @@ function defaultMessageFilter(type: ChatMessageType): boolean {
 }
 
 function tryGetToolCalls(update: ChatMessageUpdate): ToolCall[] | null {
-  if (update.type === ChatMessageType.AI && update.completedMessages) {
+  if (update.type === ChatMessageType.ASSISTANT && update.completedMessages) {
     const result: ToolCall[] = [];
     for (const cm of update.completedMessages) {
       if (cm.message.role === 'assistant') {

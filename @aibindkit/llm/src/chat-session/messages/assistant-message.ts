@@ -15,7 +15,7 @@ export class AssistantMessage implements Message {
   ) {}
 
   public async complete(abortSignal: AbortSignal, stack: ChatSessionStack): Promise<MessageCompletionResult> {
-    const llmMessages = stack.getCompletedLlmMessagesBeforeLast();
+    const llmMessages = stack.getRecentCompletedLlmMessagesBeforeLast();
     const toolDescriptors = this.toolSet.getDescriptorsOrUndefined();
 
     const { message, usage } = await this.llmClient.complete(abortSignal, this.llmModelSettings, llmMessages, toolDescriptors);
@@ -43,7 +43,7 @@ export class AssistantMessage implements Message {
     return {
       message: {
         role: 'user',
-        content: `The request to AI server failed with reason: ${reason}`
+        content: `The request to LLM server failed with reason: ${reason}`
       }
     };
   }
@@ -52,7 +52,7 @@ export class AssistantMessage implements Message {
     return {
       message: {
         role: 'user',
-        content: 'The request to AI server was interrupted by the user.'
+        content: 'The request to LLM server was interrupted by the user.'
       }
     };
   }

@@ -16,6 +16,7 @@ import {
 } from './telegram-message-metadata';
 
 const POLL_TIMEOUT_SECONDS = 25;
+const CONTEXT_COMPACTED_MESSAGE = 'Context compacted.';
 
 export class TelegramChannelSynchronizer {
   private readonly logger: Logger;
@@ -96,7 +97,7 @@ export class TelegramChannelSynchronizer {
   }
 
   private readonly onMessageStarted = (update: ChatSessionUpdate): void => {
-    if (!this.telegramChatId || update.update.type !== ChatMessageType.AI) {
+    if (!this.telegramChatId || update.update.type !== ChatMessageType.ASSISTANT) {
       return;
     }
     void this.client
@@ -266,10 +267,13 @@ export class TelegramChannelSynchronizer {
         if (telegram?.origin || telegram?.delivery?.status === TelegramMessageStatus.SENT) {
           continue;
         }
-        const chunks = [
-          ...this.messageFormatter.format({ ...message, completedMessages: [completedMessage] }),
-          ...(await this.createFormLinkMessages(completedMessage.metadata))
-        ];
+        const chunks =
+          message.type === ChatMessageType.COMPACT
+            ? [CONTEXT_COMPACTED_MESSAGE]
+            : [
+                ...this.messageFormatter.format({ ...message, completedMessages: [completedMessage] }),
+                ...(await this.createFormLinkMessages(completedMessage.metadata))
+              ];
         if (chunks.length === 0) {
           continue;
         }
@@ -369,7 +373,7 @@ export class TelegramChannelSynchronizer {
   ): Promise<void> {
     this.isUpdatingMetadata = true;
     try {
-      await session.setMetadata(messageId, completedMessageIndex, 'telegram', telegram);
+      await session.setMetadata({ id: messageId, completedMessageIndex }, 'telegram', telegram);
     } finally {
       this.isUpdatingMetadata = false;
     }

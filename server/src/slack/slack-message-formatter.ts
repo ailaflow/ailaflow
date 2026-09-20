@@ -4,7 +4,7 @@ const SLACK_MESSAGE_MAX_LENGTH = 4_000;
 
 export class SlackMessageFormatter {
   public format(message: ChatMessage): string[] {
-    if (message.type !== ChatMessageType.USER && message.type !== ChatMessageType.AI) {
+    if (message.type !== ChatMessageType.USER && message.type !== ChatMessageType.ASSISTANT) {
       return [];
     }
     return (message.completedMessages ?? []).flatMap(completed => {
@@ -19,7 +19,7 @@ export class SlackMessageFormatter {
     }
     if (
       (messageType === ChatMessageType.USER && completed.message.role !== 'user') ||
-      (messageType === ChatMessageType.AI && completed.message.role !== 'assistant')
+      (messageType === ChatMessageType.ASSISTANT && completed.message.role !== 'assistant')
     ) {
       return null;
     }

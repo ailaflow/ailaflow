@@ -2,7 +2,7 @@ import type { ChatMessageUpdate, ChatMessageMetadata, ChatMessage, ChatContextUs
 import { ChatMessageType, SimpleEvent } from '@aibindkit/core';
 import { Message, MessageCompletionResult } from './messages/message';
 import { MessageFactory } from './messages/message-factory';
-import { ChatSessionStack, CompletedChatMessagePointer } from './chat-session-stack';
+import { PendingChatMessage, ChatSessionStack, CompletedChatMessagePointer } from './chat-session-stack';
 import { ChatSessionQueue } from './chat-session-queue';
 import { ToolContext } from './tools';
 import { ChatSessionStorage } from './chat-session-storage';
@@ -18,6 +18,8 @@ export interface ChatSessionSnapshot {
   readonly totalTokens?: number;
   readonly messages: ReadonlyArray<ChatMessage>;
 }
+
+const SYSTEM_MESSAGE_ID = -1;
 
 export class ChatSession {
   public readonly onMessageStarted = new SimpleEvent<ChatSessionUpdate>();
@@ -35,7 +37,6 @@ export class ChatSession {
 
   private readonly stack = new ChatSessionStack();
   private readonly queue = new ChatSessionQueue();
-  private systemMessage?: string;
   private contextUsage: ChatContextUsageUpdate = this.calcContextUsage();
 
   private readonly toolContext: ToolContext = {
@@ -54,21 +55,24 @@ export class ChatSession {
   ) {}
 
   public setSystemMessage(systemMessage: string) {
-    this.systemMessage = systemMessage;
+    const message = this.messageFactory.createSystem(SYSTEM_MESSAGE_ID, systemMessage);
+    const result = message.complete();
+    this.stack.setSystemMessage(result.completedMessages[0].message);
   }
 
-  public async setMetadata(id: number, completedMessageIndex: number, key: string, value: unknown) {
+  public async setMetadata(pointer: CompletedChatMessagePointer, key: string, value: unknown) {
     if (this.isDestroyed) {
       throw new Error('Session is destroyed');
     }
 
-    const message = this.stack.trySetMetadata(id, completedMessageIndex, key, value);
+    const message = this.stack.trySetMetadata(pointer, key, value);
     if (!message) {
-      throw new Error(`Cannot find message with id ${id} at completed message index ${completedMessageIndex}.`);
+      throw new Error(`Cannot find message with id ${pointer.id} at completed message index ${pointer.completedMessageIndex}`);
     }
+
     this.onMessageCompleted.emit({
       update: {
-        id,
+        id: pointer.id,
         completedMessages: message.completedMessages
       }
     });
@@ -87,12 +91,6 @@ export class ChatSession {
     if (this.isInterrupted) {
       this.isInterrupted = false;
       this.interruptAbortController = new AbortController();
-    }
-
-    if (this.systemMessage && this.stack.isEmpty() && this.queue.isEmpty()) {
-      const systemMessageId = this.nextId();
-      const systemMessage = this.messageFactory.createSystem(systemMessageId, this.systemMessage);
-      this.queue.push(systemMessage);
     }
 
     const userMessageId = this.nextId();
@@ -123,18 +121,7 @@ export class ChatSession {
   }
 
   public getAll(): ChatMessage[] {
-    const all = this.stack.all();
-    const result: ChatMessage[] = [];
-    for (const item of all) {
-      result.push({
-        id: item.id,
-        type: item.type,
-        isInterrupted: item.isInterrupted,
-        failReason: item.failReason,
-        completedMessages: item.completedMessages
-      });
-    }
-    return result;
+    return [...this.stack.getHistoricalStack(), ...this.stack.getRecentStack()];
   }
 
   public getContextUsage(): ChatContextUsageUpdate {
@@ -148,19 +135,7 @@ export class ChatSession {
     }
 
     this.stack.clear();
-    let start = 0;
-    if (this.systemMessage) {
-      const index = messages.findIndex(item => item.type === ChatMessageType.SYSTEM);
-      if (index === 0) {
-        const systemMessageId = messages[0].id;
-        const systemMessage = this.messageFactory.createSystem(systemMessageId, this.systemMessage);
-        this.stack.push(systemMessage);
-        const result = systemMessage.complete();
-        this.stack.complete(systemMessage, result.completedMessages);
-        start = 1;
-      }
-    }
-    this.stack.load(messages, start, messages.length);
+    this.stack.load(messages, 0, messages.length);
     this.lastId = messages[messages.length - 1].id;
     this.contextUsage = this.calcContextUsage(snapshot.totalTokens);
   }
@@ -168,7 +143,7 @@ export class ChatSession {
   public export(): ChatSessionSnapshot {
     return {
       totalTokens: this.contextUsage.totalTokens,
-      messages: this.stack.all()
+      messages: this.getAll()
     };
   }
 
@@ -199,21 +174,29 @@ export class ChatSession {
   }
 
   private tryGetNextMessage(): Message | null {
-    if (this.effectiveContextWindowPercent <= this.contextUsage.percent) {
-      return this.messageFactory.createCompact(this.nextId());
-    }
     const last = this.stack.tryGetLast();
     if (last && last.type === ChatMessageType.TOOL) {
       return this.messageFactory.createAssistant(this.nextId());
     }
-    const nextMessage = this.queue.shift();
-    if (nextMessage) {
+
+    const next = this.queue.peek();
+    if (next && next.type === ChatMessageType.TOOL) {
+      this.queue.shift();
+      return next;
+    }
+
+    if (this.effectiveContextWindowPercent <= this.contextUsage.percent) {
+      return this.messageFactory.createCompact(this.nextId());
+    }
+
+    if (next) {
+      this.queue.shift();
       // TODO: now any action drops the whole content of the message with the action.
-      const action = UserMessageActionParser.tryParse(nextMessage);
+      const action = UserMessageActionParser.tryParse(next);
       if (action === UserMessageAction.COMPACT) {
         return this.messageFactory.createCompact(this.nextId());
       }
-      return nextMessage;
+      return next;
     }
     const isLastAi = last?.type === ChatMessageType.ASSISTANT;
     if (isLastAi) {
@@ -231,14 +214,15 @@ export class ChatSession {
     if (!message) {
       return false;
     }
-    this.stack.push(message);
+    const pending = this.stack.push(message);
     this.isWorking = true;
-    setTimeout(() => this.next(message), 0);
+    setTimeout(() => this.next(pending), 0);
     return true;
   }
 
-  private async next(message: Message) {
+  private async next(pending: PendingChatMessage) {
     await this.trySave();
+    const message = pending.message;
 
     this.onMessageStarted.emit({
       isWorking: true,
@@ -261,9 +245,9 @@ export class ChatSession {
       const failReason = (e as Error)?.message ?? String(e);
       const isInterrupted = interruptSignal.aborted;
       if (isInterrupted) {
-        this.stack.interrupt(message);
+        pending.interrupt();
       } else {
-        this.stack.fail(message, failReason);
+        pending.fail(failReason);
       }
       await this.trySave();
 
@@ -286,7 +270,7 @@ export class ChatSession {
     }
 
     this.contextUsage = this.calcContextUsage(result.usage?.total_tokens);
-    this.stack.complete(message, result.completedMessages);
+    pending.complete(result.completedMessages);
     await this.trySave();
 
     if (result.toolCalls) {

@@ -4,7 +4,7 @@ const TELEGRAM_MESSAGE_MAX_LENGTH = 4_000;
 
 export class TelegramMessageFormatter {
   public format(message: ChatMessage): string[] {
-    if (message.type !== ChatMessageType.USER && message.type !== ChatMessageType.AI) {
+    if (message.type !== ChatMessageType.USER && message.type !== ChatMessageType.ASSISTANT) {
       return [];
     }
 
@@ -20,7 +20,7 @@ export class TelegramMessageFormatter {
     }
     if (
       (messageType === ChatMessageType.USER && completedMessage.message.role !== 'user') ||
-      (messageType === ChatMessageType.AI && completedMessage.message.role !== 'assistant')
+      (messageType === ChatMessageType.ASSISTANT && completedMessage.message.role !== 'assistant')
     ) {
       return null;
     }

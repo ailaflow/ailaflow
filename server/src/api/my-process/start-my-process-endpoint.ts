@@ -95,7 +95,11 @@ export class StartMyProcessEndpoint implements Endpoint {
   private async finishMessageOnBackground(chatSession: ChatSession, request: StartMyProcessRequest) {
     if (request.chatSession) {
       try {
-        await chatSession.setMetadata(request.chatSession.messageId, request.chatSession.completedMessageIndex, 'finished', true);
+        await chatSession.setMetadata(
+          { id: request.chatSession.messageId, completedMessageIndex: request.chatSession.completedMessageIndex },
+          'finished',
+          true
+        );
       } catch (e) {
         this.logger.error(`Failed to finish message on background: ${(e as Error)?.message ?? e}`);
       }

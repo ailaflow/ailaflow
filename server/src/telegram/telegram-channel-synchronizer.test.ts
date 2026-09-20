@@ -28,7 +28,7 @@ test('replays eligible session messages, resumes chunks, and stores numeric sent
     },
     {
       id: 3,
-      type: ChatMessageType.AI,
+      type: ChatMessageType.ASSISTANT,
       completedMessages: [
         {
           message: { role: 'assistant', content: longAnswer },
@@ -56,6 +56,11 @@ test('replays eligible session messages, resumes chunks, and stores numeric sent
           metadata: { telegram: { origin: { updateId: 5, chatId: '42', messageId: 6 } } }
         }
       ]
+    },
+    {
+      id: 5,
+      type: ChatMessageType.COMPACT,
+      completedMessages: [{ message: { role: 'user', content: 'Compacted state' } }]
     }
   ];
   const session = new FakeChatSession(messages);
@@ -74,12 +79,13 @@ test('replays eligible session messages, resumes chunks, and stores numeric sent
   );
 
   await synchronizer.start();
-  await waitFor(() => client.sentTexts.length === 3);
+  await waitFor(() => client.sentTexts.length === 4);
   synchronizer.destroy();
 
   assert.equal(client.sentTexts[0], 'You in AilaFlow: Hello from portal');
   assert.equal(client.sentTexts[1].length, 4_000);
   assert.equal(client.sentTexts[2].length, 1);
+  assert.equal(client.sentTexts[3], 'Context compacted.');
   assert.equal(client.sentTexts.includes('Hidden'), false);
   assert.equal(
     client.sentTexts.some(text => text.includes('Hello from Telegram')),
@@ -247,13 +253,13 @@ class FakeChatSession {
     return this.messages;
   }
 
-  public async setMetadata(id: number, completedMessageIndex: number, key: string, value: unknown): Promise<void> {
-    const completed = this.messages.find(message => message.id === id)?.completedMessages?.[completedMessageIndex];
+  public async setMetadata(pointer: { id: number; completedMessageIndex: number }, key: string, value: unknown): Promise<void> {
+    const completed = this.messages.find(message => message.id === pointer.id)?.completedMessages?.[pointer.completedMessageIndex];
     if (!completed) {
       throw new Error('Message not found');
     }
     completed.metadata = { ...completed.metadata, [key]: value };
-    this.onMessageCompleted.emit({ update: { id, completedMessages: [completed] } });
+    this.onMessageCompleted.emit({ update: { id: pointer.id, completedMessages: [completed] } });
   }
 
   public queueUserMessage(content: string, metadata?: Record<string, unknown>): number {

@@ -16,7 +16,7 @@ test('formats eligible messages as Slack-safe plain text', () => {
   assert.deepEqual(
     formatter.format({
       id: 2,
-      type: ChatMessageType.AI,
+      type: ChatMessageType.ASSISTANT,
       completedMessages: [{ message: { role: 'assistant', content: 'Hello from Aila' } }]
     }),
     ['Hello from Aila']
@@ -26,7 +26,7 @@ test('formats eligible messages as Slack-safe plain text', () => {
 test('splits without separating Unicode surrogate pairs', () => {
   const chunks = new SlackMessageFormatter().format({
     id: 1,
-    type: ChatMessageType.AI,
+    type: ChatMessageType.ASSISTANT,
     completedMessages: [{ message: { role: 'assistant', content: `${'a'.repeat(3_999)}😀b` } }]
   });
   assert.equal(Array.from(chunks[0]).length, 4_000);
@@ -49,7 +49,7 @@ test('ignores internal, blank, and mismatched Slack messages', () => {
     []
   );
   assert.deepEqual(
-    formatter.format({ id: 3, type: ChatMessageType.AI, completedMessages: [{ message: { role: 'assistant', content: ' ' } }] }),
+    formatter.format({ id: 3, type: ChatMessageType.ASSISTANT, completedMessages: [{ message: { role: 'assistant', content: ' ' } }] }),
     []
   );
 });

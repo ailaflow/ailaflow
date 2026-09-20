@@ -12,6 +12,7 @@ import { SlackMessageDelivery, SlackMessageMetadata, SlackMessageStatus, tryGetS
 import { formatSlackError } from './slack-error';
 
 const MESSAGE_PACING_MS = 1_000;
+const CONTEXT_COMPACTED_MESSAGE = 'Context compacted.';
 
 export class SlackChannelSynchronizer {
   private readonly logger: Logger;
@@ -181,12 +182,18 @@ export class SlackChannelSynchronizer {
       return;
     }
     for (const message of session.getAll()) {
-      if (message.id <= cursor || (message.type !== ChatMessageType.USER && message.type !== ChatMessageType.AI)) {
+      if (
+        message.id <= cursor ||
+        (message.type !== ChatMessageType.USER && message.type !== ChatMessageType.ASSISTANT && message.type !== ChatMessageType.COMPACT)
+      ) {
         continue;
       }
       for (let index = 0; index < (message.completedMessages?.length ?? 0); index++) {
         const completed = message.completedMessages![index];
-        const chunks = this.formatter.format({ ...message, completedMessages: [completed] });
+        const chunks =
+          message.type === ChatMessageType.COMPACT
+            ? [CONTEXT_COMPACTED_MESSAGE]
+            : this.formatter.format({ ...message, completedMessages: [completed] });
         const slack = tryGetSlackMessageMetadata(completed.metadata);
         if (
           chunks.length === 0 ||
@@ -263,7 +270,7 @@ export class SlackChannelSynchronizer {
   ): Promise<void> {
     this.isUpdatingMetadata = true;
     try {
-      await session.setMetadata(messageId, completedMessageIndex, 'slack', slack);
+      await session.setMetadata({ id: messageId, completedMessageIndex }, 'slack', slack);
     } finally {
       this.isUpdatingMetadata = false;
     }

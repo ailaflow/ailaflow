@@ -17,7 +17,7 @@ test('formats user and assistant messages for Telegram', () => {
   assert.deepEqual(
     formatter.format({
       id: 2,
-      type: ChatMessageType.AI,
+      type: ChatMessageType.ASSISTANT,
       completedMessages: [
         {
           message: {
@@ -37,7 +37,7 @@ test('formats user and assistant messages for Telegram', () => {
 test('splits formatted text at the Telegram message length limit', () => {
   const chunks = new TelegramMessageFormatter().format({
     id: 1,
-    type: ChatMessageType.AI,
+    type: ChatMessageType.ASSISTANT,
     completedMessages: [{ message: { role: 'assistant', content: 'a'.repeat(8_001) } }]
   });
 
@@ -69,7 +69,7 @@ test('ignores internal, blank, mismatched, and unsupported messages', () => {
   assert.deepEqual(
     formatter.format({
       id: 3,
-      type: ChatMessageType.AI,
+      type: ChatMessageType.ASSISTANT,
       completedMessages: [{ message: { role: 'assistant', content: '   ' } }]
     }),
     []
