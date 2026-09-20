@@ -7,15 +7,17 @@ import { ChatMessageMetadata } from '@aibindkit/core';
 const SESSION_KEY = 'admin:*';
 
 export function AdminPortalChat() {
-  const api = useApiClient();
-  const { toolDescriptors, frontEndToolCallsHandler } = useAiEnvironment();
   const session = useSession();
+  const apiClient = useApiClient();
+  const { toolDescriptors, frontEndToolCallsHandler } = useAiEnvironment();
 
   useAiStore('global', store => store.bind({}), []);
 
   return (
     <Chat
-      transport={api.chat}
+      assistantName="Aila"
+      userName={`@${session.userName}`}
+      transport={apiClient.chat}
       sessionKey={SESSION_KEY}
       messageFilter={messageFilter}
       frontendTools={toolDescriptors}

@@ -18,6 +18,8 @@ export interface ChatProps {
   transport: ChatTransport;
   frontendTools?: ToolDescriptor[];
   sessionKey: string;
+  assistantName?: string;
+  userName?: string;
   messageRenderer?: ChatMessageRenderer;
   messageFilter?: ChatMessageFilter;
   frontEndToolCallsHandler?: FrontEndToolCallsHandler;
@@ -220,6 +222,8 @@ export function Chat(props: ChatProps) {
 
   return (
     <ChatView
+      assistantName={props.assistantName ?? 'Assistant'}
+      userName={props.userName ?? 'User'}
       isWorking={state.isWorking}
       sessionToken={state.sessionToken}
       connectionError={state.connectionError}

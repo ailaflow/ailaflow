@@ -2,7 +2,7 @@ import { ChatMessageType } from '@aibindkit/core';
 import { ChatMessageMetadata } from '@aibindkit/core';
 import { Chat } from '@aibindkit/react';
 import { useState } from 'react';
-import { useApiClient } from '../../../auth/auth-context';
+import { useApiClient, useSession } from '../../../auth/auth-context';
 import type { MyProcessStartFormArgs } from '../my-form/my-process-start-form';
 import type { MyTaskFormArgs } from '../my-form/my-task-form';
 import { MyProcessStartFormPopup } from '../popups/my-process-start-form-popup';
@@ -30,7 +30,8 @@ export interface MyChatProps {
 }
 
 export function MyChat(props: MyChatProps) {
-  const api = useApiClient();
+  const session = useSession();
+  const apiClient = useApiClient();
   const [popup, setPopup] = useState<MyChatPopupState>({});
 
   function closePopup(): void {
@@ -40,7 +41,9 @@ export function MyChat(props: MyChatProps) {
   return (
     <>
       <Chat
-        transport={api.chat}
+        assistantName="Aila"
+        userName={`@${session.userName}`}
+        transport={apiClient.chat}
         sessionKey={props.sessionKey}
         messageFilter={messageFilter}
         messageRenderer={(id, _, completedMessage, completedMessageIndex, sessionToken) =>

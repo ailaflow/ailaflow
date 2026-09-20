@@ -21,6 +21,8 @@ export type ChatMessageRenderer = (
 ) => React.ReactNode | null;
 
 export interface ChatViewProps {
+  assistantName: string;
+  userName: string;
   sessionToken: string | null;
   isWorking: boolean;
   messages: ChatMessageUpdate[];
@@ -57,6 +59,8 @@ export function ChatView(props: ChatViewProps) {
           props.messages.map(update => (
             <ChatUpdateView
               key={update.id}
+              assistantName={props.assistantName}
+              userName={props.userName}
               update={update}
               sessionToken={props.sessionToken}
               messageRenderer={props.messageRenderer}
@@ -115,6 +119,8 @@ function ChatStatusView(props: { title: string; text: string }) {
 function ChatUpdateView(props: {
   update: ChatMessageUpdate;
   sessionToken: string | null;
+  assistantName: string;
+  userName: string;
   messageRenderer?: ChatMessageRenderer;
   messageFilter: ChatMessageFilter;
 }) {
@@ -135,7 +141,7 @@ function ChatUpdateView(props: {
           if (customNode && isMessageVisible) {
             return (
               <Fragment key={index}>
-                <ChatMessageView message={message} />
+                <ChatMessageView message={message} userName={props.userName} assistantName={props.assistantName} />
                 {customNode}
               </Fragment>
             );
@@ -144,7 +150,7 @@ function ChatUpdateView(props: {
             return <Fragment key={index}>{customNode}</Fragment>;
           }
           if (isMessageVisible) {
-            return <ChatMessageView key={index} message={message} />;
+            return <ChatMessageView key={index} message={message} userName={props.userName} assistantName={props.assistantName} />;
           }
           return null;
         })}
@@ -154,12 +160,12 @@ function ChatUpdateView(props: {
   return null;
 }
 
-function ChatMessageView(props: { message: CompletedChatMessage }) {
+function ChatMessageView(props: { message: CompletedChatMessage; userName: string; assistantName: string }) {
   if (props.message.message.role === 'user') {
-    return <UserMessageView content={getContent(props.message.message)} />;
+    return <UserMessageView content={getContent(props.message.message)} userName={props.userName} />;
   }
   if (props.message.message.role === 'assistant') {
-    return <AssistantMessageView message={props.message} />;
+    return <AssistantMessageView message={props.message} assistantName={props.assistantName} />;
   }
   if (props.message.message.role === 'tool') {
     return <ToolMessageView message={props.message} />;
@@ -167,25 +173,25 @@ function ChatMessageView(props: { message: CompletedChatMessage }) {
   return <SystemMessageView message={props.message} />;
 }
 
-function UserMessageView(props: { content: string | null }) {
+function UserMessageView(props: { content: string | null; userName: string }) {
   return (
     <div className="abk-chat-row abk-chat-row-user">
       <article className="abk-chat-bubble abk-chat-bubble-user">
-        <div className="abk-chat-label">User</div>
+        <div className="abk-chat-label">{props.userName}</div>
         <MessageContentView content={props.content} />
       </article>
     </div>
   );
 }
 
-function AssistantMessageView(props: { message: CompletedChatMessage }) {
+function AssistantMessageView(props: { message: CompletedChatMessage; assistantName: string }) {
   const toolCalls = getToolCalls(props.message);
   const content = getContent(props.message.message);
 
   return (
     <div className="abk-chat-row abk-chat-row-assistant">
       <article className="abk-chat-bubble abk-chat-bubble-assistant">
-        <div className="abk-chat-label">Assistant</div>
+        <div className="abk-chat-label">{props.assistantName}</div>
         <MessageContentView content={content} />
         {toolCalls && <ToolCallsView toolCalls={toolCalls} />}
       </article>
