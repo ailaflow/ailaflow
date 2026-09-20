@@ -1,5 +1,5 @@
 import { ProcessListQuerier } from './process-list-querier';
-import { GetProcessesResponse, ProcessLiteDto } from '@ailaflow/shared';
+import { GetProcessesResponse, ProcessDisplay, ProcessLiteDto } from '@ailaflow/shared';
 import { SqliteDatabase, SqliteDatabases } from '../../core/sqlite-databases';
 
 export class SqliteProcessListQuerier implements ProcessListQuerier {
@@ -9,22 +9,29 @@ export class SqliteProcessListQuerier implements ProcessListQuerier {
     this.db = dbs.modelDb;
   }
 
-  public async query(_: AbortSignal, page: number, pageSize: number, search?: string): Promise<GetProcessesResponse> {
+  public async query(
+    _: AbortSignal,
+    page: number,
+    pageSize: number,
+    displayAtLeast: ProcessDisplay,
+    search?: string
+  ): Promise<GetProcessesResponse> {
     return this.db.read(db => {
       const searchTerm = search ?? '';
-      const { totalCount } = db.prepare(`SELECT COUNT(*) AS totalCount FROM processes WHERE instr(name, ?) > 0`).get(searchTerm) as {
-        totalCount: number;
-      };
+      const { totalCount } = db
+        .prepare(`SELECT COUNT(*) AS totalCount FROM processes WHERE display <= ? AND instr(name, ?) > 0`)
+        .get(displayAtLeast, searchTerm) as { totalCount: number };
       const statement = db.prepare(`
       SELECT name, description, userAccessExpression, isPausable, startVariableSchemas
       FROM processes
-      WHERE instr(name, ?) > 0
+      WHERE display <= ?
+        AND instr(name, ?) > 0
       ORDER BY name
       LIMIT ? OFFSET ?
     `);
 
       return {
-        processes: mapRows(statement.all(searchTerm, pageSize, (page - 1) * pageSize) as unknown as ProcessRow[]),
+        processes: mapRows(statement.all(displayAtLeast, searchTerm, pageSize, (page - 1) * pageSize) as unknown as ProcessRow[]),
         totalCount,
         page,
         pageSize

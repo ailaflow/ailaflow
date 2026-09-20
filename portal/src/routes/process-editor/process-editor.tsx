@@ -7,11 +7,11 @@ import { ResourceEditorView } from '../../views/resource-editor/resource-editor-
 import { useNavigate } from 'react-router-dom';
 import { FormEditorOverlay } from './overlays/form-editor-overlay';
 import { ScriptEditorOverlay } from './overlays/script-editor-overlay';
-import { ResourceSimpleDetailsView } from '../../views/resource-editor/resource-simple-details-view';
 import { useUnsavedChangesController } from '../common/admin-portal';
 import { DesignerUtils } from './designer-utils';
 import { useProcessEditorAi } from './process-editor-ai';
 import { ProcessIcon } from '../../views/common/process-icon';
+import { ProcessEditorDetailsView } from '../../views/process-editor/process-editor-details-view';
 
 export function ProcessEditor() {
   const state = useProcessEditor();
@@ -44,6 +44,7 @@ export function ProcessEditor() {
         description: state.description,
         name: state.name,
         userAccessExpression: state.userAccessExpression,
+        display: state.display,
         definition: state.definition.value,
         hash
       });
@@ -72,14 +73,16 @@ export function ProcessEditor() {
       detailsId="admin-process-editor-details"
       details={
         isDesigner ? (
-          <ResourceSimpleDetailsView
+          <ProcessEditorDetailsView
             id="admin-process-editor-details"
             description={state.description}
             descriptionError={state.descriptionError}
             userAccessExpression={state.userAccessExpression}
             userAccessExpressionError={state.userAccessExpressionError}
+            display={state.display}
             onDescriptionChange={description => state.setDescription(description, false)}
             onUserAccessExpressionChange={userAccessExpression => state.setUserAccessExpression(userAccessExpression, false)}
+            onDisplayChange={state.setDisplay}
           />
         ) : undefined
       }

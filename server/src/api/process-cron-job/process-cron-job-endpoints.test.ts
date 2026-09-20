@@ -1,4 +1,4 @@
-import { PROCESS_VERSION } from '@ailaflow/shared';
+import { PROCESS_VERSION, ProcessDisplay } from '@ailaflow/shared';
 import assert from 'node:assert/strict';
 import { EventEmitter } from 'node:events';
 import { Request } from 'express';
@@ -68,6 +68,7 @@ function createProcessManager(): ProcessManager {
     'alpha',
     '',
     '',
+    ProcessDisplay.LISTED,
     {
       sequence: [],
       properties: {

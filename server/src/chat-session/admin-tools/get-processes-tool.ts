@@ -1,6 +1,7 @@
 import { ToolContext, ZodTool, ZodToolExecutionResult } from '@aibindkit/llm';
 import z from 'zod/v4';
 import { ProcessListQuerier } from '../../queriers/process-list/process-list-querier';
+import { ProcessDisplay } from '@ailaflow/shared';
 
 const PAGE_SIZE = 30;
 
@@ -17,7 +18,7 @@ export class GetProcessesTool extends ZodTool<Arg> {
 
   public async handle(abortSignal: AbortSignal, _: ToolContext, arg: Arg): Promise<ZodToolExecutionResult> {
     return {
-      content: await this.querier.query(abortSignal, arg.page, PAGE_SIZE)
+      content: await this.querier.query(abortSignal, arg.page, PAGE_SIZE, ProcessDisplay.LISTED)
     };
   }
 }

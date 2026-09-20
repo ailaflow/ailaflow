@@ -1,6 +1,7 @@
 import {
   JsonSchema,
   ProcessDefinition,
+  ProcessDisplay,
   ProcessRootValidator,
   ProcessStepValidator,
   ProcessValidator,
@@ -88,6 +89,7 @@ export class Process {
       data.name,
       data.description,
       data.userAccessExpression,
+      data.display,
       data.definition,
       data.hash,
       startVariableSchemas,
@@ -102,6 +104,7 @@ export class Process {
     public readonly name: string,
     public description: string,
     public userAccessExpression: string,
+    public display: ProcessDisplay,
     public definition: ProcessDefinition,
     public hash: string,
     public startVariableSchemas: Record<string, JsonSchema> | null,
@@ -119,6 +122,7 @@ export class Process {
 
     this.description = data.description;
     this.userAccessExpression = data.userAccessExpression;
+    this.display = data.display;
     this.definition = data.definition;
     this.variablesCache = null;
     this.hash = data.hash;

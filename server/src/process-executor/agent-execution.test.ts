@@ -7,6 +7,7 @@ import {
   LlmUseCase,
   PROCESS_VERSION,
   ProcessLiteDto,
+  ProcessDisplay,
   ProcessExecutionOutcome,
   ProcessExecutionOutcomeType
 } from '@ailaflow/shared';
@@ -52,6 +53,7 @@ function createProcess(name: string, sequence: ProcessDefinition['sequence'] = [
     name,
     `${name} description`,
     'admin_only',
+    ProcessDisplay.LISTED,
     {
       sequence,
       properties: {

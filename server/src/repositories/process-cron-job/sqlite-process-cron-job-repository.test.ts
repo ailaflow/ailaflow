@@ -97,8 +97,8 @@ function insertProcess(db: DatabaseSync, name: string): void {
   db.prepare(
     `
     INSERT INTO processes (
-      name, description, userAccessExpression, nSteps, startVariableSchemas, serializedDefinition, definitionHash
-    ) VALUES (?, '', '', 0, '{}', '{"sequence":[],"properties":{"startVariableNames":[],"variables":[]}}', 'hash')
+      name, description, userAccessExpression, display, nSteps, startVariableSchemas, serializedDefinition, definitionHash
+    ) VALUES (?, '', '', 1, 0, '{}', '{"sequence":[],"properties":{"startVariableNames":[],"variables":[]}}', 'hash')
   `
   ).run(name);
 }

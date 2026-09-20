@@ -1,6 +1,7 @@
 import {
   SandboxLiteDto,
   ProcessDefinition,
+  ProcessDisplay,
   ProcessDto,
   ProcessStepValidator,
   ProcessRootValidator,
@@ -46,6 +47,7 @@ export interface ProcessEditorData {
   descriptionError: string | null;
   userAccessExpression: string;
   userAccessExpressionError: string | null;
+  display: ProcessDisplay;
   definition: WrappedDefinition<ProcessDefinition>;
   selectedStepId: string | null;
 }
@@ -57,6 +59,7 @@ export interface ProcessEditorState extends ProcessEditorData {
   setName(name: string, throwIfInvalid: boolean): void;
   setDescription(description: string, throwIfInvalid: boolean): void;
   setUserAccessExpression(userAccessExpression: string, throwIfInvalid: boolean): void;
+  setDisplay(display: ProcessDisplay): void;
   setDefinition(definition: WrappedDefinition, markDirty: boolean): void;
   getStep<S extends Step>(id: string, requiredType?: S['type']): S;
   notifyDefinitionChange(): void;
@@ -88,6 +91,7 @@ function createData(props: Omit<ProcessEditorContextProps, 'children'>): Process
   const name = props.process?.name ?? '';
   const description = props.process?.description ?? '';
   const userAccessExpression = props.process?.userAccessExpression ?? '';
+  const display = props.process?.display ?? ProcessDisplay.FEATURED;
   const controller = SequentialWorkflowDesignerController.create();
 
   return {
@@ -106,6 +110,7 @@ function createData(props: Omit<ProcessEditorContextProps, 'children'>): Process
     descriptionError: ProcessValidator.validateDescription(description),
     userAccessExpression,
     userAccessExpressionError: null,
+    display,
     selectedStepId: null,
     definition,
     isDirty: props.process ? false : true
@@ -142,6 +147,7 @@ export function ProcessEditorContext(props: ProcessEditorContextProps) {
           current.name !== data.name ||
           current.description !== data.description ||
           current.userAccessExpression !== data.userAccessExpression ||
+          current.display !== data.display ||
           DesignerUtils.calcDefinitionHash(current.definition.value) !== definitionHash
         ) {
           return {};
@@ -184,6 +190,10 @@ export function ProcessEditorContext(props: ProcessEditorContextProps) {
         userAccessExpressionError,
         isDirty: true
       });
+    }
+
+    function setDisplay(display: ProcessDisplay) {
+      update({ display, isDirty: true });
     }
 
     function setDefinition(newDefinition: WrappedDefinition<ProcessDefinition>, markDirty: boolean) {
@@ -275,6 +285,7 @@ export function ProcessEditorContext(props: ProcessEditorContextProps) {
       setName,
       setDescription,
       setUserAccessExpression,
+      setDisplay,
       setDefinition,
       notifyDefinitionChange,
       getStep,

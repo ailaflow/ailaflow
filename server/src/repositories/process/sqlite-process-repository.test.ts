@@ -7,18 +7,21 @@ import { SqliteResourceAccessRepository } from '../resource-access/sqlite-resour
 import { ProcessResourceId } from './process-resource-id';
 import { SqliteProcessRepository } from './sqlite-process-repository';
 import { Process } from './process';
-import { ProcessDefinition, PROCESS_VERSION } from '@ailaflow/shared';
+import { ProcessDefinition, ProcessDisplay, PROCESS_VERSION } from '@ailaflow/shared';
 
-test('persists and updates whether a process is pausable', async () => {
+test('persists and updates process metadata', async () => {
   const { abortSignal, db, processRepository } = await setup();
   const process = createProcess('alpha', true);
 
   await processRepository.insert(abortSignal, process);
   assert.equal((await processRepository.tryGetByName(abortSignal, process.name))?.isPausable, true);
+  assert.equal((await processRepository.tryGetByName(abortSignal, process.name))?.display, ProcessDisplay.LISTED);
 
   process.isPausable = false;
+  process.display = ProcessDisplay.FEATURED;
   await processRepository.update(abortSignal, process);
   assert.equal((await processRepository.tryGetByName(abortSignal, process.name))?.isPausable, false);
+  assert.equal((await processRepository.tryGetByName(abortSignal, process.name))?.display, ProcessDisplay.FEATURED);
 
   db.close();
 });
@@ -80,18 +83,19 @@ function insertProcess(db: DatabaseSync, name: string): void {
         name,
         description,
         userAccessExpression,
+        display,
         nSteps,
         startVariableSchemas,
         serializedDefinition,
         definitionHash
       )
-      VALUES (?, '', '', 0, '{}', '{"sequence":[],"properties":{"startVariableNames":[],"variables":[]}}', 'hash')
+      VALUES (?, '', '', 1, 0, '{}', '{"sequence":[],"properties":{"startVariableNames":[],"variables":[]}}', 'hash')
     `
   ).run(name);
 }
 
 function createProcess(name: string, isPausable: boolean): Process {
-  return new Process(name, '', '', createDefinition(), 'hash', null, 0, isPausable);
+  return new Process(name, '', '', ProcessDisplay.LISTED, createDefinition(), 'hash', null, 0, isPausable);
 }
 
 function createDefinition(): ProcessDefinition {

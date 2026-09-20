@@ -1,4 +1,4 @@
-import { JsonSchema, ProcessDefinition } from '@ailaflow/shared';
+import { JsonSchema, ProcessDefinition, ProcessDisplay } from '@ailaflow/shared';
 import { ProcessRepository, ProcessRepositoryError } from './process-repository';
 import { Process } from './process';
 import { SqliteDatabase, SqliteDatabases } from '../../core/sqlite-databases';
@@ -9,6 +9,7 @@ interface ProcessRow {
   name: string;
   description: string;
   userAccessExpression: string;
+  display: ProcessDisplay;
   nSteps: number;
   isPausable: number;
   startVariableSchemas: string;
@@ -30,6 +31,7 @@ export class SqliteProcessRepository implements ProcessRepository {
           name TEXT PRIMARY KEY,
           description TEXT NOT NULL,
           userAccessExpression TEXT NOT NULL,
+          display INTEGER NOT NULL,
           nSteps INTEGER NOT NULL,
           isPausable INTEGER NOT NULL DEFAULT 0 CHECK (isPausable IN (0, 1)),
           startVariableSchemas TEXT NOT NULL,
@@ -45,14 +47,15 @@ export class SqliteProcessRepository implements ProcessRepository {
       await this.db.write(db => {
         const statement = db.prepare(`
           INSERT INTO processes (
-            name, description, userAccessExpression, nSteps, isPausable, startVariableSchemas, serializedDefinition, definitionHash
+            name, description, userAccessExpression, display, nSteps, isPausable, startVariableSchemas, serializedDefinition, definitionHash
           )
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         `);
         statement.run(
           process.name,
           process.description,
           process.userAccessExpression,
+          process.display,
           process.nSteps,
           process.isPausable ? 1 : 0,
           serializeStartVariableSchemas(process.startVariableSchemas),
@@ -75,6 +78,7 @@ export class SqliteProcessRepository implements ProcessRepository {
         SET
           description = ?,
           userAccessExpression = ?,
+          display = ?,
           nSteps = ?,
           isPausable = ?,
           startVariableSchemas = ?,
@@ -85,6 +89,7 @@ export class SqliteProcessRepository implements ProcessRepository {
       statement.run(
         process.description,
         process.userAccessExpression,
+        process.display,
         process.nSteps,
         process.isPausable ? 1 : 0,
         serializeStartVariableSchemas(process.startVariableSchemas),
@@ -113,7 +118,7 @@ export class SqliteProcessRepository implements ProcessRepository {
   public async tryGetByName(_: AbortSignal, name: string): Promise<Process | null> {
     return this.db.read(db => {
       const statement = db.prepare(`
-        SELECT name, description, userAccessExpression, nSteps, isPausable, startVariableSchemas, serializedDefinition, definitionHash
+        SELECT name, description, userAccessExpression, display, nSteps, isPausable, startVariableSchemas, serializedDefinition, definitionHash
         FROM processes
         WHERE name = ?
         LIMIT 1
@@ -125,6 +130,7 @@ export class SqliteProcessRepository implements ProcessRepository {
             row.name,
             row.description,
             row.userAccessExpression,
+            row.display,
             JSON.parse(row.serializedDefinition) as ProcessDefinition,
             row.definitionHash,
             JSON.parse(row.startVariableSchemas) as Record<string, JsonSchema>,

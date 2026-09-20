@@ -60,7 +60,7 @@ test('rejects invalid, duplicate, and missing table saves', async () => {
   await assertEndpointError(
     () => endpoint.handle(createRequest({ body: { insert: true, name: 'Invalid', description: '' } })),
     400,
-    'Name contains invalid characters.'
+    'Name contains invalid characters'
   );
   await assertEndpointError(
     () => endpoint.handle(createRequest({ body: { insert: false, name: 'missing', description: '' } })),

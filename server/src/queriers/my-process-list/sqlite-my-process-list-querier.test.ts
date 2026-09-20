@@ -11,6 +11,7 @@ import { SqliteUserAttributesRepository } from '../../repositories/user-attribut
 import { SqliteUserRepository } from '../../repositories/user/sqlite-user-repository';
 import { User } from '../../repositories/user/user';
 import { SqliteMyProcessListQuerier } from './sqlite-my-process-list-querier';
+import { ProcessDisplay } from '@ailaflow/shared';
 
 test('queries a page containing only processes accessible to the current user', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
@@ -32,14 +33,14 @@ test('queries a page containing only processes accessible to the current user', 
   await userRepository.insert(abortSignal, alice);
   await userAttributesRepository.replace(abortSignal, UserAttributes.create(alice, {}));
 
-  insertProcess(db, 'charlie');
-  insertProcess(db, 'alpha');
-  insertProcess(db, 'bravo');
+  insertProcess(db, 'charlie', ProcessDisplay.HIDDEN);
+  insertProcess(db, 'alpha', ProcessDisplay.FEATURED);
+  insertProcess(db, 'bravo', ProcessDisplay.LISTED);
   await grantAccess(abortSignal, resourceAccessRepository, 'alpha', '');
   await grantAccess(abortSignal, resourceAccessRepository, 'bravo', '');
-  await grantAccess(abortSignal, resourceAccessRepository, 'charlie', '@bob');
+  await grantAccess(abortSignal, resourceAccessRepository, 'charlie', '');
 
-  assert.deepEqual(await querier.query(abortSignal, 'alice', 2, 1), {
+  assert.deepEqual(await querier.query(abortSignal, 'alice', 2, 1, ProcessDisplay.LISTED), {
     processes: [
       {
         name: 'bravo',
@@ -51,25 +52,39 @@ test('queries a page containing only processes accessible to the current user', 
     page: 2,
     pageSize: 1
   });
+  assert.deepEqual(await querier.query(abortSignal, 'alice', 1, 10, ProcessDisplay.FEATURED), {
+    processes: [
+      {
+        name: 'alpha',
+        description: 'alpha description',
+        startVariableSchemas: {}
+      }
+    ],
+    totalCount: 1,
+    page: 1,
+    pageSize: 10
+  });
+  assert.equal((await querier.query(abortSignal, 'alice', 1, 10, ProcessDisplay.HIDDEN)).totalCount, 3);
 
   db.close();
 });
 
-function insertProcess(db: DatabaseSync, name: string): void {
+function insertProcess(db: DatabaseSync, name: string, display: ProcessDisplay): void {
   db.prepare(
     `
     INSERT INTO processes (
       name,
       description,
       userAccessExpression,
+      display,
       nSteps,
       startVariableSchemas,
       serializedDefinition,
       definitionHash
     )
-    VALUES (?, ?, '', 0, '{}', '{}', 'hash')
+    VALUES (?, ?, '', ?, 0, '{}', '{}', 'hash')
   `
-  ).run(name, `${name} description`);
+  ).run(name, `${name} description`, display);
 }
 
 async function grantAccess(

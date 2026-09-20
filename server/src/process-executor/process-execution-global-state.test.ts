@@ -11,7 +11,7 @@ import { ProcessExecutionSnapshotTransformer } from './process-execution-snapsho
 import { AgentSessionRunner } from './services/agent-session-runner';
 import { Notifier } from './services/notifier';
 import { ProcessExecutionContext } from './process-execution-context';
-import { PROCESS_VERSION } from '@ailaflow/shared';
+import { PROCESS_VERSION, ProcessDisplay } from '@ailaflow/shared';
 
 const context: ProcessExecutionContext = {
   startedBy: 'user_1',
@@ -95,6 +95,7 @@ function createTestProcess(): Process {
     'process_1',
     '',
     '',
+    ProcessDisplay.LISTED,
     {
       sequence: [],
       properties: {

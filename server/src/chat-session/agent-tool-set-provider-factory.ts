@@ -11,6 +11,7 @@ import { SetVariableTool } from './agent-tools/set-variable-tool';
 import { RunProcessTool } from './agent-tools/run-process-tool';
 import { RunTerminalCommandTool } from './agent-tools/run-terminal-command-tool';
 import { Process } from '../repositories/process/process';
+import { ProcessDisplay } from '@ailaflow/shared';
 
 const PAGE_SIZE = 30;
 
@@ -56,11 +57,10 @@ export class AgentToolSetProviderFactory {
     executionId: string
   ) {
     if (allowedProcesses === null || allowedProcesses.length > 0) {
-      // TODO: Filter allowed non-pausable processes in the database instead of loading every page.
       for (let page = 1; ; page++) {
         abortSignal.throwIfAborted();
 
-        const result = await this.processListQuerier.query(abortSignal, page, PAGE_SIZE);
+        const result = await this.processListQuerier.query(abortSignal, page, PAGE_SIZE, ProcessDisplay.LISTED);
         for (const p of result.processes) {
           if (p.name === currentProcessName || context.parentProcessNames?.includes(p.name)) {
             continue;
@@ -76,6 +76,7 @@ export class AgentToolSetProviderFactory {
           if (!process) {
             throw new Error(`Process "${p.name}" was not found in the database`);
           }
+          // TODO: Filter allowed non-pausable processes in the database instead of loading every page.
           if (process.isPausable) {
             continue;
           }

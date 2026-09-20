@@ -1,4 +1,5 @@
 import { useLoader } from '@aibindkit/react';
+import { ProcessDisplay } from '@ailaflow/shared';
 import { useState } from 'react';
 import { useApiClient } from '../../auth/auth-context';
 import { DashboardListView } from '../../views/dashboard/dashboard-list-view';
@@ -24,7 +25,11 @@ export function DashboardPage() {
     async abortSignal => {
       const [tasks, processes, notifications] = await Promise.all([
         apiClient.myTask.getMyTasks(abortSignal, { onlyOpen: true, page: 1, pageSize: PANEL_PAGE_SIZE }),
-        apiClient.myProcess.getMyProcesses(abortSignal, { page: 1, pageSize: PANEL_PAGE_SIZE }),
+        apiClient.myProcess.getMyProcesses(abortSignal, {
+          page: 1,
+          pageSize: PANEL_PAGE_SIZE,
+          displayAtLeast: ProcessDisplay.FEATURED
+        }),
         apiClient.myNotification.getMyNotifications(abortSignal, { page: 1, pageSize: PANEL_PAGE_SIZE })
       ]);
 
@@ -85,7 +90,7 @@ export function DashboardPage() {
           />
         </DashboardPanelView>
         <DashboardPanelView
-          title="My Processes"
+          title="Featured Processes"
           variant="dashboard"
           scrollable
           action={data.processes.processes.length > PANEL_ITEM_LIMIT ? { label: 'View all', href: '/my-processes' } : undefined}

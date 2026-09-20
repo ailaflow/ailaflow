@@ -1,5 +1,5 @@
 import * as z from 'zod/v4';
-import { jsonSchema, processDefinitionSchema, ProcessExecutionOutcome, ProcessLog } from '../process';
+import { jsonSchema, processDefinitionSchema, ProcessDisplay, ProcessExecutionOutcome, ProcessLog } from '../process';
 import { paginationRequestSchema, paginationResponseSchema } from './pagination';
 
 // getProcesses
@@ -30,6 +30,7 @@ const processDtoSchema = z.object({
   name: z.string(),
   description: z.string(),
   userAccessExpression: z.string(),
+  display: z.enum(ProcessDisplay),
   definition: processDefinitionSchema
 });
 
@@ -47,6 +48,7 @@ export const saveProcessRequestSchema = z.object({
   name: z.string(),
   description: z.string(),
   userAccessExpression: z.string(),
+  display: z.enum(ProcessDisplay),
   definition: processDefinitionSchema,
   hash: z.string()
 });

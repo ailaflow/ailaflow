@@ -14,7 +14,8 @@ export class MyProcessApiClient {
   public getMyProcesses(abortSignal: AbortSignal, request: GetMyProcessesRequest): Promise<GetMyProcessesResponse> {
     const query = new URLSearchParams({
       page: String(request.page),
-      pageSize: String(request.pageSize)
+      pageSize: String(request.pageSize),
+      displayAtLeast: String(request.displayAtLeast)
     });
     return this.client.json(abortSignal, 'GET', `/api/my-processes?${query}`);
   }

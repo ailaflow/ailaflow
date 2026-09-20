@@ -1,5 +1,6 @@
 import { useApiClient } from '../../auth/auth-context';
 import { useLoader } from '@aibindkit/react';
+import { ProcessDisplay } from '@ailaflow/shared';
 import { useNavigate, useSearchParams } from 'react-router';
 import { PortalErrorView } from '../../views/portal/portal-error-view';
 import { PortalLoadingView } from '../../views/portal/portal-loading-view';
@@ -14,7 +15,12 @@ export function MyProcessListPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const page = Number(searchParams.get('page') ?? 1);
   const { data, isLoading, error } = useLoader(
-    abortSignal => apiClient.myProcess.getMyProcesses(abortSignal, { page, pageSize: PAGE_SIZE }),
+    abortSignal =>
+      apiClient.myProcess.getMyProcesses(abortSignal, {
+        page,
+        pageSize: PAGE_SIZE,
+        displayAtLeast: ProcessDisplay.LISTED
+      }),
     [apiClient, page]
   );
 

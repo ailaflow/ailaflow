@@ -1,5 +1,5 @@
 import * as z from 'zod/v4';
-import { FormDefinition, formDefinitionSchema, jsonSchema, ProcessExecutionOutcome, ProcessLog } from '../process';
+import { FormDefinition, formDefinitionSchema, jsonSchema, ProcessDisplay, ProcessExecutionOutcome, ProcessLog } from '../process';
 import { paginationRequestSchema, paginationResponseSchema } from './pagination';
 
 // getMyProcesses
@@ -10,7 +10,9 @@ const myProcessLiteDtoSchema = z.object({
   startVariableSchemas: jsonSchema
 });
 
-export const getMyProcessesRequestSchema = paginationRequestSchema;
+export const getMyProcessesRequestSchema = paginationRequestSchema.extend({
+  displayAtLeast: z.coerce.number().pipe(z.enum(ProcessDisplay))
+});
 
 export const getMyProcessesResponseSchema = paginationResponseSchema.extend({
   processes: z.array(myProcessLiteDtoSchema)

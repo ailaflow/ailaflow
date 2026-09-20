@@ -1,5 +1,5 @@
 import { ToolContext, ZodTool, ZodToolExecutionResult } from '@aibindkit/llm';
-import { MyProcessLiteDto } from '@ailaflow/shared';
+import { MyProcessLiteDto, ProcessDisplay } from '@ailaflow/shared';
 import { MyProcessListQuerier } from '../../queriers/my-process-list/my-process-list-querier';
 import { ChatSessionId } from '../chat-session-id';
 
@@ -20,7 +20,7 @@ export class GetMyProcessesTool extends ZodTool {
     const processes: MyProcessLiteDto[] = [];
 
     for (let page = 1; ; page++) {
-      const result = await this.querier.query(abortSignal, userName, page, pageSize);
+      const result = await this.querier.query(abortSignal, userName, page, pageSize, ProcessDisplay.LISTED);
       processes.push(...result.processes);
 
       if (processes.length >= result.totalCount || result.processes.length === 0) {

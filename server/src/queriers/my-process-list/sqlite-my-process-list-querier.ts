@@ -1,4 +1,4 @@
-import { GetMyProcessesResponse, MyProcessLiteDto } from '@ailaflow/shared';
+import { GetMyProcessesResponse, MyProcessLiteDto, ProcessDisplay } from '@ailaflow/shared';
 import { SqliteDatabase, SqliteDatabases } from '../../core/sqlite-databases';
 import { SqliteResourceAccessQueryBuilder } from '../../core/sqlite-resource-access-query-builder';
 import { MyProcessListQuerier } from './my-process-list-querier';
@@ -13,7 +13,13 @@ export class SqliteMyProcessListQuerier implements MyProcessListQuerier {
     this.db = dbs.modelDb;
   }
 
-  public async query(_: AbortSignal, userName: string, page: number, pageSize: number): Promise<GetMyProcessesResponse> {
+  public async query(
+    _: AbortSignal,
+    userName: string,
+    page: number,
+    pageSize: number,
+    displayAtLeast: ProcessDisplay
+  ): Promise<GetMyProcessesResponse> {
     return this.db.read(db => {
       const countStatement = db.prepare(`
       WITH ${this.resourceAccessQueryBuilder.buildAccessibleResourcesCte()}
@@ -21,8 +27,9 @@ export class SqliteMyProcessListQuerier implements MyProcessListQuerier {
       FROM processes p
       JOIN accessible_resources ar
         ON ar.resource_id = 'process:' || p.name
+      WHERE p.display <= ?
     `);
-      const { totalCount } = countStatement.get(userName) as { totalCount: number };
+      const { totalCount } = countStatement.get(userName, displayAtLeast) as { totalCount: number };
 
       const statement = db.prepare(`
       WITH ${this.resourceAccessQueryBuilder.buildAccessibleResourcesCte()}
@@ -30,12 +37,13 @@ export class SqliteMyProcessListQuerier implements MyProcessListQuerier {
       FROM processes p
       JOIN accessible_resources ar
         ON ar.resource_id = 'process:' || p.name
+      WHERE p.display <= ?
       ORDER BY p.name
       LIMIT ? OFFSET ?
     `);
 
       return {
-        processes: mapRows(statement.all(userName, pageSize, (page - 1) * pageSize) as unknown as MyProcessRow[]),
+        processes: mapRows(statement.all(userName, displayAtLeast, pageSize, (page - 1) * pageSize) as unknown as MyProcessRow[]),
         totalCount,
         page,
         pageSize
