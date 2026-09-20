@@ -40,7 +40,7 @@ function createAgent(properties: Partial<AgentStep['properties']> = {}): AgentSt
     properties: {
       prompt: { type: 'variable', name: 'prompt' },
       sandboxName: 'sandbox',
-      allowedProcesses: [],
+      allowedProcessNames: [],
       allowedVariableNames: [],
       isTerminalAllowed: false,
       ...properties
@@ -280,14 +280,23 @@ test('process tool discovery reads every page, filters selected and pausable pro
     selected.tools.map(tool => tool.descriptor.function.name),
     ['run_process_process_104', 'listVariables', 'readVariable', 'setVariable']
   );
-  const all = await harness.tools.create(signal, null, [], 'sandbox', true, parent, context, 'parent_execution');
-  assert.equal(all.tools.filter(tool => tool.descriptor.function.name.startsWith('run_process_')).length, 104);
-  assert.ok(all.tools.some(tool => tool.descriptor.function.name === 'runTerminalCommand'));
+  const allAllowed = await harness.tools.create(
+    signal,
+    processes.map(process => process.name),
+    [],
+    'sandbox',
+    true,
+    parent,
+    context,
+    'parent_execution'
+  );
+  assert.equal(allAllowed.tools.filter(tool => tool.descriptor.function.name.startsWith('run_process_')).length, 104);
+  assert.ok(allAllowed.tools.some(tool => tool.descriptor.function.name === 'runTerminalCommand'));
 });
 
 test('child process tools wait for results, bypass user access, and extend ancestry without routing to user chat', async () => {
   const child = createProcess('child');
-  const parent = createProcess('parent', [createAgent({ allowedProcesses: ['child'], prompt: { type: 'string', value: 'Run child' } })]);
+  const parent = createProcess('parent', [createAgent({ allowedProcessNames: ['child'], prompt: { type: 'string', value: 'Run child' } })]);
   let turn = 0;
   const harness = createHarness({
     processes: [child],
@@ -311,26 +320,24 @@ test('child process tools wait for results, bypass user access, and extend ances
   }
 });
 
-for (const allowedProcesses of [null, ['parent', 'ancestor', 'middle', 'child']]) {
-  test(`process tools exclude the current process and all ancestors with ${allowedProcesses === null ? 'all' : 'selected'} access`, async () => {
-    const parent = createProcess('parent');
-    const harness = createHarness({ processes: [parent, createProcess('ancestor'), createProcess('middle'), createProcess('child')] });
-    const tools = await harness.tools.create(
-      signal,
-      allowedProcesses,
-      [],
-      'sandbox',
-      false,
-      parent,
-      { ...context, parentProcessNames: ['ancestor', 'middle'] },
-      'parent_execution'
-    );
-    assert.deepEqual(
-      tools.tools.map(tool => tool.descriptor.function.name),
-      ['run_process_child', 'listVariables', 'readVariable', 'setVariable']
-    );
-  });
-}
+test('process tools exclude the current process and all ancestors from selected access', async () => {
+  const parent = createProcess('parent');
+  const harness = createHarness({ processes: [parent, createProcess('ancestor'), createProcess('middle'), createProcess('child')] });
+  const tools = await harness.tools.create(
+    signal,
+    ['parent', 'ancestor', 'middle', 'child'],
+    [],
+    'sandbox',
+    false,
+    parent,
+    { ...context, parentProcessNames: ['ancestor', 'middle'] },
+    'parent_execution'
+  );
+  assert.deepEqual(
+    tools.tools.map(tool => tool.descriptor.function.name),
+    ['run_process_child', 'listVariables', 'readVariable', 'setVariable']
+  );
+});
 
 test('pausable processes and invalid child inputs are rejected before execution', async () => {
   const paused = createProcess('paused', [], true);
@@ -482,7 +489,7 @@ test('a process changed to pausable after discovery cannot be launched', async (
       return { message: { role: 'assistant', content: 'Child is unavailable' } };
     }
   });
-  await harness.run(signal, context, createProcess('parent', [createAgent({ allowedProcesses: ['child'] })]), {
+  await harness.run(signal, context, createProcess('parent', [createAgent({ allowedProcessNames: ['child'] })]), {
     prompt: ''
   });
   assert.equal(harness.executionIds.length, 1);

@@ -40,7 +40,7 @@ export type ScriptStep = z.infer<typeof scriptStepSchema>;
 export const agentStepPropertiesSchema = z.object({
   prompt: stringOrVariableSchema,
   sandboxName: z.string().min(3),
-  allowedProcesses: z.array(z.string()).nullable(),
+  allowedProcessNames: z.array(z.string()),
   allowedVariableNames: z.array(z.string()),
   isTerminalAllowed: z.boolean()
 });

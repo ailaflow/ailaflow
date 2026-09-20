@@ -31,30 +31,30 @@ export class SaveProcessEndpoint implements Endpoint {
   ) {}
 
   public async handle(req: Request): Promise<SaveProcessResponse> {
-    const abortSignal = getEndpointAbortSignal(req);
+    const signal = getEndpointAbortSignal(req);
     const request = parseBody(saveProcessRequestSchema, req.body);
 
-    const { rootValidator, stepValidator } = await this.getValidators(abortSignal);
+    const { rootValidator, stepValidator } = await this.getValidators(signal, request.name);
 
     const resourceId = ProcessResourceId.create(request.name);
     const resourceAccess = ResourceAccess.createFromAccessExpression(resourceId, request.userAccessExpression);
 
     try {
-      let process = await this.processManager.tryGetByName(abortSignal, request.name);
+      let process = await this.processManager.tryGetByName(signal, request.name);
       if (request.insert) {
         if (process) {
           throw new EndpointError('Process already exists', 400);
         }
         process = Process.create(request, rootValidator, stepValidator);
-        await this.processRepository.insert(abortSignal, process);
-        await this.resourceAccessRepository.replace(abortSignal, resourceAccess);
+        await this.processRepository.insert(signal, process);
+        await this.resourceAccessRepository.replace(signal, resourceAccess);
       } else {
         if (!process) {
           throw new EndpointError('Process not found', 404);
         }
         await process.update(request, rootValidator, stepValidator);
-        await this.processManager.update(abortSignal, process);
-        await this.resourceAccessRepository.replace(abortSignal, resourceAccess);
+        await this.processManager.update(signal, process);
+        await this.resourceAccessRepository.replace(signal, resourceAccess);
       }
     } catch (e) {
       if (e instanceof ProcessRepositoryError) {
@@ -68,12 +68,13 @@ export class SaveProcessEndpoint implements Endpoint {
     };
   }
 
-  private async getValidators(abortSignal: AbortSignal) {
-    const sandboxes = await this.sandboxListQuerier.query(abortSignal);
+  private async getValidators(signal: AbortSignal, processName: string) {
+    const sandboxes = await this.sandboxListQuerier.query(signal);
     const variableValidator = new VariableCachedValidator();
     return {
       rootValidator: new ProcessRootValidator(variableValidator),
       stepValidator: new ProcessStepValidator(
+        processName,
         sandboxes.map(sandbox => sandbox.name),
         variableValidator
       )

@@ -11,6 +11,7 @@ import { TaskCompletionMetadataSchemaValidator } from '../task/task-completion-m
 
 export class ProcessStepValidator {
   public constructor(
+    private readonly processName: string | null,
     private readonly sandboxNames: string[],
     private readonly variableValidator: VariableCachedValidator
   ) {}
@@ -57,7 +58,7 @@ export class ProcessStepValidator {
       errors['properties.script'] = scriptError;
     }
     if (!this.sandboxNames.includes(step.properties.script.sandboxName)) {
-      errors['properties.script.sandboxName'] = 'No sandbox with the specified name exists.';
+      errors['properties.script.sandboxName'] = 'No sandbox with the specified name exists';
     }
   }
 
@@ -72,8 +73,12 @@ export class ProcessStepValidator {
       errors['properties.allowedVariableNames'] = avError;
     }
 
+    if (this.processName && step.properties.allowedProcessNames.includes(this.processName)) {
+      errors['properties.allowedProcessNames'] = 'The current process cannot be included';
+    }
+
     if (!this.sandboxNames.includes(step.properties.sandboxName)) {
-      errors['properties.sandboxName'] = 'No sandbox with the specified name exists.';
+      errors['properties.sandboxName'] = 'No sandbox with the specified name exists';
     }
   }
 

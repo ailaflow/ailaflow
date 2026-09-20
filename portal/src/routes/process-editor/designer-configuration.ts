@@ -112,7 +112,7 @@ const agentStep: Omit<AgentStep, 'id'> = {
       type: 'string',
       value: ''
     },
-    allowedProcesses: null,
+    allowedProcessNames: [],
     allowedVariableNames: [],
     isTerminalAllowed: false,
     sandboxName: 'default'

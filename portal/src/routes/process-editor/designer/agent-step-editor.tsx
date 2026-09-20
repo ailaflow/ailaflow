@@ -7,9 +7,9 @@ import { DropdownPropertyView } from '../../../views/process-editor/designer/dro
 import { StringOrVariablePropertyView } from '../../../views/process-editor/designer/string-or-variable-property-view';
 import { useState } from 'react';
 import { FindProcessesPopup } from '../../common/popups/find-processes-popup';
-import { AllowedProcessesPropertyView } from '../../../views/process-editor/designer/allowed-processes-property-view';
 import { VariableSelectorPropertyView } from '../../../views/process-editor/designer/variable-selector-property-view';
 import { EditorHeaderView } from '../../../views/process-editor/designer/editor-header-view';
+import { ProcessSelectorPropertyView } from '../../../views/process-editor/designer/process-selector-property-view';
 
 export function AgentStepEditor(props: StepEditorProps) {
   const { name, step, properties, definition, setName, setProperty } = useStepEditor<AgentStep, ProcessDefinition>();
@@ -17,7 +17,7 @@ export function AgentStepEditor(props: StepEditorProps) {
   const errors = props.state.stepValidator.validate(step, definition);
 
   function onSelectProcesses(names: string[]) {
-    setProperty('allowedProcesses', names);
+    setProperty('allowedProcessNames', names);
     setIsFindProcessesPopupOpen(false);
   }
 
@@ -32,7 +32,7 @@ export function AgentStepEditor(props: StepEditorProps) {
         <FindProcessesPopup
           apiClient={props.state.apiClient}
           onSelectProcesses={onSelectProcesses}
-          processNames={properties.allowedProcesses ?? []}
+          processNames={properties.allowedProcessNames}
           onClose={() => setIsFindProcessesPopupOpen(false)}
         />
       )}
@@ -48,11 +48,12 @@ export function AgentStepEditor(props: StepEditorProps) {
         error={errors['properties.prompt']}
       />
 
-      <AllowedProcessesPropertyView
-        processNames={properties.allowedProcesses}
-        onAllowAll={() => setProperty('allowedProcesses', null)}
-        onEdit={() => setIsFindProcessesPopupOpen(true)}
-        error={errors['properties.allowedProcesses']}
+      <ProcessSelectorPropertyView
+        label="Allowed Processes"
+        processNames={properties.allowedProcessNames}
+        onChange={names => setProperty('allowedProcessNames', names)}
+        onOpenSelector={() => setIsFindProcessesPopupOpen(true)}
+        error={errors['properties.allowedProcessNames']}
       />
 
       <VariableSelectorPropertyView

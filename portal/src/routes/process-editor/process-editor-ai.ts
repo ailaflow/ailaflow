@@ -307,9 +307,9 @@ export function useProcessEditorAi(state: ProcessEditorState, save: () => Promis
           state.notifyDefinitionChange();
           return toolSuccess('Prompt was updated');
         },
-        async agentStep_setAllowedProcesses(arg) {
+        async agentStep_setAllowedProcessNames(arg) {
           const step = state.getStep<AgentStep>(arg.stepId, 'agent');
-          step.properties.allowedProcesses = arg.processNames;
+          step.properties.allowedProcessNames = arg.processNames;
           state.notifyDefinitionChange();
           return toolSuccess('Allowed processes were updated');
         },

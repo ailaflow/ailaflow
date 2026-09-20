@@ -25,7 +25,7 @@ export class AgentToolSetProviderFactory {
 
   public async create(
     abortSignal: AbortSignal,
-    allowedProcesses: string[] | null,
+    allowedProcessNames: string[],
     allowedVariableNames: string[],
     sandboxName: string,
     isTerminalAllowed: boolean,
@@ -34,7 +34,7 @@ export class AgentToolSetProviderFactory {
     executionId: string
   ): Promise<ToolSetProvider> {
     const tools: Tool[] = [];
-    await this.addProcessTools(abortSignal, allowedProcesses, process.name, context, tools, executionId);
+    await this.addProcessTools(abortSignal, allowedProcessNames, process.name, context, tools, executionId);
     this.addVariableTools(executionId, allowedVariableNames, tools, process);
     if (isTerminalAllowed) {
       this.addTerminalTools(sandboxName, tools);
@@ -50,41 +50,43 @@ export class AgentToolSetProviderFactory {
 
   private async addProcessTools(
     abortSignal: AbortSignal,
-    allowedProcesses: string[] | null,
+    allowedProcessNames: string[],
     currentProcessName: string,
     context: ProcessExecutionContext,
     tools: Tool[],
     executionId: string
   ) {
-    if (allowedProcesses === null || allowedProcesses.length > 0) {
-      for (let page = 1; ; page++) {
-        abortSignal.throwIfAborted();
+    if (allowedProcessNames.length === 0) {
+      return tools;
+    }
+    if (allowedProcessNames.includes(currentProcessName)) {
+      throw new Error('The current process cannot be included in the allowed process names');
+    }
 
-        const result = await this.processListQuerier.query(abortSignal, page, PAGE_SIZE, ProcessDisplay.LISTED);
-        for (const p of result.processes) {
-          if (p.name === currentProcessName || context.parentProcessNames?.includes(p.name)) {
-            continue;
-          }
-          if (p.isPausable) {
-            continue;
-          }
-          if (allowedProcesses !== null && !allowedProcesses.includes(p.name)) {
-            continue;
-          }
+    for (let page = 1; ; page++) {
+      abortSignal.throwIfAborted();
 
-          const process = await this.processManager.tryGetByName(abortSignal, p.name);
-          if (!process) {
-            throw new Error(`Process "${p.name}" was not found in the database`);
-          }
-          // TODO: Filter allowed non-pausable processes in the database instead of loading every page.
-          if (process.isPausable) {
-            continue;
-          }
-          tools.push(new RunProcessTool(executionId, process, this.executionStore));
+      const result = await this.processListQuerier.query(abortSignal, page, PAGE_SIZE, ProcessDisplay.LISTED);
+      for (const p of result.processes) {
+        if (context.parentProcessNames?.includes(p.name)) {
+          continue;
         }
-        if (result.processes.length === 0 || page * result.pageSize >= result.totalCount) {
-          break;
+        if (!allowedProcessNames.includes(p.name)) {
+          continue;
         }
+
+        const process = await this.processManager.tryGetByName(abortSignal, p.name);
+        if (!process) {
+          throw new Error(`Process "${p.name}" was not found in the database`);
+        }
+        // TODO: Filter allowed non-pausable processes in the database instead of loading every page.
+        if (process.isPausable) {
+          continue;
+        }
+        tools.push(new RunProcessTool(executionId, process, this.executionStore));
+      }
+      if (result.processes.length === 0 || page * result.pageSize >= result.totalCount) {
+        break;
       }
     }
     return tools;

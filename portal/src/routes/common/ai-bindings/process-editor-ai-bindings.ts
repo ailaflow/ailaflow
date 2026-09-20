@@ -163,10 +163,10 @@ const processEditorRoute = route('processEditor')
           .strict()
       ])
     ),
-    agentStep_setAllowedProcesses: tool('Set which processes the agent can run').input(
+    agentStep_setAllowedProcessNames: tool('Set which processes the agent can run').input(
       z.object({
         stepId: z.string().describe('The agent step ID'),
-        processNames: z.array(z.string()).nullable().describe('Allowed process names; null allows all, an empty list allows none')
+        processNames: z.array(z.string()).describe('Allowed process names; an empty list allows none')
       })
     ),
     agentStep_setAllowedVariables: tool('Set which variables the agent can read and write').input(

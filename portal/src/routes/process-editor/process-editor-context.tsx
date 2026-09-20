@@ -85,7 +85,7 @@ function createData(props: Omit<ProcessEditorContextProps, 'children'>): Process
   const sandboxNames = props.sandboxes.map(sandbox => sandbox.name);
   const variableValidator = new VariableCachedValidator();
   const rootValidator = new ProcessRootValidator(variableValidator);
-  const stepValidator = new ProcessStepValidator(sandboxNames, variableValidator);
+  const stepValidator = new ProcessStepValidator(props.process?.name ?? null, sandboxNames, variableValidator);
 
   const definition = wrapDefinition<ProcessDefinition>(props.process ? props.process.definition : createBlankDefinition());
   const name = props.process?.name ?? '';
