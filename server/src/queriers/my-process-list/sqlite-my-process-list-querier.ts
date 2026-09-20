@@ -33,7 +33,7 @@ export class SqliteMyProcessListQuerier implements MyProcessListQuerier {
 
       const statement = db.prepare(`
       WITH ${this.resourceAccessQueryBuilder.buildAccessibleResourcesCte()}
-      SELECT p.name, p.description, p.startVariableSchemas
+      SELECT p.name, p.description
       FROM processes p
       JOIN accessible_resources ar
         ON ar.resource_id = 'process:' || p.name
@@ -55,13 +55,11 @@ export class SqliteMyProcessListQuerier implements MyProcessListQuerier {
 interface MyProcessRow {
   name: string;
   description: string;
-  startVariableSchemas: string;
 }
 
 function mapRows(rows: MyProcessRow[]): MyProcessLiteDto[] {
   return rows.map(row => ({
     name: row.name,
-    description: row.description,
-    startVariableSchemas: JSON.parse(row.startVariableSchemas)
+    description: row.description
   }));
 }

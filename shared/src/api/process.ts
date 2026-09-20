@@ -1,5 +1,5 @@
 import * as z from 'zod/v4';
-import { jsonSchema, processDefinitionSchema, ProcessDisplay, ProcessExecutionOutcome, ProcessLog } from '../process';
+import { processDefinitionSchema, ProcessDisplay, ProcessExecutionOutcome, ProcessLog } from '../process';
 import { paginationRequestSchema, paginationResponseSchema } from './pagination';
 
 // getProcesses
@@ -9,8 +9,7 @@ const processLiteDtoSchema = z.object({
   description: z.string(),
   userAccessExpression: z.string(),
   display: z.enum(ProcessDisplay),
-  isPausable: z.boolean(),
-  startVariableSchemas: jsonSchema
+  isPausable: z.boolean()
 });
 
 export const getProcessesRequestSchema = paginationRequestSchema.extend({

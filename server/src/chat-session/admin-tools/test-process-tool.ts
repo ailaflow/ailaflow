@@ -10,7 +10,7 @@ import { ProcessExecutionFinishedEvent } from '../../events/process-execution/pr
 
 const inputSchema = z.object({
   name: z.string(),
-  input: z.record(z.string(), z.unknown())
+  startVariableValues: z.record(z.string(), z.unknown())
 });
 
 type Arg = z.infer<typeof inputSchema>;
@@ -35,11 +35,11 @@ export class TestProcessTool extends ZodTool<Arg> {
       };
     }
 
-    const inputError = process.variables.validateStartValues(arg.input);
-    if (inputError) {
+    const startValuesError = process.variables.validateStartValues(arg.startVariableValues);
+    if (startValuesError) {
       return {
         content: {
-          error: inputError
+          error: startValuesError
         }
       };
     }
@@ -50,7 +50,7 @@ export class TestProcessTool extends ZodTool<Arg> {
       isTest: true
     };
 
-    const execution = this.processExecutor.initialize(context, process, arg.input);
+    const execution = this.processExecutor.initialize(context, process, arg.startVariableValues);
 
     const softSignal = AbortSignal.any([abortSignal, AbortSignal.timeout(6_000)]);
     const outcome = await execution.runAndWaitForOutcome(softSignal);

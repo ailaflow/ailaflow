@@ -64,6 +64,7 @@ import { ChatSessionResolver } from './chat-session/chat-session-resolver';
 import { ResourceAccessRepository } from './repositories/resource-access/resource-access-repository';
 import { SqliteResourceAccessRepository } from './repositories/resource-access/sqlite-resource-access-repository';
 import { GetMyProcessesTool } from './chat-session/user-tools/get-my-processes-tool';
+import { GetMyProcessDetailsTool } from './chat-session/user-tools/get-my-process-details-tool';
 import { StartMyProcessTool } from './chat-session/user-tools/start-my-process-tool';
 import { EventBus } from './events/event-bus';
 import { ProcessExecutionFinishedEventHandler } from './events/process-execution/process-execution-finished-event-handler';
@@ -187,6 +188,7 @@ import { ProcessCronJobScheduler } from './schedulers/process-cron-job-scheduler
 import { HttpServer } from './http-server';
 import { GetSandboxesTool } from './chat-session/admin-tools/get-sandboxes-tool';
 import { GetProcessesTool } from './chat-session/admin-tools/get-processes-tool';
+import { GetProcessDetailsTool } from './chat-session/admin-tools/get-process-details-tool';
 import { GetTablesTool } from './chat-session/admin-tools/get-tables-tool';
 import { TestProcessTool } from './chat-session/admin-tools/test-process-tool';
 import { Installer } from './install/installer';
@@ -478,6 +480,7 @@ export class Server {
 
     const userToolSetProvider = new ToolSetProvider([
       new GetMyProcessesTool(myProcessListQuerier),
+      new GetMyProcessDetailsTool(userProcessProvider),
       new GetMyTasksTool(myTaskListQuerier),
       new GetMyTaskDetailsTool(userTaskDetailsProvider),
       new StartMyProcessTool(userProcessProvider, processExecutor, eventBus),
@@ -488,6 +491,7 @@ export class Server {
     const adminToolSetProvider = new ToolSetProvider([
       new GetSandboxesTool(sandboxListQuerier),
       new GetProcessesTool(processListQuerier),
+      new GetProcessDetailsTool(processManager),
       new GetTablesTool(tableListQuerier),
       new TestProcessTool(processManager, processExecutor, eventBus)
     ]);

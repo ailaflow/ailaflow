@@ -44,8 +44,7 @@ test('queries a page containing only processes accessible to the current user', 
     processes: [
       {
         name: 'bravo',
-        description: 'bravo description',
-        startVariableSchemas: {}
+        description: 'bravo description'
       }
     ],
     totalCount: 2,
@@ -56,8 +55,7 @@ test('queries a page containing only processes accessible to the current user', 
     processes: [
       {
         name: 'alpha',
-        description: 'alpha description',
-        startVariableSchemas: {}
+        description: 'alpha description'
       }
     ],
     totalCount: 1,

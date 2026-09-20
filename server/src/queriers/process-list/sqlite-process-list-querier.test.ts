@@ -25,8 +25,7 @@ test('queries a name-ordered page of processes', async () => {
         description: 'charlie description',
         userAccessExpression: '',
         display: ProcessDisplay.HIDDEN,
-        isPausable: true,
-        startVariableSchemas: {}
+        isPausable: true
       }
     ],
     totalCount: 3,

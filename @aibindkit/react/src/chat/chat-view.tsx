@@ -228,12 +228,8 @@ function ToolMessageView(props: { message: CompletedChatMessage }) {
     <div className="abk-chat-row abk-chat-row-tool">
       <details className={`abk-chat-details${isError ? ' abk-chat-details-error' : ''}`}>
         <summary className="abk-chat-summary">
-          <span className="abk-chat-toggle abk-chat-toggle-closed">
-            <SvgIcon name="detailsClosed" />
-          </span>
-          <span className="abk-chat-toggle abk-chat-toggle-open">
-            <SvgIcon name="detailsOpen" />
-          </span>
+          <SvgIcon name="detailsClosed" className="abk-chat-toggle abk-chat-toggle-closed" />
+          <SvgIcon name="detailsOpen" className="abk-chat-toggle abk-chat-toggle-open" />
           <span className="abk-chat-summary-text">
             Tool response
             {label && (
@@ -256,9 +252,22 @@ function MessageContentView(props: { content: LlmMessageContent | null }) {
 
   return (
     <>
-      {props.content.reasoning && <div className="abk-chat-reasoning">{props.content.reasoning}</div>}
+      {props.content.reasoning && <ReasoningView reasoning={props.content.reasoning} />}
       {props.content.content && <div className="abk-chat-content">{props.content.content}</div>}
     </>
+  );
+}
+
+function ReasoningView(props: { reasoning: string }) {
+  return (
+    <details className="abk-chat-reasoning">
+      <summary className="abk-chat-reasoning-summary">
+        <SvgIcon name="detailsClosed" className="abk-chat-toggle abk-chat-toggle-closed" />
+        <SvgIcon name="detailsOpen" className="abk-chat-toggle abk-chat-toggle-open" />
+        <span>Reasoning</span>
+      </summary>
+      <div className="abk-chat-reasoning-content">{props.reasoning}</div>
+    </details>
   );
 }
 
@@ -268,12 +277,8 @@ function ToolCallsView(props: { toolCalls: ToolCall[] }) {
       {props.toolCalls.map(call => (
         <details key={call.id} className="abk-chat-details abk-chat-tool-call">
           <summary className="abk-chat-summary">
-            <span className="abk-chat-toggle abk-chat-toggle-closed">
-              <SvgIcon name="detailsClosed" />
-            </span>
-            <span className="abk-chat-toggle abk-chat-toggle-open">
-              <SvgIcon name="detailsOpen" />
-            </span>
+            <SvgIcon name="detailsClosed" className="abk-chat-toggle abk-chat-toggle-closed" />
+            <SvgIcon name="detailsOpen" className="abk-chat-toggle abk-chat-toggle-open" />
             <span className="abk-chat-summary-text">
               Function:{' '}
               <span className="abk-chat-summary-strong" title={call.function.name}>

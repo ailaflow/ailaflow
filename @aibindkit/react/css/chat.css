@@ -207,6 +207,31 @@
   color: #64748b;
   font-size: 12px;
   line-height: 1.4;
+}
+
+.abk-chat-reasoning-summary {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  cursor: pointer;
+  font-weight: 600;
+  list-style: none;
+}
+
+.abk-chat-reasoning-summary::-webkit-details-marker {
+  display: none;
+}
+
+.abk-chat-reasoning[open] .abk-chat-toggle-closed {
+  display: none;
+}
+
+.abk-chat-reasoning[open] .abk-chat-toggle-open {
+  display: block;
+}
+
+.abk-chat-reasoning-content {
+  margin-top: 4px;
   overflow-wrap: anywhere;
   white-space: pre-wrap;
 }
@@ -227,7 +252,7 @@
 .abk-chat-summary {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 2px;
   padding: 8px 12px;
   cursor: pointer;
   color: #334155;
@@ -254,23 +279,10 @@
 }
 
 .abk-chat-toggle {
-  display: inline-flex;
-  width: 20px;
-  height: 20px;
+  width: 16px;
+  height: 16px;
   flex: 0 0 auto;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid #cbd5e1;
-  border-radius: 4px;
-  background: #fff;
   color: #64748b;
-  font-size: 11px;
-}
-
-.abk-chat-toggle svg {
-  width: 18px;
-  height: 18px;
-  flex: 0 0 auto;
 }
 
 .abk-chat-toggle-open {
@@ -282,7 +294,7 @@
 }
 
 .abk-chat-details[open] .abk-chat-toggle-open {
-  display: inline-flex;
+  display: block;
 }
 
 .abk-chat-summary-text {

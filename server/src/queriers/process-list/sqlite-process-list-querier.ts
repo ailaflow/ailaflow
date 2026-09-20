@@ -22,7 +22,7 @@ export class SqliteProcessListQuerier implements ProcessListQuerier {
         .prepare(`SELECT COUNT(*) AS totalCount FROM processes WHERE display <= ? AND instr(name, ?) > 0`)
         .get(displayAtLeast, searchTerm) as { totalCount: number };
       const statement = db.prepare(`
-      SELECT name, description, userAccessExpression, display, isPausable, startVariableSchemas
+      SELECT name, description, userAccessExpression, display, isPausable
       FROM processes
       WHERE display <= ?
         AND instr(name, ?) > 0
@@ -46,7 +46,6 @@ interface ProcessRow {
   userAccessExpression: string;
   display: ProcessDisplay;
   isPausable: number;
-  startVariableSchemas: string;
 }
 
 function mapRows(rows: ProcessRow[]): ProcessLiteDto[] {
@@ -55,7 +54,6 @@ function mapRows(rows: ProcessRow[]): ProcessLiteDto[] {
     description: row.description,
     userAccessExpression: row.userAccessExpression,
     display: row.display,
-    isPausable: row.isPausable === 1,
-    startVariableSchemas: JSON.parse(row.startVariableSchemas)
+    isPausable: row.isPausable === 1
   }));
 }

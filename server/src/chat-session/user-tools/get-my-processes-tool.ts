@@ -1,31 +1,26 @@
 import { ToolContext, ZodTool, ZodToolExecutionResult } from '@aibindkit/llm';
-import { MyProcessLiteDto, ProcessDisplay } from '@ailaflow/shared';
+import { ProcessDisplay } from '@ailaflow/shared';
+import z from 'zod/v4';
 import { MyProcessListQuerier } from '../../queriers/my-process-list/my-process-list-querier';
 import { ChatSessionId } from '../chat-session-id';
 
-export class GetMyProcessesTool extends ZodTool {
+const PAGE_SIZE = 30;
+
+const inputSchema = z.object({
+  page: z.number().int().min(1).default(1)
+});
+
+type Arg = z.infer<typeof inputSchema>;
+
+export class GetMyProcessesTool extends ZodTool<Arg> {
   public constructor(private readonly querier: MyProcessListQuerier) {
-    super('get_my_processes', 'Returns a list of supported processes');
+    super('get_my_processes', 'Returns a paginated list of supported processes', inputSchema);
   }
 
-  public async handle(abortSignal: AbortSignal, { sessionId }: ToolContext): Promise<ZodToolExecutionResult> {
+  public async handle(abortSignal: AbortSignal, { sessionId }: ToolContext, arg: Arg): Promise<ZodToolExecutionResult> {
     const { userName } = ChatSessionId.decode(sessionId);
     return {
-      content: await this.queryAll(abortSignal, userName)
+      content: await this.querier.query(abortSignal, userName, arg.page, PAGE_SIZE, ProcessDisplay.LISTED)
     };
-  }
-
-  private async queryAll(abortSignal: AbortSignal, userName: string): Promise<MyProcessLiteDto[]> {
-    const pageSize = 100;
-    const processes: MyProcessLiteDto[] = [];
-
-    for (let page = 1; ; page++) {
-      const result = await this.querier.query(abortSignal, userName, page, pageSize, ProcessDisplay.LISTED);
-      processes.push(...result.processes);
-
-      if (processes.length >= result.totalCount || result.processes.length === 0) {
-        return processes;
-      }
-    }
   }
 }
