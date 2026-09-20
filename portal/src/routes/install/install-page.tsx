@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import type { SubmitEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { InstallResponse, LicenseType } from '@ailaflow/shared';
+import { LicenseType, UserValidator } from '@ailaflow/shared';
+import type { InstallResponse } from '@ailaflow/shared';
 import { useApiClient } from '../../auth/auth-context';
 import { CenteredFormLayout } from '../../views/centered-form/centered-form-layout';
 import { InstallView } from '../../views/install/install-view';
@@ -9,18 +10,27 @@ import { InstallView } from '../../views/install/install-view';
 export function InstallPage() {
   const apiClient = useApiClient();
   const navigate = useNavigate();
-  const [rootUserName, setRootUserName] = useState('');
-  const [rootPassword, setRootPassword] = useState('');
+  const [userName, setUserName] = useState('');
+  const [password, setPassword] = useState('');
   const [licenseType, setLicenseType] = useState(LicenseType.HOME);
   const [licenseKey, setLicenseKey] = useState('');
   const [isPolicyAccepted, setIsPolicyAccepted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const canSubmit = !isSubmitting && isPolicyAccepted && (licenseType !== LicenseType.BUSINESS || Boolean(licenseKey.trim()));
+  const userNameError = UserValidator.validateName(userName);
+  const passwordError = UserValidator.validatePassword(password);
+  const canSubmit =
+    !isSubmitting &&
+    userNameError === null &&
+    passwordError === null &&
+    isPolicyAccepted &&
+    (licenseType !== LicenseType.BUSINESS || Boolean(licenseKey.trim()));
   const [error, setError] = useState<string | null>(null);
 
   const onSubmit = async (e: SubmitEvent) => {
     e.preventDefault();
-    if (!canSubmit) return;
+    if (!canSubmit) {
+      return;
+    }
     setError(null);
     setIsSubmitting(true);
 
@@ -28,8 +38,8 @@ export function InstallPage() {
     try {
       const abortSignal = AbortSignal.timeout(10000);
       response = await apiClient.install.install(abortSignal, {
-        rootUserName,
-        rootPassword,
+        rootUserName: userName,
+        rootPassword: password,
         licenseType,
         licenseKey: licenseType === LicenseType.BUSINESS ? licenseKey.trim() : null
       });
@@ -51,8 +61,10 @@ export function InstallPage() {
   return (
     <CenteredFormLayout>
       <InstallView
-        rootUserName={rootUserName}
-        rootPassword={rootPassword}
+        userName={userName}
+        userNameError={userNameError}
+        password={password}
+        passwordError={passwordError}
         isPolicyAccepted={isPolicyAccepted}
         error={error}
         licenseType={licenseType}
@@ -70,8 +82,8 @@ export function InstallPage() {
           setLicenseKey(key);
           setError(null);
         }}
-        onRootUserNameChange={setRootUserName}
-        onRootPasswordChange={setRootPassword}
+        onUserNameChange={setUserName}
+        onPasswordChange={setPassword}
         onPolicyAcceptedChange={setIsPolicyAccepted}
         onSubmit={onSubmit}
       />

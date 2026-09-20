@@ -26,8 +26,8 @@ test('persists Slack configuration, directory, atomic mappings, and inbound dedu
   await directory.setup(signal);
   await mappings.setup(signal);
   await inbox.setup(signal);
-  await users.insert(signal, new User('alice', 'hash', true, false));
-  await users.insert(signal, new User('bob', 'hash', true, false));
+  await users.insert(signal, new User('alice', null, 'hash', true, false));
+  await users.insert(signal, new User('bob', null, 'hash', true, false));
   await configuration.save(signal, {
     appToken: 'app-secret',
     botToken: 'bot-secret',

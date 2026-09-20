@@ -31,6 +31,7 @@ export class GetUserEndpoint implements Endpoint {
     return {
       user: {
         name: user.name,
+        email: user.email,
         isActive: user.isActive,
         isAdmin: user.isAdmin,
         attributes: attributes.getWithoutUserName()

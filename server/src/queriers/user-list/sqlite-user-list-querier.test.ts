@@ -14,10 +14,10 @@ test('queries name-ordered pages of users with optional active and contains filt
   const querier = new SqliteUserListQuerier(dbs);
 
   await repository.setup(abortSignal);
-  await repository.insert(abortSignal, new User('charlie', 'hash', true, false));
-  await repository.insert(abortSignal, new User('alice', 'hash', true, true));
-  await repository.insert(abortSignal, new User('alicia', 'hash', false, false));
-  await repository.insert(abortSignal, new User('bob', 'hash', true, false));
+  await repository.insert(abortSignal, new User('charlie', null, 'hash', true, false));
+  await repository.insert(abortSignal, new User('alice', null, 'hash', true, true));
+  await repository.insert(abortSignal, new User('alicia', null, 'hash', false, false));
+  await repository.insert(abortSignal, new User('bob', 'support@example.com', 'hash', true, false));
 
   assert.deepEqual(await querier.query(abortSignal, 2, 1, false, 'ali'), {
     users: [{ name: 'alicia', isActive: false, isAdmin: false }],
@@ -42,6 +42,12 @@ test('queries name-ordered pages of users with optional active and contains filt
     totalCount: 3,
     page: 1,
     pageSize: 2
+  });
+  assert.deepEqual(await querier.query(abortSignal, 1, 10, false, 'support'), {
+    users: [{ name: 'bob', isActive: true, isAdmin: false }],
+    totalCount: 1,
+    page: 1,
+    pageSize: 10
   });
 
   db.close();

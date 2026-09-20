@@ -50,7 +50,7 @@ export class Installer {
 
       await this.cipherKeyStore.install();
 
-      const user = await User.create(rootUserName, rootPassword, true, this.cipher);
+      const user = await User.create(rootUserName, null, rootPassword, true, this.cipher);
       const attributes = UserAttributes.create(user, {});
       const defaultSandbox = Sandbox.create({
         name: 'default',

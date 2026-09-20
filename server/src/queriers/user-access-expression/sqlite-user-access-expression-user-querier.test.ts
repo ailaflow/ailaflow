@@ -51,7 +51,7 @@ async function insertUser(
   name: string,
   attributes: Record<string, string | number | boolean>
 ): Promise<void> {
-  const user = new User(name, 'hash', true, false);
+  const user = new User(name, null, 'hash', true, false);
   await userRepository.insert(abortSignal, user);
   await userAttributesRepository.replace(abortSignal, UserAttributes.create(user, attributes));
 }

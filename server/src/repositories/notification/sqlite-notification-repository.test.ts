@@ -17,8 +17,8 @@ test('inserts notifications for users', async () => {
 
   await userRepository.setup(abortSignal);
   await notificationRepository.setup(abortSignal);
-  await userRepository.insert(abortSignal, new User('alice', 'hash', true, false));
-  await userRepository.insert(abortSignal, new User('bob', 'hash', true, false));
+  await userRepository.insert(abortSignal, new User('alice', null, 'hash', true, false));
+  await userRepository.insert(abortSignal, new User('bob', null, 'hash', true, false));
 
   await notificationRepository.insertMultiple(abortSignal, [
     new Notification('notification_1', 'alice', 'First', 1000),

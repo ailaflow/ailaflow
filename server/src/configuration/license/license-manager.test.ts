@@ -58,8 +58,8 @@ test('rejected validation does not save the license selection or replace the cac
 
 test('sends the instance, license, user counts, and version for validation', async t => {
   const { manager, users, validate } = await fixture(t);
-  await users.insert(signal, new User('first', 'hash', true, true));
-  await users.insert(signal, new User('second', 'hash', false, false));
+  await users.insert(signal, new User('first', null, 'hash', true, true));
+  await users.insert(signal, new User('second', null, 'hash', false, false));
 
   await manager.tryValidateAndSet(signal, LicenseType.HOME, null);
 

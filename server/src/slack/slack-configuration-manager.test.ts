@@ -24,7 +24,7 @@ test('disconnect removes mappings and configuration but preserves the cached Sla
   await configuration.setup(signal);
   await directory.setup(signal);
   await mappings.setup(signal);
-  await users.insert(signal, new User('alice', 'hash', true, false));
+  await users.insert(signal, new User('alice', null, 'hash', true, false));
   await configuration.save(signal, {
     appToken: 'app-secret',
     botToken: 'bot-secret',

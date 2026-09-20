@@ -23,8 +23,8 @@ test('assigned tasks can be upserted and queried by task and user', async () => 
   await taskRepository.setup(abortSignal);
   await assignedTaskRepository.setup(abortSignal);
 
-  const user1 = new User('user_1', 'hash', true, false);
-  const user2 = new User('user_2', 'hash', true, false);
+  const user1 = new User('user_1', null, 'hash', true, false);
+  const user2 = new User('user_2', null, 'hash', true, false);
   await userRepository.insert(abortSignal, user1);
   await userRepository.insert(abortSignal, user2);
 

@@ -54,12 +54,15 @@ export function UserEditor(props: { user?: UserDto }) {
         isNew={state.isNew}
         isActive={state.isActive}
         isAdmin={state.isAdmin}
+        email={state.email}
+        emailError={state.emailError}
         password={state.password}
         passwordError={state.passwordError}
         attributes={state.attributes}
         attributeError={state.attributeError}
         onIsActiveChange={state.setIsActive}
         onIsAdminChange={state.setIsAdmin}
+        onEmailChange={state.setEmail}
         onPasswordChange={state.setPassword}
         onAttributeAdd={state.addAttribute}
         onAttributeRemove={state.removeAttribute}

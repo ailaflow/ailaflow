@@ -28,7 +28,7 @@ test('queries a page containing only processes accessible to the current user', 
   await userAttributesRepository.setup(abortSignal);
   await resourceAccessRepository.setup(abortSignal);
 
-  const alice = new User('alice', 'hash', true, false);
+  const alice = new User('alice', null, 'hash', true, false);
   await userRepository.insert(abortSignal, alice);
   await userAttributesRepository.replace(abortSignal, UserAttributes.create(alice, {}));
 

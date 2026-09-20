@@ -12,12 +12,15 @@ export interface UserEditorViewProps {
   isNew: boolean;
   isActive: boolean;
   isAdmin: boolean;
+  email: string;
+  emailError: string | null;
   password: string;
   passwordError: string | null;
   attributes: UserAttributeEditorRow[];
   attributeError: string | null;
   onIsActiveChange(isActive: boolean): void;
   onIsAdminChange(isAdmin: boolean): void;
+  onEmailChange(email: string): void;
   onPasswordChange(password: string): void;
   onAttributeAdd(): void;
   onAttributeRemove(id: number): void;
@@ -38,6 +41,19 @@ export function UserEditorView(props: UserEditorViewProps) {
             <span className="mb-1.5 block text-sm font-medium text-slate-700">Admin</span>
             <SwitchView label="Admin" value={props.isAdmin} onChange={props.onIsAdminChange} />
           </div>
+          <label className="block max-w-sm">
+            <span className="mb-1 block text-sm font-medium text-slate-700">Email</span>
+            <input
+              type="email"
+              value={props.email}
+              onChange={e => props.onEmailChange(e.target.value)}
+              aria-invalid={props.emailError !== null}
+              className={`h-9 w-full rounded-md border px-2 text-sm outline-none focus:border-slate-500 ${
+                props.emailError ? 'border-red-300 bg-red-50/30' : 'border-slate-300'
+              }`}
+            />
+            {props.emailError ? <span className="mt-1 block text-sm text-red-700">{props.emailError}</span> : null}
+          </label>
           <label className="block max-w-sm">
             <span className="mb-1 block text-sm font-medium text-slate-700">{props.isNew ? 'Password' : 'New password'}</span>
             <input

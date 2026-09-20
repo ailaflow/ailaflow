@@ -18,21 +18,21 @@ export class SqliteUserListQuerier implements UserListQuerier {
           `
         SELECT COUNT(*) AS totalCount
         FROM users
-        WHERE instr(name, ?) > 0
+        WHERE (instr(name, ?) > 0 OR instr(email, ?) > 0)
           AND (? = 0 OR isActive = 1)
       `
         )
-        .get(searchTerm, activeFilter) as { totalCount: number };
+        .get(searchTerm, searchTerm, activeFilter) as { totalCount: number };
 
       const statement = db.prepare(`
       SELECT name, isActive, isAdmin
       FROM users
-      WHERE instr(name, ?) > 0
+      WHERE (instr(name, ?) > 0 OR instr(email, ?) > 0)
         AND (? = 0 OR isActive = 1)
       ORDER BY name
       LIMIT ? OFFSET ?
     `);
-      const rows = statement.all(searchTerm, activeFilter, pageSize, (page - 1) * pageSize) as {
+      const rows = statement.all(searchTerm, searchTerm, activeFilter, pageSize, (page - 1) * pageSize) as {
         name: string;
         isActive: number;
         isAdmin: number;

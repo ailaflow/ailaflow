@@ -11,6 +11,7 @@ import { UserAttributeEditorRow } from '../../views/user-editor/user-editor-view
 
 export interface UserEditorData {
   name: string;
+  email: string;
   password: string;
   isActive: boolean;
   isAdmin: boolean;
@@ -21,10 +22,12 @@ export interface UserEditorData {
 
 export interface UserEditorState extends UserEditorData {
   nameError: string | null;
+  emailError: string | null;
   passwordError: string | null;
   attributeError: string | null;
   canSave: boolean;
   setName(name: string): void;
+  setEmail(email: string): void;
   setPassword(password: string): void;
   setIsActive(isActive: boolean): void;
   setIsAdmin(isAdmin: boolean): void;
@@ -41,8 +44,8 @@ export interface UserEditorState extends UserEditorData {
 export function useUserEditorState(user?: UserDto): UserEditorState {
   const [data, setData] = useState<UserEditorData>(() => createData(user));
   const validation = useMemo(() => validateState(data), [data]);
-  const { nameError, passwordError, attributeError } = validation;
-  const canSave = data.isDirty && nameError === null && passwordError === null && attributeError === null;
+  const { nameError, emailError, passwordError, attributeError } = validation;
+  const canSave = data.isDirty && nameError === null && emailError === null && passwordError === null && attributeError === null;
 
   function update(delta: Partial<UserEditorData> | ((data: UserEditorData) => Partial<UserEditorData>)) {
     setData(data => ({
@@ -55,10 +58,12 @@ export function useUserEditorState(user?: UserDto): UserEditorState {
   return {
     ...data,
     nameError,
+    emailError,
     passwordError,
     attributeError,
     canSave,
     setName: name => update({ name }),
+    setEmail: email => update({ email }),
     setPassword: password => update({ password }),
     setIsActive: isActive => update({ isActive }),
     setIsAdmin: isAdmin => update({ isAdmin }),
@@ -99,6 +104,7 @@ export function useUserEditorState(user?: UserDto): UserEditorState {
     toSaveRequest: () => ({
       insert: data.isNew,
       name: data.name,
+      email: data.email || null,
       password: data.password || undefined,
       isActive: data.isActive,
       isAdmin: data.isAdmin,
@@ -114,6 +120,7 @@ function nextAttributeId(attributes: UserAttributeEditorRow[]): number {
 function createData(user?: UserDto): UserEditorData {
   return {
     name: user?.name ?? '',
+    email: user?.email ?? '',
     password: '',
     isActive: user?.isActive ?? true,
     isAdmin: user?.isAdmin ?? false,
@@ -148,15 +155,22 @@ function toAttributeRow(id: number, name: string, value: UserAttributeValue): Us
   };
 }
 
-function validateState(state: UserEditorData): { nameError: string | null; passwordError: string | null; attributeError: string | null } {
+function validateState(state: UserEditorData): {
+  nameError: string | null;
+  emailError: string | null;
+  passwordError: string | null;
+  attributeError: string | null;
+} {
   const nameError = UserValidator.validateName(state.name);
-  const passwordError = state.isNew && state.password.length === 0 ? 'Password is required to create a user.' : null;
+  const emailError = UserValidator.validateEmail(state.email || null);
+  const passwordError = state.isNew || state.password.length > 0 ? UserValidator.validatePassword(state.password) : null;
   const names = new Set<string>();
   for (const attribute of state.attributes) {
     const attributeNameError = UserAttributesValidator.validateName(attribute.name);
     if (attributeNameError) {
       return {
         nameError,
+        emailError,
         passwordError,
         attributeError: `Attribute name "${attribute.name}" is invalid: ${attributeNameError}`
       };
@@ -164,6 +178,7 @@ function validateState(state: UserEditorData): { nameError: string | null; passw
     if (names.has(attribute.name)) {
       return {
         nameError,
+        emailError,
         passwordError,
         attributeError: `Attribute name "${attribute.name}" is duplicated.`
       };
@@ -172,13 +187,14 @@ function validateState(state: UserEditorData): { nameError: string | null; passw
     if (attribute.type === UserAttributeValueType.INTEGER && !Number.isInteger(Number(attribute.value))) {
       return {
         nameError,
+        emailError,
         passwordError,
         attributeError: `Attribute "${attribute.name}" must be an integer.`
       };
     }
   }
 
-  return { nameError, passwordError, attributeError: null };
+  return { nameError, emailError, passwordError, attributeError: null };
 }
 
 function rowsToAttributes(rows: UserAttributeEditorRow[]): Record<string, UserAttributeValue> {

@@ -26,6 +26,7 @@ export type GetUsersResponse = z.infer<typeof getUsersResponseSchema>;
 
 const userDtoSchema = z.object({
   name: z.string(),
+  email: z.string().nullable(),
   isActive: z.boolean(),
   isAdmin: z.boolean(),
   attributes: z.record(z.string(), z.union([z.string(), z.number(), z.boolean()]))
@@ -43,6 +44,7 @@ export type GetUserResponse = z.infer<typeof getUserResponseSchema>;
 export const saveUserRequestSchema = z.object({
   insert: z.boolean(),
   name: z.string(),
+  email: z.string().nullable(),
   password: z.string().optional(),
   isActive: z.boolean(),
   isAdmin: z.boolean(),

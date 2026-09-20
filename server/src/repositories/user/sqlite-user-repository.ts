@@ -15,6 +15,7 @@ export class SqliteUserRepository implements UserRepository {
       db.exec(`
         CREATE TABLE IF NOT EXISTS users (
           name TEXT PRIMARY KEY,
+          email TEXT UNIQUE,
           passwordHash TEXT NOT NULL,
           isActive INTEGER NOT NULL,
           isAdmin INTEGER NOT NULL
@@ -26,7 +27,7 @@ export class SqliteUserRepository implements UserRepository {
   public async tryGetUser(_: AbortSignal, userName: string): Promise<User | null> {
     return this.db.read(db => {
       const statement = db.prepare(`
-        SELECT name, passwordHash, isActive, isAdmin
+        SELECT name, email, passwordHash, isActive, isAdmin
         FROM users
         WHERE name = ?
         LIMIT 1
@@ -34,6 +35,7 @@ export class SqliteUserRepository implements UserRepository {
       const row = statement.get(userName) as
         | {
             name: string;
+            email: string | null;
             passwordHash: string;
             isActive: number;
             isAdmin: number;
@@ -42,7 +44,7 @@ export class SqliteUserRepository implements UserRepository {
       if (!row) {
         return null;
       }
-      return new User(row.name, row.passwordHash, row.isActive === 1, row.isAdmin === 1);
+      return new User(row.name, row.email, row.passwordHash, row.isActive === 1, row.isAdmin === 1);
     });
   }
 
@@ -50,31 +52,41 @@ export class SqliteUserRepository implements UserRepository {
     try {
       await this.db.write(db => {
         const statement = db.prepare(`
-          INSERT INTO users (name, passwordHash, isActive, isAdmin)
-          VALUES (?, ?, ?, ?)
+          INSERT INTO users (name, email, passwordHash, isActive, isAdmin)
+          VALUES (?, ?, ?, ?, ?)
         `);
-        statement.run(user.name, user.passwordHash, user.isActive ? 1 : 0, user.isAdmin ? 1 : 0);
+        statement.run(user.name, user.email, user.passwordHash, user.isActive ? 1 : 0, user.isAdmin ? 1 : 0);
       }, transaction);
     } catch (e) {
-      if (isDuplicateUserNameSqliteError(e)) {
-        throw new UserRepositoryError('A user name is already in use');
+      const duplicateError = getDuplicateUserError(e);
+      if (duplicateError) {
+        throw duplicateError;
       }
       throw e;
     }
   }
 
   public async update(_: AbortSignal, user: User, transaction?: Transaction): Promise<void> {
-    await this.db.write(db => {
-      const statement = db.prepare(`
-        UPDATE users
-        SET
-          passwordHash = ?,
-          isActive = ?,
-          isAdmin = ?
-        WHERE name = ?
-      `);
-      statement.run(user.passwordHash, user.isActive ? 1 : 0, user.isAdmin ? 1 : 0, user.name);
-    }, transaction);
+    try {
+      await this.db.write(db => {
+        const statement = db.prepare(`
+          UPDATE users
+          SET
+            email = ?,
+            passwordHash = ?,
+            isActive = ?,
+            isAdmin = ?
+          WHERE name = ?
+        `);
+        statement.run(user.email, user.passwordHash, user.isActive ? 1 : 0, user.isAdmin ? 1 : 0, user.name);
+      }, transaction);
+    } catch (e) {
+      const duplicateError = getDuplicateUserError(e);
+      if (duplicateError) {
+        throw duplicateError;
+      }
+      throw e;
+    }
   }
 
   public async count(_: AbortSignal, onlyActive: boolean): Promise<number> {
@@ -90,11 +102,15 @@ export class SqliteUserRepository implements UserRepository {
   }
 }
 
-function isDuplicateUserNameSqliteError(error: unknown): boolean {
-  return (
-    error instanceof Error &&
-    'code' in error &&
-    error.code === 'ERR_SQLITE_ERROR' &&
-    error.message.includes('UNIQUE constraint failed: users.name')
-  );
+function getDuplicateUserError(error: unknown): UserRepositoryError | null {
+  if (!(error instanceof Error) || !('code' in error) || error.code !== 'ERR_SQLITE_ERROR') {
+    return null;
+  }
+  if (error.message.includes('UNIQUE constraint failed: users.name')) {
+    return new UserRepositoryError('A user name is already in use');
+  }
+  if (error.message.includes('UNIQUE constraint failed: users.email')) {
+    return new UserRepositoryError('An email is already in use');
+  }
+  return null;
 }

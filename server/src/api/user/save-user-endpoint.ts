@@ -38,7 +38,7 @@ export class SaveUserEndpoint implements Endpoint {
         throw new EndpointError('Password is required to create a user', 400);
       }
       try {
-        user = await User.create(request.name, request.password, request.isAdmin, this.cipher);
+        user = await User.create(request.name, request.email, request.password, request.isAdmin, this.cipher);
       } catch (e) {
         if (e instanceof UserRepositoryError) {
           throw new EndpointError(e.message, 400);
@@ -52,8 +52,16 @@ export class SaveUserEndpoint implements Endpoint {
       user = existingUser;
     }
 
-    if (request.password) {
-      await user.setPassword(request.password, this.cipher);
+    try {
+      user.setEmail(request.email);
+      if (request.password) {
+        await user.setPassword(request.password, this.cipher);
+      }
+    } catch (e) {
+      if (e instanceof UserRepositoryError) {
+        throw new EndpointError(e.message, 400);
+      }
+      throw e;
     }
     user.setIsAdmin(request.isAdmin);
     user.setIsActive(request.isActive);

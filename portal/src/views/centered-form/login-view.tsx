@@ -14,13 +14,17 @@ export interface LoginViewProps {
 export function LoginView(props: LoginViewProps) {
   return (
     <div className="w-full max-w-sm rounded-xl border border-slate-200 bg-white p-5">
-      <div className="mb-4">
-        <h1 className="text-lg font-semibold tracking-tight">Sign in</h1>
+      <div className="mb-4 text-center">
+        <h1 className="text-2xl font-semibold tracking-tight">Sign in</h1>
         <p className="mt-1 text-xs text-slate-500">Use your account credentials to access the portal.</p>
       </div>
 
       {props.canInstall && (
-        <div className="mb-4 rounded-lg border border-blue-200 bg-blue-50 p-3 text-blue-950">
+        <div className="relative mb-4 rounded-lg border border-blue-200 bg-blue-50 p-3 text-center text-blue-950">
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 animate-pulse rounded-lg shadow-[0_0_14px_rgba(59,130,246,0.55)] motion-reduce:animate-none"
+          />
           <p className="text-sm font-semibold">Installation isn’t finished yet</p>
           <p className="mt-1 text-xs text-blue-800">Complete setup to start using AilaFlow.</p>
           <button
@@ -42,7 +46,7 @@ export function LoginView(props: LoginViewProps) {
             value={props.userName}
             onChange={e => props.onUserNameChange(e.target.value)}
             className="h-9 w-full rounded-md border border-slate-300 bg-white px-3 text-sm outline-none transition-colors placeholder:text-slate-400 focus:border-slate-500"
-            placeholder="your-user"
+            placeholder="your_user"
           />
         </label>
 

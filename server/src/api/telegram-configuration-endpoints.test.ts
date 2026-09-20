@@ -29,8 +29,8 @@ test('self endpoints use the authenticated user and admin endpoints use the rout
   const abortSignal = new AbortController().signal;
   await userRepository.setup(abortSignal);
   await repository.setup(abortSignal);
-  await userRepository.insert(abortSignal, new User('admin', 'hash', true, true));
-  await userRepository.insert(abortSignal, new User('alice', 'hash', true, false));
+  await userRepository.insert(abortSignal, new User('admin', null, 'hash', true, true));
+  await userRepository.insert(abortSignal, new User('alice', null, 'hash', true, false));
 
   const saveMy = new SaveMyTelegramBotEndpoint(api);
   assert.equal(saveMy.path, '/api/my-configuration/telegram');

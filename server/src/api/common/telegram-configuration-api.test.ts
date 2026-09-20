@@ -26,8 +26,8 @@ test('manages user Telegram configurations without exposing bot tokens', async (
   const abortSignal = new AbortController().signal;
   await userRepository.setup(abortSignal);
   await repository.setup(abortSignal);
-  await userRepository.insert(abortSignal, new User('alice', 'hash', true, false));
-  await userRepository.insert(abortSignal, new User('bob', 'hash', true, false));
+  await userRepository.insert(abortSignal, new User('alice', null, 'hash', true, false));
+  await userRepository.insert(abortSignal, new User('bob', null, 'hash', true, false));
 
   const saved = await api.save(abortSignal, 'alice', { channelName: 'default', botToken: 'top-secret' });
   assert.equal(saved.bot.botUserName, 'aila_test_bot');
@@ -84,7 +84,7 @@ test('rejects invalid Telegram bot identities and webhook configurations', async
   const abortSignal = new AbortController().signal;
   await userRepository.setup(abortSignal);
   await repository.setup(abortSignal);
-  await userRepository.insert(abortSignal, new User('alice', 'hash', true, false));
+  await userRepository.insert(abortSignal, new User('alice', null, 'hash', true, false));
   const invalidTokenApi = new TelegramConfigurationApi(
     repository,
     new FakeTelegramBotApiClient(new TelegramBotApiError('Not Found', 404, null)),

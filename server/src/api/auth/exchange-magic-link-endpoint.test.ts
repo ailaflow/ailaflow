@@ -25,7 +25,7 @@ test('exchanges a valid magic link without requiring authentication', async () =
     deleteExpired: async () => {}
   };
   const users = {
-    tryGetUser: async () => new User('alice', 'hash', true, true)
+    tryGetUser: async () => new User('alice', null, 'hash', true, true)
   } as unknown as UserRepository;
   const authTokens = {
     upsert: async () => {}
