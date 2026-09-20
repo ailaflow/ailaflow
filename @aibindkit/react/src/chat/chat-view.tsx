@@ -1,11 +1,12 @@
-import type {
-  ChatContextUsageUpdate,
-  ChatMessageMetadata,
-  ChatMessageType,
-  ChatMessageUpdate,
-  CompletedChatMessage,
-  LlmMessage,
-  ToolCall
+import {
+  LlmMessageContentExtractor,
+  type ChatContextUsageUpdate,
+  type ChatMessageMetadata,
+  type ChatMessageType,
+  type ChatMessageUpdate,
+  type CompletedChatMessage,
+  type LlmMessageContent,
+  type ToolCall
 } from '@aibindkit/core';
 import { Fragment, useLayoutEffect, useRef } from 'react';
 import { ChatComposerView } from './chat-composer-view';
@@ -162,7 +163,7 @@ function ChatUpdateView(props: {
 
 function ChatMessageView(props: { message: CompletedChatMessage; userName: string; assistantName: string }) {
   if (props.message.message.role === 'user') {
-    return <UserMessageView content={getContent(props.message.message)} userName={props.userName} />;
+    return <UserMessageView message={props.message} userName={props.userName} />;
   }
   if (props.message.message.role === 'assistant') {
     return <AssistantMessageView message={props.message} assistantName={props.assistantName} />;
@@ -173,12 +174,12 @@ function ChatMessageView(props: { message: CompletedChatMessage; userName: strin
   return <SystemMessageView message={props.message} />;
 }
 
-function UserMessageView(props: { content: string | null; userName: string }) {
+function UserMessageView(props: { message: CompletedChatMessage; userName: string }) {
   return (
     <div className="abk-chat-row abk-chat-row-user">
       <article className="abk-chat-bubble abk-chat-bubble-user">
         <div className="abk-chat-label">{props.userName}</div>
-        <MessageContentView content={props.content} />
+        <MessageContentView content={LlmMessageContentExtractor.tryExtract(props.message.message)} />
       </article>
     </div>
   );
@@ -186,7 +187,7 @@ function UserMessageView(props: { content: string | null; userName: string }) {
 
 function AssistantMessageView(props: { message: CompletedChatMessage; assistantName: string }) {
   const toolCalls = getToolCalls(props.message);
-  const content = getContent(props.message.message);
+  const content = LlmMessageContentExtractor.tryExtract(props.message.message);
 
   return (
     <div className="abk-chat-row abk-chat-row-assistant">
@@ -204,14 +205,14 @@ function SystemMessageView(props: { message: CompletedChatMessage }) {
     <div className="abk-chat-row abk-chat-row-system">
       <article className="abk-chat-bubble abk-chat-bubble-system">
         <div className="abk-chat-label">{props.message.message.role}</div>
-        <MessageContentView content={getContent(props.message.message)} />
+        <MessageContentView content={LlmMessageContentExtractor.tryExtract(props.message.message)} />
       </article>
     </div>
   );
 }
 
 function ToolMessageView(props: { message: CompletedChatMessage }) {
-  const content = getContent(props.message.message);
+  const content = LlmMessageContentExtractor.tryExtract(props.message.message)?.content ?? null;
   const parsedContent = parseMaybeJson(content);
   const label = getToolResponseLabel(parsedContent);
   const isError = hasRootError(parsedContent);
@@ -241,12 +242,17 @@ function ToolMessageView(props: { message: CompletedChatMessage }) {
   );
 }
 
-function MessageContentView(props: { content: string | null }) {
+function MessageContentView(props: { content: LlmMessageContent | null }) {
   if (!props.content) {
     return null;
   }
 
-  return <div className="abk-chat-content">{props.content}</div>;
+  return (
+    <>
+      {props.content.reasoning && <div className="abk-chat-reasoning">{props.content.reasoning}</div>}
+      {props.content.content && <div className="abk-chat-content">{props.content.content}</div>}
+    </>
+  );
 }
 
 function ToolCallsView(props: { toolCalls: ToolCall[] }) {
@@ -348,25 +354,4 @@ function limitText(value: string, maxLength: number) {
     return text;
   }
   return `${text.slice(0, maxLength - 1)}...`;
-}
-
-function getContent(message: LlmMessage): string | null {
-  if (message.content) {
-    if (typeof message.content === 'string' && message.content.length > 0) {
-      return message.content;
-    }
-    if (Array.isArray(message.content) && message.content?.[0].type === 'text') {
-      return message.content[0].text;
-    }
-  }
-  if (message.role === 'assistant') {
-    const m = message as any;
-    for (const fieldName of ['reasoning', 'reasoning_content']) {
-      const value = m[fieldName];
-      if (typeof value === 'string' && value.length > 0) {
-        return value;
-      }
-    }
-  }
-  return null;
 }

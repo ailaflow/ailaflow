@@ -184,6 +184,18 @@
   white-space: pre-wrap;
 }
 
+.abk-chat-reasoning {
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.abk-chat-reasoning + .abk-chat-content {
+  margin-top: 4px;
+}
+
 .abk-chat-failure {
   width: 100%;
   max-width: 840px;
