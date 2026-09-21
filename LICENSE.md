@@ -6,7 +6,7 @@ This AilaFlow Fair-Code License 1.0 (the **"License"**) governs the use of AilaF
 
 By using, copying, modifying, or otherwise exercising rights in the Software, you agree to this License.
 
-**N4NO.com** is referred to in this License as the **"Licensor"**.
+**N4NO.com**, EU VAT identification number **PL5581820551**, is referred to in this License as the **"Licensor"**.
 
 ---
 
