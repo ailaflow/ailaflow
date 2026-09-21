@@ -1,4 +1,4 @@
-import { ProcessExecutionVariableValues } from '@ailaflow/shared';
+import { ProcessExecutionVariableValues, TaskSubmissionMode } from '@ailaflow/shared';
 import { UserChatSessionProvider } from '../chat-session/user-chat-session-provider';
 import { AssignedTaskRepository } from '../repositories/task/assigned-task-repository';
 import { UserAssignedTaskProvider } from './user-assigned-task-provider';
@@ -33,13 +33,17 @@ export class AssignedTaskCompleter {
     isTest: boolean,
     userName: string,
     taskId: string,
-    outputValues: ProcessExecutionVariableValues
+    outputValues: ProcessExecutionVariableValues,
+    isAiTool: boolean
   ): Promise<void> {
     const userAssignedTask = await this.userAssignedTaskProvider.tryGetCompletable(abortSignal, isTest, userName, taskId);
     if (!userAssignedTask) {
       throw new AssignedTaskCompleterError('Task not found or not assigned to the user');
     }
     const { assignedTask, task } = userAssignedTask;
+    if (isAiTool && task.submissionMode !== TaskSubmissionMode.AI_TOOL_OR_TASK_FORM) {
+      throw new AssignedTaskCompleterError('This task cannot be submitted using an AI tool. Use its task form instead.');
+    }
 
     const chatSession = await this.userChatSessionProvider.get(abortSignal, isTest, userName, assignedTask.channelName);
     if (!chatSession) {

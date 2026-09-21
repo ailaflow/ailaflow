@@ -1,5 +1,5 @@
 import { ToolContext } from '@aibindkit/llm';
-import { ProcessDisplay } from '@ailaflow/shared';
+import { ProcessDisplay, ProcessExecutionMode } from '@ailaflow/shared';
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { MyProcessListQuerier } from '../../queriers/my-process-list/my-process-list-querier';
@@ -8,7 +8,13 @@ import { GetMyProcessesTool } from './get-my-processes-tool';
 
 test('returns the requested page of supported processes', async () => {
   const response = {
-    processes: [{ name: 'example', description: 'Example process' }],
+    processes: [
+      {
+        name: 'example',
+        description: 'Example process',
+        executionMode: ProcessExecutionMode.AI_TOOL_OR_START_FORM
+      }
+    ],
     totalCount: 31,
     page: 2,
     pageSize: 30
@@ -26,7 +32,12 @@ test('returns the requested page of supported processes', async () => {
 
   const result = await tool.handle(new AbortController().signal, createContext('alice'), { page: 2 });
 
-  assert.deepEqual(result.content, response);
+  assert.deepEqual(result.content, {
+    processes: [{ name: 'example', description: 'Example process', canStartWithAiTool: true }],
+    totalCount: 31,
+    page: 2,
+    pageSize: 30
+  });
 });
 
 function createContext(userName: string): ToolContext {

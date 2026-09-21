@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
 import test from 'node:test';
-import { TaskFinalizationPolicy } from '@ailaflow/shared';
+import { TaskFinalizationPolicy, TaskSubmissionMode } from '@ailaflow/shared';
 import { SqliteDatabase, SqliteDatabases } from '../../core/sqlite-databases';
 import { User } from '../user/user';
 import { SqliteUserRepository } from '../user/sqlite-user-repository';
@@ -43,7 +43,8 @@ test('assigned tasks can be upserted and queried by task and user', async () => 
     0,
     null,
     1000,
-    null
+    null,
+    TaskSubmissionMode.AI_TOOL_OR_TASK_FORM
   );
   const task2 = new Task(
     'task_2',
@@ -60,7 +61,8 @@ test('assigned tasks can be upserted and queried by task and user', async () => 
     0,
     null,
     1001,
-    null
+    null,
+    TaskSubmissionMode.AI_TOOL_OR_TASK_FORM
   );
   await taskRepository.insert(abortSignal, task1);
   await taskRepository.insert(abortSignal, task2);

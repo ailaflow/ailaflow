@@ -1,5 +1,6 @@
 import * as z from 'zod/v4';
 import { formDefinitionSchema, jsonSchema } from '../process';
+import { taskSubmissionModeSchema } from '../task';
 import { paginationRequestSchema, paginationResponseSchema } from './pagination';
 
 // getMyTasks
@@ -7,6 +8,7 @@ import { paginationRequestSchema, paginationResponseSchema } from './pagination'
 const myTaskLiteDtoSchema = z.object({
   id: z.string(),
   title: z.string(),
+  submissionMode: taskSubmissionModeSchema,
   createdAt: z.number(),
   completedAt: z.number().optional(),
   isOutdated: z.boolean().optional()

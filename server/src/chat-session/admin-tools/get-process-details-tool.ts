@@ -1,6 +1,7 @@
 import { ToolContext, ZodTool, ZodToolExecutionResult } from '@aibindkit/llm';
 import z from 'zod/v4';
 import { ProcessManager } from '../../process/process-manager';
+import { ProcessExecutionMode } from '@ailaflow/shared';
 
 const inputSchema = z.object({
   processName: z.string()
@@ -27,7 +28,8 @@ export class GetProcessDetailsTool extends ZodTool<Arg> {
       content: {
         name: process.name,
         description: process.description,
-        startVariableSchemas: process.startVariableSchemas
+        startVariableSchemas: process.startVariableSchemas,
+        canStartWithAiTool: process.executionMode === ProcessExecutionMode.AI_TOOL_OR_START_FORM
       }
     };
   }

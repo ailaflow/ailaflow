@@ -4,6 +4,7 @@ import test from 'node:test';
 import { ProcessManager } from '../../process/process-manager';
 import { Process } from '../../repositories/process/process';
 import { GetProcessDetailsTool } from './get-process-details-tool';
+import { ProcessExecutionMode } from '@ailaflow/shared';
 
 test('returns process details', async () => {
   const processManager = {
@@ -12,6 +13,7 @@ test('returns process details', async () => {
       return {
         name: 'example',
         description: 'Example process',
+        executionMode: ProcessExecutionMode.AI_TOOL_OR_START_FORM,
         startVariableSchemas: {
           title: { type: 'string' }
         }
@@ -25,6 +27,7 @@ test('returns process details', async () => {
   assert.deepEqual(result.content, {
     name: 'example',
     description: 'Example process',
+    canStartWithAiTool: true,
     startVariableSchemas: {
       title: { type: 'string' }
     }

@@ -1,4 +1,4 @@
-import { GetMyTasksResponse } from '@ailaflow/shared';
+import { GetMyTasksResponse, TaskSubmissionMode } from '@ailaflow/shared';
 import { SqliteDatabase, SqliteDatabases } from '../../core/sqlite-databases';
 import { MyTaskListQuerier } from './my-task-list-querier';
 
@@ -37,6 +37,7 @@ export class SqliteMyTaskListQuerier implements MyTaskListQuerier {
       SELECT
         t.id,
         t.title,
+        t.submissionMode,
         t.deadline,
         t.createdAt,
         COALESCE(at.completedAt, t.finalizedAt) AS completedAt
@@ -52,6 +53,7 @@ export class SqliteMyTaskListQuerier implements MyTaskListQuerier {
       const rows = statement.all(isTest ? 1 : 0, userName, pageSize, (page - 1) * pageSize) as {
         id: string;
         title: string;
+        submissionMode: TaskSubmissionMode;
         deadline: number | null;
         createdAt: number;
         completedAt: number | null;
@@ -62,6 +64,7 @@ export class SqliteMyTaskListQuerier implements MyTaskListQuerier {
         tasks: rows.map(row => ({
           id: row.id,
           title: row.title,
+          submissionMode: row.submissionMode,
           createdAt: row.createdAt,
           ...(row.completedAt === null ? {} : { completedAt: row.completedAt }),
           ...(row.completedAt === null && row.deadline !== null && now > row.deadline ? { isOutdated: true } : {})

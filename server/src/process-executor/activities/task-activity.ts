@@ -52,7 +52,8 @@ export const taskStepActivity = createSignalActivity<TaskStep, ProcessExecutionG
       step.properties.metadataVariableName ?? null,
       step.properties.inputVariableNames,
       step.properties.outputVariableNames.length > 0 ? outputVariableSchemas : null,
-      step.properties.form
+      step.properties.form,
+      step.properties.submissionMode
     );
   },
   afterSignal: async (step: TaskStep, { variables }: ProcessExecutionGlobalState, _: object, payload: SignalPayload) => {

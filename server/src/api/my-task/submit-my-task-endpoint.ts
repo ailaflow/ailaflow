@@ -22,7 +22,7 @@ export class SubmitMyTaskEndpoint implements Endpoint {
     const { isTest, userName } = authToken.maybeOverrideTestUserName(request.testUserName);
 
     try {
-      await this.assignedTaskCompleter.complete(abortSignal, isTest, userName, request.taskId, request.outputValues);
+      await this.assignedTaskCompleter.complete(abortSignal, isTest, userName, request.taskId, request.outputValues, false);
     } catch (e) {
       if (e instanceof AssignedTaskCompleterError) {
         throw new EndpointError(e.message, 400);

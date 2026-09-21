@@ -1,4 +1,4 @@
-import { FormDefinition, JsonSchema, taskFinalizationPolicySchema } from '@ailaflow/shared';
+import { FormDefinition, JsonSchema, taskFinalizationPolicySchema, taskSubmissionModeSchema } from '@ailaflow/shared';
 import { SqliteDatabase, SqliteDatabases } from '../../core/sqlite-databases';
 import { Task } from './task';
 import { TaskRepository } from './task-repository';
@@ -23,6 +23,7 @@ export class SqliteTaskRepository implements TaskRepository {
           inputVariableNames TEXT NOT NULL,
           outputVariableSchemas TEXT,
           form TEXT,
+          submissionMode INTEGER NOT NULL,
           deadline INTEGER,
           finalizationPolicy TEXT NOT NULL,
           metadataVariableName TEXT,
@@ -51,6 +52,7 @@ export class SqliteTaskRepository implements TaskRepository {
           inputVariableNames,
           outputVariableSchemas,
           form,
+          submissionMode,
           deadline,
           finalizationPolicy,
           metadataVariableName,
@@ -72,6 +74,7 @@ export class SqliteTaskRepository implements TaskRepository {
             inputVariableNames: string;
             outputVariableSchemas: string | null;
             form: string | null;
+            submissionMode: number;
             deadline: number | null;
             finalizationPolicy: string;
             metadataVariableName: string | null;
@@ -98,6 +101,7 @@ export class SqliteTaskRepository implements TaskRepository {
           inputVariableNames,
           outputVariableSchemas,
           form,
+          submissionMode,
           deadline,
           finalizationPolicy,
           metadataVariableName,
@@ -106,7 +110,7 @@ export class SqliteTaskRepository implements TaskRepository {
           createdAt,
           finalizedAt
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `);
       statement.run(
         task.id,
@@ -117,6 +121,7 @@ export class SqliteTaskRepository implements TaskRepository {
         JSON.stringify(task.inputVariableNames),
         serializeOutputVariableSchemas(task.outputVariableSchemas),
         serializeForm(task.form),
+        task.submissionMode,
         task.deadline,
         task.finalizationPolicy,
         task.metadataVariableName,
@@ -183,6 +188,7 @@ function deserializeTask(row: {
   inputVariableNames: string;
   outputVariableSchemas: string | null;
   form: string | null;
+  submissionMode: number;
   deadline: number | null;
   finalizationPolicy: string;
   metadataVariableName: string | null;
@@ -206,7 +212,8 @@ function deserializeTask(row: {
     row.finalizationRequestCount,
     row.nextFinalizationAttemptAt,
     row.createdAt,
-    row.finalizedAt
+    row.finalizedAt,
+    taskSubmissionModeSchema.parse(row.submissionMode)
   );
 }
 

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
 import test from 'node:test';
-import { TaskFinalizationPolicy } from '@ailaflow/shared';
+import { TaskFinalizationPolicy, TaskSubmissionMode } from '@ailaflow/shared';
 import { UserChatSessionProvider } from '../chat-session/user-chat-session-provider';
 import { SqliteDatabase, SqliteDatabases } from '../core/sqlite-databases';
 import { UserAccessExpressionUserQuerier } from '../queriers/user-access-expression/user-access-expression-user-querier';
@@ -44,7 +44,8 @@ test('rolls back task creation when assignment creation fails', async () => {
       null,
       [],
       null,
-      { css: '', html: '', js: '', inputExamples: [] }
+      { css: '', html: '', js: '', inputExamples: [] },
+      TaskSubmissionMode.AI_TOOL_OR_TASK_FORM
     )
   );
 

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
 import test from 'node:test';
-import { TaskFinalizationPolicy } from '@ailaflow/shared';
+import { TaskFinalizationPolicy, TaskSubmissionMode } from '@ailaflow/shared';
 import { SqliteDatabase, SqliteDatabases } from '../../core/sqlite-databases';
 import { AssignedTask } from '../../repositories/task/assigned-task';
 import { SqliteAssignedTaskRepository } from '../../repositories/task/sqlite-assigned-task-repository';
@@ -45,7 +45,8 @@ test('queries tasks assigned to the current user', async () => {
       0,
       null,
       1000,
-      null
+      null,
+      TaskSubmissionMode.AI_TOOL_OR_TASK_FORM
     )
   );
   await taskRepository.insert(
@@ -65,7 +66,8 @@ test('queries tasks assigned to the current user', async () => {
       0,
       null,
       1001,
-      null
+      null,
+      TaskSubmissionMode.TASK_FORM
     )
   );
   await taskRepository.insert(
@@ -85,7 +87,8 @@ test('queries tasks assigned to the current user', async () => {
       0,
       null,
       1002,
-      4500
+      4500,
+      TaskSubmissionMode.AI_TOOL_OR_TASK_FORM
     )
   );
   await taskRepository.insert(
@@ -105,7 +108,8 @@ test('queries tasks assigned to the current user', async () => {
       0,
       null,
       1003,
-      null
+      null,
+      TaskSubmissionMode.AI_TOOL_OR_TASK_FORM
     )
   );
   await taskRepository.insert(
@@ -125,7 +129,8 @@ test('queries tasks assigned to the current user', async () => {
       0,
       null,
       1004,
-      null
+      null,
+      TaskSubmissionMode.AI_TOOL_OR_TASK_FORM
     )
   );
   await taskRepository.insert(
@@ -145,7 +150,8 @@ test('queries tasks assigned to the current user', async () => {
       0,
       null,
       1005,
-      null
+      null,
+      TaskSubmissionMode.AI_TOOL_OR_TASK_FORM
     )
   );
 
@@ -163,12 +169,14 @@ test('queries tasks assigned to the current user', async () => {
       {
         id: 'task_1',
         title: 'Open outdated',
+        submissionMode: TaskSubmissionMode.AI_TOOL_OR_TASK_FORM,
         createdAt: 1000,
         isOutdated: true
       },
       {
         id: 'task_2',
         title: 'Open current',
+        submissionMode: TaskSubmissionMode.TASK_FORM,
         createdAt: 1001
       }
     ],
@@ -181,12 +189,14 @@ test('queries tasks assigned to the current user', async () => {
       {
         id: 'task_3',
         title: 'Completed outdated',
+        submissionMode: TaskSubmissionMode.AI_TOOL_OR_TASK_FORM,
         createdAt: 1002,
         completedAt: 4500
       },
       {
         id: 'task_5',
         title: 'No deadline',
+        submissionMode: TaskSubmissionMode.AI_TOOL_OR_TASK_FORM,
         createdAt: 1004,
         completedAt: 4700
       }
@@ -200,12 +210,14 @@ test('queries tasks assigned to the current user', async () => {
       {
         id: 'task_1',
         title: 'Open outdated',
+        submissionMode: TaskSubmissionMode.AI_TOOL_OR_TASK_FORM,
         createdAt: 1000,
         isOutdated: true
       },
       {
         id: 'task_2',
         title: 'Open current',
+        submissionMode: TaskSubmissionMode.TASK_FORM,
         createdAt: 1001
       }
     ],
@@ -218,6 +230,7 @@ test('queries tasks assigned to the current user', async () => {
       {
         id: 'task_6',
         title: 'Test task',
+        submissionMode: TaskSubmissionMode.AI_TOOL_OR_TASK_FORM,
         createdAt: 1005
       }
     ],

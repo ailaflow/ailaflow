@@ -1,4 +1,4 @@
-import { FormDefinition, JsonSchema, TaskFinalizationPolicy } from '@ailaflow/shared';
+import { FormDefinition, JsonSchema, TaskFinalizationPolicy, TaskSubmissionMode } from '@ailaflow/shared';
 import { TaskVariables } from './task-variables';
 import { randomUUID } from 'node:crypto';
 
@@ -13,7 +13,8 @@ export class Task {
     form: FormDefinition | null,
     deadline: number | null,
     finalizationPolicy: TaskFinalizationPolicy,
-    metadataVariableName: string | null
+    metadataVariableName: string | null,
+    submissionMode: TaskSubmissionMode
   ) {
     const id = randomUUID();
     const createdAt = Date.now();
@@ -32,7 +33,8 @@ export class Task {
       0,
       null,
       createdAt,
-      null
+      null,
+      submissionMode
     );
   }
 
@@ -53,7 +55,8 @@ export class Task {
     public readonly finalizationRequestCount: number,
     public readonly nextFinalizationAttemptAt: number | null,
     public readonly createdAt: number,
-    public readonly finalizedAt: number | null
+    public readonly finalizedAt: number | null,
+    public readonly submissionMode: TaskSubmissionMode
   ) {}
 
   public canReadInputVariable(variableName: string): boolean {

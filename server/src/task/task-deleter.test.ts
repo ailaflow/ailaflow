@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { TaskFinalizationPolicy } from '@ailaflow/shared';
+import { TaskFinalizationPolicy, TaskSubmissionMode } from '@ailaflow/shared';
 import { PersistedExecutionRepository } from '../repositories/persisted-execution/persisted-execution-repository';
 import { TaskRepository } from '../repositories/task/task-repository';
 import { Task } from '../repositories/task/task';
@@ -23,7 +23,8 @@ test('deletes the persisted execution and task', async () => {
     0,
     null,
     1000,
-    null
+    null,
+    TaskSubmissionMode.AI_TOOL_OR_TASK_FORM
   );
   const taskRepository = createTaskRepository(task, async id => {
     calls.push(`task:${id}`);

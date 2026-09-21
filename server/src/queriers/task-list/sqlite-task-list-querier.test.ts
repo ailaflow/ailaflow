@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
 import test from 'node:test';
-import { TaskFinalizationPolicy } from '@ailaflow/shared';
+import { TaskFinalizationPolicy, TaskSubmissionMode } from '@ailaflow/shared';
 import { SqliteDatabase, SqliteDatabases } from '../../core/sqlite-databases';
 import { AssignedTask } from '../../repositories/task/assigned-task';
 import { SqliteAssignedTaskRepository } from '../../repositories/task/sqlite-assigned-task-repository';
@@ -126,7 +126,8 @@ async function insertTask(
       0,
       null,
       createdAt,
-      finalizedAt
+      finalizedAt,
+      TaskSubmissionMode.AI_TOOL_OR_TASK_FORM
     )
   );
 }

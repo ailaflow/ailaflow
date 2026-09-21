@@ -2,6 +2,7 @@ import { ToolContext, ZodTool, ZodToolExecutionResult } from '@aibindkit/llm';
 import z from 'zod/v4';
 import { MyTaskListQuerier } from '../../queriers/my-task-list/my-task-list-querier';
 import { ChatSessionId } from '../chat-session-id';
+import { TaskSubmissionMode } from '@ailaflow/shared';
 
 const PAGE_SIZE = 30;
 
@@ -23,8 +24,28 @@ export class GetMyTasksTool extends ZodTool<Arg> {
 
   public async handle(abortSignal: AbortSignal, { sessionId }: ToolContext, arg: Arg): Promise<ZodToolExecutionResult> {
     const chatSessionId = ChatSessionId.decode(sessionId);
+    const response = await this.querier.query(
+      abortSignal,
+      chatSessionId.isTest(),
+      chatSessionId.userName,
+      arg.onlyOpen,
+      arg.page,
+      PAGE_SIZE
+    );
     return {
-      content: await this.querier.query(abortSignal, chatSessionId.isTest(), chatSessionId.userName, arg.onlyOpen, arg.page, PAGE_SIZE)
+      content: {
+        tasks: response.tasks.map(task => ({
+          id: task.id,
+          title: task.title,
+          createdAt: new Date(task.createdAt).toISOString(),
+          completedAt: task.completedAt ? new Date(task.completedAt).toISOString() : undefined,
+          isOutdated: task.isOutdated,
+          canSubmitWithAiTool: task.submissionMode === TaskSubmissionMode.AI_TOOL_OR_TASK_FORM
+        })),
+        page: response.page,
+        pageSize: response.pageSize,
+        totalCount: response.totalCount
+      }
     };
   }
 }

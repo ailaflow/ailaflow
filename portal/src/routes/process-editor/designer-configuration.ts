@@ -11,6 +11,7 @@ import {
   ProcessDefinition,
   PROCESS_VERSION,
   TaskFinalizationPolicy,
+  TaskSubmissionMode,
   BranchStep
 } from '@ailaflow/shared';
 
@@ -132,6 +133,7 @@ const taskStep: Omit<TaskStep, 'id'> = {
     outputVariableNames: [],
     userExpression: { type: 'string', value: '' },
     form: createEmptyFormDefinition(),
+    submissionMode: TaskSubmissionMode.AI_TOOL_OR_TASK_FORM,
     finalizationPolicy: TaskFinalizationPolicy.ALL_ASSIGNEES
   }
 };

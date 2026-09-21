@@ -2,7 +2,7 @@ import { useStepEditor } from 'sequential-workflow-designer-react';
 import { DesignerEditorView } from '../../../views/process-editor/designer/designer-editor-view';
 import { StepEditorProps } from './step-editor';
 import { StringEditorPropertyView } from '../../../views/process-editor/designer/string-editor-property-view';
-import { ProcessDefinition, TaskFinalizationPolicy, TaskDeadlinePreset, TaskStep } from '@ailaflow/shared';
+import { ProcessDefinition, TaskFinalizationPolicy, TaskDeadlinePreset, TaskStep, TaskSubmissionMode } from '@ailaflow/shared';
 import { EditorPropertyView } from '../../../views/process-editor/designer/editor-property-view';
 import { EnabledSubValuePreviewView } from '../../../views/process-editor/designer/sub-value-preview-view';
 import { DefinitionPath } from '../../../core/definition-path';
@@ -43,6 +43,17 @@ export function TaskStepEditor(props: StepEditorProps) {
       <EditorPropertyView label="Form">
         <EnabledSubValuePreviewView onEdit={editForm}>Form</EnabledSubValuePreviewView>
       </EditorPropertyView>
+
+      <DropdownPropertyView<TaskSubmissionMode>
+        label="Submission Mode"
+        value={properties.submissionMode}
+        options={[
+          { label: 'AI using tools and task form', value: TaskSubmissionMode.AI_TOOL_OR_TASK_FORM },
+          { label: 'Task form only', value: TaskSubmissionMode.TASK_FORM }
+        ]}
+        onValueChanged={value => setProperty('submissionMode', value)}
+        error={errors['properties.submissionMode']}
+      />
 
       <VariableSelectorPropertyView
         label="Input Variables"

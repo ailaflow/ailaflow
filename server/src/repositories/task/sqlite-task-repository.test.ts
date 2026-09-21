@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
 import test from 'node:test';
-import { TaskFinalizationPolicy } from '@ailaflow/shared';
+import { TaskFinalizationPolicy, TaskSubmissionMode } from '@ailaflow/shared';
 import { SqliteDatabase, SqliteDatabases } from '../../core/sqlite-databases';
 import { Task } from './task';
 import { SqliteTaskRepository } from './sqlite-task-repository';
@@ -35,7 +35,8 @@ test('task insert does not overwrite an existing task', async () => {
       2,
       1500,
       1000,
-      null
+      null,
+      TaskSubmissionMode.TASK_FORM
     )
   );
 
@@ -57,7 +58,8 @@ test('task insert does not overwrite an existing task', async () => {
         0,
         null,
         2000,
-        null
+        null,
+        TaskSubmissionMode.AI_TOOL_OR_TASK_FORM
       )
     )
   );
@@ -66,7 +68,7 @@ test('task insert does not overwrite an existing task', async () => {
     ...db
       .prepare(
         `
-        SELECT title, isTest, createdBy, executionId, inputVariableNames, outputVariableSchemas, finalizationPolicy, metadataVariableName, finalizationRequestCount, nextFinalizationAttemptAt, createdAt, finalizedAt
+        SELECT title, isTest, createdBy, executionId, inputVariableNames, outputVariableSchemas, submissionMode, finalizationPolicy, metadataVariableName, finalizationRequestCount, nextFinalizationAttemptAt, createdAt, finalizedAt
         FROM tasks
         WHERE id = ?
       `
@@ -79,6 +81,7 @@ test('task insert does not overwrite an existing task', async () => {
     executionId: string;
     inputVariableNames: string;
     outputVariableSchemas: string | null;
+    submissionMode: number;
     finalizationPolicy: string;
     metadataVariableName: string | null;
     finalizationRequestCount: number;
@@ -93,6 +96,7 @@ test('task insert does not overwrite an existing task', async () => {
     executionId: 'execution_1',
     inputVariableNames: '[]',
     outputVariableSchemas: null,
+    submissionMode: TaskSubmissionMode.TASK_FORM,
     finalizationPolicy: TaskFinalizationPolicy.ALL_ASSIGNEES,
     metadataVariableName: 'originalMetadata',
     finalizationRequestCount: 2,
@@ -124,7 +128,8 @@ test('task can be finalized', async () => {
     3,
     null,
     1000,
-    null
+    null,
+    TaskSubmissionMode.TASK_FORM
   );
 
   await repository.setup(abortSignal);
@@ -168,7 +173,8 @@ test('task finalization request count can be incremented and decremented', async
     0,
     null,
     1000,
-    null
+    null,
+    TaskSubmissionMode.AI_TOOL_OR_TASK_FORM
   );
 
   await repository.setup(abortSignal);
@@ -186,7 +192,19 @@ test('concurrent task finalization request increments are serialized', async () 
   const dbs = { modelDb: new SqliteDatabase(db) } as SqliteDatabases;
   const abortSignal = new AbortController().signal;
   const repository = new SqliteTaskRepository(dbs);
-  const task = Task.create('Task', false, 'creator_1', 'execution_1', [], null, null, null, TaskFinalizationPolicy.ALL_ASSIGNEES, null);
+  const task = Task.create(
+    'Task',
+    false,
+    'creator_1',
+    'execution_1',
+    [],
+    null,
+    null,
+    null,
+    TaskFinalizationPolicy.ALL_ASSIGNEES,
+    null,
+    TaskSubmissionMode.AI_TOOL_OR_TASK_FORM
+  );
 
   await repository.setup(abortSignal);
   await repository.insert(abortSignal, task);
@@ -206,7 +224,19 @@ test('next task finalization attempt can be scheduled', async () => {
   const dbs = { modelDb: new SqliteDatabase(db) } as SqliteDatabases;
   const abortSignal = new AbortController().signal;
   const repository = new SqliteTaskRepository(dbs);
-  const task = Task.create('Task', false, 'creator_1', 'execution_1', [], null, null, null, TaskFinalizationPolicy.ALL_ASSIGNEES, null);
+  const task = Task.create(
+    'Task',
+    false,
+    'creator_1',
+    'execution_1',
+    [],
+    null,
+    null,
+    null,
+    TaskFinalizationPolicy.ALL_ASSIGNEES,
+    null,
+    TaskSubmissionMode.AI_TOOL_OR_TASK_FORM
+  );
 
   await repository.setup(abortSignal);
   await repository.insert(abortSignal, task);
@@ -242,7 +272,8 @@ test('task can be fetched by id', async () => {
     0,
     null,
     1000,
-    null
+    null,
+    TaskSubmissionMode.TASK_FORM
   );
 
   await repository.setup(abortSignal);
@@ -284,7 +315,8 @@ test('task can be deleted with its assignments', async () => {
       0,
       null,
       1000,
-      null
+      null,
+      TaskSubmissionMode.AI_TOOL_OR_TASK_FORM
     )
   );
   await assignedTaskRepository.upsert(abortSignal, AssignedTask.create('task_1', 'user_1', 'default'));

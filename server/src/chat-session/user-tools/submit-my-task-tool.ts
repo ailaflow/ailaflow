@@ -20,7 +20,7 @@ export class SubmitMyTaskTool extends ZodTool<Arg> {
     const isTest = chatSessionId.isTest();
 
     try {
-      await this.completer.complete(abortSignal, isTest, chatSessionId.userName, arg.taskId, arg.outputValues);
+      await this.completer.complete(abortSignal, isTest, chatSessionId.userName, arg.taskId, arg.outputValues, true);
     } catch (e) {
       if (e instanceof AssignedTaskCompleterError) {
         return {
