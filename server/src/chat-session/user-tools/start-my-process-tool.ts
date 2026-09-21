@@ -3,7 +3,7 @@ import z from 'zod/v4';
 import { ChatSessionId } from '../chat-session-id';
 import { UserProcessProvider } from '../../process/user-process-provider';
 import { ProcessExecutionContext } from '../../process-executor/process-execution-context';
-import { ProcessExecutionOutcomeType, ResourceNameNormalizer } from '@ailaflow/shared';
+import { ProcessExecutionMode, ProcessExecutionOutcomeType, ResourceNameNormalizer } from '@ailaflow/shared';
 import { ProcessExecutor } from '../../process-executor/process-executor';
 import { EventBus } from '../../events/event-bus';
 import { ProcessExecutionFinishedEvent } from '../../events/process-execution/process-execution-finished-event';
@@ -35,7 +35,14 @@ export class StartMyProcessTool extends ZodTool<Arg> {
     if (!process) {
       return {
         content: {
-          error: `Cannot find /${processName} process, or you do not have access to it`
+          error: `Process /${processName} was not found, or you do not have access to it.`
+        }
+      };
+    }
+    if (process.executionMode !== ProcessExecutionMode.AI_TOOL_OR_START_FORM) {
+      return {
+        content: {
+          error: `Process /${processName} cannot be started using an AI tool. Use its start form instead.`
         }
       };
     }
@@ -72,8 +79,8 @@ export class StartMyProcessTool extends ZodTool<Arg> {
       });
 
       let m = `Process /${processName} started successfully. Execution ID: "${execution.id}"\n`;
-      m += `The process is still running, so this tool is returning before it finishes. Execution will continue in the background.\n`;
-      m += `The system will notify you when the process finishes.`;
+      m += `Process /${processName} is still running, so this tool is returning before it finishes. It will continue running in the background.\n`;
+      m += `You will be notified when /${processName} finishes.`;
 
       return {
         content: {
@@ -92,7 +99,7 @@ export class StartMyProcessTool extends ZodTool<Arg> {
     if (outcome.type === ProcessExecutionOutcomeType.PAUSED) {
       return {
         content: {
-          paused: 'The execution of the process has been paused (this may happen if a task was created)'
+          paused: `Process /${processName} has paused (this can happen when it creates a task).`
         }
       };
     }

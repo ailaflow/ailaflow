@@ -1,4 +1,4 @@
-import { GetMyProcessesResponse, MyProcessLiteDto, ProcessDisplay } from '@ailaflow/shared';
+import { GetMyProcessesResponse, MyProcessLiteDto, ProcessDisplay, ProcessExecutionMode } from '@ailaflow/shared';
 import { SqliteDatabase, SqliteDatabases } from '../../core/sqlite-databases';
 import { SqliteResourceAccessQueryBuilder } from '../../core/sqlite-resource-access-query-builder';
 import { MyProcessListQuerier } from './my-process-list-querier';
@@ -33,7 +33,7 @@ export class SqliteMyProcessListQuerier implements MyProcessListQuerier {
 
       const statement = db.prepare(`
       WITH ${this.resourceAccessQueryBuilder.buildAccessibleResourcesCte()}
-      SELECT p.name, p.description
+      SELECT p.name, p.description, p.executionMode
       FROM processes p
       JOIN accessible_resources ar
         ON ar.resource_id = 'process:' || p.name
@@ -55,11 +55,13 @@ export class SqliteMyProcessListQuerier implements MyProcessListQuerier {
 interface MyProcessRow {
   name: string;
   description: string;
+  executionMode: ProcessExecutionMode;
 }
 
 function mapRows(rows: MyProcessRow[]): MyProcessLiteDto[] {
   return rows.map(row => ({
     name: row.name,
-    description: row.description
+    description: row.description,
+    executionMode: row.executionMode
   }));
 }

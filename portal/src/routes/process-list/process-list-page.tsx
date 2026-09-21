@@ -10,7 +10,7 @@ import { toolError, toolSuccess, toolWait } from '@aibindkit/react';
 import { useNavigate, useSearchParams } from 'react-router';
 import { useAiStore } from '../common/admin-portal';
 import { useState } from 'react';
-import { ProcessDisplay } from '@ailaflow/shared';
+import { ProcessDisplay, ProcessExecutionMode } from '@ailaflow/shared';
 
 const PAGE_SIZE = 20;
 
@@ -116,10 +116,13 @@ export function ProcessListPage() {
           getValue: process => process.userAccessExpression.trim() || 'all'
         },
         {
-          id: 'isPausable',
-          title: 'Pausable',
+          id: 'attributes',
+          title: 'Attributes',
           width: '10%',
-          getValue: process => (process.isPausable ? 'yes' : '')
+          getValue: process =>
+            [process.isPausable ? 'pausable' : null, process.executionMode === ProcessExecutionMode.START_FORM ? 'only form' : null]
+              .filter(Boolean)
+              .join(', ')
         }
       ]}
       rows={data.processes}

@@ -1,5 +1,5 @@
 import { ProcessListQuerier } from './process-list-querier';
-import { GetProcessesResponse, ProcessDisplay, ProcessLiteDto } from '@ailaflow/shared';
+import { GetProcessesResponse, ProcessDisplay, ProcessExecutionMode, ProcessLiteDto } from '@ailaflow/shared';
 import { SqliteDatabase, SqliteDatabases } from '../../core/sqlite-databases';
 
 export class SqliteProcessListQuerier implements ProcessListQuerier {
@@ -22,7 +22,7 @@ export class SqliteProcessListQuerier implements ProcessListQuerier {
         .prepare(`SELECT COUNT(*) AS totalCount FROM processes WHERE display <= ? AND instr(name, ?) > 0`)
         .get(displayAtLeast, searchTerm) as { totalCount: number };
       const statement = db.prepare(`
-      SELECT name, description, userAccessExpression, display, isPausable
+      SELECT name, description, userAccessExpression, display, executionMode, isPausable
       FROM processes
       WHERE display <= ?
         AND instr(name, ?) > 0
@@ -45,6 +45,7 @@ interface ProcessRow {
   description: string;
   userAccessExpression: string;
   display: ProcessDisplay;
+  executionMode: ProcessExecutionMode;
   isPausable: number;
 }
 
@@ -54,6 +55,7 @@ function mapRows(rows: ProcessRow[]): ProcessLiteDto[] {
     description: row.description,
     userAccessExpression: row.userAccessExpression,
     display: row.display,
+    executionMode: row.executionMode,
     isPausable: row.isPausable === 1
   }));
 }

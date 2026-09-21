@@ -3,7 +3,7 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
-import { PROCESS_VERSION, ProcessDefinition, ProcessDisplay, ScriptDefinition } from '@ailaflow/shared';
+import { PROCESS_VERSION, ProcessDefinition, ProcessDisplay, ProcessExecutionMode, ScriptDefinition } from '@ailaflow/shared';
 import { Process } from '../repositories/process/process';
 import { SandboxHostPaths } from './sandbox-host-paths';
 import { SandboxMaterializer } from './sandbox-materializer';
@@ -68,5 +68,16 @@ function createProcess(hash: string, script: ScriptDefinition): Process {
       version: PROCESS_VERSION
     }
   };
-  return new Process('process', '', '', ProcessDisplay.LISTED, definition, hash, null, 1, false);
+  return new Process(
+    'process',
+    '',
+    '',
+    ProcessDisplay.LISTED,
+    ProcessExecutionMode.AI_TOOL_OR_START_FORM,
+    definition,
+    hash,
+    null,
+    1,
+    false
+  );
 }

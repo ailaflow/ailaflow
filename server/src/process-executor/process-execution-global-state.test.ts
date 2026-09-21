@@ -10,7 +10,7 @@ import { ProcessScriptExecutor } from './services/process-script-executor';
 import { ProcessExecutionSnapshotTransformer } from './process-execution-snapshot-transformer';
 import { AgentSessionRunner } from './services/agent-session-runner';
 import { ProcessExecutionContext } from './process-execution-context';
-import { PROCESS_VERSION, ProcessDisplay } from '@ailaflow/shared';
+import { PROCESS_VERSION, ProcessDisplay, ProcessExecutionMode } from '@ailaflow/shared';
 import { Notifier } from '../notification/notifier';
 
 const context: ProcessExecutionContext = {
@@ -96,6 +96,7 @@ function createTestProcess(): Process {
     '',
     '',
     ProcessDisplay.LISTED,
+    ProcessExecutionMode.AI_TOOL_OR_START_FORM,
     {
       sequence: [],
       properties: {

@@ -4,7 +4,7 @@ import { ProcessExecutionContext } from '../../process-executor/process-executio
 import { ProcessManager } from '../../process/process-manager';
 import { ChatSessionId } from '../chat-session-id';
 import { ProcessExecutor } from '../../process-executor/process-executor';
-import { ProcessExecutionOutcomeType } from '@ailaflow/shared';
+import { ProcessExecutionMode, ProcessExecutionOutcomeType, ResourceNameNormalizer } from '@ailaflow/shared';
 import { EventBus } from '../../events/event-bus';
 import { ProcessExecutionFinishedEvent } from '../../events/process-execution/process-execution-finished-event';
 
@@ -26,11 +26,19 @@ export class TestProcessTool extends ZodTool<Arg> {
 
   public async handle(abortSignal: AbortSignal, { sessionId }: ToolContext, arg: Arg): Promise<ZodToolExecutionResult> {
     const { userName } = ChatSessionId.decode(sessionId);
-    const process = await this.processManager.tryGetByName(abortSignal, arg.name);
+    const processName = ResourceNameNormalizer.removePrefix(arg.name, '/');
+    const process = await this.processManager.tryGetByName(abortSignal, processName);
     if (!process) {
       return {
         content: {
-          error: `Cannot find the "${arg.name}" process`
+          error: `Process /${processName} was not found.`
+        }
+      };
+    }
+    if (process.executionMode !== ProcessExecutionMode.AI_TOOL_OR_START_FORM) {
+      return {
+        content: {
+          error: `Process /${processName} cannot be tested using an AI tool. Its execution mode is start-form only.`
         }
       };
     }
@@ -65,9 +73,9 @@ export class TestProcessTool extends ZodTool<Arg> {
         this.eventBus.publish(new ProcessExecutionFinishedEvent(execution.id, context, process.name, outcome));
       });
 
-      let m = `Process /${arg.name} started successfully. Execution ID: "${execution.id}"\n`;
-      m += `The process is still running, so this tool is returning before it finishes. Execution will continue in the background.\n`;
-      m += `The system will notify you when the process finishes.`;
+      let m = `Test execution of /${processName} started successfully. Execution ID: "${execution.id}"\n`;
+      m += `The test execution is still running, so this tool is returning before it finishes. It will continue running in the background.\n`;
+      m += `You will be notified when the test execution of /${processName} finishes.`;
 
       return {
         content: {
@@ -86,7 +94,7 @@ export class TestProcessTool extends ZodTool<Arg> {
     if (outcome.type === ProcessExecutionOutcomeType.PAUSED) {
       return {
         content: {
-          paused: 'The execution of the process has been paused (this may happen if a task was created)'
+          paused: `Test execution of /${processName} has paused (this can happen when the process creates a task).`
         }
       };
     }

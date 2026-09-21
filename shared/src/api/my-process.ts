@@ -1,12 +1,20 @@
 import * as z from 'zod/v4';
-import { FormDefinition, formDefinitionSchema, jsonSchema, ProcessDisplay, ProcessExecutionOutcome } from '../process';
+import {
+  FormDefinition,
+  formDefinitionSchema,
+  jsonSchema,
+  ProcessDisplay,
+  ProcessExecutionMode,
+  ProcessExecutionOutcome
+} from '../process';
 import { paginationRequestSchema, paginationResponseSchema } from './pagination';
 
 // getMyProcesses
 
 const myProcessLiteDtoSchema = z.object({
   name: z.string(),
-  description: z.string()
+  description: z.string(),
+  executionMode: z.enum(ProcessExecutionMode)
 });
 
 export const getMyProcessesRequestSchema = paginationRequestSchema.extend({

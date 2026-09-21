@@ -1,4 +1,4 @@
-import { JsonSchema, ProcessDefinition, ProcessDisplay } from '@ailaflow/shared';
+import { JsonSchema, ProcessDefinition, ProcessDisplay, ProcessExecutionMode } from '@ailaflow/shared';
 import { ProcessRepository, ProcessRepositoryError } from './process-repository';
 import { Process } from './process';
 import { SqliteDatabase, SqliteDatabases } from '../../core/sqlite-databases';
@@ -10,6 +10,7 @@ interface ProcessRow {
   description: string;
   userAccessExpression: string;
   display: ProcessDisplay;
+  executionMode: ProcessExecutionMode;
   nSteps: number;
   isPausable: number;
   startVariableSchemas: string;
@@ -32,6 +33,7 @@ export class SqliteProcessRepository implements ProcessRepository {
           description TEXT NOT NULL,
           userAccessExpression TEXT NOT NULL,
           display INTEGER NOT NULL,
+          executionMode INTEGER NOT NULL DEFAULT 0 CHECK (executionMode IN (0, 1)),
           nSteps INTEGER NOT NULL,
           isPausable INTEGER NOT NULL DEFAULT 0 CHECK (isPausable IN (0, 1)),
           startVariableSchemas TEXT NOT NULL,
@@ -39,6 +41,10 @@ export class SqliteProcessRepository implements ProcessRepository {
           definitionHash TEXT NOT NULL
         ) STRICT
       `);
+      const columns = db.prepare('PRAGMA table_info(processes)').all() as unknown as { name: string }[];
+      if (!columns.some(column => column.name === 'executionMode')) {
+        db.exec('ALTER TABLE processes ADD COLUMN executionMode INTEGER NOT NULL DEFAULT 0 CHECK (executionMode IN (0, 1))');
+      }
     });
   }
 
@@ -47,15 +53,16 @@ export class SqliteProcessRepository implements ProcessRepository {
       await this.db.write(db => {
         const statement = db.prepare(`
           INSERT INTO processes (
-            name, description, userAccessExpression, display, nSteps, isPausable, startVariableSchemas, serializedDefinition, definitionHash
+            name, description, userAccessExpression, display, executionMode, nSteps, isPausable, startVariableSchemas, serializedDefinition, definitionHash
           )
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `);
         statement.run(
           process.name,
           process.description,
           process.userAccessExpression,
           process.display,
+          process.executionMode,
           process.nSteps,
           process.isPausable ? 1 : 0,
           serializeStartVariableSchemas(process.startVariableSchemas),
@@ -79,6 +86,7 @@ export class SqliteProcessRepository implements ProcessRepository {
           description = ?,
           userAccessExpression = ?,
           display = ?,
+          executionMode = ?,
           nSteps = ?,
           isPausable = ?,
           startVariableSchemas = ?,
@@ -90,6 +98,7 @@ export class SqliteProcessRepository implements ProcessRepository {
         process.description,
         process.userAccessExpression,
         process.display,
+        process.executionMode,
         process.nSteps,
         process.isPausable ? 1 : 0,
         serializeStartVariableSchemas(process.startVariableSchemas),
@@ -118,7 +127,7 @@ export class SqliteProcessRepository implements ProcessRepository {
   public async tryGetByName(_: AbortSignal, name: string): Promise<Process | null> {
     return this.db.read(db => {
       const statement = db.prepare(`
-        SELECT name, description, userAccessExpression, display, nSteps, isPausable, startVariableSchemas, serializedDefinition, definitionHash
+        SELECT name, description, userAccessExpression, display, executionMode, nSteps, isPausable, startVariableSchemas, serializedDefinition, definitionHash
         FROM processes
         WHERE name = ?
         LIMIT 1
@@ -131,6 +140,7 @@ export class SqliteProcessRepository implements ProcessRepository {
             row.description,
             row.userAccessExpression,
             row.display,
+            row.executionMode,
             JSON.parse(row.serializedDefinition) as ProcessDefinition,
             row.definitionHash,
             JSON.parse(row.startVariableSchemas) as Record<string, JsonSchema>,

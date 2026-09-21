@@ -28,6 +28,7 @@ export class GetProcessEndpoint implements Endpoint {
         description: process.description,
         userAccessExpression: process.userAccessExpression,
         display: process.display,
+        executionMode: process.executionMode,
         definition: process.definition
       }
     };

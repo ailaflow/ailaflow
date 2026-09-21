@@ -2,6 +2,7 @@ import {
   SandboxLiteDto,
   ProcessDefinition,
   ProcessDisplay,
+  ProcessExecutionMode,
   ProcessDto,
   ProcessStepValidator,
   ProcessRootValidator,
@@ -48,6 +49,7 @@ export interface ProcessEditorData {
   userAccessExpression: string;
   userAccessExpressionError: string | null;
   display: ProcessDisplay;
+  executionMode: ProcessExecutionMode;
   definition: WrappedDefinition<ProcessDefinition>;
   selectedStepId: string | null;
 }
@@ -60,6 +62,7 @@ export interface ProcessEditorState extends ProcessEditorData {
   setDescription(description: string, throwIfInvalid: boolean): void;
   setUserAccessExpression(userAccessExpression: string, throwIfInvalid: boolean): void;
   setDisplay(display: ProcessDisplay): void;
+  setExecutionMode(executionMode: ProcessExecutionMode): void;
   setDefinition(definition: WrappedDefinition, markDirty: boolean): void;
   getStep<S extends Step>(id: string, requiredType?: S['type']): S;
   notifyDefinitionChange(): void;
@@ -92,6 +95,7 @@ function createData(props: Omit<ProcessEditorContextProps, 'children'>): Process
   const description = props.process?.description ?? '';
   const userAccessExpression = props.process?.userAccessExpression ?? '';
   const display = props.process?.display ?? ProcessDisplay.FEATURED;
+  const executionMode = props.process?.executionMode ?? ProcessExecutionMode.AI_TOOL_OR_START_FORM;
   const controller = SequentialWorkflowDesignerController.create();
 
   return {
@@ -111,6 +115,7 @@ function createData(props: Omit<ProcessEditorContextProps, 'children'>): Process
     userAccessExpression,
     userAccessExpressionError: null,
     display,
+    executionMode,
     selectedStepId: null,
     definition,
     isDirty: props.process ? false : true
@@ -148,6 +153,7 @@ export function ProcessEditorContext(props: ProcessEditorContextProps) {
           current.description !== data.description ||
           current.userAccessExpression !== data.userAccessExpression ||
           current.display !== data.display ||
+          current.executionMode !== data.executionMode ||
           DesignerUtils.calcDefinitionHash(current.definition.value) !== definitionHash
         ) {
           return {};
@@ -194,6 +200,10 @@ export function ProcessEditorContext(props: ProcessEditorContextProps) {
 
     function setDisplay(display: ProcessDisplay) {
       update({ display, isDirty: true });
+    }
+
+    function setExecutionMode(executionMode: ProcessExecutionMode) {
+      update({ executionMode, isDirty: true });
     }
 
     function setDefinition(newDefinition: WrappedDefinition<ProcessDefinition>, markDirty: boolean) {
@@ -286,6 +296,7 @@ export function ProcessEditorContext(props: ProcessEditorContextProps) {
       setDescription,
       setUserAccessExpression,
       setDisplay,
+      setExecutionMode,
       setDefinition,
       notifyDefinitionChange,
       getStep,

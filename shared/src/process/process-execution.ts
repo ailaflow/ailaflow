@@ -1,5 +1,10 @@
 export type ProcessExecutionVariableValues = Record<string, unknown>;
 
+export enum ProcessExecutionMode {
+  AI_TOOL_OR_START_FORM = 0,
+  START_FORM = 1
+}
+
 export enum ProcessExecutionOutcomeType {
   FAILED = 1,
   FINISHED = 2,

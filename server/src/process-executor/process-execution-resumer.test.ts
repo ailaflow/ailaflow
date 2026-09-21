@@ -11,7 +11,7 @@ import { EventBus } from '../events/event-bus';
 import { ProcessExecutionResumeListenerStore } from './process-execution-resume-listener-store';
 import { ProcessManager } from '../process/process-manager';
 import { ProcessDefinitionUpgrader } from '../process/process-definition-upgrader';
-import { PROCESS_VERSION, ProcessDisplay } from '@ailaflow/shared';
+import { PROCESS_VERSION, ProcessDisplay, ProcessExecutionMode } from '@ailaflow/shared';
 
 test('process execution resumer continues when the process hash changed', async () => {
   const abortSignal = new AbortController().signal;
@@ -77,6 +77,7 @@ function createTestProcess(hash: string): Process {
     '',
     '',
     ProcessDisplay.LISTED,
+    ProcessExecutionMode.AI_TOOL_OR_START_FORM,
     {
       sequence: [],
       properties: {

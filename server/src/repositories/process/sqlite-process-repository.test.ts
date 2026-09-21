@@ -7,7 +7,7 @@ import { SqliteResourceAccessRepository } from '../resource-access/sqlite-resour
 import { ProcessResourceId } from './process-resource-id';
 import { SqliteProcessRepository } from './sqlite-process-repository';
 import { Process } from './process';
-import { ProcessDefinition, ProcessDisplay, PROCESS_VERSION } from '@ailaflow/shared';
+import { ProcessDefinition, ProcessDisplay, ProcessExecutionMode, PROCESS_VERSION } from '@ailaflow/shared';
 
 test('persists and updates process metadata', async () => {
   const { abortSignal, db, processRepository } = await setup();
@@ -16,13 +16,45 @@ test('persists and updates process metadata', async () => {
   await processRepository.insert(abortSignal, process);
   assert.equal((await processRepository.tryGetByName(abortSignal, process.name))?.isPausable, true);
   assert.equal((await processRepository.tryGetByName(abortSignal, process.name))?.display, ProcessDisplay.LISTED);
+  assert.equal(
+    (await processRepository.tryGetByName(abortSignal, process.name))?.executionMode,
+    ProcessExecutionMode.AI_TOOL_OR_START_FORM
+  );
 
   process.isPausable = false;
   process.display = ProcessDisplay.FEATURED;
+  process.executionMode = ProcessExecutionMode.START_FORM;
   await processRepository.update(abortSignal, process);
   assert.equal((await processRepository.tryGetByName(abortSignal, process.name))?.isPausable, false);
   assert.equal((await processRepository.tryGetByName(abortSignal, process.name))?.display, ProcessDisplay.FEATURED);
+  assert.equal((await processRepository.tryGetByName(abortSignal, process.name))?.executionMode, ProcessExecutionMode.START_FORM);
 
+  db.close();
+});
+
+test('adds executionMode to an existing processes table', async () => {
+  const db = new DatabaseSync(':memory:', { open: true });
+  db.exec(`
+    CREATE TABLE processes (
+      name TEXT PRIMARY KEY,
+      description TEXT NOT NULL,
+      userAccessExpression TEXT NOT NULL,
+      display INTEGER NOT NULL,
+      nSteps INTEGER NOT NULL,
+      isPausable INTEGER NOT NULL DEFAULT 0 CHECK (isPausable IN (0, 1)),
+      startVariableSchemas TEXT NOT NULL,
+      serializedDefinition TEXT NOT NULL,
+      definitionHash TEXT NOT NULL
+    ) STRICT
+  `);
+  insertProcess(db, 'alpha');
+
+  const dbs = { modelDb: new SqliteDatabase(db) } as SqliteDatabases;
+  const processRepository = new SqliteProcessRepository(dbs);
+  const abortSignal = new AbortController().signal;
+  await processRepository.setup(abortSignal);
+
+  assert.equal((await processRepository.tryGetByName(abortSignal, 'alpha'))?.executionMode, ProcessExecutionMode.AI_TOOL_OR_START_FORM);
   db.close();
 });
 
@@ -95,7 +127,18 @@ function insertProcess(db: DatabaseSync, name: string): void {
 }
 
 function createProcess(name: string, isPausable: boolean): Process {
-  return new Process(name, '', '', ProcessDisplay.LISTED, createDefinition(), 'hash', null, 0, isPausable);
+  return new Process(
+    name,
+    '',
+    '',
+    ProcessDisplay.LISTED,
+    ProcessExecutionMode.AI_TOOL_OR_START_FORM,
+    createDefinition(),
+    'hash',
+    null,
+    0,
+    isPausable
+  );
 }
 
 function createDefinition(): ProcessDefinition {

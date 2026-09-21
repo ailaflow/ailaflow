@@ -4,7 +4,7 @@ import test from 'node:test';
 import { SqliteDatabase, SqliteDatabases } from '../../core/sqlite-databases';
 import { SqliteProcessRepository } from '../../repositories/process/sqlite-process-repository';
 import { SqliteProcessListQuerier } from './sqlite-process-list-querier';
-import { ProcessDisplay } from '@ailaflow/shared';
+import { ProcessDisplay, ProcessExecutionMode } from '@ailaflow/shared';
 
 test('queries a name-ordered page of processes', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
@@ -14,7 +14,7 @@ test('queries a name-ordered page of processes', async () => {
   const querier = new SqliteProcessListQuerier(dbs);
 
   await processRepository.setup(abortSignal);
-  insertProcess(db, 'charlie', true, ProcessDisplay.HIDDEN);
+  insertProcess(db, 'charlie', true, ProcessDisplay.HIDDEN, ProcessExecutionMode.START_FORM);
   insertProcess(db, 'alpha', false, ProcessDisplay.FEATURED);
   insertProcess(db, 'bravo', false, ProcessDisplay.LISTED);
 
@@ -25,6 +25,7 @@ test('queries a name-ordered page of processes', async () => {
         description: 'charlie description',
         userAccessExpression: '',
         display: ProcessDisplay.HIDDEN,
+        executionMode: ProcessExecutionMode.START_FORM,
         isPausable: true
       }
     ],
@@ -108,7 +109,13 @@ test('treats SQL wildcards and quotes as literal process search text', async () 
   }
 });
 
-function insertProcess(db: DatabaseSync, name: string, isPausable: boolean, display: ProcessDisplay): void {
+function insertProcess(
+  db: DatabaseSync,
+  name: string,
+  isPausable: boolean,
+  display: ProcessDisplay,
+  executionMode = ProcessExecutionMode.AI_TOOL_OR_START_FORM
+): void {
   db.prepare(
     `
     INSERT INTO processes (
@@ -116,13 +123,14 @@ function insertProcess(db: DatabaseSync, name: string, isPausable: boolean, disp
       description,
       userAccessExpression,
       display,
+      executionMode,
       nSteps,
       isPausable,
       startVariableSchemas,
       serializedDefinition,
       definitionHash
     )
-    VALUES (?, ?, '', ?, 0, ?, '{}', '{}', 'hash')
+    VALUES (?, ?, '', ?, ?, 0, ?, '{}', '{}', 'hash')
   `
-  ).run(name, `${name} description`, display, isPausable ? 1 : 0);
+  ).run(name, `${name} description`, display, executionMode, isPausable ? 1 : 0);
 }

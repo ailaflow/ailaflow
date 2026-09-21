@@ -1,5 +1,5 @@
 import { ToolContext, ZodTool, ZodToolExecutionResult } from '@aibindkit/llm';
-import { ProcessDisplay } from '@ailaflow/shared';
+import { ProcessDisplay, ProcessExecutionMode } from '@ailaflow/shared';
 import z from 'zod/v4';
 import { MyProcessListQuerier } from '../../queriers/my-process-list/my-process-list-querier';
 import { ChatSessionId } from '../chat-session-id';
@@ -19,8 +19,18 @@ export class GetMyProcessesTool extends ZodTool<Arg> {
 
   public async handle(abortSignal: AbortSignal, { sessionId }: ToolContext, arg: Arg): Promise<ZodToolExecutionResult> {
     const { userName } = ChatSessionId.decode(sessionId);
+    const response = await this.querier.query(abortSignal, userName, arg.page, PAGE_SIZE, ProcessDisplay.LISTED);
     return {
-      content: await this.querier.query(abortSignal, userName, arg.page, PAGE_SIZE, ProcessDisplay.LISTED)
+      content: {
+        page: response.page,
+        pageSize: response.pageSize,
+        totalCount: response.totalCount,
+        processes: response.processes.map(p => ({
+          name: p.name,
+          description: p.description,
+          canStartWithAiTool: p.executionMode === ProcessExecutionMode.AI_TOOL_OR_START_FORM
+        }))
+      }
     };
   }
 }

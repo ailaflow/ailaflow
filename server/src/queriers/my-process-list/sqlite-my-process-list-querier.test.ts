@@ -11,7 +11,7 @@ import { SqliteUserAttributesRepository } from '../../repositories/user-attribut
 import { SqliteUserRepository } from '../../repositories/user/sqlite-user-repository';
 import { User } from '../../repositories/user/user';
 import { SqliteMyProcessListQuerier } from './sqlite-my-process-list-querier';
-import { ProcessDisplay } from '@ailaflow/shared';
+import { ProcessDisplay, ProcessExecutionMode } from '@ailaflow/shared';
 
 test('queries a page containing only processes accessible to the current user', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
@@ -35,7 +35,7 @@ test('queries a page containing only processes accessible to the current user', 
 
   insertProcess(db, 'charlie', ProcessDisplay.HIDDEN);
   insertProcess(db, 'alpha', ProcessDisplay.FEATURED);
-  insertProcess(db, 'bravo', ProcessDisplay.LISTED);
+  insertProcess(db, 'bravo', ProcessDisplay.LISTED, ProcessExecutionMode.START_FORM);
   await grantAccess(abortSignal, resourceAccessRepository, 'alpha', '');
   await grantAccess(abortSignal, resourceAccessRepository, 'bravo', '');
   await grantAccess(abortSignal, resourceAccessRepository, 'charlie', '');
@@ -44,7 +44,8 @@ test('queries a page containing only processes accessible to the current user', 
     processes: [
       {
         name: 'bravo',
-        description: 'bravo description'
+        description: 'bravo description',
+        executionMode: ProcessExecutionMode.START_FORM
       }
     ],
     totalCount: 2,
@@ -55,7 +56,8 @@ test('queries a page containing only processes accessible to the current user', 
     processes: [
       {
         name: 'alpha',
-        description: 'alpha description'
+        description: 'alpha description',
+        executionMode: ProcessExecutionMode.AI_TOOL_OR_START_FORM
       }
     ],
     totalCount: 1,
@@ -67,7 +69,12 @@ test('queries a page containing only processes accessible to the current user', 
   db.close();
 });
 
-function insertProcess(db: DatabaseSync, name: string, display: ProcessDisplay): void {
+function insertProcess(
+  db: DatabaseSync,
+  name: string,
+  display: ProcessDisplay,
+  executionMode = ProcessExecutionMode.AI_TOOL_OR_START_FORM
+): void {
   db.prepare(
     `
     INSERT INTO processes (
@@ -75,14 +82,15 @@ function insertProcess(db: DatabaseSync, name: string, display: ProcessDisplay):
       description,
       userAccessExpression,
       display,
+      executionMode,
       nSteps,
       startVariableSchemas,
       serializedDefinition,
       definitionHash
     )
-    VALUES (?, ?, '', ?, 0, '{}', '{}', 'hash')
+    VALUES (?, ?, '', ?, ?, 0, '{}', '{}', 'hash')
   `
-  ).run(name, `${name} description`, display);
+  ).run(name, `${name} description`, display, executionMode);
 }
 
 async function grantAccess(

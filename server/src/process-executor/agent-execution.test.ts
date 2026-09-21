@@ -8,6 +8,7 @@ import {
   PROCESS_VERSION,
   ProcessLiteDto,
   ProcessDisplay,
+  ProcessExecutionMode,
   ProcessExecutionOutcome,
   ProcessExecutionOutcomeType
 } from '@ailaflow/shared';
@@ -54,6 +55,7 @@ function createProcess(name: string, sequence: ProcessDefinition['sequence'] = [
     `${name} description`,
     'admin_only',
     ProcessDisplay.LISTED,
+    ProcessExecutionMode.AI_TOOL_OR_START_FORM,
     {
       sequence,
       properties: {
@@ -99,6 +101,7 @@ function createHarness(
           description: process.description,
           userAccessExpression: process.userAccessExpression,
           display: process.display,
+          executionMode: process.executionMode,
           isPausable: process.isPausable
         }))
       };

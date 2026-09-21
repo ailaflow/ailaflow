@@ -45,6 +45,7 @@ export function ProcessEditor() {
         name: state.name,
         userAccessExpression: state.userAccessExpression,
         display: state.display,
+        executionMode: state.executionMode,
         definition: state.definition.value,
         hash
       });
@@ -80,9 +81,11 @@ export function ProcessEditor() {
             userAccessExpression={state.userAccessExpression}
             userAccessExpressionError={state.userAccessExpressionError}
             display={state.display}
+            executionMode={state.executionMode}
             onDescriptionChange={description => state.setDescription(description, false)}
             onUserAccessExpressionChange={userAccessExpression => state.setUserAccessExpression(userAccessExpression, false)}
             onDisplayChange={state.setDisplay}
+            onExecutionModeChange={state.setExecutionMode}
           />
         ) : undefined
       }
