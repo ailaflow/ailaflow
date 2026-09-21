@@ -5,7 +5,6 @@ import { createEmptyFormDefinition, toolboxConfiguration } from './designer-conf
 import { ObjectCloner, Sequence, Step, Uid } from 'sequential-workflow-designer';
 import {
   AgentStep,
-  anyStepSchema,
   BranchNameValidator,
   BranchStep,
   NotificationStep,
@@ -130,37 +129,37 @@ export function useProcessEditorAi(state: ProcessEditorState, save: () => Promis
           return newStep;
         },
         async insertWorkflowStep(arg) {
-          const parseResult = anyStepSchema.safeParse(arg.step);
-          if (!parseResult.success) {
-            return toolError(`Invalid step JSON: ${parseResult.error.message}; no step was inserted`);
+          const stepOrError = DesignerUtils.tryParseAndValidateStep(arg.step, state.stepValidator, state.definition.value);
+          if (typeof stepOrError === 'string') {
+            return toolError(`${stepOrError}; no step was inserted`);
           }
           const found = state.walker.findParentSequence(state.definition.value, arg.targetStepId);
           if (!found) {
             return toolError('No target workflow step was found with the provided ID; no step was inserted');
           }
-          found.parentSequence.splice(arg.placement === 'before' ? found.index : found.index + 1, 0, parseResult.data);
+          found.parentSequence.splice(arg.placement === 'before' ? found.index : found.index + 1, 0, stepOrError);
 
           state.notifyDefinitionChange();
           return toolSuccess('Workflow step was inserted');
         },
         async replaceWorkflowStep(arg) {
-          const parseResult = anyStepSchema.safeParse(arg.step);
-          if (!parseResult.success) {
-            return toolError(`Invalid step JSON: ${parseResult.error.message}; no step was replaced`);
+          const stepOrError = DesignerUtils.tryParseAndValidateStep(arg.step, state.stepValidator, state.definition.value);
+          if (typeof stepOrError === 'string') {
+            return toolError(`${stepOrError}; no step was replaced`);
           }
           const found = state.walker.findParentSequence(state.definition.value, arg.step.id);
           if (!found) {
             return toolError('No workflow step was found with the replacement step ID; no step was replaced');
           }
-          found.parentSequence[found.index] = parseResult.data;
+          found.parentSequence[found.index] = stepOrError;
 
           state.notifyDefinitionChange();
           return toolSuccess('Workflow step was replaced');
         },
         async appendWorkflowStep(arg) {
-          const parseResult = anyStepSchema.safeParse(arg.step);
-          if (!parseResult.success) {
-            return toolError(`Invalid step JSON: ${parseResult.error.message}; no step was added`);
+          const stepOrError = DesignerUtils.tryParseAndValidateStep(arg.step, state.stepValidator, state.definition.value);
+          if (typeof stepOrError === 'string') {
+            return toolError(`${stepOrError}; no step was added`);
           }
           let sequence: Sequence;
           if (arg.targetStepId) {
@@ -172,7 +171,7 @@ export function useProcessEditorAi(state: ProcessEditorState, save: () => Promis
           } else {
             sequence = state.definition.value.sequence;
           }
-          sequence.push(parseResult.data);
+          sequence.push(stepOrError);
           state.notifyDefinitionChange();
           return toolSuccess('Workflow step was added');
         },

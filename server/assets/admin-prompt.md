@@ -113,7 +113,7 @@ Do not assume how multiple submissions are combined, how pending tasks are handl
 - **Execution:** Execute the branch whose name exactly matches the variable value, then continue after the branch step.
 - **Data:** Read the selector variable without modifying it; steps inside the selected branch use normal process data rules.
 
-### Finish
+### Return
 
 - **Purpose:** End the process at the current workflow position.
 - **Configuration:** Optional variables to return as the process result.

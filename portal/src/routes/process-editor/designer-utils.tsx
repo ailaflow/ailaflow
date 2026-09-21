@@ -1,5 +1,5 @@
 import { fnv1a } from '@aibindkit/core';
-import { ProcessDefinition } from '@ailaflow/shared';
+import { anyStepSchema, ProcessDefinition, ProcessStepValidator } from '@ailaflow/shared';
 import { BranchedStep, Sequence, SequentialStep, Step } from 'sequential-workflow-model';
 
 export class DesignerUtils {
@@ -22,5 +22,17 @@ export class DesignerUtils {
       return s.sequence;
     }
     throw new Error('Cannot find a sequence in the target step');
+  }
+
+  public static tryParseAndValidateStep(step: any, stepValidator: ProcessStepValidator, definition: ProcessDefinition): Step | string {
+    const parseResult = anyStepSchema.safeParse(step);
+    if (!parseResult.success) {
+      return `Invalid step JSON: ${parseResult.error.message}`;
+    }
+    const validationError = stepValidator.validate(parseResult.data, definition);
+    if (Object.keys(validationError).length > 0) {
+      return `Step contains validation errors: ${JSON.stringify(validationError)}`;
+    }
+    return step;
   }
 }
