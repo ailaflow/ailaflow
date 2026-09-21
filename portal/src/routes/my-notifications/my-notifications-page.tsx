@@ -62,6 +62,7 @@ export function MyNotificationsPage() {
             id: 'message',
             title: 'Message',
             width: '58%',
+            wrap: true,
             getValue: notification => notification.message
           },
           {

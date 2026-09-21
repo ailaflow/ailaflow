@@ -51,7 +51,7 @@ export interface PortalLayoutProps {
   children: React.ReactNode;
   userName: string;
   userItems: MenuItem[];
-  adminItems?: MenuItem[];
+  adminItems: MenuItem[] | null;
   onCommand(command: string): void;
 }
 

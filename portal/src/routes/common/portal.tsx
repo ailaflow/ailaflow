@@ -71,7 +71,7 @@ export function Portal(props: { children: React.ReactNode }) {
   const location = useLocation();
   const [licenseValidationError, setLicenseValidationError] = useState<string | null>(null);
   const selectedUserItems = selectMenuItems(userItems, location.pathname);
-  const selectedAdminItems = selectMenuItems(adminItems, location.pathname);
+  const selectedAdminItems = session.isAdmin ? selectMenuItems(adminItems, location.pathname) : null;
 
   useEffect(() => {
     const abortController = new AbortController();
