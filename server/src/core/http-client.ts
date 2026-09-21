@@ -15,8 +15,14 @@ export class HttpClientError extends Error {
 export class HttpClient {
   public constructor(private readonly baseUrl: URL) {}
 
-  public async json<T>(abortSignal: AbortSignal, method: string, path: string, body?: object): Promise<T> {
-    const response = await this.request(abortSignal, method, path, body);
+  public async json<T>(
+    abortSignal: AbortSignal,
+    method: string,
+    path: string,
+    body?: object,
+    headers?: Record<string, string>
+  ): Promise<T> {
+    const response = await this.request(abortSignal, method, path, body, headers);
     return (await response.json()) as T;
   }
 
@@ -25,9 +31,10 @@ export class HttpClient {
     method: string,
     path: string,
     body: object | undefined,
+    headers: Record<string, string> | undefined,
     handler: HttpSseHandler<Update>
   ): Promise<void> {
-    const response = await this.request(abortSignal, method, path, body);
+    const response = await this.request(abortSignal, method, path, body, headers);
     const reader = response.body?.getReader();
     if (!reader) {
       throw new HttpClientError('Response body is not readable', -1);
@@ -66,7 +73,13 @@ export class HttpClient {
     }
   }
 
-  public async request(abortSignal: AbortSignal, method: string, path: string, body?: object): Promise<Response> {
+  public async request(
+    abortSignal: AbortSignal,
+    method: string,
+    path: string,
+    body?: object,
+    headers?: Record<string, string>
+  ): Promise<Response> {
     let response: Response;
     try {
       const init: RequestInit = {
@@ -79,6 +92,13 @@ export class HttpClient {
           'Content-Type': 'application/json'
         };
         init.body = JSON.stringify(body);
+      }
+      if (headers) {
+        if (init.headers) {
+          Object.assign(init.headers, headers);
+        } else {
+          init.headers = headers;
+        }
       }
       const url = new URL(path, this.baseUrl);
       // console.log(`🔶 ${method} ${url}`);

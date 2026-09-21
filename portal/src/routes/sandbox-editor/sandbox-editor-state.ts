@@ -1,4 +1,4 @@
-import { SandboxDto, SandboxValidator, UpsertSandboxRequest } from '@ailaflow/shared';
+import { SandboxDto, SandboxValidator, SaveSandboxRequest } from '@ailaflow/shared';
 import { useMemo, useRef, useState } from 'react';
 import { SandboxSecret } from '../../views/sandbox-editor/sandbox-editor-view';
 
@@ -26,7 +26,7 @@ export interface SandboxEditorState extends SandboxEditorData {
   setSecretValue(id: number, value: string): void;
   getSecretNames(): string[];
   markSaved(): void;
-  toUpsertRequest(): UpsertSandboxRequest;
+  toSaveRequest(): SaveSandboxRequest;
 }
 
 export function useSandboxEditorState(sandbox?: SandboxDto): SandboxEditorState {
@@ -84,7 +84,8 @@ export function useSandboxEditorState(sandbox?: SandboxDto): SandboxEditorState 
         }
         return { ...current, isDirty: false };
       }),
-    toUpsertRequest: () => ({
+    toSaveRequest: () => ({
+      insert: data.isNew,
       name: data.name,
       description: data.description,
       isEnabled: data.isEnabled,

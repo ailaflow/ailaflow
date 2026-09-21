@@ -44,9 +44,10 @@ export const diagnoseHostResponseSchema = z.object({
 
 export type DiagnoseHostResponse = z.infer<typeof diagnoseHostResponseSchema>;
 
-// upsertSandbox
+// saveSandbox
 
-export const upsertSandboxRequestSchema = z.object({
+export const saveSandboxRequestSchema = z.object({
+  insert: z.boolean(),
   name: z.string(),
   isEnabled: z.boolean(),
   description: z.string(),
@@ -54,7 +55,7 @@ export const upsertSandboxRequestSchema = z.object({
   secrets: z.record(z.string(), z.string())
 });
 
-export type UpsertSandboxRequest = z.infer<typeof upsertSandboxRequestSchema>;
+export type SaveSandboxRequest = z.infer<typeof saveSandboxRequestSchema>;
 
 // executeSandboxCommand
 

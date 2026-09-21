@@ -5,13 +5,13 @@ import type {
   ExecuteSandboxCommandUpdate,
   GetSandboxResponse,
   GetSandboxesResponse,
-  UpsertSandboxRequest
+  SaveSandboxRequest
 } from '@ailaflow/shared';
 
 export class SandboxApiClient {
   public constructor(private readonly client: HttpClient) {}
 
-  public upsertSandbox(abortSignal: AbortSignal, request: UpsertSandboxRequest): Promise<void> {
+  public saveSandbox(abortSignal: AbortSignal, request: SaveSandboxRequest): Promise<void> {
     return this.client.json(abortSignal, 'POST', '/api/sandbox', request);
   }
 

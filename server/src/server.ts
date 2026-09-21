@@ -44,7 +44,7 @@ import { SandboxListQuerier } from './queriers/sandbox-list/sandbox-list-querier
 import { SqliteSandboxListQuerier } from './queriers/sandbox-list/sqlite-sandbox-list-querier';
 import { GetSandboxesEndpoint } from './api/sandbox/get-sandboxes-endpoint';
 import { GetSandboxEndpoint } from './api/sandbox/get-sandbox-endpoint';
-import { UpsertSandboxEndpoint } from './api/sandbox/upsert-sandbox-endpoint';
+import { SaveSandboxEndpoint } from './api/sandbox/save-sandbox-endpoint';
 import { DiagnoseHostEndpoint } from './api/sandbox/diagnose-host-endpoint';
 import { ExecuteSandboxCommandEndpoint } from './api/sandbox/execute-sandbox-command-endpoint';
 import { UserListQuerier } from './queriers/user-list/user-list-querier';
@@ -579,7 +579,7 @@ export class Server {
       new GetSandboxesEndpoint(sandboxListQuerier),
       new DiagnoseHostEndpoint(sandboxHostDiagnostician),
       new GetSandboxEndpoint(sandboxRepository),
-      new UpsertSandboxEndpoint(sandboxRepository, sandboxInstanceManager),
+      new SaveSandboxEndpoint(sandboxRepository, sandboxInstanceManager),
       new ExecuteSandboxCommandEndpoint(sandboxInstanceManager),
       new GetUsersEndpoint(userListQuerier),
       new GetUserEndpoint(userRepository, userAttributesRepository),

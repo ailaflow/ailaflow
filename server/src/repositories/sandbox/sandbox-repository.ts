@@ -10,6 +10,7 @@ export class SandboxRepositoryError extends Error {
 }
 
 export interface SandboxRepository extends Repository {
-  upsert(abortSignal: AbortSignal, sandbox: Sandbox, transaction?: Transaction): Promise<void>;
+  insert(abortSignal: AbortSignal, sandbox: Sandbox, transaction?: Transaction): Promise<void>;
+  update(abortSignal: AbortSignal, sandbox: Sandbox, transaction?: Transaction): Promise<void>;
   tryGet(abortSignal: AbortSignal, name: string): Promise<Sandbox | null>;
 }

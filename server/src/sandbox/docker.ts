@@ -34,9 +34,9 @@ export class Docker {
     abortSignal: AbortSignal,
     imageTag: string,
     internalPort: number,
-    options?: [name: '-v' | '--name', string][]
+    options?: [name: '-v' | '--network' | '--name' | '--env', string][]
   ): Promise<string> {
-    const args = ['run', '-d', '-p', `127.0.0.1::${internalPort}`];
+    const args = ['run', '--detach', '--security-opt', 'no-new-privileges', '--cap-drop', 'ALL', '--publish', `127.0.0.1::${internalPort}`];
     if (options) {
       for (const o of options) {
         args.push(o[0], o[1]);
@@ -59,12 +59,19 @@ export class Docker {
     return new URL(`http://${mapping}`);
   }
 
-  public async tryRemove(abortSignal: AbortSignal, containerIdOrName: string): Promise<boolean> {
-    const { stderr } = await this.execDocker(abortSignal, ['rm', '-f', containerIdOrName]);
-    return !stderr.includes('No such container');
+  public async tryRemove(abortSignal: AbortSignal, containerIdOrName: string) {
+    await this.execDocker(abortSignal, ['rm', '-f', containerIdOrName]);
   }
 
-  private execDocker(abortSignal: AbortSignal, args: string[]) {
-    return execFileAsync('docker', args, { cwd: this.hostCwd, signal: abortSignal });
+  public async createNetwork(abortSignal: AbortSignal, networkName: string) {
+    await this.execDocker(abortSignal, ['network', 'create', '--driver', 'bridge', networkName]);
+  }
+
+  public async tryRemoveNetwork(abortSignal: AbortSignal, networkName: string) {
+    await this.execDocker(abortSignal, ['network', 'rm', '-f', networkName]);
+  }
+
+  private execDocker(signal: AbortSignal, args: string[]) {
+    return execFileAsync('docker', args, { cwd: this.hostCwd, signal });
   }
 }

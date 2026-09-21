@@ -51,16 +51,37 @@ export class BridgeClient {
   public executeCommand(
     abortSignal: AbortSignal,
     request: ExecuteCommandRequest,
+    token: string,
     handler: HttpSseHandler<ExecuteCommandUpdate>
   ): Promise<void> {
-    return this.httpClient.sse<ExecuteCommandUpdate>(abortSignal, 'POST', '/command', request, handler);
+    return this.httpClient.sse<ExecuteCommandUpdate>(
+      abortSignal,
+      'POST',
+      '/command',
+      request,
+      {
+        'x-token': token
+      },
+      handler
+    );
   }
 
-  public listenRpc(abortSignal: AbortSignal, handler: HttpSseHandler<ListenRpcUpdate>): Promise<void> {
-    return this.httpClient.sse<ListenRpcUpdate>(abortSignal, 'GET', '/rpc', undefined, handler);
+  public listenRpc(abortSignal: AbortSignal, token: string, handler: HttpSseHandler<ListenRpcUpdate>): Promise<void> {
+    return this.httpClient.sse<ListenRpcUpdate>(
+      abortSignal,
+      'GET',
+      '/rpc',
+      undefined,
+      {
+        'x-token': token
+      },
+      handler
+    );
   }
 
-  public sendRpcReply(abortSignal: AbortSignal, request: SendRpcReplyRequest): Promise<void> {
-    return this.httpClient.json<void>(abortSignal, 'POST', '/rpc-reply', request);
+  public sendRpcReply(abortSignal: AbortSignal, token: string, request: SendRpcReplyRequest): Promise<void> {
+    return this.httpClient.json<void>(abortSignal, 'POST', '/rpc-reply', request, {
+      'x-token': token
+    });
   }
 }

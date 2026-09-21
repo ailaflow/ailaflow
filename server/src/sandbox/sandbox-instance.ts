@@ -11,7 +11,7 @@ import { CommandResult, SandboxRuntime } from './sandbox-runtime';
 
 export class SandboxInstance {
   public static async create(
-    abortSignal: AbortSignal,
+    signal: AbortSignal,
     runtimeFolderAbsolutePath: string,
     appDataFolderAbsolutePath: string,
     sandbox: Sandbox,
@@ -21,9 +21,9 @@ export class SandboxInstance {
 
     const materializer = new SandboxMaterializer(hostPaths);
 
-    await materializer.tryMaterializeSandbox(abortSignal, sandbox);
+    await materializer.tryMaterializeSandbox(signal, sandbox);
 
-    const runtime = await SandboxRuntime.create(abortSignal, hostPaths, sandbox.name, sandbox.secrets, rpcHandlerProvider);
+    const runtime = await SandboxRuntime.create(signal, hostPaths, sandbox.name, sandbox.token, sandbox.secrets, rpcHandlerProvider);
 
     const dependenciesInstaller = new SandboxDependenciesInstaller(runtime, hostPaths);
     const scriptExecutor = new SandboxScriptExecutor(runtime);

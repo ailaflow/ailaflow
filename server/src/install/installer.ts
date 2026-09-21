@@ -53,6 +53,7 @@ export class Installer {
       const user = await User.create(rootUserName, null, rootPassword, true, this.cipher);
       const attributes = UserAttributes.create(user, {});
       const defaultSandbox = Sandbox.create({
+        insert: true,
         name: 'default',
         description: 'Default sandbox',
         configuration: '',
@@ -62,7 +63,7 @@ export class Installer {
 
       await this.userRepository.insert(abortSignal, user);
       await this.userAttributesRepository.replace(abortSignal, attributes);
-      await this.sandboxRepository.upsert(abortSignal, defaultSandbox);
+      await this.sandboxRepository.insert(abortSignal, defaultSandbox);
     } finally {
       this.isInstalling = false;
     }

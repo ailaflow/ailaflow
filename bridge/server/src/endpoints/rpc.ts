@@ -1,5 +1,6 @@
 import type { HttpResponse, HttpServer } from '../core/http-server';
 import { SseResponse } from '../core/sse-response';
+import { TokenMiddleware } from '../core/token-middleware';
 
 interface Rpc {
   callId: number;
@@ -36,12 +37,14 @@ interface ListenRpcUpdate {
 
 const MAX_TIMEOUT = 60_000;
 
-export function setupRpcEndpoints(app: HttpServer): void {
+export function setupRpcEndpoints(app: HttpServer, tokenMiddleware: TokenMiddleware): void {
   const rpcs = new Map<number, Rpc>();
   let lastCallId = 0;
   let listener: ((rpc: Rpc, data: unknown) => void) | null = null;
 
-  app.get('/rpc', (_, res) => {
+  app.get('/rpc', (req, res) => {
+    tokenMiddleware.assert(req);
+
     const sse = new SseResponse<ListenRpcUpdate>(res);
 
     function dropOutdatedRequests(): void {
@@ -99,6 +102,8 @@ export function setupRpcEndpoints(app: HttpServer): void {
   });
 
   app.post<SendRpcReplyRequest>('/rpc-reply', (req, res) => {
+    tokenMiddleware.assert(req);
+
     const { callId, data, error } = req.body;
     const rpc = rpcs.get(callId);
     if (!rpc) {

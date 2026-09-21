@@ -20,40 +20,48 @@ export class SandboxRuntime {
    * @throws Error if sandbox setup failed.
    */
   public static async create(
-    abortSignal: AbortSignal,
+    signal: AbortSignal,
     hostPaths: SandboxHostPaths,
     name: string,
+    token: string,
     secrets: Record<string, string>,
     rpcHandlerProvider: SandboxRpcHandlerProvider
   ): Promise<SandboxRuntime> {
     const logger = new Logger(SandboxRuntime.name);
 
-    const imageTag = `ailaflow_sandbox_${name}`;
-    const dockerName = `ailaflow_sandbox_${name}`;
+    const id = `ailaflow_sandbox_${name}`;
     const buildArgs = {
       ...secrets,
       SANDBOX_NAME: name
     };
 
     const docker = new Docker(hostPaths.runtimeFolderAbsolutePath);
-    await docker.tryRemove(abortSignal, dockerName);
-    await docker.build(abortSignal, imageTag, hostPaths.dockerfileAbsolutePath, buildArgs);
-    logger.log(`Built image for +${name}`);
 
-    const containerId = await docker.run(abortSignal, imageTag, BRIDGE_PORT, [
-      ['--name', dockerName],
+    await docker.tryRemove(signal, id);
+    await docker.tryRemoveNetwork(signal, id);
+
+    await docker.build(signal, id, hostPaths.dockerfileAbsolutePath, buildArgs);
+    logger.log(`Built image for sandbox +${name}`);
+
+    await docker.createNetwork(signal, id);
+    logger.log(`Created network for sandbox +${name}`);
+
+    const containerId = await docker.run(signal, id, BRIDGE_PORT, [
+      ['--name', id],
+      ['--network', id],
+      ['--env', `BRIDGE_TOKEN=${token}`],
       ['-v', `${hostPaths.appFolderAbsolutePath}:/app`],
       ['-v', `${hostPaths.dataFolderAbsolutePath}:/data`]
     ]);
-    const target = await docker.getMappedHttpTarget(abortSignal, containerId, BRIDGE_PORT);
+    const target = await docker.getMappedHttpTarget(signal, containerId, BRIDGE_PORT);
     const client = new BridgeClient(target);
 
-    if (!(await checkHealth(abortSignal, client))) {
-      throw new Error(`Cannot reach sandbox bridge server in +${name}`);
+    if (!(await checkHealth(signal, client))) {
+      throw new Error(`Cannot reach bridge server for sandbox +${name}`);
     }
 
     logger.log(`Sandbox +${name} is ready`);
-    return new SandboxRuntime(name, client, docker, logger, rpcHandlerProvider);
+    return new SandboxRuntime(id, name, token, client, docker, logger, rpcHandlerProvider);
   }
 
   private isRunning = true;
@@ -65,7 +73,9 @@ export class SandboxRuntime {
   public readonly onClose = new SimpleEvent<Error | undefined>();
 
   public constructor(
+    private readonly id: string,
     private readonly name: string,
+    private readonly token: string,
     private readonly client: BridgeClient,
     private readonly docker: Docker,
     private readonly logger: Logger,
@@ -77,7 +87,7 @@ export class SandboxRuntime {
 
   private async listenRpc() {
     try {
-      await this.client.listenRpc(this.stopAbortController.signal, {
+      await this.client.listenRpc(this.stopAbortController.signal, this.token, {
         onData: update => {
           if (update.ping) {
             this.lastPingTime = Date.now();
@@ -93,7 +103,7 @@ export class SandboxRuntime {
       });
     } catch (e) {
       const error = e instanceof Error ? e : new Error(String(e));
-      this.logger.error(`RPC listener of +${this.name} failed: ${error.message}`);
+      this.logger.error(`RPC listener for sandbox +${this.name} failed: ${error.message}`);
       this.triggerTryStop(error);
     }
   }
@@ -128,10 +138,10 @@ export class SandboxRuntime {
     }
 
     try {
-      await this.client.sendRpcReply(abortSignal, result);
+      await this.client.sendRpcReply(abortSignal, this.token, result);
     } catch (e) {
       const error = (e as Error)?.message ?? String(e);
-      this.logger.error(`Failed to send ${rpc.methodName} RPC response to +${this.name} bridge: ${error}`);
+      this.logger.error(`Failed to send ${rpc.methodName} RPC response to the bridge for sandbox +${this.name}: ${error}`);
     }
   }
 
@@ -148,7 +158,7 @@ export class SandboxRuntime {
     let stdout = '';
     let stderr = '';
     let error: Error | undefined;
-    await this.client.executeCommand(abortSignal, command, {
+    await this.client.executeCommand(abortSignal, command, this.token, {
       onData(update) {
         if (update.stdout) {
           stdout += update.stdout;
@@ -190,11 +200,11 @@ export class SandboxRuntime {
       clearInterval(this.healthCheckIv);
     }
 
-    await this.docker.tryRemove(abortSignal, this.name);
+    await Promise.allSettled([this.docker.tryRemove(abortSignal, this.id), this.docker.tryRemoveNetwork(abortSignal, this.id)]);
 
     this.onClose.emit(error);
 
-    let log = `Sandbox +${this.name} is stopped`;
+    let log = `Sandbox +${this.name} has stopped`;
     if (error) {
       log += ` due to error: ${error.message}`;
     }

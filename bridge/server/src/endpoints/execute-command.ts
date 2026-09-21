@@ -2,6 +2,7 @@ import { spawn } from 'node:child_process';
 import type { HttpServer } from '../core/http-server';
 import { Logger } from '../core/logger';
 import { SseResponse } from '../core/sse-response';
+import { TokenMiddleware } from '../core/token-middleware';
 
 interface ExecuteCommandRequest {
   cwd: string;
@@ -11,10 +12,12 @@ interface ExecuteCommandRequest {
   env?: Record<string, string>;
 }
 
-export function setupExecuteCommandEndpoint(app: HttpServer): void {
+export function setupExecuteCommandEndpoint(app: HttpServer, tokenMiddleware: TokenMiddleware): void {
   const logger = new Logger('CommandEndpoint');
 
   app.post<ExecuteCommandRequest>('/command', (req, res) => {
+    tokenMiddleware.assert(req);
+
     const cwd = req.body.cwd;
     const command = req.body.command;
     const args = req.body.args ?? [];
