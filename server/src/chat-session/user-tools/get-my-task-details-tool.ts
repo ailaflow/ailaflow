@@ -13,7 +13,7 @@ export class GetMyTaskDetailsTool extends ZodTool<Arg> {
   public constructor(private readonly userTaskDetailsProvider: UserTaskDetailsProvider) {
     super(
       'get_my_task_details',
-      'Returns all input values and the schema for output values needed to submit an assigned task',
+      'Returns task details. outputVariableSchemas maps each required top-level key of outputVariableValues in submit_my_task to the JSON Schema for that value.',
       inputSchema
     );
   }

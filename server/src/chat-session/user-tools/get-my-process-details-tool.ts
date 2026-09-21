@@ -11,7 +11,11 @@ type Arg = z.infer<typeof inputSchema>;
 
 export class GetMyProcessDetailsTool extends ZodTool<Arg> {
   public constructor(private readonly userProcessProvider: UserProcessProvider) {
-    super('get_my_process_details', 'Returns the name, description, and start variable schemas for an accessible process', inputSchema);
+    super(
+      'get_my_process_details',
+      'Returns process details. startVariableSchemas maps each required top-level key of startVariableValues in start_my_process to the JSON Schema for that value.',
+      inputSchema
+    );
   }
 
   public async handle(abortSignal: AbortSignal, { sessionId }: ToolContext, arg: Arg): Promise<ZodToolExecutionResult> {

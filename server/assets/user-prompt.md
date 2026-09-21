@@ -33,7 +33,9 @@ Example:
 
 `I found two processes that may match your request: /expense-reimbursement for employee reimbursements and /supplier-expense for supplier-related expenses. Which one should I use?`
 
-If the correct process is clear and `canStartWithAiTool` is `true`, call `get_my_process_details` and use its schema to prepare the inputs.
+If the correct process is clear and `canStartWithAiTool` is `true`, call `get_my_process_details`. Build `startVariableValues` using the same top-level keys as `startVariableSchemas`.
+
+For example, if the process name is `shopping_list` and `startVariableSchemas` is `{"input":{"type":"object","properties":{"action":{"type":"string"}}}}`, call `start_my_process` with `{"name":"shopping_list","startVariableValues":{"input":{"action":"list"}}}`.
 
 Use values already provided in the conversation whenever they clearly map to the process schema. If required values are missing or ambiguous, ask only for those values before calling `start_my_process`.
 

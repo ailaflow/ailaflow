@@ -5,7 +5,7 @@ import { AssignedTaskCompleter, AssignedTaskCompleterError } from '../../task/as
 
 const inputSchema = z.object({
   taskId: z.string(),
-  outputValues: z.record(z.string(), z.unknown())
+  outputVariableValues: z.record(z.string(), z.unknown())
 });
 
 type Arg = z.infer<typeof inputSchema>;
@@ -20,7 +20,7 @@ export class SubmitMyTaskTool extends ZodTool<Arg> {
     const isTest = chatSessionId.isTest();
 
     try {
-      await this.completer.complete(abortSignal, isTest, chatSessionId.userName, arg.taskId, arg.outputValues, true);
+      await this.completer.complete(abortSignal, isTest, chatSessionId.userName, arg.taskId, arg.outputVariableValues, true);
     } catch (e) {
       if (e instanceof AssignedTaskCompleterError) {
         return {
