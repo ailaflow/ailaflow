@@ -142,11 +142,11 @@ test('sends links for task and process start form metadata', async () => {
 
   assert.match(
     client.sentTexts[0],
-    /^📗 To open the task, please click here: https:\/\/aila\.example\/magic-link\?t=%2Fmy-tasks%2Ftask-123#token=[\w-]{43}\nThis link will be active for the next 2 hours\.$/
+    /^─── 💼 Task Form ────\nPlease click here: https:\/\/aila\.example\/magic-link\?t=%2Fmy-tasks%2Ftask-123#token=[\w-]{43}\nValid for 2 hours\.\n──────────────\n$/
   );
   assert.match(
     client.sentTexts[1],
-    /^💼 To open the start form for \/employee-onboarding, please click here: https:\/\/aila\.example\/magic-link\?t=%2Fmy-processes%2Femployee-onboarding#token=[\w-]{43}\nThis link will be active for the next 2 hours\.$/
+    /^─── 💼 Start Form ────\nPlease click here: https:\/\/aila\.example\/magic-link\?t=%2Fmy-processes%2Femployee-onboarding#token=[\w-]{43}\nValid for 2 hours\.\n──────────────\n$/
   );
 });
 

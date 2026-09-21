@@ -22,10 +22,10 @@ test('queries a newest-first page of notifications for the current user', async 
   await userRepository.insert(abortSignal, new User('alice', null, 'hash', true, false));
   await userRepository.insert(abortSignal, new User('bob', null, 'hash', true, false));
   await notificationRepository.insertMultiple(abortSignal, [
-    new Notification('notification_1', 'alice', 'Oldest', 1000),
-    new Notification('notification_2', 'alice', 'Middle', 2000),
-    new Notification('notification_3', 'alice', 'Newest', 3000),
-    new Notification('notification_4', 'bob', 'Other user', 4000)
+    new Notification('notification_1', 'process-1', 'alice', 'Oldest', 1000),
+    new Notification('notification_2', 'process-1', 'alice', 'Middle', 2000),
+    new Notification('notification_3', 'process-1', 'alice', 'Newest', 3000),
+    new Notification('notification_4', 'process-2', 'bob', 'Other user', 4000)
   ]);
 
   assert.deepEqual(await querier.query(abortSignal, 'alice', 1, 2), {

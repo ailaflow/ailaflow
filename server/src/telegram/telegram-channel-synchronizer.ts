@@ -286,13 +286,16 @@ export class TelegramChannelSynchronizer {
     const messages: string[] = [];
     const abortSignal = AbortSignal.any([AbortSignal.timeout(10_000), this.destroyAbortController.signal]);
     const linkLifetimeHours = this.magicLinkGenerator.getValidityHours();
-    const linkLifetimeMessage = `This link will be active for the next ${linkLifetimeHours} hours.`;
+    const warn = `Valid for ${linkLifetimeHours} hours.`;
 
     const taskForm = metadata?.['taskForm'] as TaskFormMessageMetadata | undefined;
     if (typeof taskForm?.id === 'string') {
       const url = await this.magicLinkGenerator.tryGenerateTaskForm(abortSignal, this.configuration.userName, taskForm.id);
       if (url) {
-        messages.push(`📗 To open the task, please click here: ${url}\n${linkLifetimeMessage}`);
+        let m = '─── 💼 Task Form ────\n';
+        m += `Please click here: ${url}\n${warn}\n`;
+        m += '──────────────\n';
+        messages.push(m);
       }
     }
 
@@ -304,7 +307,10 @@ export class TelegramChannelSynchronizer {
         processStartForm.name
       );
       if (url) {
-        messages.push(`💼 To open the start form for /${processStartForm.name}, please click here: ${url}\n${linkLifetimeMessage}`);
+        let m = '─── 💼 Start Form ────\n';
+        m += `Please click here: ${url}\n${warn}\n`;
+        m += '──────────────\n';
+        messages.push(m);
       }
     }
 

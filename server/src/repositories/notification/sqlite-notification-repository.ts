@@ -15,6 +15,7 @@ export class SqliteNotificationRepository implements NotificationRepository {
       db.exec(`
         CREATE TABLE IF NOT EXISTS notifications (
           id TEXT PRIMARY KEY,
+          processName TEXT NOT NULL,
           userName TEXT NOT NULL,
           message TEXT NOT NULL,
           createdAt INTEGER NOT NULL,
@@ -40,11 +41,11 @@ export class SqliteNotificationRepository implements NotificationRepository {
 
     await this.db.write(db => {
       const statement = db.prepare(`
-        INSERT INTO notifications (id, userName, message, createdAt)
-        VALUES (?, ?, ?, ?)
+        INSERT INTO notifications (id, processName, userName, message, createdAt)
+        VALUES (?, ?, ?, ?, ?)
       `);
       for (const notification of notifications) {
-        statement.run(notification.id, notification.userName, notification.message, notification.createdAt);
+        statement.run(notification.id, notification.processName, notification.userName, notification.message, notification.createdAt);
       }
     }, transaction);
   }

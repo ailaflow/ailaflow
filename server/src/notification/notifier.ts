@@ -17,7 +17,7 @@ export class Notifier {
 
     const notifications = new Array<Notification>(userNames.length);
     for (let i = 0; i < userNames.length; i++) {
-      notifications[i] = Notification.create(userNames[i], message);
+      notifications[i] = Notification.create(processName, userNames[i], message);
     }
 
     const channelName = this.userChatSessionProvider.getDefaultChannelName();

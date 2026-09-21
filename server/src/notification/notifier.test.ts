@@ -29,10 +29,14 @@ test('persists a notification for every matched user', async () => {
 
   assert.equal(storedNotifications.length, 2);
   assert.deepEqual(
-    storedNotifications.map(notification => ({ userName: notification.userName, message: notification.message })),
+    storedNotifications.map(notification => ({
+      processName: notification.processName,
+      userName: notification.userName,
+      message: notification.message
+    })),
     [
-      { userName: 'alice', message: 'Deployment completed' },
-      { userName: 'bob', message: 'Deployment completed' }
+      { processName: 'test', userName: 'alice', message: 'Deployment completed' },
+      { processName: 'test', userName: 'bob', message: 'Deployment completed' }
     ]
   );
   for (const notification of storedNotifications) {
