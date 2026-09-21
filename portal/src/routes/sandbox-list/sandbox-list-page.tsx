@@ -59,14 +59,9 @@ export function SandboxListPage() {
         {
           id: 'name',
           title: 'Name',
-          width: '24%',
+          width: '38%',
+          disabled: sandbox => (sandbox.isEnabled ? undefined : 'Disabled'),
           getValue: sandbox => `+${sandbox.name}`
-        },
-        {
-          id: 'isEnabled',
-          title: 'Status',
-          width: '14%',
-          getValue: sandbox => (sandbox.isEnabled ? 'Enabled' : 'Disabled')
         },
         {
           id: 'description',

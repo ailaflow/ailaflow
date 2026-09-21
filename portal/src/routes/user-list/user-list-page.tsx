@@ -72,14 +72,8 @@ export function UserListPage() {
           id: 'name',
           title: 'Name',
           width: '42%',
-          getValue: user =>
-            user.isActive ? (
-              `@${user.name}`
-            ) : (
-              <span className="text-gray-400">
-                @{user.name} <small>(Deactivated)</small>
-              </span>
-            )
+          disabled: user => (user.isActive ? undefined : 'Deactivated'),
+          getValue: user => `@${user.name}`
         },
         {
           id: 'role',

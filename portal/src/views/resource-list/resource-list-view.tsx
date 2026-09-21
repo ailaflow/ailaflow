@@ -8,6 +8,7 @@ export interface ResourceListColumn<T> {
   width?: string;
   align?: 'left' | 'right';
   wrap?: boolean;
+  disabled?(item: T): string | undefined;
   getLeadingVisual?(item: T): ReactNode;
   getValue(item: T): ReactNode;
 }
@@ -30,6 +31,29 @@ export interface ResourceListViewProps<T> {
   emptyMessage: string;
   actions?: ResourceListAction<T>[];
   pagination?: PaginationViewProps;
+}
+
+function ResourceListCellContent<T>(props: { column: ResourceListColumn<T>; row: T }) {
+  const disabled = props.column.disabled?.(props.row);
+  const value = props.column.getValue(props.row);
+  const content = disabled ? (
+    <span className="text-gray-400">
+      {value} <small>({disabled})</small>
+    </span>
+  ) : (
+    value
+  );
+
+  if (props.column.getLeadingVisual) {
+    return (
+      <div className={`flex min-w-0 items-center gap-2 ${props.column.align === 'right' ? 'justify-end' : ''}`}>
+        {props.column.getLeadingVisual(props.row)}
+        <span className={props.column.wrap ? 'whitespace-pre-wrap break-words' : 'min-w-0 truncate'}>{content}</span>
+      </div>
+    );
+  }
+
+  return content;
 }
 
 export function ResourceListView<T>(props: ResourceListViewProps<T>) {
@@ -84,16 +108,7 @@ export function ResourceListView<T>(props: ResourceListViewProps<T>) {
                               column.align === 'right' ? 'text-right' : ''
                             } ${column.id === 'name' ? 'font-medium text-slate-900' : 'text-slate-600'}`}
                           >
-                            {column.getLeadingVisual ? (
-                              <div className={`flex min-w-0 items-center gap-2 ${column.align === 'right' ? 'justify-end' : ''}`}>
-                                {column.getLeadingVisual(row)}
-                                <span className={column.wrap ? 'whitespace-pre-wrap break-words' : 'min-w-0 truncate'}>
-                                  {column.getValue(row)}
-                                </span>
-                              </div>
-                            ) : (
-                              column.getValue(row)
-                            )}
+                            <ResourceListCellContent column={column} row={row} />
                           </td>
                         ))}
                         {props.actions && props.actions.length > 0 ? (
