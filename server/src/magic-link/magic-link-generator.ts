@@ -13,11 +13,11 @@ export class MagicLinkGenerator {
   }
 
   public tryGenerateTaskForm(abortSignal: AbortSignal, userName: string, taskId: string): Promise<string | null> {
-    return this.tryGenerate(abortSignal, userName, `/my-tasks/${encodeURIComponent(taskId)}`);
+    return this.tryGenerate(abortSignal, userName, `/my-tasks/${encodeURIComponent(taskId)}?fs=1`);
   }
 
   public tryGenerateProcessStartForm(abortSignal: AbortSignal, userName: string, processName: string): Promise<string | null> {
-    return this.tryGenerate(abortSignal, userName, `/my-processes/${encodeURIComponent(processName)}`);
+    return this.tryGenerate(abortSignal, userName, `/my-processes/${encodeURIComponent(processName)}?fs=1`);
   }
 
   private async tryGenerate(abortSignal: AbortSignal, userName: string, target: string): Promise<string | null> {
