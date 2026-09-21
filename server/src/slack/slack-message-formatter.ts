@@ -4,6 +4,15 @@ const SLACK_MESSAGE_MAX_LENGTH = 4_000;
 
 export class SlackMessageFormatter {
   public format(message: ChatMessage): string[] {
+    if (message.failReason !== undefined) {
+      return splitUnicodeSafe(`Failed: ${message.failReason || 'Unknown error'}`);
+    }
+    if (message.isInterrupted) {
+      return ['Interrupted.'];
+    }
+    if (message.type === ChatMessageType.COMPACT) {
+      return ['Context compacted.'];
+    }
     if (message.type !== ChatMessageType.USER && message.type !== ChatMessageType.ASSISTANT) {
       return [];
     }

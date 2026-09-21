@@ -150,6 +150,75 @@ test('sends links for task and process start form metadata', async () => {
   );
 });
 
+test('delivers failures and interruptions once and reports only successful compaction as completed', async () => {
+  const messages: ChatMessage[] = [
+    {
+      id: 1,
+      type: ChatMessageType.ASSISTANT,
+      failReason: 'Tool call validation failed',
+      completedMessages: [{ message: { role: 'user', content: 'Internal failure context' } }]
+    },
+    {
+      id: 2,
+      type: ChatMessageType.USER,
+      failReason: 'User message failed',
+      completedMessages: [
+        {
+          message: { role: 'user', content: 'Telegram input' },
+          metadata: { telegram: { origin: { updateId: 10, chatId: '42', messageId: 20 } } }
+        }
+      ]
+    },
+    {
+      id: 3,
+      type: ChatMessageType.ASSISTANT,
+      isInterrupted: true,
+      completedMessages: [{ message: { role: 'user', content: 'Internal interruption context' } }]
+    },
+    {
+      id: 4,
+      type: ChatMessageType.COMPACT,
+      failReason: 'Compaction failed',
+      completedMessages: [{ message: { role: 'user', content: 'Internal failure context' } }]
+    },
+    {
+      id: 5,
+      type: ChatMessageType.COMPACT,
+      completedMessages: [{ message: { role: 'user', content: 'Compacted state' } }]
+    }
+  ];
+  const session = new FakeChatSession(messages);
+  const client = new FakeTelegramBotApiClient();
+  const synchronizer = new TelegramChannelSynchronizer(
+    TelegramBotConfiguration.create('alice', 'default', 'token', {
+      botId: 'bot',
+      botUserName: 'aila_bot',
+      telegramChatId: '42'
+    }),
+    new FakeTelegramConfigurationRepository(),
+    client,
+    createSessionProvider(session),
+    createMagicLinkGenerator()
+  );
+
+  await synchronizer.start();
+  await waitFor(() => client.sentTexts.length === 5);
+  synchronizer.destroy();
+
+  assert.deepEqual(client.sentTexts, [
+    'Failed: Tool call validation failed',
+    'Failed: User message failed',
+    'Interrupted.',
+    'Failed: Compaction failed',
+    'Context compacted.'
+  ]);
+  for (const message of messages) {
+    const delivery = tryGetTelegramMessageMetadata(message.completedMessages![0].metadata)?.delivery;
+    assert.equal(delivery?.status, TelegramMessageStatus.SENT);
+    assert.equal(delivery?.attemptCount, 1);
+  }
+});
+
 test('links a private Telegram chat and queues Telegram text with origin metadata', async () => {
   const session = new FakeChatSession([]);
   const repository = new FakeTelegramConfigurationRepository();
@@ -185,6 +254,34 @@ test('links a private Telegram chat and queues Telegram text with origin metadat
   assert.deepEqual(session.queuedMessages[0].metadata?.['telegram'], {
     origin: { updateId: 11, chatId: '42', messageId: 21 }
   });
+});
+
+test('reports an interrupted response after receiving the stop command', async () => {
+  const session = new FakeChatSession([{ id: 1, type: ChatMessageType.ASSISTANT }]);
+  const repository = new FakeTelegramConfigurationRepository();
+  const client = new FakeTelegramBotApiClient([
+    {
+      update_id: 10,
+      message: { message_id: 20, chat: { id: 42, type: 'private' }, text: '/stop' }
+    }
+  ]);
+  const synchronizer = new TelegramChannelSynchronizer(
+    TelegramBotConfiguration.create('alice', 'default', 'token', {
+      botId: 'bot',
+      botUserName: 'aila_bot',
+      telegramChatId: '42'
+    }),
+    repository,
+    client,
+    createSessionProvider(session),
+    createMagicLinkGenerator()
+  );
+
+  await synchronizer.start();
+  await waitFor(() => client.sentTexts.length === 1 && repository.lastUpdateId === 10);
+  synchronizer.destroy();
+
+  assert.deepEqual(client.sentTexts, ['Interrupted.']);
 });
 
 test('reconnects polling after a transient Telegram failure', async () => {
@@ -272,6 +369,29 @@ class FakeChatSession {
   }
 
   public tryInterrupt(): boolean {
+    let pendingMessage: ChatMessage | undefined;
+    for (let index = this.messages.length - 1; index >= 0; index--) {
+      if (!this.messages[index].completedMessages) {
+        pendingMessage = this.messages[index];
+        break;
+      }
+    }
+    if (!pendingMessage) {
+      return false;
+    }
+    pendingMessage.isInterrupted = true;
+    pendingMessage.completedMessages = [
+      {
+        message: {
+          role: 'user',
+          content: 'The request to LLM server was interrupted by the user.'
+        }
+      }
+    ];
+    this.onMessageFailed.emit({
+      isWorking: false,
+      update: { id: pendingMessage.id, isInterrupted: true }
+    });
     return true;
   }
 }

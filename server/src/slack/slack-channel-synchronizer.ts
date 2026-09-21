@@ -1,4 +1,4 @@
-import { ChatMessageType } from '@aibindkit/core';
+import { ChatMessage, ChatMessageType } from '@aibindkit/core';
 import { ChatSession } from '@aibindkit/llm';
 import { UserChatSessionProvider } from '../chat-session/user-chat-session-provider';
 import { abortableSleep } from '../core/abortable-sleep';
@@ -12,7 +12,6 @@ import { SlackMessageDelivery, SlackMessageMetadata, SlackMessageStatus, tryGetS
 import { formatSlackError } from './slack-error';
 
 const MESSAGE_PACING_MS = 1_000;
-const CONTEXT_COMPACTED_MESSAGE = 'Context compacted.';
 
 export class SlackChannelSynchronizer {
   private readonly logger: Logger;
@@ -182,22 +181,24 @@ export class SlackChannelSynchronizer {
       return;
     }
     for (const message of session.getAll()) {
+      const isOutcome = this.isMessageOutcome(message);
       if (
         message.id <= cursor ||
-        (message.type !== ChatMessageType.USER && message.type !== ChatMessageType.ASSISTANT && message.type !== ChatMessageType.COMPACT)
+        (!isOutcome &&
+          message.type !== ChatMessageType.USER &&
+          message.type !== ChatMessageType.ASSISTANT &&
+          message.type !== ChatMessageType.COMPACT)
       ) {
         continue;
       }
-      for (let index = 0; index < (message.completedMessages?.length ?? 0); index++) {
+      const completedMessageCount = this.getCompletedMessageDeliveryCount(message);
+      for (let index = 0; index < completedMessageCount; index++) {
         const completed = message.completedMessages![index];
-        const chunks =
-          message.type === ChatMessageType.COMPACT
-            ? [CONTEXT_COMPACTED_MESSAGE]
-            : this.formatter.format({ ...message, completedMessages: [completed] });
+        const chunks = this.formatter.format({ ...message, completedMessages: [completed] });
         const slack = tryGetSlackMessageMetadata(completed.metadata);
         if (
           chunks.length === 0 ||
-          slack?.origin ||
+          (slack?.origin && !isOutcome) ||
           (slack?.delivery?.status === SlackMessageStatus.SENT && slack.delivery.mappingGeneration === this.mapping.generation)
         ) {
           continue;
@@ -205,6 +206,18 @@ export class SlackChannelSynchronizer {
         await this.deliverMessage(session, message.id, index, chunks, slack, currentMapping.dmChannelId);
       }
     }
+  }
+
+  private getCompletedMessageDeliveryCount(message: ChatMessage): number {
+    const count = message.completedMessages?.length ?? 0;
+    if (this.isMessageOutcome(message) || message.type === ChatMessageType.COMPACT) {
+      return Math.min(count, 1);
+    }
+    return count;
+  }
+
+  private isMessageOutcome(message: ChatMessage): boolean {
+    return message.failReason !== undefined || message.isInterrupted === true;
   }
 
   private async deliverMessage(

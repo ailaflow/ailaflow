@@ -47,6 +47,68 @@ test('splits formatted text at the Telegram message length limit', () => {
   );
 });
 
+test('formats failures and interruptions before considering the message type or content', () => {
+  const formatter = new TelegramMessageFormatter();
+
+  assert.deepEqual(
+    formatter.format({
+      id: 1,
+      type: ChatMessageType.TOOL,
+      failReason: 'Tool call validation failed',
+      completedMessages: [{ message: { role: 'tool', tool_call_id: 'call-1', content: 'Ignored' } }]
+    }),
+    ['Failed: Tool call validation failed']
+  );
+  assert.deepEqual(
+    formatter.format({
+      id: 2,
+      type: ChatMessageType.ASSISTANT,
+      isInterrupted: true,
+      completedMessages: [{ message: { role: 'user', content: 'Ignored' } }]
+    }),
+    ['Interrupted.']
+  );
+  assert.deepEqual(
+    formatter.format({
+      id: 3,
+      type: ChatMessageType.SYSTEM,
+      failReason: ''
+    }),
+    ['Failed: Unknown error']
+  );
+});
+
+test('reports successful compaction only when it did not fail or get interrupted', () => {
+  const formatter = new TelegramMessageFormatter();
+
+  assert.deepEqual(
+    formatter.format({
+      id: 1,
+      type: ChatMessageType.COMPACT,
+      completedMessages: [{ message: { role: 'user', content: 'Compacted state' } }]
+    }),
+    ['Context compacted.']
+  );
+  assert.deepEqual(
+    formatter.format({
+      id: 2,
+      type: ChatMessageType.COMPACT,
+      failReason: 'Compaction failed',
+      completedMessages: [{ message: { role: 'user', content: 'Ignored' } }]
+    }),
+    ['Failed: Compaction failed']
+  );
+  assert.deepEqual(
+    formatter.format({
+      id: 3,
+      type: ChatMessageType.COMPACT,
+      isInterrupted: true,
+      completedMessages: [{ message: { role: 'user', content: 'Ignored' } }]
+    }),
+    ['Interrupted.']
+  );
+});
+
 test('ignores internal, blank, mismatched, and unsupported messages', () => {
   const formatter = new TelegramMessageFormatter();
 

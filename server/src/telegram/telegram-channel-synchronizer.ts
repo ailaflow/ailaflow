@@ -1,4 +1,4 @@
-import { ChatMessageMetadata, ChatMessageType } from '@aibindkit/core';
+import { ChatMessage, ChatMessageMetadata, ChatMessageType } from '@aibindkit/core';
 import { ChatSession, ChatSessionUpdate } from '@aibindkit/llm';
 import { ProcessStartFormMessageMetadata, TaskFormMessageMetadata } from '@ailaflow/shared';
 import { UserChatSessionProvider } from '../chat-session/user-chat-session-provider';
@@ -16,7 +16,6 @@ import {
 } from './telegram-message-metadata';
 
 const POLL_TIMEOUT_SECONDS = 25;
-const CONTEXT_COMPACTED_MESSAGE = 'Context compacted.';
 
 export class TelegramChannelSynchronizer {
   private readonly logger: Logger;
@@ -261,25 +260,36 @@ export class TelegramChannelSynchronizer {
     }
 
     for (const message of session.getAll()) {
-      for (let completedMessageIndex = 0; completedMessageIndex < (message.completedMessages?.length ?? 0); completedMessageIndex++) {
+      const isOutcome = this.isMessageOutcome(message);
+      const completedMessageCount = this.getCompletedMessageDeliveryCount(message);
+      for (let completedMessageIndex = 0; completedMessageIndex < completedMessageCount; completedMessageIndex++) {
         const completedMessage = message.completedMessages![completedMessageIndex];
         const telegram = tryGetTelegramMessageMetadata(completedMessage.metadata);
-        if (telegram?.origin || telegram?.delivery?.status === TelegramMessageStatus.SENT) {
+        if (telegram?.delivery?.status === TelegramMessageStatus.SENT || (telegram?.origin && !isOutcome)) {
           continue;
         }
-        const chunks =
-          message.type === ChatMessageType.COMPACT
-            ? [CONTEXT_COMPACTED_MESSAGE]
-            : [
-                ...this.messageFormatter.format({ ...message, completedMessages: [completedMessage] }),
-                ...(await this.createFormLinkMessages(completedMessage.metadata))
-              ];
+        const chunks = [
+          ...this.messageFormatter.format({ ...message, completedMessages: [completedMessage] }),
+          ...(isOutcome ? [] : await this.createFormLinkMessages(completedMessage.metadata))
+        ];
         if (chunks.length === 0) {
           continue;
         }
         await this.deliverMessage(session, message.id, completedMessageIndex, chunks, telegram, chatId);
       }
     }
+  }
+
+  private getCompletedMessageDeliveryCount(message: ChatMessage): number {
+    const count = message.completedMessages?.length ?? 0;
+    if (this.isMessageOutcome(message) || message.type === ChatMessageType.COMPACT) {
+      return Math.min(count, 1);
+    }
+    return count;
+  }
+
+  private isMessageOutcome(message: ChatMessage): boolean {
+    return message.failReason !== undefined || message.isInterrupted === true;
   }
 
   private async createFormLinkMessages(metadata: ChatMessageMetadata | undefined): Promise<string[]> {
