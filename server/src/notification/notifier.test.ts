@@ -1,10 +1,10 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { ChatSession } from '@aibindkit/llm';
-import { UserChatSessionProvider } from '../../chat-session/user-chat-session-provider';
-import { UserAccessExpressionUserQuerier } from '../../queriers/user-access-expression/user-access-expression-user-querier';
-import { Notification } from '../../repositories/notification/notification';
-import { NotificationRepository } from '../../repositories/notification/notification-repository';
+import { UserChatSessionProvider } from '../chat-session/user-chat-session-provider';
+import { UserAccessExpressionUserQuerier } from '../queriers/user-access-expression/user-access-expression-user-querier';
+import { Notification } from '../repositories/notification/notification';
+import { NotificationRepository } from '../repositories/notification/notification-repository';
 import { Notifier } from './notifier';
 
 test('persists a notification for every matched user', async () => {
@@ -25,7 +25,7 @@ test('persists a notification for every matched user', async () => {
   } as NotificationRepository;
   const notifier = new Notifier(userQuerier, sessionProvider, notificationRepository);
 
-  await notifier.notify(new AbortController().signal, false, '', 'Deployment completed');
+  await notifier.notify(new AbortController().signal, 'test', false, '', 'Deployment completed');
 
   assert.equal(storedNotifications.length, 2);
   assert.deepEqual(

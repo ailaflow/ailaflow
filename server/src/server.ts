@@ -97,7 +97,6 @@ import { UserChatSessionProvider } from './chat-session/user-chat-session-provid
 import { AdminChatSessionProvider } from './chat-session/admin-chat-session-provider';
 import { ProcessExecutionResumer } from './process-executor/process-execution-resumer';
 import { UserAssignedTaskProvider } from './task/user-assigned-task-provider';
-import { Notifier } from './process-executor/services/notifier';
 import { NotificationRepository } from './repositories/notification/notification-repository';
 import { SqliteNotificationRepository } from './repositories/notification/sqlite-notification-repository';
 import { MyNotificationListQuerier } from './queriers/my-notification-list/my-notification-list-querier';
@@ -223,6 +222,7 @@ import { Logger } from './core/logger';
 import { TableDataListQuerier } from './queriers/table-data-list/table-data-list-querier';
 import { SlackUserListQuerier } from './queriers/slack-user-list/slack-user-list-querier';
 import { TableSchemaRepository } from './repositories/table/table-schema-repository';
+import { Notifier } from './notification/notifier';
 
 const DB_TYPE = 'sqlite';
 

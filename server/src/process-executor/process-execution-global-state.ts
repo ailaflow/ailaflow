@@ -4,11 +4,11 @@ import { ProcessLogger } from './services/process-logger';
 import { ProcessScriptExecutor } from './services/process-script-executor';
 import { ProcessVariableManager } from './services/process-variable-manager';
 import { TaskCreator } from '../task/task-creator';
-import { Notifier } from './services/notifier';
 import { ProcessExecutionServices } from './services/services';
 import { ProcessVariableEvaluator } from './services/process-value-evaluator';
 import { AgentSessionRunner } from './services/agent-session-runner';
 import { ProcessExecutionContext } from './process-execution-context';
+import { Notifier } from '../notification/notifier';
 
 export interface SerializedProcessExecutionGlobalState {
   variableValues: ProcessExecutionVariableValues;

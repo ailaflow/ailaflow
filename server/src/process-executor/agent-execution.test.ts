@@ -319,12 +319,25 @@ test('child process tools wait for results, bypass user access, and extend ances
   }
 });
 
-test('process tools exclude the current process and all ancestors from selected access', async () => {
+test('process tools reject the current process and exclude all ancestors from selected access', async () => {
   const parent = createProcess('parent');
   const harness = createHarness({ processes: [parent, createProcess('ancestor'), createProcess('middle'), createProcess('child')] });
+  await assert.rejects(
+    harness.tools.create(
+      signal,
+      ['parent', 'ancestor', 'middle', 'child'],
+      [],
+      'sandbox',
+      false,
+      parent,
+      { ...context, parentProcessNames: ['ancestor', 'middle'] },
+      'parent_execution'
+    ),
+    /current process cannot be included/
+  );
   const tools = await harness.tools.create(
     signal,
-    ['parent', 'ancestor', 'middle', 'child'],
+    ['ancestor', 'middle', 'child'],
     [],
     'sandbox',
     false,

@@ -9,9 +9,9 @@ import { ProcessLogger } from './services/process-logger';
 import { ProcessScriptExecutor } from './services/process-script-executor';
 import { ProcessExecutionSnapshotTransformer } from './process-execution-snapshot-transformer';
 import { AgentSessionRunner } from './services/agent-session-runner';
-import { Notifier } from './services/notifier';
 import { ProcessExecutionContext } from './process-execution-context';
 import { PROCESS_VERSION, ProcessDisplay } from '@ailaflow/shared';
+import { Notifier } from '../notification/notifier';
 
 const context: ProcessExecutionContext = {
   startedBy: 'user_1',

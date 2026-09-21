@@ -38,7 +38,7 @@ function createBranchStep(branchSelectorVariableName: string): BranchStep {
 }
 
 test('branch step requires an existing string selector variable', () => {
-  const validator = new ProcessStepValidator([], new VariableCachedValidator());
+  const validator = new ProcessStepValidator(null, [], new VariableCachedValidator());
 
   assert.deepEqual(validator.validate(createBranchStep('route'), createDefinition('string')), {});
   assert.equal(

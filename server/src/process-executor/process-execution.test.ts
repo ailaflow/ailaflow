@@ -11,8 +11,8 @@ import { ProcessVariableManager } from './services/process-variable-manager';
 import { Process } from '../repositories/process/process';
 import { ProcessExecutionPersister } from './process-execution-persister';
 import { ProcessVariables } from '../repositories/process/process-variables';
-import { Notifier } from './services/notifier';
 import { ProcessVariableEvaluator } from './services/process-value-evaluator';
+import { Notifier } from '../notification/notifier';
 
 test('process execution signals the first wait and pauses on a later wait', async () => {
   const activitySet = createActivitySet<ProcessExecutionGlobalState>([

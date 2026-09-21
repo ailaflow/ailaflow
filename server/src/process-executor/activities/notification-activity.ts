@@ -4,11 +4,11 @@ import { ProcessExecutionGlobalState } from '../process-execution-global-state';
 
 export const notificationStepActivity = createAtomActivity<NotificationStep, ProcessExecutionGlobalState>('notification', {
   init: () => ({}),
-  handler: async (step: NotificationStep, { stopSignal, context, notifier, variableEvaluator }: ProcessExecutionGlobalState) => {
+  handler: async (step: NotificationStep, { stopSignal, context, process, notifier, variableEvaluator }: ProcessExecutionGlobalState) => {
     const expression = variableEvaluator.evaluateStringOrVariable(step.properties.userExpression);
     const notification = variableEvaluator.evaluateStringOrVariable(step.properties.notification);
 
     const signal = AbortSignal.any([stopSignal, AbortSignal.timeout(5_000)]);
-    await notifier.notify(signal, context.isTest, expression, notification);
+    await notifier.notify(signal, process.name, context.isTest, expression, notification);
   }
 });

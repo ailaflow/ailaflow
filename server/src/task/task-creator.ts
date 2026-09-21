@@ -62,10 +62,14 @@ export class TaskCreator {
       throw e;
     }
 
+    let m = '>>>>>>>>\n';
+    m += `You have a new task assigned: "${title}", id: ${task.id}\n`;
+    m += '<<<<<<<<';
+
     for (const userName of userNames) {
       const session = await this.userChatSessionProvider.get(abortSignal, isTest, userName, channelName);
       if (session) {
-        session.queueUserMessage(`>>>>>>>>\nYou have a new task assigned: "${title}", id: ${task.id}\n<<<<<<<<`, {
+        session.queueUserMessage(m, {
           internal: true,
           taskForm: {
             id: task.id
