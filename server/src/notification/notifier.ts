@@ -11,13 +11,13 @@ export class Notifier {
     private readonly notificationRepository: NotificationRepository
   ) {}
 
-  public async notify(abortSignal: AbortSignal, processName: string, isTest: boolean, userExpression: string, notification: string) {
+  public async notify(abortSignal: AbortSignal, processName: string, isTest: boolean, userExpression: string, message: string) {
     const expression = UserAccessExpressionParser.parse(userExpression);
     const userNames = await this.userAccessExpressionUserQuerier.queryUserNames(abortSignal, expression);
 
     const notifications = new Array<Notification>(userNames.length);
     for (let i = 0; i < userNames.length; i++) {
-      notifications[i] = Notification.create(userNames[i], notification);
+      notifications[i] = Notification.create(userNames[i], message);
     }
 
     const channelName = this.userChatSessionProvider.getDefaultChannelName();
@@ -26,7 +26,7 @@ export class Notifier {
 
     let m = '>>>>>>>>\n';
     m += `The user has a new notification from /${processName} process:\n`;
-    m += notification + '\n';
+    m += `Message: ${message}\n`;
     m += '<<<<<<<<';
 
     for (const n of notifications) {

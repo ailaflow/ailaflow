@@ -1,4 +1,4 @@
-import { FormDefinition, JsonSchema, TaskFinalizationPolicy, TaskFormMessageMetadata, UserAccessExpressionParser } from '@ailaflow/shared';
+import { FormDefinition, JsonSchema, TaskFinalizationPolicy, UserAccessExpressionParser } from '@ailaflow/shared';
 import { AssignedTaskRepository } from '../repositories/task/assigned-task-repository';
 import { TaskRepository } from '../repositories/task/task-repository';
 import { UserAccessExpressionUserQuerier } from '../queriers/user-access-expression/user-access-expression-user-querier';
@@ -63,17 +63,16 @@ export class TaskCreator {
     }
 
     let m = '>>>>>>>>\n';
-    m += `You have a new task assigned: "${title}", id: ${task.id}\n`;
+    m += 'The user has a new task assigned!\n';
+    m += `ID: ${task.id}\n`;
+    m += `Title: ${title}\n`;
     m += '<<<<<<<<';
 
     for (const userName of userNames) {
       const session = await this.userChatSessionProvider.get(abortSignal, isTest, userName, channelName);
       if (session) {
         session.queueUserMessage(m, {
-          internal: true,
-          taskForm: {
-            id: task.id
-          } satisfies TaskFormMessageMetadata
+          internal: true
         });
       }
     }

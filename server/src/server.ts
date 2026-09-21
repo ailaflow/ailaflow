@@ -76,6 +76,7 @@ import {
   SqlitePersistedExecutionRepository
 } from './repositories/persisted-execution/persisted-execution-repository';
 import { OpenMyProcessStartFormTool } from './chat-session/user-tools/open-my-process-start-form-tool';
+import { OpenMyTaskFormTool } from './chat-session/user-tools/open-my-task-form-tool';
 import { GetMyProcessStartFormEndpoint } from './api/my-process/get-my-process-start-form-endpoint';
 import { UserProcessProvider } from './process/user-process-provider';
 import { StartMyProcessEndpoint } from './api/my-process/start-my-process-endpoint';
@@ -485,6 +486,7 @@ export class Server {
       new GetMyTaskDetailsTool(userTaskDetailsProvider),
       new StartMyProcessTool(userProcessProvider, processExecutor, eventBus),
       new OpenMyProcessStartFormTool(userProcessProvider),
+      new OpenMyTaskFormTool(userAssignedTaskProvider),
       new SubmitMyTaskTool(assignedTaskCompleter)
     ]);
 
