@@ -122,7 +122,13 @@ export function ConfigurationOverviewPage() {
     }
   ];
 
-  return <ConfigurationOverviewView statuses={statuses} />;
+  return (
+    <ConfigurationOverviewView
+      title="System status"
+      description="For the best AilaFlow experience, make sure every status card below shows a green indicator."
+      statuses={statuses}
+    />
+  );
 }
 
 function publicUrlStatusValue(publicUrl: string | null, isAvailable: boolean): string {

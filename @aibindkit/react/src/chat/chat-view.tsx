@@ -280,7 +280,7 @@ function ToolCallsView(props: { toolCalls: ToolCall[] }) {
             <SvgIcon name="detailsClosed" className="abk-chat-toggle abk-chat-toggle-closed" />
             <SvgIcon name="detailsOpen" className="abk-chat-toggle abk-chat-toggle-open" />
             <span className="abk-chat-summary-text">
-              Function:{' '}
+              Tool:{' '}
               <span className="abk-chat-summary-strong" title={call.function.name}>
                 {call.function.name}
               </span>
