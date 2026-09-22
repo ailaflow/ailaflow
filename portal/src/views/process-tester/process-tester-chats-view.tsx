@@ -65,6 +65,12 @@ export function ProcessTesterChatsView(props: ProcessTesterChatsViewProps) {
           </button>
         </div>
 
+        {props.activeUserName !== props.currentUserName && (
+          <div role="note" className="shrink-0 bg-orange-100 px-3 py-2 text-xs text-orange-950">
+            Test chat: real history isn’t shown. Actions still run as @{props.activeUserName} - proceed carefully.
+          </div>
+        )}
+
         <div className="flex min-h-0 flex-1 bg-white">{props.children}</div>
       </div>
     </section>

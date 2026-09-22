@@ -42,7 +42,7 @@ export function MyChat(props: MyChatProps) {
     <>
       <Chat
         assistantName="Aila"
-        userName={`@${session.userName}`}
+        userName={`@${props.testUserName ?? session.userName}`}
         transport={apiClient.chat}
         sessionKey={props.sessionKey}
         messageFilter={messageFilter}

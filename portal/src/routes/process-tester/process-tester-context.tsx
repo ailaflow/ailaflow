@@ -22,7 +22,7 @@ import {
   ProcessTesterTimelineFormStatus,
   ProcessTesterTimelineFormType,
   type ProcessTesterTimelineItem
-} from '../../views/process-tester/process-tester-top-view';
+} from '../../views/process-tester/process-tester-timeline-view';
 import { FormError } from '../common/form-renderer/form-adapter';
 
 export interface ProcessTesterData {
