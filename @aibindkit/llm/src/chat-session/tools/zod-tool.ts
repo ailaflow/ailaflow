@@ -30,7 +30,7 @@ export abstract class ZodTool<T = void> implements Tool {
     };
   }
 
-  public async execute(abortSignal: AbortSignal, context: ToolContext, call: ToolCall): Promise<ToolExecutionResult> {
+  public async execute(signal: AbortSignal, context: ToolContext, call: ToolCall): Promise<ToolExecutionResult> {
     let result: ZodToolExecutionResult;
     if (this.inputZod) {
       const json = JSON.parse(call.function.arguments);
@@ -42,9 +42,9 @@ export abstract class ZodTool<T = void> implements Tool {
           })
         };
       }
-      result = await this.handle(abortSignal, context, data as T);
+      result = await this.handle(signal, context, data as T);
     } else {
-      result = await this.handle(abortSignal, context, undefined as T);
+      result = await this.handle(signal, context, undefined as T);
     }
     return {
       content: JSON.stringify(result.content),
@@ -52,5 +52,5 @@ export abstract class ZodTool<T = void> implements Tool {
     };
   }
 
-  protected abstract handle(abortSignal: AbortSignal, context: ToolContext, arg: T): Promise<ZodToolExecutionResult>;
+  protected abstract handle(signal: AbortSignal, context: ToolContext, arg: T): Promise<ZodToolExecutionResult>;
 }

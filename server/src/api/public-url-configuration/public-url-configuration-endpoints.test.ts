@@ -19,8 +19,8 @@ test('gets, saves, clears, and tests the Public URL configuration', async () => 
   const getEndpoint = new GetPublicUrlConfigurationEndpoint(manager);
   const saveEndpoint = new SavePublicUrlConfigurationEndpoint(manager);
   const testEndpoint = new TestPublicUrlEndpoint(manager, tester);
-  const abortSignal = new AbortController().signal;
-  await repository.setup(abortSignal);
+  const signal = new AbortController().signal;
+  await repository.setup(signal);
 
   assert.deepEqual(await getEndpoint.handle(createRequest()), { publicUrl: null });
   assert.deepEqual(await testEndpoint.handle(createRequest({})), {

@@ -13,13 +13,13 @@ export class SlackStatusProvider {
     private readonly runtimeHealth: SlackRuntimeHealthProvider
   ) {}
 
-  public async get(abortSignal: AbortSignal, userName: string): Promise<MySlackConfigurationResponse> {
-    const mapping = await this.mappingRepository.tryGetByAilaUser(abortSignal, userName, 'default');
+  public async get(signal: AbortSignal, userName: string): Promise<MySlackConfigurationResponse> {
+    const mapping = await this.mappingRepository.tryGetByAilaUser(signal, userName, 'default');
     if (!mapping) {
       return { status: SlackConnectionStatus.NOT_CONNECTED, workspaceName: null, displayName: null, email: null };
     }
-    const configuration = await this.configurationRepository.tryGet(abortSignal);
-    const slackUser = await this.directoryRepository.tryGet(abortSignal, mapping.workspaceId, mapping.slackUserId);
+    const configuration = await this.configurationRepository.tryGet(signal);
+    const slackUser = await this.directoryRepository.tryGet(signal, mapping.workspaceId, mapping.slackUserId);
     const available =
       configuration?.workspaceId === mapping.workspaceId &&
       slackUser !== null &&

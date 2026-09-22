@@ -1,3 +1,3 @@
 export interface Repository {
-  setup(abortSignal: AbortSignal): Promise<void>;
+  setup(signal: AbortSignal): Promise<void>;
 }

@@ -1,27 +1,27 @@
 export class ToolWait {
   public constructor(public finishSignal: AbortSignal) {}
 
-  public wait(abortSignal: AbortSignal) {
+  public wait(signal: AbortSignal) {
     return new Promise<void>((resolve, reject) => {
       if (this.finishSignal.aborted) {
         resolve();
         return;
       }
-      if (abortSignal.aborted) {
+      if (signal.aborted) {
         reject(new Error('Tool wait aborted'));
         return;
       }
 
       const onAbort = () => {
-        abortSignal.removeEventListener('abort', onAbort);
+        signal.removeEventListener('abort', onAbort);
         reject(new Error('Tool wait aborted'));
       };
-      abortSignal.addEventListener('abort', onAbort);
+      signal.addEventListener('abort', onAbort);
 
       this.finishSignal.addEventListener(
         'abort',
         () => {
-          abortSignal.removeEventListener('abort', onAbort);
+          signal.removeEventListener('abort', onAbort);
           resolve();
         },
         { once: true }

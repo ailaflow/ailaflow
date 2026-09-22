@@ -25,10 +25,10 @@ export class SaveUserEndpoint implements Endpoint {
   ) {}
 
   public async handle(req: Request): Promise<SaveUserResponse> {
-    const abortSignal = getEndpointAbortSignal(req);
+    const signal = getEndpointAbortSignal(req);
     const request = parseBody(saveUserRequestSchema, req.body);
 
-    const existingUser = await this.userRepository.tryGetUser(abortSignal, request.name);
+    const existingUser = await this.userRepository.tryGetUser(signal, request.name);
     let user: User;
     if (request.insert) {
       if (existingUser) {
@@ -78,11 +78,11 @@ export class SaveUserEndpoint implements Endpoint {
 
     try {
       if (request.insert) {
-        await this.userRepository.insert(abortSignal, user);
+        await this.userRepository.insert(signal, user);
       } else {
-        await this.userRepository.update(abortSignal, user);
+        await this.userRepository.update(signal, user);
       }
-      await this.userAttributesRepository.replace(abortSignal, attributes);
+      await this.userAttributesRepository.replace(signal, attributes);
     } catch (e) {
       if (e instanceof UserRepositoryError || e instanceof UserAttributesRepositoryError) {
         throw new EndpointError(e.message, 400);
@@ -91,7 +91,7 @@ export class SaveUserEndpoint implements Endpoint {
     }
 
     if (!request.isActive) {
-      await this.authTokenRepository.deleteForUser(abortSignal, user.name);
+      await this.authTokenRepository.deleteForUser(signal, user.name);
     }
 
     return {

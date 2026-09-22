@@ -31,9 +31,9 @@ export class ReadTablePageRpcHandler implements SandboxRpcHandler {
 
   public constructor(private readonly tableManager: TableManager) {}
 
-  public async handle(abortSignal: AbortSignal, _sandboxName: string, _executionId: string, data: object) {
+  public async handle(signal: AbortSignal, _sandboxName: string, _executionId: string, data: object) {
     const request = requestSchema.parse(data);
-    return this.tableManager.readPage(abortSignal, {
+    return this.tableManager.readPage(signal, {
       tableName: request.name,
       page: request.page,
       pageSize: request.pageSize,

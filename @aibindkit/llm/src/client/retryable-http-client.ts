@@ -90,20 +90,20 @@ export class RetryableHttpClient {
     }
   }
 
-  private wait(delayMs: number, abortSignal: AbortSignal | null | undefined): Promise<void> {
-    if (abortSignal?.aborted) {
-      return Promise.reject(abortSignal.reason);
+  private wait(delayMs: number, signal: AbortSignal | null | undefined): Promise<void> {
+    if (signal?.aborted) {
+      return Promise.reject(signal.reason);
     }
     return new Promise((resolve, reject) => {
       const timeoutId = setTimeout(() => {
-        abortSignal?.removeEventListener('abort', onAbort);
+        signal?.removeEventListener('abort', onAbort);
         resolve();
       }, delayMs);
       const onAbort = () => {
         clearTimeout(timeoutId);
-        reject(abortSignal?.reason);
+        reject(signal?.reason);
       };
-      abortSignal?.addEventListener('abort', onAbort, { once: true });
+      signal?.addEventListener('abort', onAbort, { once: true });
     });
   }
 }

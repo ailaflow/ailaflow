@@ -14,11 +14,11 @@ export class AssistantMessage implements Message {
     private readonly toolSet: ToolSet
   ) {}
 
-  public async complete(abortSignal: AbortSignal, stack: ChatSessionStack): Promise<MessageCompletionResult> {
+  public async complete(signal: AbortSignal, stack: ChatSessionStack): Promise<MessageCompletionResult> {
     const llmMessages = stack.getRecentCompletedLlmMessagesBeforeLast();
     const toolDescriptors = this.toolSet.getDescriptorsOrUndefined();
 
-    const { message, usage } = await this.llmClient.complete(abortSignal, this.llmModelSettings, llmMessages, toolDescriptors);
+    const { message, usage } = await this.llmClient.complete(signal, this.llmModelSettings, llmMessages, toolDescriptors);
 
     let toolCalls: ToolCall[] | undefined;
     if (message.role === 'assistant') {

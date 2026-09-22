@@ -8,10 +8,10 @@ import { SqlitePersistedExecutionRepository } from './persisted-execution-reposi
 test('persisted execution repository upserts, gets, and deletes an execution', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
   const dbs = { dataDb: new SqliteDatabase(db) } as SqliteDatabases;
-  const abortSignal = new AbortController().signal;
+  const signal = new AbortController().signal;
   const repository = new SqlitePersistedExecutionRepository(dbs);
 
-  await repository.setup(abortSignal);
+  await repository.setup(signal);
 
   const execution = new PersistedExecution(
     'execution_1',
@@ -33,13 +33,13 @@ test('persisted execution repository upserts, gets, and deletes an execution', a
     2000
   );
 
-  await repository.upsert(abortSignal, execution);
+  await repository.upsert(signal, execution);
 
-  assert.deepEqual(await repository.tryGet(abortSignal, 'execution_1'), execution);
+  assert.deepEqual(await repository.tryGet(signal, 'execution_1'), execution);
 
-  await repository.delete(abortSignal, 'execution_1');
+  await repository.delete(signal, 'execution_1');
 
-  assert.equal(await repository.tryGet(abortSignal, 'execution_1'), null);
+  assert.equal(await repository.tryGet(signal, 'execution_1'), null);
 
   db.close();
 });

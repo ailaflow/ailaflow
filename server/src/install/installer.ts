@@ -21,13 +21,13 @@ export class Installer {
     private readonly licenseManager: LicenseManager
   ) {}
 
-  public async canInstall(abortSignal: AbortSignal): Promise<boolean> {
-    const userCount = await this.userRepository.count(abortSignal, false);
+  public async canInstall(signal: AbortSignal): Promise<boolean> {
+    const userCount = await this.userRepository.count(signal, false);
     return userCount === 0;
   }
 
   public async install(
-    abortSignal: AbortSignal,
+    signal: AbortSignal,
     rootUserName: string,
     rootPassword: string,
     licenseType: LicenseType,
@@ -39,11 +39,11 @@ export class Installer {
     this.isInstalling = true;
 
     try {
-      if ((await this.canInstall(abortSignal)) === false) {
+      if ((await this.canInstall(signal)) === false) {
         return 'Installation is not allowed because the system is already initialized';
       }
 
-      const licenseValidationError = await this.licenseManager.tryValidateAndSet(abortSignal, licenseType, licenseKey);
+      const licenseValidationError = await this.licenseManager.tryValidateAndSet(signal, licenseType, licenseKey);
       if (licenseValidationError !== null) {
         return `License validation failed: ${licenseValidationError}`;
       }
@@ -61,9 +61,9 @@ export class Installer {
         secrets: {}
       });
 
-      await this.userRepository.insert(abortSignal, user);
-      await this.userAttributesRepository.replace(abortSignal, attributes);
-      await this.sandboxRepository.insert(abortSignal, defaultSandbox);
+      await this.userRepository.insert(signal, user);
+      await this.userAttributesRepository.replace(signal, attributes);
+      await this.sandboxRepository.insert(signal, defaultSandbox);
     } finally {
       this.isInstalling = false;
     }

@@ -16,8 +16,8 @@ export class GetProcessesTool extends ZodTool<Arg> {
     super('global_get_processes', 'Returns a paginated list of processes in the system', inputSchema);
   }
 
-  public async handle(abortSignal: AbortSignal, _: ToolContext, arg: Arg): Promise<ZodToolExecutionResult> {
-    const response = await this.querier.query(abortSignal, arg.page, PAGE_SIZE, ProcessDisplay.LISTED);
+  public async handle(signal: AbortSignal, _: ToolContext, arg: Arg): Promise<ZodToolExecutionResult> {
+    const response = await this.querier.query(signal, arg.page, PAGE_SIZE, ProcessDisplay.LISTED);
     return {
       content: {
         processes: response.processes.map(p => ({

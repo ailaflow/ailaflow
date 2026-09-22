@@ -26,11 +26,11 @@ export class LlmClientError extends Error {
 
 export interface LlmClient {
   complete(
-    abortSignal: AbortSignal,
+    signal: AbortSignal,
     modelSettings: LlmModelSettings,
     messages: LlmMessage[],
     toolDescriptors: ToolDescriptor[] | undefined
   ): Promise<LlmCompleteResult>;
-  getModels(abortSignal: AbortSignal): Promise<LlmModel[]>;
+  getModels(signal: AbortSignal): Promise<LlmModel[]>;
   dispose(): void;
 }

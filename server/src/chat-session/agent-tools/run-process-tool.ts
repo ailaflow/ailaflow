@@ -25,7 +25,7 @@ export class RunProcessTool extends ZodTool<Record<string, unknown>> {
     );
   }
 
-  protected async handle(abortSignal: AbortSignal, _: ToolContext, input: Record<string, unknown>): Promise<ZodToolExecutionResult> {
+  protected async handle(signal: AbortSignal, _: ToolContext, input: Record<string, unknown>): Promise<ZodToolExecutionResult> {
     const execution = this.executionStore.get(this.executionId);
     if (this.process.isPausable) {
       throw new Error(`Process "${this.process.name}" is pausable and cannot be run by an agent`);
@@ -36,7 +36,7 @@ export class RunProcessTool extends ZodTool<Record<string, unknown>> {
       throw new Error(error);
     }
 
-    const softSignal = AbortSignal.any([abortSignal, AbortSignal.timeout(60_000)]);
+    const softSignal = AbortSignal.any([signal, AbortSignal.timeout(60_000)]);
 
     const subExecution = execution.initializeSubExecution(this.process, input);
 
@@ -44,7 +44,7 @@ export class RunProcessTool extends ZodTool<Record<string, unknown>> {
 
     if (outcome === null) {
       subExecution.tryStop();
-      abortSignal.throwIfAborted();
+      signal.throwIfAborted();
       return { content: { error: 'The process execution took too long and was stopped' } };
     }
     if (outcome.type === ProcessExecutionOutcomeType.FINISHED) {

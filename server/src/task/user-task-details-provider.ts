@@ -8,13 +8,13 @@ export class UserTaskDetailsProvider {
     private readonly repository: PersistedExecutionRepository
   ) {}
 
-  public async tryGet(abortSignal: AbortSignal, isTest: boolean, userName: string, taskId: string): Promise<TaskDetails | null> {
-    const userAssignedTask = await this.provider.tryGetCompletable(abortSignal, isTest, userName, taskId);
+  public async tryGet(signal: AbortSignal, isTest: boolean, userName: string, taskId: string): Promise<TaskDetails | null> {
+    const userAssignedTask = await this.provider.tryGetCompletable(signal, isTest, userName, taskId);
     if (!userAssignedTask) {
       return null;
     }
 
-    const execution = await this.repository.tryGet(abortSignal, userAssignedTask.task.executionId);
+    const execution = await this.repository.tryGet(signal, userAssignedTask.task.executionId);
     if (!execution) {
       throw new Error('Cannot find the execution');
     }

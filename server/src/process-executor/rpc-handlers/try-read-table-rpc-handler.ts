@@ -13,8 +13,8 @@ export class TryReadTableRpcHandler implements SandboxRpcHandler {
 
   public constructor(private readonly tableManager: TableManager) {}
 
-  public async handle(abortSignal: AbortSignal, _sandboxName: string, _executionId: string, data: object): Promise<TableRow | null> {
+  public async handle(signal: AbortSignal, _sandboxName: string, _executionId: string, data: object): Promise<TableRow | null> {
     const request = requestSchema.parse(data);
-    return this.tableManager.tryRead(abortSignal, request.name, request._id);
+    return this.tableManager.tryRead(signal, request.name, request._id);
   }
 }

@@ -12,7 +12,7 @@ export interface SlackSocketClient {
   start(
     appToken: string,
     onEvent: (event: SlackSocketEvent) => Promise<void>,
-    abortSignal: AbortSignal,
+    signal: AbortSignal,
     onConnectionChange?: (connected: boolean, error: string | null) => void
   ): Promise<void>;
   stop(): Promise<void>;
@@ -26,11 +26,11 @@ export class OfficialSlackSocketClient implements SlackSocketClient {
   public async start(
     appToken: string,
     onEvent: (event: SlackSocketEvent) => Promise<void>,
-    abortSignal: AbortSignal,
+    signal: AbortSignal,
     onConnectionChange?: (connected: boolean, error: string | null) => void
   ): Promise<void> {
     await this.stop();
-    if (abortSignal.aborted) {
+    if (signal.aborted) {
       return;
     }
     const client = new SocketModeClient({ appToken });
@@ -43,7 +43,7 @@ export class OfficialSlackSocketClient implements SlackSocketClient {
     client.on('connected', () => onConnectionChange?.(true, null));
     client.on('reconnecting', () => onConnectionChange?.(false, 'Slack Socket Mode is reconnecting'));
     client.on('disconnected', () => onConnectionChange?.(false, 'Slack Socket Mode disconnected'));
-    abortSignal.addEventListener(
+    signal.addEventListener(
       'abort',
       () => {
         void this.stop().catch(error => {

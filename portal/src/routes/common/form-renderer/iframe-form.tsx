@@ -37,10 +37,10 @@ export function IframeForm({ form, adapter }: IframeFormProps) {
       iframe.contentWindow?.postMessage(message, '*');
     };
 
-    const handle = async (message: RequestMessage, handler: (abortSignal: AbortSignal) => Promise<unknown>) => {
+    const handle = async (message: RequestMessage, handler: (signal: AbortSignal) => Promise<unknown>) => {
       try {
-        const abortSignal = AbortSignal.timeout(5_000);
-        const payload = await handler(abortSignal);
+        const signal = AbortSignal.timeout(5_000);
+        const payload = await handler(signal);
         sendResponse({
           id: message.id,
           type: message.type,
@@ -64,17 +64,17 @@ export function IframeForm({ form, adapter }: IframeFormProps) {
         }
         adapter.assertVariableValue(name, value);
       }
-      const abortSignal = AbortSignal.timeout(5_000);
-      await adapter.submitForm(abortSignal, payload);
+      const signal = AbortSignal.timeout(5_000);
+      await adapter.submitForm(signal, payload);
     };
 
-    const readVariable = async (abortSignal: AbortSignal, payload: Record<string, unknown>) => {
+    const readVariable = async (signal: AbortSignal, payload: Record<string, unknown>) => {
       let name = payload.name as string;
-      return adapter.readVariable(abortSignal, name);
+      return adapter.readVariable(signal, name);
     };
 
-    const openStartForm = async (abortSignal: AbortSignal) => {
-      return adapter.openStartForm(abortSignal);
+    const openStartForm = async (signal: AbortSignal) => {
+      return adapter.openStartForm(signal);
     };
 
     const collectFormError = async (payload: Record<string, unknown>) => {
@@ -92,14 +92,14 @@ export function IframeForm({ form, adapter }: IframeFormProps) {
       if (!message || !message.id || !message.payload) {
         return;
       }
-      handle(message, async abortSignal => {
+      handle(message, async signal => {
         switch (message.type) {
           case 'openStartForm':
-            return openStartForm(abortSignal);
+            return openStartForm(signal);
           case 'submitForm':
             return submitForm(message.payload);
           case 'readVariable':
-            return readVariable(abortSignal, message.payload);
+            return readVariable(signal, message.payload);
           case 'tryReadUserStorage':
             return userStorage.tryReadUserStorage(message.payload);
           case 'writeUserStorage':

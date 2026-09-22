@@ -31,15 +31,15 @@ export class LicenseManager {
     return this.status;
   }
 
-  public async getInstanceId(abortSignal: AbortSignal): Promise<string> {
+  public async getInstanceId(signal: AbortSignal): Promise<string> {
     const release = await this.instanceIdMutex.acquire();
     try {
-      const config = await this.configurationManager.get(abortSignal);
+      const config = await this.configurationManager.get(signal);
       let instanceId = config.instanceId;
       if (!instanceId) {
         instanceId = randomUUID();
         config.setInstanceId(instanceId);
-        await this.configurationManager.update(abortSignal, config);
+        await this.configurationManager.update(signal, config);
       }
       return instanceId;
     } finally {

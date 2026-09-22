@@ -10,12 +10,12 @@ export class TableDataRepositoryError extends Error {
 }
 
 export interface TableDataRepository {
-  tryGet(abortSignal: AbortSignal, schema: TableSchema, _id: string): Promise<TableRow | null>;
+  tryGet(signal: AbortSignal, schema: TableSchema, _id: string): Promise<TableRow | null>;
   upsert(
-    abortSignal: AbortSignal,
+    signal: AbortSignal,
     schema: TableSchema,
     row: Record<string, unknown> & { _id: string },
     transaction?: Transaction
   ): Promise<void>;
-  delete(abortSignal: AbortSignal, tableName: string, _id: string, transaction?: Transaction): Promise<void>;
+  delete(signal: AbortSignal, tableName: string, _id: string, transaction?: Transaction): Promise<void>;
 }

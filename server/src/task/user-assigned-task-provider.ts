@@ -14,18 +14,13 @@ export class UserAssignedTaskProvider {
     private readonly assignedTaskRepository: AssignedTaskRepository
   ) {}
 
-  public async tryGetCompletable(
-    abortSignal: AbortSignal,
-    isTest: boolean,
-    userName: string,
-    taskId: string
-  ): Promise<UserAssignedTask | null> {
-    const assignedTask = await this.assignedTaskRepository.tryGet(abortSignal, taskId, userName);
+  public async tryGetCompletable(signal: AbortSignal, isTest: boolean, userName: string, taskId: string): Promise<UserAssignedTask | null> {
+    const assignedTask = await this.assignedTaskRepository.tryGet(signal, taskId, userName);
     if (!assignedTask || assignedTask.completedAt !== null) {
       return null;
     }
 
-    const task = await this.taskRepository.tryGet(abortSignal, taskId);
+    const task = await this.taskRepository.tryGet(signal, taskId);
     if (!task) {
       throw new Error(`Task ${taskId} not found but assignment exists`);
     }

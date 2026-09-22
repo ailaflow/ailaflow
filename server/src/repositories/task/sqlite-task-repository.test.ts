@@ -13,13 +13,13 @@ import { User } from '../user/user';
 test('task insert does not overwrite an existing task', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
   const dbs = { modelDb: new SqliteDatabase(db) } as SqliteDatabases;
-  const abortSignal = new AbortController().signal;
+  const signal = new AbortController().signal;
   const repository = new SqliteTaskRepository(dbs);
 
-  await repository.setup(abortSignal);
+  await repository.setup(signal);
 
   await repository.insert(
-    abortSignal,
+    signal,
     new Task(
       'task_1',
       'Original task',
@@ -42,7 +42,7 @@ test('task insert does not overwrite an existing task', async () => {
 
   await assert.rejects(() =>
     repository.insert(
-      abortSignal,
+      signal,
       new Task(
         'task_1',
         'Changed task',
@@ -111,7 +111,7 @@ test('task insert does not overwrite an existing task', async () => {
 test('task can be finalized', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
   const dbs = { modelDb: new SqliteDatabase(db) } as SqliteDatabases;
-  const abortSignal = new AbortController().signal;
+  const signal = new AbortController().signal;
   const repository = new SqliteTaskRepository(dbs);
   const task = new Task(
     'task_1',
@@ -132,11 +132,11 @@ test('task can be finalized', async () => {
     TaskSubmissionMode.TASK_FORM
   );
 
-  await repository.setup(abortSignal);
-  await repository.insert(abortSignal, task);
+  await repository.setup(signal);
+  await repository.insert(signal, task);
   const rowBeforeUpdate = { ...db.prepare(`SELECT * FROM tasks WHERE id = ?`).get(task.id) };
 
-  await repository.finalize(abortSignal, task.id, 2500);
+  await repository.finalize(signal, task.id, 2500);
 
   assert.deepEqual(
     { ...db.prepare(`SELECT * FROM tasks WHERE id = ?`).get(task.id) },
@@ -146,7 +146,7 @@ test('task can be finalized', async () => {
       finalizedAt: 2500
     }
   );
-  const finalizedTask = await repository.tryGet(abortSignal, task.id);
+  const finalizedTask = await repository.tryGet(signal, task.id);
   assert.equal(finalizedTask?.finalizationRequestCount, 0);
   assert.equal(finalizedTask?.finalizedAt, 2500);
 
@@ -156,7 +156,7 @@ test('task can be finalized', async () => {
 test('task finalization request count can be incremented and decremented', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
   const dbs = { modelDb: new SqliteDatabase(db) } as SqliteDatabases;
-  const abortSignal = new AbortController().signal;
+  const signal = new AbortController().signal;
   const repository = new SqliteTaskRepository(dbs);
   const task = new Task(
     'task_1',
@@ -177,12 +177,12 @@ test('task finalization request count can be incremented and decremented', async
     TaskSubmissionMode.AI_TOOL_OR_TASK_FORM
   );
 
-  await repository.setup(abortSignal);
-  await repository.insert(abortSignal, task);
-  await repository.incrementFinalizationRequestCount(abortSignal, task.id, 3);
-  await repository.incrementFinalizationRequestCount(abortSignal, task.id, -1);
+  await repository.setup(signal);
+  await repository.insert(signal, task);
+  await repository.incrementFinalizationRequestCount(signal, task.id, 3);
+  await repository.incrementFinalizationRequestCount(signal, task.id, -1);
 
-  assert.equal((await repository.tryGet(abortSignal, task.id))?.finalizationRequestCount, 2);
+  assert.equal((await repository.tryGet(signal, task.id))?.finalizationRequestCount, 2);
 
   db.close();
 });
@@ -190,7 +190,7 @@ test('task finalization request count can be incremented and decremented', async
 test('concurrent task finalization request increments are serialized', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
   const dbs = { modelDb: new SqliteDatabase(db) } as SqliteDatabases;
-  const abortSignal = new AbortController().signal;
+  const signal = new AbortController().signal;
   const repository = new SqliteTaskRepository(dbs);
   const task = Task.create(
     'Task',
@@ -206,15 +206,15 @@ test('concurrent task finalization request increments are serialized', async () 
     TaskSubmissionMode.AI_TOOL_OR_TASK_FORM
   );
 
-  await repository.setup(abortSignal);
-  await repository.insert(abortSignal, task);
+  await repository.setup(signal);
+  await repository.insert(signal, task);
 
   await Promise.all([
-    repository.incrementFinalizationRequestCount(abortSignal, task.id, 1),
-    repository.incrementFinalizationRequestCount(abortSignal, task.id, 1)
+    repository.incrementFinalizationRequestCount(signal, task.id, 1),
+    repository.incrementFinalizationRequestCount(signal, task.id, 1)
   ]);
 
-  assert.equal((await repository.tryGet(abortSignal, task.id))?.finalizationRequestCount, 2);
+  assert.equal((await repository.tryGet(signal, task.id))?.finalizationRequestCount, 2);
 
   db.close();
 });
@@ -222,7 +222,7 @@ test('concurrent task finalization request increments are serialized', async () 
 test('next task finalization attempt can be scheduled', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
   const dbs = { modelDb: new SqliteDatabase(db) } as SqliteDatabases;
-  const abortSignal = new AbortController().signal;
+  const signal = new AbortController().signal;
   const repository = new SqliteTaskRepository(dbs);
   const task = Task.create(
     'Task',
@@ -238,11 +238,11 @@ test('next task finalization attempt can be scheduled', async () => {
     TaskSubmissionMode.AI_TOOL_OR_TASK_FORM
   );
 
-  await repository.setup(abortSignal);
-  await repository.insert(abortSignal, task);
-  await repository.setNextFinalizationAttemptAt(abortSignal, task.id, 5000);
+  await repository.setup(signal);
+  await repository.insert(signal, task);
+  await repository.setNextFinalizationAttemptAt(signal, task.id, 5000);
 
-  assert.equal((await repository.tryGet(abortSignal, task.id))?.nextFinalizationAttemptAt, 5000);
+  assert.equal((await repository.tryGet(signal, task.id))?.nextFinalizationAttemptAt, 5000);
 
   db.close();
 });
@@ -250,7 +250,7 @@ test('next task finalization attempt can be scheduled', async () => {
 test('task can be fetched by id', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
   const dbs = { modelDb: new SqliteDatabase(db) } as SqliteDatabases;
-  const abortSignal = new AbortController().signal;
+  const signal = new AbortController().signal;
   const repository = new SqliteTaskRepository(dbs);
   const task = new Task(
     'task_1',
@@ -276,11 +276,11 @@ test('task can be fetched by id', async () => {
     TaskSubmissionMode.TASK_FORM
   );
 
-  await repository.setup(abortSignal);
-  await repository.insert(abortSignal, task);
+  await repository.setup(signal);
+  await repository.insert(signal, task);
 
-  assert.deepEqual(await repository.tryGet(abortSignal, 'task_1'), task);
-  assert.equal(await repository.tryGet(abortSignal, 'missing'), null);
+  assert.deepEqual(await repository.tryGet(signal, 'task_1'), task);
+  assert.equal(await repository.tryGet(signal, 'missing'), null);
 
   db.close();
 });
@@ -289,17 +289,17 @@ test('task can be deleted with its assignments', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
   db.exec(`PRAGMA foreign_keys = ON`);
   const dbs = { modelDb: new SqliteDatabase(db) } as SqliteDatabases;
-  const abortSignal = new AbortController().signal;
+  const signal = new AbortController().signal;
   const userRepository = new SqliteUserRepository(dbs);
   const taskRepository = new SqliteTaskRepository(dbs);
   const assignedTaskRepository = new SqliteAssignedTaskRepository(dbs);
 
-  await userRepository.setup(abortSignal);
-  await taskRepository.setup(abortSignal);
-  await assignedTaskRepository.setup(abortSignal);
-  await userRepository.insert(abortSignal, new User('user_1', null, 'hash', true, false));
+  await userRepository.setup(signal);
+  await taskRepository.setup(signal);
+  await assignedTaskRepository.setup(signal);
+  await userRepository.insert(signal, new User('user_1', null, 'hash', true, false));
   await taskRepository.insert(
-    abortSignal,
+    signal,
     new Task(
       'task_1',
       'Task',
@@ -319,12 +319,12 @@ test('task can be deleted with its assignments', async () => {
       TaskSubmissionMode.AI_TOOL_OR_TASK_FORM
     )
   );
-  await assignedTaskRepository.upsert(abortSignal, AssignedTask.create('task_1', 'user_1', 'default'));
+  await assignedTaskRepository.upsert(signal, AssignedTask.create('task_1', 'user_1', 'default'));
 
-  assert.equal(await taskRepository.delete(abortSignal, 'task_1'), true);
-  assert.equal(await taskRepository.tryGet(abortSignal, 'task_1'), null);
-  assert.equal(await assignedTaskRepository.tryGet(abortSignal, 'task_1', 'user_1'), null);
-  assert.equal(await taskRepository.delete(abortSignal, 'task_1'), false);
+  assert.equal(await taskRepository.delete(signal, 'task_1'), true);
+  assert.equal(await taskRepository.tryGet(signal, 'task_1'), null);
+  assert.equal(await assignedTaskRepository.tryGet(signal, 'task_1', 'user_1'), null);
+  assert.equal(await taskRepository.delete(signal, 'task_1'), false);
 
   db.close();
 });

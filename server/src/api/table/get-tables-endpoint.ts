@@ -14,8 +14,8 @@ export class GetTablesEndpoint implements Endpoint {
   public constructor(private readonly querier: TableListQuerier) {}
 
   public async handle(req: Request): Promise<GetTablesResponse> {
-    const abortSignal = getEndpointAbortSignal(req);
+    const signal = getEndpointAbortSignal(req);
     const { page, pageSize } = parseQuery(getTablesRequestSchema, req.query);
-    return this.querier.query(abortSignal, page, pageSize);
+    return this.querier.query(signal, page, pageSize);
   }
 }

@@ -20,13 +20,13 @@ export class SaveUserTelegramBotEndpoint implements Endpoint {
   ) {}
 
   public async handle(req: Request): Promise<SaveTelegramBotResponse> {
-    const abortSignal = getEndpointAbortSignal(req);
+    const signal = getEndpointAbortSignal(req);
     const userName = String(req.params.userName);
-    const user = await this.userRepository.tryGetUser(abortSignal, userName);
+    const user = await this.userRepository.tryGetUser(signal, userName);
     if (!user) {
       throw new EndpointError('User not found', 404);
     }
     const request = parseBody(saveTelegramBotRequestSchema, req.body);
-    return this.api.save(abortSignal, user.name, request);
+    return this.api.save(signal, user.name, request);
   }
 }

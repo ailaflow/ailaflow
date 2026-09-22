@@ -22,7 +22,7 @@ export interface ResolvedChatSession {
   backendTools: Tool[];
   backendToolsHash: string;
   systemPrompt?: string;
-  getLlmClientWithSettings(abortSignal: AbortSignal): Promise<LlmClientWithSettings>;
+  getLlmClientWithSettings(signal: AbortSignal): Promise<LlmClientWithSettings>;
 }
 
 export interface ChatSessionResolver {

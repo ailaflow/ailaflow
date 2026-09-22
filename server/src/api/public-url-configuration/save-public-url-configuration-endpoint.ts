@@ -17,8 +17,8 @@ export class SavePublicUrlConfigurationEndpoint implements Endpoint {
 
   public async handle(req: Request): Promise<SavePublicUrlConfigurationResponse> {
     const request = parseBody(savePublicUrlConfigurationRequestSchema, req.body);
-    const abortSignal = getEndpointAbortSignal(req);
-    const config = await this.manager.get(abortSignal);
+    const signal = getEndpointAbortSignal(req);
+    const config = await this.manager.get(signal);
 
     try {
       config.setPublicUrl(request.publicUrl);
@@ -29,7 +29,7 @@ export class SavePublicUrlConfigurationEndpoint implements Endpoint {
       throw e;
     }
 
-    await this.manager.update(abortSignal, config);
+    await this.manager.update(signal, config);
     return { publicUrl: config.publicUrl };
   }
 }

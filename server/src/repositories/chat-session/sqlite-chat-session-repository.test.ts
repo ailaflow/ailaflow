@@ -9,12 +9,12 @@ import { SqliteChatSessionRepository } from './sqlite-chat-session-repository';
 test('upserts and restores chat-session snapshots', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
   const repository = new SqliteChatSessionRepository({ dataDb: new SqliteDatabase(db) } as SqliteDatabases);
-  const abortSignal = new AbortController().signal;
-  await repository.setup(abortSignal);
+  const signal = new AbortController().signal;
+  await repository.setup(signal);
 
-  assert.equal(await repository.tryGet(abortSignal, 'missing'), null);
+  assert.equal(await repository.tryGet(signal, 'missing'), null);
 
-  await repository.upsert(abortSignal, 'session', {
+  await repository.upsert(signal, 'session', {
     totalTokens: 12,
     messages: [
       {
@@ -24,7 +24,7 @@ test('upserts and restores chat-session snapshots', async () => {
       }
     ]
   });
-  await repository.upsert(abortSignal, 'session', {
+  await repository.upsert(signal, 'session', {
     totalTokens: 24,
     messages: [
       {
@@ -35,7 +35,7 @@ test('upserts and restores chat-session snapshots', async () => {
     ]
   });
 
-  assert.deepEqual(await repository.tryGet(abortSignal, 'session'), {
+  assert.deepEqual(await repository.tryGet(signal, 'session'), {
     totalTokens: 24,
     messages: [
       {
@@ -51,14 +51,14 @@ test('upserts and restores chat-session snapshots', async () => {
 test('serializes data writes behind an externally owned transaction', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
   const repository = new SqliteChatSessionRepository({ dataDb: new SqliteDatabase(db) } as SqliteDatabases);
-  const abortSignal = new AbortController().signal;
-  await repository.setup(abortSignal);
+  const signal = new AbortController().signal;
+  await repository.setup(signal);
 
   const transaction = Transaction.begin();
-  await repository.upsert(abortSignal, 'rolled-back', { totalTokens: 0, messages: [] }, transaction);
+  await repository.upsert(signal, 'rolled-back', { totalTokens: 0, messages: [] }, transaction);
 
   let standaloneWriteCompleted = false;
-  const standaloneWrite = repository.upsert(abortSignal, 'committed', { totalTokens: 0, messages: [] }).then(() => {
+  const standaloneWrite = repository.upsert(signal, 'committed', { totalTokens: 0, messages: [] }).then(() => {
     standaloneWriteCompleted = true;
   });
   await Promise.resolve();
@@ -68,7 +68,7 @@ test('serializes data writes behind an externally owned transaction', async () =
   await transaction.rollback();
   await standaloneWrite;
 
-  assert.equal(await repository.tryGet(abortSignal, 'rolled-back'), null);
-  assert.notEqual(await repository.tryGet(abortSignal, 'committed'), null);
+  assert.equal(await repository.tryGet(signal, 'rolled-back'), null);
+  assert.notEqual(await repository.tryGet(signal, 'committed'), null);
   db.close();
 });

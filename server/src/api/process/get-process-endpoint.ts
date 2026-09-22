@@ -14,10 +14,10 @@ export class GetProcessEndpoint implements Endpoint {
   public constructor(private readonly processManager: ProcessManager) {}
 
   public async handle(req: Request): Promise<GetProcessResponse> {
-    const abortSignal = getEndpointAbortSignal(req);
+    const signal = getEndpointAbortSignal(req);
     const processName = String(req.params.name);
 
-    const process = await this.processManager.tryGetByName(abortSignal, processName);
+    const process = await this.processManager.tryGetByName(signal, processName);
     if (!process) {
       throw new EndpointError('Process not found', 404);
     }

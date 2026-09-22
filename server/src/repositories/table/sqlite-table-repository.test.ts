@@ -9,13 +9,13 @@ test('manages table definitions and their data tables', async () => {
   const modelDb = new DatabaseSync(':memory:', { open: true });
   const dataDb = new DatabaseSync(':memory:', { open: true });
   const dbs = { modelDb: new SqliteDatabase(modelDb), dataDb: new SqliteDatabase(dataDb) } as SqliteDatabases;
-  const abortSignal = new AbortController().signal;
+  const signal = new AbortController().signal;
   const repository = new SqliteTableRepository(dbs);
 
-  await repository.setup(abortSignal);
-  await repository.insert(abortSignal, new Table('customers', 'Customer records'));
+  await repository.setup(signal);
+  await repository.insert(signal, new Table('customers', 'Customer records'));
 
-  assert.deepEqual(await repository.tryGetByName(abortSignal, 'customers'), new Table('customers', 'Customer records'));
+  assert.deepEqual(await repository.tryGetByName(signal, 'customers'), new Table('customers', 'Customer records'));
   assert.deepEqual(toPlainRows(modelDb.prepare(`SELECT name, description FROM tables`)), [
     { name: 'customers', description: 'Customer records' }
   ]);
@@ -32,14 +32,14 @@ test('manages table definitions and their data tables', async () => {
     ]
   );
 
-  await repository.update(abortSignal, new Table('customers', 'Updated description'));
+  await repository.update(signal, new Table('customers', 'Updated description'));
   assert.deepEqual(toPlainRows(modelDb.prepare(`SELECT name, description FROM tables`)), [
     { name: 'customers', description: 'Updated description' }
   ]);
 
-  assert.equal(await repository.delete(abortSignal, 'customers'), true);
-  assert.equal(await repository.delete(abortSignal, 'customers'), false);
-  assert.equal(await repository.tryGetByName(abortSignal, 'customers'), null);
+  assert.equal(await repository.delete(signal, 'customers'), true);
+  assert.equal(await repository.delete(signal, 'customers'), false);
+  assert.equal(await repository.tryGetByName(signal, 'customers'), null);
   assert.deepEqual(toPlainRows(modelDb.prepare(`SELECT name, description FROM tables`)), []);
   assert.equal(tableExists(dataDb, 'data_customers'), false);
 
@@ -51,13 +51,13 @@ test('rolls back a definition insert when its data table cannot be created', asy
   const modelDb = new DatabaseSync(':memory:', { open: true });
   const dataDb = new DatabaseSync(':memory:', { open: true });
   const dbs = { modelDb: new SqliteDatabase(modelDb), dataDb: new SqliteDatabase(dataDb) } as SqliteDatabases;
-  const abortSignal = new AbortController().signal;
+  const signal = new AbortController().signal;
   const repository = new SqliteTableRepository(dbs);
 
-  await repository.setup(abortSignal);
+  await repository.setup(signal);
   dataDb.exec(`CREATE TABLE data_customers (legacyId TEXT PRIMARY KEY)`);
 
-  await assert.rejects(() => repository.insert(abortSignal, new Table('customers', 'Customer records')));
+  await assert.rejects(() => repository.insert(signal, new Table('customers', 'Customer records')));
   assert.deepEqual(toPlainRows(modelDb.prepare(`SELECT name, description FROM tables`)), []);
 
   modelDb.close();

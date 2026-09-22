@@ -11,15 +11,15 @@ export class ProcessCronJobRepositoryError extends Error {
 }
 
 export interface ProcessCronJobRepository extends Repository {
-  insert(abortSignal: AbortSignal, job: ProcessCronJob, transaction?: Transaction): Promise<void>;
-  updateConfiguration(abortSignal: AbortSignal, job: ProcessCronJob, transaction?: Transaction): Promise<void>;
-  updateLastRun(abortSignal: AbortSignal, id: string, lastRun: ProcessCronJobRun, transaction?: Transaction): Promise<boolean>;
-  delete(abortSignal: AbortSignal, id: string, transaction?: Transaction): Promise<boolean>;
-  tryGet(abortSignal: AbortSignal, id: string): Promise<ProcessCronJob | null>;
-  getByProcessName(abortSignal: AbortSignal, processName: string): Promise<ProcessCronJob[]>;
-  getDue(abortSignal: AbortSignal, now: number, limit: number): Promise<ProcessCronJob[]>;
+  insert(signal: AbortSignal, job: ProcessCronJob, transaction?: Transaction): Promise<void>;
+  updateConfiguration(signal: AbortSignal, job: ProcessCronJob, transaction?: Transaction): Promise<void>;
+  updateLastRun(signal: AbortSignal, id: string, lastRun: ProcessCronJobRun, transaction?: Transaction): Promise<boolean>;
+  delete(signal: AbortSignal, id: string, transaction?: Transaction): Promise<boolean>;
+  tryGet(signal: AbortSignal, id: string): Promise<ProcessCronJob | null>;
+  getByProcessName(signal: AbortSignal, processName: string): Promise<ProcessCronJob[]>;
+  getDue(signal: AbortSignal, now: number, limit: number): Promise<ProcessCronJob[]>;
   tryAdvanceNextExecutionAt(
-    abortSignal: AbortSignal,
+    signal: AbortSignal,
     id: string,
     expectedNextExecutionAt: number,
     nextExecutionAt: number,

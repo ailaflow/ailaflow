@@ -74,8 +74,8 @@ test('persists LLM providers and use-case configurations', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
   db.exec(`PRAGMA foreign_keys = ON`);
   const repository = createRepository(db);
-  const abortSignal = new AbortController().signal;
-  await repository.setup(abortSignal);
+  const signal = new AbortController().signal;
+  await repository.setup(signal);
 
   const provider = LlmProviderConfiguration.create({
     name: 'Primary OpenAI',
@@ -84,7 +84,7 @@ test('persists LLM providers and use-case configurations', async () => {
     apiKey: 'secret',
     models: [{ name: 'gpt-model', contextWindow: 131_072 }]
   });
-  await repository.insertProvider(abortSignal, provider);
+  await repository.insertProvider(signal, provider);
   const providerRow = db.prepare(`SELECT apiKey FROM llm_providers WHERE id = ?`).get(provider.id) as { apiKey: string };
   assert.notEqual(providerRow.apiKey, provider.apiKey);
   assert.match(providerRow.apiKey, /^v1\./);
@@ -95,7 +95,7 @@ test('persists LLM providers and use-case configurations', async () => {
     apiKey: null,
     models: [{ name: 'codex-model' }]
   });
-  await repository.insertProvider(abortSignal, codexProvider);
+  await repository.insertProvider(signal, codexProvider);
   const codexRow = db.prepare(`SELECT url, apiKey FROM llm_providers WHERE id = ?`).get(codexProvider.id) as {
     url: string;
     apiKey: string | null;
@@ -103,27 +103,23 @@ test('persists LLM providers and use-case configurations', async () => {
   assert.notEqual(codexRow.url, codexProvider.url);
   assert.match(codexRow.url, /^v1\./);
   assert.equal(codexRow.apiKey, null);
-  const restoredCodexProvider = await repository.tryGetProvider(abortSignal, codexProvider.id);
+  const restoredCodexProvider = await repository.tryGetProvider(signal, codexProvider.id);
   assert.equal(restoredCodexProvider?.url, codexProvider.url);
   assert.equal(restoredCodexProvider?.apiKey, null);
-  await repository.saveUseCases(
-    abortSignal,
-    [new LlmUseCaseConfiguration(LlmUseCase.ADMIN_CHAT, provider.id, 'gpt-model', 120_000, 90)],
-    []
-  );
+  await repository.saveUseCases(signal, [new LlmUseCaseConfiguration(LlmUseCase.ADMIN_CHAT, provider.id, 'gpt-model', 120_000, 90)], []);
 
-  const configuration = await repository.get(abortSignal);
+  const configuration = await repository.get(signal);
   assert.equal(configuration.getProvider(provider.id).apiKey, 'secret');
   assert.deepEqual(configuration.getProvider(provider.id).models, [{ name: 'gpt-model', contextWindow: 131_072 }]);
   assert.equal(configuration.getUseCase(LlmUseCase.ADMIN_CHAT).modelName, 'gpt-model');
   assert.equal(configuration.getUseCase(LlmUseCase.ADMIN_CHAT).modelContextWindow, 120_000);
   assert.equal(configuration.getUseCase(LlmUseCase.ADMIN_CHAT).effectiveContextWindowPercent, 90);
 
-  await assert.rejects(() => repository.deleteProvider(abortSignal, provider.id), /assigned to a use case/);
-  await repository.saveUseCases(abortSignal, [], [LlmUseCase.ADMIN_CHAT]);
-  assert.equal(await repository.deleteProvider(abortSignal, provider.id), true);
-  assert.equal(await repository.deleteProvider(abortSignal, codexProvider.id), true);
-  assert.equal((await repository.get(abortSignal)).providers.length, 0);
+  await assert.rejects(() => repository.deleteProvider(signal, provider.id), /assigned to a use case/);
+  await repository.saveUseCases(signal, [], [LlmUseCase.ADMIN_CHAT]);
+  assert.equal(await repository.deleteProvider(signal, provider.id), true);
+  assert.equal(await repository.deleteProvider(signal, codexProvider.id), true);
+  assert.equal((await repository.get(signal)).providers.length, 0);
   db.close();
 });
 
@@ -131,8 +127,8 @@ test('updates provider data while retaining its stable ID', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
   db.exec(`PRAGMA foreign_keys = ON`);
   const repository = createRepository(db);
-  const abortSignal = new AbortController().signal;
-  await repository.setup(abortSignal);
+  const signal = new AbortController().signal;
+  await repository.setup(signal);
 
   const provider = LlmProviderConfiguration.create({
     name: 'Gateway',
@@ -141,7 +137,7 @@ test('updates provider data while retaining its stable ID', async () => {
     apiKey: 'old-secret',
     models: [{ name: 'old-model' }]
   });
-  await repository.insertProvider(abortSignal, provider);
+  await repository.insertProvider(signal, provider);
   assert.throws(
     () =>
       provider.update({
@@ -160,9 +156,9 @@ test('updates provider data while retaining its stable ID', async () => {
     apiKey: 'new-secret',
     models: [{ name: 'new-model' }]
   });
-  await repository.updateProvider(abortSignal, provider);
+  await repository.updateProvider(signal, provider);
 
-  const restored = await repository.tryGetProvider(abortSignal, provider.id);
+  const restored = await repository.tryGetProvider(signal, provider.id);
   assert.equal(restored?.name, 'Gateway 2');
   assert.equal(restored?.type, LlmProviderType.ANTHROPIC);
   assert.equal(restored?.apiKey, 'new-secret');

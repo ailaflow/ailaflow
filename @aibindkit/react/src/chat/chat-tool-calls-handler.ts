@@ -1,6 +1,6 @@
 import { ChatTransport, Logger, SendFrontendToolResultRequest, ToolCall } from '@aibindkit/core';
 
-export type FrontEndToolCallsHandler = (abortSignal: AbortSignal, toolCalls: ToolCall) => Promise<object | null>;
+export type FrontEndToolCallsHandler = (signal: AbortSignal, toolCalls: ToolCall) => Promise<object | null>;
 
 export class ChatToolCallsHandler {
   public constructor(
@@ -9,12 +9,12 @@ export class ChatToolCallsHandler {
     private readonly logger: Logger
   ) {}
 
-  public async handle(abortSignal: AbortSignal, toolCalls: ToolCall[], sessionToken: string): Promise<void> {
+  public async handle(signal: AbortSignal, toolCalls: ToolCall[], sessionToken: string): Promise<void> {
     const resolvedIds = new Set<string>();
     try {
       const toReturn: SendFrontendToolResultRequest[] = [];
       for (const toolCall of toolCalls) {
-        const result = await this.frontEndToolCallsHandler(abortSignal, toolCall);
+        const result = await this.frontEndToolCallsHandler(signal, toolCall);
         if (result === null) {
           // The handler has decided to not handle this tool call, so we skip it.
           resolvedIds.add(toolCall.id);
@@ -28,7 +28,7 @@ export class ChatToolCallsHandler {
       }
 
       for (const r of toReturn) {
-        await this.transport.sendFrontendToolResult(abortSignal, r);
+        await this.transport.sendFrontendToolResult(signal, r);
         resolvedIds.add(r.callId);
       }
     } catch (e) {
@@ -38,7 +38,7 @@ export class ChatToolCallsHandler {
           continue;
         }
         try {
-          await this.transport.sendFrontendToolResult(abortSignal, {
+          await this.transport.sendFrontendToolResult(signal, {
             sessionToken,
             callId: toolCall.id,
             result: `Error executing tool call: ${error}`

@@ -19,10 +19,10 @@ export class ChatSessionManager {
     return this.services;
   }
 
-  public getOrActivate(abortSignal: AbortSignal, sessionKey: string, authContext: ChatAuthContext): Promise<ChatSession> {
+  public getOrActivate(signal: AbortSignal, sessionKey: string, authContext: ChatAuthContext): Promise<ChatSession> {
     const frontendTools: ToolDescriptor[] = [];
     const frontendToolsHash = fnv1a(frontendTools);
-    return this.getServices().chatSessionActivator.getOrActivate(abortSignal, frontendTools, frontendToolsHash, sessionKey, authContext);
+    return this.getServices().chatSessionActivator.getOrActivate(signal, frontendTools, frontendToolsHash, sessionKey, authContext);
   }
 
   public tryGetById(id: string): ChatSession | undefined {

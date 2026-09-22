@@ -15,10 +15,10 @@ export class OpenMyTaskFormTool extends ZodTool<Arg> {
     super('open_my_task_form', 'Opens the form for a task assigned to the user', inputSchema);
   }
 
-  protected async handle(abortSignal: AbortSignal, { sessionId }: ToolContext, arg: Arg): Promise<ZodToolExecutionResult> {
+  protected async handle(signal: AbortSignal, { sessionId }: ToolContext, arg: Arg): Promise<ZodToolExecutionResult> {
     const chatSessionId = ChatSessionId.decode(sessionId);
     const userAssignedTask = await this.userAssignedTaskProvider.tryGetCompletable(
-      abortSignal,
+      signal,
       chatSessionId.isTest(),
       chatSessionId.userName,
       arg.taskId

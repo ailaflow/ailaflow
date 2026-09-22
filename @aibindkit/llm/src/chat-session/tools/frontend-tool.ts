@@ -8,9 +8,9 @@ export class FrontendTool implements Tool {
     public readonly bus: FrontendToolBus
   ) {}
 
-  public async execute(abortSignal: AbortSignal, context: ToolContext, call: ToolCall): Promise<ToolExecutionResult> {
-    const signal = AbortSignal.any([abortSignal, AbortSignal.timeout(10_000)]);
-    const result = await this.bus.waitForResult(signal, context.sessionToken, call.id);
+  public async execute(signal: AbortSignal, context: ToolContext, call: ToolCall): Promise<ToolExecutionResult> {
+    const waitSignal = AbortSignal.any([signal, AbortSignal.timeout(10_000)]);
+    const result = await this.bus.waitForResult(waitSignal, context.sessionToken, call.id);
     return {
       content: result
     };

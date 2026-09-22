@@ -416,7 +416,7 @@ class FakeTelegramBotApiClient extends TelegramBotApiClient {
     return { url: '' };
   }
 
-  public async getUpdates(abortSignal: AbortSignal): Promise<TelegramUpdate[]> {
+  public async getUpdates(signal: AbortSignal): Promise<TelegramUpdate[]> {
     this.getUpdatesCallCount++;
     if (this.failuresBeforeUpdates > 0) {
       this.failuresBeforeUpdates--;
@@ -426,7 +426,7 @@ class FakeTelegramBotApiClient extends TelegramBotApiClient {
       this.updatesReturned = true;
       return this.updates;
     }
-    await new Promise<void>(resolve => abortSignal.addEventListener('abort', () => resolve(), { once: true }));
+    await new Promise<void>(resolve => signal.addEventListener('abort', () => resolve(), { once: true }));
     return [];
   }
 

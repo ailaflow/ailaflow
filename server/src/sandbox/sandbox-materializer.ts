@@ -22,7 +22,7 @@ export class SandboxMaterializer {
 
   public constructor(private readonly paths: SandboxHostPaths) {}
 
-  public async tryMaterializeSandbox(abortSignal: AbortSignal, sandbox: Sandbox): Promise<boolean> {
+  public async tryMaterializeSandbox(signal: AbortSignal, sandbox: Sandbox): Promise<boolean> {
     const versionPath = join(this.paths.appFolderAbsolutePath, 'version');
     if ((await tryRead(versionPath)) === sandbox.hash) {
       return false;
@@ -34,12 +34,12 @@ export class SandboxMaterializer {
     await fs.writeFile(this.paths.dockerfileAbsolutePath, dockerfileContent);
     await fs.writeFile(versionPath, sandbox.hash);
 
-    abortSignal.throwIfAborted();
+    signal.throwIfAborted();
     this.logger.log(`Materialized sandbox +${sandbox.name}`);
     return true;
   }
 
-  public async tryBeginMaterializationOfProcess(abortSignal: AbortSignal, process: Process): Promise<null | (() => Promise<void>)> {
+  public async tryBeginMaterializationOfProcess(signal: AbortSignal, process: Process): Promise<null | (() => Promise<void>)> {
     const processFolder = join(this.paths.appFolderAbsolutePath, process.name);
     const processVersionPath = join(processFolder, 'version');
     if ((await tryRead(processVersionPath)) === process.hash) {
@@ -48,7 +48,7 @@ export class SandboxMaterializer {
 
     let nScripts = 0;
     await fs.mkdir(processFolder, { recursive: true });
-    abortSignal.throwIfAborted();
+    signal.throwIfAborted();
 
     const scriptMap = this.readScripts(process.definition);
     for (const [stepId, script] of scriptMap.entries()) {
@@ -64,7 +64,7 @@ export class SandboxMaterializer {
       for (const content of script.contents) {
         const contentPath = join(stepFolderPath, content.path);
         await fs.writeFile(contentPath, content.content);
-        abortSignal.throwIfAborted();
+        signal.throwIfAborted();
       }
 
       await fs.writeFile(stepVersionPath, scriptHash);

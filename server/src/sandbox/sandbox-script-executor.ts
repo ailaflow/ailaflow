@@ -24,14 +24,14 @@ export class SandboxScriptExecutor {
   public constructor(private readonly runtime: SandboxRuntime) {}
 
   public async execute(
-    abortSignal: AbortSignal,
+    signal: AbortSignal,
     request: SandboxScriptExecutorRequest,
     handler?: HttpSseHandler<ExecuteCommandUpdate>
   ): Promise<SandboxScriptExecutorResult> {
     const startTime = Date.now();
 
     const result = await this.runtime.executeCommand(
-      abortSignal,
+      signal,
       {
         cwd: request.cwd,
         command: 'node',

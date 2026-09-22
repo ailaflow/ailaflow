@@ -2,7 +2,7 @@ import { GetProcessesResponse, ProcessDisplay } from '@ailaflow/shared';
 
 export interface ProcessListQuerier {
   query(
-    abortSignal: AbortSignal,
+    signal: AbortSignal,
     page: number,
     pageSize: number,
     displayAtLeast: ProcessDisplay,

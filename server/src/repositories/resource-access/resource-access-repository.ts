@@ -15,5 +15,5 @@ export class ResourceAccess {
 }
 
 export interface ResourceAccessRepository extends Repository {
-  replace(abortSignal: AbortSignal, resourceAccess: ResourceAccess, transaction?: Transaction): Promise<void>;
+  replace(signal: AbortSignal, resourceAccess: ResourceAccess, transaction?: Transaction): Promise<void>;
 }

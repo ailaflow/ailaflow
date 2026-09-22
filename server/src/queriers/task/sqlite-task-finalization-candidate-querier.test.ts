@@ -7,7 +7,7 @@ import { SqliteTaskFinalizationCandidateQuerier } from './sqlite-task-finalizati
 test('queries only task finalization candidates eligible for an attempt', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
   const dbs = { modelDb: new SqliteDatabase(db) } as SqliteDatabases;
-  const abortSignal = new AbortController().signal;
+  const signal = new AbortController().signal;
   const querier = new SqliteTaskFinalizationCandidateQuerier(dbs);
 
   db.exec(`
@@ -32,7 +32,7 @@ test('queries only task finalization candidates eligible for an attempt', async 
   insert.run('not-requested', null, 0, null, 6, null);
   insert.run('finalized', null, 1, null, 7, 900);
 
-  const candidates = await querier.query(abortSignal, 1000, 10);
+  const candidates = await querier.query(signal, 1000, 10);
   assert.deepEqual(
     candidates.map(candidate => ({ ...candidate })),
     [

@@ -15,21 +15,21 @@ test('queries tasks assigned to the current user', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
   db.exec(`PRAGMA foreign_keys = ON`);
   const dbs = { modelDb: new SqliteDatabase(db) } as SqliteDatabases;
-  const abortSignal = new AbortController().signal;
+  const signal = new AbortController().signal;
   const userRepository = new SqliteUserRepository(dbs);
   const taskRepository = new SqliteTaskRepository(dbs);
   const assignedTaskRepository = new SqliteAssignedTaskRepository(dbs);
   const querier = new SqliteMyTaskListQuerier(dbs, () => 5000);
 
-  await userRepository.setup(abortSignal);
-  await taskRepository.setup(abortSignal);
-  await assignedTaskRepository.setup(abortSignal);
+  await userRepository.setup(signal);
+  await taskRepository.setup(signal);
+  await assignedTaskRepository.setup(signal);
 
-  await userRepository.insert(abortSignal, new User('alice', null, 'hash', true, false));
-  await userRepository.insert(abortSignal, new User('bob', null, 'hash', true, false));
+  await userRepository.insert(signal, new User('alice', null, 'hash', true, false));
+  await userRepository.insert(signal, new User('bob', null, 'hash', true, false));
 
   await taskRepository.insert(
-    abortSignal,
+    signal,
     new Task(
       'task_1',
       'Open outdated',
@@ -50,7 +50,7 @@ test('queries tasks assigned to the current user', async () => {
     )
   );
   await taskRepository.insert(
-    abortSignal,
+    signal,
     new Task(
       'task_2',
       'Open current',
@@ -71,7 +71,7 @@ test('queries tasks assigned to the current user', async () => {
     )
   );
   await taskRepository.insert(
-    abortSignal,
+    signal,
     new Task(
       'task_3',
       'Completed outdated',
@@ -92,7 +92,7 @@ test('queries tasks assigned to the current user', async () => {
     )
   );
   await taskRepository.insert(
-    abortSignal,
+    signal,
     new Task(
       'task_4',
       'Other user',
@@ -113,7 +113,7 @@ test('queries tasks assigned to the current user', async () => {
     )
   );
   await taskRepository.insert(
-    abortSignal,
+    signal,
     new Task(
       'task_5',
       'No deadline',
@@ -134,7 +134,7 @@ test('queries tasks assigned to the current user', async () => {
     )
   );
   await taskRepository.insert(
-    abortSignal,
+    signal,
     new Task(
       'task_6',
       'Test task',
@@ -155,7 +155,7 @@ test('queries tasks assigned to the current user', async () => {
     )
   );
 
-  await assignedTaskRepository.upsertMultiple(abortSignal, [
+  await assignedTaskRepository.upsertMultiple(signal, [
     AssignedTask.create('task_1', 'alice', 'default'),
     AssignedTask.create('task_2', 'alice', 'default'),
     AssignedTask.create('task_3', 'alice', 'default'),
@@ -164,7 +164,7 @@ test('queries tasks assigned to the current user', async () => {
     AssignedTask.create('task_6', 'alice', 'default')
   ]);
 
-  assert.deepEqual(await querier.query(abortSignal, false, 'alice', false, 1, 2), {
+  assert.deepEqual(await querier.query(signal, false, 'alice', false, 1, 2), {
     tasks: [
       {
         id: 'task_1',
@@ -184,7 +184,7 @@ test('queries tasks assigned to the current user', async () => {
     page: 1,
     pageSize: 2
   });
-  assert.deepEqual(await querier.query(abortSignal, false, 'alice', false, 2, 2), {
+  assert.deepEqual(await querier.query(signal, false, 'alice', false, 2, 2), {
     tasks: [
       {
         id: 'task_3',
@@ -205,7 +205,7 @@ test('queries tasks assigned to the current user', async () => {
     page: 2,
     pageSize: 2
   });
-  assert.deepEqual(await querier.query(abortSignal, false, 'alice', true, 1, 20), {
+  assert.deepEqual(await querier.query(signal, false, 'alice', true, 1, 20), {
     tasks: [
       {
         id: 'task_1',
@@ -225,7 +225,7 @@ test('queries tasks assigned to the current user', async () => {
     page: 1,
     pageSize: 20
   });
-  assert.deepEqual(await querier.query(abortSignal, true, 'alice', false, 1, 20), {
+  assert.deepEqual(await querier.query(signal, true, 'alice', false, 1, 20), {
     tasks: [
       {
         id: 'task_6',

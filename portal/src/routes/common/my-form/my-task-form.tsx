@@ -20,7 +20,7 @@ export interface MyTaskFormProps {
 export function MyTaskForm({ args, onSubmitted }: MyTaskFormProps) {
   const apiClient = useApiClient();
   const { data, error, isLoading } = useLoader(
-    abortSignal => apiClient.myTask.getMyTaskForm(abortSignal, args.taskId, { testUserName: args.testUserName }),
+    signal => apiClient.myTask.getMyTaskForm(signal, args.taskId, { testUserName: args.testUserName }),
     [apiClient, args]
   );
   const [formError, setFormError] = useState<FormError | null>(null);
@@ -34,8 +34,8 @@ export function MyTaskForm({ args, onSubmitted }: MyTaskFormProps) {
       async openStartForm() {
         throw new Error('Task does not support opening a start form');
       },
-      async submitForm(abortSignal: AbortSignal, outputValues: Record<string, unknown>) {
-        const response = await apiClient.myTask.submitMyTask(abortSignal, {
+      async submitForm(signal: AbortSignal, outputValues: Record<string, unknown>) {
+        const response = await apiClient.myTask.submitMyTask(signal, {
           taskId: args.taskId,
           outputValues,
           testUserName: args.testUserName
@@ -45,8 +45,8 @@ export function MyTaskForm({ args, onSubmitted }: MyTaskFormProps) {
         }
         await onSubmitted?.();
       },
-      async readVariable(abortSignal: AbortSignal, variableName: string) {
-        const response = await apiClient.myTask.getTaskVariableValue(abortSignal, {
+      async readVariable(signal: AbortSignal, variableName: string) {
+        const response = await apiClient.myTask.getTaskVariableValue(signal, {
           taskId: args.taskId,
           variableName,
           testUserName: args.testUserName

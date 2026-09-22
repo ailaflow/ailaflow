@@ -11,10 +11,10 @@ import { PortalLoadingView } from '../../views/portal/portal-loading-view';
 export function LicenseConfigurationPage() {
   const apiClient = useApiClient();
   const loader = useLoader(
-    async abortSignal => {
+    async signal => {
       const [configuration, status] = await Promise.all([
-        apiClient.licenseConfiguration.get(abortSignal),
-        apiClient.licenseConfiguration.getStatus(abortSignal)
+        apiClient.licenseConfiguration.get(signal),
+        apiClient.licenseConfiguration.getStatus(signal)
       ]);
       return { configuration, status };
     },

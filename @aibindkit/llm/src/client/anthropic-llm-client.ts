@@ -32,7 +32,7 @@ export class AnthropicLlmClient implements LlmClient {
   ) {}
 
   public async complete(
-    abortSignal: AbortSignal,
+    signal: AbortSignal,
     modelSettings: LlmModelSettings,
     messages: LlmMessage[],
     toolDescriptors: ToolDescriptor[] | undefined
@@ -52,7 +52,7 @@ export class AnthropicLlmClient implements LlmClient {
           input_schema: tool.function.parameters ?? { type: 'object', properties: {} }
         }))
       }),
-      signal: abortSignal
+      signal
     });
     const data = (await response.json()) as AnthropicResponse;
     if (!response.ok) {
@@ -84,7 +84,7 @@ export class AnthropicLlmClient implements LlmClient {
     };
   }
 
-  public async getModels(abortSignal: AbortSignal): Promise<LlmModel[]> {
+  public async getModels(signal: AbortSignal): Promise<LlmModel[]> {
     const models: string[] = [];
     const seenCursors = new Set<string>();
     let afterId: string | undefined;
@@ -94,7 +94,7 @@ export class AnthropicLlmClient implements LlmClient {
       if (afterId) {
         url.searchParams.set('after_id', afterId);
       }
-      const response = await fetch(url, { headers: this.createHeaders(false), signal: abortSignal });
+      const response = await fetch(url, { headers: this.createHeaders(false), signal });
       const data = await readModelsResponse(response);
       if (!response.ok) {
         throw new LlmClientError(data.error?.message ?? `Anthropic models API returned status ${response.status}`);

@@ -45,7 +45,7 @@ export class OpenaiLlmClient implements LlmClient {
   }
 
   public async complete(
-    abortSignal: AbortSignal,
+    signal: AbortSignal,
     modelSettings: LlmModelSettings,
     messages: LlmMessage[],
     toolDescriptors: ToolDescriptor[] | undefined
@@ -60,7 +60,7 @@ export class OpenaiLlmClient implements LlmClient {
         messages: this.sanitizer.sanitize(messages)
       }),
       keepalive: true,
-      signal: abortSignal
+      signal
     });
     const data = await readResponse<OpenaiChatCompletionResponse>(response);
     if (!response.ok) {
@@ -80,10 +80,10 @@ export class OpenaiLlmClient implements LlmClient {
     };
   }
 
-  public async getModels(abortSignal: AbortSignal): Promise<LlmModel[]> {
+  public async getModels(signal: AbortSignal): Promise<LlmModel[]> {
     const response = await this.httpClient.fetch(`${this.baseUrl}/models`, {
       headers: this.createHeaders(false),
-      signal: abortSignal
+      signal
     });
     const data = await readResponse<OpenaiModelsResponse>(response);
     if (!response.ok) {

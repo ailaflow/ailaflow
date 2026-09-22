@@ -20,23 +20,23 @@ export class SaveSandboxEndpoint implements Endpoint {
   ) {}
 
   public async handle(req: Request) {
-    const abortSignal = getEndpointAbortSignal(req);
+    const signal = getEndpointAbortSignal(req);
     const request = parseBody(saveSandboxRequestSchema, req.body);
 
     try {
-      let sandbox = await this.sandboxRepository.tryGet(abortSignal, request.name);
+      let sandbox = await this.sandboxRepository.tryGet(signal, request.name);
       if (request.insert) {
         if (sandbox) {
           throw new EndpointError('Sandbox already exists', 400);
         }
         sandbox = Sandbox.create(request);
-        await this.sandboxRepository.insert(abortSignal, sandbox);
+        await this.sandboxRepository.insert(signal, sandbox);
       } else {
         if (!sandbox) {
           throw new EndpointError('Sandbox not found', 404);
         }
         sandbox.update(request);
-        await this.sandboxRepository.update(abortSignal, sandbox);
+        await this.sandboxRepository.update(signal, sandbox);
       }
     } catch (e) {
       if (e instanceof SandboxRepositoryError) {
@@ -47,7 +47,7 @@ export class SaveSandboxEndpoint implements Endpoint {
 
     const oldSandbox = this.sandboxInstanceManager.tryGet(request.name);
     if (oldSandbox) {
-      await oldSandbox.tryStop(abortSignal, new Error('Sandbox has been updated'));
+      await oldSandbox.tryStop(signal, new Error('Sandbox has been updated'));
     }
 
     return {};

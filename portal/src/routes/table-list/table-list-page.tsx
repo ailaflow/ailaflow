@@ -18,7 +18,7 @@ export function TableListPage() {
   const [reloadToken, setReloadToken] = useState(0);
   const page = Number(searchParams.get('page') ?? 1);
   const { data, isLoading, finishSignal, error } = useLoader(
-    abortSignal => apiClient.table.getTables(abortSignal, { page, pageSize: PAGE_SIZE }),
+    signal => apiClient.table.getTables(signal, { page, pageSize: PAGE_SIZE }),
     [apiClient, page, reloadToken]
   );
 

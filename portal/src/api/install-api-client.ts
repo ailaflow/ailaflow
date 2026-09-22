@@ -4,11 +4,11 @@ import type { CanInstallResponse, InstallRequest, InstallResponse } from '@ailaf
 export class InstallApiClient {
   public constructor(private readonly client: HttpClient) {}
 
-  public canInstall(abortSignal: AbortSignal): Promise<CanInstallResponse> {
-    return this.client.json(abortSignal, 'GET', '/api/install/can-install');
+  public canInstall(signal: AbortSignal): Promise<CanInstallResponse> {
+    return this.client.json(signal, 'GET', '/api/install/can-install');
   }
 
-  public install(abortSignal: AbortSignal, request: InstallRequest): Promise<InstallResponse> {
-    return this.client.json(abortSignal, 'POST', '/api/install', request);
+  public install(signal: AbortSignal, request: InstallRequest): Promise<InstallResponse> {
+    return this.client.json(signal, 'POST', '/api/install', request);
   }
 }

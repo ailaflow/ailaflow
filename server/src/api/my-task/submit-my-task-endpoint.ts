@@ -15,14 +15,14 @@ export class SubmitMyTaskEndpoint implements Endpoint {
   public constructor(private readonly assignedTaskCompleter: AssignedTaskCompleter) {}
 
   public async handle(req: Request): Promise<SubmitMyTaskResponse> {
-    const abortSignal = getEndpointAbortSignal(req);
+    const signal = getEndpointAbortSignal(req);
     const authToken = getAuthToken(req);
     const request = parseBody(submitMyTaskRequestSchema, req.body);
 
     const { isTest, userName } = authToken.maybeOverrideTestUserName(request.testUserName);
 
     try {
-      await this.assignedTaskCompleter.complete(abortSignal, isTest, userName, request.taskId, request.outputValues, false);
+      await this.assignedTaskCompleter.complete(signal, isTest, userName, request.taskId, request.outputValues, false);
     } catch (e) {
       if (e instanceof AssignedTaskCompleterError) {
         throw new EndpointError(e.message, 400);

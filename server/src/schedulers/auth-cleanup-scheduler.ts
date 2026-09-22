@@ -24,12 +24,9 @@ export class AuthCleanupScheduler implements Scheduler {
 
   private handle = async () => {
     try {
-      const abortSignal = AbortSignal.timeout(10_000);
+      const signal = AbortSignal.timeout(10_000);
       const now = Date.now();
-      await Promise.all([
-        this.authTokenRepository.deleteOutdated(abortSignal, now),
-        this.magicLinkRepository.deleteExpired(abortSignal, now)
-      ]);
+      await Promise.all([this.authTokenRepository.deleteOutdated(signal, now), this.magicLinkRepository.deleteExpired(signal, now)]);
     } catch (e) {
       this.logger.error(`Failed to delete outdated auth records: ${(e as Error)?.message ?? e}`);
     }

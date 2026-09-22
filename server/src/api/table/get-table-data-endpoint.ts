@@ -14,10 +14,10 @@ export class GetTableDataEndpoint implements Endpoint {
   public constructor(private readonly tableManager: TableManager) {}
 
   public async handle(req: Request): Promise<GetTableDataResponse> {
-    const abortSignal = getEndpointAbortSignal(req);
+    const signal = getEndpointAbortSignal(req);
     const tableName = String(req.params.name);
     const { page, pageSize, orderBy, ascending } = parseQuery(getTableDataRequestSchema, req.query);
-    return this.tableManager.readPage(abortSignal, {
+    return this.tableManager.readPage(signal, {
       tableName,
       page,
       pageSize,

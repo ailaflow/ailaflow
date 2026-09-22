@@ -9,7 +9,7 @@ export class TableSchemaConcurrencyError extends Error {
 }
 
 export interface TableSchemaRepository {
-  get(abortSignal: AbortSignal, tableName: string): Promise<TableSchema>;
-  tryGet(abortSignal: AbortSignal, tableName: string): Promise<TableSchema | null>;
-  save(abortSignal: AbortSignal, schema: TableSchema, transaction?: Transaction): Promise<TableSchema>;
+  get(signal: AbortSignal, tableName: string): Promise<TableSchema>;
+  tryGet(signal: AbortSignal, tableName: string): Promise<TableSchema | null>;
+  save(signal: AbortSignal, schema: TableSchema, transaction?: Transaction): Promise<TableSchema>;
 }

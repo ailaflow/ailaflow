@@ -5,5 +5,5 @@ export interface TaskFinalizationCandidate {
 }
 
 export interface TaskFinalizationCandidateQuerier {
-  query(abortSignal: AbortSignal, now: number, limit: number): Promise<TaskFinalizationCandidate[]>;
+  query(signal: AbortSignal, now: number, limit: number): Promise<TaskFinalizationCandidate[]>;
 }

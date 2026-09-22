@@ -14,8 +14,8 @@ export class ProcessExecutionFinishedEventHandler implements EventHandler<Proces
   ) {}
 
   public async handle(event: ProcessExecutionFinishedEvent) {
-    const abortSignal = AbortSignal.timeout(5_000);
-    const session = await this.tryGetSession(abortSignal, event);
+    const signal = AbortSignal.timeout(5_000);
+    const session = await this.tryGetSession(signal, event);
     if (!session) {
       return;
     }
@@ -47,7 +47,7 @@ export class ProcessExecutionFinishedEventHandler implements EventHandler<Proces
     });
   }
 
-  private async tryGetSession(abortSignal: AbortSignal, event: ProcessExecutionFinishedEvent) {
+  private async tryGetSession(signal: AbortSignal, event: ProcessExecutionFinishedEvent) {
     if (!event.context.chatSessionId) {
       return undefined;
     }
@@ -57,6 +57,6 @@ export class ProcessExecutionFinishedEventHandler implements EventHandler<Proces
       return this.adminChatSessionProvider.tryGet(sessionId.userName);
     }
 
-    return await this.userChatSessionProvider.get(abortSignal, sessionId.isTest(), sessionId.userName, sessionId.channelName);
+    return await this.userChatSessionProvider.get(signal, sessionId.isTest(), sessionId.userName, sessionId.channelName);
   }
 }

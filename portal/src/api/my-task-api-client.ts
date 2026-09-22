@@ -13,28 +13,28 @@ import type {
 export class MyTaskApiClient {
   public constructor(private readonly client: HttpClient) {}
 
-  public getMyTasks(abortSignal: AbortSignal, request: GetMyTasksRequest): Promise<GetMyTasksResponse> {
+  public getMyTasks(signal: AbortSignal, request: GetMyTasksRequest): Promise<GetMyTasksResponse> {
     const query = new URLSearchParams({
       onlyOpen: request.onlyOpen ? '1' : '0',
       page: String(request.page),
       pageSize: String(request.pageSize)
     });
-    return this.client.json(abortSignal, 'GET', `/api/my-tasks?${query}`);
+    return this.client.json(signal, 'GET', `/api/my-tasks?${query}`);
   }
 
-  public getMyTaskForm(abortSignal: AbortSignal, id: string, request: GetMyTaskFormRequest): Promise<GetMyTaskFormResponse> {
+  public getMyTaskForm(signal: AbortSignal, id: string, request: GetMyTaskFormRequest): Promise<GetMyTaskFormResponse> {
     const query = new URLSearchParams();
     if (request.testUserName) {
       query.set('testUserName', request.testUserName);
     }
-    return this.client.json(abortSignal, 'GET', `/api/my-tasks/${encodeURIComponent(id)}/form?${query}`);
+    return this.client.json(signal, 'GET', `/api/my-tasks/${encodeURIComponent(id)}/form?${query}`);
   }
 
-  public getTaskVariableValue(abortSignal: AbortSignal, request: GetTaskVariableValueRequest): Promise<GetTaskVariableValueResponse> {
-    return this.client.json(abortSignal, 'POST', '/api/my-tasks/variable-value', request);
+  public getTaskVariableValue(signal: AbortSignal, request: GetTaskVariableValueRequest): Promise<GetTaskVariableValueResponse> {
+    return this.client.json(signal, 'POST', '/api/my-tasks/variable-value', request);
   }
 
-  public submitMyTask(abortSignal: AbortSignal, request: SubmitMyTaskRequest): Promise<SubmitMyTaskResponse> {
-    return this.client.json(abortSignal, 'POST', '/api/my-tasks/submit', request);
+  public submitMyTask(signal: AbortSignal, request: SubmitMyTaskRequest): Promise<SubmitMyTaskResponse> {
+    return this.client.json(signal, 'POST', '/api/my-tasks/submit', request);
   }
 }

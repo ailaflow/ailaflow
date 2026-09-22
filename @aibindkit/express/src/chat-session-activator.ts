@@ -17,7 +17,7 @@ export class ChatSessionActivator {
    * @throws {ChatSessionInitializerError} if the session cannot be initialized
    */
   public async getOrActivate(
-    abortSignal: AbortSignal,
+    signal: AbortSignal,
     frontendTools: ToolDescriptor[],
     frontendToolsHash: string,
     sessionKey: string,
@@ -36,7 +36,7 @@ export class ChatSessionActivator {
       session.destroy();
     }
 
-    const llm = await resolved.getLlmClientWithSettings(abortSignal);
+    const llm = await resolved.getLlmClientWithSettings(signal);
     const toolSet = new ToolSet();
     for (const descriptor of frontendTools) {
       toolSet.addTool(this.frontendToolFactory.create(descriptor));
@@ -46,7 +46,7 @@ export class ChatSessionActivator {
     }
 
     if (!snapshot) {
-      snapshot = await this.sessionStorage.tryGet(abortSignal, resolved.sessionId);
+      snapshot = await this.sessionStorage.tryGet(signal, resolved.sessionId);
     }
 
     session = this.chatSessionFactory.create(resolved.sessionId, toolsHash, llm.client, llm.modelSettings, toolSet);

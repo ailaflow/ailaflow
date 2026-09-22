@@ -26,16 +26,16 @@ test('self endpoints use the authenticated user and admin endpoints use the rout
   const userRepository = new SqliteUserRepository(dbs);
   const repository = new SqliteTelegramConfigurationRepository(dbs);
   const api = new TelegramConfigurationApi(repository, new FakeTelegramBotApiClient(), new EventBus());
-  const abortSignal = new AbortController().signal;
-  await userRepository.setup(abortSignal);
-  await repository.setup(abortSignal);
-  await userRepository.insert(abortSignal, new User('admin', null, 'hash', true, true));
-  await userRepository.insert(abortSignal, new User('alice', null, 'hash', true, false));
+  const signal = new AbortController().signal;
+  await userRepository.setup(signal);
+  await repository.setup(signal);
+  await userRepository.insert(signal, new User('admin', null, 'hash', true, true));
+  await userRepository.insert(signal, new User('alice', null, 'hash', true, false));
 
   const saveMy = new SaveMyTelegramBotEndpoint(api);
   assert.equal(saveMy.path, '/api/my-configuration/telegram');
   await saveMy.handle(createRequest('alice', { body: { channelName: 'default', botToken: 'alice-token' } }));
-  assert.equal((await repository.tryGet(abortSignal, 'alice', 'default'))?.botToken, 'alice-token');
+  assert.equal((await repository.tryGet(signal, 'alice', 'default'))?.botToken, 'alice-token');
 
   const saveUser = new SaveUserTelegramBotEndpoint(userRepository, api);
   assert.equal(saveUser.path, '/api/users/:userName/telegram');
@@ -45,8 +45,8 @@ test('self endpoints use the authenticated user and admin endpoints use the rout
       body: { channelName: 'default', botToken: 'admin-set-token' }
     })
   );
-  assert.equal((await repository.tryGet(abortSignal, 'alice', 'default'))?.botToken, 'admin-set-token');
-  assert.equal(await repository.tryGet(abortSignal, 'admin', 'default'), null);
+  assert.equal((await repository.tryGet(signal, 'alice', 'default'))?.botToken, 'admin-set-token');
+  assert.equal(await repository.tryGet(signal, 'admin', 'default'), null);
 
   const getMy = new GetMyTelegramConfigurationEndpoint(api);
   assert.equal(getMy.path, '/api/my-configuration/telegram');

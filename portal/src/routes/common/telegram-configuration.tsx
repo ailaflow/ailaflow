@@ -16,10 +16,8 @@ export interface TelegramConfigurationProps {
 export function TelegramConfiguration(props: TelegramConfigurationProps) {
   const apiClient = useApiClient();
   const loader = useLoader(
-    abortSignal =>
-      props.userName
-        ? apiClient.user.getTelegramConfiguration(abortSignal, props.userName)
-        : apiClient.telegramConfiguration.get(abortSignal),
+    signal =>
+      props.userName ? apiClient.user.getTelegramConfiguration(signal, props.userName) : apiClient.telegramConfiguration.get(signal),
     [apiClient, props.userName]
   );
 

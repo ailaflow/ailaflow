@@ -17,21 +17,21 @@ export class TelegramSynchronizationManager {
     private readonly magicLinkGenerator: MagicLinkGenerator
   ) {}
 
-  public async start(abortSignal: AbortSignal): Promise<void> {
-    const configurations = await this.repository.getAll(abortSignal);
+  public async start(signal: AbortSignal): Promise<void> {
+    const configurations = await this.repository.getAll(signal);
     await Promise.all(
-      configurations.map(configuration => this.startSynchronizer(configuration.userName, configuration.channelName, abortSignal))
+      configurations.map(configuration => this.startSynchronizer(configuration.userName, configuration.channelName, signal))
     );
   }
 
-  public async reload(abortSignal: AbortSignal, userName: string, channelName: string): Promise<void> {
+  public async reload(signal: AbortSignal, userName: string, channelName: string): Promise<void> {
     const key = createSynchronizerKey(userName, channelName);
     const s = this.synchronizers.get(key);
     if (s) {
       s.destroy();
       this.synchronizers.delete(key);
     }
-    await this.startSynchronizer(userName, channelName, abortSignal);
+    await this.startSynchronizer(userName, channelName, signal);
   }
 
   public stop(): void {
@@ -42,11 +42,11 @@ export class TelegramSynchronizationManager {
     this.synchronizers.clear();
   }
 
-  private async startSynchronizer(userName: string, channelName: string, abortSignal: AbortSignal): Promise<void> {
+  private async startSynchronizer(userName: string, channelName: string, signal: AbortSignal): Promise<void> {
     if (this.stopped) {
       return;
     }
-    const configuration = await this.repository.tryGet(abortSignal, userName, channelName);
+    const configuration = await this.repository.tryGet(signal, userName, channelName);
     if (!configuration?.botId) {
       return;
     }

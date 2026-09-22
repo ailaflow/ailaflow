@@ -13,14 +13,14 @@ test('materializes a script only when its definition changes', async () => {
   try {
     const paths = new SandboxHostPaths(temporaryFolder, temporaryFolder, 'default');
     const materializer = new SandboxMaterializer(paths);
-    const abortSignal = new AbortController().signal;
+    const signal = new AbortController().signal;
     const files = [
       { path: 'package.json', mimeType: 'application/json', content: '{}' },
       { path: 'main.js', mimeType: 'text/javascript', content: 'original' }
     ];
 
     const firstCommit = await materializer.tryBeginMaterializationOfProcess(
-      abortSignal,
+      signal,
       createProcess('process-1', { sandboxName: 'default', contents: files })
     );
     assert.ok(firstCommit);
@@ -30,7 +30,7 @@ test('materializes a script only when its definition changes', async () => {
     await fs.writeFile(materializedFile, 'local change');
 
     const unchangedCommit = await materializer.tryBeginMaterializationOfProcess(
-      abortSignal,
+      signal,
       createProcess('process-2', { sandboxName: 'default', contents: files })
     );
     assert.ok(unchangedCommit);
@@ -38,7 +38,7 @@ test('materializes a script only when its definition changes', async () => {
     await unchangedCommit();
 
     const changedCommit = await materializer.tryBeginMaterializationOfProcess(
-      abortSignal,
+      signal,
       createProcess('process-3', {
         sandboxName: 'default',
         contents: files.map(file => (file.path === 'main.js' ? { ...file, content: 'changed' } : file))

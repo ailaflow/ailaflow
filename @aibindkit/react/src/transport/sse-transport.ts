@@ -25,23 +25,23 @@ export class SseTransport implements ChatTransport {
     this.client.updateHeaders(headers);
   }
 
-  public async restoreChat(abortSignal: AbortSignal, listener: ChatTransportListener, request: RestoreChatRequest): Promise<void> {
-    return this.client.sse(abortSignal, listener, 'POST', '/api/chat', request);
+  public async restoreChat(signal: AbortSignal, listener: ChatTransportListener, request: RestoreChatRequest): Promise<void> {
+    return this.client.sse(signal, listener, 'POST', '/api/chat', request);
   }
 
-  public async sendChatMessage(abortSignal: AbortSignal, request: SendChatMessageRequest): Promise<SendChatMessageResponse> {
-    return this.client.json(abortSignal, 'POST', '/api/chat/message', request);
+  public async sendChatMessage(signal: AbortSignal, request: SendChatMessageRequest): Promise<SendChatMessageResponse> {
+    return this.client.json(signal, 'POST', '/api/chat/message', request);
   }
 
-  public async sendFrontendToolResult(abortSignal: AbortSignal, request: SendFrontendToolResultRequest): Promise<void> {
-    return this.client.json(abortSignal, 'POST', '/api/chat/front-end-tool', request);
+  public async sendFrontendToolResult(signal: AbortSignal, request: SendFrontendToolResultRequest): Promise<void> {
+    return this.client.json(signal, 'POST', '/api/chat/front-end-tool', request);
   }
 
-  public async interruptChat(abortSignal: AbortSignal, request: InterruptChatRequest): Promise<void> {
-    return this.client.json(abortSignal, 'POST', '/api/chat/interrupt', request);
+  public async interruptChat(signal: AbortSignal, request: InterruptChatRequest): Promise<void> {
+    return this.client.json(signal, 'POST', '/api/chat/interrupt', request);
   }
 
-  public async restartChat(abortSignal: AbortSignal, request: RestartChatRequest): Promise<void> {
-    return this.client.json(abortSignal, 'POST', '/api/chat/restart', request);
+  public async restartChat(signal: AbortSignal, request: RestartChatRequest): Promise<void> {
+    return this.client.json(signal, 'POST', '/api/chat/restart', request);
   }
 }

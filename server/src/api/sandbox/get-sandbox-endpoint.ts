@@ -14,10 +14,10 @@ export class GetSandboxEndpoint implements Endpoint {
   public constructor(private readonly repository: SandboxRepository) {}
 
   public async handle(req: Request): Promise<GetSandboxResponse> {
-    const abortSignal = getEndpointAbortSignal(req);
+    const signal = getEndpointAbortSignal(req);
     const sandboxName = String(req.params.name);
 
-    const sandbox = await this.repository.tryGet(abortSignal, sandboxName);
+    const sandbox = await this.repository.tryGet(signal, sandboxName);
     if (!sandbox) {
       throw new EndpointError('Sandbox not found', 404);
     }

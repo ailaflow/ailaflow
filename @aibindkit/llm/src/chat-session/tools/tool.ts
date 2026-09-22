@@ -12,5 +12,5 @@ export interface ToolExecutionResult {
 
 export interface Tool {
   descriptor: ToolDescriptor;
-  execute(abortSignal: AbortSignal, context: ToolContext, call: ToolCall): Promise<ToolExecutionResult>;
+  execute(signal: AbortSignal, context: ToolContext, call: ToolCall): Promise<ToolExecutionResult>;
 }

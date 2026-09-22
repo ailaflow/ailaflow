@@ -9,10 +9,10 @@ import { PortalLoadingView } from '../../views/portal/portal-loading-view';
 export function MyConfigurationOverview() {
   const apiClient = useApiClient();
   const loader = useLoader(
-    async abortSignal => {
+    async signal => {
       const [telegram, slack] = await Promise.all([
-        apiClient.telegramConfiguration.get(abortSignal),
-        apiClient.mySlackConfiguration.get(abortSignal)
+        apiClient.telegramConfiguration.get(signal),
+        apiClient.mySlackConfiguration.get(signal)
       ]);
       return { telegram, slack };
     },

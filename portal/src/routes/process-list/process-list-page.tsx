@@ -21,7 +21,7 @@ export function ProcessListPage() {
   const [reloadToken, setReloadToken] = useState(0);
   const page = Number(searchParams.get('page') ?? 1);
   const { data, isLoading, finishSignal, error } = useLoader(
-    abortSignal => apiClient.process.getProcesses(abortSignal, { page, pageSize: PAGE_SIZE }),
+    signal => apiClient.process.getProcesses(signal, { page, pageSize: PAGE_SIZE }),
     [apiClient, page, reloadToken]
   );
 

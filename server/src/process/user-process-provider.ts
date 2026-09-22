@@ -8,12 +8,12 @@ export class UserProcessProvider {
     private readonly processManager: ProcessManager
   ) {}
 
-  public async tryGet(abortSignal: AbortSignal, userName: string, processName: string): Promise<Process | null> {
-    const hasAccess = await this.accessQuerier.hasAccess(abortSignal, userName, processName);
+  public async tryGet(signal: AbortSignal, userName: string, processName: string): Promise<Process | null> {
+    const hasAccess = await this.accessQuerier.hasAccess(signal, userName, processName);
     if (!hasAccess) {
       return null;
     }
-    const process = await this.processManager.tryGetByName(abortSignal, processName);
+    const process = await this.processManager.tryGetByName(signal, processName);
     if (!process) {
       throw new Error('Process not found but access was granted');
     }

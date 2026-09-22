@@ -23,31 +23,31 @@ test('manages user Telegram configurations without exposing bot tokens', async (
   const eventHandler = new RecordingTelegramConfigurationChangedEventHandler();
   eventBus.registerHandler(eventHandler);
   const api = new TelegramConfigurationApi(repository, new FakeTelegramBotApiClient(), eventBus);
-  const abortSignal = new AbortController().signal;
-  await userRepository.setup(abortSignal);
-  await repository.setup(abortSignal);
-  await userRepository.insert(abortSignal, new User('alice', null, 'hash', true, false));
-  await userRepository.insert(abortSignal, new User('bob', null, 'hash', true, false));
+  const signal = new AbortController().signal;
+  await userRepository.setup(signal);
+  await repository.setup(signal);
+  await userRepository.insert(signal, new User('alice', null, 'hash', true, false));
+  await userRepository.insert(signal, new User('bob', null, 'hash', true, false));
 
-  const saved = await api.save(abortSignal, 'alice', { channelName: 'default', botToken: 'top-secret' });
+  const saved = await api.save(signal, 'alice', { channelName: 'default', botToken: 'top-secret' });
   assert.equal(saved.bot.botUserName, 'aila_test_bot');
   assert.equal(saved.bot.isConnected, false);
   assert.ok(saved.bot.linkCode);
   assert.equal('botToken' in saved.bot, false);
 
-  const configuration = await api.get(abortSignal, 'alice');
+  const configuration = await api.get(signal, 'alice');
   assert.equal(configuration.bots[0].botUserName, 'aila_test_bot');
   assert.equal(configuration.bots[0].isConnected, false);
   assert.equal('botToken' in configuration.bots[0], false);
-  assert.deepEqual(await api.get(abortSignal, 'bob'), { bots: [] });
+  assert.deepEqual(await api.get(signal, 'bob'), { bots: [] });
 
-  await api.save(abortSignal, 'alice', { channelName: 'default' });
-  assert.equal((await repository.tryGet(abortSignal, 'alice', 'default'))?.botToken, 'top-secret');
+  await api.save(signal, 'alice', { channelName: 'default' });
+  assert.equal((await repository.tryGet(signal, 'alice', 'default'))?.botToken, 'top-secret');
 
-  const existing = await repository.tryGet(abortSignal, 'alice', 'default');
+  const existing = await repository.tryGet(signal, 'alice', 'default');
   assert.ok(existing);
   await repository.upsert(
-    abortSignal,
+    signal,
     TelegramBotConfiguration.create(existing.userName, existing.channelName, existing.botToken, {
       botId: existing.botId,
       botUserName: existing.botUserName,
@@ -55,20 +55,20 @@ test('manages user Telegram configurations without exposing bot tokens', async (
       lastUpdateId: 42
     })
   );
-  assert.equal((await api.save(abortSignal, 'alice', { channelName: 'default' })).bot.isConnected, true);
-  const reconnected = await api.save(abortSignal, 'alice', { channelName: 'default', reconnect: true });
+  assert.equal((await api.save(signal, 'alice', { channelName: 'default' })).bot.isConnected, true);
+  const reconnected = await api.save(signal, 'alice', { channelName: 'default', reconnect: true });
   assert.equal(reconnected.bot.isConnected, false);
   assert.ok(reconnected.bot.linkCode);
 
   await assert.rejects(
-    () => api.save(abortSignal, 'bob', { channelName: 'default' }),
+    () => api.save(signal, 'bob', { channelName: 'default' }),
     error => error instanceof EndpointError && error.status === 400 && error.message === 'Bot token is required'
   );
   await assert.rejects(
-    () => api.delete(abortSignal, 'bob', 'default'),
+    () => api.delete(signal, 'bob', 'default'),
     error => error instanceof EndpointError && error.status === 404
   );
-  assert.deepEqual(await api.delete(abortSignal, 'alice', 'default'), { channelName: 'default' });
+  assert.deepEqual(await api.delete(signal, 'alice', 'default'), { channelName: 'default' });
 
   assert.ok(eventHandler.events.some(event => event.userName === 'alice' && event.channelName === 'default'));
   db.close();
@@ -81,25 +81,22 @@ test('rejects invalid Telegram bot identities and webhook configurations', async
   const userRepository = new SqliteUserRepository(dbs);
   const repository = new SqliteTelegramConfigurationRepository(dbs);
   const eventBus = new EventBus();
-  const abortSignal = new AbortController().signal;
-  await userRepository.setup(abortSignal);
-  await repository.setup(abortSignal);
-  await userRepository.insert(abortSignal, new User('alice', null, 'hash', true, false));
+  const signal = new AbortController().signal;
+  await userRepository.setup(signal);
+  await repository.setup(signal);
+  await userRepository.insert(signal, new User('alice', null, 'hash', true, false));
   const invalidTokenApi = new TelegramConfigurationApi(
     repository,
     new FakeTelegramBotApiClient(new TelegramBotApiError('Not Found', 404, null)),
     eventBus
   );
   await assert.rejects(
-    () => invalidTokenApi.save(abortSignal, 'alice', { channelName: 'default', botToken: 'bad-token' }),
+    () => invalidTokenApi.save(signal, 'alice', { channelName: 'default', botToken: 'bad-token' }),
     /Incorrect Telegram bot token/
   );
 
   const webhookApi = new TelegramConfigurationApi(repository, new FakeTelegramBotApiClient(null, 'https://example.test'), eventBus);
-  await assert.rejects(
-    () => webhookApi.save(abortSignal, 'alice', { channelName: 'default', botToken: 'token' }),
-    /has a webhook configured/
-  );
+  await assert.rejects(() => webhookApi.save(signal, 'alice', { channelName: 'default', botToken: 'token' }), /has a webhook configured/);
   db.close();
 });
 

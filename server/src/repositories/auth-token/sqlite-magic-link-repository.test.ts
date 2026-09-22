@@ -11,17 +11,17 @@ test('consumes a valid magic link only once', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
   db.exec(`PRAGMA foreign_keys = ON`);
   const databases = { modelDb: new SqliteDatabase(db) } as SqliteDatabases;
-  const abortSignal = new AbortController().signal;
+  const signal = new AbortController().signal;
   const userRepository = new SqliteUserRepository(databases);
   const repository = new SqliteMagicLinkRepository(databases);
-  await userRepository.setup(abortSignal);
-  await repository.setup(abortSignal);
-  await userRepository.insert(abortSignal, new User('alice', null, 'hash', true, false));
-  await repository.insert(abortSignal, new MagicLink('secret-token', 'alice', 2_000));
+  await userRepository.setup(signal);
+  await repository.setup(signal);
+  await userRepository.insert(signal, new User('alice', null, 'hash', true, false));
+  await repository.insert(signal, new MagicLink('secret-token', 'alice', 2_000));
 
-  assert.equal(await repository.consume(abortSignal, 'wrong-token', 1_000), null);
-  assert.equal(await repository.consume(abortSignal, 'secret-token', 1_000), 'alice');
-  assert.equal(await repository.consume(abortSignal, 'secret-token', 1_000), null);
+  assert.equal(await repository.consume(signal, 'wrong-token', 1_000), null);
+  assert.equal(await repository.consume(signal, 'secret-token', 1_000), 'alice');
+  assert.equal(await repository.consume(signal, 'secret-token', 1_000), null);
 
   db.close();
 });
@@ -30,16 +30,16 @@ test('rejects and deletes expired magic links', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
   db.exec(`PRAGMA foreign_keys = ON`);
   const databases = { modelDb: new SqliteDatabase(db) } as SqliteDatabases;
-  const abortSignal = new AbortController().signal;
+  const signal = new AbortController().signal;
   const userRepository = new SqliteUserRepository(databases);
   const repository = new SqliteMagicLinkRepository(databases);
-  await userRepository.setup(abortSignal);
-  await repository.setup(abortSignal);
-  await userRepository.insert(abortSignal, new User('alice', null, 'hash', true, false));
-  await repository.insert(abortSignal, new MagicLink('expired-token', 'alice', 1_000));
+  await userRepository.setup(signal);
+  await repository.setup(signal);
+  await userRepository.insert(signal, new User('alice', null, 'hash', true, false));
+  await repository.insert(signal, new MagicLink('expired-token', 'alice', 1_000));
 
-  assert.equal(await repository.consume(abortSignal, 'expired-token', 1_000), null);
-  await repository.deleteExpired(abortSignal, 1_000);
+  assert.equal(await repository.consume(signal, 'expired-token', 1_000), null);
+  await repository.deleteExpired(signal, 1_000);
 
   const row = db.prepare(`SELECT token FROM magic_links WHERE token = ?`).get('expired-token');
   assert.equal(row, undefined);

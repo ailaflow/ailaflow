@@ -22,15 +22,15 @@ export function DashboardPage() {
   const [openedTaskId, setOpenedTaskId] = useState<string | null>(null);
   const [reloadToken, setReloadToken] = useState(0);
   const { data, isLoading, error } = useLoader(
-    async abortSignal => {
+    async signal => {
       const [tasks, processes, notifications] = await Promise.all([
-        apiClient.myTask.getMyTasks(abortSignal, { onlyOpen: true, page: 1, pageSize: PANEL_PAGE_SIZE }),
-        apiClient.myProcess.getMyProcesses(abortSignal, {
+        apiClient.myTask.getMyTasks(signal, { onlyOpen: true, page: 1, pageSize: PANEL_PAGE_SIZE }),
+        apiClient.myProcess.getMyProcesses(signal, {
           page: 1,
           pageSize: PANEL_PAGE_SIZE,
           displayAtLeast: ProcessDisplay.FEATURED
         }),
-        apiClient.myNotification.getMyNotifications(abortSignal, { page: 1, pageSize: PANEL_PAGE_SIZE })
+        apiClient.myNotification.getMyNotifications(signal, { page: 1, pageSize: PANEL_PAGE_SIZE })
       ]);
 
       return { tasks, processes, notifications };

@@ -9,7 +9,7 @@ export interface AiEnvironmentContext<Stores extends Record<string, AiBindingsSt
   stores: Stores;
   unsavedChangesController: UnsavedChangesController;
   toolDescriptors: ToolDescriptor[];
-  frontEndToolCallsHandler(abortSignal: AbortSignal, toolCall: ToolCall): Promise<object | null>;
+  frontEndToolCallsHandler(signal: AbortSignal, toolCall: ToolCall): Promise<object | null>;
 }
 
 export interface AiEnvironmentProviderProps {

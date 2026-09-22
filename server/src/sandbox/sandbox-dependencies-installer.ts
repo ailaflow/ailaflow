@@ -13,11 +13,11 @@ export class SandboxDependenciesInstaller {
     private readonly paths: SandboxHostPaths
   ) {}
 
-  public async install(abortSignal: AbortSignal, process: Process, handler?: HttpSseHandler<ExecuteCommandUpdate>) {
+  public async install(signal: AbortSignal, process: Process, handler?: HttpSseHandler<ExecuteCommandUpdate>) {
     const startTime = Date.now();
 
     const result = await this.runtime.executeCommand(
-      abortSignal,
+      signal,
       {
         cwd: `/app/${process.name}`,
         command: 'pnpm',

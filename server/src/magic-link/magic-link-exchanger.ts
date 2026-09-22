@@ -10,20 +10,20 @@ export class MagicLinkExchanger {
     private readonly authTokenRepository: AuthTokenRepository
   ) {}
 
-  public async exchange(abortSignal: AbortSignal, token: string): Promise<AuthToken | null> {
-    const userName = await this.magicLinkRepository.consume(abortSignal, token, Date.now());
+  public async exchange(signal: AbortSignal, token: string): Promise<AuthToken | null> {
+    const userName = await this.magicLinkRepository.consume(signal, token, Date.now());
     if (!userName) {
       return null;
     }
 
-    const user = await this.userRepository.tryGetUser(abortSignal, userName);
+    const user = await this.userRepository.tryGetUser(signal, userName);
     if (!user) {
       return null;
     }
 
     // Magic links must never grant admin privileges.
     const authToken = await AuthToken.create(user.name, false);
-    await this.authTokenRepository.upsert(abortSignal, authToken);
+    await this.authTokenRepository.upsert(signal, authToken);
     return authToken;
   }
 }

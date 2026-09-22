@@ -15,31 +15,31 @@ test('queries newest tasks with pagination and an open filter', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
   db.exec(`PRAGMA foreign_keys = ON`);
   const dbs = { modelDb: new SqliteDatabase(db) } as SqliteDatabases;
-  const abortSignal = new AbortController().signal;
+  const signal = new AbortController().signal;
   const userRepository = new SqliteUserRepository(dbs);
   const taskRepository = new SqliteTaskRepository(dbs);
   const assignedTaskRepository = new SqliteAssignedTaskRepository(dbs);
   const querier = new SqliteTaskListQuerier(dbs, () => 2500);
 
-  await userRepository.setup(abortSignal);
-  await taskRepository.setup(abortSignal);
-  await assignedTaskRepository.setup(abortSignal);
-  await userRepository.insert(abortSignal, new User('alice', null, 'hash', true, false));
-  await userRepository.insert(abortSignal, new User('bob', null, 'hash', true, false));
+  await userRepository.setup(signal);
+  await taskRepository.setup(signal);
+  await assignedTaskRepository.setup(signal);
+  await userRepository.insert(signal, new User('alice', null, 'hash', true, false));
+  await userRepository.insert(signal, new User('bob', null, 'hash', true, false));
 
-  await insertTask(taskRepository, abortSignal, 'open', 1000, null, false, null);
-  await insertTask(taskRepository, abortSignal, 'outdated', 2000, 2000, true, null);
-  await insertTask(taskRepository, abortSignal, 'completed', 3000, null, false, 3200);
-  await insertTask(taskRepository, abortSignal, 'unassigned', 4000, null, false, null);
+  await insertTask(taskRepository, signal, 'open', 1000, null, false, null);
+  await insertTask(taskRepository, signal, 'outdated', 2000, 2000, true, null);
+  await insertTask(taskRepository, signal, 'completed', 3000, null, false, 3200);
+  await insertTask(taskRepository, signal, 'unassigned', 4000, null, false, null);
 
-  await assignedTaskRepository.upsert(abortSignal, new AssignedTask('open', 'alice', 'default', 1100, {}));
-  await assignedTaskRepository.upsert(abortSignal, AssignedTask.create('outdated', 'alice', 'default'));
-  await assignedTaskRepository.upsertMultiple(abortSignal, [
+  await assignedTaskRepository.upsert(signal, new AssignedTask('open', 'alice', 'default', 1100, {}));
+  await assignedTaskRepository.upsert(signal, AssignedTask.create('outdated', 'alice', 'default'));
+  await assignedTaskRepository.upsertMultiple(signal, [
     new AssignedTask('completed', 'alice', 'default', 3100, {}),
     AssignedTask.create('completed', 'bob', 'default')
   ]);
 
-  assert.deepEqual(await querier.query(abortSignal, true, 1, 2), {
+  assert.deepEqual(await querier.query(signal, true, 1, 2), {
     tasks: [
       {
         id: 'unassigned',
@@ -68,7 +68,7 @@ test('queries newest tasks with pagination and an open filter', async () => {
     pageSize: 2
   });
 
-  assert.deepEqual(await querier.query(abortSignal, false, 1, 2), {
+  assert.deepEqual(await querier.query(signal, false, 1, 2), {
     tasks: [
       {
         id: 'unassigned',
@@ -102,7 +102,7 @@ test('queries newest tasks with pagination and an open filter', async () => {
 
 async function insertTask(
   repository: SqliteTaskRepository,
-  abortSignal: AbortSignal,
+  signal: AbortSignal,
   id: string,
   createdAt: number,
   deadline: number | null,
@@ -110,7 +110,7 @@ async function insertTask(
   finalizedAt: number | null
 ): Promise<void> {
   await repository.insert(
-    abortSignal,
+    signal,
     new Task(
       id,
       `${id} title`,

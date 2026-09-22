@@ -10,8 +10,8 @@ export class TableRepositoryError extends Error {
 }
 
 export interface TableRepository extends Repository {
-  insert(abortSignal: AbortSignal, table: Table, transaction?: Transaction): Promise<void>;
-  update(abortSignal: AbortSignal, table: Table, transaction?: Transaction): Promise<void>;
-  delete(abortSignal: AbortSignal, tableName: string, transaction?: Transaction): Promise<boolean>;
-  tryGetByName(abortSignal: AbortSignal, tableName: string): Promise<Table | null>;
+  insert(signal: AbortSignal, table: Table, transaction?: Transaction): Promise<void>;
+  update(signal: AbortSignal, table: Table, transaction?: Transaction): Promise<void>;
+  delete(signal: AbortSignal, tableName: string, transaction?: Transaction): Promise<boolean>;
+  tryGetByName(signal: AbortSignal, tableName: string): Promise<Table | null>;
 }

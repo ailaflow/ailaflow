@@ -7,7 +7,7 @@ import { SqliteIncompleteAssignedTaskCountQuerier } from './sqlite-incomplete-as
 test('counts incomplete assigned tasks for a task', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
   const dbs = { modelDb: new SqliteDatabase(db) } as SqliteDatabases;
-  const abortSignal = new AbortController().signal;
+  const signal = new AbortController().signal;
   const querier = new SqliteIncompleteAssignedTaskCountQuerier(dbs);
 
   db.exec(`
@@ -27,9 +27,9 @@ test('counts incomplete assigned tasks for a task', async () => {
   insert.run('task_1', 'charlie', 1000);
   insert.run('task_2', 'alice', null);
 
-  assert.equal(await querier.queryIncompleteAssignedTaskCount(abortSignal, 'task_1'), 2);
-  assert.equal(await querier.queryIncompleteAssignedTaskCount(abortSignal, 'task_2'), 1);
-  assert.equal(await querier.queryIncompleteAssignedTaskCount(abortSignal, 'task_3'), 0);
+  assert.equal(await querier.queryIncompleteAssignedTaskCount(signal, 'task_1'), 2);
+  assert.equal(await querier.queryIncompleteAssignedTaskCount(signal, 'task_2'), 1);
+  assert.equal(await querier.queryIncompleteAssignedTaskCount(signal, 'task_3'), 0);
 
   db.close();
 });

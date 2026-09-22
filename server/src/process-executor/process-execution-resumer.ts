@@ -26,13 +26,13 @@ export class ProcessExecutionResumer {
     private readonly eventBus: EventBus
   ) {}
 
-  public async resume(abortSignal: AbortSignal, executionId: string, payload: SignalPayload): Promise<ProcessExecution> {
-    const persistedExecution = await this.persistedExecutionRepository.tryGet(abortSignal, executionId);
+  public async resume(signal: AbortSignal, executionId: string, payload: SignalPayload): Promise<ProcessExecution> {
+    const persistedExecution = await this.persistedExecutionRepository.tryGet(signal, executionId);
     if (!persistedExecution) {
       throw new ProcessExecutionResumeError(`Cannot find the persisted execution: ${executionId}`);
     }
 
-    const process = await this.processManager.tryGetByName(abortSignal, persistedExecution.processName);
+    const process = await this.processManager.tryGetByName(signal, persistedExecution.processName);
     if (!process) {
       throw new ProcessExecutionResumeError(`Cannot find the process: ${persistedExecution.processName}`);
     }
@@ -55,7 +55,7 @@ export class ProcessExecutionResumer {
       );
     });
 
-    await this.persistedExecutionRepository.delete(abortSignal, executionId);
+    await this.persistedExecutionRepository.delete(signal, executionId);
 
     const listener = this.resumeListenerStore.tryGet(executionId);
     if (listener) {

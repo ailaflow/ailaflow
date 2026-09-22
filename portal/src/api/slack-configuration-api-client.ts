@@ -14,31 +14,31 @@ import type {
 export class SlackConfigurationApiClient {
   public constructor(private readonly client: HttpClient) {}
 
-  public get(abortSignal: AbortSignal): Promise<GetSlackConfigurationResponse> {
-    return this.client.json(abortSignal, 'GET', '/api/slack-configuration');
+  public get(signal: AbortSignal): Promise<GetSlackConfigurationResponse> {
+    return this.client.json(signal, 'GET', '/api/slack-configuration');
   }
 
-  public save(abortSignal: AbortSignal, request: SaveSlackConfigurationRequest): Promise<SaveSlackConfigurationResponse> {
-    return this.client.json(abortSignal, 'POST', '/api/slack-configuration', request);
+  public save(signal: AbortSignal, request: SaveSlackConfigurationRequest): Promise<SaveSlackConfigurationResponse> {
+    return this.client.json(signal, 'POST', '/api/slack-configuration', request);
   }
 
-  public delete(abortSignal: AbortSignal): Promise<DeleteSlackConfigurationResponse> {
-    return this.client.json(abortSignal, 'DELETE', '/api/slack-configuration');
+  public delete(signal: AbortSignal): Promise<DeleteSlackConfigurationResponse> {
+    return this.client.json(signal, 'DELETE', '/api/slack-configuration');
   }
 
-  public getUsers(abortSignal: AbortSignal, request: GetSlackUsersRequest): Promise<GetSlackUsersResponse> {
+  public getUsers(signal: AbortSignal, request: GetSlackUsersRequest): Promise<GetSlackUsersResponse> {
     const query = new URLSearchParams({ page: String(request.page), pageSize: String(request.pageSize) });
     if (request.search) {
       query.set('search', request.search);
     }
-    return this.client.json(abortSignal, 'GET', `/api/slack-configuration/users?${query}`);
+    return this.client.json(signal, 'GET', `/api/slack-configuration/users?${query}`);
   }
 
-  public refreshUsers(abortSignal: AbortSignal): Promise<RefreshSlackUsersResponse> {
-    return this.client.json(abortSignal, 'POST', '/api/slack-configuration/users/refresh', {});
+  public refreshUsers(signal: AbortSignal): Promise<RefreshSlackUsersResponse> {
+    return this.client.json(signal, 'POST', '/api/slack-configuration/users/refresh', {});
   }
 
-  public saveMappings(abortSignal: AbortSignal, request: SaveSlackMappingsRequest): Promise<SaveSlackMappingsResponse> {
-    return this.client.json(abortSignal, 'POST', '/api/slack-configuration/mappings', request);
+  public saveMappings(signal: AbortSignal, request: SaveSlackMappingsRequest): Promise<SaveSlackMappingsResponse> {
+    return this.client.json(signal, 'POST', '/api/slack-configuration/mappings', request);
   }
 }

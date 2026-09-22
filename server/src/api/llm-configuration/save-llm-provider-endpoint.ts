@@ -24,7 +24,7 @@ export class SaveLlmProviderEndpoint implements Endpoint {
   ) {}
 
   public async handle(req: Request): Promise<object> {
-    const abortSignal = getEndpointAbortSignal(req);
+    const signal = getEndpointAbortSignal(req);
     const request = parseBody(saveLlmProviderRequestSchema, req.body);
     try {
       let provider: LlmProviderConfiguration;
@@ -37,9 +37,9 @@ export class SaveLlmProviderEndpoint implements Endpoint {
           apiKey: request.apiKey,
           models: request.models
         });
-        await this.repository.insertProvider(abortSignal, provider);
+        await this.repository.insertProvider(signal, provider);
       } else {
-        const existingProvider = await this.repository.tryGetProvider(abortSignal, request.id!);
+        const existingProvider = await this.repository.tryGetProvider(signal, request.id!);
         if (!existingProvider) {
           throw new EndpointError('LLM provider not found', 404);
         }
@@ -51,7 +51,7 @@ export class SaveLlmProviderEndpoint implements Endpoint {
           apiKey: request.apiKey,
           models: request.models
         });
-        await this.repository.updateProvider(abortSignal, provider);
+        await this.repository.updateProvider(signal, provider);
       }
       await this.eventBus.publish(new LlmConfigurationChangedEvent());
       return {};

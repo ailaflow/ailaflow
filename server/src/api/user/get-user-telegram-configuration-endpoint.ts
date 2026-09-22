@@ -18,12 +18,12 @@ export class GetUserTelegramConfigurationEndpoint implements Endpoint {
   ) {}
 
   public async handle(req: Request): Promise<GetTelegramConfigurationResponse> {
-    const abortSignal = getEndpointAbortSignal(req);
+    const signal = getEndpointAbortSignal(req);
     const userName = String(req.params.userName);
-    const user = await this.userRepository.tryGetUser(abortSignal, userName);
+    const user = await this.userRepository.tryGetUser(signal, userName);
     if (!user) {
       throw new EndpointError('User not found', 404);
     }
-    return this.api.get(abortSignal, user.name);
+    return this.api.get(signal, user.name);
   }
 }

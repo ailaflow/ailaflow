@@ -24,14 +24,14 @@ export class StartMyProcessTool extends ZodTool<Arg> {
     super('start_my_process', 'Starts a new process', inputSchema);
   }
 
-  protected async handle(abortSignal: AbortSignal, { sessionId }: ToolContext, arg: Arg): Promise<ZodToolExecutionResult> {
+  protected async handle(signal: AbortSignal, { sessionId }: ToolContext, arg: Arg): Promise<ZodToolExecutionResult> {
     const chatSession = ChatSessionId.decode(sessionId);
     const userName = chatSession.userName;
     const isTest = chatSession.isTest();
 
     const processName = ResourceNameNormalizer.removePrefix(arg.name, '/');
 
-    const process = await this.userProcessProvider.tryGet(abortSignal, userName, processName);
+    const process = await this.userProcessProvider.tryGet(signal, userName, processName);
     if (!process) {
       return {
         content: {
@@ -64,11 +64,11 @@ export class StartMyProcessTool extends ZodTool<Arg> {
 
     const execution = this.processExecutor.initialize(context, process, arg.startVariableValues);
 
-    const softSignal = AbortSignal.any([abortSignal, AbortSignal.timeout(6_000)]);
+    const softSignal = AbortSignal.any([signal, AbortSignal.timeout(6_000)]);
     const outcome = await execution.runAndWaitForOutcome(softSignal);
 
     if (outcome === null) {
-      if (abortSignal.aborted) {
+      if (signal.aborted) {
         execution.tryStop();
         throw new Error('Operation aborted');
       }

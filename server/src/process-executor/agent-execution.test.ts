@@ -145,9 +145,9 @@ function createHarness(
       agentSessionRunner: agent
     } as ProcessExecutionServices
   );
-  function run(abortSignal: AbortSignal, runContext: ProcessExecutionContext, process: Process, input: Record<string, unknown>) {
+  function run(signal: AbortSignal, runContext: ProcessExecutionContext, process: Process, input: Record<string, unknown>) {
     const execution = executor.initialize(runContext, process, input);
-    return execution.runAndWaitForOutcome(abortSignal) as Promise<ProcessExecutionOutcome>;
+    return execution.runAndWaitForOutcome(signal) as Promise<ProcessExecutionOutcome>;
   }
 
   let caller: ProcessExecution | undefined;
@@ -520,10 +520,10 @@ test('agent runtime timeout fails the step and interrupts the session', async t 
   });
   let requestSignal: AbortSignal | undefined;
   const harness = createHarness({
-    complete: async abortSignal => {
-      requestSignal = abortSignal;
+    complete: async signal => {
+      requestSignal = signal;
       return await new Promise((_, reject) => {
-        abortSignal.addEventListener('abort', () => reject(abortSignal.reason), { once: true });
+        signal.addEventListener('abort', () => reject(signal.reason), { once: true });
         timeoutController.abort(timeoutError);
       });
     }

@@ -21,7 +21,7 @@ export class CodexDynamicToolBus {
   private readonly earlyResults = new Map<string, CodexDynamicToolResponse>();
   private readonly callWaiters = new Map<string, CallWaiter>();
 
-  public publishCall(abortSignal: AbortSignal, call: CodexDynamicToolCall): Promise<CodexDynamicToolResponse> {
+  public publishCall(signal: AbortSignal, call: CodexDynamicToolCall): Promise<CodexDynamicToolResponse> {
     const key = getCallKey(call.threadId, call.callId);
     const existing = this.pendingCalls.get(key);
     if (existing) {
@@ -44,17 +44,17 @@ export class CodexDynamicToolBus {
 
     const abort = () => {
       if (this.pendingCalls.delete(key)) {
-        reject(toAbortError(abortSignal));
+        reject(toAbortError(signal));
       }
     };
-    abortSignal.addEventListener('abort', abort, { once: true });
-    void promise.finally(() => abortSignal.removeEventListener('abort', abort)).catch(() => undefined);
+    signal.addEventListener('abort', abort, { once: true });
+    void promise.finally(() => signal.removeEventListener('abort', abort)).catch(() => undefined);
 
     this.notifyCallWaiter(call.threadId);
     return promise;
   }
 
-  public waitForCalls(abortSignal: AbortSignal, threadId: string, turnId: string): Promise<CodexDynamicToolCall[]> {
+  public waitForCalls(signal: AbortSignal, threadId: string, turnId: string): Promise<CodexDynamicToolCall[]> {
     const ready = this.takeReadyCalls(threadId, turnId);
     if (ready.length > 0) {
       return Promise.resolve(ready);
@@ -65,14 +65,14 @@ export class CodexDynamicToolBus {
     return new Promise((resolve, reject) => {
       const abort = () => {
         this.callWaiters.delete(threadId);
-        reject(toAbortError(abortSignal));
+        reject(toAbortError(signal));
       };
-      const cleanup = () => abortSignal.removeEventListener('abort', abort);
-      if (abortSignal.aborted) {
+      const cleanup = () => signal.removeEventListener('abort', abort);
+      if (signal.aborted) {
         abort();
         return;
       }
-      abortSignal.addEventListener('abort', abort, { once: true });
+      signal.addEventListener('abort', abort, { once: true });
       this.callWaiters.set(threadId, { turnId, resolve, reject, cleanup });
     });
   }
@@ -165,6 +165,6 @@ function getCallKey(threadId: string, callId: string): string {
   return `${threadId}:${callId}`;
 }
 
-function toAbortError(abortSignal: AbortSignal): Error {
-  return abortSignal.reason instanceof Error ? abortSignal.reason : new LlmClientError('Operation aborted');
+function toAbortError(signal: AbortSignal): Error {
+  return signal.reason instanceof Error ? signal.reason : new LlmClientError('Operation aborted');
 }

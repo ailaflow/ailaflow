@@ -14,9 +14,9 @@ export class GetTableEndpoint implements Endpoint {
   public constructor(private readonly tableManager: Pick<TableManager, 'tryGetByName'>) {}
 
   public async handle(req: Request): Promise<GetTableResponse> {
-    const abortSignal = getEndpointAbortSignal(req);
+    const signal = getEndpointAbortSignal(req);
     const tableName = String(req.params.name);
-    const table = await this.tableManager.tryGetByName(abortSignal, tableName);
+    const table = await this.tableManager.tryGetByName(signal, tableName);
     if (!table) {
       throw new EndpointError('Table not found', 404);
     }

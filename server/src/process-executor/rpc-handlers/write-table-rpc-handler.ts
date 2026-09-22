@@ -16,9 +16,9 @@ export class WriteTableRpcHandler implements SandboxRpcHandler {
 
   public constructor(private readonly tableManager: TableManager) {}
 
-  public async handle(abortSignal: AbortSignal, _sandboxName: string, _executionId: string, data: object): Promise<true> {
+  public async handle(signal: AbortSignal, _sandboxName: string, _executionId: string, data: object): Promise<true> {
     const request = requestSchema.parse(data);
-    await this.tableManager.write(abortSignal, request.name, request.row);
+    await this.tableManager.write(signal, request.name, request.row);
     return true;
   }
 }

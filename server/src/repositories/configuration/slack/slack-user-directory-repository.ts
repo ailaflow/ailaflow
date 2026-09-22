@@ -8,7 +8,7 @@ export interface SlackDirectoryCounts {
 }
 
 export interface SlackUserDirectoryRepository extends Repository {
-  replaceFromRefresh(abortSignal: AbortSignal, workspaceId: string, users: SlackDirectoryUser[], refreshedAt: number): Promise<void>;
-  tryGet(abortSignal: AbortSignal, workspaceId: string, slackUserId: string): Promise<SlackDirectoryUser | null>;
-  getCounts(abortSignal: AbortSignal, workspaceId: string): Promise<SlackDirectoryCounts>;
+  replaceFromRefresh(signal: AbortSignal, workspaceId: string, users: SlackDirectoryUser[], refreshedAt: number): Promise<void>;
+  tryGet(signal: AbortSignal, workspaceId: string, slackUserId: string): Promise<SlackDirectoryUser | null>;
+  getCounts(signal: AbortSignal, workspaceId: string): Promise<SlackDirectoryCounts>;
 }

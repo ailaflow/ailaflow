@@ -13,13 +13,13 @@ export class LlmConfigurationRepositoryError extends Error {
 }
 
 export interface LlmConfigurationRepository extends Repository {
-  get(abortSignal: AbortSignal): Promise<LlmConfiguration>;
-  tryGetProvider(abortSignal: AbortSignal, id: string): Promise<LlmProviderConfiguration | null>;
-  insertProvider(abortSignal: AbortSignal, provider: LlmProviderConfiguration, transaction?: Transaction): Promise<void>;
-  updateProvider(abortSignal: AbortSignal, provider: LlmProviderConfiguration, transaction?: Transaction): Promise<void>;
-  deleteProvider(abortSignal: AbortSignal, id: string, transaction?: Transaction): Promise<boolean>;
+  get(signal: AbortSignal): Promise<LlmConfiguration>;
+  tryGetProvider(signal: AbortSignal, id: string): Promise<LlmProviderConfiguration | null>;
+  insertProvider(signal: AbortSignal, provider: LlmProviderConfiguration, transaction?: Transaction): Promise<void>;
+  updateProvider(signal: AbortSignal, provider: LlmProviderConfiguration, transaction?: Transaction): Promise<void>;
+  deleteProvider(signal: AbortSignal, id: string, transaction?: Transaction): Promise<boolean>;
   saveUseCases(
-    abortSignal: AbortSignal,
+    signal: AbortSignal,
     configurations: LlmUseCaseConfiguration[],
     removedUseCases: LlmUseCase[],
     transaction?: Transaction

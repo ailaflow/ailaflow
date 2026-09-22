@@ -11,24 +11,24 @@ test('inserts notifications for users', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
   db.exec(`PRAGMA foreign_keys = ON`);
   const dbs = { modelDb: new SqliteDatabase(db) } as SqliteDatabases;
-  const abortSignal = new AbortController().signal;
+  const signal = new AbortController().signal;
   const userRepository = new SqliteUserRepository(dbs);
   const notificationRepository = new SqliteNotificationRepository(dbs);
 
-  await userRepository.setup(abortSignal);
-  await notificationRepository.setup(abortSignal);
-  await userRepository.insert(abortSignal, new User('alice', null, 'hash', true, false));
-  await userRepository.insert(abortSignal, new User('bob', null, 'hash', true, false));
+  await userRepository.setup(signal);
+  await notificationRepository.setup(signal);
+  await userRepository.insert(signal, new User('alice', null, 'hash', true, false));
+  await userRepository.insert(signal, new User('bob', null, 'hash', true, false));
 
-  await notificationRepository.insertMultiple(abortSignal, [
+  await notificationRepository.insertMultiple(signal, [
     new Notification('notification_1', 'process-1', 'alice', 'First', 1000),
     new Notification('notification_2', 'process-2', 'bob', 'Second', 2000)
   ]);
-  await notificationRepository.insertMultiple(abortSignal, []);
+  await notificationRepository.insertMultiple(signal, []);
 
-  assert.equal(await notificationRepository.delete(abortSignal, 'alice', 'notification_2'), false);
-  assert.equal(await notificationRepository.delete(abortSignal, 'alice', 'notification_1'), true);
-  assert.equal(await notificationRepository.delete(abortSignal, 'alice', 'notification_1'), false);
+  assert.equal(await notificationRepository.delete(signal, 'alice', 'notification_2'), false);
+  assert.equal(await notificationRepository.delete(signal, 'alice', 'notification_1'), true);
+  assert.equal(await notificationRepository.delete(signal, 'alice', 'notification_1'), false);
 
   const rows = db
     .prepare(`SELECT id, processName, userName, message, createdAt FROM notifications ORDER BY id`)

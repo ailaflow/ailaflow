@@ -36,7 +36,7 @@ export class CompactMessage implements Message {
     private readonly toolSet: ToolSet
   ) {}
 
-  public async complete(abortSignal: AbortSignal, stack: ChatSessionStack): Promise<MessageCompletionResult> {
+  public async complete(signal: AbortSignal, stack: ChatSessionStack): Promise<MessageCompletionResult> {
     const llmMessages = stack.getRecentCompletedLlmMessagesBeforeLast();
     const toolDescriptors = this.toolSet.getDescriptorsOrUndefined();
 
@@ -45,7 +45,7 @@ export class CompactMessage implements Message {
       content: COMPACT_PROMPT
     });
 
-    const { message } = await this.llmClient.complete(abortSignal, this.llmModelSettings, llmMessages, toolDescriptors);
+    const { message } = await this.llmClient.complete(signal, this.llmModelSettings, llmMessages, toolDescriptors);
 
     const content = LlmMessageContentExtractor.tryExtract(message);
     if (!content) {

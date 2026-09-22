@@ -120,11 +120,11 @@ export class SandboxRuntime {
   }
 
   private async handleRpc(rpc: NonNullable<ListenRpcUpdate['rpc']>): Promise<void> {
-    const abortSignal = AbortSignal.any([AbortSignal.timeout(rpc.timeout), this.stopAbortController.signal]);
+    const signal = AbortSignal.any([AbortSignal.timeout(rpc.timeout), this.stopAbortController.signal]);
 
     let result: SendRpcReplyRequest;
     try {
-      const data = await this.rpcHandlerProvider.get(rpc.methodName).handle(abortSignal, this.name, rpc.executionId, rpc.data);
+      const data = await this.rpcHandlerProvider.get(rpc.methodName).handle(signal, this.name, rpc.executionId, rpc.data);
       result = {
         callId: rpc.callId,
         data
@@ -138,7 +138,7 @@ export class SandboxRuntime {
     }
 
     try {
-      await this.client.sendRpcReply(abortSignal, this.token, result);
+      await this.client.sendRpcReply(signal, this.token, result);
     } catch (e) {
       const error = (e as Error)?.message ?? String(e);
       this.logger.error(`Failed to send ${rpc.methodName} RPC response to the bridge for sandbox +${this.name}: ${error}`);
@@ -146,7 +146,7 @@ export class SandboxRuntime {
   }
 
   public async executeCommand(
-    abortSignal: AbortSignal,
+    signal: AbortSignal,
     command: ExecuteCommandRequest,
     handler?: HttpSseHandler<ExecuteCommandUpdate>
   ): Promise<CommandResult> {
@@ -158,7 +158,7 @@ export class SandboxRuntime {
     let stdout = '';
     let stderr = '';
     let error: Error | undefined;
-    await this.client.executeCommand(abortSignal, command, this.token, {
+    await this.client.executeCommand(signal, command, this.token, {
       onData(update) {
         if (update.stdout) {
           stdout += update.stdout;
@@ -185,11 +185,11 @@ export class SandboxRuntime {
   }
 
   private triggerTryStop(error?: Error) {
-    const abortSignal = AbortSignal.timeout(5_000);
-    void this.tryStop(abortSignal, error);
+    const signal = AbortSignal.timeout(5_000);
+    void this.tryStop(signal, error);
   }
 
-  public async tryStop(abortSignal: AbortSignal, error?: Error): Promise<boolean> {
+  public async tryStop(signal: AbortSignal, error?: Error): Promise<boolean> {
     if (!this.isRunning) {
       return false;
     }
@@ -200,7 +200,7 @@ export class SandboxRuntime {
       clearInterval(this.healthCheckIv);
     }
 
-    await Promise.allSettled([this.docker.tryRemove(abortSignal, this.id), this.docker.tryRemoveNetwork(abortSignal, this.id)]);
+    await Promise.allSettled([this.docker.tryRemove(signal, this.id), this.docker.tryRemoveNetwork(signal, this.id)]);
 
     this.onClose.emit(error);
 
@@ -213,16 +213,16 @@ export class SandboxRuntime {
   }
 }
 
-async function checkHealth(abortSignal: AbortSignal, client: BridgeClient): Promise<boolean> {
+async function checkHealth(signal: AbortSignal, client: BridgeClient): Promise<boolean> {
   for (let attempt = 1; ; attempt++) {
     try {
-      await client.getHealth(abortSignal);
+      await client.getHealth(signal);
       return true;
     } catch (e) {
       if (attempt >= 40) {
         return false;
       }
-      await abortableSleep(abortSignal, 250);
+      await abortableSleep(signal, 250);
     }
   }
 }

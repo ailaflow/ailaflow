@@ -13,9 +13,9 @@ export class ExchangeMagicLinkEndpoint implements Endpoint {
   public constructor(private readonly magicLinkExchanger: MagicLinkExchanger) {}
 
   public async handle(req: Request): Promise<ExchangeMagicLinkResponse> {
-    const abortSignal = getEndpointAbortSignal(req);
+    const signal = getEndpointAbortSignal(req);
     const request = parseBody(exchangeMagicLinkRequestSchema, req.body);
-    const authToken = await this.magicLinkExchanger.exchange(abortSignal, request.token);
+    const authToken = await this.magicLinkExchanger.exchange(signal, request.token);
     if (!authToken) {
       throw new EndpointError('Magic link is invalid or expired', 401);
     }

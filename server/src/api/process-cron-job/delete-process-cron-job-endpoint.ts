@@ -14,9 +14,9 @@ export class DeleteProcessCronJobEndpoint implements Endpoint {
   public constructor(private readonly repository: ProcessCronJobRepository) {}
 
   public async handle(req: Request): Promise<DeleteProcessCronJobResponse> {
-    const abortSignal = getEndpointAbortSignal(req);
+    const signal = getEndpointAbortSignal(req);
     const id = String(req.params.id);
-    if (!(await this.repository.delete(abortSignal, id))) {
+    if (!(await this.repository.delete(signal, id))) {
       throw new EndpointError('Process cron job not found', 404);
     }
     return { id };

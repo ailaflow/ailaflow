@@ -14,10 +14,10 @@ const PAGE_SIZE = 50;
 export function SlackConfigurationPage() {
   const apiClient = useApiClient();
   const loader = useLoader(
-    async abortSignal => {
-      const configuration = await apiClient.slackConfiguration.get(abortSignal);
+    async signal => {
+      const configuration = await apiClient.slackConfiguration.get(signal);
       const users = configuration.isConfigured
-        ? await apiClient.slackConfiguration.getUsers(abortSignal, { page: 1, pageSize: PAGE_SIZE })
+        ? await apiClient.slackConfiguration.getUsers(signal, { page: 1, pageSize: PAGE_SIZE })
         : emptyUsers(configuration.mappingRevision);
       return { configuration, users };
     },

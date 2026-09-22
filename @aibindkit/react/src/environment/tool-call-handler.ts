@@ -65,7 +65,7 @@ export class ToolCallHandler<Stores extends Record<string, AiBindingsStore>> {
     }
   }
 
-  public readonly frontEndToolCallsHandler = async (abortSignal: AbortSignal, toolCall: ToolCall): Promise<object | null> => {
+  public readonly frontEndToolCallsHandler = async (signal: AbortSignal, toolCall: ToolCall): Promise<object | null> => {
     const arg = JSON.parse(toolCall.function.arguments);
 
     if (toolCall.function.name === 'navigation_getCurrentPage') {
@@ -77,7 +77,7 @@ export class ToolCallHandler<Stores extends Record<string, AiBindingsStore>> {
     }
     const fn = this.functionMap[toolCall.function.name];
     if (fn) {
-      return this.runFn(abortSignal, fn, arg);
+      return this.runFn(signal, fn, arg);
     }
 
     // We don't support the requested tool call.
@@ -130,7 +130,7 @@ export class ToolCallHandler<Stores extends Record<string, AiBindingsStore>> {
     return toolSuccess(`Redirected to the "${route.name}" page`);
   }
 
-  private async runFn(abortSignal: AbortSignal, fn: BindingWithStore, arg: Record<string, unknown>) {
+  private async runFn(signal: AbortSignal, fn: BindingWithStore, arg: Record<string, unknown>) {
     for (let attempt = 0; ; attempt++) {
       const handler = fn.store.tryGet();
       if (!handler) {
@@ -145,7 +145,7 @@ export class ToolCallHandler<Stores extends Record<string, AiBindingsStore>> {
       const result = await handler[fn.binding.name](arg);
       if (isToolWait(result)) {
         if (attempt === 0) {
-          await result.wait(abortSignal);
+          await result.wait(signal);
           continue;
         } else {
           return toolError('The requested resource is still loading. Please try again later.');

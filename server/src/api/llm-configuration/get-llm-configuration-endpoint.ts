@@ -13,8 +13,8 @@ export class GetLlmConfigurationEndpoint implements Endpoint {
   public constructor(private readonly repository: LlmConfigurationRepository) {}
 
   public async handle(req: Request): Promise<GetLlmConfigurationResponse> {
-    const abortSignal = getEndpointAbortSignal(req);
-    const configuration = await this.repository.get(abortSignal);
+    const signal = getEndpointAbortSignal(req);
+    const configuration = await this.repository.get(signal);
 
     return {
       providers: configuration.providers.map(provider => ({

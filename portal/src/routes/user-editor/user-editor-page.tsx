@@ -8,10 +8,7 @@ import { UserEditor } from './user-editor';
 export function UserEditorPage() {
   const { userName } = useParams();
   const apiClient = useApiClient();
-  const loader = useLoader(
-    abortSignal => (userName ? apiClient.user.getUser(abortSignal, userName) : Promise.resolve(null)),
-    [apiClient, userName]
-  );
+  const loader = useLoader(signal => (userName ? apiClient.user.getUser(signal, userName) : Promise.resolve(null)), [apiClient, userName]);
 
   if (loader.isLoading) {
     return <PortalLoadingView />;

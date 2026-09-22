@@ -18,15 +18,15 @@ export class GetUserEndpoint implements Endpoint {
   ) {}
 
   public async handle(req: Request): Promise<GetUserResponse> {
-    const abortSignal = getEndpointAbortSignal(req);
+    const signal = getEndpointAbortSignal(req);
     const userName = String(req.params.name);
 
-    const user = await this.userRepository.tryGetUser(abortSignal, userName);
+    const user = await this.userRepository.tryGetUser(signal, userName);
     if (!user) {
       throw new EndpointError('User not found', 404);
     }
 
-    const attributes = await this.userAttributesRepository.get(abortSignal, user.name);
+    const attributes = await this.userAttributesRepository.get(signal, user.name);
 
     return {
       user: {

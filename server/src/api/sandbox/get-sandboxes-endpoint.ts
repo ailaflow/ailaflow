@@ -13,9 +13,9 @@ export class GetSandboxesEndpoint implements Endpoint {
   public constructor(private readonly querier: SandboxListQuerier) {}
 
   public async handle(req: Request): Promise<GetSandboxesResponse> {
-    const abortSignal = getEndpointAbortSignal(req);
+    const signal = getEndpointAbortSignal(req);
     return {
-      sandboxes: await this.querier.query(abortSignal)
+      sandboxes: await this.querier.query(signal)
     };
   }
 }

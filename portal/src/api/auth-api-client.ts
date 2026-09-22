@@ -11,15 +11,15 @@ import type {
 export class AuthApiClient {
   public constructor(private readonly client: HttpClient) {}
 
-  public login(abortSignal: AbortSignal, request: LoginRequest): Promise<LoginResponse> {
-    return this.client.json(abortSignal, 'POST', '/api/auth/login', request);
+  public login(signal: AbortSignal, request: LoginRequest): Promise<LoginResponse> {
+    return this.client.json(signal, 'POST', '/api/auth/login', request);
   }
 
-  public refreshToken(abortSignal: AbortSignal, request: RefreshTokenRequest): Promise<RefreshTokenResponse> {
-    return this.client.json(abortSignal, 'POST', '/api/auth/token/refresh', request);
+  public refreshToken(signal: AbortSignal, request: RefreshTokenRequest): Promise<RefreshTokenResponse> {
+    return this.client.json(signal, 'POST', '/api/auth/token/refresh', request);
   }
 
-  public exchangeMagicLink(abortSignal: AbortSignal, request: ExchangeMagicLinkRequest): Promise<ExchangeMagicLinkResponse> {
-    return this.client.json(abortSignal, 'POST', '/api/auth/magic-link/exchange', request);
+  public exchangeMagicLink(signal: AbortSignal, request: ExchangeMagicLinkRequest): Promise<ExchangeMagicLinkResponse> {
+    return this.client.json(signal, 'POST', '/api/auth/magic-link/exchange', request);
   }
 }

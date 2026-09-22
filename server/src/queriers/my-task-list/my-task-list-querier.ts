@@ -2,7 +2,7 @@ import { GetMyTasksResponse } from '@ailaflow/shared';
 
 export interface MyTaskListQuerier {
   query(
-    abortSignal: AbortSignal,
+    signal: AbortSignal,
     isTest: boolean,
     userName: string,
     onlyOpen: boolean,

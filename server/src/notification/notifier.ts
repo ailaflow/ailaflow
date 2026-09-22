@@ -11,9 +11,9 @@ export class Notifier {
     private readonly notificationRepository: NotificationRepository
   ) {}
 
-  public async notify(abortSignal: AbortSignal, processName: string, isTest: boolean, userExpression: string, message: string) {
+  public async notify(signal: AbortSignal, processName: string, isTest: boolean, userExpression: string, message: string) {
     const expression = UserAccessExpressionParser.parse(userExpression);
-    const userNames = await this.userAccessExpressionUserQuerier.queryUserNames(abortSignal, expression);
+    const userNames = await this.userAccessExpressionUserQuerier.queryUserNames(signal, expression);
 
     const notifications = new Array<Notification>(userNames.length);
     for (let i = 0; i < userNames.length; i++) {
@@ -22,7 +22,7 @@ export class Notifier {
 
     const channelName = this.userChatSessionProvider.getDefaultChannelName();
 
-    await this.notificationRepository.insertMultiple(abortSignal, notifications);
+    await this.notificationRepository.insertMultiple(signal, notifications);
 
     let m = '>>>>>>>>\n';
     m += `The user has a new notification from /${processName} process:\n`;
@@ -30,7 +30,7 @@ export class Notifier {
     m += '<<<<<<<<';
 
     for (const n of notifications) {
-      const session = await this.userChatSessionProvider.get(abortSignal, isTest, n.userName, channelName);
+      const session = await this.userChatSessionProvider.get(signal, isTest, n.userName, channelName);
       if (session) {
         session.queueUserMessage(m, {
           internal: true

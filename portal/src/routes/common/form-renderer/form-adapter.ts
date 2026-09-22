@@ -18,9 +18,9 @@ export interface FormAdapter {
 
   assertVariableValue(variableName: string, value: unknown): void;
 
-  openStartForm(abortSignal: AbortSignal): Promise<void>;
-  submitForm(abortSignal: AbortSignal, values: ProcessExecutionVariableValues): Promise<void>;
-  readVariable(abortSignal: AbortSignal, variableName: string): Promise<unknown>;
+  openStartForm(signal: AbortSignal): Promise<void>;
+  submitForm(signal: AbortSignal, values: ProcessExecutionVariableValues): Promise<void>;
+  readVariable(signal: AbortSignal, variableName: string): Promise<unknown>;
 
   collectFormError?: (error: FormError) => void;
 }

@@ -60,9 +60,9 @@ export class CodexAppServerConnection {
     return this.connecting;
   }
 
-  public async request<T>(method: string, params?: unknown, abortSignal?: AbortSignal): Promise<T> {
+  public async request<T>(method: string, params?: unknown, signal?: AbortSignal): Promise<T> {
     await this.connect();
-    return this.sendRequest<T>(method, params, abortSignal);
+    return this.sendRequest<T>(method, params, signal);
   }
 
   public notify(method: string, params?: unknown): void {
@@ -110,9 +110,9 @@ export class CodexAppServerConnection {
     }
   }
 
-  private sendRequest<T>(method: string, params?: unknown, abortSignal?: AbortSignal): Promise<T> {
-    if (abortSignal?.aborted) {
-      return Promise.reject(toAbortError(abortSignal));
+  private sendRequest<T>(method: string, params?: unknown, signal?: AbortSignal): Promise<T> {
+    if (signal?.aborted) {
+      return Promise.reject(toAbortError(signal));
     }
     const id = this.nextRequestId++;
     return new Promise<T>((resolve, reject) => {
@@ -120,20 +120,20 @@ export class CodexAppServerConnection {
       const abort = () => {
         this.pendingRequests.delete(id);
         cleanup();
-        reject(toAbortError(abortSignal));
+        reject(toAbortError(signal));
       };
       const cleanup = () => {
         if (timeout) {
           clearTimeout(timeout);
         }
-        abortSignal?.removeEventListener('abort', abort);
+        signal?.removeEventListener('abort', abort);
       };
       timeout = setTimeout(() => {
         this.pendingRequests.delete(id);
         cleanup();
         reject(new LlmClientError(`Codex app-server request ${method} timed out`));
       }, requestTimeoutMs);
-      abortSignal?.addEventListener('abort', abort, { once: true });
+      signal?.addEventListener('abort', abort, { once: true });
       this.pendingRequests.set(id, {
         resolve: value => resolve(value as T),
         reject,
@@ -299,8 +299,8 @@ function readRpcError(value: unknown): string {
   return `Codex app-server request failed: ${JSON.stringify(value)}`;
 }
 
-function toAbortError(abortSignal?: AbortSignal): Error {
-  return abortSignal?.reason instanceof Error ? abortSignal.reason : new LlmClientError('Operation aborted');
+function toAbortError(signal?: AbortSignal): Error {
+  return signal?.reason instanceof Error ? signal.reason : new LlmClientError('Operation aborted');
 }
 
 function toError(value: unknown): Error {

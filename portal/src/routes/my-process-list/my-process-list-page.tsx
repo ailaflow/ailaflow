@@ -15,8 +15,8 @@ export function MyProcessListPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const page = Number(searchParams.get('page') ?? 1);
   const { data, isLoading, error } = useLoader(
-    abortSignal =>
-      apiClient.myProcess.getMyProcesses(abortSignal, {
+    signal =>
+      apiClient.myProcess.getMyProcesses(signal, {
         page,
         pageSize: PAGE_SIZE,
         displayAtLeast: ProcessDisplay.LISTED

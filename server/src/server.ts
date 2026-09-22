@@ -232,7 +232,7 @@ const DB_TYPE = 'sqlite';
 export class Server {
   private isClosed = false;
 
-  public static async create(abortSignal: AbortSignal): Promise<Server> {
+  public static async create(signal: AbortSignal): Promise<Server> {
     const serverPaths = new ServerPaths();
 
     const cipherKeyStore = new FileSystemCipherKeyStore(serverPaths);
@@ -326,27 +326,27 @@ export class Server {
     }
 
     await Promise.all([
-      userRepository.setup(abortSignal),
-      userAttributesRepository.setup(abortSignal),
-      resourceAccessRepository.setup(abortSignal),
-      authTokenRepository.setup(abortSignal),
-      magicLinkRepository.setup(abortSignal),
-      processRepository.setup(abortSignal),
-      processCronJobRepository.setup(abortSignal),
-      sandboxRepository.setup(abortSignal),
-      chatSessionRepository.setup(abortSignal),
-      persistedExecutionRepository.setup(abortSignal),
-      taskRepository.setup(abortSignal),
-      assignedTaskRepository.setup(abortSignal),
-      notificationRepository.setup(abortSignal),
-      tableRepository.setup(abortSignal),
-      llmConfigurationRepository.setup(abortSignal),
-      telegramConfigurationRepository.setup(abortSignal),
-      slackConfigurationRepository.setup(abortSignal),
-      slackUserDirectoryRepository.setup(abortSignal),
-      slackUserMappingRepository.setup(abortSignal),
-      slackInboundEventRepository.setup(abortSignal),
-      kvConfigurationRepository.setup(abortSignal)
+      userRepository.setup(signal),
+      userAttributesRepository.setup(signal),
+      resourceAccessRepository.setup(signal),
+      authTokenRepository.setup(signal),
+      magicLinkRepository.setup(signal),
+      processRepository.setup(signal),
+      processCronJobRepository.setup(signal),
+      sandboxRepository.setup(signal),
+      chatSessionRepository.setup(signal),
+      persistedExecutionRepository.setup(signal),
+      taskRepository.setup(signal),
+      assignedTaskRepository.setup(signal),
+      notificationRepository.setup(signal),
+      tableRepository.setup(signal),
+      llmConfigurationRepository.setup(signal),
+      telegramConfigurationRepository.setup(signal),
+      slackConfigurationRepository.setup(signal),
+      slackUserDirectoryRepository.setup(signal),
+      slackUserMappingRepository.setup(signal),
+      slackInboundEventRepository.setup(signal),
+      kvConfigurationRepository.setup(signal)
     ]);
 
     const tableSchemaManager = new TableSchemaManager(tableSchemaRepository);
@@ -597,7 +597,7 @@ export class Server {
 
     httpServer.setupPortal();
 
-    await telegramSynchronizationManager.start(abortSignal);
+    await telegramSynchronizationManager.start(signal);
 
     for (const scheduler of schedulers) {
       scheduler.start();
@@ -652,11 +652,11 @@ export class Server {
       return;
     }
     this.isClosed = true;
-    const abortSignal = new AbortController().signal;
+    const signal = new AbortController().signal;
 
     this.telegramSynchronizationManager.stop();
     await this.slackSynchronizationManager.stop();
-    await this.sandboxInstanceManager.stopAll(abortSignal);
+    await this.sandboxInstanceManager.stopAll(signal);
     for (const scheduler of this.schedulers) {
       scheduler.stop();
     }

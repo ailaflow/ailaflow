@@ -6,9 +6,9 @@ export class GetSandboxesTool extends ZodTool<void> {
     super('global_get_sandboxes', 'Get all available sandboxes in the system');
   }
 
-  public async handle(abortSignal: AbortSignal): Promise<ZodToolExecutionResult> {
+  public async handle(signal: AbortSignal): Promise<ZodToolExecutionResult> {
     return {
-      content: await this.querier.query(abortSignal)
+      content: await this.querier.query(signal)
     };
   }
 }

@@ -13,36 +13,31 @@ export interface SlackMappingCounts {
 }
 
 export interface SlackUserMappingRepository extends Repository {
-  getAll(abortSignal: AbortSignal, workspaceId?: string): Promise<SlackUserMapping[]>;
-  tryGetBySlackUser(abortSignal: AbortSignal, workspaceId: string, slackUserId: string): Promise<SlackUserMapping | null>;
-  tryGetByAilaUser(abortSignal: AbortSignal, userName: string, channelName: string): Promise<SlackUserMapping | null>;
-  applyChanges(
-    abortSignal: AbortSignal,
-    workspaceId: string,
-    expectedRevision: number,
-    changes: SlackMappingChangeRecord[]
-  ): Promise<number>;
-  deleteAll(abortSignal: AbortSignal, workspaceId: string, transaction?: Transaction): Promise<void>;
+  getAll(signal: AbortSignal, workspaceId?: string): Promise<SlackUserMapping[]>;
+  tryGetBySlackUser(signal: AbortSignal, workspaceId: string, slackUserId: string): Promise<SlackUserMapping | null>;
+  tryGetByAilaUser(signal: AbortSignal, userName: string, channelName: string): Promise<SlackUserMapping | null>;
+  applyChanges(signal: AbortSignal, workspaceId: string, expectedRevision: number, changes: SlackMappingChangeRecord[]): Promise<number>;
+  deleteAll(signal: AbortSignal, workspaceId: string, transaction?: Transaction): Promise<void>;
   initializeDeliveryCursor(
-    abortSignal: AbortSignal,
+    signal: AbortSignal,
     workspaceId: string,
     slackUserId: string,
     generation: number,
     messageId: number
   ): Promise<boolean>;
   updateDeliveryCursorAfterReset(
-    abortSignal: AbortSignal,
+    signal: AbortSignal,
     workspaceId: string,
     slackUserId: string,
     generation: number,
     messageId: number
   ): Promise<void>;
-  updateDmChannelId(abortSignal: AbortSignal, workspaceId: string, slackUserId: string, dmChannelId: string): Promise<void>;
-  getWelcomeCandidates(abortSignal: AbortSignal, now: number): Promise<SlackUserMapping[]>;
-  markWelcomeAttempt(abortSignal: AbortSignal, mapping: SlackUserMapping, nextAttemptAt: number, error: string): Promise<void>;
-  markWelcomeSent(abortSignal: AbortSignal, mapping: SlackUserMapping, dmChannelId: string, sentAt: number): Promise<void>;
-  markWelcomeFailed(abortSignal: AbortSignal, mapping: SlackUserMapping, error: string): Promise<void>;
-  getCounts(abortSignal: AbortSignal, workspaceId: string): Promise<SlackMappingCounts>;
+  updateDmChannelId(signal: AbortSignal, workspaceId: string, slackUserId: string, dmChannelId: string): Promise<void>;
+  getWelcomeCandidates(signal: AbortSignal, now: number): Promise<SlackUserMapping[]>;
+  markWelcomeAttempt(signal: AbortSignal, mapping: SlackUserMapping, nextAttemptAt: number, error: string): Promise<void>;
+  markWelcomeSent(signal: AbortSignal, mapping: SlackUserMapping, dmChannelId: string, sentAt: number): Promise<void>;
+  markWelcomeFailed(signal: AbortSignal, mapping: SlackUserMapping, error: string): Promise<void>;
+  getCounts(signal: AbortSignal, workspaceId: string): Promise<SlackMappingCounts>;
 }
 
 export class SlackMappingRevisionConflictError extends Error {

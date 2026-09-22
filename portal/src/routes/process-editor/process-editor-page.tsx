@@ -12,10 +12,10 @@ export function ProcessEditorPage() {
   const apiClient = useApiClient();
 
   const { data, isLoading, finishSignal, error } = useLoader(
-    abortSignal =>
+    signal =>
       Promise.all([
-        processName ? apiClient.process.getProcess(abortSignal, processName) : Promise.resolve(null),
-        apiClient.sandbox.getSandboxes(abortSignal)
+        processName ? apiClient.process.getProcess(signal, processName) : Promise.resolve(null),
+        apiClient.sandbox.getSandboxes(signal)
       ]),
     [processName]
   );

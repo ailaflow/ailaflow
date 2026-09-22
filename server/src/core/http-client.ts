@@ -15,26 +15,20 @@ export class HttpClientError extends Error {
 export class HttpClient {
   public constructor(private readonly baseUrl: URL) {}
 
-  public async json<T>(
-    abortSignal: AbortSignal,
-    method: string,
-    path: string,
-    body?: object,
-    headers?: Record<string, string>
-  ): Promise<T> {
-    const response = await this.request(abortSignal, method, path, body, headers);
+  public async json<T>(signal: AbortSignal, method: string, path: string, body?: object, headers?: Record<string, string>): Promise<T> {
+    const response = await this.request(signal, method, path, body, headers);
     return (await response.json()) as T;
   }
 
   public async sse<Update extends object>(
-    abortSignal: AbortSignal,
+    signal: AbortSignal,
     method: string,
     path: string,
     body: object | undefined,
     headers: Record<string, string> | undefined,
     handler: HttpSseHandler<Update>
   ): Promise<void> {
-    const response = await this.request(abortSignal, method, path, body, headers);
+    const response = await this.request(signal, method, path, body, headers);
     const reader = response.body?.getReader();
     if (!reader) {
       throw new HttpClientError('Response body is not readable', -1);
@@ -74,7 +68,7 @@ export class HttpClient {
   }
 
   public async request(
-    abortSignal: AbortSignal,
+    signal: AbortSignal,
     method: string,
     path: string,
     body?: object,
@@ -85,7 +79,7 @@ export class HttpClient {
       const init: RequestInit = {
         method,
         keepalive: true,
-        signal: abortSignal
+        signal
       };
       if (body) {
         init.headers = {

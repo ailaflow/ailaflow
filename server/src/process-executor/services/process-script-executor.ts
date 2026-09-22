@@ -13,8 +13,8 @@ export class ProcessScriptExecutor {
     private readonly sandboxInstanceManager: SandboxInstanceManager
   ) {}
 
-  public async execute(abortSignal: AbortSignal, stepId: string, script: ScriptDefinition) {
-    const instance = await this.sandboxInstanceManager.getOrCreate(abortSignal, script.sandboxName);
+  public async execute(signal: AbortSignal, stepId: string, script: ScriptDefinition) {
+    const instance = await this.sandboxInstanceManager.getOrCreate(signal, script.sandboxName);
 
     const sseHandler: HttpSseHandler<ExecuteCommandUpdate> = {
       onData: data => {
@@ -29,10 +29,10 @@ export class ProcessScriptExecutor {
       }
     };
 
-    await instance.tryMaterializeProcess(abortSignal, this.process, sseHandler);
+    await instance.tryMaterializeProcess(signal, this.process, sseHandler);
 
     const result = await instance.executeScript(
-      abortSignal,
+      signal,
       {
         cwd: `/app/${this.process.name}/${stepId}`,
         scriptName: 'main.js',

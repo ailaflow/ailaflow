@@ -14,9 +14,9 @@ export class GetMyProcessesEndpoint implements Endpoint {
   public constructor(private readonly querier: MyProcessListQuerier) {}
 
   public async handle(req: Request): Promise<GetMyProcessesResponse> {
-    const abortSignal = getEndpointAbortSignal(req);
+    const signal = getEndpointAbortSignal(req);
     const authToken = getAuthToken(req);
     const { page, pageSize, displayAtLeast } = parseQuery(getMyProcessesRequestSchema, req.query);
-    return this.querier.query(abortSignal, authToken.userName, page, pageSize, displayAtLeast);
+    return this.querier.query(signal, authToken.userName, page, pageSize, displayAtLeast);
   }
 }

@@ -20,10 +20,10 @@ export class LoginEndpoint implements Endpoint {
   ) {}
 
   public async handle(req: Request): Promise<LoginResponse> {
-    const abortSignal = getEndpointAbortSignal(req);
+    const signal = getEndpointAbortSignal(req);
     const request = parseBody(loginRequestSchema, req.body);
 
-    const user = await this.userRepository.tryGetUser(abortSignal, request.userName);
+    const user = await this.userRepository.tryGetUser(signal, request.userName);
     if (!user || !(await user.comparePassword(request.password, this.cipher))) {
       throw new EndpointError('Invalid username or password', 401);
     }
@@ -32,7 +32,7 @@ export class LoginEndpoint implements Endpoint {
     }
 
     const authToken = await AuthToken.create(user.name, user.isAdmin);
-    await this.authTokenRepository.upsert(abortSignal, authToken);
+    await this.authTokenRepository.upsert(signal, authToken);
 
     return { userName: user.name, authToken: authToken.token, isAdmin: user.isAdmin };
   }

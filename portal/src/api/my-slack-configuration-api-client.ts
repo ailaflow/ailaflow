@@ -4,7 +4,7 @@ import type { MySlackConfigurationResponse } from '@ailaflow/shared';
 export class MySlackConfigurationApiClient {
   public constructor(private readonly client: HttpClient) {}
 
-  public get(abortSignal: AbortSignal): Promise<MySlackConfigurationResponse> {
-    return this.client.json(abortSignal, 'GET', '/api/my-slack-configuration');
+  public get(signal: AbortSignal): Promise<MySlackConfigurationResponse> {
+    return this.client.json(signal, 'GET', '/api/my-slack-configuration');
   }
 }

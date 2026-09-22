@@ -11,17 +11,17 @@ import type {
 export class MyProcessApiClient {
   public constructor(private readonly client: HttpClient) {}
 
-  public getMyProcesses(abortSignal: AbortSignal, request: GetMyProcessesRequest): Promise<GetMyProcessesResponse> {
+  public getMyProcesses(signal: AbortSignal, request: GetMyProcessesRequest): Promise<GetMyProcessesResponse> {
     const query = new URLSearchParams({
       page: String(request.page),
       pageSize: String(request.pageSize),
       displayAtLeast: String(request.displayAtLeast)
     });
-    return this.client.json(abortSignal, 'GET', `/api/my-processes?${query}`);
+    return this.client.json(signal, 'GET', `/api/my-processes?${query}`);
   }
 
   public getMyProcessStartForm(
-    abortSignal: AbortSignal,
+    signal: AbortSignal,
     name: string,
     request: GetMyProcessStartFormRequest
   ): Promise<GetMyProcessStartFormResponse> {
@@ -29,15 +29,15 @@ export class MyProcessApiClient {
     if (request.testUserName) {
       query.set('testUserName', request.testUserName);
     }
-    return this.client.json(abortSignal, 'GET', `/api/my-processes/${name}/start-form?${query}`);
+    return this.client.json(signal, 'GET', `/api/my-processes/${name}/start-form?${query}`);
   }
 
   public startMyProcess(
-    abortSignal: AbortSignal,
+    signal: AbortSignal,
     listener: HttpClientSseListener<StartMyProcessUpdate>,
     name: string,
     request: StartMyProcessRequest
   ) {
-    return this.client.sse(abortSignal, listener, 'POST', `/api/my-processes/${name}/start`, request);
+    return this.client.sse(signal, listener, 'POST', `/api/my-processes/${name}/start`, request);
   }
 }

@@ -12,7 +12,7 @@ export class DiagnoseHostEndpoint implements Endpoint {
   public constructor(private readonly diagnostician: SandboxHostDiagnostician) {}
 
   public async handle(req: Request): Promise<SandboxHostDiagnosticianResult> {
-    const abortSignal = getEndpointAbortSignal(req);
-    return this.diagnostician.diagnose(abortSignal);
+    const signal = getEndpointAbortSignal(req);
+    return this.diagnostician.diagnose(signal);
   }
 }

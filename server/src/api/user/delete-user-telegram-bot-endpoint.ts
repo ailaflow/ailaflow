@@ -18,13 +18,13 @@ export class DeleteUserTelegramBotEndpoint implements Endpoint {
   ) {}
 
   public async handle(req: Request): Promise<DeleteTelegramBotResponse> {
-    const abortSignal = getEndpointAbortSignal(req);
+    const signal = getEndpointAbortSignal(req);
     const userName = String(req.params.userName);
-    const user = await this.userRepository.tryGetUser(abortSignal, userName);
+    const user = await this.userRepository.tryGetUser(signal, userName);
     if (!user) {
       throw new EndpointError('User not found', 404);
     }
     const channelName = String(req.params.channelName);
-    return this.api.delete(abortSignal, user.name, channelName);
+    return this.api.delete(signal, user.name, channelName);
   }
 }

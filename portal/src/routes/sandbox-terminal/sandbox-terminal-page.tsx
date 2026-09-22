@@ -14,10 +14,7 @@ export function SandboxTerminalPage() {
   }
 
   const apiClient = useApiClient();
-  const { data, error, isLoading, finishSignal } = useLoader(
-    abortSignal => apiClient.sandbox.getSandbox(abortSignal, name),
-    [apiClient, name]
-  );
+  const { data, error, isLoading, finishSignal } = useLoader(signal => apiClient.sandbox.getSandbox(signal, name), [apiClient, name]);
 
   useAiStore(
     'sandboxTerminal',

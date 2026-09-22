@@ -15,12 +15,12 @@ export class SubmitMyTaskTool extends ZodTool<Arg> {
     super('submit_my_task', 'Submits a task for the user', inputSchema);
   }
 
-  public async handle(abortSignal: AbortSignal, { sessionId }: ToolContext, arg: Arg): Promise<ZodToolExecutionResult> {
+  public async handle(signal: AbortSignal, { sessionId }: ToolContext, arg: Arg): Promise<ZodToolExecutionResult> {
     const chatSessionId = ChatSessionId.decode(sessionId);
     const isTest = chatSessionId.isTest();
 
     try {
-      await this.completer.complete(abortSignal, isTest, chatSessionId.userName, arg.taskId, arg.outputVariableValues, true);
+      await this.completer.complete(signal, isTest, chatSessionId.userName, arg.taskId, arg.outputVariableValues, true);
     } catch (e) {
       if (e instanceof AssignedTaskCompleterError) {
         return {

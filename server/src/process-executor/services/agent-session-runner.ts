@@ -23,14 +23,14 @@ export class AgentSessionRunner {
     this.systemPrompt = readFileSync(join(serverPaths.getRuntimeFolderPath(), 'assets', 'agent-prompt.md'), 'utf-8');
   }
 
-  public async run(abortSignal: AbortSignal, step: AgentStep, state: ProcessExecutionGlobalState): Promise<void> {
+  public async run(signal: AbortSignal, step: AgentStep, state: ProcessExecutionGlobalState): Promise<void> {
     const prompt = state.variableEvaluator.evaluateStringOrVariable(step.properties.prompt);
 
-    const signal = AbortSignal.any([abortSignal, AbortSignal.timeout(AGENT_TIMEOUT_MS)]);
+    const executionSignal = AbortSignal.any([signal, AbortSignal.timeout(AGENT_TIMEOUT_MS)]);
     const logger = state.logger;
 
     const tools = await this.toolSetProviderFactory.create(
-      signal,
+      executionSignal,
       step.properties.allowedProcessNames,
       step.properties.allowedVariableNames,
       step.properties.sandboxName,
@@ -39,7 +39,7 @@ export class AgentSessionRunner {
       state.context,
       state.executionId
     );
-    const llm = await this.llmClientProvider.get(signal, LlmUseCase.AGENT_STEP);
+    const llm = await this.llmClientProvider.get(executionSignal, LlmUseCase.AGENT_STEP);
 
     const toolSet = new ToolSet();
     for (const tool of tools.tools) {
@@ -51,7 +51,7 @@ export class AgentSessionRunner {
 
     try {
       await new Promise<void>((resolve, reject) => {
-        const onAbort = () => reject(signal.reason);
+        const onAbort = () => reject(executionSignal.reason);
         const onFailed = (event: ChatSessionUpdate) => reject(new Error(event.update.failReason ?? 'Agent session interrupted'));
         const onCompleted = (event: ChatSessionUpdate) => {
           for (const { message } of event.update.completedMessages ?? []) {
@@ -75,12 +75,12 @@ export class AgentSessionRunner {
 
         session.onMessageCompleted.subscribe(onCompleted);
         session.onMessageFailed.subscribe(onFailed);
-        signal.addEventListener('abort', onAbort, { once: true });
+        executionSignal.addEventListener('abort', onAbort, { once: true });
 
         session.onDestroyed.subscribe(() => {
           session.onMessageCompleted.unsubscribe(onCompleted);
           session.onMessageFailed.unsubscribe(onFailed);
-          signal.removeEventListener('abort', onAbort);
+          executionSignal.removeEventListener('abort', onAbort);
         });
 
         session.queueUserMessage(prompt);

@@ -17,22 +17,22 @@ export class SlackUserDirectoryRefresher {
     private readonly eventBus: EventBus
   ) {}
 
-  public async refresh(abortSignal: AbortSignal): Promise<RefreshSlackUsersResponse> {
+  public async refresh(signal: AbortSignal): Promise<RefreshSlackUsersResponse> {
     if (this.isRefreshing) {
       throw new SlackError(SlackErrorReason.DIRECTORY_REFRESH_IN_PROGRESS, 'A Slack user refresh is already running');
     }
     this.isRefreshing = true;
     try {
-      const configuration = await this.configurationRepository.tryGet(abortSignal);
+      const configuration = await this.configurationRepository.tryGet(signal);
       if (!configuration) {
         throw new SlackError(SlackErrorReason.NOT_CONFIGURED, 'Slack is not configured');
       }
       const refreshedAt = Date.now();
-      const members = await this.client.listUsers(abortSignal, configuration.botToken);
+      const members = await this.client.listUsers(signal, configuration.botToken);
       const users = members.map(member => mapUser(configuration.workspaceId, member, refreshedAt));
-      await this.directoryRepository.replaceFromRefresh(abortSignal, configuration.workspaceId, users, refreshedAt);
+      await this.directoryRepository.replaceFromRefresh(signal, configuration.workspaceId, users, refreshedAt);
       await this.eventBus.publish(new SlackMappingsChangedEvent());
-      const counts = await this.directoryRepository.getCounts(abortSignal, configuration.workspaceId);
+      const counts = await this.directoryRepository.getCounts(signal, configuration.workspaceId);
       return { refreshedAt, activeCount: counts.active, unavailableCount: counts.unavailable };
     } catch (error) {
       if (error instanceof SlackError) {

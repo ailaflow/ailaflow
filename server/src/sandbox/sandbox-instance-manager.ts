@@ -14,7 +14,7 @@ export class SandboxInstanceManager {
     private readonly rpcHandlerProvider: SandboxRpcHandlerProvider
   ) {}
 
-  public async getOrCreate(abortSignal: AbortSignal, sandboxName: string): Promise<SandboxInstance> {
+  public async getOrCreate(signal: AbortSignal, sandboxName: string): Promise<SandboxInstance> {
     let instance = this.instances.get(sandboxName);
     if (instance) {
       return instance;
@@ -22,13 +22,13 @@ export class SandboxInstanceManager {
 
     const release = await this.mutex.acquire();
     try {
-      const sandbox = await this.sandboxRepository.tryGet(abortSignal, sandboxName);
+      const sandbox = await this.sandboxRepository.tryGet(signal, sandboxName);
       if (!sandbox) {
         throw new Error(`Cannot find sandbox: ${sandboxName}`);
       }
 
       instance = await SandboxInstance.create(
-        abortSignal,
+        signal,
         this.paths.getRuntimeFolderPath(),
         this.paths.getAppDataFolderPath(),
         sandbox,
@@ -46,10 +46,10 @@ export class SandboxInstanceManager {
     return this.instances.get(sandboxName);
   }
 
-  public async stopAll(abortSignal: AbortSignal, error?: Error) {
+  public async stopAll(signal: AbortSignal, error?: Error) {
     for (const instance of this.instances.values()) {
       try {
-        await instance.tryStop(abortSignal, error);
+        await instance.tryStop(signal, error);
       } catch (err) {
         // Ignore
       }

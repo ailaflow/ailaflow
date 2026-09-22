@@ -10,12 +10,12 @@ import { PortalLoadingView } from '../../views/portal/portal-loading-view';
 export function ConfigurationOverviewPage() {
   const apiClient = useApiClient();
   const loader = useLoader(
-    async abortSignal => {
+    async signal => {
       const [host, llm, publicUrlTest, license] = await Promise.all([
-        apiClient.sandbox.diagnoseHost(abortSignal),
-        apiClient.llmConfiguration.get(abortSignal),
-        apiClient.publicUrlConfiguration.test(abortSignal, {}),
-        apiClient.licenseConfiguration.getStatus(abortSignal)
+        apiClient.sandbox.diagnoseHost(signal),
+        apiClient.llmConfiguration.get(signal),
+        apiClient.publicUrlConfiguration.test(signal, {}),
+        apiClient.licenseConfiguration.getStatus(signal)
       ]);
       return { host, llm, publicUrlTest, license };
     },

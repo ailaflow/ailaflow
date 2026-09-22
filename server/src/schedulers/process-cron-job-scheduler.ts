@@ -115,10 +115,10 @@ class LastRunUpdater {
   ) {}
 
   public update(status: ProcessCronJobRunStatus, error: string | null) {
-    const abortSignal = AbortSignal.timeout(5_000);
+    const signal = AbortSignal.timeout(5_000);
     const isFinished = status === ProcessCronJobRunStatus.SUCCEEDED || status === ProcessCronJobRunStatus.FAILED;
     this.repository
-      .updateLastRun(abortSignal, this.jobId, {
+      .updateLastRun(signal, this.jobId, {
         status,
         error,
         executionId: '',

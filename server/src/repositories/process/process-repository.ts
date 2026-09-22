@@ -10,8 +10,8 @@ export class ProcessRepositoryError extends Error {
 }
 
 export interface ProcessRepository extends Repository {
-  insert(abortSignal: AbortSignal, process: Process, transaction?: Transaction): Promise<void>;
-  update(abortSignal: AbortSignal, process: Process, transaction?: Transaction): Promise<void>;
-  delete(abortSignal: AbortSignal, name: string, transaction?: Transaction): Promise<boolean>;
-  tryGetByName(abortSignal: AbortSignal, name: string): Promise<Process | null>;
+  insert(signal: AbortSignal, process: Process, transaction?: Transaction): Promise<void>;
+  update(signal: AbortSignal, process: Process, transaction?: Transaction): Promise<void>;
+  delete(signal: AbortSignal, name: string, transaction?: Transaction): Promise<boolean>;
+  tryGetByName(signal: AbortSignal, name: string): Promise<Process | null>;
 }

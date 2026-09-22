@@ -9,7 +9,7 @@ import { PortalLoadingView } from '../../views/portal/portal-loading-view';
 
 export function PublicUrlConfigurationPage() {
   const apiClient = useApiClient();
-  const loader = useLoader(abortSignal => apiClient.publicUrlConfiguration.get(abortSignal), [apiClient]);
+  const loader = useLoader(signal => apiClient.publicUrlConfiguration.get(signal), [apiClient]);
 
   if (loader.isLoading) {
     return <PortalLoadingView />;

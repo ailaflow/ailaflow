@@ -11,23 +11,23 @@ import type {
 export class LlmConfigurationApiClient {
   public constructor(private readonly client: HttpClient) {}
 
-  public get(abortSignal: AbortSignal): Promise<GetLlmConfigurationResponse> {
-    return this.client.json(abortSignal, 'GET', '/api/llm-configuration');
+  public get(signal: AbortSignal): Promise<GetLlmConfigurationResponse> {
+    return this.client.json(signal, 'GET', '/api/llm-configuration');
   }
 
-  public saveProvider(abortSignal: AbortSignal, request: SaveLlmProviderRequest): Promise<void> {
-    return this.client.json(abortSignal, 'POST', '/api/llm-provider', request);
+  public saveProvider(signal: AbortSignal, request: SaveLlmProviderRequest): Promise<void> {
+    return this.client.json(signal, 'POST', '/api/llm-provider', request);
   }
 
-  public fetchProviderModels(abortSignal: AbortSignal, request: FetchLlmProviderModelsRequest): Promise<FetchLlmProviderModelsResponse> {
-    return this.client.json(abortSignal, 'POST', '/api/llm-provider/models', request);
+  public fetchProviderModels(signal: AbortSignal, request: FetchLlmProviderModelsRequest): Promise<FetchLlmProviderModelsResponse> {
+    return this.client.json(signal, 'POST', '/api/llm-provider/models', request);
   }
 
-  public deleteProvider(abortSignal: AbortSignal, id: string): Promise<DeleteLlmProviderResponse> {
-    return this.client.json(abortSignal, 'DELETE', `/api/llm-providers/${encodeURIComponent(id)}`);
+  public deleteProvider(signal: AbortSignal, id: string): Promise<DeleteLlmProviderResponse> {
+    return this.client.json(signal, 'DELETE', `/api/llm-providers/${encodeURIComponent(id)}`);
   }
 
-  public saveUseCaseAssignments(abortSignal: AbortSignal, request: SaveLlmUseCaseAssignmentsRequest): Promise<void> {
-    return this.client.json(abortSignal, 'POST', '/api/llm-use-case-assignments', request);
+  public saveUseCaseAssignments(signal: AbortSignal, request: SaveLlmUseCaseAssignmentsRequest): Promise<void> {
+    return this.client.json(signal, 'POST', '/api/llm-use-case-assignments', request);
   }
 }

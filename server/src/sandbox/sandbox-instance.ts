@@ -39,31 +39,31 @@ export class SandboxInstance {
     private readonly scriptExecutor: SandboxScriptExecutor
   ) {}
 
-  public async tryMaterializeProcess(abortSignal: AbortSignal, process: Process, handler?: HttpSseHandler<ExecuteCommandUpdate>) {
-    const commit = await this.materializer.tryBeginMaterializationOfProcess(abortSignal, process);
+  public async tryMaterializeProcess(signal: AbortSignal, process: Process, handler?: HttpSseHandler<ExecuteCommandUpdate>) {
+    const commit = await this.materializer.tryBeginMaterializationOfProcess(signal, process);
     if (commit) {
-      await this.dependenciesInstaller.install(abortSignal, process, handler);
+      await this.dependenciesInstaller.install(signal, process, handler);
       await commit();
     }
   }
 
   public executeCommand(
-    abortSignal: AbortSignal,
+    signal: AbortSignal,
     command: ExecuteCommandRequest,
     handler?: HttpSseHandler<ExecuteCommandUpdate>
   ): Promise<CommandResult> {
-    return this.runtime.executeCommand(abortSignal, command, handler);
+    return this.runtime.executeCommand(signal, command, handler);
   }
 
   public executeScript(
-    abortSignal: AbortSignal,
+    signal: AbortSignal,
     request: SandboxScriptExecutorRequest,
     handler?: HttpSseHandler<ExecuteCommandUpdate>
   ): Promise<SandboxScriptExecutorResult> {
-    return this.scriptExecutor.execute(abortSignal, request, handler);
+    return this.scriptExecutor.execute(signal, request, handler);
   }
 
-  public tryStop(abortSignal: AbortSignal, error?: Error): Promise<boolean> {
-    return this.runtime.tryStop(abortSignal, error);
+  public tryStop(signal: AbortSignal, error?: Error): Promise<boolean> {
+    return this.runtime.tryStop(signal, error);
   }
 }

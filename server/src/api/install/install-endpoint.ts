@@ -13,16 +13,10 @@ export class InstallEndpoint implements Endpoint {
   public constructor(private readonly installer: Installer) {}
 
   public async handle(req: Request): Promise<InstallResponse> {
-    const abortSignal = getEndpointAbortSignal(req);
+    const signal = getEndpointAbortSignal(req);
     const request = parseBody(installRequestSchema, req.body);
 
-    const error = await this.installer.install(
-      abortSignal,
-      request.rootUserName,
-      request.rootPassword,
-      request.licenseType,
-      request.licenseKey
-    );
+    const error = await this.installer.install(signal, request.rootUserName, request.rootPassword, request.licenseType, request.licenseKey);
     if (error !== null) {
       throw new EndpointError(error, 400);
     }

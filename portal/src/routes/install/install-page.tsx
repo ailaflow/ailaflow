@@ -36,8 +36,8 @@ export function InstallPage() {
 
     let response: InstallResponse;
     try {
-      const abortSignal = AbortSignal.timeout(10000);
-      response = await apiClient.install.install(abortSignal, {
+      const signal = AbortSignal.timeout(10000);
+      response = await apiClient.install.install(signal, {
         rootUserName: userName,
         rootPassword: password,
         licenseType,

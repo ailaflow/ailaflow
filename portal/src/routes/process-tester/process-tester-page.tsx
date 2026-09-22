@@ -15,7 +15,7 @@ export function ProcessTesterPage() {
   const apiClient = useApiClient();
 
   const { data, error, isLoading, finishSignal } = useLoader(
-    abortSignal => apiClient.process.getProcess(abortSignal, processName),
+    signal => apiClient.process.getProcess(signal, processName),
     [apiClient, processName]
   );
 

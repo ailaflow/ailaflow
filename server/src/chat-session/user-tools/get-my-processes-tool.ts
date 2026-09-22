@@ -17,9 +17,9 @@ export class GetMyProcessesTool extends ZodTool<Arg> {
     super('get_my_processes', 'Returns a paginated list of supported processes', inputSchema);
   }
 
-  public async handle(abortSignal: AbortSignal, { sessionId }: ToolContext, arg: Arg): Promise<ZodToolExecutionResult> {
+  public async handle(signal: AbortSignal, { sessionId }: ToolContext, arg: Arg): Promise<ZodToolExecutionResult> {
     const { userName } = ChatSessionId.decode(sessionId);
-    const response = await this.querier.query(abortSignal, userName, arg.page, PAGE_SIZE, ProcessDisplay.LISTED);
+    const response = await this.querier.query(signal, userName, arg.page, PAGE_SIZE, ProcessDisplay.LISTED);
     return {
       content: {
         page: response.page,

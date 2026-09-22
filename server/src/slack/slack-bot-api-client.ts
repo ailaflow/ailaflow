@@ -49,8 +49,8 @@ export class SlackBotApiError extends Error {
 export class SlackBotApiClient {
   public constructor(private readonly apiBaseUrl = 'https://slack.com/api') {}
 
-  public async testAuth(abortSignal: AbortSignal, botToken: string): Promise<SlackAuthIdentity> {
-    const payload = await this.call(abortSignal, botToken, 'auth.test', {});
+  public async testAuth(signal: AbortSignal, botToken: string): Promise<SlackAuthIdentity> {
+    const payload = await this.call(signal, botToken, 'auth.test', {});
     const workspaceId = readString(payload, 'team_id');
     const workspaceName = readString(payload, 'team');
     const botUserId = readString(payload, 'user_id');
@@ -58,16 +58,16 @@ export class SlackBotApiClient {
     return { appId, workspaceId, workspaceName, botUserId };
   }
 
-  public async openSocketConnection(abortSignal: AbortSignal, appToken: string): Promise<SlackSocketConnection> {
-    const payload = await this.call(abortSignal, appToken, 'apps.connections.open', {});
+  public async openSocketConnection(signal: AbortSignal, appToken: string): Promise<SlackSocketConnection> {
+    const payload = await this.call(signal, appToken, 'apps.connections.open', {});
     return { url: readString(payload, 'url') };
   }
 
-  public async listUsers(abortSignal: AbortSignal, botToken: string): Promise<SlackApiUser[]> {
+  public async listUsers(signal: AbortSignal, botToken: string): Promise<SlackApiUser[]> {
     const users: SlackApiUser[] = [];
     let cursor: string | undefined;
     do {
-      const payload = await this.call(abortSignal, botToken, 'users.list', { limit: 200, cursor });
+      const payload = await this.call(signal, botToken, 'users.list', { limit: 200, cursor });
       const members = payload['members'];
       if (!Array.isArray(members)) {
         throw new SlackBotApiError('invalid_response', 200, null);
@@ -79,8 +79,8 @@ export class SlackBotApiClient {
     return users;
   }
 
-  public async postMessage(abortSignal: AbortSignal, botToken: string, channel: string, text: string): Promise<SlackPostedMessage> {
-    const payload = await this.call(abortSignal, botToken, 'chat.postMessage', {
+  public async postMessage(signal: AbortSignal, botToken: string, channel: string, text: string): Promise<SlackPostedMessage> {
+    const payload = await this.call(signal, botToken, 'chat.postMessage', {
       channel,
       text,
       mrkdwn: false,
@@ -90,7 +90,7 @@ export class SlackBotApiClient {
     return { channel: readString(payload, 'channel'), ts: readString(payload, 'ts') };
   }
 
-  private async call(abortSignal: AbortSignal, token: string, method: string, body: Record<string, unknown>): Promise<SlackApiResponse> {
+  private async call(signal: AbortSignal, token: string, method: string, body: Record<string, unknown>): Promise<SlackApiResponse> {
     const response = await fetch(`${this.apiBaseUrl}/${method}`, {
       method: 'POST',
       headers: {
@@ -98,7 +98,7 @@ export class SlackBotApiClient {
         'Content-Type': 'application/json; charset=utf-8'
       },
       body: JSON.stringify(body),
-      signal: abortSignal
+      signal
     });
     const retryAfter = parseRetryAfter(response.headers.get('Retry-After'));
     let payload: SlackApiResponse;

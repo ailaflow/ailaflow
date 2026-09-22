@@ -14,9 +14,9 @@ export class DeleteTableEndpoint implements Endpoint {
   public constructor(private readonly tableManager: Pick<TableManager, 'delete'>) {}
 
   public async handle(req: Request): Promise<DeleteTableResponse> {
-    const abortSignal = getEndpointAbortSignal(req);
+    const signal = getEndpointAbortSignal(req);
     const tableName = String(req.params.name);
-    const deleted = await this.tableManager.delete(abortSignal, tableName);
+    const deleted = await this.tableManager.delete(signal, tableName);
     if (!deleted) {
       throw new EndpointError('Table not found', 404);
     }

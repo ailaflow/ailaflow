@@ -33,8 +33,8 @@ export function JsonForm({ adapter }: JsonFormProps) {
       const value = values[name] ?? '';
       output[name] = JSON.parse(value);
     }
-    const abortSignal = AbortSignal.timeout(5_000);
-    await adapter.submitForm(abortSignal, output);
+    const signal = AbortSignal.timeout(5_000);
+    await adapter.submitForm(signal, output);
   }
 
   function onValueChanged(name: string, value: string) {

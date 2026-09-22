@@ -16,9 +16,9 @@ export class GetTasksEndpoint implements Endpoint {
   public constructor(private readonly querier: TaskListQuerier) {}
 
   public async handle(req: Request): Promise<GetTasksResponse> {
-    const abortSignal = getEndpointAbortSignal(req);
+    const signal = getEndpointAbortSignal(req);
     const { onlyOpen, page, pageSize } = parseQuery(getTasksRequestSchema, req.query);
-    return this.querier.query(abortSignal, onlyOpen, page, pageSize);
+    return this.querier.query(signal, onlyOpen, page, pageSize);
   }
 }
 
@@ -31,9 +31,9 @@ export class DeleteTaskEndpoint implements Endpoint {
   public constructor(private readonly taskDeleter: TaskDeleter) {}
 
   public async handle(req: Request): Promise<DeleteTaskResponse> {
-    const abortSignal = getEndpointAbortSignal(req);
+    const signal = getEndpointAbortSignal(req);
     const id = String(req.params.id);
-    const deleted = await this.taskDeleter.delete(abortSignal, id);
+    const deleted = await this.taskDeleter.delete(signal, id);
     if (!deleted) {
       throw new EndpointError('Task not found', 404);
     }

@@ -10,13 +10,13 @@ test('resource access rules are replaced as grouped conditions', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
   db.exec(`PRAGMA foreign_keys = ON`);
   const dbs = { modelDb: new SqliteDatabase(db) } as SqliteDatabases;
-  const abortSignal = new AbortController().signal;
+  const signal = new AbortController().signal;
   const repository = new SqliteResourceAccessRepository(dbs);
 
-  await repository.setup(abortSignal);
+  await repository.setup(signal);
 
   await repository.replace(
-    abortSignal,
+    signal,
     new ResourceAccess('process:review', {
       groups: [
         {
@@ -117,7 +117,7 @@ test('resource access rules are replaced as grouped conditions', async () => {
   );
 
   await repository.replace(
-    abortSignal,
+    signal,
     new ResourceAccess('process:review', {
       groups: [
         {

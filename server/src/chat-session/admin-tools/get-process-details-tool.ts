@@ -14,8 +14,8 @@ export class GetProcessDetailsTool extends ZodTool<Arg> {
     super('global_get_process_details', 'Returns the name, description, and start variable schemas for a process', inputSchema);
   }
 
-  public async handle(abortSignal: AbortSignal, _: ToolContext, arg: Arg): Promise<ZodToolExecutionResult> {
-    const process = await this.processManager.tryGetByName(abortSignal, arg.processName);
+  public async handle(signal: AbortSignal, _: ToolContext, arg: Arg): Promise<ZodToolExecutionResult> {
+    const process = await this.processManager.tryGetByName(signal, arg.processName);
     if (!process) {
       return {
         content: {

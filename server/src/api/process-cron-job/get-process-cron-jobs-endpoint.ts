@@ -18,11 +18,11 @@ export class GetProcessCronJobsEndpoint implements Endpoint {
   ) {}
 
   public async handle(req: Request): Promise<GetProcessCronJobsResponse> {
-    const abortSignal = getEndpointAbortSignal(req);
+    const signal = getEndpointAbortSignal(req);
     const processName = String(req.params.processName);
-    if (!(await this.processManager.tryGetByName(abortSignal, processName))) {
+    if (!(await this.processManager.tryGetByName(signal, processName))) {
       throw new EndpointError('Process not found', 404);
     }
-    return { jobs: await this.repository.getByProcessName(abortSignal, processName) };
+    return { jobs: await this.repository.getByProcessName(signal, processName) };
   }
 }

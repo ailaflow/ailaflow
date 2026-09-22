@@ -188,8 +188,8 @@ export function Chat(props: ChatProps) {
 
   async function onSendMessage() {
     if (state.sessionToken && message.length > 0) {
-      const abortSignal = AbortSignal.timeout(3_000);
-      await props.transport.sendChatMessage(abortSignal, {
+      const signal = AbortSignal.timeout(3_000);
+      await props.transport.sendChatMessage(signal, {
         sessionToken: state.sessionToken,
         message
       });
@@ -199,8 +199,8 @@ export function Chat(props: ChatProps) {
 
   async function onStopClicked() {
     if (state.sessionToken && state.isWorking) {
-      const abortSignal = AbortSignal.timeout(3_000);
-      await props.transport.interruptChat(abortSignal, {
+      const signal = AbortSignal.timeout(3_000);
+      await props.transport.interruptChat(signal, {
         sessionToken: state.sessionToken
       });
     }
@@ -208,8 +208,8 @@ export function Chat(props: ChatProps) {
 
   async function onStartNewConversation() {
     if (state.sessionToken) {
-      const abortSignal = AbortSignal.timeout(3_000);
-      await props.transport.restartChat(abortSignal, {
+      const signal = AbortSignal.timeout(3_000);
+      await props.transport.restartChat(signal, {
         sessionToken: state.sessionToken
       });
     }

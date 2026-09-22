@@ -18,7 +18,7 @@ export function TaskListPage() {
   const onlyOpen = searchParams.get('only-open') !== '0';
   const page = Number(searchParams.get('page') ?? 1);
   const { data, isLoading, finishSignal, error } = useLoader(
-    abortSignal => apiClient.task.getTasks(abortSignal, { onlyOpen, page, pageSize: PAGE_SIZE }),
+    signal => apiClient.task.getTasks(signal, { onlyOpen, page, pageSize: PAGE_SIZE }),
     [apiClient, onlyOpen, page, reloadToken]
   );
 

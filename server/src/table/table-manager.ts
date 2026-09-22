@@ -13,37 +13,37 @@ export class TableManager {
     private readonly tableDataListQuerier: TableDataListQuerier
   ) {}
 
-  public async tryRead(abortSignal: AbortSignal, tableName: string, _id: string): Promise<TableRow | null> {
-    const schema = await this.tableSchemaManager.tryGet(abortSignal, tableName);
+  public async tryRead(signal: AbortSignal, tableName: string, _id: string): Promise<TableRow | null> {
+    const schema = await this.tableSchemaManager.tryGet(signal, tableName);
     if (!schema) {
       return null;
     }
-    return this.tableDataRepository.tryGet(abortSignal, schema, _id);
+    return this.tableDataRepository.tryGet(signal, schema, _id);
   }
 
-  public async tryGetByName(abortSignal: AbortSignal, tableName: string): Promise<Table | null> {
-    return this.tableRepository.tryGetByName(abortSignal, tableName);
+  public async tryGetByName(signal: AbortSignal, tableName: string): Promise<Table | null> {
+    return this.tableRepository.tryGetByName(signal, tableName);
   }
 
-  public async insert(abortSignal: AbortSignal, table: Table): Promise<void> {
-    await this.tableRepository.insert(abortSignal, table);
+  public async insert(signal: AbortSignal, table: Table): Promise<void> {
+    await this.tableRepository.insert(signal, table);
     this.tableSchemaManager.invalidate(table.name);
   }
 
-  public async update(abortSignal: AbortSignal, table: Table): Promise<void> {
-    await this.tableRepository.update(abortSignal, table);
+  public async update(signal: AbortSignal, table: Table): Promise<void> {
+    await this.tableRepository.update(signal, table);
   }
 
-  public async delete(abortSignal: AbortSignal, tableName: string): Promise<boolean> {
-    const deleted = await this.tableRepository.delete(abortSignal, tableName);
+  public async delete(signal: AbortSignal, tableName: string): Promise<boolean> {
+    const deleted = await this.tableRepository.delete(signal, tableName);
     if (deleted) {
       this.tableSchemaManager.invalidate(tableName);
     }
     return deleted;
   }
 
-  public async readPage(abortSignal: AbortSignal, query: TableDataListQuery): Promise<GetTableDataResponse> {
-    const schema = await this.tableSchemaManager.tryGet(abortSignal, query.tableName);
+  public async readPage(signal: AbortSignal, query: TableDataListQuery): Promise<GetTableDataResponse> {
+    const schema = await this.tableSchemaManager.tryGet(signal, query.tableName);
     if (!schema) {
       return {
         rows: [],
@@ -52,29 +52,29 @@ export class TableManager {
         hasMore: false
       };
     }
-    return this.tableDataListQuerier.query(abortSignal, schema, query);
+    return this.tableDataListQuerier.query(signal, schema, query);
   }
 
-  public async write(abortSignal: AbortSignal, tableName: string, row: Record<string, unknown> & { _id: string }): Promise<void> {
+  public async write(signal: AbortSignal, tableName: string, row: Record<string, unknown> & { _id: string }): Promise<void> {
     const validationError = TableRowValidator.validate(row);
     if (validationError) {
       throw new TableSchemaError(validationError);
     }
 
-    await this.ensureTableExists(abortSignal, tableName);
-    const schema = await this.tableSchemaManager.ensureCompatible(abortSignal, tableName, row);
-    await this.tableDataRepository.upsert(abortSignal, schema, row);
+    await this.ensureTableExists(signal, tableName);
+    const schema = await this.tableSchemaManager.ensureCompatible(signal, tableName, row);
+    await this.tableDataRepository.upsert(signal, schema, row);
   }
 
-  private async ensureTableExists(abortSignal: AbortSignal, tableName: string): Promise<void> {
-    if (await this.tryGetByName(abortSignal, tableName)) {
+  private async ensureTableExists(signal: AbortSignal, tableName: string): Promise<void> {
+    if (await this.tryGetByName(signal, tableName)) {
       return;
     }
 
     try {
-      await this.insert(abortSignal, Table.create(tableName, ''));
+      await this.insert(signal, Table.create(tableName, ''));
     } catch (error) {
-      if (await this.tryGetByName(abortSignal, tableName)) {
+      if (await this.tryGetByName(signal, tableName)) {
         return;
       }
       throw error;

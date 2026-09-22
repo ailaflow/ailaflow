@@ -13,8 +13,8 @@ export function TableDataGrid(props: { tableName: string }) {
   const [searchParams, setSearchParams] = useSearchParams();
   const page = Number(searchParams.get('page') ?? 1);
   const loader = useLoader(
-    abortSignal =>
-      apiClient.table.getTableData(abortSignal, props.tableName, {
+    signal =>
+      apiClient.table.getTableData(signal, props.tableName, {
         page,
         pageSize: PAGE_SIZE,
         orderBy: '_id',

@@ -16,8 +16,8 @@ export function LoginPage() {
 
   useEffect(() => {
     async function checkCanInstall() {
-      const abortSignal = AbortSignal.timeout(3_000);
-      const response = await apiClient.install.canInstall(abortSignal);
+      const signal = AbortSignal.timeout(3_000);
+      const response = await apiClient.install.canInstall(signal);
       setCanInstall(response.canInstall);
     }
     void checkCanInstall();
@@ -28,8 +28,8 @@ export function LoginPage() {
 
     let response: LoginResponse;
     try {
-      const abortSignal = AbortSignal.timeout(10000);
-      response = await apiClient.auth.login(abortSignal, {
+      const signal = AbortSignal.timeout(10000);
+      response = await apiClient.auth.login(signal, {
         userName,
         password
       });

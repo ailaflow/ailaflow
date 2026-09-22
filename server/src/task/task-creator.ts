@@ -16,7 +16,7 @@ export class TaskCreator {
   ) {}
 
   public async create(
-    abortSignal: AbortSignal,
+    signal: AbortSignal,
     isTest: boolean,
     createdBy: string,
     executionId: string,
@@ -31,7 +31,7 @@ export class TaskCreator {
     submissionMode: TaskSubmissionMode
   ) {
     const parsedExpression = UserAccessExpressionParser.parse(userExpression);
-    const userNames = await this.userAccessExpressionUserQuerier.queryUserNames(abortSignal, parsedExpression);
+    const userNames = await this.userAccessExpressionUserQuerier.queryUserNames(signal, parsedExpression);
 
     const task = Task.create(
       title,
@@ -56,8 +56,8 @@ export class TaskCreator {
 
     const transaction = Transaction.begin();
     try {
-      await this.taskRepository.insert(abortSignal, task, transaction);
-      await this.assignedTaskRepository.upsertMultiple(abortSignal, assignedTasks, transaction);
+      await this.taskRepository.insert(signal, task, transaction);
+      await this.assignedTaskRepository.upsertMultiple(signal, assignedTasks, transaction);
       await transaction.commit();
     } catch (e) {
       await transaction.rollback();
@@ -71,7 +71,7 @@ export class TaskCreator {
     m += '<<<<<<<<';
 
     for (const userName of userNames) {
-      const session = await this.userChatSessionProvider.get(abortSignal, isTest, userName, channelName);
+      const session = await this.userChatSessionProvider.get(signal, isTest, userName, channelName);
       if (session) {
         session.queueUserMessage(m, {
           internal: true

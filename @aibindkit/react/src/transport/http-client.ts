@@ -25,7 +25,7 @@ export class HttpClient {
     this.headers = headers;
   }
 
-  private async fetch(abortSignal: AbortSignal, method: string, path: string, body?: object): Promise<Response> {
+  private async fetch(signal: AbortSignal, method: string, path: string, body?: object): Promise<Response> {
     const headers: Record<string, string> = { ...this.headers };
     if (body) {
       headers['Content-Type'] = 'application/json';
@@ -35,7 +35,7 @@ export class HttpClient {
       headers,
       method,
       body: body ? JSON.stringify(body) : undefined,
-      signal: abortSignal,
+      signal,
       cache: 'no-store'
     });
 
@@ -70,19 +70,13 @@ export class HttpClient {
     return response;
   }
 
-  public async json<T>(abortSignal: AbortSignal, method: string, path: string, body?: object): Promise<T> {
-    const response = await this.fetch(abortSignal, method, path, body);
+  public async json<T>(signal: AbortSignal, method: string, path: string, body?: object): Promise<T> {
+    const response = await this.fetch(signal, method, path, body);
     return await response.json();
   }
 
-  public async sse<U>(
-    abortSignal: AbortSignal,
-    listener: HttpClientSseListener<U>,
-    method: string,
-    path: string,
-    body?: object
-  ): Promise<void> {
-    const response = await this.fetch(abortSignal, method, path, body);
+  public async sse<U>(signal: AbortSignal, listener: HttpClientSseListener<U>, method: string, path: string, body?: object): Promise<void> {
+    const response = await this.fetch(signal, method, path, body);
     const reader = response.body?.getReader();
     if (!reader) {
       throw new HttpClientError('Response body is null', response.status, null);

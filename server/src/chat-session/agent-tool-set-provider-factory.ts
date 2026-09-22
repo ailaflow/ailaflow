@@ -24,7 +24,7 @@ export class AgentToolSetProviderFactory {
   ) {}
 
   public async create(
-    abortSignal: AbortSignal,
+    signal: AbortSignal,
     allowedProcessNames: string[],
     allowedVariableNames: string[],
     sandboxName: string,
@@ -34,7 +34,7 @@ export class AgentToolSetProviderFactory {
     executionId: string
   ): Promise<ToolSetProvider> {
     const tools: Tool[] = [];
-    await this.addProcessTools(abortSignal, allowedProcessNames, process.name, context, tools, executionId);
+    await this.addProcessTools(signal, allowedProcessNames, process.name, context, tools, executionId);
     this.addVariableTools(executionId, allowedVariableNames, tools, process);
     if (isTerminalAllowed) {
       this.addTerminalTools(sandboxName, tools);
@@ -49,7 +49,7 @@ export class AgentToolSetProviderFactory {
   }
 
   private async addProcessTools(
-    abortSignal: AbortSignal,
+    signal: AbortSignal,
     allowedProcessNames: string[],
     currentProcessName: string,
     context: ProcessExecutionContext,
@@ -64,9 +64,9 @@ export class AgentToolSetProviderFactory {
     }
 
     for (let page = 1; ; page++) {
-      abortSignal.throwIfAborted();
+      signal.throwIfAborted();
 
-      const result = await this.processListQuerier.query(abortSignal, page, PAGE_SIZE, ProcessDisplay.LISTED);
+      const result = await this.processListQuerier.query(signal, page, PAGE_SIZE, ProcessDisplay.LISTED);
       for (const p of result.processes) {
         if (context.parentProcessNames?.includes(p.name)) {
           continue;
@@ -75,7 +75,7 @@ export class AgentToolSetProviderFactory {
           continue;
         }
 
-        const process = await this.processManager.tryGetByName(abortSignal, p.name);
+        const process = await this.processManager.tryGetByName(signal, p.name);
         if (!process) {
           throw new Error(`Process "${p.name}" was not found in the database`);
         }

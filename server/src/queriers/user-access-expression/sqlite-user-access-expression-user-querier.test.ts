@@ -12,46 +12,46 @@ import { SqliteUserAccessExpressionUserQuerier } from './sqlite-user-access-expr
 test('queries user names matching a user access expression', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
   const dbs = { modelDb: new SqliteDatabase(db) } as SqliteDatabases;
-  const abortSignal = new AbortController().signal;
+  const signal = new AbortController().signal;
 
   const userRepository = new SqliteUserRepository(dbs);
   const userAttributesRepository = new SqliteUserAttributesRepository(dbs);
   const querier = new SqliteUserAccessExpressionUserQuerier(dbs);
 
-  await userRepository.setup(abortSignal);
-  await userAttributesRepository.setup(abortSignal);
+  await userRepository.setup(signal);
+  await userAttributesRepository.setup(signal);
 
-  await insertUser(abortSignal, userRepository, userAttributesRepository, 'alice', {
+  await insertUser(signal, userRepository, userAttributesRepository, 'alice', {
     active: false,
     age: 10
   });
-  await insertUser(abortSignal, userRepository, userAttributesRepository, 'bob', {
+  await insertUser(signal, userRepository, userAttributesRepository, 'bob', {
     active: true,
     age: 20
   });
-  await insertUser(abortSignal, userRepository, userAttributesRepository, 'carol', {
+  await insertUser(signal, userRepository, userAttributesRepository, 'carol', {
     active: true,
     age: 17
   });
 
-  assert.deepEqual(
-    await querier.queryUserNames(abortSignal, UserAccessExpressionParser.parse('@alice or @{.active = true and .age >= 18}')),
-    ['alice', 'bob']
-  );
-  assert.deepEqual(await querier.queryUserNames(abortSignal, UserAccessExpressionParser.parse('')), ['alice', 'bob', 'carol']);
-  assert.deepEqual(await querier.queryUserNames(abortSignal, UserAccessExpressionParser.parse('@unknown')), []);
+  assert.deepEqual(await querier.queryUserNames(signal, UserAccessExpressionParser.parse('@alice or @{.active = true and .age >= 18}')), [
+    'alice',
+    'bob'
+  ]);
+  assert.deepEqual(await querier.queryUserNames(signal, UserAccessExpressionParser.parse('')), ['alice', 'bob', 'carol']);
+  assert.deepEqual(await querier.queryUserNames(signal, UserAccessExpressionParser.parse('@unknown')), []);
 
   db.close();
 });
 
 async function insertUser(
-  abortSignal: AbortSignal,
+  signal: AbortSignal,
   userRepository: SqliteUserRepository,
   userAttributesRepository: SqliteUserAttributesRepository,
   name: string,
   attributes: Record<string, string | number | boolean>
 ): Promise<void> {
   const user = new User(name, null, 'hash', true, false);
-  await userRepository.insert(abortSignal, user);
-  await userAttributesRepository.replace(abortSignal, UserAttributes.create(user, attributes));
+  await userRepository.insert(signal, user);
+  await userAttributesRepository.replace(signal, UserAttributes.create(user, attributes));
 }

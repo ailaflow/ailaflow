@@ -22,16 +22,9 @@ export class GetMyTasksTool extends ZodTool<Arg> {
     );
   }
 
-  public async handle(abortSignal: AbortSignal, { sessionId }: ToolContext, arg: Arg): Promise<ZodToolExecutionResult> {
+  public async handle(signal: AbortSignal, { sessionId }: ToolContext, arg: Arg): Promise<ZodToolExecutionResult> {
     const chatSessionId = ChatSessionId.decode(sessionId);
-    const response = await this.querier.query(
-      abortSignal,
-      chatSessionId.isTest(),
-      chatSessionId.userName,
-      arg.onlyOpen,
-      arg.page,
-      PAGE_SIZE
-    );
+    const response = await this.querier.query(signal, chatSessionId.isTest(), chatSessionId.userName, arg.onlyOpen, arg.page, PAGE_SIZE);
     return {
       content: {
         tasks: response.tasks.map(task => ({

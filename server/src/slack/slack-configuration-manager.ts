@@ -24,13 +24,13 @@ export class SlackConfigurationManager {
     private readonly eventBus: EventBus
   ) {}
 
-  public async get(abortSignal: AbortSignal): Promise<GetSlackConfigurationResponse> {
-    const configuration = await this.configurationRepository.tryGet(abortSignal);
+  public async get(signal: AbortSignal): Promise<GetSlackConfigurationResponse> {
+    const configuration = await this.configurationRepository.tryGet(signal);
     const workspaceId = configuration?.workspaceId;
     const directoryCounts = workspaceId
-      ? await this.directoryRepository.getCounts(abortSignal, workspaceId)
+      ? await this.directoryRepository.getCounts(signal, workspaceId)
       : { active: 0, unavailable: 0, lastRefreshedAt: null };
-    const mappingCounts = workspaceId ? await this.mappingRepository.getCounts(abortSignal, workspaceId) : { mapped: 0, failedWelcome: 0 };
+    const mappingCounts = workspaceId ? await this.mappingRepository.getCounts(signal, workspaceId) : { mapped: 0, failedWelcome: 0 };
     return {
       isConfigured: configuration !== null,
       hasAppToken: Boolean(configuration?.appToken),
@@ -54,16 +54,16 @@ export class SlackConfigurationManager {
     };
   }
 
-  public async save(abortSignal: AbortSignal, request: SaveSlackConfigurationRequest): Promise<SaveSlackConfigurationResponse> {
-    const existing = await this.configurationRepository.tryGet(abortSignal);
+  public async save(signal: AbortSignal, request: SaveSlackConfigurationRequest): Promise<SaveSlackConfigurationResponse> {
+    const existing = await this.configurationRepository.tryGet(signal);
     const appToken = request.appToken ?? existing?.appToken;
     const botToken = request.botToken ?? existing?.botToken;
     if (!appToken || !botToken) {
       throw new SlackError(SlackErrorReason.INVALID_CONFIGURATION, 'Both Slack tokens are required for the first configuration');
     }
     try {
-      const identity = await this.client.testAuth(abortSignal, botToken);
-      await this.client.openSocketConnection(abortSignal, appToken);
+      const identity = await this.client.testAuth(signal, botToken);
+      await this.client.openSocketConnection(signal, appToken);
       const tokenAppId = tryGetAppIdFromAppToken(appToken);
       if (identity.appId && tokenAppId && identity.appId !== tokenAppId) {
         throw new SlackError(SlackErrorReason.INVALID_CONFIGURATION, 'The Slack app-level token and bot token belong to different apps');
@@ -72,7 +72,7 @@ export class SlackConfigurationManager {
       if (!appId) {
         throw new SlackError(SlackErrorReason.INVALID_CONFIGURATION, 'Slack did not return a valid App identity');
       }
-      const mappings = await this.mappingRepository.getAll(abortSignal);
+      const mappings = await this.mappingRepository.getAll(signal);
       if (mappings.some(mapping => mapping.workspaceId !== identity.workspaceId)) {
         throw new SlackError(
           SlackErrorReason.INVALID_CONFIGURATION,
@@ -80,7 +80,7 @@ export class SlackConfigurationManager {
         );
       }
       const now = Date.now();
-      await this.configurationRepository.save(abortSignal, {
+      await this.configurationRepository.save(signal, {
         appToken,
         botToken,
         appId,
@@ -92,7 +92,7 @@ export class SlackConfigurationManager {
         updatedAt: now
       });
       await this.eventBus.publish(new SlackConfigurationChangedEvent());
-      return this.get(abortSignal);
+      return this.get(signal);
     } catch (error) {
       if (error instanceof SlackError) {
         throw error;
@@ -107,14 +107,14 @@ export class SlackConfigurationManager {
     }
   }
 
-  public async delete(abortSignal: AbortSignal): Promise<DeleteSlackConfigurationResponse> {
-    const configuration = await this.configurationRepository.tryGet(abortSignal);
+  public async delete(signal: AbortSignal): Promise<DeleteSlackConfigurationResponse> {
+    const configuration = await this.configurationRepository.tryGet(signal);
     const transaction = Transaction.begin();
     try {
       if (configuration) {
-        await this.mappingRepository.deleteAll(abortSignal, configuration.workspaceId, transaction);
+        await this.mappingRepository.deleteAll(signal, configuration.workspaceId, transaction);
       }
-      await this.configurationRepository.delete(abortSignal, transaction);
+      await this.configurationRepository.delete(signal, transaction);
       await transaction.commit();
     } catch (error) {
       await transaction.rollback();

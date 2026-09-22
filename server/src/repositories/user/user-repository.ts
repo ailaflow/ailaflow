@@ -10,8 +10,8 @@ export class UserRepositoryError extends Error {
 }
 
 export interface UserRepository extends Repository {
-  tryGetUser(abortSignal: AbortSignal, userName: string): Promise<User | null>;
-  count(abortSignal: AbortSignal, onlyActive: boolean): Promise<number>;
-  insert(abortSignal: AbortSignal, user: User, transaction?: Transaction): Promise<void>;
-  update(abortSignal: AbortSignal, user: User, transaction?: Transaction): Promise<void>;
+  tryGetUser(signal: AbortSignal, userName: string): Promise<User | null>;
+  count(signal: AbortSignal, onlyActive: boolean): Promise<number>;
+  insert(signal: AbortSignal, user: User, transaction?: Transaction): Promise<void>;
+  update(signal: AbortSignal, user: User, transaction?: Transaction): Promise<void>;
 }

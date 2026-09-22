@@ -10,7 +10,7 @@ export interface MessageCompletionResult {
 export interface Message {
   id: number;
   type: ChatMessageType;
-  complete(abortSignal: AbortSignal, stack: ChatSessionStack): MessageCompletionResult | Promise<MessageCompletionResult>;
+  complete(signal: AbortSignal, stack: ChatSessionStack): MessageCompletionResult | Promise<MessageCompletionResult>;
   interrupt?(): CompletedChatMessage;
   fail?(reason: string): CompletedChatMessage;
 }

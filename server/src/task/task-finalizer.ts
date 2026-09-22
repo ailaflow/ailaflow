@@ -12,20 +12,20 @@ export class TaskFinalizer {
     private readonly processExecutionResumer: ProcessExecutionResumer
   ) {}
 
-  public async tryFinalize(abortSignal: AbortSignal, taskId: string, deadlineExceeded: boolean): Promise<boolean> {
-    const task = await this.taskRepository.tryGet(abortSignal, taskId);
+  public async tryFinalize(signal: AbortSignal, taskId: string, deadlineExceeded: boolean): Promise<boolean> {
+    const task = await this.taskRepository.tryGet(signal, taskId);
     if (!task || task.finalizedAt !== null) {
       return false;
     }
 
     if (!deadlineExceeded && task.finalizationPolicy === 'all_assignees') {
-      const incompleteCount = await this.incompleteAssignedTaskCountQuerier.queryIncompleteAssignedTaskCount(abortSignal, task.id);
+      const incompleteCount = await this.incompleteAssignedTaskCountQuerier.queryIncompleteAssignedTaskCount(signal, task.id);
       if (incompleteCount > 0) {
         return false;
       }
     }
 
-    const completedAssignedTasks = await this.assignedTaskRepository.getAllCompleted(abortSignal, task.id);
+    const completedAssignedTasks = await this.assignedTaskRepository.getAllCompleted(signal, task.id);
 
     if (!deadlineExceeded && task.finalizationPolicy === 'any_assignee' && completedAssignedTasks.length === 0) {
       return false;
@@ -79,7 +79,7 @@ export class TaskFinalizer {
     const executionSignal = new AbortController().signal;
     await this.processExecutionResumer.resume(executionSignal, task.executionId, value);
 
-    await this.taskRepository.finalize(abortSignal, task.id, Date.now());
+    await this.taskRepository.finalize(signal, task.id, Date.now());
 
     return true;
   }

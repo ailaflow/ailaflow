@@ -41,9 +41,9 @@ class FakeClient extends TelegramBotApiClient {
   public async getWebhookInfo() {
     return { url: '' };
   }
-  public async getUpdates(abortSignal: AbortSignal) {
-    this.pollSignals.push(abortSignal);
-    await new Promise<void>(resolve => abortSignal.addEventListener('abort', () => resolve(), { once: true }));
+  public async getUpdates(signal: AbortSignal) {
+    this.pollSignals.push(signal);
+    await new Promise<void>(resolve => signal.addEventListener('abort', () => resolve(), { once: true }));
     return [];
   }
   public async sendMessage(): Promise<never> {

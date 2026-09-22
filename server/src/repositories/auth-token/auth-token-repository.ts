@@ -3,8 +3,8 @@ import { Repository } from '../repository';
 import { AuthToken } from './auth-token';
 
 export interface AuthTokenRepository extends Repository {
-  upsert(abortSignal: AbortSignal, authToken: AuthToken, transaction?: Transaction): Promise<void>;
-  tryGetByToken(abortSignal: AbortSignal, token: string): Promise<AuthToken | null>;
-  deleteOutdated(abortSignal: AbortSignal, now: number, transaction?: Transaction): Promise<void>;
-  deleteForUser(abortSignal: AbortSignal, userName: string, transaction?: Transaction): Promise<void>;
+  upsert(signal: AbortSignal, authToken: AuthToken, transaction?: Transaction): Promise<void>;
+  tryGetByToken(signal: AbortSignal, token: string): Promise<AuthToken | null>;
+  deleteOutdated(signal: AbortSignal, now: number, transaction?: Transaction): Promise<void>;
+  deleteForUser(signal: AbortSignal, userName: string, transaction?: Transaction): Promise<void>;
 }

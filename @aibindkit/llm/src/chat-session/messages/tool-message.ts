@@ -13,7 +13,7 @@ export class ToolMessage implements Message {
     private readonly toolSet: ToolSet
   ) {}
 
-  public async complete(abortSignal: AbortSignal): Promise<MessageCompletionResult> {
+  public async complete(signal: AbortSignal): Promise<MessageCompletionResult> {
     const completedMessages = await Promise.all(
       this.calls.map<Promise<CompletedChatMessage>>(async call => {
         if (call.type !== 'function') {
@@ -24,7 +24,7 @@ export class ToolMessage implements Message {
         let metadata: ChatMessageMetadata | undefined;
         if (tool) {
           try {
-            const result = await tool.execute(abortSignal, this.context, call);
+            const result = await tool.execute(signal, this.context, call);
             content = result.content;
             metadata = result.metadata;
           } catch (e) {

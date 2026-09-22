@@ -11,28 +11,28 @@ import type {
 export class SandboxApiClient {
   public constructor(private readonly client: HttpClient) {}
 
-  public saveSandbox(abortSignal: AbortSignal, request: SaveSandboxRequest): Promise<void> {
-    return this.client.json(abortSignal, 'POST', '/api/sandbox', request);
+  public saveSandbox(signal: AbortSignal, request: SaveSandboxRequest): Promise<void> {
+    return this.client.json(signal, 'POST', '/api/sandbox', request);
   }
 
-  public getSandboxes(abortSignal: AbortSignal): Promise<GetSandboxesResponse> {
-    return this.client.json(abortSignal, 'GET', '/api/sandboxes');
+  public getSandboxes(signal: AbortSignal): Promise<GetSandboxesResponse> {
+    return this.client.json(signal, 'GET', '/api/sandboxes');
   }
 
-  public getSandbox(abortSignal: AbortSignal, name: string): Promise<GetSandboxResponse> {
-    return this.client.json(abortSignal, 'GET', `/api/sandboxes/${encodeURIComponent(name)}`);
+  public getSandbox(signal: AbortSignal, name: string): Promise<GetSandboxResponse> {
+    return this.client.json(signal, 'GET', `/api/sandboxes/${encodeURIComponent(name)}`);
   }
 
-  public diagnoseHost(abortSignal: AbortSignal): Promise<DiagnoseHostResponse> {
-    return this.client.json(abortSignal, 'GET', '/api/sandboxes/diagnose-host');
+  public diagnoseHost(signal: AbortSignal): Promise<DiagnoseHostResponse> {
+    return this.client.json(signal, 'GET', '/api/sandboxes/diagnose-host');
   }
 
   public executeCommand(
-    abortSignal: AbortSignal,
+    signal: AbortSignal,
     listener: HttpClientSseListener<ExecuteSandboxCommandUpdate>,
     name: string,
     request: ExecuteSandboxCommandRequest
   ): Promise<void> {
-    return this.client.sse(abortSignal, listener, 'POST', `/api/sandboxes/${encodeURIComponent(name)}/commands`, request);
+    return this.client.sse(signal, listener, 'POST', `/api/sandboxes/${encodeURIComponent(name)}/commands`, request);
   }
 }

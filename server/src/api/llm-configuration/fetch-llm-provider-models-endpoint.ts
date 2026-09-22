@@ -21,12 +21,12 @@ export class FetchLlmProviderModelsEndpoint implements Endpoint {
   ) {}
 
   public async handle(req: Request): Promise<FetchLlmProviderModelsResponse> {
-    const abortSignal = getEndpointAbortSignal(req);
+    const signal = getEndpointAbortSignal(req);
     const request = parseBody(fetchLlmProviderModelsRequestSchema, req.body);
     try {
       let apiKey = request.apiKey;
       if (!apiKey && request.id && LlmProviderPolicy.requiresApiKey(request.type)) {
-        const existing = await this.repository.tryGetProvider(abortSignal, request.id);
+        const existing = await this.repository.tryGetProvider(signal, request.id);
         if (!existing) {
           throw new EndpointError('LLM provider not found', 404);
         }
@@ -44,7 +44,7 @@ export class FetchLlmProviderModelsEndpoint implements Endpoint {
       });
       const client = this.clientFactory.createForProvider(provider);
       try {
-        return { models: await client.getModels(abortSignal) };
+        return { models: await client.getModels(signal) };
       } finally {
         client.dispose();
       }

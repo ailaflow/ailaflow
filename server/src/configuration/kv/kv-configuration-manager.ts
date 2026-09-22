@@ -6,19 +6,19 @@ export class KvConfigurationManager {
 
   public constructor(private readonly repository: KvConfigurationRepository) {}
 
-  public async get(abortSignal: AbortSignal): Promise<KvConfiguration> {
+  public async get(signal: AbortSignal): Promise<KvConfiguration> {
     if (!this.cache) {
-      this.cache = await this.repository.get(abortSignal);
+      this.cache = await this.repository.get(signal);
     }
     return this.cache.clone();
   }
 
-  public async update(abortSignal: AbortSignal, configuration: KvConfiguration): Promise<void> {
+  public async update(signal: AbortSignal, configuration: KvConfiguration): Promise<void> {
     if (configuration.getChangedKeys().length === 0) {
       return;
     }
-    abortSignal.throwIfAborted();
-    await this.repository.updateChanged(abortSignal, configuration);
+    signal.throwIfAborted();
+    await this.repository.updateChanged(signal, configuration);
     this.cache = null;
   }
 }

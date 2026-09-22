@@ -15,9 +15,9 @@ export class SaveMyTelegramBotEndpoint implements Endpoint {
   public constructor(private readonly api: TelegramConfigurationApi) {}
 
   public async handle(req: Request): Promise<SaveTelegramBotResponse> {
-    const abortSignal = getEndpointAbortSignal(req);
+    const signal = getEndpointAbortSignal(req);
     const { userName } = getAuthToken(req);
     const request = parseBody(saveTelegramBotRequestSchema, req.body);
-    return this.api.save(abortSignal, userName, request);
+    return this.api.save(signal, userName, request);
   }
 }

@@ -7,9 +7,9 @@ import { ProcessExecutionContext } from '../../process-executor/process-executio
 import { Transaction } from '../../core/transaction';
 
 export interface PersistedExecutionRepository extends Repository {
-  upsert(abortSignal: AbortSignal, execution: PersistedExecution, transaction?: Transaction): Promise<void>;
-  tryGet(abortSignal: AbortSignal, executionId: string): Promise<PersistedExecution | null>;
-  delete(abortSignal: AbortSignal, executionId: string, transaction?: Transaction): Promise<void>;
+  upsert(signal: AbortSignal, execution: PersistedExecution, transaction?: Transaction): Promise<void>;
+  tryGet(signal: AbortSignal, executionId: string): Promise<PersistedExecution | null>;
+  delete(signal: AbortSignal, executionId: string, transaction?: Transaction): Promise<void>;
 }
 
 export class SqlitePersistedExecutionRepository implements PersistedExecutionRepository {

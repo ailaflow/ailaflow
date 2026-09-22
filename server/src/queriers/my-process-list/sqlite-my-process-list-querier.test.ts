@@ -17,30 +17,30 @@ test('queries a page containing only processes accessible to the current user', 
   const db = new DatabaseSync(':memory:', { open: true });
   db.exec(`PRAGMA foreign_keys = ON`);
   const dbs = { modelDb: new SqliteDatabase(db) } as SqliteDatabases;
-  const abortSignal = new AbortController().signal;
+  const signal = new AbortController().signal;
   const processRepository = new SqliteProcessRepository(dbs);
   const userRepository = new SqliteUserRepository(dbs);
   const userAttributesRepository = new SqliteUserAttributesRepository(dbs);
   const resourceAccessRepository = new SqliteResourceAccessRepository(dbs);
   const querier = new SqliteMyProcessListQuerier(dbs);
 
-  await processRepository.setup(abortSignal);
-  await userRepository.setup(abortSignal);
-  await userAttributesRepository.setup(abortSignal);
-  await resourceAccessRepository.setup(abortSignal);
+  await processRepository.setup(signal);
+  await userRepository.setup(signal);
+  await userAttributesRepository.setup(signal);
+  await resourceAccessRepository.setup(signal);
 
   const alice = new User('alice', null, 'hash', true, false);
-  await userRepository.insert(abortSignal, alice);
-  await userAttributesRepository.replace(abortSignal, UserAttributes.create(alice, {}));
+  await userRepository.insert(signal, alice);
+  await userAttributesRepository.replace(signal, UserAttributes.create(alice, {}));
 
   insertProcess(db, 'charlie', ProcessDisplay.HIDDEN);
   insertProcess(db, 'alpha', ProcessDisplay.FEATURED);
   insertProcess(db, 'bravo', ProcessDisplay.LISTED, ProcessExecutionMode.START_FORM);
-  await grantAccess(abortSignal, resourceAccessRepository, 'alpha', '');
-  await grantAccess(abortSignal, resourceAccessRepository, 'bravo', '');
-  await grantAccess(abortSignal, resourceAccessRepository, 'charlie', '');
+  await grantAccess(signal, resourceAccessRepository, 'alpha', '');
+  await grantAccess(signal, resourceAccessRepository, 'bravo', '');
+  await grantAccess(signal, resourceAccessRepository, 'charlie', '');
 
-  assert.deepEqual(await querier.query(abortSignal, 'alice', 2, 1, ProcessDisplay.LISTED), {
+  assert.deepEqual(await querier.query(signal, 'alice', 2, 1, ProcessDisplay.LISTED), {
     processes: [
       {
         name: 'bravo',
@@ -52,7 +52,7 @@ test('queries a page containing only processes accessible to the current user', 
     page: 2,
     pageSize: 1
   });
-  assert.deepEqual(await querier.query(abortSignal, 'alice', 1, 10, ProcessDisplay.FEATURED), {
+  assert.deepEqual(await querier.query(signal, 'alice', 1, 10, ProcessDisplay.FEATURED), {
     processes: [
       {
         name: 'alpha',
@@ -64,7 +64,7 @@ test('queries a page containing only processes accessible to the current user', 
     page: 1,
     pageSize: 10
   });
-  assert.equal((await querier.query(abortSignal, 'alice', 1, 10, ProcessDisplay.HIDDEN)).totalCount, 3);
+  assert.equal((await querier.query(signal, 'alice', 1, 10, ProcessDisplay.HIDDEN)).totalCount, 3);
 
   db.close();
 });
@@ -94,13 +94,10 @@ function insertProcess(
 }
 
 async function grantAccess(
-  abortSignal: AbortSignal,
+  signal: AbortSignal,
   repository: SqliteResourceAccessRepository,
   processName: string,
   userAccessExpression: string
 ): Promise<void> {
-  await repository.replace(
-    abortSignal,
-    ResourceAccess.createFromAccessExpression(ProcessResourceId.create(processName), userAccessExpression)
-  );
+  await repository.replace(signal, ResourceAccess.createFromAccessExpression(ProcessResourceId.create(processName), userAccessExpression));
 }

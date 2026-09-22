@@ -13,9 +13,9 @@ export class DeleteMyTelegramBotEndpoint implements Endpoint {
   public constructor(private readonly api: TelegramConfigurationApi) {}
 
   public async handle(req: Request): Promise<DeleteTelegramBotResponse> {
-    const abortSignal = getEndpointAbortSignal(req);
+    const signal = getEndpointAbortSignal(req);
     const { userName } = getAuthToken(req);
     const channelName = String(req.params.channelName);
-    return this.api.delete(abortSignal, userName, channelName);
+    return this.api.delete(signal, userName, channelName);
   }
 }

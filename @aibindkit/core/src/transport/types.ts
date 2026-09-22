@@ -76,9 +76,9 @@ export interface ChatTransportListener {
 }
 
 export interface ChatTransport {
-  restoreChat(abortSignal: AbortSignal, listener: ChatTransportListener, request: RestoreChatRequest): Promise<void>;
-  sendChatMessage(abortSignal: AbortSignal, request: SendChatMessageRequest): Promise<SendChatMessageResponse>;
-  sendFrontendToolResult(abortSignal: AbortSignal, request: SendFrontendToolResultRequest): Promise<void>;
-  interruptChat(abortSignal: AbortSignal, request: InterruptChatRequest): Promise<void>;
-  restartChat(abortSignal: AbortSignal, request: RestartChatRequest): Promise<void>;
+  restoreChat(signal: AbortSignal, listener: ChatTransportListener, request: RestoreChatRequest): Promise<void>;
+  sendChatMessage(signal: AbortSignal, request: SendChatMessageRequest): Promise<SendChatMessageResponse>;
+  sendFrontendToolResult(signal: AbortSignal, request: SendFrontendToolResultRequest): Promise<void>;
+  interruptChat(signal: AbortSignal, request: InterruptChatRequest): Promise<void>;
+  restartChat(signal: AbortSignal, request: RestartChatRequest): Promise<void>;
 }

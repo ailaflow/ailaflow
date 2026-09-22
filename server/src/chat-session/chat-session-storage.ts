@@ -8,13 +8,13 @@ export class ChatSessionStorage implements Interface {
 
   public constructor(private readonly repository: ChatSessionRepository) {}
 
-  public save(abortSignal: AbortSignal, sessionId: string, snapshot: ChatSessionSnapshot): Promise<void> {
+  public save(signal: AbortSignal, sessionId: string, snapshot: ChatSessionSnapshot): Promise<void> {
     this.timeouts.set(
       sessionId,
       setTimeout(async () => {
         this.timeouts.delete(sessionId);
         try {
-          await this.repository.upsert(abortSignal, sessionId, snapshot);
+          await this.repository.upsert(signal, sessionId, snapshot);
         } catch (e) {
           this.logger.error(`Failed to save chat session: ${(e as Error).message ?? e}`);
         }
@@ -23,7 +23,7 @@ export class ChatSessionStorage implements Interface {
     return Promise.resolve();
   }
 
-  public tryGet(abortSignal: AbortSignal, sessionId: string): Promise<ChatSessionSnapshot | null> {
-    return this.repository.tryGet(abortSignal, sessionId);
+  public tryGet(signal: AbortSignal, sessionId: string): Promise<ChatSessionSnapshot | null> {
+    return this.repository.tryGet(signal, sessionId);
   }
 }

@@ -10,23 +10,23 @@ export class TelegramConfigurationRepositoryError extends Error {
 }
 
 export interface TelegramConfigurationRepository extends Repository {
-  getAll(abortSignal: AbortSignal): Promise<TelegramBotConfiguration[]>;
-  getForUser(abortSignal: AbortSignal, userName: string): Promise<TelegramBotConfiguration[]>;
-  tryGet(abortSignal: AbortSignal, userName: string, channelName: string): Promise<TelegramBotConfiguration | null>;
-  upsert(abortSignal: AbortSignal, configuration: TelegramBotConfiguration, transaction?: Transaction): Promise<void>;
+  getAll(signal: AbortSignal): Promise<TelegramBotConfiguration[]>;
+  getForUser(signal: AbortSignal, userName: string): Promise<TelegramBotConfiguration[]>;
+  tryGet(signal: AbortSignal, userName: string, channelName: string): Promise<TelegramBotConfiguration | null>;
+  upsert(signal: AbortSignal, configuration: TelegramBotConfiguration, transaction?: Transaction): Promise<void>;
   connectTelegramChat(
-    abortSignal: AbortSignal,
+    signal: AbortSignal,
     userName: string,
     channelName: string,
     telegramChatId: string,
     transaction?: Transaction
   ): Promise<void>;
   updateLastUpdateId(
-    abortSignal: AbortSignal,
+    signal: AbortSignal,
     userName: string,
     channelName: string,
     lastUpdateId: number,
     transaction?: Transaction
   ): Promise<void>;
-  delete(abortSignal: AbortSignal, userName: string, channelName: string, transaction?: Transaction): Promise<boolean>;
+  delete(signal: AbortSignal, userName: string, channelName: string, transaction?: Transaction): Promise<boolean>;
 }

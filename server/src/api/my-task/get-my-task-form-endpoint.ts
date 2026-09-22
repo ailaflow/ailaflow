@@ -15,14 +15,14 @@ export class GetMyTaskFormEndpoint implements Endpoint {
   public constructor(private readonly userAssignedTaskProvider: UserAssignedTaskProvider) {}
 
   public async handle(req: Request): Promise<GetMyTaskFormResponse> {
-    const abortSignal = getEndpointAbortSignal(req);
+    const signal = getEndpointAbortSignal(req);
     const authToken = getAuthToken(req);
     const taskId = String(req.params.id);
     const request = parseQuery(getMyTaskFormRequestSchema, req.query);
 
     const { isTest, userName } = authToken.maybeOverrideTestUserName(request.testUserName);
 
-    const userAssignedTask = await this.userAssignedTaskProvider.tryGetCompletable(abortSignal, isTest, userName, taskId);
+    const userAssignedTask = await this.userAssignedTaskProvider.tryGetCompletable(signal, isTest, userName, taskId);
     if (!userAssignedTask) {
       throw new EndpointError('Task not found', 404);
     }

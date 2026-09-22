@@ -18,9 +18,9 @@ export class GetMyTaskDetailsTool extends ZodTool<Arg> {
     );
   }
 
-  public async handle(abortSignal: AbortSignal, { sessionId }: ToolContext, arg: Arg): Promise<ZodToolExecutionResult> {
+  public async handle(signal: AbortSignal, { sessionId }: ToolContext, arg: Arg): Promise<ZodToolExecutionResult> {
     const chatSessionId = ChatSessionId.decode(sessionId);
-    const details = await this.userTaskDetailsProvider.tryGet(abortSignal, chatSessionId.isTest(), chatSessionId.userName, arg.taskId);
+    const details = await this.userTaskDetailsProvider.tryGet(signal, chatSessionId.isTest(), chatSessionId.userName, arg.taskId);
     if (!details) {
       return {
         content: {

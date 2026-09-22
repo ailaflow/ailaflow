@@ -10,15 +10,15 @@ import type {
 export class PublicUrlConfigurationApiClient {
   public constructor(private readonly client: HttpClient) {}
 
-  public get(abortSignal: AbortSignal): Promise<GetPublicUrlConfigurationResponse> {
-    return this.client.json(abortSignal, 'GET', '/api/public-url-configuration');
+  public get(signal: AbortSignal): Promise<GetPublicUrlConfigurationResponse> {
+    return this.client.json(signal, 'GET', '/api/public-url-configuration');
   }
 
-  public save(abortSignal: AbortSignal, request: SavePublicUrlConfigurationRequest): Promise<SavePublicUrlConfigurationResponse> {
-    return this.client.json(abortSignal, 'POST', '/api/public-url-configuration', request);
+  public save(signal: AbortSignal, request: SavePublicUrlConfigurationRequest): Promise<SavePublicUrlConfigurationResponse> {
+    return this.client.json(signal, 'POST', '/api/public-url-configuration', request);
   }
 
-  public test(abortSignal: AbortSignal, request: TestPublicUrlRequest): Promise<TestPublicUrlResponse> {
-    return this.client.json(abortSignal, 'POST', '/api/public-url-configuration/test', request);
+  public test(signal: AbortSignal, request: TestPublicUrlRequest): Promise<TestPublicUrlResponse> {
+    return this.client.json(signal, 'POST', '/api/public-url-configuration/test', request);
   }
 }

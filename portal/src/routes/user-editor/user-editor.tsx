@@ -20,8 +20,8 @@ export function UserEditor(props: { user?: UserDto }) {
     }
     isSaving.current = true;
     try {
-      const abortSignal = AbortSignal.timeout(5_000);
-      const response = await apiClient.user.saveUser(abortSignal, state.toSaveRequest());
+      const signal = AbortSignal.timeout(5_000);
+      const response = await apiClient.user.saveUser(signal, state.toSaveRequest());
       if (state.isNew) {
         navigate(`/admin/users/${response.name}`);
       } else {

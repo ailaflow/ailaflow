@@ -7,13 +7,13 @@ export class TaskDeleter {
     private readonly persistedExecutionRepository: PersistedExecutionRepository
   ) {}
 
-  public async delete(abortSignal: AbortSignal, id: string): Promise<boolean> {
-    const task = await this.taskRepository.tryGet(abortSignal, id);
+  public async delete(signal: AbortSignal, id: string): Promise<boolean> {
+    const task = await this.taskRepository.tryGet(signal, id);
     if (!task) {
       return false;
     }
 
-    await this.persistedExecutionRepository.delete(abortSignal, task.executionId);
-    return this.taskRepository.delete(abortSignal, id);
+    await this.persistedExecutionRepository.delete(signal, task.executionId);
+    return this.taskRepository.delete(signal, id);
   }
 }

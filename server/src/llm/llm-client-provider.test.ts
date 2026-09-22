@@ -69,10 +69,10 @@ test('returns the same configured client until all clients are flushed', async (
   } as unknown as LlmConfigurationRepository;
   const factory = new FakeLlmClientFactory();
   const provider = new LlmClientProvider(repository, factory);
-  const abortSignal = new AbortController().signal;
+  const signal = new AbortController().signal;
 
-  const first = await provider.get(abortSignal, LlmUseCase.ADMIN_CHAT);
-  assert.equal(await provider.get(abortSignal, LlmUseCase.ADMIN_CHAT), first);
+  const first = await provider.get(signal, LlmUseCase.ADMIN_CHAT);
+  assert.equal(await provider.get(signal, LlmUseCase.ADMIN_CHAT), first);
 
   const completeHistory: LlmMessage[] = [
     { role: 'system', content: 'System' },
@@ -80,13 +80,13 @@ test('returns the same configured client until all clients are flushed', async (
     { role: 'assistant', content: 'Previous answer', refusal: null },
     { role: 'user', content: 'Follow-up' }
   ];
-  await first.client.complete(abortSignal, first.modelSettings, completeHistory, undefined);
+  await first.client.complete(signal, first.modelSettings, completeHistory, undefined);
 
   model = 'model-b';
   provider.flushAll();
   assert.equal(factory.clients[0].isDisposed, true);
-  const second = await provider.get(abortSignal, LlmUseCase.ADMIN_CHAT);
-  const result = await second.client.complete(abortSignal, second.modelSettings, completeHistory, undefined);
+  const second = await provider.get(signal, LlmUseCase.ADMIN_CHAT);
+  const result = await second.client.complete(signal, second.modelSettings, completeHistory, undefined);
 
   assert.notEqual(second, first);
   assert.equal(result.message.content, 'model-b');

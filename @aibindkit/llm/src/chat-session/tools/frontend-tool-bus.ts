@@ -9,9 +9,9 @@ export class FrontendToolBus {
 
   // waitForResult
 
-  public async waitForResult(abortSignal: AbortSignal, sessionToken: string, callId: string): Promise<string> {
+  public async waitForResult(signal: AbortSignal, sessionToken: string, callId: string): Promise<string> {
     const key = this.getKey(sessionToken, callId);
-    return this.tryGetReadyResult(key) ?? this.waitForPendingResult(abortSignal, key);
+    return this.tryGetReadyResult(key) ?? this.waitForPendingResult(signal, key);
   }
 
   private tryGetReadyResult(key: string): Promise<string> | null {
@@ -23,7 +23,7 @@ export class FrontendToolBus {
     return null;
   }
 
-  private waitForPendingResult(abortSignal: AbortSignal, key: string): Promise<string> {
+  private waitForPendingResult(signal: AbortSignal, key: string): Promise<string> {
     return new Promise<string>((resolve, reject) => {
       if (this.pendingResults.has(key)) {
         reject(new Error('Result already being waited for'));
@@ -35,16 +35,16 @@ export class FrontendToolBus {
         reject(new Error('Operation aborted'));
       };
 
-      if (abortSignal.aborted) {
+      if (signal.aborted) {
         abort();
         return;
       }
 
-      abortSignal.addEventListener('abort', abort, { once: true });
+      signal.addEventListener('abort', abort, { once: true });
 
       this.pendingResults.set(key, result => {
         this.pendingResults.delete(key);
-        abortSignal.removeEventListener('abort', abort);
+        signal.removeEventListener('abort', abort);
         resolve(result);
       });
     });
@@ -53,14 +53,14 @@ export class FrontendToolBus {
   // sendResult
 
   public async sendResult(
-    abortSignal: AbortSignal,
+    signal: AbortSignal,
     maxWaitTime: number,
     sessionToken: string,
     callId: string,
     result: string
   ): Promise<boolean> {
     const key = this.getKey(sessionToken, callId);
-    return this.trySendPendingResult(key, result) ?? this.sendReadyResult(abortSignal, maxWaitTime, key, result);
+    return this.trySendPendingResult(key, result) ?? this.sendReadyResult(signal, maxWaitTime, key, result);
   }
 
   private trySendPendingResult(key: string, result: string): true | null {
@@ -72,7 +72,7 @@ export class FrontendToolBus {
     return null;
   }
 
-  private sendReadyResult(abortSignal: AbortSignal, maxWaitTime: number, key: string, result: string): Promise<boolean> {
+  private sendReadyResult(signal: AbortSignal, maxWaitTime: number, key: string, result: string): Promise<boolean> {
     if (this.readyResults.has(key)) {
       throw new Error('Result already sent for this call');
     }
@@ -97,7 +97,7 @@ export class FrontendToolBus {
         reject(new Error('Operation aborted'));
       };
 
-      if (abortSignal.aborted) {
+      if (signal.aborted) {
         abort();
         return;
       }
@@ -107,7 +107,7 @@ export class FrontendToolBus {
       }
 
       const to = setTimeout(() => {
-        abortSignal.removeEventListener('abort', abort);
+        signal.removeEventListener('abort', abort);
         if (!consumed) {
           remove();
           resolve(false);
@@ -115,12 +115,12 @@ export class FrontendToolBus {
       }, maxWaitTime);
 
       finish = () => {
-        abortSignal.removeEventListener('abort', abort);
+        signal.removeEventListener('abort', abort);
         clearTimeout(to);
         resolve(true);
       };
 
-      abortSignal.addEventListener('abort', abort, { once: true });
+      signal.addEventListener('abort', abort, { once: true });
     });
   }
 

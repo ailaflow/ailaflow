@@ -24,11 +24,11 @@ export class RunTerminalCommandTool extends ZodTool<Input> {
     );
   }
 
-  protected async handle(abortSignal: AbortSignal, _: ToolContext, arg: Input): Promise<ZodToolExecutionResult> {
-    const signal = AbortSignal.any([abortSignal, AbortSignal.timeout(TERMINAL_TIMEOUT_MS)]);
+  protected async handle(signal: AbortSignal, _: ToolContext, arg: Input): Promise<ZodToolExecutionResult> {
+    const executionSignal = AbortSignal.any([signal, AbortSignal.timeout(TERMINAL_TIMEOUT_MS)]);
 
-    const sandbox = await this.sandboxInstanceManager.getOrCreate(signal, this.sandboxName);
-    const result = await sandbox.executeCommand(signal, { cwd: arg.cwd ?? '/app', command: '/bin/sh', args: ['-c', arg.command] });
+    const sandbox = await this.sandboxInstanceManager.getOrCreate(executionSignal, this.sandboxName);
+    const result = await sandbox.executeCommand(executionSignal, { cwd: arg.cwd ?? '/app', command: '/bin/sh', args: ['-c', arg.command] });
 
     return {
       content: {

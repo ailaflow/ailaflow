@@ -8,10 +8,7 @@ import { SandboxEditor } from './sandbox-editor';
 export function SandboxEditorPage() {
   const { name } = useParams();
   const apiClient = useApiClient();
-  const loader = useLoader(
-    abortSignal => (name ? apiClient.sandbox.getSandbox(abortSignal, name) : Promise.resolve(null)),
-    [apiClient, name]
-  );
+  const loader = useLoader(signal => (name ? apiClient.sandbox.getSandbox(signal, name) : Promise.resolve(null)), [apiClient, name]);
 
   if (loader.isLoading) {
     return <PortalLoadingView />;

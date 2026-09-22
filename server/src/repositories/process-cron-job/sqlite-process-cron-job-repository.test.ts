@@ -9,7 +9,7 @@ import { ProcessCronJob } from './process-cron-job';
 import { SqliteProcessCronJobRepository } from './sqlite-process-cron-job-repository';
 
 test('persists, updates, lists and deletes process cron jobs', async () => {
-  const { abortSignal, db, repository } = await setup();
+  const { signal, db, repository } = await setup();
   const job = createJob('job_1', 'alpha', 1_000);
   job.lastRun = {
     executionId: 'execution_1',
@@ -19,16 +19,16 @@ test('persists, updates, lists and deletes process cron jobs', async () => {
     error: 'Failed'
   };
 
-  await repository.insert(abortSignal, job);
-  assert.deepEqual(await repository.tryGet(abortSignal, job.id), job);
-  assert.deepEqual(await repository.getByProcessName(abortSignal, 'alpha'), [job]);
+  await repository.insert(signal, job);
+  assert.deepEqual(await repository.tryGet(signal, job.id), job);
+  assert.deepEqual(await repository.getByProcessName(signal, 'alpha'), [job]);
 
   job.expression = '0 * * * *';
   job.inputValues = { x: 2 };
   job.isEnabled = false;
   job.nextExecutionAt = 2_000;
-  await repository.updateConfiguration(abortSignal, job);
-  assert.deepEqual(await repository.tryGet(abortSignal, job.id), job);
+  await repository.updateConfiguration(signal, job);
+  assert.deepEqual(await repository.tryGet(signal, job.id), job);
 
   const nextLastRun = {
     executionId: 'execution_2',
@@ -38,40 +38,40 @@ test('persists, updates, lists and deletes process cron jobs', async () => {
     error: null
   };
   job.lastRun = nextLastRun;
-  await repository.updateConfiguration(abortSignal, job);
-  assert.equal((await repository.tryGet(abortSignal, job.id))?.lastRun?.executionId, 'execution_1');
-  assert.equal(await repository.updateLastRun(abortSignal, job.id, nextLastRun), true);
-  assert.deepEqual((await repository.tryGet(abortSignal, job.id))?.lastRun, nextLastRun);
-  assert.equal(await repository.updateLastRun(abortSignal, 'missing', nextLastRun), false);
+  await repository.updateConfiguration(signal, job);
+  assert.equal((await repository.tryGet(signal, job.id))?.lastRun?.executionId, 'execution_1');
+  assert.equal(await repository.updateLastRun(signal, job.id, nextLastRun), true);
+  assert.deepEqual((await repository.tryGet(signal, job.id))?.lastRun, nextLastRun);
+  assert.equal(await repository.updateLastRun(signal, 'missing', nextLastRun), false);
 
-  assert.equal(await repository.delete(abortSignal, job.id), true);
-  assert.equal(await repository.delete(abortSignal, job.id), false);
-  assert.equal(await repository.tryGet(abortSignal, job.id), null);
+  assert.equal(await repository.delete(signal, job.id), true);
+  assert.equal(await repository.delete(signal, job.id), false);
+  assert.equal(await repository.tryGet(signal, job.id), null);
   db.close();
 });
 
 test('finds due jobs and advances them only once', async () => {
-  const { abortSignal, db, repository } = await setup();
-  await repository.insert(abortSignal, createJob('due', 'alpha', 1_000));
-  await repository.insert(abortSignal, createJob('future', 'alpha', 2_000));
-  await repository.insert(abortSignal, new ProcessCronJob('disabled', 'alpha', '* * * * *', 'UTC', {}, false, 1_000, null));
+  const { signal, db, repository } = await setup();
+  await repository.insert(signal, createJob('due', 'alpha', 1_000));
+  await repository.insert(signal, createJob('future', 'alpha', 2_000));
+  await repository.insert(signal, new ProcessCronJob('disabled', 'alpha', '* * * * *', 'UTC', {}, false, 1_000, null));
 
   assert.deepEqual(
-    (await repository.getDue(abortSignal, 1_500, 10)).map(job => job.id),
+    (await repository.getDue(signal, 1_500, 10)).map(job => job.id),
     ['due']
   );
-  assert.equal(await repository.tryAdvanceNextExecutionAt(abortSignal, 'due', 1_000, 3_000), true);
-  assert.equal(await repository.tryAdvanceNextExecutionAt(abortSignal, 'due', 1_000, 4_000), false);
-  assert.equal((await repository.tryGet(abortSignal, 'due'))?.nextExecutionAt, 3_000);
+  assert.equal(await repository.tryAdvanceNextExecutionAt(signal, 'due', 1_000, 3_000), true);
+  assert.equal(await repository.tryAdvanceNextExecutionAt(signal, 'due', 1_000, 4_000), false);
+  assert.equal((await repository.tryGet(signal, 'due'))?.nextExecutionAt, 3_000);
   db.close();
 });
 
 test('deletes jobs when their process is deleted', async () => {
-  const { abortSignal, db, processRepository, repository } = await setup();
-  await repository.insert(abortSignal, createJob('job_1', 'alpha', 1_000));
+  const { signal, db, processRepository, repository } = await setup();
+  await repository.insert(signal, createJob('job_1', 'alpha', 1_000));
 
-  assert.equal(await processRepository.delete(abortSignal, 'alpha'), true);
-  assert.equal(await repository.tryGet(abortSignal, 'job_1'), null);
+  assert.equal(await processRepository.delete(signal, 'alpha'), true);
+  assert.equal(await repository.tryGet(signal, 'job_1'), null);
   db.close();
 });
 
@@ -79,14 +79,14 @@ async function setup() {
   const db = new DatabaseSync(':memory:', { open: true });
   db.exec(`PRAGMA foreign_keys = ON`);
   const dbs = { modelDb: new SqliteDatabase(db) } as SqliteDatabases;
-  const abortSignal = new AbortController().signal;
+  const signal = new AbortController().signal;
   const processRepository = new SqliteProcessRepository(dbs);
   const repository = new SqliteProcessCronJobRepository(dbs);
-  await processRepository.setup(abortSignal);
-  await new SqliteResourceAccessRepository(dbs).setup(abortSignal);
-  await repository.setup(abortSignal);
+  await processRepository.setup(signal);
+  await new SqliteResourceAccessRepository(dbs).setup(signal);
+  await repository.setup(signal);
   insertProcess(db, 'alpha');
-  return { abortSignal, db, processRepository, repository };
+  return { signal, db, processRepository, repository };
 }
 
 function createJob(id: string, processName: string, nextExecutionAt: number): ProcessCronJob {

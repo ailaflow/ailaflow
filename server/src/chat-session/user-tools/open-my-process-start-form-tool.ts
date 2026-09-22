@@ -15,12 +15,12 @@ export class OpenMyProcessStartFormTool extends ZodTool<Arg> {
     super('open_start_form_of_my_process', 'Opens a start form for given process', inputSchema);
   }
 
-  protected async handle(abortSignal: AbortSignal, { sessionId }: ToolContext, arg: Arg): Promise<ZodToolExecutionResult> {
+  protected async handle(signal: AbortSignal, { sessionId }: ToolContext, arg: Arg): Promise<ZodToolExecutionResult> {
     const { userName } = ChatSessionId.decode(sessionId);
 
     const name = ResourceNameNormalizer.removePrefix(arg.name, '/');
 
-    const process = await this.userProcessProvider.tryGet(abortSignal, userName, name);
+    const process = await this.userProcessProvider.tryGet(signal, userName, name);
     if (!process) {
       return {
         content: {

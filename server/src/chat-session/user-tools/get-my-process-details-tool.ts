@@ -18,9 +18,9 @@ export class GetMyProcessDetailsTool extends ZodTool<Arg> {
     );
   }
 
-  public async handle(abortSignal: AbortSignal, { sessionId }: ToolContext, arg: Arg): Promise<ZodToolExecutionResult> {
+  public async handle(signal: AbortSignal, { sessionId }: ToolContext, arg: Arg): Promise<ZodToolExecutionResult> {
     const { userName } = ChatSessionId.decode(sessionId);
-    const process = await this.userProcessProvider.tryGet(abortSignal, userName, arg.processName);
+    const process = await this.userProcessProvider.tryGet(signal, userName, arg.processName);
     if (!process) {
       return {
         content: {

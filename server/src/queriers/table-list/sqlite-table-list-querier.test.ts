@@ -10,16 +10,16 @@ test('queries a name-ordered page of tables', async () => {
   const modelDb = new DatabaseSync(':memory:', { open: true });
   const dataDb = new DatabaseSync(':memory:', { open: true });
   const dbs = { modelDb: new SqliteDatabase(modelDb), dataDb: new SqliteDatabase(dataDb) } as SqliteDatabases;
-  const abortSignal = new AbortController().signal;
+  const signal = new AbortController().signal;
   const repository = new SqliteTableRepository(dbs);
   const querier = new SqliteTableListQuerier(dbs);
 
-  await repository.setup(abortSignal);
-  await repository.insert(abortSignal, new Table('charlie', 'Charlie description'));
-  await repository.insert(abortSignal, new Table('alpha', 'Alpha description'));
-  await repository.insert(abortSignal, new Table('bravo', 'Bravo description'));
+  await repository.setup(signal);
+  await repository.insert(signal, new Table('charlie', 'Charlie description'));
+  await repository.insert(signal, new Table('alpha', 'Alpha description'));
+  await repository.insert(signal, new Table('bravo', 'Bravo description'));
 
-  assert.deepEqual(await querier.query(abortSignal, 2, 2), {
+  assert.deepEqual(await querier.query(signal, 2, 2), {
     tables: [{ name: 'charlie', description: 'Charlie description' }],
     totalCount: 3,
     page: 2,

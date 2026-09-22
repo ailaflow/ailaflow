@@ -14,9 +14,9 @@ export class GetMyNotificationsEndpoint implements Endpoint {
   public constructor(private readonly querier: MyNotificationListQuerier) {}
 
   public async handle(req: Request): Promise<GetMyNotificationsResponse> {
-    const abortSignal = getEndpointAbortSignal(req);
+    const signal = getEndpointAbortSignal(req);
     const { userName } = getAuthToken(req);
     const { page, pageSize } = parseQuery(getMyNotificationsRequestSchema, req.query);
-    return this.querier.query(abortSignal, userName, page, pageSize);
+    return this.querier.query(signal, userName, page, pageSize);
   }
 }

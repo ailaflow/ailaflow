@@ -39,7 +39,7 @@ interface CodexTurnResult {
 interface CodexActiveTurn {
   threadId: string;
   turnId: string;
-  abortSignal: AbortSignal;
+  signal: AbortSignal;
   abortHandler: () => void;
   toolNames: Set<string>;
   text: string;
@@ -72,31 +72,31 @@ export class CodexLlmClient implements LlmClient {
   }
 
   public async complete(
-    abortSignal: AbortSignal,
+    signal: AbortSignal,
     modelSettings: LlmModelSettings,
     messages: LlmMessage[],
     toolDescriptors: ToolDescriptor[] | undefined
   ): Promise<LlmCompleteResult> {
     this.assertUsable();
-    abortSignal.throwIfAborted();
+    signal.throwIfAborted();
     const markerThreadId = findLatestCodexThreadId(messages);
     if (markerThreadId) {
       return this.withThreadLock(markerThreadId, () =>
-        this.completeUnlocked(abortSignal, modelSettings, messages, toolDescriptors, markerThreadId)
+        this.completeUnlocked(signal, modelSettings, messages, toolDescriptors, markerThreadId)
       );
     }
-    return this.completeUnlocked(abortSignal, modelSettings, messages, toolDescriptors, undefined);
+    return this.completeUnlocked(signal, modelSettings, messages, toolDescriptors, undefined);
   }
 
   private async completeUnlocked(
-    abortSignal: AbortSignal,
+    signal: AbortSignal,
     modelSettings: LlmModelSettings,
     messages: LlmMessage[],
     toolDescriptors: ToolDescriptor[] | undefined,
     markerThreadId: string | undefined
   ): Promise<LlmCompleteResult> {
     this.assertUsable();
-    abortSignal.throwIfAborted();
+    signal.throwIfAborted();
     await this.connection.connect();
     const dynamicTools = mapDynamicTools(toolDescriptors);
     const toolsFingerprint = dynamicToolsFingerprint(dynamicTools);
@@ -105,14 +105,14 @@ export class CodexLlmClient implements LlmClient {
       const active = this.activeTurns.get(markerThreadId);
       if (active) {
         this.submitToolResults(active, messages);
-        return this.waitForTurnResult(active, abortSignal);
+        return this.waitForTurnResult(active, signal);
       }
     }
 
     const latestUser = readLatestUserInput(messages);
     const instructions = readDeveloperInstructions(messages);
     const thread = await this.ensureThread(
-      abortSignal,
+      signal,
       modelSettings.name,
       markerThreadId,
       toolsFingerprint,
@@ -121,14 +121,14 @@ export class CodexLlmClient implements LlmClient {
       messages,
       latestUser.index
     );
-    const active = await this.startTurn(abortSignal, thread.id, modelSettings.name, latestUser.text, dynamicTools);
+    const active = await this.startTurn(signal, thread.id, modelSettings.name, latestUser.text, dynamicTools);
     this.collectGarbage();
-    return this.waitForTurnResult(active, abortSignal);
+    return this.waitForTurnResult(active, signal);
   }
 
-  public async getModels(abortSignal: AbortSignal): Promise<LlmModel[]> {
+  public async getModels(signal: AbortSignal): Promise<LlmModel[]> {
     this.assertUsable();
-    const response = await this.connection.request<unknown>('model/list', { limit: 100 }, abortSignal);
+    const response = await this.connection.request<unknown>('model/list', { limit: 100 }, signal);
     if (!isCodexJsonObject(response) || !Array.isArray(response.data)) {
       throw new LlmClientError('Codex app-server returned an invalid model list');
     }
@@ -155,7 +155,7 @@ export class CodexLlmClient implements LlmClient {
   }
 
   private async ensureThread(
-    abortSignal: AbortSignal,
+    signal: AbortSignal,
     model: string,
     markerThreadId: string | undefined,
     toolsFingerprint: string,
@@ -172,32 +172,32 @@ export class CodexLlmClient implements LlmClient {
 
     if (markerThreadId && (!loaded || loaded.dynamicToolsFingerprint === toolsFingerprint)) {
       try {
-        const resumed = await this.resumeThread(abortSignal, markerThreadId, model, developerInstructions);
+        const resumed = await this.resumeThread(signal, markerThreadId, model, developerInstructions);
         const runtime = this.trackThread(resumed.id, toolsFingerprint);
         return runtime;
       } catch (error) {
-        if (abortSignal.aborted) {
+        if (signal.aborted) {
           throw error;
         }
         // An ephemeral thread can disappear when app-server restarts. Rebuild it from AilaFlow's transcript.
       }
     }
 
-    const started = await this.startThread(abortSignal, model, dynamicTools, developerInstructions);
+    const started = await this.startThread(signal, model, dynamicTools, developerInstructions);
     const history = projectHistory(messages, latestUserIndex);
     if (history.length > 0) {
-      await this.connection.request('thread/inject_items', { threadId: started.id, items: history }, abortSignal);
+      await this.connection.request('thread/inject_items', { threadId: started.id, items: history }, signal);
     }
     return this.trackThread(started.id, toolsFingerprint);
   }
 
   private async startThread(
-    abortSignal: AbortSignal,
+    signal: AbortSignal,
     model: string,
     dynamicTools: ReturnType<typeof mapDynamicTools>,
     developerInstructions: string
   ): Promise<CodexThread> {
-    const config = await this.getRestrictedConfig(abortSignal);
+    const config = await this.getRestrictedConfig(signal);
     const response = await this.connection.request<unknown>(
       'thread/start',
       {
@@ -211,20 +211,15 @@ export class CodexLlmClient implements LlmClient {
         config,
         ephemeral: true
       },
-      abortSignal
+      signal
     );
     const thread = readThreadResponse(response);
-    await attestRestrictedCodexThread(this.connection, thread.id, abortSignal);
+    await attestRestrictedCodexThread(this.connection, thread.id, signal);
     return thread;
   }
 
-  private async resumeThread(
-    abortSignal: AbortSignal,
-    threadId: string,
-    model: string,
-    developerInstructions: string
-  ): Promise<CodexThread> {
-    const config = await this.getRestrictedConfig(abortSignal);
+  private async resumeThread(signal: AbortSignal, threadId: string, model: string, developerInstructions: string): Promise<CodexThread> {
+    const config = await this.getRestrictedConfig(signal);
     const response = await this.connection.request<unknown>(
       'thread/resume',
       {
@@ -237,15 +232,15 @@ export class CodexLlmClient implements LlmClient {
         excludeTurns: true,
         initialTurnsPage: { limit: 1, sortDirection: 'desc', itemsView: 'notLoaded' }
       },
-      abortSignal
+      signal
     );
     const thread = readThreadResponse(response);
-    await attestRestrictedCodexThread(this.connection, thread.id, abortSignal);
+    await attestRestrictedCodexThread(this.connection, thread.id, signal);
     return thread;
   }
 
   private async startTurn(
-    abortSignal: AbortSignal,
+    signal: AbortSignal,
     threadId: string,
     model: string,
     prompt: string,
@@ -264,28 +259,28 @@ export class CodexLlmClient implements LlmClient {
         sandboxPolicy: { type: 'readOnly', networkAccess: false },
         environments: []
       },
-      abortSignal
+      signal
     );
     const turn = readTurnResponse(response);
     const active = createActiveTurn(
       threadId,
       turn.id,
-      abortSignal,
+      signal,
       dynamicTools.map(tool => tool.name)
     );
     active.abortHandler = () => {
-      const error = toAbortError(abortSignal);
+      const error = toAbortError(signal);
       void this.connection.request('turn/interrupt', { threadId, turnId: turn.id }).catch(() => undefined);
       this.failActiveTurn(active, error);
     };
-    abortSignal.addEventListener('abort', active.abortHandler, { once: true });
+    signal.addEventListener('abort', active.abortHandler, { once: true });
     this.activeTurns.set(threadId, active);
     return active;
   }
 
-  private async waitForTurnResult(active: CodexActiveTurn, abortSignal: AbortSignal): Promise<LlmCompleteResult> {
+  private async waitForTurnResult(active: CodexActiveTurn, signal: AbortSignal): Promise<LlmCompleteResult> {
     const waitController = new AbortController();
-    const waitSignal = AbortSignal.any([abortSignal, waitController.signal]);
+    const waitSignal = AbortSignal.any([signal, waitController.signal]);
     try {
       const outcome = await Promise.race([
         active.completion.then(result => ({ kind: 'complete' as const, result })),
@@ -354,7 +349,7 @@ export class CodexLlmClient implements LlmClient {
       this.failActiveTurn(active, error);
       throw error;
     }
-    return (await this.toolBus.publishCall(active.abortSignal, call)) as unknown as CodexJsonValue;
+    return (await this.toolBus.publishCall(active.signal, call)) as unknown as CodexJsonValue;
   }
 
   private handleNotification(notification: CodexNotification): void {
@@ -439,7 +434,7 @@ export class CodexLlmClient implements LlmClient {
   }
 
   private finishActiveTurn(active: CodexActiveTurn): void {
-    active.abortSignal.removeEventListener('abort', active.abortHandler);
+    active.signal.removeEventListener('abort', active.abortHandler);
     if (this.activeTurns.get(active.threadId) === active) {
       this.activeTurns.delete(active.threadId);
     }
@@ -457,11 +452,11 @@ export class CodexLlmClient implements LlmClient {
     this.restrictedConfig = undefined;
   }
 
-  private async getRestrictedConfig(abortSignal: AbortSignal): Promise<CodexJsonObject> {
+  private async getRestrictedConfig(signal: AbortSignal): Promise<CodexJsonObject> {
     if (!this.restrictedConfig || this.restrictedConfig.generation !== this.connection.generation) {
       const entry = {
         generation: this.connection.generation,
-        promise: createRestrictedCodexConfig(this.connection, abortSignal)
+        promise: createRestrictedCodexConfig(this.connection, signal)
       };
       entry.promise = entry.promise.catch(error => {
         if (this.restrictedConfig === entry) {
@@ -525,7 +520,7 @@ export class CodexLlmClient implements LlmClient {
   }
 }
 
-function createActiveTurn(threadId: string, turnId: string, abortSignal: AbortSignal, toolNames: string[]): CodexActiveTurn {
+function createActiveTurn(threadId: string, turnId: string, signal: AbortSignal, toolNames: string[]): CodexActiveTurn {
   let resolve!: (result: CodexTurnResult) => void;
   let reject!: (error: Error) => void;
   const completion = new Promise<CodexTurnResult>((promiseResolve, promiseReject) => {
@@ -535,7 +530,7 @@ function createActiveTurn(threadId: string, turnId: string, abortSignal: AbortSi
   return {
     threadId,
     turnId,
-    abortSignal,
+    signal,
     abortHandler: () => undefined,
     toolNames: new Set(toolNames),
     text: '',
@@ -580,6 +575,6 @@ function isCodexModel(value: CodexJsonValue): value is CodexModel & CodexJsonObj
   return isCodexJsonObject(value) && typeof value.id === 'string' && (value.model === undefined || typeof value.model === 'string');
 }
 
-function toAbortError(abortSignal: AbortSignal): Error {
-  return abortSignal.reason instanceof Error ? abortSignal.reason : new LlmClientError(String(abortSignal.reason ?? 'Operation aborted'));
+function toAbortError(signal: AbortSignal): Error {
+  return signal.reason instanceof Error ? signal.reason : new LlmClientError(String(signal.reason ?? 'Operation aborted'));
 }

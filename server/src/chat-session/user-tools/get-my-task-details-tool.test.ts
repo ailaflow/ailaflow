@@ -10,7 +10,7 @@ import { ChatSessionId } from '../chat-session-id';
 import { GetMyTaskDetailsTool } from './get-my-task-details-tool';
 
 test('returns all task input values, output schemas, and no other execution values', async () => {
-  const abortSignal = new AbortController().signal;
+  const signal = new AbortController().signal;
   const userAssignedTaskProvider = {
     tryGetCompletable: async (_: AbortSignal, isTest: boolean, userName: string, taskId: string) => {
       assert.equal(isTest, true);
@@ -49,7 +49,7 @@ test('returns all task input values, output schemas, and no other execution valu
   const provider = new UserTaskDetailsProvider(userAssignedTaskProvider, persistedExecutionRepository);
   const tool = new GetMyTaskDetailsTool(provider);
 
-  const result = await tool.handle(abortSignal, createContext('alice', true), { taskId: 'task_1' });
+  const result = await tool.handle(signal, createContext('alice', true), { taskId: 'task_1' });
 
   assert.deepEqual(result.content, {
     inputValues: {

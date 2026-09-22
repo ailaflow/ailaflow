@@ -12,26 +12,26 @@ export interface DockerInfo {
 export class Docker {
   public constructor(private readonly hostCwd: string) {}
 
-  public async info(abortSignal: AbortSignal): Promise<DockerInfo> {
-    const { stderr, stdout } = await this.execDocker(abortSignal, ['info', '--format', '{{json .}}']);
+  public async info(signal: AbortSignal): Promise<DockerInfo> {
+    const { stderr, stdout } = await this.execDocker(signal, ['info', '--format', '{{json .}}']);
     if (stderr.includes('Cannot connect')) {
       throw new Error('Docker is not running');
     }
     return JSON.parse(stdout);
   }
 
-  public async build(abortSignal: AbortSignal, imageTag: string, dockerfilePath: string, envs: Record<string, string>) {
+  public async build(signal: AbortSignal, imageTag: string, dockerfilePath: string, envs: Record<string, string>) {
     const args = ['build', '-t', imageTag];
     for (const [key, value] of Object.entries(envs)) {
       args.push('--build-arg', `${key}=${value}`);
     }
     args.push('-f', dockerfilePath, '.');
 
-    await this.execDocker(abortSignal, args);
+    await this.execDocker(signal, args);
   }
 
   public async run(
-    abortSignal: AbortSignal,
+    signal: AbortSignal,
     imageTag: string,
     internalPort: number,
     options?: [name: '-v' | '--network' | '--name' | '--env', string][]
@@ -44,13 +44,13 @@ export class Docker {
     }
     args.push(imageTag);
 
-    const { stdout } = await this.execDocker(abortSignal, args);
+    const { stdout } = await this.execDocker(signal, args);
     const containerId = stdout.trim();
     return containerId;
   }
 
-  public async getMappedHttpTarget(abortSignal: AbortSignal, containerId: string, port: number): Promise<URL> {
-    const { stdout } = await this.execDocker(abortSignal, ['port', containerId, `${port}/tcp`]);
+  public async getMappedHttpTarget(signal: AbortSignal, containerId: string, port: number): Promise<URL> {
+    const { stdout } = await this.execDocker(signal, ['port', containerId, `${port}/tcp`]);
     const mapping = stdout.trim().split('\n')[0];
     const lastColon = mapping.lastIndexOf(':');
     if (lastColon === -1) {
@@ -59,16 +59,16 @@ export class Docker {
     return new URL(`http://${mapping}`);
   }
 
-  public async tryRemove(abortSignal: AbortSignal, containerIdOrName: string) {
-    await this.execDocker(abortSignal, ['rm', '-f', containerIdOrName]);
+  public async tryRemove(signal: AbortSignal, containerIdOrName: string) {
+    await this.execDocker(signal, ['rm', '-f', containerIdOrName]);
   }
 
-  public async createNetwork(abortSignal: AbortSignal, networkName: string) {
-    await this.execDocker(abortSignal, ['network', 'create', '--driver', 'bridge', networkName]);
+  public async createNetwork(signal: AbortSignal, networkName: string) {
+    await this.execDocker(signal, ['network', 'create', '--driver', 'bridge', networkName]);
   }
 
-  public async tryRemoveNetwork(abortSignal: AbortSignal, networkName: string) {
-    await this.execDocker(abortSignal, ['network', 'rm', '-f', networkName]);
+  public async tryRemoveNetwork(signal: AbortSignal, networkName: string) {
+    await this.execDocker(signal, ['network', 'rm', '-f', networkName]);
   }
 
   private execDocker(signal: AbortSignal, args: string[]) {

@@ -22,10 +22,10 @@ export class DeleteLlmProviderEndpoint implements Endpoint {
   ) {}
 
   public async handle(req: Request): Promise<DeleteLlmProviderResponse> {
-    const abortSignal = getEndpointAbortSignal(req);
+    const signal = getEndpointAbortSignal(req);
     const id = String(req.params.id);
     try {
-      if (!(await this.repository.deleteProvider(abortSignal, id))) {
+      if (!(await this.repository.deleteProvider(signal, id))) {
         throw new EndpointError('LLM provider not found', 404);
       }
       await this.eventBus.publish(new LlmConfigurationChangedEvent());

@@ -11,9 +11,9 @@ export class UserExistsRpcHandler implements SandboxRpcHandler {
 
   public constructor(private readonly repository: UserRepository) {}
 
-  public async handle(abortSignal: AbortSignal, _sandboxName: string, _executionId: string, data: object): Promise<boolean> {
+  public async handle(signal: AbortSignal, _sandboxName: string, _executionId: string, data: object): Promise<boolean> {
     const request = requestSchema.parse(data);
-    const user = await this.repository.tryGetUser(abortSignal, request.name);
+    const user = await this.repository.tryGetUser(signal, request.name);
     return Boolean(user);
   }
 }

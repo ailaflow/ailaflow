@@ -178,10 +178,10 @@ test('stopping background validation aborts the validator and permits a subseque
     started = done;
   });
   validate.mock.mockImplementation(
-    abortSignal =>
+    signal =>
       new Promise((_resolve, reject) => {
-        receivedSignal = abortSignal;
-        abortSignal.addEventListener('abort', () => reject(abortSignal.reason), { once: true });
+        receivedSignal = signal;
+        signal.addEventListener('abort', () => reject(signal.reason), { once: true });
         started();
       })
   );

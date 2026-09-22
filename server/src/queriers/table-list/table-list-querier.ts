@@ -1,5 +1,5 @@
 import { GetTablesResponse } from '@ailaflow/shared';
 
 export interface TableListQuerier {
-  query(abortSignal: AbortSignal, page: number, pageSize: number): Promise<GetTablesResponse>;
+  query(signal: AbortSignal, page: number, pageSize: number): Promise<GetTablesResponse>;
 }

@@ -13,18 +13,18 @@ test('loads and saves an append-only SQLite table schema', async () => {
   const modelDb = new DatabaseSync(':memory:', { open: true });
   const dataDb = new DatabaseSync(':memory:', { open: true });
   const dbs = { modelDb: new SqliteDatabase(modelDb), dataDb: new SqliteDatabase(dataDb) } as SqliteDatabases;
-  const abortSignal = new AbortController().signal;
+  const signal = new AbortController().signal;
   const tableRepository = new SqliteTableRepository(dbs);
   const schemaRepository = new SqliteTableSchemaRepository(dbs);
-  await tableRepository.setup(abortSignal);
-  assert.equal(await schemaRepository.tryGet(abortSignal, 'missing'), null);
-  await tableRepository.insert(abortSignal, new Table('customers', 'Customer records'));
+  await tableRepository.setup(signal);
+  assert.equal(await schemaRepository.tryGet(signal, 'missing'), null);
+  await tableRepository.insert(signal, new Table('customers', 'Customer records'));
 
-  const initial = await schemaRepository.get(abortSignal, 'customers');
+  const initial = await schemaRepository.get(signal, 'customers');
   const extended = initial.tryExtend({ _id: 'customer_1', name: 'Alice', score: 1, active: true, details: { source: 'web' } });
   assert.ok(extended);
 
-  const saved = await schemaRepository.save(abortSignal, extended);
+  const saved = await schemaRepository.save(signal, extended);
   assert.deepEqual(saved.columns, [
     { name: 'name', type: TableColumnType.STRING },
     { name: 'score', type: TableColumnType.NUMBER },
@@ -47,7 +47,7 @@ test('loads and saves an append-only SQLite table schema', async () => {
     ]
   );
 
-  await assert.rejects(() => schemaRepository.save(abortSignal, extended), TableSchemaConcurrencyError);
+  await assert.rejects(() => schemaRepository.save(signal, extended), TableSchemaConcurrencyError);
   modelDb.close();
   dataDb.close();
 });
@@ -56,16 +56,16 @@ test('reloads after another schema manager creates the same column', async () =>
   const modelDb = new DatabaseSync(':memory:', { open: true });
   const dataDb = new DatabaseSync(':memory:', { open: true });
   const dbs = { modelDb: new SqliteDatabase(modelDb), dataDb: new SqliteDatabase(dataDb) } as SqliteDatabases;
-  const abortSignal = new AbortController().signal;
+  const signal = new AbortController().signal;
   const firstManager = new TableSchemaManager(new SqliteTableSchemaRepository(dbs));
   const secondManager = new TableSchemaManager(new SqliteTableSchemaRepository(dbs));
   const tableRepository = new SqliteTableRepository(dbs);
-  await tableRepository.setup(abortSignal);
-  await tableRepository.insert(abortSignal, new Table('customers', 'Customer records'));
-  await secondManager.get(abortSignal, 'customers');
+  await tableRepository.setup(signal);
+  await tableRepository.insert(signal, new Table('customers', 'Customer records'));
+  await secondManager.get(signal, 'customers');
 
-  await firstManager.ensureCompatible(abortSignal, 'customers', { _id: 'customer_1', score: 1 });
-  const schema = await secondManager.ensureCompatible(abortSignal, 'customers', { _id: 'customer_2', score: 2 });
+  await firstManager.ensureCompatible(signal, 'customers', { _id: 'customer_1', score: 1 });
+  const schema = await secondManager.ensureCompatible(signal, 'customers', { _id: 'customer_2', score: 2 });
 
   assert.deepEqual(schema.columns, [{ name: 'score', type: TableColumnType.NUMBER }]);
   assert.deepEqual(schema.newColumns, []);

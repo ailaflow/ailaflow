@@ -27,5 +27,5 @@ export interface TableDataListQuery extends TableDataPageQuery {
 }
 
 export interface TableDataListQuerier {
-  query(abortSignal: AbortSignal, schema: TableSchema, query: TableDataPageQuery): Promise<GetTableDataResponse>;
+  query(signal: AbortSignal, schema: TableSchema, query: TableDataPageQuery): Promise<GetTableDataResponse>;
 }

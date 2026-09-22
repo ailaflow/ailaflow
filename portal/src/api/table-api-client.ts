@@ -13,33 +13,33 @@ import type {
 export class TableApiClient {
   public constructor(private readonly client: HttpClient) {}
 
-  public saveTable(abortSignal: AbortSignal, request: SaveTableRequest): Promise<SaveTableResponse> {
-    return this.client.json(abortSignal, 'POST', '/api/table', request);
+  public saveTable(signal: AbortSignal, request: SaveTableRequest): Promise<SaveTableResponse> {
+    return this.client.json(signal, 'POST', '/api/table', request);
   }
 
-  public getTables(abortSignal: AbortSignal, request: GetTablesRequest): Promise<GetTablesResponse> {
+  public getTables(signal: AbortSignal, request: GetTablesRequest): Promise<GetTablesResponse> {
     const query = new URLSearchParams({
       page: String(request.page),
       pageSize: String(request.pageSize)
     });
-    return this.client.json(abortSignal, 'GET', `/api/tables?${query}`);
+    return this.client.json(signal, 'GET', `/api/tables?${query}`);
   }
 
-  public getTable(abortSignal: AbortSignal, name: string): Promise<GetTableResponse> {
-    return this.client.json(abortSignal, 'GET', `/api/tables/${encodeURIComponent(name)}`);
+  public getTable(signal: AbortSignal, name: string): Promise<GetTableResponse> {
+    return this.client.json(signal, 'GET', `/api/tables/${encodeURIComponent(name)}`);
   }
 
-  public getTableData(abortSignal: AbortSignal, name: string, request: GetTableDataRequest): Promise<GetTableDataResponse> {
+  public getTableData(signal: AbortSignal, name: string, request: GetTableDataRequest): Promise<GetTableDataResponse> {
     const query = new URLSearchParams({
       page: String(request.page),
       pageSize: String(request.pageSize),
       orderBy: request.orderBy,
       ascending: String(request.ascending)
     });
-    return this.client.json(abortSignal, 'GET', `/api/tables/${encodeURIComponent(name)}/data?${query}`);
+    return this.client.json(signal, 'GET', `/api/tables/${encodeURIComponent(name)}/data?${query}`);
   }
 
-  public deleteTable(abortSignal: AbortSignal, name: string): Promise<DeleteTableResponse> {
-    return this.client.json(abortSignal, 'DELETE', `/api/tables/${encodeURIComponent(name)}`);
+  public deleteTable(signal: AbortSignal, name: string): Promise<DeleteTableResponse> {
+    return this.client.json(signal, 'DELETE', `/api/tables/${encodeURIComponent(name)}`);
   }
 }

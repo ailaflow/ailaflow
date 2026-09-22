@@ -14,10 +14,10 @@ export class DeleteMyNotificationEndpoint implements Endpoint {
   public constructor(private readonly repository: NotificationRepository) {}
 
   public async handle(req: Request): Promise<DeleteMyNotificationResponse> {
-    const abortSignal = getEndpointAbortSignal(req);
+    const signal = getEndpointAbortSignal(req);
     const { userName } = getAuthToken(req);
     const id = String(req.params.id);
-    const deleted = await this.repository.delete(abortSignal, userName, id);
+    const deleted = await this.repository.delete(signal, userName, id);
     if (!deleted) {
       throw new EndpointError('Notification not found', 404);
     }

@@ -30,9 +30,9 @@ export function MagicLinkPage() {
     }
 
     const abortController = new AbortController();
-    const abortSignal = AbortSignal.any([abortController.signal, AbortSignal.timeout(10_000)]);
+    const signal = AbortSignal.any([abortController.signal, AbortSignal.timeout(10_000)]);
     void apiClient.auth
-      .exchangeMagicLink(abortSignal, { token })
+      .exchangeMagicLink(signal, { token })
       .then(response => {
         setSession({
           userName: response.userName,

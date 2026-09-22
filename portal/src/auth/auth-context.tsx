@@ -68,8 +68,8 @@ export function AuthContext(props: AuthContextProps) {
     }
     const iv = setInterval(async () => {
       try {
-        const abortSignal = AbortSignal.timeout(3_000);
-        const response = await apiClient.auth.refreshToken(abortSignal, {
+        const signal = AbortSignal.timeout(3_000);
+        const response = await apiClient.auth.refreshToken(signal, {
           authToken: session.authToken
         });
         session.authToken = response.authToken;

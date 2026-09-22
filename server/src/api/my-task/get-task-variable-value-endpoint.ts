@@ -15,13 +15,13 @@ export class GetTaskVariableValueEndpoint implements Endpoint {
   public constructor(private readonly provider: UserTaskDetailsProvider) {}
 
   public async handle(req: Request): Promise<GetTaskVariableValueResponse> {
-    const abortSignal = getEndpointAbortSignal(req);
+    const signal = getEndpointAbortSignal(req);
     const authToken = getAuthToken(req);
     const request = parseBody(getTaskVariableValueRequestSchema, req.body);
 
     const { isTest, userName } = authToken.maybeOverrideTestUserName(request.testUserName);
 
-    const details = await this.provider.tryGet(abortSignal, isTest, userName, request.taskId);
+    const details = await this.provider.tryGet(signal, isTest, userName, request.taskId);
     if (!details) {
       throw new EndpointError('Task not found', 404);
     }

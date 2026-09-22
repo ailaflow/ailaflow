@@ -13,7 +13,7 @@ import { useAiStore } from '../common/admin-portal';
 export function SandboxListPage() {
   const apiClient = useApiClient();
   const navigate = useNavigate();
-  const { data, isLoading, finishSignal, error } = useLoader(abortSignal => apiClient.sandbox.getSandboxes(abortSignal), [apiClient]);
+  const { data, isLoading, finishSignal, error } = useLoader(signal => apiClient.sandbox.getSandboxes(signal), [apiClient]);
 
   const createNew = useCallback(() => {
     return navigate('/admin/create-sandbox');

@@ -14,19 +14,19 @@ test('assigned tasks can be upserted and queried by task and user', async () => 
   const db = new DatabaseSync(':memory:', { open: true });
   db.exec(`PRAGMA foreign_keys = ON`);
   const dbs = { modelDb: new SqliteDatabase(db) } as SqliteDatabases;
-  const abortSignal = new AbortController().signal;
+  const signal = new AbortController().signal;
 
   const userRepository = new SqliteUserRepository(dbs);
   const taskRepository = new SqliteTaskRepository(dbs);
   const assignedTaskRepository = new SqliteAssignedTaskRepository(dbs);
-  await userRepository.setup(abortSignal);
-  await taskRepository.setup(abortSignal);
-  await assignedTaskRepository.setup(abortSignal);
+  await userRepository.setup(signal);
+  await taskRepository.setup(signal);
+  await assignedTaskRepository.setup(signal);
 
   const user1 = new User('user_1', null, 'hash', true, false);
   const user2 = new User('user_2', null, 'hash', true, false);
-  await userRepository.insert(abortSignal, user1);
-  await userRepository.insert(abortSignal, user2);
+  await userRepository.insert(signal, user1);
+  await userRepository.insert(signal, user2);
 
   const task1 = new Task(
     'task_1',
@@ -64,45 +64,45 @@ test('assigned tasks can be upserted and queried by task and user', async () => 
     null,
     TaskSubmissionMode.AI_TOOL_OR_TASK_FORM
   );
-  await taskRepository.insert(abortSignal, task1);
-  await taskRepository.insert(abortSignal, task2);
+  await taskRepository.insert(signal, task1);
+  await taskRepository.insert(signal, task2);
 
-  await assert.rejects(() => assignedTaskRepository.upsert(abortSignal, AssignedTask.create('missing', user1.name, 'default')));
-  await assignedTaskRepository.upsert(abortSignal, AssignedTask.create(task1.id, user1.name, 'default'));
-  await assignedTaskRepository.upsertMultiple(abortSignal, [
+  await assert.rejects(() => assignedTaskRepository.upsert(signal, AssignedTask.create('missing', user1.name, 'default')));
+  await assignedTaskRepository.upsert(signal, AssignedTask.create(task1.id, user1.name, 'default'));
+  await assignedTaskRepository.upsertMultiple(signal, [
     AssignedTask.create(task1.id, user2.name, 'telegram'),
     new AssignedTask(task2.id, user1.name, 'default', 2000, { approved: true, comments: ['ready'] })
   ]);
 
   assert.deepEqual(
-    await assignedTaskRepository.tryGet(abortSignal, task1.id, user1.name),
+    await assignedTaskRepository.tryGet(signal, task1.id, user1.name),
     new AssignedTask(task1.id, user1.name, 'default', null, null)
   );
   assert.deepEqual(
-    await assignedTaskRepository.tryGet(abortSignal, task1.id, user2.name),
+    await assignedTaskRepository.tryGet(signal, task1.id, user2.name),
     new AssignedTask(task1.id, user2.name, 'telegram', null, null)
   );
   assert.deepEqual(
-    await assignedTaskRepository.tryGet(abortSignal, task2.id, user1.name),
+    await assignedTaskRepository.tryGet(signal, task2.id, user1.name),
     new AssignedTask(task2.id, user1.name, 'default', 2000, { approved: true, comments: ['ready'] })
   );
-  assert.equal(await assignedTaskRepository.tryGet(abortSignal, 'missing', user1.name), null);
-  assert.deepEqual(await assignedTaskRepository.getAllCompleted(abortSignal, task1.id), []);
-  assert.deepEqual(await assignedTaskRepository.getAllCompleted(abortSignal, task2.id), [
+  assert.equal(await assignedTaskRepository.tryGet(signal, 'missing', user1.name), null);
+  assert.deepEqual(await assignedTaskRepository.getAllCompleted(signal, task1.id), []);
+  assert.deepEqual(await assignedTaskRepository.getAllCompleted(signal, task2.id), [
     new AssignedTask(task2.id, user1.name, 'default', 2000, { approved: true, comments: ['ready'] })
   ]);
 
-  await assignedTaskRepository.upsert(abortSignal, new AssignedTask(task1.id, user1.name, 'admin', 3000, { decision: 'accepted' }));
+  await assignedTaskRepository.upsert(signal, new AssignedTask(task1.id, user1.name, 'admin', 3000, { decision: 'accepted' }));
   assert.deepEqual(
-    await assignedTaskRepository.tryGet(abortSignal, task1.id, user1.name),
+    await assignedTaskRepository.tryGet(signal, task1.id, user1.name),
     new AssignedTask(task1.id, user1.name, 'admin', 3000, { decision: 'accepted' })
   );
-  assert.deepEqual(await assignedTaskRepository.getAllCompleted(abortSignal, task1.id), [
+  assert.deepEqual(await assignedTaskRepository.getAllCompleted(signal, task1.id), [
     new AssignedTask(task1.id, user1.name, 'admin', 3000, { decision: 'accepted' })
   ]);
-  assert.deepEqual(await assignedTaskRepository.getAllCompleted(abortSignal, 'missing'), []);
+  assert.deepEqual(await assignedTaskRepository.getAllCompleted(signal, 'missing'), []);
 
-  await assignedTaskRepository.upsertMultiple(abortSignal, []);
+  await assignedTaskRepository.upsertMultiple(signal, []);
 
   const indexes = db
     .prepare(

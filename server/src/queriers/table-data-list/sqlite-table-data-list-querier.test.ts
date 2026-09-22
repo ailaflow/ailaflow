@@ -15,7 +15,7 @@ test('queries a primary-key-ordered page of table data', async t => {
   const modelDb = new DatabaseSync(':memory:', { open: true });
   const dataDb = new DatabaseSync(':memory:', { open: true });
   const dbs = { modelDb: new SqliteDatabase(modelDb), dataDb: new SqliteDatabase(dataDb) } as SqliteDatabases;
-  const abortSignal = new AbortController().signal;
+  const signal = new AbortController().signal;
   const schemaManager = new TableSchemaManager(new SqliteTableSchemaRepository(dbs));
   const tableRepository = new SqliteTableRepository(dbs);
   const timestamps = [3000, 1000, 2000];
@@ -23,13 +23,13 @@ test('queries a primary-key-ordered page of table data', async t => {
   const tableDataRepository = new SqliteTableDataRepository(dbs);
   const querier = new SqliteTableDataListQuerier(dbs);
 
-  await tableRepository.setup(abortSignal);
-  await tableRepository.insert(abortSignal, new Table('customers', 'Customer records'));
-  await upsertTableData(abortSignal, schemaManager, tableDataRepository, 'customers', { _id: 'charlie', x: 3, info: ['third'] });
-  await upsertTableData(abortSignal, schemaManager, tableDataRepository, 'customers', { _id: 'alpha', x: 1, active: true });
-  await upsertTableData(abortSignal, schemaManager, tableDataRepository, 'customers', { _id: 'bravo', x: 2 });
-  const schema = await schemaManager.get(abortSignal, 'customers');
-  const queryPage = (query: TableDataPageQuery) => querier.query(abortSignal, schema, query);
+  await tableRepository.setup(signal);
+  await tableRepository.insert(signal, new Table('customers', 'Customer records'));
+  await upsertTableData(signal, schemaManager, tableDataRepository, 'customers', { _id: 'charlie', x: 3, info: ['third'] });
+  await upsertTableData(signal, schemaManager, tableDataRepository, 'customers', { _id: 'alpha', x: 1, active: true });
+  await upsertTableData(signal, schemaManager, tableDataRepository, 'customers', { _id: 'bravo', x: 2 });
+  const schema = await schemaManager.get(signal, 'customers');
+  const queryPage = (query: TableDataPageQuery) => querier.query(signal, schema, query);
 
   assert.deepEqual(await queryPage(createQuery({ pageSize: 2, orderBy: 'x', ascending: false })), {
     rows: [
@@ -128,12 +128,12 @@ function createQuery(overrides: Partial<TableDataPageQuery> = {}): TableDataPage
 }
 
 async function upsertTableData(
-  abortSignal: AbortSignal,
+  signal: AbortSignal,
   schemaManager: TableSchemaManager,
   repository: SqliteTableDataRepository,
   tableName: string,
   row: Record<string, unknown> & { _id: string }
 ): Promise<void> {
-  const schema = await schemaManager.ensureCompatible(abortSignal, tableName, row);
-  await repository.upsert(abortSignal, schema, row);
+  const schema = await schemaManager.ensureCompatible(signal, tableName, row);
+  await repository.upsert(signal, schema, row);
 }

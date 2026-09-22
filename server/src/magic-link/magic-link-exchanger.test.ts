@@ -31,13 +31,13 @@ test('consumes a magic link and persists a non-admin auth token', async () => {
     }
   } as unknown as AuthTokenRepository;
   const exchanger = new MagicLinkExchanger(magicLinks, users, authTokens);
-  const abortSignal = new AbortController().signal;
+  const signal = new AbortController().signal;
 
-  const authToken = await exchanger.exchange(abortSignal, 'valid-token');
+  const authToken = await exchanger.exchange(signal, 'valid-token');
 
   assert.ok(authToken);
   assert.equal(authToken.userName, 'alice');
   assert.equal(authToken.isAdmin, false);
   assert.strictEqual(persisted[0], authToken);
-  assert.equal(await exchanger.exchange(abortSignal, 'valid-token'), null);
+  assert.equal(await exchanger.exchange(signal, 'valid-token'), null);
 });

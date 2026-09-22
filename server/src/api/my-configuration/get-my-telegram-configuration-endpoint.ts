@@ -13,8 +13,8 @@ export class GetMyTelegramConfigurationEndpoint implements Endpoint {
   public constructor(private readonly api: TelegramConfigurationApi) {}
 
   public async handle(req: Request): Promise<GetTelegramConfigurationResponse> {
-    const abortSignal = getEndpointAbortSignal(req);
+    const signal = getEndpointAbortSignal(req);
     const { userName } = getAuthToken(req);
-    return this.api.get(abortSignal, userName);
+    return this.api.get(signal, userName);
   }
 }

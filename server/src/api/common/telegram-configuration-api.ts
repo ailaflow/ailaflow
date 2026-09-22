@@ -26,13 +26,13 @@ export class TelegramConfigurationApi {
     private readonly eventBus: EventBus
   ) {}
 
-  public async get(abortSignal: AbortSignal, userName: string): Promise<GetTelegramConfigurationResponse> {
-    const configurations = await this.repository.getForUser(abortSignal, userName);
+  public async get(signal: AbortSignal, userName: string): Promise<GetTelegramConfigurationResponse> {
+    const configurations = await this.repository.getForUser(signal, userName);
     return { bots: configurations.map(toDto) };
   }
 
-  public async save(abortSignal: AbortSignal, userName: string, request: SaveTelegramBotRequest): Promise<SaveTelegramBotResponse> {
-    const existing = await this.repository.tryGet(abortSignal, userName, request.channelName);
+  public async save(signal: AbortSignal, userName: string, request: SaveTelegramBotRequest): Promise<SaveTelegramBotResponse> {
+    const existing = await this.repository.tryGet(signal, userName, request.channelName);
     const botToken = request.botToken ?? existing?.botToken;
 
     if (!botToken) {
@@ -40,11 +40,11 @@ export class TelegramConfigurationApi {
     }
 
     try {
-      const identity = await this.client.getMe(abortSignal, botToken);
+      const identity = await this.client.getMe(signal, botToken);
       if (!identity.username) {
         throw new EndpointError('Telegram bot does not have a username', 400);
       }
-      const webhook = await this.client.getWebhookInfo(abortSignal, botToken);
+      const webhook = await this.client.getWebhookInfo(signal, botToken);
       if (webhook.url) {
         throw new EndpointError('Telegram bot has a webhook configured; remove it before connecting it to AilaFlow', 400);
       }
@@ -59,7 +59,7 @@ export class TelegramConfigurationApi {
         linkCode: telegramChatId === null ? (isSameBot && !reconnect && existing.linkCode ? existing.linkCode : createLinkCode()) : null,
         lastUpdateId: isSameBot ? existing.lastUpdateId : null
       });
-      await this.repository.upsert(abortSignal, configuration);
+      await this.repository.upsert(signal, configuration);
       await this.eventBus.publish(new TelegramConfigurationChangedEvent(userName, request.channelName));
       return { bot: toDto(configuration) };
     } catch (error) {
@@ -76,8 +76,8 @@ export class TelegramConfigurationApi {
     }
   }
 
-  public async delete(abortSignal: AbortSignal, userName: string, channelName: string): Promise<DeleteTelegramBotResponse> {
-    const deleted = await this.repository.delete(abortSignal, userName, channelName);
+  public async delete(signal: AbortSignal, userName: string, channelName: string): Promise<DeleteTelegramBotResponse> {
+    const deleted = await this.repository.delete(signal, userName, channelName);
     if (!deleted) {
       throw new EndpointError('Telegram bot configuration not found', 404);
     }

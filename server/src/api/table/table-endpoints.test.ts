@@ -14,12 +14,12 @@ test('creates, reads, updates, and deletes a table definition', async () => {
   const modelDb = new DatabaseSync(':memory:', { open: true });
   const dataDb = new DatabaseSync(':memory:', { open: true });
   const dbs = { modelDb: new SqliteDatabase(modelDb), dataDb: new SqliteDatabase(dataDb) } as SqliteDatabases;
-  const abortSignal = new AbortController().signal;
+  const signal = new AbortController().signal;
   const repository = new SqliteTableRepository(dbs);
   const saveEndpoint = new SaveTableEndpoint(repository);
   const getEndpoint = new GetTableEndpoint(repository);
   const deleteEndpoint = new DeleteTableEndpoint(repository);
-  await repository.setup(abortSignal);
+  await repository.setup(signal);
 
   assert.deepEqual(
     await saveEndpoint.handle(createRequest({ body: { insert: true, name: 'customers', description: 'Customer records' } })),
@@ -46,10 +46,10 @@ test('rejects invalid, duplicate, and missing table saves', async () => {
   const modelDb = new DatabaseSync(':memory:', { open: true });
   const dataDb = new DatabaseSync(':memory:', { open: true });
   const dbs = { modelDb: new SqliteDatabase(modelDb), dataDb: new SqliteDatabase(dataDb) } as SqliteDatabases;
-  const abortSignal = new AbortController().signal;
+  const signal = new AbortController().signal;
   const repository = new SqliteTableRepository(dbs);
   const endpoint = new SaveTableEndpoint(repository);
-  await repository.setup(abortSignal);
+  await repository.setup(signal);
 
   await endpoint.handle(createRequest({ body: { insert: true, name: 'customers', description: '' } }));
   await assertEndpointError(

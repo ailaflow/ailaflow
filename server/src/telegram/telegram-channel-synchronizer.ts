@@ -290,13 +290,13 @@ export class TelegramChannelSynchronizer {
 
   private async createFormLinkMessages(metadata: ChatMessageMetadata | undefined): Promise<string[]> {
     const messages: string[] = [];
-    const abortSignal = AbortSignal.any([AbortSignal.timeout(10_000), this.destroyAbortController.signal]);
+    const signal = AbortSignal.any([AbortSignal.timeout(10_000), this.destroyAbortController.signal]);
     const linkLifetimeHours = this.magicLinkGenerator.getValidityHours();
     const warn = `Valid for ${linkLifetimeHours} hours.`;
 
     const taskForm = metadata?.['taskForm'] as TaskFormMessageMetadata | undefined;
     if (typeof taskForm?.id === 'string') {
-      const url = await this.magicLinkGenerator.tryGenerateTaskForm(abortSignal, this.configuration.userName, taskForm.id);
+      const url = await this.magicLinkGenerator.tryGenerateTaskForm(signal, this.configuration.userName, taskForm.id);
       if (url) {
         let m = '─── 💼 Task Form ────\n';
         m += `Please click here: ${url}\n${warn}\n`;
@@ -307,11 +307,7 @@ export class TelegramChannelSynchronizer {
 
     const processStartForm = metadata?.['processStartForm'] as ProcessStartFormMessageMetadata | undefined;
     if (typeof processStartForm?.name === 'string') {
-      const url = await this.magicLinkGenerator.tryGenerateProcessStartForm(
-        abortSignal,
-        this.configuration.userName,
-        processStartForm.name
-      );
+      const url = await this.magicLinkGenerator.tryGenerateProcessStartForm(signal, this.configuration.userName, processStartForm.name);
       if (url) {
         let m = '─── 💼 Start Form ────\n';
         m += `Please click here: ${url}\n${warn}\n`;
@@ -401,13 +397,13 @@ function formatError(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
-async function delay(milliseconds: number, abortSignal: AbortSignal): Promise<void> {
-  if (abortSignal.aborted) {
+async function delay(milliseconds: number, signal: AbortSignal): Promise<void> {
+  if (signal.aborted) {
     return;
   }
   await new Promise<void>(resolve => {
     const timeout = setTimeout(resolve, milliseconds);
-    abortSignal.addEventListener(
+    signal.addEventListener(
       'abort',
       () => {
         clearTimeout(timeout);

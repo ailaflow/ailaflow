@@ -10,7 +10,7 @@ export function TableEditorPage() {
   const { tableName } = useParams();
   const apiClient = useApiClient();
   const loader = useLoader(
-    abortSignal => (tableName ? apiClient.table.getTable(abortSignal, tableName) : Promise.resolve(null)),
+    signal => (tableName ? apiClient.table.getTable(signal, tableName) : Promise.resolve(null)),
     [apiClient, tableName]
   );
 

@@ -29,14 +29,14 @@ export class AssignedTaskCompleter {
    * @throws {AssignedTaskCompleterError} if the assigned task cannot be completed
    */
   public async complete(
-    abortSignal: AbortSignal,
+    signal: AbortSignal,
     isTest: boolean,
     userName: string,
     taskId: string,
     outputValues: ProcessExecutionVariableValues,
     isAiTool: boolean
   ): Promise<void> {
-    const userAssignedTask = await this.userAssignedTaskProvider.tryGetCompletable(abortSignal, isTest, userName, taskId);
+    const userAssignedTask = await this.userAssignedTaskProvider.tryGetCompletable(signal, isTest, userName, taskId);
     if (!userAssignedTask) {
       throw new AssignedTaskCompleterError('Task not found or not assigned to the user');
     }
@@ -45,7 +45,7 @@ export class AssignedTaskCompleter {
       throw new AssignedTaskCompleterError('This task cannot be submitted using an AI tool. Use its task form instead.');
     }
 
-    const chatSession = await this.userChatSessionProvider.get(abortSignal, isTest, userName, assignedTask.channelName);
+    const chatSession = await this.userChatSessionProvider.get(signal, isTest, userName, assignedTask.channelName);
     if (!chatSession) {
       throw new Error('Chat session not found');
     }
@@ -57,8 +57,8 @@ export class AssignedTaskCompleter {
 
     const transaction = Transaction.begin();
     try {
-      await this.assignedTaskRepository.upsert(abortSignal, assignedTask, transaction);
-      await this.taskRepository.incrementFinalizationRequestCount(abortSignal, assignedTask.taskId, 1, transaction);
+      await this.assignedTaskRepository.upsert(signal, assignedTask, transaction);
+      await this.taskRepository.incrementFinalizationRequestCount(signal, assignedTask.taskId, 1, transaction);
       await transaction.commit();
     } catch (e) {
       await transaction.rollback();

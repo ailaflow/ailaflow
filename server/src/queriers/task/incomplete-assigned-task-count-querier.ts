@@ -1,3 +1,3 @@
 export interface IncompleteAssignedTaskCountQuerier {
-  queryIncompleteAssignedTaskCount(abortSignal: AbortSignal, taskId: string): Promise<number>;
+  queryIncompleteAssignedTaskCount(signal: AbortSignal, taskId: string): Promise<number>;
 }

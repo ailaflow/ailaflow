@@ -62,7 +62,7 @@ export class ChatSessionResolver implements BaseChatSessionResolver {
       backendTools: this.adminToolSetProvider.tools,
       backendToolsHash: this.adminToolSetProvider.hash,
       systemPrompt: this.adminSystemPrompt,
-      getLlmClientWithSettings: abortSignal => this.getLlmClientWithSettings(abortSignal, LlmUseCase.ADMIN_CHAT)
+      getLlmClientWithSettings: signal => this.getLlmClientWithSettings(signal, LlmUseCase.ADMIN_CHAT)
     };
   }
 
@@ -75,13 +75,13 @@ export class ChatSessionResolver implements BaseChatSessionResolver {
       backendTools: this.userToolSetProvider.tools,
       backendToolsHash: this.userToolSetProvider.hash,
       systemPrompt: this.userSystemPrompt,
-      getLlmClientWithSettings: abortSignal => this.getLlmClientWithSettings(abortSignal, LlmUseCase.USER_CHAT)
+      getLlmClientWithSettings: signal => this.getLlmClientWithSettings(signal, LlmUseCase.USER_CHAT)
     };
   }
 
-  private async getLlmClientWithSettings(abortSignal: AbortSignal, useCase: LlmUseCase): Promise<LlmClientWithSettings> {
+  private async getLlmClientWithSettings(signal: AbortSignal, useCase: LlmUseCase): Promise<LlmClientWithSettings> {
     try {
-      return await this.llmClientProvider.get(abortSignal, useCase);
+      return await this.llmClientProvider.get(signal, useCase);
     } catch (error) {
       if (error instanceof LlmProviderConfigurationError) {
         throw new ChatSessionInitializerError(error.message);

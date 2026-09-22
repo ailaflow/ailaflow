@@ -3,16 +3,16 @@ import { healthResponseSchema, TestPublicUrlResponse } from '@ailaflow/shared';
 const TIMEOUT = 5_000;
 
 export class PublicUrlTester {
-  public async test(abortSignal: AbortSignal, publicUrl: string): Promise<TestPublicUrlResponse> {
+  public async test(signal: AbortSignal, publicUrl: string): Promise<TestPublicUrlResponse> {
     const timeoutSignal = AbortSignal.timeout(TIMEOUT);
-    const signal = AbortSignal.any([abortSignal, timeoutSignal]);
+    const requestSignal = AbortSignal.any([signal, timeoutSignal]);
     const healthUrl = `${publicUrl}/health`;
 
     try {
       const response = await fetch(healthUrl, {
         method: 'GET',
         headers: { Accept: 'application/json' },
-        signal
+        signal: requestSignal
       });
       if (!response.ok) {
         return unavailable(publicUrl, `Health endpoint returned HTTP ${response.status}.`);
@@ -23,7 +23,7 @@ export class PublicUrlTester {
         ? { publicUrl, isAvailable: true, error: null }
         : unavailable(publicUrl, 'Health endpoint returned an unexpected response.');
     } catch (error) {
-      if (abortSignal.aborted) {
+      if (signal.aborted) {
         throw error;
       }
       return timeoutSignal.aborted

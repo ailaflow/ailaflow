@@ -20,9 +20,9 @@ export class SaveProcessCronJobEndpoint implements Endpoint {
   ) {}
 
   public async handle(req: Request): Promise<SaveProcessCronJobResponse> {
-    const abortSignal = getEndpointAbortSignal(req);
+    const signal = getEndpointAbortSignal(req);
     const request = parseBody(saveProcessCronJobRequestSchema, req.body);
-    const process = await this.processManager.tryGetByName(abortSignal, request.processName);
+    const process = await this.processManager.tryGetByName(signal, request.processName);
     if (!process) {
       throw new EndpointError('Process not found', 404);
     }
@@ -35,12 +35,12 @@ export class SaveProcessCronJobEndpoint implements Endpoint {
       let job: ProcessCronJob;
       if (request.insert) {
         job = ProcessCronJob.create(request.processName, request.expression, request.timeZone, request.inputValues, request.isEnabled);
-        await this.repository.insert(abortSignal, job);
+        await this.repository.insert(signal, job);
       } else {
         if (!request.id) {
           throw new EndpointError('Cron job ID is required', 400);
         }
-        const existingJob = await this.repository.tryGet(abortSignal, request.id);
+        const existingJob = await this.repository.tryGet(signal, request.id);
         if (!existingJob) {
           throw new EndpointError('Process cron job not found', 404);
         }
@@ -49,7 +49,7 @@ export class SaveProcessCronJobEndpoint implements Endpoint {
           throw new EndpointError('A process cron job cannot be moved to another process', 400);
         }
         job.update(request.expression, request.timeZone, request.inputValues, request.isEnabled);
-        await this.repository.updateConfiguration(abortSignal, job);
+        await this.repository.updateConfiguration(signal, job);
       }
       return { id: job.id };
     } catch (error) {

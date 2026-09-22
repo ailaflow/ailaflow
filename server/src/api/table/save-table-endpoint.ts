@@ -17,22 +17,22 @@ export class SaveTableEndpoint implements Endpoint {
   public constructor(private readonly tableManager: Pick<TableManager, 'tryGetByName' | 'insert' | 'update'>) {}
 
   public async handle(req: Request): Promise<SaveTableResponse> {
-    const abortSignal = getEndpointAbortSignal(req);
+    const signal = getEndpointAbortSignal(req);
     const request = parseBody(saveTableRequestSchema, req.body);
 
     try {
-      const existingTable = await this.tableManager.tryGetByName(abortSignal, request.name);
+      const existingTable = await this.tableManager.tryGetByName(signal, request.name);
       if (request.insert) {
         if (existingTable) {
           throw new EndpointError('Table already exists', 400);
         }
-        await this.tableManager.insert(abortSignal, Table.create(request.name, request.description));
+        await this.tableManager.insert(signal, Table.create(request.name, request.description));
       } else {
         if (!existingTable) {
           throw new EndpointError('Table not found', 404);
         }
         existingTable.update(request.description);
-        await this.tableManager.update(abortSignal, existingTable);
+        await this.tableManager.update(signal, existingTable);
       }
     } catch (e) {
       if (e instanceof TableRepositoryError) {

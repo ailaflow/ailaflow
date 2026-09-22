@@ -44,18 +44,18 @@ export class BridgeClient {
 
   public constructor(private readonly baseUrl: URL) {}
 
-  public getHealth(abortSignal: AbortSignal): Promise<GetHealthResponse> {
-    return this.httpClient.json<GetHealthResponse>(abortSignal, 'GET', '/health');
+  public getHealth(signal: AbortSignal): Promise<GetHealthResponse> {
+    return this.httpClient.json<GetHealthResponse>(signal, 'GET', '/health');
   }
 
   public executeCommand(
-    abortSignal: AbortSignal,
+    signal: AbortSignal,
     request: ExecuteCommandRequest,
     token: string,
     handler: HttpSseHandler<ExecuteCommandUpdate>
   ): Promise<void> {
     return this.httpClient.sse<ExecuteCommandUpdate>(
-      abortSignal,
+      signal,
       'POST',
       '/command',
       request,
@@ -66,9 +66,9 @@ export class BridgeClient {
     );
   }
 
-  public listenRpc(abortSignal: AbortSignal, token: string, handler: HttpSseHandler<ListenRpcUpdate>): Promise<void> {
+  public listenRpc(signal: AbortSignal, token: string, handler: HttpSseHandler<ListenRpcUpdate>): Promise<void> {
     return this.httpClient.sse<ListenRpcUpdate>(
-      abortSignal,
+      signal,
       'GET',
       '/rpc',
       undefined,
@@ -79,8 +79,8 @@ export class BridgeClient {
     );
   }
 
-  public sendRpcReply(abortSignal: AbortSignal, token: string, request: SendRpcReplyRequest): Promise<void> {
-    return this.httpClient.json<void>(abortSignal, 'POST', '/rpc-reply', request, {
+  public sendRpcReply(signal: AbortSignal, token: string, request: SendRpcReplyRequest): Promise<void> {
+    return this.httpClient.json<void>(signal, 'POST', '/rpc-reply', request, {
       'x-token': token
     });
   }

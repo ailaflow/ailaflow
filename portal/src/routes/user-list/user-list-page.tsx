@@ -15,10 +15,7 @@ export function UserListPage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const page = Number(searchParams.get('page') ?? 1);
-  const loader = useLoader(
-    abortSignal => apiClient.user.getUsers(abortSignal, { page, pageSize: PAGE_SIZE, onlyActive: false }),
-    [apiClient, page]
-  );
+  const loader = useLoader(signal => apiClient.user.getUsers(signal, { page, pageSize: PAGE_SIZE, onlyActive: false }), [apiClient, page]);
 
   function createNew() {
     return navigate('/admin/create-user');

@@ -19,11 +19,11 @@ export class TestPublicUrlEndpoint implements Endpoint {
 
   public async handle(req: Request): Promise<TestPublicUrlResponse> {
     const request = parseBody(testPublicUrlRequestSchema, req.body);
-    const abortSignal = getEndpointAbortSignal(req);
-    const publicUrl = request.publicUrl ?? (await this.manager.get(abortSignal)).publicUrl;
+    const signal = getEndpointAbortSignal(req);
+    const publicUrl = request.publicUrl ?? (await this.manager.get(signal)).publicUrl;
     if (!publicUrl) {
       return { publicUrl: null, isAvailable: false, error: 'Public URL is not configured.' };
     }
-    return this.tester.test(abortSignal, publicUrl);
+    return this.tester.test(signal, publicUrl);
   }
 }

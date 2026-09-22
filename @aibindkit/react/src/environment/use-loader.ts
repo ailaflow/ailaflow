@@ -20,7 +20,7 @@ export type LoaderResult<T> =
       error?: never;
     };
 
-export function useLoader<T>(loader: (abortSignal: AbortSignal) => Promise<T>, deps: unknown[] = []): LoaderResult<T> {
+export function useLoader<T>(loader: (signal: AbortSignal) => Promise<T>, deps: unknown[] = []): LoaderResult<T> {
   const finishAbortController = useMemo(() => new AbortController(), deps);
   const [data, setData] = useState<{
     data?: T;

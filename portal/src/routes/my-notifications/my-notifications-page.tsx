@@ -16,7 +16,7 @@ export function MyNotificationsPage() {
   const [reloadToken, setReloadToken] = useState(0);
   const page = Number(searchParams.get('page') ?? 1);
   const { data, isLoading, error } = useLoader(
-    abortSignal => apiClient.myNotification.getMyNotifications(abortSignal, { page, pageSize: PAGE_SIZE }),
+    signal => apiClient.myNotification.getMyNotifications(signal, { page, pageSize: PAGE_SIZE }),
     [apiClient, page, reloadToken]
   );
 

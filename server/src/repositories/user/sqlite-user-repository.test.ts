@@ -8,15 +8,15 @@ import { User } from './user';
 test('counts active users or all users', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
   const dbs = { modelDb: new SqliteDatabase(db) } as SqliteDatabases;
-  const abortSignal = new AbortController().signal;
+  const signal = new AbortController().signal;
   const repository = new SqliteUserRepository(dbs);
 
-  await repository.setup(abortSignal);
-  await repository.insert(abortSignal, new User('alice', null, 'hash', true, false));
-  await repository.insert(abortSignal, new User('bob', null, 'hash', false, false));
+  await repository.setup(signal);
+  await repository.insert(signal, new User('alice', null, 'hash', true, false));
+  await repository.insert(signal, new User('bob', null, 'hash', false, false));
 
-  assert.equal(await repository.count(abortSignal, true), 1);
-  assert.equal(await repository.count(abortSignal, false), 2);
+  assert.equal(await repository.count(signal, true), 1);
+  assert.equal(await repository.count(signal, false), 2);
 
   db.close();
 });
@@ -24,19 +24,19 @@ test('counts active users or all users', async () => {
 test('stores and updates an optional email', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
   const dbs = { modelDb: new SqliteDatabase(db) } as SqliteDatabases;
-  const abortSignal = new AbortController().signal;
+  const signal = new AbortController().signal;
   const repository = new SqliteUserRepository(dbs);
 
-  await repository.setup(abortSignal);
+  await repository.setup(signal);
   const user = new User('alice', 'alice@example.com', 'hash', true, false);
-  await repository.insert(abortSignal, user);
+  await repository.insert(signal, user);
 
-  assert.equal((await repository.tryGetUser(abortSignal, user.name))?.email, 'alice@example.com');
+  assert.equal((await repository.tryGetUser(signal, user.name))?.email, 'alice@example.com');
 
   user.setEmail(null);
-  await repository.update(abortSignal, user);
+  await repository.update(signal, user);
 
-  assert.equal((await repository.tryGetUser(abortSignal, user.name))?.email, null);
+  assert.equal((await repository.tryGetUser(signal, user.name))?.email, null);
 
   db.close();
 });
@@ -44,21 +44,21 @@ test('stores and updates an optional email', async () => {
 test('rejects duplicate non-null emails', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
   const dbs = { modelDb: new SqliteDatabase(db) } as SqliteDatabases;
-  const abortSignal = new AbortController().signal;
+  const signal = new AbortController().signal;
   const repository = new SqliteUserRepository(dbs);
 
-  await repository.setup(abortSignal);
-  await repository.insert(abortSignal, new User('alice', 'shared@example.com', 'hash', true, false));
+  await repository.setup(signal);
+  await repository.insert(signal, new User('alice', 'shared@example.com', 'hash', true, false));
 
-  await assert.rejects(repository.insert(abortSignal, new User('bob', 'shared@example.com', 'hash', true, false)), {
+  await assert.rejects(repository.insert(signal, new User('bob', 'shared@example.com', 'hash', true, false)), {
     message: 'An email is already in use'
   });
 
   const bob = new User('bob', null, 'hash', true, false);
-  await repository.insert(abortSignal, bob);
+  await repository.insert(signal, bob);
   bob.setEmail('shared@example.com');
 
-  await assert.rejects(repository.update(abortSignal, bob), { message: 'An email is already in use' });
+  await assert.rejects(repository.update(signal, bob), { message: 'An email is already in use' });
 
   db.close();
 });

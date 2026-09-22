@@ -35,12 +35,12 @@ export class StartMyProcessEndpoint implements Endpoint {
   ) {}
 
   public async handle(req: Request, res: Response) {
-    const abortSignal = getEndpointAbortSignal(req);
+    const signal = getEndpointAbortSignal(req);
     const authToken = getAuthToken(req);
     const request = parseBody(startMyProcessRequestSchema, req.body);
 
     const processName = String(req.params.name);
-    const process = await this.userProcessProvider.tryGet(abortSignal, authToken.userName, processName);
+    const process = await this.userProcessProvider.tryGet(signal, authToken.userName, processName);
     if (!process) {
       throw new EndpointError('Process not found', 404);
     }

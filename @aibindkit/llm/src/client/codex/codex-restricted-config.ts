@@ -58,13 +58,10 @@ const emptyHooks: CodexJsonObject = {
   Stop: []
 };
 
-export async function createRestrictedCodexConfig(
-  connection: CodexAppServerConnection,
-  abortSignal: AbortSignal
-): Promise<CodexJsonObject> {
+export async function createRestrictedCodexConfig(connection: CodexAppServerConnection, signal: AbortSignal): Promise<CodexJsonObject> {
   const [requirements, current] = await Promise.all([
-    connection.request<unknown>('configRequirements/read', undefined, abortSignal),
-    connection.request<unknown>('config/read', { includeLayers: true }, abortSignal)
+    connection.request<unknown>('configRequirements/read', undefined, signal),
+    connection.request<unknown>('config/read', { includeLayers: true }, signal)
   ]);
   assertRequirementsAllowRestrictedTools(requirements);
   assertConfigCanBeOverridden(current);
@@ -96,9 +93,9 @@ export async function createRestrictedCodexConfig(
 export async function attestRestrictedCodexThread(
   connection: CodexAppServerConnection,
   threadId: string,
-  abortSignal: AbortSignal
+  signal: AbortSignal
 ): Promise<void> {
-  const response = await connection.request<unknown>('mcpServerStatus/list', { threadId, detail: 'toolsAndAuthOnly' }, abortSignal);
+  const response = await connection.request<unknown>('mcpServerStatus/list', { threadId, detail: 'toolsAndAuthOnly' }, signal);
   if (!isCodexJsonObject(response) || !Array.isArray(response.data)) {
     throw new LlmClientError('Codex app-server returned an invalid MCP status response');
   }

@@ -10,13 +10,13 @@ export class LlmClientProvider {
     private readonly factory: LlmClientFactory
   ) {}
 
-  public async get(abortSignal: AbortSignal, useCase: LlmUseCase): Promise<ConfiguredLlmClient> {
+  public async get(signal: AbortSignal, useCase: LlmUseCase): Promise<ConfiguredLlmClient> {
     let client = this.clients.get(useCase);
     if (client) {
       return client;
     }
 
-    const configuration = (await this.repository.get(abortSignal)).getUseCase(useCase);
+    const configuration = (await this.repository.get(signal)).getUseCase(useCase);
     client = this.factory.create(configuration);
     this.clients.set(useCase, client);
     return client;

@@ -14,12 +14,12 @@ export interface SandboxHostDiagnosticianResult {
 export class SandboxHostDiagnostician {
   public constructor(private readonly paths: ServerPaths) {}
 
-  public async diagnose(abortSignal: AbortSignal): Promise<SandboxHostDiagnosticianResult> {
+  public async diagnose(signal: AbortSignal): Promise<SandboxHostDiagnosticianResult> {
     const appFolderPath = this.paths.getRuntimeFolderPath();
     const dataFolderPath = this.paths.getAppDataFolderPath();
 
     return {
-      dockerVersion: await this.checkDocker(abortSignal),
+      dockerVersion: await this.checkDocker(signal),
       appFolderPath,
       dataFolderPath,
       isAppFolderReadable: await this.checkPath(appFolderPath, constants.R_OK),
@@ -27,10 +27,10 @@ export class SandboxHostDiagnostician {
     };
   }
 
-  private async checkDocker(abortSignal: AbortSignal) {
+  private async checkDocker(signal: AbortSignal) {
     try {
       const docker = new Docker(this.paths.getRuntimeFolderPath());
-      const info = await docker.info(abortSignal);
+      const info = await docker.info(signal);
       return info.ClientInfo.Version;
     } catch {
       return null;

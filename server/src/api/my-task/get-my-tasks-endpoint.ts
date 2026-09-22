@@ -14,11 +14,11 @@ export class GetMyTasksEndpoint implements Endpoint {
   public constructor(private readonly querier: MyTaskListQuerier) {}
 
   public async handle(req: Request): Promise<GetMyTasksResponse> {
-    const abortSignal = getEndpointAbortSignal(req);
+    const signal = getEndpointAbortSignal(req);
     const authToken = getAuthToken(req);
     const { onlyOpen, page, pageSize } = parseQuery(getMyTasksRequestSchema, req.query);
 
     const isTest = false;
-    return this.querier.query(abortSignal, isTest, authToken.userName, onlyOpen, page, pageSize);
+    return this.querier.query(signal, isTest, authToken.userName, onlyOpen, page, pageSize);
   }
 }

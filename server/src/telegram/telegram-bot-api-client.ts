@@ -45,36 +45,36 @@ export class TelegramBotApiError extends Error {
 }
 
 export class TelegramBotApiClient {
-  public getMe(abortSignal: AbortSignal, botToken: string): Promise<TelegramBotIdentity> {
-    return this.call(abortSignal, botToken, 'getMe', {});
+  public getMe(signal: AbortSignal, botToken: string): Promise<TelegramBotIdentity> {
+    return this.call(signal, botToken, 'getMe', {});
   }
 
-  public getWebhookInfo(abortSignal: AbortSignal, botToken: string): Promise<TelegramWebhookInfo> {
-    return this.call(abortSignal, botToken, 'getWebhookInfo', {});
+  public getWebhookInfo(signal: AbortSignal, botToken: string): Promise<TelegramWebhookInfo> {
+    return this.call(signal, botToken, 'getWebhookInfo', {});
   }
 
-  public getUpdates(abortSignal: AbortSignal, botToken: string, offset: number | null, timeoutSeconds: number): Promise<TelegramUpdate[]> {
-    return this.call(abortSignal, botToken, 'getUpdates', {
+  public getUpdates(signal: AbortSignal, botToken: string, offset: number | null, timeoutSeconds: number): Promise<TelegramUpdate[]> {
+    return this.call(signal, botToken, 'getUpdates', {
       offset: offset ?? undefined,
       timeout: timeoutSeconds,
       allowed_updates: ['message']
     });
   }
 
-  public sendMessage(abortSignal: AbortSignal, botToken: string, chatId: string, text: string): Promise<TelegramMessage> {
-    return this.call(abortSignal, botToken, 'sendMessage', { chat_id: chatId, text });
+  public sendMessage(signal: AbortSignal, botToken: string, chatId: string, text: string): Promise<TelegramMessage> {
+    return this.call(signal, botToken, 'sendMessage', { chat_id: chatId, text });
   }
 
-  public async sendTyping(abortSignal: AbortSignal, botToken: string, chatId: string): Promise<void> {
-    await this.call(abortSignal, botToken, 'sendChatAction', { chat_id: chatId, action: 'typing' });
+  public async sendTyping(signal: AbortSignal, botToken: string, chatId: string): Promise<void> {
+    await this.call(signal, botToken, 'sendChatAction', { chat_id: chatId, action: 'typing' });
   }
 
-  private async call<T>(abortSignal: AbortSignal, botToken: string, method: string, body: object): Promise<T> {
+  private async call<T>(signal: AbortSignal, botToken: string, method: string, body: object): Promise<T> {
     const response = await fetch(`https://api.telegram.org/bot${botToken}/${method}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
-      signal: abortSignal
+      signal
     });
     let payload: TelegramApiResponse<T>;
     try {

@@ -9,16 +9,16 @@ import { ProcessDisplay, ProcessExecutionMode } from '@ailaflow/shared';
 test('queries a name-ordered page of processes', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
   const dbs = { modelDb: new SqliteDatabase(db) } as SqliteDatabases;
-  const abortSignal = new AbortController().signal;
+  const signal = new AbortController().signal;
   const processRepository = new SqliteProcessRepository(dbs);
   const querier = new SqliteProcessListQuerier(dbs);
 
-  await processRepository.setup(abortSignal);
+  await processRepository.setup(signal);
   insertProcess(db, 'charlie', true, ProcessDisplay.HIDDEN, ProcessExecutionMode.START_FORM);
   insertProcess(db, 'alpha', false, ProcessDisplay.FEATURED);
   insertProcess(db, 'bravo', false, ProcessDisplay.LISTED);
 
-  assert.deepEqual(await querier.query(abortSignal, 2, 2, ProcessDisplay.HIDDEN), {
+  assert.deepEqual(await querier.query(signal, 2, 2, ProcessDisplay.HIDDEN), {
     processes: [
       {
         name: 'charlie',
@@ -34,7 +34,7 @@ test('queries a name-ordered page of processes', async () => {
     pageSize: 2
   });
   assert.deepEqual(
-    (await querier.query(abortSignal, 1, 10, ProcessDisplay.LISTED)).processes.map(process => process.name),
+    (await querier.query(signal, 1, 10, ProcessDisplay.LISTED)).processes.map(process => process.name),
     ['alpha', 'bravo']
   );
 
@@ -44,24 +44,24 @@ test('queries a name-ordered page of processes', async () => {
 test('filters process names before counting and paginating, with the same matching as user search', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
   const dbs = { modelDb: new SqliteDatabase(db) } as SqliteDatabases;
-  const abortSignal = new AbortController().signal;
+  const signal = new AbortController().signal;
   const repository = new SqliteProcessRepository(dbs);
   const querier = new SqliteProcessListQuerier(dbs);
 
   try {
-    await repository.setup(abortSignal);
+    await repository.setup(signal);
     for (const name of ['review-charlie', 'other', 'review-alpha', 'review-bravo', 'Review-uppercase']) {
       insertProcess(db, name, false, ProcessDisplay.LISTED);
     }
 
-    const firstPage = await querier.query(abortSignal, 1, 2, ProcessDisplay.HIDDEN, 'review');
+    const firstPage = await querier.query(signal, 1, 2, ProcessDisplay.HIDDEN, 'review');
     assert.deepEqual(
       firstPage.processes.map(process => process.name),
       ['review-alpha', 'review-bravo']
     );
     assert.equal(firstPage.totalCount, 3);
 
-    const secondPage = await querier.query(abortSignal, 2, 2, ProcessDisplay.HIDDEN, 'review');
+    const secondPage = await querier.query(signal, 2, 2, ProcessDisplay.HIDDEN, 'review');
     assert.deepEqual(
       secondPage.processes.map(process => process.name),
       ['review-charlie']
@@ -70,10 +70,10 @@ test('filters process names before counting and paginating, with the same matchi
     assert.equal(secondPage.page, 2);
     assert.equal(secondPage.pageSize, 2);
 
-    const noMatches = await querier.query(abortSignal, 1, 2, ProcessDisplay.HIDDEN, 'missing');
+    const noMatches = await querier.query(signal, 1, 2, ProcessDisplay.HIDDEN, 'missing');
     assert.deepEqual(noMatches.processes, []);
     assert.equal(noMatches.totalCount, 0);
-    assert.equal((await querier.query(abortSignal, 1, 20, ProcessDisplay.HIDDEN, '')).totalCount, 5);
+    assert.equal((await querier.query(signal, 1, 20, ProcessDisplay.HIDDEN, '')).totalCount, 5);
   } finally {
     db.close();
   }
@@ -82,12 +82,12 @@ test('filters process names before counting and paginating, with the same matchi
 test('treats SQL wildcards and quotes as literal process search text', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
   const dbs = { modelDb: new SqliteDatabase(db) } as SqliteDatabases;
-  const abortSignal = new AbortController().signal;
+  const signal = new AbortController().signal;
   const repository = new SqliteProcessRepository(dbs);
   const querier = new SqliteProcessListQuerier(dbs);
 
   try {
-    await repository.setup(abortSignal);
+    await repository.setup(signal);
     for (const name of ['percent%process', 'under_score', "quote'process", 'ordinary']) {
       insertProcess(db, name, false, ProcessDisplay.LISTED);
     }
@@ -96,14 +96,14 @@ test('treats SQL wildcards and quotes as literal process search text', async () 
       ['_', 'under_score'],
       ["'", "quote'process"]
     ]) {
-      const result = await querier.query(abortSignal, 1, 20, ProcessDisplay.HIDDEN, search);
+      const result = await querier.query(signal, 1, 20, ProcessDisplay.HIDDEN, search);
       assert.deepEqual(
         result.processes.map(process => process.name),
         [expectedName]
       );
       assert.equal(result.totalCount, 1);
     }
-    assert.equal((await querier.query(abortSignal, 1, 20, ProcessDisplay.HIDDEN, "' OR 1=1 --")).totalCount, 0);
+    assert.equal((await querier.query(signal, 1, 20, ProcessDisplay.HIDDEN, "' OR 1=1 --")).totalCount, 0);
   } finally {
     db.close();
   }

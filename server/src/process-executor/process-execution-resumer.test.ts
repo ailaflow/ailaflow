@@ -14,7 +14,7 @@ import { ProcessDefinitionUpgrader } from '../process/process-definition-upgrade
 import { PROCESS_VERSION, ProcessDisplay, ProcessExecutionMode } from '@ailaflow/shared';
 
 test('process execution resumer continues when the process hash changed', async () => {
-  const abortSignal = new AbortController().signal;
+  const signal = new AbortController().signal;
   let deletedExecutionId: string | null = null;
   let runPayload: unknown;
   const execution = {
@@ -66,7 +66,7 @@ test('process execution resumer continues when the process hash changed', async 
   );
 
   const payload = { signal: 'continue' };
-  assert.equal(await resumer.resume(abortSignal, 'execution_1', payload), execution);
+  assert.equal(await resumer.resume(signal, 'execution_1', payload), execution);
   assert.equal(deletedExecutionId, 'execution_1');
   assert.equal(runPayload, payload);
 });

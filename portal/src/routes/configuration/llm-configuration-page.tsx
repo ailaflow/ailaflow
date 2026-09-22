@@ -9,7 +9,7 @@ import { useLlmConfigurationState } from './llm-configuration-state';
 
 export function LlmConfigurationPage() {
   const apiClient = useApiClient();
-  const loader = useLoader(abortSignal => apiClient.llmConfiguration.get(abortSignal), [apiClient]);
+  const loader = useLoader(signal => apiClient.llmConfiguration.get(signal), [apiClient]);
 
   if (loader.isLoading) {
     return <PortalLoadingView />;

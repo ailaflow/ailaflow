@@ -21,8 +21,8 @@ export function SandboxEditor(props: { sandbox?: SandboxDto }) {
     }
     isSaving.current = true;
     try {
-      const abortSignal = AbortSignal.timeout(5_000);
-      await apiClient.sandbox.saveSandbox(abortSignal, state.toSaveRequest());
+      const signal = AbortSignal.timeout(5_000);
+      await apiClient.sandbox.saveSandbox(signal, state.toSaveRequest());
       if (state.isNew) {
         navigate(`/admin/sandboxes/${state.name}`);
       } else {

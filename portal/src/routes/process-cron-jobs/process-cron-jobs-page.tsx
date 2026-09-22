@@ -15,10 +15,10 @@ export function ProcessCronJobsPage() {
 
   const apiClient = useApiClient();
   const { data, error, isLoading, finishSignal } = useLoader(
-    async abortSignal => {
+    async signal => {
       const [processResponse, jobsResponse] = await Promise.all([
-        apiClient.process.getProcess(abortSignal, processName),
-        apiClient.process.getProcessCronJobs(abortSignal, processName)
+        apiClient.process.getProcess(signal, processName),
+        apiClient.process.getProcessCronJobs(signal, processName)
       ]);
       return { process: processResponse.process, jobs: jobsResponse.jobs };
     },

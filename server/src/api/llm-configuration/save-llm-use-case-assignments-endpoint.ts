@@ -25,7 +25,7 @@ export class SaveLlmUseCaseAssignmentsEndpoint implements Endpoint {
   ) {}
 
   public async handle(req: Request): Promise<object> {
-    const abortSignal = getEndpointAbortSignal(req);
+    const signal = getEndpointAbortSignal(req);
     const request = parseBody(saveLlmUseCaseAssignmentsRequestSchema, req.body);
     const seen = new Set<LlmUseCase>();
     const assignments: LlmUseCaseConfiguration[] = [];
@@ -50,11 +50,11 @@ export class SaveLlmUseCaseAssignmentsEndpoint implements Endpoint {
       assignments.push(configuration);
     }
     try {
-      const configuration = await this.repository.get(abortSignal);
+      const configuration = await this.repository.get(signal);
       for (const assignment of assignments) {
         configuration.resolveUseCase(assignment);
       }
-      await this.repository.saveUseCases(abortSignal, assignments, removedUseCases);
+      await this.repository.saveUseCases(signal, assignments, removedUseCases);
       await this.eventBus.publish(new LlmConfigurationChangedEvent());
       return {
         success: true

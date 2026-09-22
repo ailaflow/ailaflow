@@ -13,7 +13,7 @@ export class GetPublicUrlConfigurationEndpoint implements Endpoint {
   public constructor(private readonly manager: KvConfigurationManager) {}
 
   public async handle(req: Request): Promise<GetPublicUrlConfigurationResponse> {
-    const abortSignal = getEndpointAbortSignal(req);
-    return { publicUrl: (await this.manager.get(abortSignal)).publicUrl };
+    const signal = getEndpointAbortSignal(req);
+    return { publicUrl: (await this.manager.get(signal)).publicUrl };
   }
 }

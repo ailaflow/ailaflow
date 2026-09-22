@@ -9,10 +9,10 @@ import { MagicLinkGenerator } from './magic-link-generator';
 test('generates and stores magic links with centralized form targets', async () => {
   const inserted: MagicLink[] = [];
   const generator = createGenerator('https://aila.example/proxy/aila', inserted);
-  const abortSignal = new AbortController().signal;
+  const signal = new AbortController().signal;
 
-  const taskResult = await generator.tryGenerateTaskForm(abortSignal, 'alice', 'task/1');
-  const processResult = await generator.tryGenerateProcessStartForm(abortSignal, 'alice', 'employee onboarding');
+  const taskResult = await generator.tryGenerateTaskForm(signal, 'alice', 'task/1');
+  const processResult = await generator.tryGenerateProcessStartForm(signal, 'alice', 'employee onboarding');
 
   assert.ok(taskResult);
   const taskUrl = new URL(taskResult);
@@ -32,9 +32,9 @@ test('generates and stores magic links with centralized form targets', async () 
 test('does not create a magic link without a public URL', async () => {
   const inserted: MagicLink[] = [];
   const generator = createGenerator(null, inserted);
-  const abortSignal = new AbortController().signal;
+  const signal = new AbortController().signal;
 
-  assert.equal(await generator.tryGenerateTaskForm(abortSignal, 'alice', 'task_1'), null);
+  assert.equal(await generator.tryGenerateTaskForm(signal, 'alice', 'task_1'), null);
   assert.equal(inserted.length, 0);
 });
 

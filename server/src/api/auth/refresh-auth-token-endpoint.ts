@@ -14,17 +14,17 @@ export class RefreshAuthTokenEndpoint implements Endpoint {
   public constructor(private readonly authTokenRepository: AuthTokenRepository) {}
 
   public async handle(req: Request): Promise<RefreshTokenResponse> {
-    const abortSignal = getEndpointAbortSignal(req);
+    const signal = getEndpointAbortSignal(req);
     const request = parseBody(refreshTokenRequestSchema, req.body);
 
-    const authToken = await this.authTokenRepository.tryGetByToken(abortSignal, request.authToken);
+    const authToken = await this.authTokenRepository.tryGetByToken(signal, request.authToken);
     if (!authToken || !authToken.tryScheduleExpiration()) {
       throw new EndpointError('Invalid or expired token', 401);
     }
 
     const newAuthToken = await AuthToken.refresh(authToken);
-    await this.authTokenRepository.upsert(abortSignal, newAuthToken);
-    await this.authTokenRepository.upsert(abortSignal, authToken);
+    await this.authTokenRepository.upsert(signal, newAuthToken);
+    await this.authTokenRepository.upsert(signal, authToken);
 
     return {
       authToken: newAuthToken.token

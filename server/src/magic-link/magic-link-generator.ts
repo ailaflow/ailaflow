@@ -12,22 +12,22 @@ export class MagicLinkGenerator {
     return MAGIC_LINK_VALIDITY_HOURS;
   }
 
-  public tryGenerateTaskForm(abortSignal: AbortSignal, userName: string, taskId: string): Promise<string | null> {
-    return this.tryGenerate(abortSignal, userName, `/my-tasks/${encodeURIComponent(taskId)}?fs=1`);
+  public tryGenerateTaskForm(signal: AbortSignal, userName: string, taskId: string): Promise<string | null> {
+    return this.tryGenerate(signal, userName, `/my-tasks/${encodeURIComponent(taskId)}?fs=1`);
   }
 
-  public tryGenerateProcessStartForm(abortSignal: AbortSignal, userName: string, processName: string): Promise<string | null> {
-    return this.tryGenerate(abortSignal, userName, `/my-processes/${encodeURIComponent(processName)}?fs=1`);
+  public tryGenerateProcessStartForm(signal: AbortSignal, userName: string, processName: string): Promise<string | null> {
+    return this.tryGenerate(signal, userName, `/my-processes/${encodeURIComponent(processName)}?fs=1`);
   }
 
-  private async tryGenerate(abortSignal: AbortSignal, userName: string, target: string): Promise<string | null> {
-    const configuration = await this.configurationManager.get(abortSignal);
+  private async tryGenerate(signal: AbortSignal, userName: string, target: string): Promise<string | null> {
+    const configuration = await this.configurationManager.get(signal);
     if (!configuration.publicUrl) {
       return null;
     }
 
     const magicLink = MagicLink.create(userName);
-    await this.magicLinkRepository.insert(abortSignal, magicLink);
+    await this.magicLinkRepository.insert(signal, magicLink);
 
     const url = new URL(`${configuration.publicUrl}/magic-link`);
     url.searchParams.set('t', target);

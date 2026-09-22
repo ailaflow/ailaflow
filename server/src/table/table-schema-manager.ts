@@ -7,24 +7,24 @@ export class TableSchemaManager {
 
   public constructor(private readonly repository: TableSchemaRepository) {}
 
-  public async get(abortSignal: AbortSignal, tableName: string): Promise<TableSchema> {
+  public async get(signal: AbortSignal, tableName: string): Promise<TableSchema> {
     const cached = this.cache.get(tableName);
     if (cached) {
       return cached;
     }
 
-    const schema = await this.repository.get(abortSignal, tableName);
+    const schema = await this.repository.get(signal, tableName);
     this.cache.set(tableName, schema);
     return schema;
   }
 
-  public async tryGet(abortSignal: AbortSignal, tableName: string): Promise<TableSchema | null> {
+  public async tryGet(signal: AbortSignal, tableName: string): Promise<TableSchema | null> {
     const cached = this.cache.get(tableName);
     if (cached) {
       return cached;
     }
 
-    const schema = await this.repository.tryGet(abortSignal, tableName);
+    const schema = await this.repository.tryGet(signal, tableName);
     if (schema) {
       this.cache.set(tableName, schema);
     }
@@ -32,29 +32,29 @@ export class TableSchemaManager {
   }
 
   public async ensureCompatible(
-    abortSignal: AbortSignal,
+    signal: AbortSignal,
     tableName: string,
     row: Record<string, unknown>,
     transaction?: Transaction
   ): Promise<TableSchema> {
-    let schema = await this.get(abortSignal, tableName);
+    let schema = await this.get(signal, tableName);
 
     while (true) {
-      abortSignal.throwIfAborted();
+      signal.throwIfAborted();
       const extended = schema.tryExtend(row);
       if (extended === null) {
         return schema;
       }
 
       try {
-        const saved = await this.repository.save(abortSignal, extended, transaction);
+        const saved = await this.repository.save(signal, extended, transaction);
         this.cache.set(tableName, saved);
         return saved;
       } catch (error) {
         if (!(error instanceof TableSchemaConcurrencyError)) {
           throw error;
         }
-        schema = await this.repository.get(abortSignal, tableName);
+        schema = await this.repository.get(signal, tableName);
         this.cache.set(tableName, schema);
       }
     }

@@ -15,9 +15,9 @@ export class GetTablesTool extends ZodTool<Arg> {
     super('global_get_tables', 'Returns a paginated list of tables in the system', inputSchema);
   }
 
-  public async handle(abortSignal: AbortSignal, _: ToolContext, arg: Arg): Promise<ZodToolExecutionResult> {
+  public async handle(signal: AbortSignal, _: ToolContext, arg: Arg): Promise<ZodToolExecutionResult> {
     return {
-      content: await this.querier.query(abortSignal, arg.page, PAGE_SIZE)
+      content: await this.querier.query(signal, arg.page, PAGE_SIZE)
     };
   }
 }

@@ -14,7 +14,7 @@ test('rolls back task creation when assignment creation fails', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
   db.exec(`PRAGMA foreign_keys = ON`);
   const dbs = { modelDb: new SqliteDatabase(db) } as SqliteDatabases;
-  const abortSignal = new AbortController().signal;
+  const signal = new AbortController().signal;
   const taskRepository = new SqliteTaskRepository(dbs);
   const assignedTaskRepository = new SqliteAssignedTaskRepository(dbs);
   const userRepository = new SqliteUserRepository(dbs);
@@ -27,13 +27,13 @@ test('rolls back task creation when assignment creation fails', async () => {
   } as unknown as UserChatSessionProvider;
   const creator = new TaskCreator(taskRepository, assignedTaskRepository, userQuerier, chatSessionProvider);
 
-  await userRepository.setup(abortSignal);
-  await taskRepository.setup(abortSignal);
-  await assignedTaskRepository.setup(abortSignal);
+  await userRepository.setup(signal);
+  await taskRepository.setup(signal);
+  await assignedTaskRepository.setup(signal);
 
   await assert.rejects(() =>
     creator.create(
-      abortSignal,
+      signal,
       false,
       'creator',
       'execution',

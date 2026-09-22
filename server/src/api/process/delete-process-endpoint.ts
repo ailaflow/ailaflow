@@ -14,9 +14,9 @@ export class DeleteProcessEndpoint implements Endpoint {
   public constructor(private readonly processManager: ProcessManager) {}
 
   public async handle(req: Request): Promise<DeleteProcessResponse> {
-    const abortSignal = getEndpointAbortSignal(req);
+    const signal = getEndpointAbortSignal(req);
     const processName = String(req.params.name);
-    const deleted = await this.processManager.delete(abortSignal, processName);
+    const deleted = await this.processManager.delete(signal, processName);
     if (!deleted) {
       throw new EndpointError('Process not found', 404);
     }
