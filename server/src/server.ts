@@ -131,6 +131,8 @@ import { IncompleteAssignedTaskCountQuerier } from './queriers/task/incomplete-a
 import { SqliteIncompleteAssignedTaskCountQuerier } from './queriers/task/sqlite-incomplete-assigned-task-count-querier';
 import { TaskFinalizationCandidateQuerier } from './queriers/task/task-finalization-candidate-querier';
 import { SqliteTaskFinalizationCandidateQuerier } from './queriers/task/sqlite-task-finalization-candidate-querier';
+import { ExecutionTaskCandidateQuerier } from './queriers/my-task-list/execution-task-candidate-querier';
+import { SqliteExecutionTaskCandidateQuerier } from './queriers/my-task-list/sqlite-execution-task-candidate-querier';
 import { LlmConfigurationRepository } from './repositories/configuration/llm/llm-configuration-repository';
 import { SqliteLlmConfigurationRepository } from './repositories/configuration/llm/sqlite-llm-configuration-repository';
 import { LlmClientFactory } from './llm/llm-client-factory';
@@ -275,6 +277,7 @@ export class Server {
     let tableDataListQuerier: TableDataListQuerier;
     let incompleteAssignedTaskCountQuerier: IncompleteAssignedTaskCountQuerier;
     let taskFinalizationCandidateQuerier: TaskFinalizationCandidateQuerier;
+    let executionTaskCandidateQuerier: ExecutionTaskCandidateQuerier;
     let taskListQuerier: TaskListQuerier;
     let slackUserListQuerier: SlackUserListQuerier;
     let disposeDatabase: () => void;
@@ -319,6 +322,7 @@ export class Server {
       tableDataListQuerier = new SqliteTableDataListQuerier(sqliteDatabases);
       incompleteAssignedTaskCountQuerier = new SqliteIncompleteAssignedTaskCountQuerier(sqliteDatabases);
       taskFinalizationCandidateQuerier = new SqliteTaskFinalizationCandidateQuerier(sqliteDatabases);
+      executionTaskCandidateQuerier = new SqliteExecutionTaskCandidateQuerier(sqliteDatabases);
       taskListQuerier = new SqliteTaskListQuerier(sqliteDatabases);
       slackUserListQuerier = new SqliteSlackUserListQuerier(sqliteDatabases);
     } else {
@@ -488,7 +492,7 @@ export class Server {
       new GetMyProcessDetailsTool(userProcessProvider),
       new GetMyTasksTool(myTaskListQuerier),
       new GetMyTaskDetailsTool(userTaskDetailsProvider),
-      new StartMyProcessTool(userProcessProvider, processExecutor, eventBus),
+      new StartMyProcessTool(userProcessProvider, processExecutor, executionTaskCandidateQuerier, eventBus),
       new OpenMyProcessStartFormTool(userProcessProvider),
       new OpenMyTaskFormTool(userAssignedTaskProvider),
       new SubmitMyTaskTool(assignedTaskCompleter)
@@ -566,7 +570,7 @@ export class Server {
       new GetTaskVariableValueEndpoint(userTaskDetailsProvider),
       new SubmitMyTaskEndpoint(assignedTaskCompleter),
       new GetMyProcessStartFormEndpoint(userProcessProvider),
-      new StartMyProcessEndpoint(userProcessProvider, processExecutor, sessionManager),
+      new StartMyProcessEndpoint(userProcessProvider, processExecutor, sessionManager, executionTaskCandidateQuerier),
       new GetProcessesEndpoint(processListQuerier),
       new GetProcessEndpoint(processManager),
       new DeleteProcessEndpoint(processManager),

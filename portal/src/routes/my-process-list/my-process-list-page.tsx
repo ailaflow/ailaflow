@@ -8,12 +8,14 @@ import { PortalLoadingView } from '../../views/portal/portal-loading-view';
 import { ProcessListView } from '../../views/process-list-view/process-list-view';
 import { Portal } from '../common/portal';
 import { MyProcessStartFormPopup } from '../common/popups/my-process-start-form-popup';
+import { MyTaskFormPopup } from '../common/popups/my-task-form-popup';
 
 const PAGE_SIZE = 20;
 
 export function MyProcessListPage() {
   const apiClient = useApiClient();
   const [startedProcessName, setStartedProcessName] = useState<string | null>(null);
+  const [openedTaskId, setOpenedTaskId] = useState<string | null>(null);
   const [searchParams, setSearchParams] = useSearchParams();
   const page = Number(searchParams.get('page') ?? 1);
   const { data, isLoading, error } = useLoader(
@@ -32,6 +34,15 @@ export function MyProcessListPage() {
       next.set('page', String(value));
       return next;
     });
+  }
+
+  function handleProcessEnded(candidateTaskIds?: string[]): void {
+    setStartedProcessName(null);
+
+    const candidateTaskId = candidateTaskIds?.[0];
+    if (candidateTaskId) {
+      setOpenedTaskId(candidateTaskId);
+    }
   }
 
   if (isLoading) {
@@ -68,8 +79,13 @@ export function MyProcessListPage() {
         }}
       />
       {startedProcessName ? (
-        <MyProcessStartFormPopup args={{ processName: startedProcessName }} onClose={() => setStartedProcessName(null)} />
+        <MyProcessStartFormPopup
+          args={{ processName: startedProcessName }}
+          onEnded={handleProcessEnded}
+          onClose={() => setStartedProcessName(null)}
+        />
       ) : null}
+      {openedTaskId ? <MyTaskFormPopup args={{ taskId: openedTaskId }} onClose={() => setOpenedTaskId(null)} /> : null}
     </Portal>
   );
 }

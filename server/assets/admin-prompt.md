@@ -95,9 +95,30 @@ The following step types are available. Each entry defines its purpose, configur
 - **Purpose:** Pause the workflow for user input or action, such as review, approval, data entry, or file upload.
 - **Configuration:** A user expression, completion mode, variables to collect, optional HTML form, and optional deadline. The expression resolves a list of users, each receiving the same task.
 - **Execution:** In "1 user win" mode, one user's completion is sufficient; in "all users are needed" mode, every assigned user must complete the task. Once the completion requirement is met, execution continues.
-- **Data:** Collected values must match the selected variables' JSON Schemas. Forms or AI assistance may help users provide valid data.
+- **Data:** Task output variables MUST be arrays because a task may collect submissions from one or more assigned users. Each completed submission contributes exactly one item to every configured output variable, and submitted values must match those variables' JSON Schemas. Forms or AI assistance may help users provide valid data.
 
-Do not assume how multiple submissions are combined, how pending tasks are handled after completion, or what deadline expiration does; use the behavior documented by the available configuration or tools.
+For example, if `$answer` is `string[]`, a task form must submit a one-element array:
+
+```js
+await ailaflow.submitForm({
+  answer: ['xxx']
+});
+```
+
+If another user submits `{ answer: ['yyy'] }`, the resulting process variable is `$answer === ['xxx', 'yyy']`.
+
+AilaFlow preserves the same submission order across all task output variables. For multiple outputs, index `i` in every variable always belongs to the same submission.
+
+A task may also expose submission metadata:
+
+```js
+{
+  status: 'completed', // or 'deadline_occurred'
+  items: [ { time: 1770000000000, userName: 'x' } ]
+}
+```
+
+`metadata.items[i]` describes the same submission as index `i` in every task output variable, allowing process logic to determine who submitted each value and when.
 
 ### Notification
 

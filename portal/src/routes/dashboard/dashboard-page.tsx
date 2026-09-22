@@ -38,6 +38,15 @@ export function DashboardPage() {
     [apiClient, reloadToken]
   );
 
+  function handleProcessEnded(candidateTaskIds?: string[]): void {
+    setStartedProcessName(null);
+
+    const candidateTaskId = candidateTaskIds?.[0];
+    if (candidateTaskId) {
+      setOpenedTaskId(candidateTaskId);
+    }
+  }
+
   if (isLoading) {
     return (
       <Portal>
@@ -108,7 +117,11 @@ export function DashboardPage() {
         </DashboardPanelView>
       </DashboardView>
       {startedProcessName ? (
-        <MyProcessStartFormPopup args={{ processName: startedProcessName }} onClose={() => setStartedProcessName(null)} />
+        <MyProcessStartFormPopup
+          args={{ processName: startedProcessName }}
+          onEnded={handleProcessEnded}
+          onClose={() => setStartedProcessName(null)}
+        />
       ) : null}
       {openedTaskId ? (
         <MyTaskFormPopup

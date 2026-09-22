@@ -5,13 +5,10 @@ import { MyProcessStartForm, MyProcessStartFormArgs } from '../my-form/my-proces
 export interface MyProcessStartFormPopupProps {
   args: MyProcessStartFormArgs;
   onClose(): void;
+  onEnded: (candidateTaskIds?: string[]) => void;
 }
 
 export function MyProcessStartFormPopup(props: MyProcessStartFormPopupProps) {
-  async function onEnded() {
-    props.onClose();
-  }
-
   return (
     <MyFormPopupView
       title={`/${props.args.processName}`}
@@ -19,7 +16,7 @@ export function MyProcessStartFormPopup(props: MyProcessStartFormPopupProps) {
       closeLabel="Close process form"
       onClose={props.onClose}
     >
-      <MyProcessStartForm args={props.args} onEnded={onEnded} />
+      <MyProcessStartForm args={props.args} onEnded={props.onEnded} />
     </MyFormPopupView>
   );
 }

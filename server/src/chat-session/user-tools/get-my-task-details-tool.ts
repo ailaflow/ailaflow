@@ -31,6 +31,7 @@ export class GetMyTaskDetailsTool extends ZodTool<Arg> {
 
     return {
       content: {
+        title: details.title,
         inputValues: details.getAllInputVariableValues(),
         outputVariableSchemas: details.outputVariableSchemas
       }

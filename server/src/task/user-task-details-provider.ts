@@ -20,6 +20,7 @@ export class UserTaskDetailsProvider {
     }
 
     return new TaskDetails(
+      userAssignedTask.task.title,
       userAssignedTask.task.inputVariableNames,
       execution.state.context.globalState.variableValues,
       userAssignedTask.task.outputVariableSchemas
@@ -29,6 +30,7 @@ export class UserTaskDetailsProvider {
 
 export class TaskDetails {
   public constructor(
+    public readonly title: string,
     private readonly inputVariableNames: string[],
     private readonly executionVariableValues: ProcessExecutionVariableValues,
     public readonly outputVariableSchemas: Record<string, JsonSchema> | null

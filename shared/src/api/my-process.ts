@@ -62,4 +62,5 @@ export interface StartMyProcessUpdate {
   stepChanged?: true;
   outcome?: ProcessExecutionOutcome;
   form?: FormDefinition;
+  candidateTaskIds?: string[];
 }

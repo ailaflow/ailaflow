@@ -20,6 +20,7 @@ import { ProcessExecutor } from '../../process-executor/process-executor';
 import { SseResponse } from '../../core/sse-response';
 import { Logger } from '../../core/logger';
 import { DefinitionWalker } from 'sequential-workflow-model';
+import { ExecutionTaskCandidateQuerier } from '../../queriers/my-task-list/execution-task-candidate-querier';
 
 export class StartMyProcessEndpoint implements Endpoint {
   private readonly logger = new Logger(StartMyProcessEndpoint.name);
@@ -31,7 +32,8 @@ export class StartMyProcessEndpoint implements Endpoint {
   public constructor(
     private readonly userProcessProvider: UserProcessProvider,
     private readonly processExecutor: ProcessExecutor,
-    private readonly chatSessionManager: ChatSessionManager
+    private readonly chatSessionManager: ChatSessionManager,
+    private readonly taskCandidateQuerier: ExecutionTaskCandidateQuerier
   ) {}
 
   public async handle(req: Request, res: Response) {
@@ -71,17 +73,20 @@ export class StartMyProcessEndpoint implements Endpoint {
     execution.onCurrentStepChanged.subscribe(_ => {
       sseResponse.send({ stepChanged: true });
     });
-    execution.onOutcome.subscribe(outcome => {
-      let form: FormDefinition | undefined;
+    execution.onOutcome.subscribe(async outcome => {
+      const update: StartMyProcessUpdate = { outcome };
+
       if (outcome.type === ProcessExecutionOutcomeType.FINISHED && outcome.interruptedStepId) {
         const walker = new DefinitionWalker();
         const step = walker.findById(process.definition, outcome.interruptedStepId);
         if (step && step.type === 'return') {
-          form = (step as ReturnStep).properties.outputForm;
+          update.form = (step as ReturnStep).properties.outputForm;
         }
+      } else if (outcome.type === ProcessExecutionOutcomeType.PAUSED) {
+        update.candidateTaskIds = await this.tryResolveCandidateTaskIds(signal, execution.id, authToken.userName);
       }
 
-      sseResponse.send({ outcome, form });
+      sseResponse.send(update);
       res.end();
 
       if (chatSession && request.chatSession) {
@@ -90,6 +95,15 @@ export class StartMyProcessEndpoint implements Endpoint {
     });
 
     execution.run();
+  }
+
+  private async tryResolveCandidateTaskIds(signal: AbortSignal, executionId: string, userName: string): Promise<string[] | undefined> {
+    try {
+      return await this.taskCandidateQuerier.query(signal, executionId, userName, false, Date.now(), 2);
+    } catch (e) {
+      this.logger.error(`Failed to resolve candidate task IDs: ${(e as Error)?.message ?? e}`);
+    }
+    return undefined;
   }
 
   private async finishMessageOnBackground(chatSession: ChatSession, request: StartMyProcessRequest) {

@@ -62,7 +62,7 @@ export interface MyProcessStartFormArgs {
 
 export interface MyProcessStartFormProps {
   args: MyProcessStartFormArgs;
-  onEnded?: () => void;
+  onEnded?: (candidateTaskIds?: string[]) => void;
 }
 
 export function MyProcessStartForm({ args, onEnded }: MyProcessStartFormProps) {
@@ -130,7 +130,7 @@ export function MyProcessStartForm({ args, onEnded }: MyProcessStartFormProps) {
                 });
                 return;
               case ProcessExecutionOutcomeType.PAUSED:
-                onEnded?.();
+                onEnded?.(update.candidateTaskIds);
                 return;
             }
           }

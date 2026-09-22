@@ -7,6 +7,7 @@ test('task details expose only declared input variable values and the output sch
     approved: { type: 'boolean' as const }
   };
   const details = new TaskDetails(
+    'test',
     ['nullable'],
     {
       nullable: null,
@@ -22,7 +23,7 @@ test('task details expose only declared input variable values and the output sch
 });
 
 test('task details reject a missing declared input variable value', () => {
-  const details = new TaskDetails(['missing'], {}, null);
+  const details = new TaskDetails('test', ['missing'], {}, null);
 
   assert.throws(() => details.tryGetInputVariableValue('missing'), /does not exist in the execution context/);
   assert.throws(() => details.getAllInputVariableValues(), /does not exist in the execution context/);

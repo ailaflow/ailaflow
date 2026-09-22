@@ -67,7 +67,12 @@ class FakeChatSession {
     return this.messages;
   }
 
-  public async setMetadata(pointer: { id: number; completedMessageIndex: number }, key: string, value: unknown): Promise<void> {
+  public async setMetadata(
+    _: AbortSignal,
+    pointer: { id: number; completedMessageIndex: number },
+    key: string,
+    value: unknown
+  ): Promise<void> {
     const completed = this.messages.find(message => message.id === pointer.id)?.completedMessages?.[pointer.completedMessageIndex];
     if (!completed) {
       throw new Error('Message not found');

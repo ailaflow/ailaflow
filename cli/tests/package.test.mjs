@@ -99,6 +99,10 @@ test('the packaged CLI reports and resets its data directory', async () => {
 test('the packaged bridge server starts without installed dependencies', async () => {
   const child = spawn(process.execPath, [resolve(cliDirectory, 'dist/runtime/bridge/server/index.cjs')], {
     cwd: cliDirectory,
+    env: {
+      ...process.env,
+      BRIDGE_TOKEN: 'test-bridge-token'
+    },
     stdio: ['ignore', 'pipe', 'pipe']
   });
 

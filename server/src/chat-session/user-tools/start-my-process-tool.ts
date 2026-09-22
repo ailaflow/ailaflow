@@ -7,6 +7,8 @@ import { ProcessExecutionMode, ProcessExecutionOutcomeType, ResourceNameNormaliz
 import { ProcessExecutor } from '../../process-executor/process-executor';
 import { EventBus } from '../../events/event-bus';
 import { ProcessExecutionFinishedEvent } from '../../events/process-execution/process-execution-finished-event';
+import { ExecutionTaskCandidateQuerier } from '../../queriers/my-task-list/execution-task-candidate-querier';
+import { Logger } from '../../core/logger';
 
 const inputSchema = z.object({
   name: z.string(),
@@ -16,9 +18,12 @@ const inputSchema = z.object({
 type Arg = z.infer<typeof inputSchema>;
 
 export class StartMyProcessTool extends ZodTool<Arg> {
+  private readonly logger = new Logger(StartMyProcessTool.name);
+
   public constructor(
     private readonly userProcessProvider: UserProcessProvider,
     private readonly processExecutor: ProcessExecutor,
+    private readonly taskCandidateQuerier: ExecutionTaskCandidateQuerier,
     private readonly eventBus: EventBus
   ) {
     super('start_my_process', 'Starts a new process', inputSchema);
@@ -99,7 +104,8 @@ export class StartMyProcessTool extends ZodTool<Arg> {
     if (outcome.type === ProcessExecutionOutcomeType.PAUSED) {
       return {
         content: {
-          paused: `Process /${processName} has paused (this can happen when it creates a task).`
+          paused: `Process /${processName} has paused (this can happen when it creates a task)`,
+          candidateTaskIds: await this.tryResolveCandidateTaskIds(signal, execution.id, userName)
         }
       };
     }
@@ -108,5 +114,14 @@ export class StartMyProcessTool extends ZodTool<Arg> {
         error: outcome.error
       }
     };
+  }
+
+  private async tryResolveCandidateTaskIds(signal: AbortSignal, executionId: string, userName: string): Promise<string[] | undefined> {
+    try {
+      return await this.taskCandidateQuerier.query(signal, executionId, userName, false, Date.now(), 2);
+    } catch (e) {
+      this.logger.error(`Failed to resolve candidate task IDs: ${(e as Error)?.message ?? e}`);
+    }
+    return undefined;
   }
 }
