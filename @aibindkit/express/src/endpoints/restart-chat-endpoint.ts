@@ -22,7 +22,8 @@ export class RestartChatEndpoint implements Endpoint {
       return;
     }
 
-    await chatSession.reset();
+    const signal = AbortSignal.timeout(3_000);
+    await chatSession.reset(signal);
     return {
       ok: true
     };

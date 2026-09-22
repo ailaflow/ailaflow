@@ -212,10 +212,6 @@ export class TelegramChannelSynchronizer {
       );
       return;
     }
-    if (text === '/new') {
-      this.session?.reset();
-      return;
-    }
     if (text === '/stop') {
       this.session?.tryInterrupt();
       return;
@@ -389,7 +385,8 @@ export class TelegramChannelSynchronizer {
   ): Promise<void> {
     this.isUpdatingMetadata = true;
     try {
-      await session.setMetadata({ id: messageId, completedMessageIndex }, 'telegram', telegram);
+      const signal = AbortSignal.timeout(3_000);
+      await session.setMetadata(signal, { id: messageId, completedMessageIndex }, 'telegram', telegram);
     } finally {
       this.isUpdatingMetadata = false;
     }

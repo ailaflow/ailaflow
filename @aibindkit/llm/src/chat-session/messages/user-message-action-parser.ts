@@ -3,7 +3,8 @@ import { Message } from './message';
 import { UserMessage } from './user-message';
 
 export enum UserMessageAction {
-  COMPACT = 1
+  COMPACT = 1,
+  RESET = 2
 }
 
 export class UserMessageActionParser {
@@ -12,6 +13,9 @@ export class UserMessageActionParser {
       const um = message as UserMessage;
       if (/^\s*\/compact\s*$/.test(um.text)) {
         return UserMessageAction.COMPACT;
+      }
+      if (/^\s*\/(new|reset)\s*$/.test(um.text)) {
+        return UserMessageAction.RESET;
       }
     }
     return null;

@@ -24,7 +24,7 @@ export class RestoreChatEndpoint implements Endpoint {
       return;
     }
 
-    const abortSignal = AbortSignal.timeout(3_000);
+    const signal = AbortSignal.timeout(3_000);
 
     let authContext: ChatAuthContext;
     try {
@@ -37,7 +37,7 @@ export class RestoreChatEndpoint implements Endpoint {
     let session: ChatSession;
     try {
       session = await this.activator.getOrActivate(
-        abortSignal,
+        signal,
         request.frontendTools,
         request.frontendToolsHash,
         request.sessionKey,

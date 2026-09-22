@@ -95,7 +95,9 @@ export class StartMyProcessEndpoint implements Endpoint {
   private async finishMessageOnBackground(chatSession: ChatSession, request: StartMyProcessRequest) {
     if (request.chatSession) {
       try {
+        const signal = AbortSignal.timeout(3_000);
         await chatSession.setMetadata(
+          signal,
           { id: request.chatSession.messageId, completedMessageIndex: request.chatSession.completedMessageIndex },
           'finished',
           true

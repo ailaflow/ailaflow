@@ -152,7 +152,7 @@ Writes a value. Fails if the variable does not exist or the value does not match
 
 ### Tables
 
-Tables are dynamic: reads tolerate missing tables and columns, while writes create them automatically and preserve established column types.
+Tables are dynamic: reads tolerate missing tables and columns, while writes create them automatically and preserve established column types. Every record includes `_updatedAt`, a Unix timestamp in milliseconds that the system updates whenever the record is written.
 
 #### `await ailaflow.tryReadTable('#customers', 'customer_1')`
 
@@ -170,6 +170,7 @@ await ailaflow.readTablePage('#customers', {
     amount_minor: { $gte: 1000, $lt: 10000 }
   }
 });
+// => { page: 1, pageSize: 100, hasMore: true, rows: [ { _id: 'my_id', _updatedAt: 1770000000000, ... } ] }
 ```
 
 `where` supports `$eq`, `$neq`, `$lt`, `$gt`, `$lte`, and `$gte` with string, number, or boolean values. All conditions use AND. A missing table, filter column, or ordering column returns an empty page. JSON columns cannot be filtered or ordered. Invalid options fail the call.

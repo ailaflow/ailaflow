@@ -74,7 +74,8 @@ export class AssignedTaskCompleter {
     try {
       const pointer = chatSession.findByMetadata('taskId', taskId);
       if (pointer) {
-        await chatSession.setMetadata(pointer, 'finished', true);
+        const signal = AbortSignal.timeout(3_000);
+        await chatSession.setMetadata(signal, pointer, 'finished', true);
       }
     } catch (e) {
       this.logger.warn(`Failed to update chat session metadata: ${(e as Error)?.message ?? e}`);

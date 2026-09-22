@@ -61,7 +61,7 @@ export class ChatSession {
     this.stack.setSystemMessage(result.completedMessages[0].message);
   }
 
-  public async setMetadata(pointer: CompletedChatMessagePointer, key: string, value: unknown) {
+  public async setMetadata(signal: AbortSignal, pointer: CompletedChatMessagePointer, key: string, value: unknown) {
     if (this.isDestroyed) {
       throw new Error('Session is destroyed');
     }
@@ -77,7 +77,7 @@ export class ChatSession {
         completedMessages: message.completedMessages
       }
     });
-    await this.save();
+    await this.save(signal);
   }
 
   public findByMetadata(key: string, value: unknown): CompletedChatMessagePointer | null {
@@ -113,12 +113,9 @@ export class ChatSession {
     return true;
   }
 
-  public async reset() {
+  public async reset(signal: AbortSignal) {
     this.tryInterrupt();
-    this.queue.clear();
-    this.stack.clear();
-    this.onReset.emit();
-    await this.save();
+    await this.resetAndSave(signal);
   }
 
   public getAll(): ChatMessage[] {
@@ -160,21 +157,28 @@ export class ChatSession {
   /**
    * The save operation is best-effort, and errors are emitted via the onStackStoreError event.
    */
-  private async trySave() {
+  private async maybeSave() {
     try {
-      await this.save();
+      const signal = AbortSignal.timeout(3_000);
+      await this.save(signal);
     } catch (e) {
       const error = e instanceof Error ? e : new Error(String(e));
       this.onStackStoreError.emit(error);
     }
   }
 
-  private async save() {
-    const abortSignal = AbortSignal.timeout(3_000);
-    await this.storage.save(abortSignal, this.id, this.export());
+  private async save(signal: AbortSignal) {
+    await this.storage.save(signal, this.id, this.export());
   }
 
-  private tryGetNextMessage(): Message | null {
+  private async resetAndSave(signal: AbortSignal) {
+    this.queue.clear();
+    this.stack.clear();
+    this.onReset.emit();
+    await this.save(signal);
+  }
+
+  private tryGetNextJob(): Message | UserMessageAction.RESET | null {
     const last = this.stack.tryGetLast();
     if (last && last.type === ChatMessageType.TOOL) {
       return this.messageFactory.createAssistant(this.nextId());
@@ -192,10 +196,12 @@ export class ChatSession {
 
     if (next) {
       this.queue.shift();
-      // TODO: now any action drops the whole content of the message with the action.
       const action = UserMessageActionParser.tryParse(next);
       if (action === UserMessageAction.COMPACT) {
         return this.messageFactory.createCompact(this.nextId());
+      }
+      if (action === UserMessageAction.RESET) {
+        return UserMessageAction.RESET;
       }
       return next;
     }
@@ -210,19 +216,36 @@ export class ChatSession {
     if (this.isWorking) {
       return null;
     }
-
-    const message = this.tryGetNextMessage();
-    if (!message) {
+    const job = this.tryGetNextJob();
+    if (!job) {
       return false;
     }
-    const pending = this.stack.push(message);
-    this.isWorking = true;
-    setTimeout(() => this.next(pending), 0);
+
+    if (job === UserMessageAction.RESET) {
+      this.isWorking = true;
+      setTimeout(() => this.handleReset());
+      return true;
+    } else {
+      const pending = this.stack.push(job);
+      this.isWorking = true;
+      setTimeout(() => this.handleMessage(pending));
+    }
     return true;
   }
 
-  private async next(pending: PendingChatMessage) {
-    await this.trySave();
+  private async handleReset() {
+    try {
+      const signal = AbortSignal.timeout(3_000);
+      await this.resetAndSave(signal);
+    } catch {
+      this.logger.warn('Failed to reset and save chat session');
+    } finally {
+      this.isWorking = false;
+    }
+  }
+
+  private async handleMessage(pending: PendingChatMessage) {
+    await this.maybeSave();
     const message = pending.message;
 
     this.onMessageStarted.emit({
@@ -250,7 +273,7 @@ export class ChatSession {
       } else {
         pending.fail(failReason);
       }
-      await this.trySave();
+      await this.maybeSave();
 
       // TODO: we should probably restore user messages in UI here, that a user won't lose their input if the session fails.
       this.queue.clear();
@@ -272,7 +295,7 @@ export class ChatSession {
 
     this.contextUsage = this.calcContextUsage(result.usage?.total_tokens);
     pending.complete(result.completedMessages);
-    await this.trySave();
+    await this.maybeSave();
 
     if (result.toolCalls) {
       const tid = this.nextId();

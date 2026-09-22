@@ -283,7 +283,8 @@ export class SlackChannelSynchronizer {
   ): Promise<void> {
     this.isUpdatingMetadata = true;
     try {
-      await session.setMetadata({ id: messageId, completedMessageIndex }, 'slack', slack);
+      const signal = AbortSignal.timeout(3_000);
+      await session.setMetadata(signal, { id: messageId, completedMessageIndex }, 'slack', slack);
     } finally {
       this.isUpdatingMetadata = false;
     }
