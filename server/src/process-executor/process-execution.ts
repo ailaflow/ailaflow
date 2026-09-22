@@ -116,6 +116,10 @@ export class ProcessExecution {
     this.variableManager.set(name, value);
   }
 
+  public getUserAccessExpression(): string {
+    return this.process.userAccessExpression;
+  }
+
   public initializeSubExecution(process: Process, input: Record<string, unknown>): ProcessExecution {
     const parentProcessNames = this.context.parentProcessNames
       ? [...this.context.parentProcessNames, this.process.name]

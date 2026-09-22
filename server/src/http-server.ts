@@ -9,7 +9,6 @@ const PORT = Number(process.env.PORT) || 2048;
 const HOST = process.env.HOST || '0.0.0.0';
 
 export class HttpServer {
-  private readonly logger = new Logger(HttpServer.name);
   public readonly app: Express;
   private server: NodeHttpServer | null = null;
 

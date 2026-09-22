@@ -182,7 +182,7 @@ Creates the table if needed, then inserts or replaces the row. `_id` is required
 
 #### `ailaflow.log('Foo')`
 
-Writes to the AilaFlow logger, visible in debug mode.
+Writes to the AilaFlow logger, visible in test mode.
 
 ### Utilities
 
@@ -196,7 +196,11 @@ Returns `true` if the user exists and `false` otherwise. The `@` prefix is optio
 
 #### `await ailaflow.isTest()`
 
-Returns `true` if the current process is executed in test mode, `false` otherwise.
+Returns `true` if the current process is running in test mode and `false` otherwise.
+
+#### `await ailaflow.getUserAccessExpression()`
+
+Returns the process's user access expression, such as `@robert or @aila` or `@{.team = "finance"}`. Pass it to a notification or task step to notify or create tasks for all users assigned to the process.
 
 ## Forms
 
