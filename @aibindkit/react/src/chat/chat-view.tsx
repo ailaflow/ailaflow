@@ -40,6 +40,7 @@ export interface ChatViewProps {
 }
 
 export function ChatView(props: ChatViewProps) {
+  const chatRef = useRef<HTMLElement>(null);
   const messagesRef = useRef<HTMLUListElement>(null);
 
   useLayoutEffect(() => {
@@ -50,7 +51,7 @@ export function ChatView(props: ChatViewProps) {
   }, [props.messages]);
 
   return (
-    <section className="abk-chat">
+    <section ref={chatRef} className="abk-chat">
       <ul ref={messagesRef} className="abk-chat-messages">
         {props.sessionToken === null && !props.connectionError ? (
           <LoadingChatView />
@@ -74,6 +75,7 @@ export function ChatView(props: ChatViewProps) {
       {props.connectionError && <ConnectionErrorBar error={props.connectionError} onReconnectClicked={props.onReconnectClicked} />}
 
       <ChatComposerView
+        chatRef={chatRef}
         isWorking={props.isWorking}
         message={props.message}
         contextUsage={props.contextUsage}

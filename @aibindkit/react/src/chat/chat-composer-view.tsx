@@ -1,9 +1,12 @@
-import { useEffect, useRef, useState } from 'react';
-import type { KeyboardEvent } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import type { KeyboardEvent, RefObject } from 'react';
 import type { ChatContextUsageUpdate } from '@aibindkit/core';
 import { SvgIcon } from './svg-icon';
 
+const isResizeObserverSupported = typeof ResizeObserver !== 'undefined';
+
 export interface ChatComposerViewProps {
+  chatRef: RefObject<HTMLElement | null>;
   isWorking: boolean;
   message: string;
   contextUsage?: ChatContextUsageUpdate;
@@ -16,6 +19,29 @@ export interface ChatComposerViewProps {
 export function ChatComposerView(props: ChatComposerViewProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  useLayoutEffect(() => {
+    const input = inputRef.current;
+    const chat = props.chatRef.current;
+    if (!input || !chat) {
+      return;
+    }
+
+    const resizeInput = () => {
+      input.style.height = 'auto';
+      input.style.height = `${Math.min(input.scrollHeight, chat.clientHeight * 0.3)}px`;
+    };
+
+    resizeInput();
+    if (!isResizeObserverSupported) {
+      return;
+    }
+
+    const observer = new ResizeObserver(resizeInput);
+    observer.observe(chat);
+    return () => observer.disconnect();
+  }, [props.chatRef, props.message]);
 
   useEffect(() => {
     if (!isMenuOpen) {
@@ -43,7 +69,7 @@ export function ChatComposerView(props: ChatComposerViewProps) {
   }, [isMenuOpen]);
 
   function onMessageKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
-    if (event.key !== 'Enter' || event.ctrlKey) {
+    if (event.key !== 'Enter' || event.ctrlKey || event.shiftKey) {
       return;
     }
 
@@ -62,6 +88,7 @@ export function ChatComposerView(props: ChatComposerViewProps) {
     <div className="abk-chat-composer">
       <div className="abk-chat-composer-inner">
         <textarea
+          ref={inputRef}
           value={props.message}
           onChange={e => props.onMessageChanged(e.currentTarget.value)}
           onKeyDown={onMessageKeyDown}
