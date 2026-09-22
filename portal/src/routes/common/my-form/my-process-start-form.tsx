@@ -1,4 +1,4 @@
-import { HttpClientSseListener, useLoader } from '@aibindkit/react';
+import { HttpClientSseListener } from '@aibindkit/react';
 import {
   JsonSchema,
   ProcessExecutionOutcomeType,
@@ -9,9 +9,10 @@ import {
 } from '@ailaflow/shared';
 import { useEffect, useMemo, useState } from 'react';
 import { useApiClient } from '../../../auth/auth-context';
+import { MyFormContainerView } from '../../../views/common/my-form/my-form-container-view';
 import { MyFormErrorView } from '../../../views/common/my-form/my-form-error-view';
 import { MyFormLoadingView } from '../../../views/common/my-form/my-form-loading-view';
-import { FormAdapter } from '../form-renderer/form-adapter';
+import { FormAdapter, FormError } from '../form-renderer/form-adapter';
 import { FormRenderer } from '../form-renderer/form-renderer';
 import { MyFormOutputView } from '../../../views/common/my-form/my-form-output-view';
 
@@ -66,6 +67,7 @@ export interface MyProcessStartFormProps {
 
 export function MyProcessStartForm({ args, onEnded }: MyProcessStartFormProps) {
   const apiClient = useApiClient();
+  const [formError, setFormError] = useState<FormError | null>(null);
   const [state, setState] = useState<LoadingStartFormState | StartFormState | ExecutingState | OutputFormState | ErrorState>(() => ({
     type: StateType.LOADING_START_FORM,
     args
@@ -175,6 +177,9 @@ export function MyProcessStartForm({ args, onEnded }: MyProcessStartFormProps) {
           });
         },
         async submitForm(_: AbortSignal, startValues: Record<string, unknown>) {
+          if (formError) {
+            setFormError(null);
+          }
           setState({
             type: StateType.EXECUTING,
             startValues,
@@ -183,7 +188,8 @@ export function MyProcessStartForm({ args, onEnded }: MyProcessStartFormProps) {
         },
         readVariable: async () => {
           throw new Error('Reading variables is not allowed');
-        }
+        },
+        collectFormError: setFormError
       };
     }
 
@@ -199,6 +205,9 @@ export function MyProcessStartForm({ args, onEnded }: MyProcessStartFormProps) {
           });
         },
         async submitForm(_, values) {
+          if (formError) {
+            setFormError(null);
+          }
           setState({
             type: StateType.EXECUTING,
             startValues: values,
@@ -208,7 +217,8 @@ export function MyProcessStartForm({ args, onEnded }: MyProcessStartFormProps) {
             }
           });
         },
-        readVariable: async (_, name) => state.outputValues[name]
+        readVariable: async (_, name) => state.outputValues[name],
+        collectFormError: setFormError
       };
     }
 
@@ -220,14 +230,15 @@ export function MyProcessStartForm({ args, onEnded }: MyProcessStartFormProps) {
   }
 
   if (formAdapter) {
-    if (state.type === StateType.START_FORM) {
-      return <FormRenderer form={state.form} adapter={formAdapter} />;
-    }
-    if (state.type === StateType.OUTPUT_FORM) {
-      if (!state.form) {
+    if (state.type === StateType.START_FORM || state.type === StateType.OUTPUT_FORM) {
+      if (state.type === StateType.OUTPUT_FORM && !state.form) {
         return <MyFormOutputView outputValues={state.outputValues} />;
       }
-      return <FormRenderer form={state.form} adapter={formAdapter} />;
+      return (
+        <MyFormContainerView formError={formError} onFormErrorClose={() => setFormError(null)}>
+          <FormRenderer form={state.form} adapter={formAdapter} />
+        </MyFormContainerView>
+      );
     }
   }
   return <MyFormLoadingView />;

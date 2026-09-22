@@ -1,9 +1,10 @@
 import { useLoader } from '@aibindkit/react';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useApiClient } from '../../../auth/auth-context';
+import { MyFormContainerView } from '../../../views/common/my-form/my-form-container-view';
 import { MyFormErrorView } from '../../../views/common/my-form/my-form-error-view';
 import { MyFormLoadingView } from '../../../views/common/my-form/my-form-loading-view';
-import { FormAdapter } from '../form-renderer/form-adapter';
+import { FormAdapter, FormError } from '../form-renderer/form-adapter';
 import { FormRenderer } from '../form-renderer/form-renderer';
 
 export interface MyTaskFormArgs {
@@ -22,6 +23,7 @@ export function MyTaskForm({ args, onSubmitted }: MyTaskFormProps) {
     abortSignal => apiClient.myTask.getMyTaskForm(abortSignal, args.taskId, { testUserName: args.testUserName }),
     [apiClient, args]
   );
+  const [formError, setFormError] = useState<FormError | null>(null);
 
   const formAdapter = useMemo<FormAdapter>(
     () => ({
@@ -50,6 +52,9 @@ export function MyTaskForm({ args, onSubmitted }: MyTaskFormProps) {
           testUserName: args.testUserName
         });
         return response.value;
+      },
+      collectFormError(error: FormError) {
+        setFormError(error);
       }
     }),
     [apiClient, args, data, onSubmitted]
@@ -61,5 +66,9 @@ export function MyTaskForm({ args, onSubmitted }: MyTaskFormProps) {
   if (error) {
     return <MyFormErrorView error={error} />;
   }
-  return <FormRenderer form={data.form} adapter={formAdapter} />;
+  return (
+    <MyFormContainerView formError={formError} onFormErrorClose={() => setFormError(null)}>
+      <FormRenderer form={data.form} adapter={formAdapter} />
+    </MyFormContainerView>
+  );
 }
