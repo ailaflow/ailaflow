@@ -48,7 +48,7 @@ export function Chat(props: ChatProps) {
   const pendingToolAbortControllers = useRef(new Set<AbortController>());
 
   const toolCallsHandler = useMemo<ChatToolCallsHandler>(
-    () => new ChatToolCallsHandler(props.transport, props.frontEndToolCallsHandler ?? (async () => null)),
+    () => new ChatToolCallsHandler(props.transport, props.frontEndToolCallsHandler ?? (async () => null), console),
     [props.transport, props.frontEndToolCallsHandler]
   );
 

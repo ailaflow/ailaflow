@@ -7,7 +7,7 @@ const maxDefaultRetryDelayMs = 8_000;
 export class RetryableHttpClient {
   public constructor(
     private readonly maxRetries: number,
-    private readonly logger?: Logger
+    private readonly logger: Logger
   ) {}
 
   public async fetch(url: string, init: RequestInit): Promise<Response> {
@@ -20,10 +20,9 @@ export class RetryableHttpClient {
           throw e;
         }
         const delay = this.calculateDefaultRetryDelay(attempt);
-        if (this.logger) {
-          const error = e instanceof Error ? e.message : String(e);
-          this.logger.warn(`Request to ${url} failed: ${error}; attempt ${attempt + 1}; retrying in ${delay} ms`);
-        }
+
+        const error = e instanceof Error ? e.message : String(e);
+        this.logger.warn(`Request to ${url} failed: ${error}; attempt ${attempt + 1}; retrying in ${delay} ms`);
         await this.wait(delay, init.signal);
         continue;
       }
@@ -35,11 +34,9 @@ export class RetryableHttpClient {
       await this.cancelResponseBody(response);
 
       const delay = this.calculateRetryDelay(response.headers, attempt);
-      if (this.logger) {
-        this.logger.warn(
-          `Request to ${url} failed with retryable status ${response.status}; attempt ${attempt + 1}; retrying in ${delay} ms`
-        );
-      }
+      this.logger.warn(
+        `Request to ${url} failed with retryable status ${response.status}; attempt ${attempt + 1}; retrying in ${delay} ms`
+      );
       await this.wait(delay, init.signal);
     }
   }

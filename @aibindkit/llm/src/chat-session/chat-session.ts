@@ -1,4 +1,4 @@
-import type { ChatMessageUpdate, ChatMessageMetadata, ChatMessage, ChatContextUsageUpdate } from '@aibindkit/core';
+import type { ChatMessageUpdate, ChatMessageMetadata, ChatMessage, ChatContextUsageUpdate, Logger } from '@aibindkit/core';
 import { ChatMessageType, SimpleEvent } from '@aibindkit/core';
 import { Message, MessageCompletionResult } from './messages/message';
 import { MessageFactory } from './messages/message-factory';
@@ -50,6 +50,7 @@ export class ChatSession {
     public readonly toolsHash: string,
     private readonly contextWindow: number | undefined,
     private readonly effectiveContextWindowPercent: number,
+    private readonly logger: Logger,
     private readonly storage: ChatSessionStorage,
     private readonly messageFactory: MessageFactory
   ) {}
@@ -263,7 +264,7 @@ export class ChatSession {
         }
       });
 
-      console.error('Error completing message:', failReason);
+      this.logger.error(`Error completing message: ${failReason}`);
       return;
     } finally {
       this.isWorking = false;

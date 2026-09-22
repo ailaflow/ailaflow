@@ -45,7 +45,8 @@ export function UserListPage() {
           }
           return loader.data.users.map(user => ({
             name: user.name,
-            isAdmin: user.isAdmin
+            isAdmin: user.isAdmin,
+            isActive: user.isActive
           }));
         },
         createNew: async () => {

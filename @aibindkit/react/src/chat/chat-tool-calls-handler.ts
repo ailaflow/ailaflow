@@ -1,11 +1,12 @@
-import { ChatTransport, SendFrontendToolResultRequest, ToolCall } from '@aibindkit/core';
+import { ChatTransport, Logger, SendFrontendToolResultRequest, ToolCall } from '@aibindkit/core';
 
 export type FrontEndToolCallsHandler = (abortSignal: AbortSignal, toolCalls: ToolCall) => Promise<object | null>;
 
 export class ChatToolCallsHandler {
   public constructor(
     private readonly transport: ChatTransport,
-    private readonly frontEndToolCallsHandler: FrontEndToolCallsHandler
+    private readonly frontEndToolCallsHandler: FrontEndToolCallsHandler,
+    private readonly logger: Logger
   ) {}
 
   public async handle(abortSignal: AbortSignal, toolCalls: ToolCall[], sessionToken: string): Promise<void> {
@@ -43,7 +44,7 @@ export class ChatToolCallsHandler {
             result: `Error executing tool call: ${error}`
           });
         } catch (e) {
-          console.warn(e);
+          this.logger.warn(`Failed to send frontend tool result for callId: ${toolCall.id} with error: ${(e as Error)?.message ?? e}`);
         }
       }
     }

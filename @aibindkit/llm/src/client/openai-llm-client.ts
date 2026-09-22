@@ -38,7 +38,7 @@ export class OpenaiLlmClient implements LlmClient {
       maxRetries?: number;
       debugUsage?: boolean;
     },
-    private readonly logger?: Logger
+    private readonly logger: Logger
   ) {
     this.baseUrl = config.url.replace(/\/+$/, '');
     this.httpClient = new RetryableHttpClient(config.maxRetries ?? defaultMaxRetries, logger);
@@ -71,10 +71,9 @@ export class OpenaiLlmClient implements LlmClient {
     if (!choice?.message) {
       throw new LlmClientError('No choices returned from AI API');
     }
-    if (this.config.debugUsage && this.logger) {
+    if (this.config.debugUsage) {
       this.logger.log(`Usage: ${JSON.stringify(data.usage)}`);
     }
-
     return {
       message: choice.message,
       usage: data.usage

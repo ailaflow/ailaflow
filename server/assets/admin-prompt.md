@@ -194,6 +194,10 @@ Returns the name of the user who started the process, including the `@` prefix, 
 
 Returns `true` if the user exists and `false` otherwise. The `@` prefix is optional.
 
+#### `await ailaflow.isTest()`
+
+Returns `true` if the current process is executed in test mode, `false` otherwise.
+
 ## Forms
 
 ### Rendering and event handling

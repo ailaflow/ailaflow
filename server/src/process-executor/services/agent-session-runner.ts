@@ -7,12 +7,13 @@ import { LlmClientProvider } from '../../llm/llm-client-provider';
 import { ServerPaths } from '../../core/server-paths';
 import { AgentToolSetProviderFactory } from '../../chat-session/agent-tool-set-provider-factory';
 import { ProcessExecutionGlobalState } from '../process-execution-global-state';
+import { Logger } from '../../core/logger';
 
 const AGENT_TIMEOUT_MS = 10 * 60_000;
 
 export class AgentSessionRunner {
   private readonly systemPrompt: string;
-  private readonly sessionFactory = new ChatSessionFactory(new DisabledChatSessionStorage());
+  private readonly sessionFactory = new ChatSessionFactory(new Logger('AiBindKit'), new DisabledChatSessionStorage());
 
   public constructor(
     private readonly llmClientProvider: LlmClientProvider,

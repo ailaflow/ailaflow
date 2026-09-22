@@ -26,11 +26,13 @@ export interface ChatServerConfiguration {
 }
 
 export function setupServer(app: Express, config: ChatServerConfiguration): void {
+  const logger = config.logger ?? console;
+
   const frontendToolBus = new FrontendToolBus();
   const frontendToolFactory = new FrontendToolFactory(frontendToolBus);
   const authContextResolver = config.authContextResolver ?? new DefaultChatAuthContextResolver();
   const sessionStorage = config.sessionStorage ?? new DisabledChatSessionStorage();
-  const sessionFactory = new ChatSessionFactory(sessionStorage);
+  const sessionFactory = new ChatSessionFactory(logger, sessionStorage);
   const liveChatSessionStore = new LiveChatSessionStore();
   const chatSessionActivator = new ChatSessionActivator(
     liveChatSessionStore,
@@ -39,7 +41,6 @@ export function setupServer(app: Express, config: ChatServerConfiguration): void
     sessionFactory,
     frontendToolFactory
   );
-  const logger = config.logger ?? console;
 
   const endpoints: Endpoint[] = [
     new RestoreChatEndpoint(authContextResolver, chatSessionActivator),

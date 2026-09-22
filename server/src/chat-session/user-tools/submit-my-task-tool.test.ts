@@ -16,7 +16,7 @@ test('rejects AI submission when a task only supports its form', async () => {
 
   const result = await tool.handle(new AbortController().signal, createContext(), {
     taskId: 'task_1',
-    outputValues: {}
+    outputVariableValues: {}
   });
 
   assert.deepEqual(result.content, {
@@ -40,7 +40,7 @@ test('submits a task that supports the AI tool', async () => {
 
   const result = await tool.handle(new AbortController().signal, createContext(), {
     taskId: 'task_1',
-    outputValues: { approved: true }
+    outputVariableValues: { approved: true }
   });
 
   assert.equal(completed, true);

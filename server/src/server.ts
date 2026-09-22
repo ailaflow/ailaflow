@@ -224,6 +224,7 @@ import { TableDataListQuerier } from './queriers/table-data-list/table-data-list
 import { SlackUserListQuerier } from './queriers/slack-user-list/slack-user-list-querier';
 import { TableSchemaRepository } from './repositories/table/table-schema-repository';
 import { Notifier } from './notification/notifier';
+import { IsTestRpcHandler } from './process-executor/rpc-handlers/is-test-rpc-handler';
 
 const DB_TYPE = 'sqlite';
 
@@ -357,6 +358,7 @@ export class Server {
       new WriteTableRpcHandler(tableManager),
       new TryReadTableRpcHandler(tableManager),
       new GetStartedByRpcHandler(processExecutionStore),
+      new IsTestRpcHandler(processExecutionStore),
       new UserExistsRpcHandler(userRepository)
     ]);
 

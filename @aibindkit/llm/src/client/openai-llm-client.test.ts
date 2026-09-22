@@ -49,7 +49,7 @@ test('sends a chat completion request and passes through the response', async ()
   };
 
   try {
-    const client = new OpenaiLlmClient({ url: 'https://gateway.example/v1/', apiKey: 'secret' });
+    const client = new OpenaiLlmClient({ url: 'https://gateway.example/v1/', apiKey: 'secret' }, console);
     const result = await client.complete(
       AbortSignal.timeout(1_000),
       { name: 'model-a', effectiveContextWindowPercent: 90 },
@@ -128,7 +128,7 @@ test('lists models and reads compatible context-window fields', async () => {
   };
 
   try {
-    const client = new OpenaiLlmClient({ url: 'https://gateway.example/v1', apiKey: 'secret' });
+    const client = new OpenaiLlmClient({ url: 'https://gateway.example/v1', apiKey: 'secret' }, console);
     assert.deepEqual(await client.getModels(AbortSignal.timeout(1_000)), [
       { name: 'model-a', contextWindow: 128_000 },
       { name: 'model-b', contextWindow: 32_000 },
@@ -147,7 +147,7 @@ test('reports API error messages', async () => {
   };
 
   try {
-    const client = new OpenaiLlmClient({ url: 'https://gateway.example/v1', apiKey: 'secret' });
+    const client = new OpenaiLlmClient({ url: 'https://gateway.example/v1', apiKey: 'secret' }, console);
     await assert.rejects(
       client.getModels(AbortSignal.timeout(1_000)),
       error => error instanceof Error && error.name === 'LlmClientError' && error.message === 'Invalid API key'
@@ -166,7 +166,7 @@ test('limits retries for server errors', async () => {
   };
 
   try {
-    const client = new OpenaiLlmClient({ url: 'https://gateway.example/v1', apiKey: 'secret' });
+    const client = new OpenaiLlmClient({ url: 'https://gateway.example/v1', apiKey: 'secret' }, console);
     await assert.rejects(
       client.getModels(AbortSignal.timeout(1_000)),
       error => error instanceof Error && error.message === 'Temporarily unavailable'
@@ -186,7 +186,7 @@ test('does not retry after aborting', async () => {
 
   try {
     const abortController = new AbortController();
-    const client = new OpenaiLlmClient({ url: 'https://gateway.example/v1', apiKey: 'secret' });
+    const client = new OpenaiLlmClient({ url: 'https://gateway.example/v1', apiKey: 'secret' }, console);
     const models = client.getModels(abortController.signal);
     abortController.abort();
     await assert.rejects(models, error => error === abortController.signal.reason);

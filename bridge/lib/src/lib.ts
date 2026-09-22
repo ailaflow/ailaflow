@@ -155,6 +155,14 @@ export async function getStartedBy(): Promise<string> {
 }
 
 /**
+ * Returns whether the current process is executed in test mode.
+ * @returns `true` if the current process is executed in test mode, `false` otherwise.
+ */
+export async function isTest(rpcConfig?: RpcConfig): Promise<boolean> {
+  return rpc<boolean>('isTest', {}, rpcConfig);
+}
+
+/**
  * Checks whether a user exists.
  * @param name The name of the user to check.
  * @param rpcConfig Optional configuration for the RPC call.
