@@ -148,6 +148,7 @@ export function log(...texts: unknown[]) {
 /**
  * Returns the name of the user who started the process with the '@' prefix.
  * @returns The name of the user who started the process.
+ * @throws If the RPC call fails.
  */
 export async function getStartedBy(): Promise<string> {
   const name = await rpc<string>('getStartedBy', {});
@@ -155,8 +156,19 @@ export async function getStartedBy(): Promise<string> {
 }
 
 /**
+ * Resolves the current process's user access expression to explicit user references.
+ * @returns The names of users with access to the process, each with the '@' prefix.
+ * @throws If the RPC call fails.
+ */
+export async function resolveUserAccess(rpcConfig?: RpcConfig): Promise<string[]> {
+  const userNames = await rpc<string[]>('resolveUserAccess', {}, rpcConfig);
+  return userNames.map(name => '@' + name);
+}
+
+/**
  * Returns whether the current process is executed in test mode.
  * @returns `true` if the current process is executed in test mode, `false` otherwise.
+ * @throws If the RPC call fails.
  */
 export async function isTest(rpcConfig?: RpcConfig): Promise<boolean> {
   return rpc<boolean>('isTest', {}, rpcConfig);

@@ -198,9 +198,9 @@ Returns `true` if the user exists and `false` otherwise. The `@` prefix is optio
 
 Returns `true` if the current process is running in test mode and `false` otherwise.
 
-#### `await ailaflow.getUserAccessExpression()`
+#### `await ailaflow.resolveUserAccess()`
 
-Returns the process's user access expression, such as `@robert or @aila` or `@{.team = "finance"}`. Pass it to a notification or task step to notify or create tasks for all users assigned to the process.
+Resolves the process's user access and returns matching user names, such as `['@robert', '@aila']`. You can use this method to determine which users to target in a notification or task step. First convert the list to a user access expression, for example with `(await ailaflow.resolveUserAccess()).join(' or ')`.
 
 ## Forms
 

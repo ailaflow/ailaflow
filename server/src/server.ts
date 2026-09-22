@@ -225,7 +225,7 @@ import { SlackUserListQuerier } from './queriers/slack-user-list/slack-user-list
 import { TableSchemaRepository } from './repositories/table/table-schema-repository';
 import { Notifier } from './notification/notifier';
 import { IsTestRpcHandler } from './process-executor/rpc-handlers/is-test-rpc-handler';
-import { GetUserAccessExpressionRpcHandler } from './process-executor/rpc-handlers/get-user-access-expression-rpc-handler';
+import { ResolveUserAccessRpcHandler } from './process-executor/rpc-handlers/resolve-user-access-rpc-handler';
 
 const DB_TYPE = 'sqlite';
 
@@ -354,7 +354,7 @@ export class Server {
     const processExecutionStore = new ProcessExecutionStore();
     const rpcHandler = new SandboxRpcHandlerProvider([
       new GetStartedByRpcHandler(processExecutionStore),
-      new GetUserAccessExpressionRpcHandler(processExecutionStore),
+      new ResolveUserAccessRpcHandler(processExecutionStore, userAccessExpressionUserQuerier),
       new IsTestRpcHandler(processExecutionStore),
       new ReadTablePageRpcHandler(tableManager),
       new ReadVariableRpcHandler(processExecutionStore),
