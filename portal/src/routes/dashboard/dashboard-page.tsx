@@ -100,6 +100,7 @@ export function DashboardPage() {
             items={data.processes.processes.slice(0, PANEL_ITEM_LIMIT).map(process => ({
               name: process.name,
               description: process.description,
+              url: `/my-processes/${encodeURIComponent(process.name)}`,
               onClick: () => setStartedProcessName(process.name)
             }))}
             emptyMessage="No processes are available."

@@ -1,17 +1,19 @@
 import { useApiClient } from '../../auth/auth-context';
 import { useLoader } from '@aibindkit/react';
 import { ProcessDisplay } from '@ailaflow/shared';
-import { useNavigate, useSearchParams } from 'react-router';
+import { useState } from 'react';
+import { useSearchParams } from 'react-router';
 import { PortalErrorView } from '../../views/portal/portal-error-view';
 import { PortalLoadingView } from '../../views/portal/portal-loading-view';
 import { ProcessListView } from '../../views/process-list-view/process-list-view';
 import { Portal } from '../common/portal';
+import { MyProcessStartFormPopup } from '../common/popups/my-process-start-form-popup';
 
 const PAGE_SIZE = 20;
 
 export function MyProcessListPage() {
   const apiClient = useApiClient();
-  const navigate = useNavigate();
+  const [startedProcessName, setStartedProcessName] = useState<string | null>(null);
   const [searchParams, setSearchParams] = useSearchParams();
   const page = Number(searchParams.get('page') ?? 1);
   const { data, isLoading, error } = useLoader(
@@ -54,7 +56,8 @@ export function MyProcessListPage() {
         items={data.processes.map(process => ({
           name: process.name,
           description: process.description,
-          onClick: () => navigate(`/my-processes/${encodeURIComponent(process.name)}`)
+          url: `/my-processes/${encodeURIComponent(process.name)}`,
+          onClick: () => setStartedProcessName(process.name)
         }))}
         emptyMessage="No processes found."
         pagination={{
@@ -64,6 +67,9 @@ export function MyProcessListPage() {
           onPageChange: changePage
         }}
       />
+      {startedProcessName ? (
+        <MyProcessStartFormPopup args={{ processName: startedProcessName }} onClose={() => setStartedProcessName(null)} />
+      ) : null}
     </Portal>
   );
 }
