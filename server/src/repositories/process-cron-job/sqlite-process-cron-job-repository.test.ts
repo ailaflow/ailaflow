@@ -77,10 +77,10 @@ test('deletes jobs when their process is deleted', async () => {
   db.close();
 });
 
-test('requires the caller to reference an existing user', async () => {
+test('requires the starter user to reference an existing user', async () => {
   const { signal, db, repository } = await setup();
   const job = createJob('job_1', 'alpha', 1_000);
-  job.callerName = 'missing';
+  job.starterUserName = 'missing';
 
   await assert.rejects(repository.insert(signal, job), /FOREIGN KEY constraint failed/);
   db.close();

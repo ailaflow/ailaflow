@@ -7,7 +7,7 @@ import { Transaction } from '../../core/transaction';
 interface ProcessCronJobRow {
   id: string;
   processName: string;
-  callerName: string;
+  starterUserName: string;
   expression: string;
   timeZone: string;
   inputValues: string;
@@ -29,7 +29,7 @@ export class SqliteProcessCronJobRepository implements ProcessCronJobRepository 
         CREATE TABLE IF NOT EXISTS process_cron_jobs (
           id TEXT PRIMARY KEY,
           processName TEXT NOT NULL REFERENCES processes(name) ON DELETE CASCADE,
-          callerName TEXT NOT NULL REFERENCES users(name) ON DELETE CASCADE,
+          starterUserName TEXT NOT NULL REFERENCES users(name) ON DELETE CASCADE,
           expression TEXT NOT NULL,
           timeZone TEXT NOT NULL,
           inputValues TEXT NOT NULL,
@@ -49,7 +49,7 @@ export class SqliteProcessCronJobRepository implements ProcessCronJobRepository 
       db.prepare(
         `
           INSERT INTO process_cron_jobs (
-            id, processName, callerName, expression, timeZone, inputValues, isEnabled, nextExecutionAt, lastRun
+            id, processName, starterUserName, expression, timeZone, inputValues, isEnabled, nextExecutionAt, lastRun
           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         `
       ).run(...serialize(job));
@@ -61,11 +61,11 @@ export class SqliteProcessCronJobRepository implements ProcessCronJobRepository 
       db.prepare(
         `
           UPDATE process_cron_jobs
-          SET callerName = ?, expression = ?, timeZone = ?, inputValues = ?, isEnabled = ?, nextExecutionAt = ?
+          SET starterUserName = ?, expression = ?, timeZone = ?, inputValues = ?, isEnabled = ?, nextExecutionAt = ?
           WHERE id = ?
         `
       ).run(
-        job.callerName,
+        job.starterUserName,
         job.expression,
         job.timeZone,
         JSON.stringify(job.inputValues),
@@ -92,7 +92,7 @@ export class SqliteProcessCronJobRepository implements ProcessCronJobRepository 
       const row = db
         .prepare(
           `
-          SELECT id, processName, callerName, expression, timeZone, inputValues, isEnabled, nextExecutionAt, lastRun
+          SELECT id, processName, starterUserName, expression, timeZone, inputValues, isEnabled, nextExecutionAt, lastRun
           FROM process_cron_jobs
           WHERE id = ?
           LIMIT 1
@@ -108,7 +108,7 @@ export class SqliteProcessCronJobRepository implements ProcessCronJobRepository 
       const rows = db
         .prepare(
           `
-          SELECT id, processName, callerName, expression, timeZone, inputValues, isEnabled, nextExecutionAt, lastRun
+          SELECT id, processName, starterUserName, expression, timeZone, inputValues, isEnabled, nextExecutionAt, lastRun
           FROM process_cron_jobs
           WHERE processName = ?
           ORDER BY expression, id
@@ -124,7 +124,7 @@ export class SqliteProcessCronJobRepository implements ProcessCronJobRepository 
       const rows = db
         .prepare(
           `
-          SELECT id, processName, callerName, expression, timeZone, inputValues, isEnabled, nextExecutionAt, lastRun
+          SELECT id, processName, starterUserName, expression, timeZone, inputValues, isEnabled, nextExecutionAt, lastRun
           FROM process_cron_jobs
           WHERE isEnabled = 1 AND nextExecutionAt <= ?
           ORDER BY nextExecutionAt, id
@@ -163,7 +163,7 @@ function serialize(job: ProcessCronJob): [string, string, string, string, string
   return [
     job.id,
     job.processName,
-    job.callerName,
+    job.starterUserName,
     job.expression,
     job.timeZone,
     JSON.stringify(job.inputValues),
@@ -177,7 +177,7 @@ function deserialize(row: ProcessCronJobRow): ProcessCronJob {
   return new ProcessCronJob(
     row.id,
     row.processName,
-    row.callerName,
+    row.starterUserName,
     row.expression,
     row.timeZone,
     JSON.parse(row.inputValues) as ProcessExecutionVariableValues,

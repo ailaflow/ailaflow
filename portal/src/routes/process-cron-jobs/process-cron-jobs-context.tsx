@@ -51,12 +51,12 @@ export function ProcessCronJobsContext(props: ProcessCronJobsContextProps) {
   const inputValidation = draft
     ? validateInputValues(draft.inputValuesText, props.process, variableValidator)
     : { inputValues: null, error: null };
-  const canSave = draft !== null && draft.callerName.length > 0 && expressionError === null && inputValidation.error === null;
+  const canSave = draft !== null && draft.starterUserName.length > 0 && expressionError === null && inputValidation.error === null;
 
   function createJob(): void {
     setDraft({
       id: null,
-      callerName: session?.userName ?? '',
+      starterUserName: session?.userName ?? '',
       expression: '0 9 * * *',
       timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
       inputValuesText: '{}',
@@ -67,7 +67,7 @@ export function ProcessCronJobsContext(props: ProcessCronJobsContextProps) {
   function editJob(job: ProcessCronJobDto): void {
     setDraft({
       id: job.id,
-      callerName: job.callerName,
+      starterUserName: job.starterUserName,
       expression: job.expression,
       timeZone: job.timeZone,
       inputValuesText: JSON.stringify(job.inputValues, null, 2),
@@ -93,7 +93,7 @@ export function ProcessCronJobsContext(props: ProcessCronJobsContextProps) {
         insert: draft.id === null,
         id: draft.id ?? undefined,
         processName: props.process.name,
-        callerName: draft.callerName,
+        starterUserName: draft.starterUserName,
         expression: draft.expression,
         timeZone: draft.timeZone,
         inputValues: inputValidation.inputValues,

@@ -82,9 +82,9 @@ export class ProcessCronJobScheduler implements Scheduler {
   private async handleProcess(jobSignal: AbortSignal, job: ProcessCronJob) {
     const processSignal = AbortSignal.any([jobSignal, AbortSignal.timeout(4_000)]);
 
-    const hasAccess = await this.processAccessQuerier.hasAccess(processSignal, job.callerName, job.processName);
+    const hasAccess = await this.processAccessQuerier.hasAccess(processSignal, job.starterUserName, job.processName);
     if (!hasAccess) {
-      throw new Error('Caller does not have access to process');
+      throw new Error('Starter user does not have access to process');
     }
 
     const process = await this.processManager.tryGetByName(processSignal, job.processName);
@@ -94,7 +94,7 @@ export class ProcessCronJobScheduler implements Scheduler {
 
     const context: ProcessExecutionContext = {
       isTest: false,
-      startedBy: job.callerName
+      startedBy: job.starterUserName
     };
 
     const execution = this.processExecutor.initialize(context, process, job.inputValues);

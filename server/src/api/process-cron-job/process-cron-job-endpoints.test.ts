@@ -27,7 +27,7 @@ test('creates, lists, updates, and deletes a process cron job', async () => {
       {
         insert: true,
         processName: 'alpha',
-        callerName: 'alice',
+        starterUserName: 'alice',
         expression: '0 9 * * *',
         timeZone: 'UTC',
         inputValues: { x: 1 },
@@ -38,7 +38,7 @@ test('creates, lists, updates, and deletes a process cron job', async () => {
   const listed = await getEndpoint.handle(createRequest({ processName: 'alpha' }));
   assert.equal(listed.jobs.length, 1);
   assert.equal(listed.jobs[0].id, created.id);
-  assert.equal(listed.jobs[0].callerName, 'alice');
+  assert.equal(listed.jobs[0].starterUserName, 'alice');
 
   await saveEndpoint.handle(
     createRequest(
@@ -47,7 +47,7 @@ test('creates, lists, updates, and deletes a process cron job', async () => {
         insert: false,
         id: created.id,
         processName: 'alpha',
-        callerName: 'bob',
+        starterUserName: 'bob',
         expression: '0 10 * * *',
         timeZone: 'UTC',
         inputValues: { x: 2 },
@@ -56,7 +56,7 @@ test('creates, lists, updates, and deletes a process cron job', async () => {
     )
   );
   assert.equal((await repository.tryGet(new AbortController().signal, created.id))?.expression, '0 10 * * *');
-  assert.equal((await repository.tryGet(new AbortController().signal, created.id))?.callerName, 'bob');
+  assert.equal((await repository.tryGet(new AbortController().signal, created.id))?.starterUserName, 'bob');
   assert.deepEqual(await deleteEndpoint.handle(createRequest({ id: created.id })), { id: created.id });
 });
 
@@ -70,7 +70,7 @@ test('rejects cron jobs with input that does not match the process definition', 
           {
             insert: true,
             processName: 'alpha',
-            callerName: 'alice',
+            starterUserName: 'alice',
             expression: '0 9 * * *',
             timeZone: 'UTC',
             inputValues: { x: 'wrong' },

@@ -10,7 +10,7 @@ import { useProcessCronJobs } from './process-cron-jobs-context';
 export function ProcessCronJobs() {
   const apiClient = useApiClient();
   const state = useProcessCronJobs();
-  const [isFindCallerPopupOpen, setIsFindCallerPopupOpen] = useState(false);
+  const [isFindStarterUserPopupOpen, setIsFindStarterUserPopupOpen] = useState(false);
 
   useProcessCronJobsAi(state);
   useUnsavedChangesController(state.draft !== null);
@@ -58,27 +58,27 @@ export function ProcessCronJobs() {
           onCreate={state.createJob}
           onEdit={state.editJob}
           onDelete={job => void deleteJob(job.id)}
-          onFindCaller={() => setIsFindCallerPopupOpen(true)}
+          onFindStarterUser={() => setIsFindStarterUserPopupOpen(true)}
           onDraftChange={state.updateDraft}
           onSave={() => void save()}
           onCancel={() => {
-            setIsFindCallerPopupOpen(false);
+            setIsFindStarterUserPopupOpen(false);
             state.cancelDraft();
           }}
         />
       </ResourceEditorView>
-      {isFindCallerPopupOpen && state.draft ? (
+      {isFindStarterUserPopupOpen && state.draft ? (
         <FindUserPopup
           apiClient={apiClient}
           disabledUserNames={[]}
-          initialSearch={state.draft.callerName}
-          title="Select cron job caller"
+          initialSearch={state.draft.starterUserName}
+          title="Select cron job starter"
           description="Choose the user whose permissions will be used to run this process."
-          onSelectUser={callerName => {
-            state.updateDraft({ callerName });
-            setIsFindCallerPopupOpen(false);
+          onSelectUser={starterUserName => {
+            state.updateDraft({ starterUserName });
+            setIsFindStarterUserPopupOpen(false);
           }}
-          onClose={() => setIsFindCallerPopupOpen(false)}
+          onClose={() => setIsFindStarterUserPopupOpen(false)}
         />
       ) : null}
     </>

@@ -6,7 +6,7 @@ import { ProcessCronJobRepositoryError } from './process-cron-job-repository';
 export class ProcessCronJob {
   public static create(
     processName: string,
-    callerName: string,
+    starterUserName: string,
     expression: string,
     timeZone: string,
     inputValues: ProcessExecutionVariableValues,
@@ -16,7 +16,7 @@ export class ProcessCronJob {
     return new ProcessCronJob(
       randomUUID(),
       processName,
-      callerName,
+      starterUserName,
       expression,
       timeZone,
       inputValues,
@@ -29,7 +29,7 @@ export class ProcessCronJob {
   public constructor(
     public readonly id: string,
     public readonly processName: string,
-    public callerName: string,
+    public starterUserName: string,
     public expression: string,
     public timeZone: string,
     public inputValues: ProcessExecutionVariableValues,
@@ -39,14 +39,14 @@ export class ProcessCronJob {
   ) {}
 
   public update(
-    callerName: string,
+    starterUserName: string,
     expression: string,
     timeZone: string,
     inputValues: ProcessExecutionVariableValues,
     isEnabled: boolean
   ): void {
     validate(expression, timeZone);
-    this.callerName = callerName;
+    this.starterUserName = starterUserName;
     this.expression = expression;
     this.timeZone = timeZone;
     this.inputValues = inputValues;

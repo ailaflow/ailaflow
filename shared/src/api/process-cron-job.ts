@@ -27,7 +27,7 @@ export type ProcessCronJobRun = z.infer<typeof processCronJobRunSchema>;
 export const processCronJobDtoSchema = z.object({
   id: z.string(),
   processName: z.string(),
-  callerName: z.string(),
+  starterUserName: z.string(),
   expression: z.string(),
   timeZone: z.string(),
   inputValues: z.record(z.string(), z.unknown()),
@@ -52,7 +52,7 @@ export const saveProcessCronJobRequestSchema = z.object({
   insert: z.boolean(),
   id: z.string().optional(),
   processName: z.string(),
-  callerName: z.string().min(1),
+  starterUserName: z.string().min(1),
   expression: z.string(),
   timeZone: z.string(),
   inputValues: z.record(z.string(), z.unknown()),

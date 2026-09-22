@@ -2,7 +2,7 @@ import { ProcessCronJobDto, ProcessCronJobRun, ProcessCronJobRunStatus } from '@
 
 export interface ProcessCronJobDraftViewModel {
   id: string | null;
-  callerName: string;
+  starterUserName: string;
   expression: string;
   timeZone: string;
   inputValuesText: string;
@@ -18,7 +18,7 @@ export interface ProcessCronJobsViewProps {
   onCreate(): void;
   onEdit(job: ProcessCronJobDto): void;
   onDelete(job: ProcessCronJobDto): void;
-  onFindCaller(): void;
+  onFindStarterUser(): void;
   onDraftChange(changes: Partial<ProcessCronJobDraftViewModel>): void;
   onSave(): void;
   onCancel(): void;
@@ -65,24 +65,23 @@ function CronJobEditor(props: ProcessCronJobsViewProps & { draft: ProcessCronJob
     <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5" aria-label="Cron job editor">
       <div className="flex items-center justify-between gap-3">
         <h2 className="text-lg font-semibold text-slate-900">{props.draft.id ? 'Edit cron job' : 'New cron job'}</h2>
-        <span className="text-xs text-slate-500">Five-field cron expression</span>
       </div>
       <div className="mt-4 grid gap-4 md:grid-cols-3">
         <div>
-          <span className="mb-1.5 block text-sm font-medium text-slate-700">Caller</span>
+          <span className="mb-1.5 block text-sm font-medium text-slate-700">Starter user</span>
           <div className="flex gap-2">
             <div
               className={`flex h-10 min-w-0 flex-1 items-center rounded-md border bg-slate-50 px-3 text-sm text-slate-900 ${
-                props.draft.callerName ? 'border-slate-200' : 'border-red-300'
+                props.draft.starterUserName ? 'border-slate-200' : 'border-red-300'
               }`}
             >
-              <span className="truncate">{props.draft.callerName ? `@${props.draft.callerName}` : 'No user selected'}</span>
+              <span className="truncate">{props.draft.starterUserName ? `@${props.draft.starterUserName}` : 'No user selected'}</span>
             </div>
-            <button className={secondaryButtonClass} type="button" onClick={props.onFindCaller}>
+            <button className={secondaryButtonClass} type="button" onClick={props.onFindStarterUser}>
               Select user
             </button>
           </div>
-          {!props.draft.callerName ? <span className="mt-1 block text-xs text-red-700">Caller is required</span> : null}
+          {!props.draft.starterUserName ? <span className="mt-1 block text-xs text-red-700">Starter user is required</span> : null}
         </div>
         <div>
           <TextField
@@ -199,8 +198,8 @@ function CronJobItem(props: { job: ProcessCronJobDto; onEdit(job: ProcessCronJob
 
       <dl className="grid gap-3 text-sm sm:grid-cols-2">
         <div>
-          <dt className="text-xs font-medium uppercase tracking-wide text-slate-400">Caller</dt>
-          <dd className="mt-1 truncate text-slate-700">@{job.callerName}</dd>
+          <dt className="text-xs font-medium uppercase tracking-wide text-slate-400">Starter user</dt>
+          <dd className="mt-1 truncate text-slate-700">@{job.starterUserName}</dd>
         </div>
         <div>
           <dt className="text-xs font-medium uppercase tracking-wide text-slate-400">Last run</dt>
