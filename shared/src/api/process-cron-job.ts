@@ -15,7 +15,7 @@ const processCronJobRunStatusSchema = z.union([
 ]);
 
 export const processCronJobRunSchema = z.object({
-  executionId: z.string(),
+  executionId: z.string().nullable(),
   status: processCronJobRunStatusSchema,
   startedAt: z.number(),
   finishedAt: z.number().nullable(),
@@ -27,6 +27,7 @@ export type ProcessCronJobRun = z.infer<typeof processCronJobRunSchema>;
 export const processCronJobDtoSchema = z.object({
   id: z.string(),
   processName: z.string(),
+  callerName: z.string(),
   expression: z.string(),
   timeZone: z.string(),
   inputValues: z.record(z.string(), z.unknown()),
@@ -51,6 +52,7 @@ export const saveProcessCronJobRequestSchema = z.object({
   insert: z.boolean(),
   id: z.string().optional(),
   processName: z.string(),
+  callerName: z.string().min(1),
   expression: z.string(),
   timeZone: z.string(),
   inputValues: z.record(z.string(), z.unknown()),

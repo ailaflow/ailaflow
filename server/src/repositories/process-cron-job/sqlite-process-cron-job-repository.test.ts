@@ -5,6 +5,8 @@ import test from 'node:test';
 import { SqliteDatabase, SqliteDatabases } from '../../core/sqlite-databases';
 import { SqliteProcessRepository } from '../process/sqlite-process-repository';
 import { SqliteResourceAccessRepository } from '../resource-access/sqlite-resource-access-repository';
+import { SqliteUserRepository } from '../user/sqlite-user-repository';
+import { User } from '../user/user';
 import { ProcessCronJob } from './process-cron-job';
 import { SqliteProcessCronJobRepository } from './sqlite-process-cron-job-repository';
 
@@ -54,7 +56,7 @@ test('finds due jobs and advances them only once', async () => {
   const { signal, db, repository } = await setup();
   await repository.insert(signal, createJob('due', 'alpha', 1_000));
   await repository.insert(signal, createJob('future', 'alpha', 2_000));
-  await repository.insert(signal, new ProcessCronJob('disabled', 'alpha', '* * * * *', 'UTC', {}, false, 1_000, null));
+  await repository.insert(signal, new ProcessCronJob('disabled', 'alpha', 'alice', '* * * * *', 'UTC', {}, false, 1_000, null));
 
   assert.deepEqual(
     (await repository.getDue(signal, 1_500, 10)).map(job => job.id),
@@ -75,6 +77,15 @@ test('deletes jobs when their process is deleted', async () => {
   db.close();
 });
 
+test('requires the caller to reference an existing user', async () => {
+  const { signal, db, repository } = await setup();
+  const job = createJob('job_1', 'alpha', 1_000);
+  job.callerName = 'missing';
+
+  await assert.rejects(repository.insert(signal, job), /FOREIGN KEY constraint failed/);
+  db.close();
+});
+
 async function setup() {
   const db = new DatabaseSync(':memory:', { open: true });
   db.exec(`PRAGMA foreign_keys = ON`);
@@ -82,15 +93,18 @@ async function setup() {
   const signal = new AbortController().signal;
   const processRepository = new SqliteProcessRepository(dbs);
   const repository = new SqliteProcessCronJobRepository(dbs);
+  const userRepository = new SqliteUserRepository(dbs);
+  await userRepository.setup(signal);
   await processRepository.setup(signal);
   await new SqliteResourceAccessRepository(dbs).setup(signal);
   await repository.setup(signal);
+  await userRepository.insert(signal, new User('alice', null, 'hash', true, false));
   insertProcess(db, 'alpha');
   return { signal, db, processRepository, repository };
 }
 
 function createJob(id: string, processName: string, nextExecutionAt: number): ProcessCronJob {
-  return new ProcessCronJob(id, processName, '*/15 * * * *', 'UTC', { x: 1 }, true, nextExecutionAt, null);
+  return new ProcessCronJob(id, processName, 'alice', '*/15 * * * *', 'UTC', { x: 1 }, true, nextExecutionAt, null);
 }
 
 function insertProcess(db: DatabaseSync, name: string): void {

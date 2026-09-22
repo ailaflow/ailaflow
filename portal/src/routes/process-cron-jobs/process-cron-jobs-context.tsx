@@ -6,7 +6,7 @@ import {
   VariableCachedValidator
 } from '@ailaflow/shared';
 import { createContext, useContext, useMemo, useRef, useState } from 'react';
-import { useApiClient } from '../../auth/auth-context';
+import { useAuthState } from '../../auth/auth-context';
 import type { ProcessCronJobDraftViewModel } from '../../views/process-cron-jobs/process-cron-jobs-view';
 
 export interface ProcessCronJobsState {
@@ -42,7 +42,7 @@ export interface ProcessCronJobsContextProps {
 }
 
 export function ProcessCronJobsContext(props: ProcessCronJobsContextProps) {
-  const apiClient = useApiClient();
+  const { apiClient, session } = useAuthState();
   const variableValidator = useMemo(() => new VariableCachedValidator(), []);
   const [jobs, setJobs] = useState(props.initialJobs);
   const [draft, setDraft] = useState<ProcessCronJobDraftViewModel | null>(null);
@@ -51,11 +51,12 @@ export function ProcessCronJobsContext(props: ProcessCronJobsContextProps) {
   const inputValidation = draft
     ? validateInputValues(draft.inputValuesText, props.process, variableValidator)
     : { inputValues: null, error: null };
-  const canSave = draft !== null && expressionError === null && inputValidation.error === null;
+  const canSave = draft !== null && draft.callerName.length > 0 && expressionError === null && inputValidation.error === null;
 
   function createJob(): void {
     setDraft({
       id: null,
+      callerName: session?.userName ?? '',
       expression: '0 9 * * *',
       timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
       inputValuesText: '{}',
@@ -66,6 +67,7 @@ export function ProcessCronJobsContext(props: ProcessCronJobsContextProps) {
   function editJob(job: ProcessCronJobDto): void {
     setDraft({
       id: job.id,
+      callerName: job.callerName,
       expression: job.expression,
       timeZone: job.timeZone,
       inputValuesText: JSON.stringify(job.inputValues, null, 2),
@@ -91,6 +93,7 @@ export function ProcessCronJobsContext(props: ProcessCronJobsContextProps) {
         insert: draft.id === null,
         id: draft.id ?? undefined,
         processName: props.process.name,
+        callerName: draft.callerName,
         expression: draft.expression,
         timeZone: draft.timeZone,
         inputValues: inputValidation.inputValues,

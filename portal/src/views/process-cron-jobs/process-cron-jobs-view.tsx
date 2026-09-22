@@ -2,6 +2,7 @@ import { ProcessCronJobDto, ProcessCronJobRun, ProcessCronJobRunStatus } from '@
 
 export interface ProcessCronJobDraftViewModel {
   id: string | null;
+  callerName: string;
   expression: string;
   timeZone: string;
   inputValuesText: string;
@@ -17,6 +18,7 @@ export interface ProcessCronJobsViewProps {
   onCreate(): void;
   onEdit(job: ProcessCronJobDto): void;
   onDelete(job: ProcessCronJobDto): void;
+  onFindCaller(): void;
   onDraftChange(changes: Partial<ProcessCronJobDraftViewModel>): void;
   onSave(): void;
   onCancel(): void;
@@ -65,7 +67,23 @@ function CronJobEditor(props: ProcessCronJobsViewProps & { draft: ProcessCronJob
         <h2 className="text-lg font-semibold text-slate-900">{props.draft.id ? 'Edit cron job' : 'New cron job'}</h2>
         <span className="text-xs text-slate-500">Five-field cron expression</span>
       </div>
-      <div className="mt-4 grid gap-4 md:grid-cols-2">
+      <div className="mt-4 grid gap-4 md:grid-cols-3">
+        <div>
+          <span className="mb-1.5 block text-sm font-medium text-slate-700">Caller</span>
+          <div className="flex gap-2">
+            <div
+              className={`flex h-10 min-w-0 flex-1 items-center rounded-md border bg-slate-50 px-3 text-sm text-slate-900 ${
+                props.draft.callerName ? 'border-slate-200' : 'border-red-300'
+              }`}
+            >
+              <span className="truncate">{props.draft.callerName ? `@${props.draft.callerName}` : 'No user selected'}</span>
+            </div>
+            <button className={secondaryButtonClass} type="button" onClick={props.onFindCaller}>
+              Select user
+            </button>
+          </div>
+          {!props.draft.callerName ? <span className="mt-1 block text-xs text-red-700">Caller is required</span> : null}
+        </div>
         <div>
           <TextField
             label="Expression"
@@ -181,12 +199,16 @@ function CronJobItem(props: { job: ProcessCronJobDto; onEdit(job: ProcessCronJob
 
       <dl className="grid gap-3 text-sm sm:grid-cols-2">
         <div>
+          <dt className="text-xs font-medium uppercase tracking-wide text-slate-400">Caller</dt>
+          <dd className="mt-1 truncate text-slate-700">@{job.callerName}</dd>
+        </div>
+        <div>
           <dt className="text-xs font-medium uppercase tracking-wide text-slate-400">Last run</dt>
           <dd className="mt-1 text-slate-700">
             <LastRunStatus run={job.lastRun} />
           </dd>
         </div>
-        <div>
+        <div className="sm:col-span-2">
           <dt className="text-xs font-medium uppercase tracking-wide text-slate-400">Next execution</dt>
           <dd className="mt-1 text-slate-700">{formatTime(job.nextExecutionAt)}</dd>
         </div>

@@ -1,11 +1,16 @@
+import { useState } from 'react';
+import { useApiClient } from '../../auth/auth-context';
 import { ProcessCronJobsView } from '../../views/process-cron-jobs/process-cron-jobs-view';
 import { ResourceEditorView } from '../../views/resource-editor/resource-editor-view';
 import { useUnsavedChangesController } from '../common/admin-portal';
+import { FindUserPopup } from '../common/popups/find-user-popup';
 import { useProcessCronJobsAi } from './process-cron-jobs-ai';
 import { useProcessCronJobs } from './process-cron-jobs-context';
 
 export function ProcessCronJobs() {
+  const apiClient = useApiClient();
   const state = useProcessCronJobs();
+  const [isFindCallerPopupOpen, setIsFindCallerPopupOpen] = useState(false);
 
   useProcessCronJobsAi(state);
   useUnsavedChangesController(state.draft !== null);
@@ -31,31 +36,51 @@ export function ProcessCronJobs() {
   }
 
   return (
-    <ResourceEditorView
-      icon="/"
-      name={state.process.name}
-      isNameReadOnly={true}
-      isNameValid={true}
-      viewSwitcherOptions={[
-        { label: 'Editor', href: `/admin/processes/${state.process.name}` },
-        { label: 'Test', href: `/admin/processes/${state.process.name}/test` },
-        { label: 'Cron jobs', href: `/admin/processes/${state.process.name}/cron-jobs`, selected: true }
-      ]}
-      viewSwitcherDisabledReason={state.draft !== null ? 'Please save changes' : undefined}
-    >
-      <ProcessCronJobsView
-        jobs={state.jobs}
-        draft={state.draft}
-        expressionError={state.expressionError}
-        inputValuesError={state.inputValuesError}
-        canSave={state.canSave}
-        onCreate={state.createJob}
-        onEdit={state.editJob}
-        onDelete={job => void deleteJob(job.id)}
-        onDraftChange={state.updateDraft}
-        onSave={() => void save()}
-        onCancel={state.cancelDraft}
-      />
-    </ResourceEditorView>
+    <>
+      <ResourceEditorView
+        icon="/"
+        name={state.process.name}
+        isNameReadOnly={true}
+        isNameValid={true}
+        viewSwitcherOptions={[
+          { label: 'Editor', href: `/admin/processes/${state.process.name}` },
+          { label: 'Test', href: `/admin/processes/${state.process.name}/test` },
+          { label: 'Cron jobs', href: `/admin/processes/${state.process.name}/cron-jobs`, selected: true }
+        ]}
+        viewSwitcherDisabledReason={state.draft !== null ? 'Please save changes' : undefined}
+      >
+        <ProcessCronJobsView
+          jobs={state.jobs}
+          draft={state.draft}
+          expressionError={state.expressionError}
+          inputValuesError={state.inputValuesError}
+          canSave={state.canSave}
+          onCreate={state.createJob}
+          onEdit={state.editJob}
+          onDelete={job => void deleteJob(job.id)}
+          onFindCaller={() => setIsFindCallerPopupOpen(true)}
+          onDraftChange={state.updateDraft}
+          onSave={() => void save()}
+          onCancel={() => {
+            setIsFindCallerPopupOpen(false);
+            state.cancelDraft();
+          }}
+        />
+      </ResourceEditorView>
+      {isFindCallerPopupOpen && state.draft ? (
+        <FindUserPopup
+          apiClient={apiClient}
+          disabledUserNames={[]}
+          initialSearch={state.draft.callerName}
+          title="Select cron job caller"
+          description="Choose the user whose permissions will be used to run this process."
+          onSelectUser={callerName => {
+            state.updateDraft({ callerName });
+            setIsFindCallerPopupOpen(false);
+          }}
+          onClose={() => setIsFindCallerPopupOpen(false)}
+        />
+      ) : null}
+    </>
   );
 }

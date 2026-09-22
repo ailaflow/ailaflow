@@ -1,4 +1,4 @@
-import { ProcessCronJobRunStatus, ProcessExecutionOutcomeType } from '@ailaflow/shared';
+import { ProcessCronJobRunStatus, ProcessExecutionOutcome, ProcessExecutionOutcomeType } from '@ailaflow/shared';
 import { Logger } from '../core/logger';
 import { ProcessCronJobExpressionParser } from '../crons/process-cron-job-expression-parser';
 import { ProcessCronJob } from '../repositories/process-cron-job/process-cron-job';
@@ -7,6 +7,7 @@ import { Scheduler } from './scheduler';
 import { ProcessManager } from '../process/process-manager';
 import { ProcessExecutor } from '../process-executor/process-executor';
 import { ProcessExecutionContext } from '../process-executor/process-execution-context';
+import { MyProcessAccessQuerier } from '../queriers/my-process/my-process-access-querier';
 
 const INTERVAL_MS = 60_000;
 const BATCH_SIZE = 100;
@@ -19,7 +20,8 @@ export class ProcessCronJobScheduler implements Scheduler {
   public constructor(
     private readonly repository: ProcessCronJobRepository,
     private readonly processManager: ProcessManager,
-    private readonly processExecutor: ProcessExecutor
+    private readonly processExecutor: ProcessExecutor,
+    private readonly processAccessQuerier: MyProcessAccessQuerier
   ) {}
 
   public start(): void {
@@ -64,42 +66,50 @@ export class ProcessCronJobScheduler implements Scheduler {
       const claimed = await this.repository.tryAdvanceNextExecutionAt(claimSignal, job.id, job.nextExecutionAt, nextExecutionAt);
 
       if (claimed) {
-        updater.update(ProcessCronJobRunStatus.RUNNING, null);
-        await this.handleProcess(jobSignal, job);
-        updater.update(ProcessCronJobRunStatus.SUCCEEDED, null);
+        updater.update(ProcessCronJobRunStatus.RUNNING, null, null);
+        const outcome = await this.handleProcess(jobSignal, job);
+        const type =
+          outcome.outcome.type === ProcessExecutionOutcomeType.FAILED ? ProcessCronJobRunStatus.FAILED : ProcessCronJobRunStatus.SUCCEEDED;
+        updater.update(type, null, outcome.id);
       }
     } catch (e) {
       const error = (e as Error)?.message ?? String(e);
       this.logger.error(`Failed to handle process cron job ${job.id}: ${error}`);
-      updater.update(ProcessCronJobRunStatus.FAILED, error);
+      updater.update(ProcessCronJobRunStatus.FAILED, error, null);
     }
   }
 
   private async handleProcess(jobSignal: AbortSignal, job: ProcessCronJob) {
     const processSignal = AbortSignal.any([jobSignal, AbortSignal.timeout(4_000)]);
+
+    const hasAccess = await this.processAccessQuerier.hasAccess(processSignal, job.callerName, job.processName);
+    if (!hasAccess) {
+      throw new Error('Caller does not have access to process');
+    }
+
     const process = await this.processManager.tryGetByName(processSignal, job.processName);
     if (!process) {
-      throw new Error(`Process ${job.processName} not found`);
+      throw new Error(`Process /${job.processName} not found`);
     }
 
     const context: ProcessExecutionContext = {
       isTest: false,
-      startedBy: '_system'
+      startedBy: job.callerName
     };
 
-    return new Promise<unknown>((resolve, reject) => {
-      const execution = this.processExecutor.initialize(context, process, job.inputValues);
-
+    const execution = this.processExecutor.initialize(context, process, job.inputValues);
+    return new Promise<{
+      outcome: ProcessExecutionOutcome;
+      id: string;
+    }>(resolve => {
       jobSignal.addEventListener('abort', () => execution.tryStop(), {
         once: true
       });
-
       execution.onOutcome.subscribe(outcome => {
-        if (outcome.type === ProcessExecutionOutcomeType.FAILED) {
-          reject(new Error(outcome.error));
-        } else {
-          resolve(outcome);
-        }
+        resolve({
+          id: execution.id,
+          outcome
+        });
       });
       execution.run();
     });
@@ -114,14 +124,14 @@ class LastRunUpdater {
     private readonly jobId: string
   ) {}
 
-  public update(status: ProcessCronJobRunStatus, error: string | null) {
+  public update(status: ProcessCronJobRunStatus, error: string | null, executionId: string | null) {
     const signal = AbortSignal.timeout(5_000);
     const isFinished = status === ProcessCronJobRunStatus.SUCCEEDED || status === ProcessCronJobRunStatus.FAILED;
     this.repository
       .updateLastRun(signal, this.jobId, {
         status,
         error,
-        executionId: '',
+        executionId,
         startedAt: this.startedAt,
         finishedAt: isFinished ? Date.now() : null
       })

@@ -525,7 +525,7 @@ export class Server {
     const schedulers: Scheduler[] = [
       new LicenseCheckScheduler(licenseManager),
       new AuthCleanupScheduler(authTokenRepository, magicLinkRepository),
-      new ProcessCronJobScheduler(processCronJobRepository, processManager, processExecutor)
+      new ProcessCronJobScheduler(processCronJobRepository, processManager, processExecutor, myProcessAccessQuerier)
     ];
 
     const endpoints = [
