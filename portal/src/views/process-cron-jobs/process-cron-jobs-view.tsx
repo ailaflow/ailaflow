@@ -71,7 +71,7 @@ function CronJobEditor(props: ProcessCronJobsViewProps & { draft: ProcessCronJob
           <span className="mb-1.5 block text-sm font-medium text-slate-700">Starter user</span>
           <div className="flex gap-2">
             <div
-              className={`flex h-10 min-w-0 flex-1 items-center rounded-md border bg-slate-50 px-3 text-sm text-slate-900 ${
+              className={`flex h-9 min-w-0 flex-1 items-center rounded-md border bg-slate-50 px-3 text-sm text-slate-900 ${
                 props.draft.starterUserName ? 'border-slate-200' : 'border-red-300'
               }`}
             >
@@ -169,7 +169,7 @@ function TextField(props: { label: string; value: string; placeholder: string; e
         placeholder={props.placeholder}
         onChange={event => props.onChange(event.currentTarget.value)}
         aria-invalid={Boolean(props.error)}
-        className={`h-10 w-full rounded-md border bg-white px-3 font-mono text-sm text-slate-900 outline-none ${
+        className={`h-9 w-full rounded-md border bg-white px-3 font-mono text-sm text-slate-900 outline-none ${
           props.error ? 'border-red-300 focus:border-red-500' : 'border-slate-200 focus:border-slate-400'
         }`}
       />
@@ -265,7 +265,7 @@ function formatTime(value: number | null): string {
 }
 
 const secondaryButtonClass =
-  'inline-flex h-8 cursor-pointer items-center rounded-md border border-slate-200 px-3 text-sm font-medium text-slate-700 hover:bg-slate-50';
+  'inline-flex h-9 cursor-pointer items-center rounded-md border border-slate-200 px-3 text-sm font-medium text-slate-700 hover:bg-slate-50';
 
 const expressionExamples = [
   { label: 'Every 10 minutes', expression: '*/10 * * * *' },
