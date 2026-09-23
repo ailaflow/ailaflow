@@ -32,7 +32,7 @@ export class GetMyTasksTool extends ZodTool<Arg> {
           title: task.title,
           createdAt: new Date(task.createdAt).toISOString(),
           completedAt: task.completedAt ? new Date(task.completedAt).toISOString() : undefined,
-          isOutdated: task.isOutdated,
+          deadline: task.deadline === undefined ? undefined : new Date(task.deadline).toISOString(),
           canSubmitWithAiTool: task.submissionMode === TaskSubmissionMode.AI_TOOL_OR_TASK_FORM
         })),
         page: response.page,

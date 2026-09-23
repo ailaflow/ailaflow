@@ -11,7 +11,7 @@ const myTaskLiteDtoSchema = z.object({
   submissionMode: taskSubmissionModeSchema,
   createdAt: z.number(),
   completedAt: z.number().optional(),
-  isOutdated: z.boolean().optional()
+  deadline: z.number().optional()
 });
 export const getMyTasksRequestSchema = paginationRequestSchema.extend({
   onlyOpen: z.coerce.number().int().min(0).max(1).transform(Boolean).default(true)

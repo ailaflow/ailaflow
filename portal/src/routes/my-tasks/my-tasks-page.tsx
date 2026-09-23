@@ -70,24 +70,25 @@ export function MyTasksPage() {
           {
             id: 'title',
             title: 'Title',
-            width: '52%',
+            width: '40%',
             getValue: task => task.title
           },
           {
             id: 'status',
             title: 'Status',
-            width: '24%',
-            getValue: task => {
-              if (task.completedAt !== undefined) {
-                return 'Completed';
-              }
-              return task.isOutdated ? 'Outdated' : 'Open';
-            }
+            width: '16%',
+            getValue: task => (task.completedAt === undefined ? 'Open' : 'Completed')
+          },
+          {
+            id: 'deadline',
+            title: 'Deadline',
+            width: '22%',
+            getValue: task => (task.deadline === undefined ? '' : formatDate(task.deadline))
           },
           {
             id: 'completedAt',
             title: 'Completed',
-            width: '24%',
+            width: '22%',
             getValue: task => (task.completedAt === undefined ? '' : formatDate(task.completedAt))
           }
         ]}

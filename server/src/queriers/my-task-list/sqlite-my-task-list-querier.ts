@@ -5,10 +5,7 @@ import { MyTaskListQuerier } from './my-task-list-querier';
 export class SqliteMyTaskListQuerier implements MyTaskListQuerier {
   private readonly db: SqliteDatabase;
 
-  public constructor(
-    dbs: SqliteDatabases,
-    private readonly now = Date.now
-  ) {
+  public constructor(dbs: SqliteDatabases) {
     this.db = dbs.modelDb;
   }
 
@@ -58,7 +55,6 @@ export class SqliteMyTaskListQuerier implements MyTaskListQuerier {
         createdAt: number;
         completedAt: number | null;
       }[];
-      const now = this.now();
 
       return {
         tasks: rows.map(row => ({
@@ -67,7 +63,7 @@ export class SqliteMyTaskListQuerier implements MyTaskListQuerier {
           submissionMode: row.submissionMode,
           createdAt: row.createdAt,
           ...(row.completedAt === null ? {} : { completedAt: row.completedAt }),
-          ...(row.completedAt === null && row.deadline !== null && now > row.deadline ? { isOutdated: true } : {})
+          ...(row.deadline === null ? {} : { deadline: row.deadline })
         })),
         totalCount,
         page,

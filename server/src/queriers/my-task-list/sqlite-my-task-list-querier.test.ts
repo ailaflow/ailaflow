@@ -19,7 +19,7 @@ test('queries tasks assigned to the current user', async () => {
   const userRepository = new SqliteUserRepository(dbs);
   const taskRepository = new SqliteTaskRepository(dbs);
   const assignedTaskRepository = new SqliteAssignedTaskRepository(dbs);
-  const querier = new SqliteMyTaskListQuerier(dbs, () => 5000);
+  const querier = new SqliteMyTaskListQuerier(dbs);
 
   await userRepository.setup(signal);
   await taskRepository.setup(signal);
@@ -171,13 +171,14 @@ test('queries tasks assigned to the current user', async () => {
         title: 'Open outdated',
         submissionMode: TaskSubmissionMode.AI_TOOL_OR_TASK_FORM,
         createdAt: 1000,
-        isOutdated: true
+        deadline: 4000
       },
       {
         id: 'task_2',
         title: 'Open current',
         submissionMode: TaskSubmissionMode.TASK_FORM,
-        createdAt: 1001
+        createdAt: 1001,
+        deadline: 6000
       }
     ],
     totalCount: 4,
@@ -191,7 +192,8 @@ test('queries tasks assigned to the current user', async () => {
         title: 'Completed outdated',
         submissionMode: TaskSubmissionMode.AI_TOOL_OR_TASK_FORM,
         createdAt: 1002,
-        completedAt: 4500
+        completedAt: 4500,
+        deadline: 3000
       },
       {
         id: 'task_5',
@@ -212,13 +214,14 @@ test('queries tasks assigned to the current user', async () => {
         title: 'Open outdated',
         submissionMode: TaskSubmissionMode.AI_TOOL_OR_TASK_FORM,
         createdAt: 1000,
-        isOutdated: true
+        deadline: 4000
       },
       {
         id: 'task_2',
         title: 'Open current',
         submissionMode: TaskSubmissionMode.TASK_FORM,
-        createdAt: 1001
+        createdAt: 1001,
+        deadline: 6000
       }
     ],
     totalCount: 2,

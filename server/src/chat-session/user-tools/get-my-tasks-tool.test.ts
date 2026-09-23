@@ -14,7 +14,8 @@ test('maps task submission modes to AI tool capabilities', async () => {
           id: 'task_1',
           title: 'AI task',
           submissionMode: TaskSubmissionMode.AI_TOOL_OR_TASK_FORM,
-          createdAt: 1000
+          createdAt: 1000,
+          deadline: 3000
         },
         {
           id: 'task_2',
@@ -39,7 +40,7 @@ test('maps task submission modes to AI tool capabilities', async () => {
         title: 'AI task',
         createdAt: '1970-01-01T00:00:01.000Z',
         completedAt: undefined,
-        isOutdated: undefined,
+        deadline: '1970-01-01T00:00:03.000Z',
         canSubmitWithAiTool: true
       },
       {
@@ -47,7 +48,7 @@ test('maps task submission modes to AI tool capabilities', async () => {
         title: 'Form task',
         createdAt: '1970-01-01T00:00:02.000Z',
         completedAt: undefined,
-        isOutdated: undefined,
+        deadline: undefined,
         canSubmitWithAiTool: false
       }
     ],
