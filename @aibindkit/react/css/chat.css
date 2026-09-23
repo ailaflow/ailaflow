@@ -34,7 +34,7 @@
   margin: 0 auto;
 }
 
-.abk-chat-update + .abk-chat-update {
+.abk-chat-messages > li + li {
   margin-top: 12px;
 }
 
