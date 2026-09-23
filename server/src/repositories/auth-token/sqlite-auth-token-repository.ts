@@ -17,7 +17,11 @@ export class SqliteAuthTokenRepository implements AuthTokenRepository {
           token TEXT PRIMARY KEY,
           userName TEXT NOT NULL,
           isAdmin INTEGER NOT NULL,
-          expiresAt INTEGER NOT NULL
+          expiresAt INTEGER NOT NULL,
+
+          FOREIGN KEY (userName)
+            REFERENCES users(name)
+            ON DELETE CASCADE
         ) STRICT
       `);
     });
