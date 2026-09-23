@@ -45,6 +45,7 @@ export const taskStepActivity = createSignalActivity<TaskStep, ProcessExecutionG
       globalState.context.isTest,
       globalState.context.startedBy,
       globalState.executionId,
+      globalState.process.name,
       title,
       userExpression,
       deadline,

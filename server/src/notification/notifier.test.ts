@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { ChatSession } from '@aibindkit/llm';
+import { AdminChatSessionProvider } from '../chat-session/admin-chat-session-provider';
 import { UserChatSessionProvider } from '../chat-session/user-chat-session-provider';
 import { UserAccessExpressionUserQuerier } from '../queriers/user-access-expression/user-access-expression-user-querier';
 import { Notification } from '../repositories/notification/notification';
@@ -16,6 +17,9 @@ test('persists a notification for every matched user', async () => {
     getDefaultChannelName: () => 'default',
     get: async () => ({ queueUserMessage: () => undefined }) as unknown as ChatSession
   } as unknown as UserChatSessionProvider;
+  const adminSessionProvider = {
+    tryGet: () => null
+  } as unknown as AdminChatSessionProvider;
   const notificationRepository = {
     setup: async () => undefined,
     insertMultiple: async (_abortSignal: AbortSignal, notifications: Notification[]) => {
@@ -23,9 +27,9 @@ test('persists a notification for every matched user', async () => {
     },
     delete: async () => false
   } as NotificationRepository;
-  const notifier = new Notifier(userQuerier, sessionProvider, notificationRepository);
+  const notifier = new Notifier(userQuerier, sessionProvider, adminSessionProvider, notificationRepository);
 
-  await notifier.notify(new AbortController().signal, 'test', false, '', 'Deployment completed');
+  await notifier.notifyUsersMatchingAccessExpression(new AbortController().signal, 'test', false, '', 'default', 'Deployment completed');
 
   assert.equal(storedNotifications.length, 2);
   assert.deepEqual(

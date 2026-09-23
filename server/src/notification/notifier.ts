@@ -3,31 +3,50 @@ import { UserChatSessionProvider } from '../chat-session/user-chat-session-provi
 import { UserAccessExpressionUserQuerier } from '../queriers/user-access-expression/user-access-expression-user-querier';
 import { Notification } from '../repositories/notification/notification';
 import { NotificationRepository } from '../repositories/notification/notification-repository';
+import { ChatSessionId } from '../chat-session/chat-session-id';
+import { AdminChatSessionProvider } from '../chat-session/admin-chat-session-provider';
 
 export class Notifier {
   public constructor(
     private readonly userAccessExpressionUserQuerier: UserAccessExpressionUserQuerier,
     private readonly userChatSessionProvider: UserChatSessionProvider,
+    private readonly adminChatSessionProvider: AdminChatSessionProvider,
     private readonly notificationRepository: NotificationRepository
   ) {}
 
-  public async notify(signal: AbortSignal, processName: string, isTest: boolean, userExpression: string, message: string) {
+  public getDefaultUserChannelName(): string {
+    return this.userChatSessionProvider.getDefaultChannelName();
+  }
+
+  public async notifyUsersMatchingAccessExpression(
+    signal: AbortSignal,
+    processName: string,
+    isTest: boolean,
+    userExpression: string,
+    channelName: string,
+    message: string
+  ) {
     const expression = UserAccessExpressionParser.parse(userExpression);
     const userNames = await this.userAccessExpressionUserQuerier.queryUserNames(signal, expression);
+    return this.notifyUsers(signal, processName, isTest, userNames, channelName, message);
+  }
 
+  public async notifyUsers(
+    signal: AbortSignal,
+    processName: string,
+    isTest: boolean,
+    userNames: string[],
+    channelName: string,
+    message: string
+  ) {
     const notifications = new Array<Notification>(userNames.length);
     for (let i = 0; i < userNames.length; i++) {
       notifications[i] = Notification.create(processName, userNames[i], message);
     }
 
-    const channelName = this.userChatSessionProvider.getDefaultChannelName();
-
     await this.notificationRepository.insertMultiple(signal, notifications);
 
-    let m = '>>>>>>>>\n';
-    m += `The user has a new notification from /${processName} process:\n`;
-    m += `Message: ${message}\n`;
-    m += '<<<<<<<<';
+    const m = this.buildChatMessage(processName, message);
 
     for (const n of notifications) {
       const session = await this.userChatSessionProvider.get(signal, isTest, n.userName, channelName);
@@ -37,5 +56,31 @@ export class Notifier {
         });
       }
     }
+  }
+
+  public async notifyUser(signal: AbortSignal, sessionId: ChatSessionId | null, processName: string, userName: string, message: string) {
+    const chatSession = sessionId
+      ? await (sessionId.isAdmin()
+          ? this.adminChatSessionProvider.tryGet(sessionId.userName)
+          : this.userChatSessionProvider.get(signal, sessionId.isTest(), sessionId.userName, sessionId.channelName))
+      : null;
+    const notification = Notification.create(processName, userName, message);
+
+    await this.notificationRepository.insertMultiple(signal, [notification]);
+
+    if (chatSession) {
+      const m = this.buildChatMessage(processName, message);
+      chatSession.queueUserMessage(m, {
+        internal: true
+      });
+    }
+  }
+
+  private buildChatMessage(processName: string, message: string): string {
+    let m = '>>>>>>>>\n';
+    m += `The user has a new notification from /${processName} process:\n`;
+    m += `Message: ${message}\n`;
+    m += '<<<<<<<<';
+    return m;
   }
 }

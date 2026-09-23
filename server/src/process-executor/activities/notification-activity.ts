@@ -9,6 +9,8 @@ export const notificationStepActivity = createAtomActivity<NotificationStep, Pro
     const notification = variableEvaluator.evaluateStringOrVariable(step.properties.notification);
 
     const signal = AbortSignal.any([stopSignal, AbortSignal.timeout(5_000)]);
-    await notifier.notify(signal, process.name, context.isTest, expression, notification);
+
+    const channelName = notifier.getDefaultUserChannelName();
+    await notifier.notifyUsersMatchingAccessExpression(signal, process.name, context.isTest, expression, channelName, notification);
   }
 });

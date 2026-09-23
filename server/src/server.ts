@@ -375,8 +375,13 @@ export class Server {
 
     const sandboxInstanceManager = new SandboxInstanceManager(serverPaths, sandboxRepository, rpcHandler);
 
-    const taskCreator = new TaskCreator(taskRepository, assignedTaskRepository, userAccessExpressionUserQuerier, userChatSessionProvider);
-    const notifier = new Notifier(userAccessExpressionUserQuerier, userChatSessionProvider, notificationRepository);
+    const notifier = new Notifier(
+      userAccessExpressionUserQuerier,
+      userChatSessionProvider,
+      adminChatSessionProvider,
+      notificationRepository
+    );
+    const taskCreator = new TaskCreator(taskRepository, assignedTaskRepository, userAccessExpressionUserQuerier, notifier);
 
     const llmClientFactory = new LlmClientFactory();
     const llmClientProvider = new LlmClientProvider(llmConfigurationRepository, llmClientFactory);
@@ -386,7 +391,7 @@ export class Server {
     const magicLinkExchanger = new MagicLinkExchanger(magicLinkRepository, userRepository, authTokenRepository);
 
     const eventBus = new EventBus();
-    eventBus.registerHandler(new ProcessExecutionFinishedEventHandler(userChatSessionProvider, adminChatSessionProvider));
+    eventBus.registerHandler(new ProcessExecutionFinishedEventHandler(notifier));
     eventBus.registerHandler(new LlmConfigurationChangedEventHandler(llmClientProvider, sessionManager));
 
     const telegramClient = new TelegramBotApiClient();

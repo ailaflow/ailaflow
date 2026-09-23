@@ -4,15 +4,15 @@ import { TaskRepository } from '../repositories/task/task-repository';
 import { UserAccessExpressionUserQuerier } from '../queriers/user-access-expression/user-access-expression-user-querier';
 import { AssignedTask } from '../repositories/task/assigned-task';
 import { Task } from '../repositories/task/task';
-import { UserChatSessionProvider } from '../chat-session/user-chat-session-provider';
 import { Transaction } from '../core/transaction';
+import { Notifier } from '../notification/notifier';
 
 export class TaskCreator {
   public constructor(
     private readonly taskRepository: TaskRepository,
     private readonly assignedTaskRepository: AssignedTaskRepository,
     private readonly userAccessExpressionUserQuerier: UserAccessExpressionUserQuerier,
-    private readonly userChatSessionProvider: UserChatSessionProvider
+    private readonly notifier: Notifier
   ) {}
 
   public async create(
@@ -20,6 +20,7 @@ export class TaskCreator {
     isTest: boolean,
     createdBy: string,
     executionId: string,
+    processName: string,
     title: string,
     userExpression: string,
     deadline: number | null,
@@ -47,7 +48,7 @@ export class TaskCreator {
       submissionMode
     );
 
-    const channelName = this.userChatSessionProvider.getDefaultChannelName();
+    const channelName = this.notifier.getDefaultUserChannelName();
 
     const assignedTasks = new Array<AssignedTask>(userNames.length);
     for (let i = 0; i < userNames.length; i++) {
@@ -64,19 +65,10 @@ export class TaskCreator {
       throw e;
     }
 
-    let m = '>>>>>>>>\n';
-    m += 'The user has a new task assigned!\n';
-    m += `ID: ${task.id}\n`;
-    m += `Title: ${title}\n`;
-    m += '<<<<<<<<';
+    let message = 'The user has a new task assigned!\n';
+    message += `Title: ${title}\n`;
+    message += `ID: ${task.id}\n`;
 
-    for (const userName of userNames) {
-      const session = await this.userChatSessionProvider.get(signal, isTest, userName, channelName);
-      if (session) {
-        session.queueUserMessage(m, {
-          internal: true
-        });
-      }
-    }
+    await this.notifier.notifyUsersMatchingAccessExpression(signal, processName, isTest, userExpression, channelName, message);
   }
 }

@@ -2,8 +2,8 @@ import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
 import test from 'node:test';
 import { TaskFinalizationPolicy, TaskSubmissionMode } from '@ailaflow/shared';
-import { UserChatSessionProvider } from '../chat-session/user-chat-session-provider';
 import { SqliteDatabase, SqliteDatabases } from '../core/sqlite-databases';
+import { Notifier } from '../notification/notifier';
 import { UserAccessExpressionUserQuerier } from '../queriers/user-access-expression/user-access-expression-user-querier';
 import { SqliteAssignedTaskRepository } from '../repositories/task/sqlite-assigned-task-repository';
 import { SqliteTaskRepository } from '../repositories/task/sqlite-task-repository';
@@ -21,11 +21,10 @@ test('rolls back task creation when assignment creation fails', async () => {
   const userQuerier: UserAccessExpressionUserQuerier = {
     queryUserNames: async () => ['missing-user']
   };
-  const chatSessionProvider = {
-    getDefaultChannelName: () => 'default',
-    get: async () => null
-  } as unknown as UserChatSessionProvider;
-  const creator = new TaskCreator(taskRepository, assignedTaskRepository, userQuerier, chatSessionProvider);
+  const notifier = {
+    getDefaultUserChannelName: () => 'default'
+  } as unknown as Notifier;
+  const creator = new TaskCreator(taskRepository, assignedTaskRepository, userQuerier, notifier);
 
   await userRepository.setup(signal);
   await taskRepository.setup(signal);
@@ -37,6 +36,7 @@ test('rolls back task creation when assignment creation fails', async () => {
       false,
       'creator',
       'execution',
+      'process',
       'Task',
       '@missing-user',
       null,
