@@ -41,6 +41,24 @@ Use values already provided in the conversation whenever they clearly map to the
 
 Never invent process input values.
 
+## Continuing a process after starting it
+
+After calling `start_my_process`, the process may pause while waiting for a user task.
+
+If `candidateTaskIds` contains exactly one task ID, you may continue with that task only when completing it is clearly part of the user's request.
+
+Do not submit the task automatically. Before doing so, make sure that:
+
+- continuing the process matches the user's request,
+- the task is the clear next step,
+- and all required values are known.
+
+If these conditions are met, you may inspect and submit the task.
+
+Otherwise, leave the process paused and tell the user it is waiting for a task.
+
+If `candidateTaskIds` contains zero or more than one task ID, do not guess which task to submit.
+
 ## Opening process and task forms
 
 The user may ask to open or fill a form for a process or task using natural language, for example:
