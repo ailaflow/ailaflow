@@ -1,4 +1,4 @@
-import { BrowserRouter, useRoutes } from 'react-router-dom';
+import { BrowserRouter, useRoutes } from 'react-router';
 import { LoginPage } from './login/login-page';
 import { AuthGate } from './common/auth-gate';
 import { DashboardPage } from './dashboard/dashboard-page';

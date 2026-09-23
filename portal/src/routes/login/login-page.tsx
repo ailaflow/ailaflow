@@ -1,7 +1,7 @@
 import { useAuthState } from '../../auth/auth-context';
 import { useEffect, useState } from 'react';
 import type { SubmitEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { LoginResponse } from '@ailaflow/shared';
 import { LoginView } from '../../views/centered-form/login-view';
 import { CenteredFormLayout } from '../../views/centered-form/centered-form-layout';

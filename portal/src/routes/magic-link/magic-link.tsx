@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router';
 import { useAuthState } from '../../auth/auth-context';
 import { CenteredFormLayout } from '../../views/centered-form/centered-form-layout';
 

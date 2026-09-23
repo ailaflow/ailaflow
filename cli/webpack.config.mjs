@@ -69,6 +69,13 @@ function shared(name, mode) {
 function portalConfig(mode) {
   const config = shared('portal', mode);
   config.target = 'web';
+  config.optimization = {
+    usedExports: true,
+    innerGraph: true,
+    concatenateModules: true,
+    splitChunks: false,
+    runtimeChunk: false
+  };
   config.entry = resolve(rootDirectory, 'portal/src/main.tsx');
   config.output = {
     path: resolve(outputDirectory, 'portal'),

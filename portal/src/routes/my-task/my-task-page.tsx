@@ -1,4 +1,4 @@
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router';
 import { MyFullscreenView } from '../../views/my-form/my-fullscreen-view';
 import { MyFormView } from '../../views/my-form/my-form-view';
 import { MyTaskForm } from '../common/my-form/my-task-form';

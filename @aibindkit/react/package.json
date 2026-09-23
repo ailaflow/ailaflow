@@ -22,11 +22,11 @@
   },
   "dependencies": {
     "@aibindkit/core": "workspace:*",
-    "react": "^19.0.0",
+    "react": "^19.3.0",
     "zod": "^4.6.5"
   },
   "devDependencies": {
-    "@types/react": "^19.0.0",
+    "@types/react": "^19.3.0",
     "typescript": "^6.0.3"
   }
 }

@@ -4,7 +4,7 @@ import { SchemaEditorOverlay } from './overlays/schema-editor-overlay';
 import { Designer } from './designer';
 import { useApiClient } from '../../auth/auth-context';
 import { ResourceEditorView } from '../../views/resource-editor/resource-editor-view';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { FormEditorOverlay } from './overlays/form-editor-overlay';
 import { ScriptEditorOverlay } from './overlays/script-editor-overlay';
 import { useUnsavedChangesController } from '../common/admin-portal';

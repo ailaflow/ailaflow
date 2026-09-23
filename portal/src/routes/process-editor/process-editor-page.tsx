@@ -1,6 +1,6 @@
 import { ProcessEditor } from './process-editor';
 import { ProcessEditorContext } from './process-editor-context';
-import { useParams } from 'react-router-dom';
+import { useParams } from 'react-router';
 import { useApiClient } from '../../auth/auth-context';
 import { useLoader } from '@aibindkit/react';
 import { PortalLoadingView } from '../../views/portal/portal-loading-view';

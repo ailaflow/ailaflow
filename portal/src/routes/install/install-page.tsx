@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { SubmitEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { LicenseType, UserValidator } from '@ailaflow/shared';
 import type { InstallResponse } from '@ailaflow/shared';
 import { useApiClient } from '../../auth/auth-context';

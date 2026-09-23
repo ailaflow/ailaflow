@@ -1,6 +1,6 @@
 import { useRef } from 'react';
 import { UserDto } from '@ailaflow/shared';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { useApiClient } from '../../auth/auth-context';
 import { ResourceEditorView } from '../../views/resource-editor/resource-editor-view';
 import { UserEditorView } from '../../views/user-editor/user-editor-view';

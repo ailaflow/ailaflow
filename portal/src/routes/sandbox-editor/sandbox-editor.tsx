@@ -1,6 +1,6 @@
 import { useRef } from 'react';
 import { SandboxDto } from '@ailaflow/shared';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { useApiClient } from '../../auth/auth-context';
 import { ResourceEditorView } from '../../views/resource-editor/resource-editor-view';
 import { ResourceSimpleDetailsView } from '../../views/resource-editor/resource-simple-details-view';

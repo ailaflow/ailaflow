@@ -1,6 +1,6 @@
 import { TableColumnResolver, TableColumnType, TableRow } from '@ailaflow/shared';
 import { useLoader } from '@aibindkit/react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router';
 import { useApiClient } from '../../auth/auth-context';
 import { PortalErrorView } from '../../views/portal/portal-error-view';
 import { PortalLoadingView } from '../../views/portal/portal-loading-view';

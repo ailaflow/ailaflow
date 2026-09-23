@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams } from 'react-router';
 import { ResourceEditorView } from '../../views/resource-editor/resource-editor-view';
 import { TelegramConfiguration } from '../common/telegram-configuration';
 import { useUnsavedChangesController } from '../common/admin-portal';
