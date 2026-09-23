@@ -22,13 +22,16 @@ test('inserts notifications for users', async () => {
 
   await notificationRepository.insertMultiple(signal, [
     new Notification('notification_1', 'process-1', 'alice', 'First', 1000),
-    new Notification('notification_2', 'process-2', 'bob', 'Second', 2000)
+    new Notification('notification_2', 'process-2', 'bob', 'Second', 2000),
+    new Notification('notification_3', 'process-3', 'alice', 'Third', 3000)
   ]);
   await notificationRepository.insertMultiple(signal, []);
 
   assert.equal(await notificationRepository.delete(signal, 'alice', 'notification_2'), false);
   assert.equal(await notificationRepository.delete(signal, 'alice', 'notification_1'), true);
   assert.equal(await notificationRepository.delete(signal, 'alice', 'notification_1'), false);
+  assert.equal(await notificationRepository.deleteAll(signal, 'alice'), 1);
+  assert.equal(await notificationRepository.deleteAll(signal, 'alice'), 0);
 
   const rows = db
     .prepare(`SELECT id, processName, userName, message, createdAt FROM notifications ORDER BY id`)

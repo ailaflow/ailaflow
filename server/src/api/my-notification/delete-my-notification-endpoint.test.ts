@@ -33,7 +33,8 @@ function createRepository(deleteNotification: (userName: string, id: string) => 
   return {
     setup: async () => undefined,
     insertMultiple: async () => undefined,
-    delete: async (_, userName, id) => deleteNotification(userName, id)
+    delete: async (_, userName, id) => deleteNotification(userName, id),
+    deleteAll: async () => 0
   };
 }
 

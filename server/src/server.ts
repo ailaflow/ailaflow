@@ -104,6 +104,7 @@ import { MyNotificationListQuerier } from './queriers/my-notification-list/my-no
 import { SqliteMyNotificationListQuerier } from './queriers/my-notification-list/sqlite-my-notification-list-querier';
 import { GetMyNotificationsEndpoint } from './api/my-notification/get-my-notifications-endpoint';
 import { DeleteMyNotificationEndpoint } from './api/my-notification/delete-my-notification-endpoint';
+import { DeleteAllMyNotificationsEndpoint } from './api/my-notification/delete-all-my-notifications-endpoint';
 import { TableRepository } from './repositories/table/table-repository';
 import { SqliteTableRepository } from './repositories/table/sqlite-table-repository';
 import { TableDataRepository } from './repositories/table/table-data-repository';
@@ -566,6 +567,7 @@ export class Server {
       new SaveSlackMappingsEndpoint(slackMappingManager),
       new GetMySlackConfigurationEndpoint(slackStatusProvider),
       new GetMyNotificationsEndpoint(myNotificationListQuerier),
+      new DeleteAllMyNotificationsEndpoint(notificationRepository),
       new DeleteMyNotificationEndpoint(notificationRepository),
       new GetMyProcessesEndpoint(myProcessListQuerier),
       new GetMyTasksEndpoint(myTaskListQuerier),

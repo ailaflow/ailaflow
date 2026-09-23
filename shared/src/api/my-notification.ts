@@ -26,3 +26,11 @@ export const deleteMyNotificationResponseSchema = z.object({
 });
 
 export type DeleteMyNotificationResponse = z.infer<typeof deleteMyNotificationResponseSchema>;
+
+// deleteAllMyNotifications
+
+export const deleteAllMyNotificationsResponseSchema = z.object({
+  deletedCount: z.number().int().nonnegative()
+});
+
+export type DeleteAllMyNotificationsResponse = z.infer<typeof deleteAllMyNotificationsResponseSchema>;

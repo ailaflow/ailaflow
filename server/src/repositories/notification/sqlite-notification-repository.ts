@@ -56,4 +56,8 @@ export class SqliteNotificationRepository implements NotificationRepository {
       transaction
     );
   }
+
+  public async deleteAll(_: AbortSignal, userName: string, transaction?: Transaction): Promise<number> {
+    return this.db.write(db => Number(db.prepare(`DELETE FROM notifications WHERE userName = ?`).run(userName).changes), transaction);
+  }
 }

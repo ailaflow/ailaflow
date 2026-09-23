@@ -25,7 +25,8 @@ test('persists a notification for every matched user', async () => {
     insertMultiple: async (_abortSignal: AbortSignal, notifications: Notification[]) => {
       storedNotifications.push(...notifications);
     },
-    delete: async () => false
+    delete: async () => false,
+    deleteAll: async () => 0
   } as NotificationRepository;
   const notifier = new Notifier(userQuerier, sessionProvider, adminSessionProvider, notificationRepository);
 

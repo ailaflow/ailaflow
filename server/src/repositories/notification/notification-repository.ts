@@ -5,4 +5,5 @@ import { Notification } from './notification';
 export interface NotificationRepository extends Repository {
   insertMultiple(signal: AbortSignal, notifications: Notification[], transaction?: Transaction): Promise<void>;
   delete(signal: AbortSignal, userName: string, id: string, transaction?: Transaction): Promise<boolean>;
+  deleteAll(signal: AbortSignal, userName: string, transaction?: Transaction): Promise<number>;
 }

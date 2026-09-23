@@ -5,6 +5,7 @@ import { useApiClient } from '../../auth/auth-context';
 import { SvgIcon } from '../../views/common/svg-icons';
 import { PortalErrorView } from '../../views/portal/portal-error-view';
 import { PortalLoadingView } from '../../views/portal/portal-loading-view';
+import { ResourceHeaderButtonView } from '../../views/resource-list/resource-header-button-view';
 import { ResourceListView } from '../../views/resource-list/resource-list-view';
 import { Portal } from '../common/portal';
 
@@ -38,6 +39,20 @@ export function MyNotificationsPage() {
     }
   }
 
+  async function deleteAllNotifications(): Promise<void> {
+    if (!window.confirm('Delete all notifications? This cannot be undone.')) {
+      return;
+    }
+
+    try {
+      await apiClient.myNotification.deleteAllMyNotifications(AbortSignal.timeout(5_000));
+      changePage(1);
+      setReloadToken(current => current + 1);
+    } catch (e) {
+      window.alert(`Failed to delete all notifications: ${e instanceof Error ? e.message : String(e)}`);
+    }
+  }
+
   if (isLoading) {
     return (
       <Portal>
@@ -57,6 +72,9 @@ export function MyNotificationsPage() {
     <Portal>
       <ResourceListView
         title="My Notifications"
+        headerActions={
+          data.totalCount > 0 ? <ResourceHeaderButtonView onClick={deleteAllNotifications}>Delete all</ResourceHeaderButtonView> : null
+        }
         columns={[
           {
             id: 'message',
