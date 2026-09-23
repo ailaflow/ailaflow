@@ -22,6 +22,7 @@
     "dev": "node scripts/dev.mjs",
     "start": "node ./dist/cli.mjs",
     "build": "node scripts/build.mjs",
+    "build:stats": "pnpm build && find dist -type f -exec du -h {} + | sort -h",
     "prepack": "pnpm build",
     "prettier": "prettier --check ./src ./scripts webpack.config.mjs",
     "prettier:fix": "prettier --write ./src ./scripts webpack.config.mjs",
