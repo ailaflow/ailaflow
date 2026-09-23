@@ -231,6 +231,7 @@ import { TableSchemaRepository } from './repositories/table/table-schema-reposit
 import { Notifier } from './notification/notifier';
 import { IsTestRpcHandler } from './process-executor/rpc-handlers/is-test-rpc-handler';
 import { ResolveUserAccessRpcHandler } from './process-executor/rpc-handlers/resolve-user-access-rpc-handler';
+import { LoginThrottler } from './api/auth/login-throttler';
 
 const DB_TYPE = 'sqlite';
 
@@ -533,6 +534,7 @@ export class Server {
     const versionProvider = new VersionProvider(serverPaths);
     const licenseManager = new LicenseManager(new LicenseValidator(), kvConfigurationManager, userRepository, versionProvider);
     const installer = new Installer(cipherKeyStore, cipher, userRepository, userAttributesRepository, sandboxRepository, licenseManager);
+    const loginThrottler = new LoginThrottler();
 
     const schedulers: Scheduler[] = [
       new LicenseCheckScheduler(licenseManager),
@@ -547,7 +549,7 @@ export class Server {
       new SaveLicenseConfigurationEndpoint(licenseManager),
       new CanInstallEndpoint(installer),
       new InstallEndpoint(installer),
-      new LoginEndpoint(userRepository, authTokenRepository, cipher),
+      new LoginEndpoint(userRepository, authTokenRepository, loginThrottler, cipher),
       new RefreshAuthTokenEndpoint(authTokenRepository),
       new ExchangeMagicLinkEndpoint(magicLinkExchanger),
       new GetLlmConfigurationEndpoint(llmConfigurationRepository),
@@ -617,6 +619,7 @@ export class Server {
       scheduler.start();
     }
     taskFinalizationWorker.start();
+    loginThrottler.start();
 
     await httpServer.start();
     slackSynchronizationManager.start();
@@ -629,6 +632,7 @@ export class Server {
       telegramSynchronizationManager,
       slackSynchronizationManager,
       taskFinalizationWorker,
+      loginThrottler,
       versionProvider
     );
   }
@@ -642,6 +646,7 @@ export class Server {
     private readonly telegramSynchronizationManager: TelegramSynchronizationManager,
     private readonly slackSynchronizationManager: SlackSynchronizationManager,
     private readonly taskFinalizationWorker: TaskFinalizationWorker,
+    private readonly loginThrottler: LoginThrottler,
     private readonly versionProvider: VersionProvider
   ) {}
 
@@ -675,6 +680,7 @@ export class Server {
       scheduler.stop();
     }
     this.taskFinalizationWorker.stop();
+    this.loginThrottler.stop();
     this.disposeDatabase();
 
     await this.httpServer.close();

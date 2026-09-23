@@ -8,6 +8,7 @@ import { AuthToken } from '../../repositories/auth-token/auth-token';
 import { EndpointError } from '../framework/endpoint-error';
 import { parseBody } from '../framework/parse-request';
 import { getEndpointAbortSignal } from '../framework/endpoint-abort-signal';
+import { LoginThrottler } from './login-throttler';
 
 export class LoginEndpoint implements Endpoint {
   public readonly method = 'post';
@@ -16,11 +17,21 @@ export class LoginEndpoint implements Endpoint {
   public constructor(
     private readonly userRepository: UserRepository,
     private readonly authTokenRepository: AuthTokenRepository,
+    private readonly loginThrottler: LoginThrottler,
     private readonly cipher: Cipher
   ) {}
 
   public async handle(req: Request): Promise<LoginResponse> {
     const signal = getEndpointAbortSignal(req);
+
+    const ip = req.ip;
+    if (!ip) {
+      throw new EndpointError('Unable to determine IP address', 400);
+    }
+    if (!this.loginThrottler.tryConsumeAttempt(ip)) {
+      throw new EndpointError('Too many login attempts, please try again later', 429);
+    }
+
     const request = parseBody(loginRequestSchema, req.body);
 
     const user = await this.userRepository.tryGetUser(signal, request.userName);
