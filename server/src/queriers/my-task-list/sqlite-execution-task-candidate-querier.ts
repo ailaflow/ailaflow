@@ -26,6 +26,7 @@ export class SqliteExecutionTaskCandidateQuerier implements ExecutionTaskCandida
           AND at.userName = ?
           AND t.isTest = ?
           AND t.finalizedAt IS NULL
+          AND t.failedAt IS NULL
           AND at.completedAt IS NULL
           AND (t.deadline IS NULL OR t.deadline >= ?)
         ORDER BY t.createdAt, t.id

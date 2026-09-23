@@ -42,11 +42,12 @@ test('queries tasks assigned to the current user', async () => {
       4000,
       TaskFinalizationPolicy.ALL_ASSIGNEES,
       null,
+      TaskSubmissionMode.AI_TOOL_OR_TASK_FORM,
       0,
       null,
       1000,
       null,
-      TaskSubmissionMode.AI_TOOL_OR_TASK_FORM
+      null
     )
   );
   await taskRepository.insert(
@@ -63,11 +64,12 @@ test('queries tasks assigned to the current user', async () => {
       6000,
       TaskFinalizationPolicy.ALL_ASSIGNEES,
       null,
+      TaskSubmissionMode.TASK_FORM,
       0,
       null,
       1001,
       null,
-      TaskSubmissionMode.TASK_FORM
+      null
     )
   );
   await taskRepository.insert(
@@ -84,11 +86,12 @@ test('queries tasks assigned to the current user', async () => {
       3000,
       TaskFinalizationPolicy.ALL_ASSIGNEES,
       null,
+      TaskSubmissionMode.AI_TOOL_OR_TASK_FORM,
       0,
       null,
       1002,
       4500,
-      TaskSubmissionMode.AI_TOOL_OR_TASK_FORM
+      null
     )
   );
   await taskRepository.insert(
@@ -105,11 +108,12 @@ test('queries tasks assigned to the current user', async () => {
       3000,
       TaskFinalizationPolicy.ALL_ASSIGNEES,
       null,
+      TaskSubmissionMode.AI_TOOL_OR_TASK_FORM,
       0,
       null,
       1003,
       null,
-      TaskSubmissionMode.AI_TOOL_OR_TASK_FORM
+      null
     )
   );
   await taskRepository.insert(
@@ -126,11 +130,12 @@ test('queries tasks assigned to the current user', async () => {
       null,
       TaskFinalizationPolicy.ALL_ASSIGNEES,
       null,
+      TaskSubmissionMode.AI_TOOL_OR_TASK_FORM,
       0,
       null,
       1004,
       null,
-      TaskSubmissionMode.AI_TOOL_OR_TASK_FORM
+      null
     )
   );
   await taskRepository.insert(
@@ -147,11 +152,34 @@ test('queries tasks assigned to the current user', async () => {
       null,
       TaskFinalizationPolicy.ALL_ASSIGNEES,
       null,
+      TaskSubmissionMode.AI_TOOL_OR_TASK_FORM,
       0,
       null,
       1005,
       null,
-      TaskSubmissionMode.AI_TOOL_OR_TASK_FORM
+      null
+    )
+  );
+  await taskRepository.insert(
+    signal,
+    new Task(
+      'task_7',
+      'Failed task',
+      false,
+      'alice',
+      'execution_1',
+      [],
+      null,
+      null,
+      null,
+      TaskFinalizationPolicy.ALL_ASSIGNEES,
+      null,
+      TaskSubmissionMode.AI_TOOL_OR_TASK_FORM,
+      1,
+      null,
+      1006,
+      null,
+      5000
     )
   );
 
@@ -161,7 +189,8 @@ test('queries tasks assigned to the current user', async () => {
     AssignedTask.create('task_3', 'alice', 'default'),
     AssignedTask.create('task_4', 'bob', 'default'),
     new AssignedTask('task_5', 'alice', 'default', 4700, null),
-    AssignedTask.create('task_6', 'alice', 'default')
+    AssignedTask.create('task_6', 'alice', 'default'),
+    AssignedTask.create('task_7', 'alice', 'default')
   ]);
 
   assert.deepEqual(await querier.query(signal, false, 'alice', false, 1, 2), {

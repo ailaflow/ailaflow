@@ -30,11 +30,12 @@ export class Task {
       deadline,
       finalizationPolicy,
       metadataVariableName,
+      submissionMode,
       0,
       null,
       createdAt,
       null,
-      submissionMode
+      null
     );
   }
 
@@ -52,11 +53,12 @@ export class Task {
     public readonly deadline: number | null,
     public readonly finalizationPolicy: TaskFinalizationPolicy,
     public readonly metadataVariableName: string | null,
+    public readonly submissionMode: TaskSubmissionMode,
     public readonly finalizationRequestCount: number,
     public readonly nextFinalizationAttemptAt: number | null,
     public readonly createdAt: number,
     public readonly finalizedAt: number | null,
-    public readonly submissionMode: TaskSubmissionMode
+    public readonly failedAt: number | null
   ) {}
 
   public canReadInputVariable(variableName: string): boolean {

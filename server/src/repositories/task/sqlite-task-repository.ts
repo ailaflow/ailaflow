@@ -20,17 +20,18 @@ export class SqliteTaskRepository implements TaskRepository {
           isTest INTEGER NOT NULL,
           createdBy TEXT NOT NULL,
           executionId TEXT NOT NULL,
-          inputVariableNames TEXT NOT NULL,
+          inputVariableNames TEXT,
           outputVariableSchemas TEXT,
           form TEXT,
-          submissionMode INTEGER NOT NULL,
+          submissionMode TEXT NOT NULL,
           deadline INTEGER,
           finalizationPolicy TEXT NOT NULL,
           metadataVariableName TEXT,
           finalizationRequestCount INTEGER NOT NULL,
           nextFinalizationAttemptAt INTEGER,
           createdAt INTEGER NOT NULL,
-          finalizedAt INTEGER
+          finalizedAt INTEGER,
+          failedAt INTEGER
         ) STRICT
       `);
       db.exec(`
@@ -59,7 +60,8 @@ export class SqliteTaskRepository implements TaskRepository {
           finalizationRequestCount,
           nextFinalizationAttemptAt,
           createdAt,
-          finalizedAt
+          finalizedAt,
+          failedAt
         FROM tasks
         WHERE id = ?
         LIMIT 1
@@ -71,10 +73,10 @@ export class SqliteTaskRepository implements TaskRepository {
             isTest: number;
             createdBy: string;
             executionId: string;
-            inputVariableNames: string;
+            inputVariableNames: string | null;
             outputVariableSchemas: string | null;
             form: string | null;
-            submissionMode: number;
+            submissionMode: string;
             deadline: number | null;
             finalizationPolicy: string;
             metadataVariableName: string | null;
@@ -82,6 +84,7 @@ export class SqliteTaskRepository implements TaskRepository {
             nextFinalizationAttemptAt: number | null;
             createdAt: number;
             finalizedAt: number | null;
+            failedAt: number | null;
           }
         | undefined;
 
@@ -108,9 +111,10 @@ export class SqliteTaskRepository implements TaskRepository {
           finalizationRequestCount,
           nextFinalizationAttemptAt,
           createdAt,
-          finalizedAt
+          finalizedAt,
+          failedAt
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `);
       statement.run(
         task.id,
@@ -128,7 +132,8 @@ export class SqliteTaskRepository implements TaskRepository {
         task.finalizationRequestCount,
         task.nextFinalizationAttemptAt,
         task.createdAt,
-        task.finalizedAt
+        task.finalizedAt,
+        task.failedAt
       );
     }, transaction);
   }
@@ -139,7 +144,26 @@ export class SqliteTaskRepository implements TaskRepository {
         UPDATE tasks
         SET
           finalizedAt = ?,
-          finalizationRequestCount = 0
+          finalizationRequestCount = 0,
+          metadataVariableName = NULL,
+          outputVariableSchemas = NULL,
+          inputVariableNames = NULL
+        WHERE id = ?
+      `);
+      statement.run(time, id);
+    }, transaction);
+  }
+
+  public async fail(_: AbortSignal, id: string, time: number, transaction?: Transaction): Promise<void> {
+    await this.db.write(db => {
+      const statement = db.prepare(`
+        UPDATE tasks
+        SET
+          failedAt = ?,
+          finalizationRequestCount = 0,
+          metadataVariableName = NULL,
+          outputVariableSchemas = NULL,
+          inputVariableNames = NULL
         WHERE id = ?
       `);
       statement.run(time, id);
@@ -185,10 +209,10 @@ function deserializeTask(row: {
   isTest: number;
   createdBy: string;
   executionId: string;
-  inputVariableNames: string;
+  inputVariableNames: string | null;
   outputVariableSchemas: string | null;
   form: string | null;
-  submissionMode: number;
+  submissionMode: string;
   deadline: number | null;
   finalizationPolicy: string;
   metadataVariableName: string | null;
@@ -196,6 +220,7 @@ function deserializeTask(row: {
   nextFinalizationAttemptAt: number | null;
   createdAt: number;
   finalizedAt: number | null;
+  failedAt: number | null;
 }): Task {
   return new Task(
     row.id,
@@ -203,17 +228,18 @@ function deserializeTask(row: {
     row.isTest === 1,
     row.createdBy,
     row.executionId,
-    JSON.parse(row.inputVariableNames) as string[],
+    row.inputVariableNames ? (JSON.parse(row.inputVariableNames) as string[]) : [],
     row.outputVariableSchemas ? (JSON.parse(row.outputVariableSchemas) as Record<string, JsonSchema>) : null,
     row.form ? (JSON.parse(row.form) as FormDefinition) : null,
     row.deadline,
     taskFinalizationPolicySchema.parse(row.finalizationPolicy),
     row.metadataVariableName,
+    taskSubmissionModeSchema.parse(row.submissionMode),
     row.finalizationRequestCount,
     row.nextFinalizationAttemptAt,
     row.createdAt,
     row.finalizedAt,
-    taskSubmissionModeSchema.parse(row.submissionMode)
+    row.failedAt
   );
 }
 

@@ -8,10 +8,10 @@ import { ProcessExecutionFinishedEvent } from '../events/process-execution/proce
 import { ProcessExecutionResumeListenerStore } from './process-execution-resume-listener-store';
 import { Logger } from '../core/logger';
 
-export class ProcessExecutionResumeError extends Error {
+export class NonResumableProcessError extends Error {
   public constructor(message: string) {
     super(message);
-    this.name = ProcessExecutionResumeError.name;
+    this.name = NonResumableProcessError.name;
   }
 }
 
@@ -29,12 +29,12 @@ export class ProcessExecutionResumer {
   public async resume(signal: AbortSignal, executionId: string, payload: SignalPayload): Promise<ProcessExecution> {
     const persistedExecution = await this.persistedExecutionRepository.tryGet(signal, executionId);
     if (!persistedExecution) {
-      throw new ProcessExecutionResumeError(`Cannot find the persisted execution: ${executionId}`);
+      throw new NonResumableProcessError(`Cannot find the persisted execution: ${executionId}`);
     }
 
     const process = await this.processManager.tryGetByName(signal, persistedExecution.processName);
     if (!process) {
-      throw new ProcessExecutionResumeError(`Cannot find the process: ${persistedExecution.processName}`);
+      throw new NonResumableProcessError(`Cannot find the process: ${persistedExecution.processName}`);
     }
     if (process.hash !== persistedExecution.processHash) {
       // TODO: this may cause issues, we should consider how to handle this case.

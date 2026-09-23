@@ -34,6 +34,7 @@ test('returns not found when deleting a missing task', async () => {
     tryGet: async () => null,
     insert: async () => undefined,
     finalize: async () => undefined,
+    fail: async () => undefined,
     incrementFinalizationRequestCount: async () => undefined,
     setNextFinalizationAttemptAt: async () => undefined,
     delete: async () => false

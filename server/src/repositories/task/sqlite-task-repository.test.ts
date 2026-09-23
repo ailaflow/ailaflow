@@ -32,11 +32,12 @@ test('task insert does not overwrite an existing task', async () => {
       null,
       TaskFinalizationPolicy.ALL_ASSIGNEES,
       'originalMetadata',
+      TaskSubmissionMode.TASK_FORM,
       2,
       1500,
       1000,
       null,
-      TaskSubmissionMode.TASK_FORM
+      null
     )
   );
 
@@ -55,11 +56,12 @@ test('task insert does not overwrite an existing task', async () => {
         null,
         TaskFinalizationPolicy.ANY_ASSIGNEE,
         null,
+        TaskSubmissionMode.AI_TOOL_OR_TASK_FORM,
         0,
         null,
         2000,
         null,
-        TaskSubmissionMode.AI_TOOL_OR_TASK_FORM
+        null
       )
     )
   );
@@ -81,7 +83,7 @@ test('task insert does not overwrite an existing task', async () => {
     executionId: string;
     inputVariableNames: string;
     outputVariableSchemas: string | null;
-    submissionMode: number;
+    submissionMode: string;
     finalizationPolicy: string;
     metadataVariableName: string | null;
     finalizationRequestCount: number;
@@ -125,11 +127,12 @@ test('task can be finalized', async () => {
     2000,
     TaskFinalizationPolicy.ANY_ASSIGNEE,
     'taskMetadata',
+    TaskSubmissionMode.TASK_FORM,
     3,
     null,
     1000,
     null,
-    TaskSubmissionMode.TASK_FORM
+    null
   );
 
   await repository.setup(signal);
@@ -143,12 +146,73 @@ test('task can be finalized', async () => {
     {
       ...rowBeforeUpdate,
       finalizationRequestCount: 0,
+      inputVariableNames: null,
+      metadataVariableName: null,
+      outputVariableSchemas: null,
       finalizedAt: 2500
     }
   );
   const finalizedTask = await repository.tryGet(signal, task.id);
   assert.equal(finalizedTask?.finalizationRequestCount, 0);
   assert.equal(finalizedTask?.finalizedAt, 2500);
+  assert.deepEqual(finalizedTask?.inputVariableNames, []);
+  assert.equal(finalizedTask?.metadataVariableName, null);
+  assert.equal(finalizedTask?.outputVariableSchemas, null);
+
+  db.close();
+});
+
+test('task can be failed and its stored variable metadata is released', async () => {
+  const db = new DatabaseSync(':memory:', { open: true });
+  const dbs = { modelDb: new SqliteDatabase(db) } as SqliteDatabases;
+  const signal = new AbortController().signal;
+  const repository = new SqliteTaskRepository(dbs);
+  const task = Task.create(
+    'Task',
+    false,
+    'creator_1',
+    'execution_1',
+    ['input'],
+    { output: { type: 'string' } },
+    null,
+    null,
+    TaskFinalizationPolicy.ALL_ASSIGNEES,
+    'taskMetadata',
+    TaskSubmissionMode.AI_TOOL_OR_TASK_FORM
+  );
+
+  await repository.setup(signal);
+  await repository.insert(signal, task);
+  await repository.incrementFinalizationRequestCount(signal, task.id, 3);
+  await repository.fail(signal, task.id, 2500);
+
+  assert.deepEqual(
+    { ...db.prepare(`SELECT * FROM tasks WHERE id = ?`).get(task.id) },
+    {
+      id: task.id,
+      title: task.title,
+      isTest: 0,
+      createdBy: task.createdBy,
+      executionId: task.executionId,
+      outputVariableSchemas: null,
+      form: null,
+      deadline: null,
+      finalizationPolicy: TaskFinalizationPolicy.ALL_ASSIGNEES,
+      metadataVariableName: null,
+      finalizationRequestCount: 0,
+      nextFinalizationAttemptAt: null,
+      createdAt: task.createdAt,
+      finalizedAt: null,
+      submissionMode: TaskSubmissionMode.AI_TOOL_OR_TASK_FORM,
+      inputVariableNames: null,
+      failedAt: 2500
+    }
+  );
+  const failedTask = await repository.tryGet(signal, task.id);
+  assert.equal(failedTask?.failedAt, 2500);
+  assert.deepEqual(failedTask?.inputVariableNames, []);
+  assert.equal(failedTask?.metadataVariableName, null);
+  assert.equal(failedTask?.outputVariableSchemas, null);
 
   db.close();
 });
@@ -170,11 +234,12 @@ test('task finalization request count can be incremented and decremented', async
     null,
     TaskFinalizationPolicy.ALL_ASSIGNEES,
     null,
+    TaskSubmissionMode.AI_TOOL_OR_TASK_FORM,
     0,
     null,
     1000,
     null,
-    TaskSubmissionMode.AI_TOOL_OR_TASK_FORM
+    null
   );
 
   await repository.setup(signal);
@@ -269,11 +334,12 @@ test('task can be fetched by id', async () => {
     2000,
     TaskFinalizationPolicy.ANY_ASSIGNEE,
     'taskMetadata',
+    TaskSubmissionMode.TASK_FORM,
     0,
     null,
     1000,
     null,
-    TaskSubmissionMode.TASK_FORM
+    3000
   );
 
   await repository.setup(signal);
@@ -312,11 +378,12 @@ test('task can be deleted with its assignments', async () => {
       null,
       TaskFinalizationPolicy.ALL_ASSIGNEES,
       null,
+      TaskSubmissionMode.AI_TOOL_OR_TASK_FORM,
       0,
       null,
       1000,
       null,
-      TaskSubmissionMode.AI_TOOL_OR_TASK_FORM
+      null
     )
   );
   await assignedTaskRepository.upsert(signal, AssignedTask.create('task_1', 'user_1', 'default'));

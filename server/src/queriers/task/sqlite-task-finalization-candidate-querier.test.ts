@@ -17,20 +17,22 @@ test('queries only task finalization candidates eligible for an attempt', async 
       finalizationRequestCount INTEGER NOT NULL,
       nextFinalizationAttemptAt INTEGER,
       createdAt INTEGER NOT NULL,
-      finalizedAt INTEGER
+      finalizedAt INTEGER,
+      failedAt INTEGER
     ) STRICT
   `);
   const insert = db.prepare(`
-    INSERT INTO tasks (id, deadline, finalizationRequestCount, nextFinalizationAttemptAt, createdAt, finalizedAt)
-    VALUES (?, ?, ?, ?, ?, ?)
+    INSERT INTO tasks (id, deadline, finalizationRequestCount, nextFinalizationAttemptAt, createdAt, finalizedAt, failedAt)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
   `);
-  insert.run('requested', null, 1, null, 1, null);
-  insert.run('deadline', 999, 0, null, 2, null);
-  insert.run('blocked-request', null, 1, 1001, 3, null);
-  insert.run('blocked-deadline', 999, 0, 1001, 4, null);
-  insert.run('block-expired', null, 1, 1000, 5, null);
-  insert.run('not-requested', null, 0, null, 6, null);
-  insert.run('finalized', null, 1, null, 7, 900);
+  insert.run('requested', null, 1, null, 1, null, null);
+  insert.run('deadline', 999, 0, null, 2, null, null);
+  insert.run('blocked-request', null, 1, 1001, 3, null, null);
+  insert.run('blocked-deadline', 999, 0, 1001, 4, null, null);
+  insert.run('block-expired', null, 1, 1000, 5, null, null);
+  insert.run('not-requested', null, 0, null, 6, null, null);
+  insert.run('finalized', null, 1, null, 7, 900, null);
+  insert.run('failed', null, 1, null, 8, null, 950);
 
   const candidates = await querier.query(signal, 1000, 10);
   assert.deepEqual(

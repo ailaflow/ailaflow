@@ -1,10 +1,13 @@
 import { TaskCompletionMetadata } from '@ailaflow/shared';
-import { ProcessExecutionResumer } from '../process-executor/process-execution-resumer';
+import { NonResumableProcessError, ProcessExecutionResumer } from '../process-executor/process-execution-resumer';
 import { IncompleteAssignedTaskCountQuerier } from '../queriers/task/incomplete-assigned-task-count-querier';
 import { AssignedTaskRepository } from '../repositories/task/assigned-task-repository';
 import { TaskRepository } from '../repositories/task/task-repository';
+import { Logger } from '../core/logger';
 
 export class TaskFinalizer {
+  private readonly logger = new Logger(TaskFinalizer.name);
+
   public constructor(
     private readonly assignedTaskRepository: AssignedTaskRepository,
     private readonly taskRepository: TaskRepository,
@@ -14,7 +17,7 @@ export class TaskFinalizer {
 
   public async tryFinalize(signal: AbortSignal, taskId: string, deadlineExceeded: boolean): Promise<boolean> {
     const task = await this.taskRepository.tryGet(signal, taskId);
-    if (!task || task.finalizedAt !== null) {
+    if (!task || task.finalizedAt !== null || task.failedAt !== null) {
       return false;
     }
 
@@ -77,9 +80,20 @@ export class TaskFinalizer {
     }
 
     const executionSignal = new AbortController().signal;
-    await this.processExecutionResumer.resume(executionSignal, task.executionId, value);
+    const now = Date.now();
 
-    await this.taskRepository.finalize(signal, task.id, Date.now());
+    try {
+      await this.processExecutionResumer.resume(executionSignal, task.executionId, value);
+    } catch (e) {
+      if (e instanceof NonResumableProcessError) {
+        await this.taskRepository.fail(signal, task.id, now);
+        this.logger.warn(`Task ${task.id} is marked as failed due to non-resumable process error: ${(e as Error)?.message ?? e}`);
+        return true;
+      }
+      throw e;
+    }
+
+    await this.taskRepository.finalize(signal, task.id, now);
 
     return true;
   }

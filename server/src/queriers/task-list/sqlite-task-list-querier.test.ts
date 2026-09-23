@@ -123,11 +123,12 @@ async function insertTask(
       deadline,
       TaskFinalizationPolicy.ALL_ASSIGNEES,
       null,
+      TaskSubmissionMode.AI_TOOL_OR_TASK_FORM,
       0,
       null,
       createdAt,
       finalizedAt,
-      TaskSubmissionMode.AI_TOOL_OR_TASK_FORM
+      null
     )
   );
 }

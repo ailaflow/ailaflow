@@ -26,6 +26,7 @@ export class SqliteMyTaskListQuerier implements MyTaskListQuerier {
         ON t.id = at.taskId
       WHERE t.isTest = ?
         AND at.userName = ?
+        AND t.failedAt IS NULL
       ${statusCondition}
     `);
       const { totalCount } = countStatement.get(isTest ? 1 : 0, userName) as { totalCount: number };
@@ -43,6 +44,7 @@ export class SqliteMyTaskListQuerier implements MyTaskListQuerier {
         ON t.id = at.taskId
       WHERE t.isTest = ?
         AND at.userName = ?
+        AND t.failedAt IS NULL
       ${statusCondition}
       ORDER BY t.createdAt, t.id
       LIMIT ? OFFSET ?

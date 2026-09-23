@@ -17,7 +17,8 @@ test('queries a limited number of active task candidates for an execution and us
       isTest INTEGER NOT NULL,
       deadline INTEGER,
       createdAt INTEGER NOT NULL,
-      finalizedAt INTEGER
+      finalizedAt INTEGER,
+      failedAt INTEGER
     ) STRICT;
 
     CREATE TABLE assigned_tasks (
@@ -28,24 +29,25 @@ test('queries a limited number of active task candidates for an execution and us
     ) STRICT;
   `);
   const insertTask = db.prepare(`
-    INSERT INTO tasks (id, executionId, isTest, deadline, createdAt, finalizedAt)
-    VALUES (?, ?, ?, ?, ?, ?)
+    INSERT INTO tasks (id, executionId, isTest, deadline, createdAt, finalizedAt, failedAt)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
   `);
   const insertAssignment = db.prepare(`
     INSERT INTO assigned_tasks (taskId, userName, completedAt)
     VALUES (?, ?, ?)
   `);
 
-  insertTask.run('no-deadline', 'execution', 0, null, 1, null);
-  insertTask.run('at-deadline', 'execution', 0, 1000, 2, null);
-  insertTask.run('after-deadline', 'execution', 0, 1001, 3, null);
-  insertTask.run('over-limit', 'execution', 0, null, 4, null);
-  insertTask.run('expired', 'execution', 0, 999, 5, null);
-  insertTask.run('completed-assignment', 'execution', 0, null, 6, null);
-  insertTask.run('finalized-task', 'execution', 0, null, 7, 900);
-  insertTask.run('other-execution', 'other execution', 0, null, 8, null);
-  insertTask.run('test-task', 'execution', 1, null, 9, null);
-  insertTask.run('other-user', 'execution', 0, null, 10, null);
+  insertTask.run('no-deadline', 'execution', 0, null, 1, null, null);
+  insertTask.run('at-deadline', 'execution', 0, 1000, 2, null, null);
+  insertTask.run('after-deadline', 'execution', 0, 1001, 3, null, null);
+  insertTask.run('over-limit', 'execution', 0, null, 4, null, null);
+  insertTask.run('expired', 'execution', 0, 999, 5, null, null);
+  insertTask.run('completed-assignment', 'execution', 0, null, 6, null, null);
+  insertTask.run('finalized-task', 'execution', 0, null, 7, 900, null);
+  insertTask.run('other-execution', 'other execution', 0, null, 8, null, null);
+  insertTask.run('test-task', 'execution', 1, null, 9, null, null);
+  insertTask.run('other-user', 'execution', 0, null, 10, null, null);
+  insertTask.run('failed-task', 'execution', 0, null, 11, null, 950);
 
   insertAssignment.run('no-deadline', 'alice', null);
   insertAssignment.run('at-deadline', 'alice', null);
@@ -57,6 +59,7 @@ test('queries a limited number of active task candidates for an execution and us
   insertAssignment.run('other-execution', 'alice', null);
   insertAssignment.run('test-task', 'alice', null);
   insertAssignment.run('other-user', 'bob', null);
+  insertAssignment.run('failed-task', 'alice', null);
 
   const candidates = await querier.query(signal, 'execution', 'alice', false, 1000, 10);
 
@@ -82,7 +85,8 @@ test('queries test task candidates separately', async () => {
       isTest INTEGER NOT NULL,
       deadline INTEGER,
       createdAt INTEGER NOT NULL,
-      finalizedAt INTEGER
+      finalizedAt INTEGER,
+      failedAt INTEGER
     ) STRICT;
 
     CREATE TABLE assigned_tasks (
@@ -92,8 +96,8 @@ test('queries test task candidates separately', async () => {
       PRIMARY KEY (taskId, userName)
     ) STRICT;
 
-    INSERT INTO tasks (id, executionId, isTest, deadline, createdAt, finalizedAt)
-    VALUES ('test-task', 'execution', 1, NULL, 1, NULL);
+    INSERT INTO tasks (id, executionId, isTest, deadline, createdAt, finalizedAt, failedAt)
+    VALUES ('test-task', 'execution', 1, NULL, 1, NULL, NULL);
 
     INSERT INTO assigned_tasks (taskId, userName, completedAt)
     VALUES ('test-task', 'alice', NULL);

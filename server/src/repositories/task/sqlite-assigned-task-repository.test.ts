@@ -40,11 +40,12 @@ test('assigned tasks can be upserted and queried by task and user', async () => 
     null,
     TaskFinalizationPolicy.ALL_ASSIGNEES,
     null,
+    TaskSubmissionMode.AI_TOOL_OR_TASK_FORM,
     0,
     null,
     1000,
     null,
-    TaskSubmissionMode.AI_TOOL_OR_TASK_FORM
+    null
   );
   const task2 = new Task(
     'task_2',
@@ -58,11 +59,12 @@ test('assigned tasks can be upserted and queried by task and user', async () => 
     null,
     TaskFinalizationPolicy.ANY_ASSIGNEE,
     null,
+    TaskSubmissionMode.AI_TOOL_OR_TASK_FORM,
     0,
     null,
     1001,
     null,
-    TaskSubmissionMode.AI_TOOL_OR_TASK_FORM
+    null
   );
   await taskRepository.insert(signal, task1);
   await taskRepository.insert(signal, task2);

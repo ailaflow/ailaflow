@@ -14,6 +14,7 @@ export class SqliteTaskFinalizationCandidateQuerier implements TaskFinalizationC
         SELECT id, deadline, finalizationRequestCount
         FROM tasks
         WHERE finalizedAt IS NULL
+          AND failedAt IS NULL
           AND (nextFinalizationAttemptAt IS NULL OR nextFinalizationAttemptAt <= ?)
           AND (
             finalizationRequestCount > 0

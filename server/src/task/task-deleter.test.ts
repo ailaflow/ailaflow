@@ -20,11 +20,12 @@ test('deletes the persisted execution and task', async () => {
     null,
     TaskFinalizationPolicy.ALL_ASSIGNEES,
     null,
+    TaskSubmissionMode.AI_TOOL_OR_TASK_FORM,
     0,
     null,
     1000,
     null,
-    TaskSubmissionMode.AI_TOOL_OR_TASK_FORM
+    null
   );
   const taskRepository = createTaskRepository(task, async id => {
     calls.push(`task:${id}`);
@@ -60,6 +61,7 @@ function createTaskRepository(task: Task | null, deleteTask: (id: string) => Pro
     tryGet: async () => task,
     insert: async () => undefined,
     finalize: async () => undefined,
+    fail: async () => undefined,
     incrementFinalizationRequestCount: async () => undefined,
     setNextFinalizationAttemptAt: async () => undefined,
     delete: async (_, id) => deleteTask(id)
