@@ -16,8 +16,8 @@ export class ProcessExecutionFinishedEventHandler implements EventHandler<Proces
 
     if (event.outcome.type === ProcessExecutionOutcomeType.FINISHED) {
       m += 'finished successfully. ';
-      const key = Object.keys(event.outcome.output);
-      if (key.length > 0) {
+      const keys = Object.keys(event.outcome.output);
+      if (keys.length > 0) {
         m += 'Output:\n```json\n';
         m += JSON.stringify(event.outcome.output, null, 2) + '\n';
         m += '```\n';
