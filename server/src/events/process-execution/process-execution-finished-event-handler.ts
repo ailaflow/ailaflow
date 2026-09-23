@@ -15,10 +15,15 @@ export class ProcessExecutionFinishedEventHandler implements EventHandler<Proces
     let m = `Execution "${event.executionId}" for process "/${event.processName}" `;
 
     if (event.outcome.type === ProcessExecutionOutcomeType.FINISHED) {
-      m += 'finished successfully.\n';
-      m += 'Output:\n```json\n';
-      m += JSON.stringify(event.outcome.output, null, 2) + '\n';
-      m += '```\n';
+      m += 'finished successfully. ';
+      const key = Object.keys(event.outcome.output);
+      if (key.length > 0) {
+        m += 'Output:\n```json\n';
+        m += JSON.stringify(event.outcome.output, null, 2) + '\n';
+        m += '```\n';
+      } else {
+        m += 'No output was produced.\n';
+      }
     } else if (event.outcome.type === ProcessExecutionOutcomeType.PAUSED) {
       m += 'was paused';
       if (event.outcome.stepId) {
