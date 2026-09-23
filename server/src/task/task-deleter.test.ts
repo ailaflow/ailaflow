@@ -2,11 +2,12 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { TaskFinalizationPolicy, TaskSubmissionMode } from '@ailaflow/shared';
 import { PersistedExecutionRepository } from '../repositories/persisted-execution/persisted-execution-repository';
+import { AssignedTaskRepository } from '../repositories/task/assigned-task-repository';
 import { TaskRepository } from '../repositories/task/task-repository';
 import { Task } from '../repositories/task/task';
 import { TaskDeleter } from './task-deleter';
 
-test('deletes the persisted execution and task', async () => {
+test('deletes the persisted execution, assigned tasks, and task', async () => {
   const calls: string[] = [];
   const task = new Task(
     'task_1',
@@ -34,10 +35,13 @@ test('deletes the persisted execution and task', async () => {
   const persistedExecutionRepository = createPersistedExecutionRepository(async executionId => {
     calls.push(`execution:${executionId}`);
   });
-  const deleter = new TaskDeleter(taskRepository, persistedExecutionRepository);
+  const assignedTaskRepository = createAssignedTaskRepository(async taskId => {
+    calls.push(`assignedTasks:${taskId}`);
+  });
+  const deleter = new TaskDeleter(taskRepository, assignedTaskRepository, persistedExecutionRepository);
 
   assert.equal(await deleter.delete(new AbortController().signal, 'task_1'), true);
-  assert.deepEqual(calls, ['execution:execution_1', 'task:task_1']);
+  assert.deepEqual(calls, ['execution:execution_1', 'assignedTasks:task_1', 'task:task_1']);
 });
 
 test('does not delete anything when the task does not exist', async () => {
@@ -49,7 +53,10 @@ test('does not delete anything when the task does not exist', async () => {
   const persistedExecutionRepository = createPersistedExecutionRepository(async () => {
     deleteCalled = true;
   });
-  const deleter = new TaskDeleter(taskRepository, persistedExecutionRepository);
+  const assignedTaskRepository = createAssignedTaskRepository(async () => {
+    deleteCalled = true;
+  });
+  const deleter = new TaskDeleter(taskRepository, assignedTaskRepository, persistedExecutionRepository);
 
   assert.equal(await deleter.delete(new AbortController().signal, 'missing'), false);
   assert.equal(deleteCalled, false);
@@ -65,6 +72,17 @@ function createTaskRepository(task: Task | null, deleteTask: (id: string) => Pro
     incrementFinalizationRequestCount: async () => undefined,
     setNextFinalizationAttemptAt: async () => undefined,
     delete: async (_, id) => deleteTask(id)
+  };
+}
+
+function createAssignedTaskRepository(deleteAll: (taskId: string) => Promise<void>): AssignedTaskRepository {
+  return {
+    setup: async () => undefined,
+    tryGet: async () => null,
+    upsert: async () => undefined,
+    upsertMultiple: async () => undefined,
+    getAllCompleted: async () => [],
+    deleteAll: async (_, taskId) => deleteAll(taskId)
   };
 }
 

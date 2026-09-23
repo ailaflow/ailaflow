@@ -105,6 +105,10 @@ test('assigned tasks can be upserted and queried by task and user', async () => 
   assert.deepEqual(await assignedTaskRepository.getAllCompleted(signal, 'missing'), []);
 
   await assignedTaskRepository.upsertMultiple(signal, []);
+  await assignedTaskRepository.deleteAll(signal, task1.id);
+  assert.equal(await assignedTaskRepository.tryGet(signal, task1.id, user1.name), null);
+  assert.equal(await assignedTaskRepository.tryGet(signal, task1.id, user2.name), null);
+  assert.notEqual(await assignedTaskRepository.tryGet(signal, task2.id, user1.name), null);
 
   const indexes = db
     .prepare(

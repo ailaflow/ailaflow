@@ -169,7 +169,8 @@ import { GetMyTaskDetailsTool } from './chat-session/user-tools/get-my-task-deta
 import { UserTaskDetailsProvider } from './task/user-task-details-provider';
 import { TaskListQuerier } from './queriers/task-list/task-list-querier';
 import { SqliteTaskListQuerier } from './queriers/task-list/sqlite-task-list-querier';
-import { DeleteTaskEndpoint, GetTasksEndpoint } from './api/task/tasks-endpoint';
+import { DeleteTaskEndpoint } from './api/task/delete-task-endpoint';
+import { GetTasksEndpoint } from './api/task/get-tasks-endpoint';
 import { TaskDeleter } from './task/task-deleter';
 import { KvConfigurationRepository } from './repositories/configuration/kv/kv-configuration-repository';
 import { SqliteKvConfigurationRepository } from './repositories/configuration/kv/sqlite-kv-configuration-repository';
@@ -492,7 +493,7 @@ export class Server {
       taskRepository,
       taskFinalizationWorker
     );
-    const taskDeleter = new TaskDeleter(taskRepository, persistedExecutionRepository);
+    const taskDeleter = new TaskDeleter(taskRepository, assignedTaskRepository, persistedExecutionRepository);
 
     const userToolSetProvider = new ToolSetProvider([
       new GetMyProcessesTool(myProcessListQuerier),

@@ -7,4 +7,5 @@ export interface AssignedTaskRepository extends Repository {
   upsert(signal: AbortSignal, assignedTask: AssignedTask, transaction?: Transaction): Promise<void>;
   upsertMultiple(signal: AbortSignal, assignedTasks: AssignedTask[], transaction?: Transaction): Promise<void>;
   getAllCompleted(signal: AbortSignal, taskId: string): Promise<AssignedTask[]>;
+  deleteAll(signal: AbortSignal, taskId: string, transaction?: Transaction): Promise<void>;
 }

@@ -1,9 +1,12 @@
+import { Transaction } from '../core/transaction';
 import { PersistedExecutionRepository } from '../repositories/persisted-execution/persisted-execution-repository';
+import { AssignedTaskRepository } from '../repositories/task/assigned-task-repository';
 import { TaskRepository } from '../repositories/task/task-repository';
 
 export class TaskDeleter {
   public constructor(
     private readonly taskRepository: TaskRepository,
+    private readonly assignedTaskRepository: AssignedTaskRepository,
     private readonly persistedExecutionRepository: PersistedExecutionRepository
   ) {}
 
@@ -13,7 +16,17 @@ export class TaskDeleter {
       return false;
     }
 
-    await this.persistedExecutionRepository.delete(signal, task.executionId);
-    return this.taskRepository.delete(signal, id);
+    const transaction = Transaction.begin();
+    try {
+      await this.persistedExecutionRepository.delete(signal, task.executionId);
+      await this.assignedTaskRepository.deleteAll(signal, id, transaction);
+      const success = await this.taskRepository.delete(signal, id, transaction);
+
+      await transaction.commit();
+      return success;
+    } catch (e) {
+      await transaction.rollback();
+      throw e;
+    }
   }
 }

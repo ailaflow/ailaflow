@@ -100,6 +100,12 @@ export class SqliteAssignedTaskRepository implements AssignedTaskRepository {
     }, transaction);
   }
 
+  public async deleteAll(_: AbortSignal, taskId: string, transaction?: Transaction): Promise<void> {
+    await this.db.write(db => {
+      db.prepare(`DELETE FROM assigned_tasks WHERE taskId = ?`).run(taskId);
+    }, transaction);
+  }
+
   private createUpsertStatement(db: DatabaseSync): ReturnType<DatabaseSync['prepare']> {
     return db.prepare(`
       INSERT INTO assigned_tasks (taskId, userName, channelName, completedAt, outputValues)
