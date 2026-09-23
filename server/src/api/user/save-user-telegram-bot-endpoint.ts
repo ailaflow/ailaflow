@@ -2,11 +2,12 @@ import type { SaveTelegramBotResponse } from '@ailaflow/shared';
 import { saveTelegramBotRequestSchema } from '@ailaflow/shared';
 import { Request } from 'express';
 import { UserRepository } from '../../repositories/user/user-repository';
-import { TelegramConfigurationApi } from '../common/telegram-configuration-api';
+import { TelegramConfigurationManager } from '../../telegram/telegram-configuration-manager';
 import { Endpoint } from '../framework/endpoint';
 import { getEndpointAbortSignal } from '../framework/endpoint-abort-signal';
 import { EndpointError } from '../framework/endpoint-error';
 import { parseBody } from '../framework/parse-request';
+import { mapTelegramEndpointErrors } from '../telegram-configuration/telegram-endpoint-error-mapper';
 
 export class SaveUserTelegramBotEndpoint implements Endpoint {
   public readonly method = 'post';
@@ -16,7 +17,7 @@ export class SaveUserTelegramBotEndpoint implements Endpoint {
 
   public constructor(
     private readonly userRepository: UserRepository,
-    private readonly api: TelegramConfigurationApi
+    private readonly manager: TelegramConfigurationManager
   ) {}
 
   public async handle(req: Request): Promise<SaveTelegramBotResponse> {
@@ -27,6 +28,6 @@ export class SaveUserTelegramBotEndpoint implements Endpoint {
       throw new EndpointError('User not found', 404);
     }
     const request = parseBody(saveTelegramBotRequestSchema, req.body);
-    return this.api.save(signal, user.name, request);
+    return mapTelegramEndpointErrors(() => this.manager.save(signal, user.name, request));
   }
 }

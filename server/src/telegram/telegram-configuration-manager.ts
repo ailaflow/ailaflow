@@ -6,20 +6,17 @@ import type {
   TelegramBotConfigurationDto
 } from '@ailaflow/shared';
 import { randomBytes } from 'crypto';
-import { EventBus } from '../../events/event-bus';
-import { TelegramConfigurationChangedEvent } from '../../events/telegram-configuration/telegram-configuration-changed-event';
-import {
-  TelegramBotConfiguration,
-  TelegramBotConfigurationError
-} from '../../repositories/configuration/telegram/telegram-bot-configuration';
+import { EventBus } from '../events/event-bus';
+import { TelegramConfigurationChangedEvent } from '../events/telegram-configuration/telegram-configuration-changed-event';
+import { TelegramBotConfiguration, TelegramBotConfigurationError } from '../repositories/configuration/telegram/telegram-bot-configuration';
 import {
   TelegramConfigurationRepository,
   TelegramConfigurationRepositoryError
-} from '../../repositories/configuration/telegram/telegram-configuration-repository';
-import { TelegramBotApiClient, TelegramBotApiError } from '../../telegram/telegram-bot-api-client';
-import { EndpointError } from '../framework/endpoint-error';
+} from '../repositories/configuration/telegram/telegram-configuration-repository';
+import { TelegramBotApiClient, TelegramBotApiError } from './telegram-bot-api-client';
+import { TelegramConfigurationError, TelegramConfigurationErrorReason } from './telegram-configuration-error';
 
-export class TelegramConfigurationApi {
+export class TelegramConfigurationManager {
   public constructor(
     private readonly repository: TelegramConfigurationRepository,
     private readonly client: TelegramBotApiClient,
@@ -36,17 +33,23 @@ export class TelegramConfigurationApi {
     const botToken = request.botToken ?? existing?.botToken;
 
     if (!botToken) {
-      throw new EndpointError('Bot token is required', 400);
+      throw new TelegramConfigurationError(TelegramConfigurationErrorReason.INVALID_CONFIGURATION, 'Bot token is required');
     }
 
     try {
       const identity = await this.client.getMe(signal, botToken);
       if (!identity.username) {
-        throw new EndpointError('Telegram bot does not have a username', 400);
+        throw new TelegramConfigurationError(
+          TelegramConfigurationErrorReason.INVALID_CONFIGURATION,
+          'Telegram bot does not have a username'
+        );
       }
       const webhook = await this.client.getWebhookInfo(signal, botToken);
       if (webhook.url) {
-        throw new EndpointError('Telegram bot has a webhook configured; remove it before connecting it to AilaFlow', 400);
+        throw new TelegramConfigurationError(
+          TelegramConfigurationErrorReason.INVALID_CONFIGURATION,
+          'Telegram bot has a webhook configured; remove it before connecting it to AilaFlow'
+        );
       }
 
       const isSameBot = existing?.botId === String(identity.id);
@@ -63,14 +66,14 @@ export class TelegramConfigurationApi {
       await this.eventBus.publish(new TelegramConfigurationChangedEvent(userName, request.channelName));
       return { bot: toDto(configuration) };
     } catch (error) {
-      if (error instanceof EndpointError) {
+      if (error instanceof TelegramConfigurationError) {
         throw error;
       }
       if (error instanceof TelegramBotApiError && (error.errorCode === 401 || error.errorCode === 404)) {
-        throw new EndpointError('Incorrect Telegram bot token', 400);
+        throw new TelegramConfigurationError(TelegramConfigurationErrorReason.CREDENTIALS_REJECTED, 'Incorrect Telegram bot token');
       }
       if (error instanceof TelegramBotConfigurationError || error instanceof TelegramConfigurationRepositoryError) {
-        throw new EndpointError(error.message, 400);
+        throw new TelegramConfigurationError(TelegramConfigurationErrorReason.INVALID_CONFIGURATION, error.message);
       }
       throw error;
     }
@@ -79,7 +82,10 @@ export class TelegramConfigurationApi {
   public async delete(signal: AbortSignal, userName: string, channelName: string): Promise<DeleteTelegramBotResponse> {
     const deleted = await this.repository.delete(signal, userName, channelName);
     if (!deleted) {
-      throw new EndpointError('Telegram bot configuration not found', 404);
+      throw new TelegramConfigurationError(
+        TelegramConfigurationErrorReason.CONFIGURATION_NOT_FOUND,
+        'Telegram bot configuration not found'
+      );
     }
     await this.eventBus.publish(new TelegramConfigurationChangedEvent(userName, channelName));
     return { channelName };

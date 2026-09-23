@@ -1,10 +1,11 @@
 import type { DeleteTelegramBotResponse } from '@ailaflow/shared';
 import { Request } from 'express';
 import { UserRepository } from '../../repositories/user/user-repository';
-import { TelegramConfigurationApi } from '../common/telegram-configuration-api';
+import { TelegramConfigurationManager } from '../../telegram/telegram-configuration-manager';
 import { Endpoint } from '../framework/endpoint';
 import { getEndpointAbortSignal } from '../framework/endpoint-abort-signal';
 import { EndpointError } from '../framework/endpoint-error';
+import { mapTelegramEndpointErrors } from '../telegram-configuration/telegram-endpoint-error-mapper';
 
 export class DeleteUserTelegramBotEndpoint implements Endpoint {
   public readonly method = 'delete';
@@ -14,7 +15,7 @@ export class DeleteUserTelegramBotEndpoint implements Endpoint {
 
   public constructor(
     private readonly userRepository: UserRepository,
-    private readonly api: TelegramConfigurationApi
+    private readonly manager: TelegramConfigurationManager
   ) {}
 
   public async handle(req: Request): Promise<DeleteTelegramBotResponse> {
@@ -25,6 +26,6 @@ export class DeleteUserTelegramBotEndpoint implements Endpoint {
       throw new EndpointError('User not found', 404);
     }
     const channelName = String(req.params.channelName);
-    return this.api.delete(signal, user.name, channelName);
+    return mapTelegramEndpointErrors(() => this.manager.delete(signal, user.name, channelName));
   }
 }

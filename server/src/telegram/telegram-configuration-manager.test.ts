@@ -1,17 +1,17 @@
 import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
 import test from 'node:test';
-import { SqliteDatabase, SqliteDatabases } from '../../core/sqlite-databases';
-import { EventBus } from '../../events/event-bus';
-import { TelegramConfigurationChangedEvent } from '../../events/telegram-configuration/telegram-configuration-changed-event';
-import { EventHandler } from '../../events/event-handler';
-import { TelegramBotConfiguration } from '../../repositories/configuration/telegram/telegram-bot-configuration';
-import { SqliteTelegramConfigurationRepository } from '../../repositories/configuration/telegram/sqlite-telegram-configuration-repository';
-import { SqliteUserRepository } from '../../repositories/user/sqlite-user-repository';
-import { User } from '../../repositories/user/user';
-import { TelegramBotApiClient, TelegramBotApiError } from '../../telegram/telegram-bot-api-client';
-import { EndpointError } from '../framework/endpoint-error';
-import { TelegramConfigurationApi } from './telegram-configuration-api';
+import { SqliteDatabase, SqliteDatabases } from '../core/sqlite-databases';
+import { EventBus } from '../events/event-bus';
+import { TelegramConfigurationChangedEvent } from '../events/telegram-configuration/telegram-configuration-changed-event';
+import { EventHandler } from '../events/event-handler';
+import { TelegramBotConfiguration } from '../repositories/configuration/telegram/telegram-bot-configuration';
+import { SqliteTelegramConfigurationRepository } from '../repositories/configuration/telegram/sqlite-telegram-configuration-repository';
+import { SqliteUserRepository } from '../repositories/user/sqlite-user-repository';
+import { User } from '../repositories/user/user';
+import { TelegramBotApiClient, TelegramBotApiError } from './telegram-bot-api-client';
+import { TelegramConfigurationError, TelegramConfigurationErrorReason } from './telegram-configuration-error';
+import { TelegramConfigurationManager } from './telegram-configuration-manager';
 
 test('manages user Telegram configurations without exposing bot tokens', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
@@ -22,26 +22,26 @@ test('manages user Telegram configurations without exposing bot tokens', async (
   const eventBus = new EventBus();
   const eventHandler = new RecordingTelegramConfigurationChangedEventHandler();
   eventBus.registerHandler(eventHandler);
-  const api = new TelegramConfigurationApi(repository, new FakeTelegramBotApiClient(), eventBus);
+  const manager = new TelegramConfigurationManager(repository, new FakeTelegramBotApiClient(), eventBus);
   const signal = new AbortController().signal;
   await userRepository.setup(signal);
   await repository.setup(signal);
   await userRepository.insert(signal, new User('alice', null, 'hash', true, false));
   await userRepository.insert(signal, new User('bob', null, 'hash', true, false));
 
-  const saved = await api.save(signal, 'alice', { channelName: 'default', botToken: 'top-secret' });
+  const saved = await manager.save(signal, 'alice', { channelName: 'default', botToken: 'top-secret' });
   assert.equal(saved.bot.botUserName, 'aila_test_bot');
   assert.equal(saved.bot.isConnected, false);
   assert.ok(saved.bot.linkCode);
   assert.equal('botToken' in saved.bot, false);
 
-  const configuration = await api.get(signal, 'alice');
+  const configuration = await manager.get(signal, 'alice');
   assert.equal(configuration.bots[0].botUserName, 'aila_test_bot');
   assert.equal(configuration.bots[0].isConnected, false);
   assert.equal('botToken' in configuration.bots[0], false);
-  assert.deepEqual(await api.get(signal, 'bob'), { bots: [] });
+  assert.deepEqual(await manager.get(signal, 'bob'), { bots: [] });
 
-  await api.save(signal, 'alice', { channelName: 'default' });
+  await manager.save(signal, 'alice', { channelName: 'default' });
   assert.equal((await repository.tryGet(signal, 'alice', 'default'))?.botToken, 'top-secret');
 
   const existing = await repository.tryGet(signal, 'alice', 'default');
@@ -55,20 +55,23 @@ test('manages user Telegram configurations without exposing bot tokens', async (
       lastUpdateId: 42
     })
   );
-  assert.equal((await api.save(signal, 'alice', { channelName: 'default' })).bot.isConnected, true);
-  const reconnected = await api.save(signal, 'alice', { channelName: 'default', reconnect: true });
+  assert.equal((await manager.save(signal, 'alice', { channelName: 'default' })).bot.isConnected, true);
+  const reconnected = await manager.save(signal, 'alice', { channelName: 'default', reconnect: true });
   assert.equal(reconnected.bot.isConnected, false);
   assert.ok(reconnected.bot.linkCode);
 
   await assert.rejects(
-    () => api.save(signal, 'bob', { channelName: 'default' }),
-    error => error instanceof EndpointError && error.status === 400 && error.message === 'Bot token is required'
+    () => manager.save(signal, 'bob', { channelName: 'default' }),
+    error =>
+      error instanceof TelegramConfigurationError &&
+      error.reason === TelegramConfigurationErrorReason.INVALID_CONFIGURATION &&
+      error.message === 'Bot token is required'
   );
   await assert.rejects(
-    () => api.delete(signal, 'bob', 'default'),
-    error => error instanceof EndpointError && error.status === 404
+    () => manager.delete(signal, 'bob', 'default'),
+    error => error instanceof TelegramConfigurationError && error.reason === TelegramConfigurationErrorReason.CONFIGURATION_NOT_FOUND
   );
-  assert.deepEqual(await api.delete(signal, 'alice', 'default'), { channelName: 'default' });
+  assert.deepEqual(await manager.delete(signal, 'alice', 'default'), { channelName: 'default' });
 
   assert.ok(eventHandler.events.some(event => event.userName === 'alice' && event.channelName === 'default'));
   db.close();
@@ -85,18 +88,27 @@ test('rejects invalid Telegram bot identities and webhook configurations', async
   await userRepository.setup(signal);
   await repository.setup(signal);
   await userRepository.insert(signal, new User('alice', null, 'hash', true, false));
-  const invalidTokenApi = new TelegramConfigurationApi(
+  const invalidTokenManager = new TelegramConfigurationManager(
     repository,
     new FakeTelegramBotApiClient(new TelegramBotApiError('Not Found', 404, null)),
     eventBus
   );
   await assert.rejects(
-    () => invalidTokenApi.save(signal, 'alice', { channelName: 'default', botToken: 'bad-token' }),
-    /Incorrect Telegram bot token/
+    () => invalidTokenManager.save(signal, 'alice', { channelName: 'default', botToken: 'bad-token' }),
+    error =>
+      error instanceof TelegramConfigurationError &&
+      error.reason === TelegramConfigurationErrorReason.CREDENTIALS_REJECTED &&
+      error.message === 'Incorrect Telegram bot token'
   );
 
-  const webhookApi = new TelegramConfigurationApi(repository, new FakeTelegramBotApiClient(null, 'https://example.test'), eventBus);
-  await assert.rejects(() => webhookApi.save(signal, 'alice', { channelName: 'default', botToken: 'token' }), /has a webhook configured/);
+  const webhookManager = new TelegramConfigurationManager(repository, new FakeTelegramBotApiClient(null, 'https://example.test'), eventBus);
+  await assert.rejects(
+    () => webhookManager.save(signal, 'alice', { channelName: 'default', botToken: 'token' }),
+    error =>
+      error instanceof TelegramConfigurationError &&
+      error.reason === TelegramConfigurationErrorReason.INVALID_CONFIGURATION &&
+      error.message.includes('has a webhook configured')
+  );
   db.close();
 });
 

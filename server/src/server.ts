@@ -153,7 +153,7 @@ import { SaveMyTelegramBotEndpoint } from './api/my-configuration/save-my-telegr
 import { DeleteMyTelegramBotEndpoint } from './api/my-configuration/delete-my-telegram-bot-endpoint';
 import { ChangeMyPasswordEndpoint } from './api/my-configuration/change-my-password-endpoint';
 import { TelegramBotApiClient } from './telegram/telegram-bot-api-client';
-import { TelegramConfigurationApi } from './api/common/telegram-configuration-api';
+import { TelegramConfigurationManager } from './telegram/telegram-configuration-manager';
 import { TelegramSynchronizationManager } from './telegram/telegram-synchronization-manager';
 import { TelegramConfigurationChangedEventHandler } from './events/telegram-configuration/telegram-configuration-changed-event-handler';
 import { GetStartedByRpcHandler } from './process-executor/rpc-handlers/get-started-by-rpc-handler';
@@ -397,7 +397,7 @@ export class Server {
     eventBus.registerHandler(new LlmConfigurationChangedEventHandler(llmClientProvider, sessionManager));
 
     const telegramClient = new TelegramBotApiClient();
-    const telegramConfigurationApi = new TelegramConfigurationApi(telegramConfigurationRepository, telegramClient, eventBus);
+    const telegramConfigurationManager = new TelegramConfigurationManager(telegramConfigurationRepository, telegramClient, eventBus);
     const telegramSynchronizationManager = new TelegramSynchronizationManager(
       telegramConfigurationRepository,
       telegramClient,
@@ -557,9 +557,9 @@ export class Server {
       new GetPublicUrlConfigurationEndpoint(kvConfigurationManager),
       new SavePublicUrlConfigurationEndpoint(kvConfigurationManager),
       new TestPublicUrlEndpoint(kvConfigurationManager, publicUrlTester),
-      new GetMyTelegramConfigurationEndpoint(telegramConfigurationApi),
-      new SaveMyTelegramBotEndpoint(telegramConfigurationApi),
-      new DeleteMyTelegramBotEndpoint(telegramConfigurationApi),
+      new GetMyTelegramConfigurationEndpoint(telegramConfigurationManager),
+      new SaveMyTelegramBotEndpoint(telegramConfigurationManager),
+      new DeleteMyTelegramBotEndpoint(telegramConfigurationManager),
       new ChangeMyPasswordEndpoint(userRepository, cipher),
       new GetSlackConfigurationEndpoint(slackConfigurationManager),
       new SaveSlackConfigurationEndpoint(slackConfigurationManager),
@@ -601,9 +601,9 @@ export class Server {
       new GetUsersEndpoint(userListQuerier),
       new GetUserEndpoint(userRepository, userAttributesRepository),
       new SaveUserEndpoint(userRepository, userAttributesRepository, authTokenRepository, cipher),
-      new GetUserTelegramConfigurationEndpoint(userRepository, telegramConfigurationApi),
-      new SaveUserTelegramBotEndpoint(userRepository, telegramConfigurationApi),
-      new DeleteUserTelegramBotEndpoint(userRepository, telegramConfigurationApi)
+      new GetUserTelegramConfigurationEndpoint(userRepository, telegramConfigurationManager),
+      new SaveUserTelegramBotEndpoint(userRepository, telegramConfigurationManager),
+      new DeleteUserTelegramBotEndpoint(userRepository, telegramConfigurationManager)
     ];
     const router = new Router(httpServer.app, endpoints, authMiddleware);
     router.setup();

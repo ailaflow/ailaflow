@@ -1,10 +1,11 @@
 import type { GetTelegramConfigurationResponse } from '@ailaflow/shared';
 import { Request } from 'express';
 import { UserRepository } from '../../repositories/user/user-repository';
-import { TelegramConfigurationApi } from '../common/telegram-configuration-api';
+import { TelegramConfigurationManager } from '../../telegram/telegram-configuration-manager';
 import { Endpoint } from '../framework/endpoint';
 import { getEndpointAbortSignal } from '../framework/endpoint-abort-signal';
 import { EndpointError } from '../framework/endpoint-error';
+import { mapTelegramEndpointErrors } from '../telegram-configuration/telegram-endpoint-error-mapper';
 
 export class GetUserTelegramConfigurationEndpoint implements Endpoint {
   public readonly method = 'get';
@@ -14,7 +15,7 @@ export class GetUserTelegramConfigurationEndpoint implements Endpoint {
 
   public constructor(
     private readonly userRepository: UserRepository,
-    private readonly api: TelegramConfigurationApi
+    private readonly manager: TelegramConfigurationManager
   ) {}
 
   public async handle(req: Request): Promise<GetTelegramConfigurationResponse> {
@@ -24,6 +25,6 @@ export class GetUserTelegramConfigurationEndpoint implements Endpoint {
     if (!user) {
       throw new EndpointError('User not found', 404);
     }
-    return this.api.get(signal, user.name);
+    return mapTelegramEndpointErrors(() => this.manager.get(signal, user.name));
   }
 }
