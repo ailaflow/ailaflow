@@ -41,10 +41,6 @@ export class SqliteProcessRepository implements ProcessRepository {
           definitionHash TEXT NOT NULL
         ) STRICT
       `);
-      const columns = db.prepare('PRAGMA table_info(processes)').all() as unknown as { name: string }[];
-      if (!columns.some(column => column.name === 'executionMode')) {
-        db.exec('ALTER TABLE processes ADD COLUMN executionMode INTEGER NOT NULL DEFAULT 0 CHECK (executionMode IN (0, 1))');
-      }
     });
   }
 

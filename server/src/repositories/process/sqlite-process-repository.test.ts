@@ -29,32 +29,6 @@ test('persists and updates process metadata', async () => {
   db.close();
 });
 
-test('adds executionMode to an existing processes table', async () => {
-  const db = new DatabaseSync(':memory:', { open: true });
-  db.exec(`
-    CREATE TABLE processes (
-      name TEXT PRIMARY KEY,
-      description TEXT NOT NULL,
-      userAccessExpression TEXT NOT NULL,
-      display INTEGER NOT NULL,
-      nSteps INTEGER NOT NULL,
-      isPausable INTEGER NOT NULL DEFAULT 0 CHECK (isPausable IN (0, 1)),
-      startVariableSchemas TEXT NOT NULL,
-      serializedDefinition TEXT NOT NULL,
-      definitionHash TEXT NOT NULL
-    ) STRICT
-  `);
-  insertProcess(db, 'alpha');
-
-  const dbs = { modelDb: new SqliteDatabase(db) } as SqliteDatabases;
-  const processRepository = new SqliteProcessRepository(dbs);
-  const signal = new AbortController().signal;
-  await processRepository.setup(signal);
-
-  assert.equal((await processRepository.tryGetByName(signal, 'alpha'))?.executionMode, ProcessExecutionMode.AI_TOOL_OR_START_FORM);
-  db.close();
-});
-
 test('deletes a process and its resource access rules', async () => {
   const { signal, db, processRepository, resourceAccessRepository } = await setup();
   insertProcess(db, 'alpha');
