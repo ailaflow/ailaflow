@@ -18,7 +18,7 @@
     "express": "^5.2.1",
     "sequential-workflow-machine": "^0.7.1",
     "sequential-workflow-model": "^0.2.0",
-    "zod": "^4.4.3"
+    "zod": "^4.6.5"
   },
   "devDependencies": {
     "@types/express": "^5.0.6",

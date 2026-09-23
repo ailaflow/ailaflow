@@ -20,7 +20,7 @@
     "prettier:fix": "prettier --write ./src"
   },
   "dependencies": {
-    "zod": "^4.4.3"
+    "zod": "^4.6.5"
   },
   "devDependencies": {
     "typescript": "^6.0.3"

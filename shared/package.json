@@ -14,7 +14,7 @@
   "dependencies": {
     "@aibindkit/core": "workspace:*",
     "sequential-workflow-model": "^0.2.0",
-    "zod": "^4.4.3"
+    "zod": "^4.6.5"
   },
   "devDependencies": {
     "@types/node": "^22.10.1",

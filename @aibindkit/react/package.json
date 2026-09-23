@@ -23,7 +23,7 @@
   "dependencies": {
     "@aibindkit/core": "workspace:*",
     "react": "^19.0.0",
-    "zod": "^4.4.3"
+    "zod": "^4.6.5"
   },
   "devDependencies": {
     "@types/react": "^19.0.0",
