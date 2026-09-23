@@ -22,7 +22,8 @@ test('exchanges a valid magic link without requiring authentication', async () =
       consumed = true;
       return 'alice';
     },
-    deleteExpired: async () => {}
+    deleteExpired: async () => {},
+    deleteForUsers: async () => {}
   };
   const users = {
     tryGetUser: async () => new User('alice', null, 'hash', true, true)

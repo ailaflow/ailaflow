@@ -41,7 +41,7 @@ test('deletes the persisted execution, assigned tasks, and task', async () => {
   const deleter = new TaskDeleter(taskRepository, assignedTaskRepository, persistedExecutionRepository);
 
   assert.equal(await deleter.delete(new AbortController().signal, 'task_1'), true);
-  assert.deepEqual(calls, ['execution:execution_1', 'assignedTasks:task_1', 'task:task_1']);
+  assert.deepEqual(calls, ['assignedTasks:task_1', 'task:task_1', 'execution:execution_1']);
 });
 
 test('does not delete anything when the task does not exist', async () => {

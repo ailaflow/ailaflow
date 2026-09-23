@@ -19,6 +19,7 @@ test('returns all task input values, output schemas, and no other execution valu
       return {
         assignedTask: {},
         task: {
+          title: 'Task',
           executionId: 'execution_1',
           inputVariableNames: ['name', 'count'],
           outputVariableSchemas: {
@@ -52,6 +53,7 @@ test('returns all task input values, output schemas, and no other execution valu
   const result = await tool.handle(signal, createContext('alice', true), { taskId: 'task_1' });
 
   assert.deepEqual(result.content, {
+    title: 'Task',
     inputValues: {
       name: 'Example',
       count: 3

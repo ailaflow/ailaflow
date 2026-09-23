@@ -93,7 +93,8 @@ function createMagicLinkGenerator(): MagicLinkGenerator {
     setup: async () => {},
     insert: async () => {},
     consume: async () => null,
-    deleteExpired: async () => {}
+    deleteExpired: async () => {},
+    deleteForUsers: async () => {}
   };
   return new MagicLinkGenerator(manager, repository);
 }

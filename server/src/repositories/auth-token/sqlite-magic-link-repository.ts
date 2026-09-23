@@ -62,4 +62,10 @@ export class SqliteMagicLinkRepository implements MagicLinkRepository {
       db.prepare(`DELETE FROM magic_links WHERE expiresAt <= ?`).run(now);
     });
   }
+
+  public async deleteForUsers(_: AbortSignal, userName: string): Promise<void> {
+    await this.db.write(db => {
+      db.prepare(`DELETE FROM magic_links WHERE userName = ?`).run(userName);
+    });
+  }
 }

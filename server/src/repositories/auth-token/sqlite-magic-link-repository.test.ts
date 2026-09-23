@@ -45,3 +45,28 @@ test('rejects and deletes expired magic links', async () => {
   assert.equal(row, undefined);
   db.close();
 });
+
+test('deletes all magic links for a user', async () => {
+  const db = new DatabaseSync(':memory:', { open: true });
+  db.exec(`PRAGMA foreign_keys = ON`);
+  const databases = { modelDb: new SqliteDatabase(db) } as SqliteDatabases;
+  const signal = new AbortController().signal;
+  const userRepository = new SqliteUserRepository(databases);
+  const repository = new SqliteMagicLinkRepository(databases);
+  await userRepository.setup(signal);
+  await repository.setup(signal);
+  await userRepository.insert(signal, new User('alice', null, 'hash', true, false));
+  await userRepository.insert(signal, new User('bob', null, 'hash', true, false));
+  await repository.insert(signal, new MagicLink('alice-token-1', 'alice', 2_000));
+  await repository.insert(signal, new MagicLink('alice-token-2', 'alice', 3_000));
+  await repository.insert(signal, new MagicLink('bob-token', 'bob', 2_000));
+
+  await repository.deleteForUsers(signal, 'alice');
+
+  const rows = db.prepare(`SELECT token FROM magic_links ORDER BY token`).all() as Array<{ token: string }>;
+  assert.deepEqual(
+    rows.map(row => row.token),
+    ['bob-token']
+  );
+  db.close();
+});

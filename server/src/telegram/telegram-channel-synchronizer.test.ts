@@ -142,11 +142,11 @@ test('sends links for task and process start form metadata', async () => {
 
   assert.match(
     client.sentTexts[0],
-    /^─── 💼 Task Form ────\nPlease click here: https:\/\/aila\.example\/magic-link\?t=%2Fmy-tasks%2Ftask-123#token=[\w-]{43}\nValid for 2 hours\.\n──────────────\n$/
+    /^─── 💼 Task Form ────\nPlease click here: https:\/\/aila\.example\/magic-link\?t=%2Fmy-tasks%2Ftask-123%3Ffs%3D1#token=[\w-]{43}\nValid for 2 hours\.\n──────────────\n$/
   );
   assert.match(
     client.sentTexts[1],
-    /^─── 💼 Start Form ────\nPlease click here: https:\/\/aila\.example\/magic-link\?t=%2Fmy-processes%2Femployee-onboarding#token=[\w-]{43}\nValid for 2 hours\.\n──────────────\n$/
+    /^─── 💼 Start Form ────\nPlease click here: https:\/\/aila\.example\/magic-link\?t=%2Fmy-processes%2Femployee-onboarding%3Ffs%3D1#token=[\w-]{43}\nValid for 2 hours\.\n──────────────\n$/
   );
 });
 
@@ -350,7 +350,12 @@ class FakeChatSession {
     return this.messages;
   }
 
-  public async setMetadata(pointer: { id: number; completedMessageIndex: number }, key: string, value: unknown): Promise<void> {
+  public async setMetadata(
+    _: AbortSignal,
+    pointer: { id: number; completedMessageIndex: number },
+    key: string,
+    value: unknown
+  ): Promise<void> {
     const completed = this.messages.find(message => message.id === pointer.id)?.completedMessages?.[pointer.completedMessageIndex];
     if (!completed) {
       throw new Error('Message not found');
@@ -476,7 +481,8 @@ function createMagicLinkGenerator(publicUrl: string | null = null): MagicLinkGen
     setup: async () => {},
     insert: async () => {},
     consume: async () => null,
-    deleteExpired: async () => {}
+    deleteExpired: async () => {},
+    deleteForUsers: async () => {}
   };
   return new MagicLinkGenerator(manager, repository);
 }

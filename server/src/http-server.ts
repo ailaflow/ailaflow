@@ -2,7 +2,6 @@ import express, { Express } from 'express';
 import type { Server as NodeHttpServer } from 'node:http';
 import { networkInterfaces } from 'node:os';
 import { extname, join } from 'node:path';
-import { Logger } from './core/logger';
 import { ServerPaths } from './core/server-paths';
 
 const PORT = Number(process.env.PORT) || 2048;
@@ -14,6 +13,7 @@ export class HttpServer {
 
   public constructor(private readonly serverPaths: ServerPaths) {
     this.app = express();
+    this.app.disable('x-powered-by');
     this.app.use(express.json());
   }
 

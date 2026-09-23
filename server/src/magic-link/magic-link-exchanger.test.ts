@@ -20,7 +20,8 @@ test('consumes a magic link and persists a non-admin auth token', async () => {
       consumed = true;
       return 'alice';
     },
-    deleteExpired: async () => {}
+    deleteExpired: async () => {},
+    deleteForUsers: async () => {}
   };
   const users = {
     tryGetUser: async () => new User('alice', null, 'hash', true, true)

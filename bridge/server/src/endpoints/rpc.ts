@@ -1,4 +1,5 @@
 import type { HttpResponse, HttpServer } from '../core/http-server';
+import { isLocalRequest } from '../core/is-local-request';
 import { SseResponse } from '../core/sse-response';
 import { TokenMiddleware } from '../core/token-middleware';
 
@@ -87,6 +88,10 @@ export function setupRpcEndpoints(app: HttpServer, tokenMiddleware: TokenMiddlew
   });
 
   app.post<ExecuteRpcRequest>('/rpc', (req, res) => {
+    if (!isLocalRequest(req)) {
+      res.json(403, { error: 'Only local requests are allowed' });
+      return;
+    }
     if (!listener) {
       res.json(503, { error: 'No listener' });
       return;

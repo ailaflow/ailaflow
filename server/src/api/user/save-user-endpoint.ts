@@ -10,6 +10,7 @@ import { EndpointError } from '../framework/endpoint-error';
 import { User } from '../../repositories/user/user';
 import { getEndpointAbortSignal } from '../framework/endpoint-abort-signal';
 import { AuthTokenRepository } from '../../repositories/auth-token/auth-token-repository';
+import { MagicLinkRepository } from '../../repositories/auth-token/magic-link-repository';
 
 export class SaveUserEndpoint implements Endpoint {
   public readonly method = 'post';
@@ -21,6 +22,7 @@ export class SaveUserEndpoint implements Endpoint {
     private readonly userRepository: UserRepository,
     private readonly userAttributesRepository: UserAttributesRepository,
     private readonly authTokenRepository: AuthTokenRepository,
+    private readonly magicLinkRepository: MagicLinkRepository,
     private readonly cipher: Cipher
   ) {}
 
@@ -63,6 +65,8 @@ export class SaveUserEndpoint implements Endpoint {
       }
       throw e;
     }
+
+    const isAdminChanged = user.isAdmin !== request.isAdmin;
     user.setIsAdmin(request.isAdmin);
     user.setIsActive(request.isActive);
 
@@ -90,8 +94,9 @@ export class SaveUserEndpoint implements Endpoint {
       throw e;
     }
 
-    if (!request.isActive) {
+    if (!request.isActive || isAdminChanged) {
       await this.authTokenRepository.deleteForUser(signal, user.name);
+      await this.magicLinkRepository.deleteForUsers(signal, user.name);
     }
 
     return {

@@ -601,7 +601,7 @@ export class Server {
       new ExecuteSandboxCommandEndpoint(sandboxInstanceManager),
       new GetUsersEndpoint(userListQuerier),
       new GetUserEndpoint(userRepository, userAttributesRepository),
-      new SaveUserEndpoint(userRepository, userAttributesRepository, authTokenRepository, cipher),
+      new SaveUserEndpoint(userRepository, userAttributesRepository, authTokenRepository, magicLinkRepository, cipher),
       new GetUserTelegramConfigurationEndpoint(userRepository, telegramConfigurationManager),
       new SaveUserTelegramBotEndpoint(userRepository, telegramConfigurationManager),
       new DeleteUserTelegramBotEndpoint(userRepository, telegramConfigurationManager)

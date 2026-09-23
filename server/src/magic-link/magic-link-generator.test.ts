@@ -17,13 +17,13 @@ test('generates and stores magic links with centralized form targets', async () 
   assert.ok(taskResult);
   const taskUrl = new URL(taskResult);
   assert.equal(taskUrl.origin + taskUrl.pathname, 'https://aila.example/proxy/aila/magic-link');
-  assert.equal(taskUrl.searchParams.get('t'), '/my-tasks/task%2F1');
+  assert.equal(taskUrl.searchParams.get('t'), '/my-tasks/task%2F1?fs=1');
   assert.equal(new URLSearchParams(taskUrl.hash.slice(1)).get('token'), inserted[0].token);
   assert.equal(inserted[0].userName, 'alice');
 
   assert.ok(processResult);
   const processUrl = new URL(processResult);
-  assert.equal(processUrl.searchParams.get('t'), '/my-processes/employee%20onboarding');
+  assert.equal(processUrl.searchParams.get('t'), '/my-processes/employee%20onboarding?fs=1');
   assert.equal(new URLSearchParams(processUrl.hash.slice(1)).get('token'), inserted[1].token);
   assert.equal(inserted[1].userName, 'alice');
   assert.equal(generator.getValidityHours(), 2);
@@ -48,7 +48,8 @@ function createGenerator(publicUrl: string | null, inserted: MagicLink[]): Magic
       inserted.push(magicLink);
     },
     consume: async () => null,
-    deleteExpired: async () => {}
+    deleteExpired: async () => {},
+    deleteForUsers: async () => {}
   };
   return new MagicLinkGenerator(manager, repository);
 }
