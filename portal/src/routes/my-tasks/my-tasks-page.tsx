@@ -5,6 +5,7 @@ import { PortalErrorView } from '../../views/portal/portal-error-view';
 import { PortalLoadingView } from '../../views/portal/portal-loading-view';
 import { ResourceListView } from '../../views/resource-list/resource-list-view';
 import { ResourceHeaderSwitchView } from '../../views/resource-list/resource-header-switch-view';
+import { SvgIcon } from '../../views/common/svg-icons';
 import { Portal } from '../common/portal';
 
 const PAGE_SIZE = 20;
@@ -71,6 +72,8 @@ export function MyTasksPage() {
             id: 'title',
             title: 'Title',
             width: '40%',
+            getLeadingVisual: task =>
+              task.deadline === undefined ? null : <SvgIcon name="timer" className="h-5 w-5 shrink-0 text-slate-500" />,
             getValue: task => task.title
           },
           {

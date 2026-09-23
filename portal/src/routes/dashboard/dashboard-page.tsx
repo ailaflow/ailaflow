@@ -8,6 +8,7 @@ import { DashboardView } from '../../views/dashboard/dashboard-view';
 import { PortalErrorView } from '../../views/portal/portal-error-view';
 import { PortalLoadingView } from '../../views/portal/portal-loading-view';
 import { ProcessIconGridView } from '../../views/common/process-icon-grid-view';
+import { SvgIcon } from '../../views/common/svg-icons';
 import { MyChat } from '../common/my-chat/my-chat';
 import { MyProcessStartFormPopup } from '../common/popups/my-process-start-form-popup';
 import { MyTaskFormPopup } from '../common/popups/my-task-form-popup';
@@ -70,10 +71,14 @@ export function DashboardPage() {
             items={data.tasks.tasks.slice(0, PANEL_ITEM_LIMIT).map(task => ({
               key: task.id,
               title: task.title,
+              deadline: task.deadline,
               createdAt: task.createdAt,
               ariaLabel: `Open task ${task.title}`,
               onClick: () => setOpenedTaskId(task.id)
             }))}
+            getLeadingVisual={task =>
+              task.deadline === undefined ? null : <SvgIcon name="timer" className="h-5 w-5 shrink-0 text-slate-500" />
+            }
             emptyMessage="You have no open tasks."
           />
         </DashboardPanelView>

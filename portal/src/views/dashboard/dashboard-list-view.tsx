@@ -15,12 +15,13 @@ export interface DashboardListItem {
   onClick?(): void | Promise<void>;
 }
 
-export interface DashboardListViewProps {
-  items: DashboardListItem[];
+export interface DashboardListViewProps<T extends DashboardListItem> {
+  items: T[];
   emptyMessage: string;
+  getLeadingVisual?(item: T): ReactNode;
 }
 
-export function DashboardListView(props: DashboardListViewProps) {
+export function DashboardListView<T extends DashboardListItem>(props: DashboardListViewProps<T>) {
   if (props.items.length === 0) {
     return (
       <div className="flex min-h-40 items-center justify-center px-4 py-8 text-center text-sm text-slate-500">{props.emptyMessage}</div>
@@ -33,7 +34,10 @@ export function DashboardListView(props: DashboardListViewProps) {
         const content = (
           <div className="flex min-w-0 flex-1 items-start gap-3">
             <div className="min-w-0 flex-1">
-              <div className="whitespace-pre-wrap break-words text-sm font-medium text-slate-900">{item.title}</div>
+              <div className="flex items-start gap-2">
+                {props.getLeadingVisual?.(item)}
+                <div className="min-w-0 whitespace-pre-wrap break-words text-sm font-medium text-slate-900">{item.title}</div>
+              </div>
             </div>
             {item.createdAt !== undefined ? (
               <time dateTime={new Date(item.createdAt).toISOString()} className="shrink-0 text-xs text-slate-500">
