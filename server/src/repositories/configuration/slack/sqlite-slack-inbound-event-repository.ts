@@ -1,4 +1,5 @@
-import { SqliteDatabase, SqliteDatabases } from '../../../core/sqlite-databases';
+import { SqliteDatabase } from '../../../core/sqlite-database';
+import { SqliteDatabases } from '../../../core/sqlite-databases';
 import { SlackInboundEventRepository } from './slack-inbound-event-repository';
 import { SlackInboundEvent, SlackInboundEventStatus } from './slack-types';
 
@@ -10,24 +11,26 @@ export class SqliteSlackInboundEventRepository implements SlackInboundEventRepos
   }
 
   public async setup(_: AbortSignal): Promise<void> {
-    await this.db.write(db => {
-      db.exec(`
-        CREATE TABLE IF NOT EXISTS slack_inbound_events (
-          eventId TEXT PRIMARY KEY,
-          workspaceId TEXT NOT NULL,
-          slackUserId TEXT NOT NULL,
-          slackChannelId TEXT NOT NULL,
-          slackMessageTs TEXT NOT NULL,
-          text TEXT,
-          eventPayload TEXT NOT NULL,
-          status INTEGER NOT NULL,
-          attemptCount INTEGER NOT NULL,
-          nextAttemptAt INTEGER,
-          lastError TEXT,
-          receivedAt INTEGER NOT NULL,
-          processedAt INTEGER
-        ) STRICT
-      `);
+    await this.db.setup(1, 'slack_inbound_events', (db, version) => {
+      if (version < 1) {
+        db.exec(`
+          CREATE TABLE slack_inbound_events (
+            eventId TEXT PRIMARY KEY,
+            workspaceId TEXT NOT NULL,
+            slackUserId TEXT NOT NULL,
+            slackChannelId TEXT NOT NULL,
+            slackMessageTs TEXT NOT NULL,
+            text TEXT,
+            eventPayload TEXT NOT NULL,
+            status INTEGER NOT NULL,
+            attemptCount INTEGER NOT NULL,
+            nextAttemptAt INTEGER,
+            lastError TEXT,
+            receivedAt INTEGER NOT NULL,
+            processedAt INTEGER
+          ) STRICT
+        `);
+      }
     });
   }
 

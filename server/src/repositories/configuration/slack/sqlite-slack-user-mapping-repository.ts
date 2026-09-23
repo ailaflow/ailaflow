@@ -1,4 +1,5 @@
-import { SqliteDatabase, SqliteDatabases } from '../../../core/sqlite-databases';
+import { SqliteDatabase } from '../../../core/sqlite-database';
+import { SqliteDatabases } from '../../../core/sqlite-databases';
 import { Transaction } from '../../../core/transaction';
 import {
   SlackMappingChangeRecord,
@@ -17,29 +18,31 @@ export class SqliteSlackUserMappingRepository implements SlackUserMappingReposit
   }
 
   public async setup(_: AbortSignal): Promise<void> {
-    await this.db.write(db => {
-      db.exec(`
-        CREATE TABLE IF NOT EXISTS slack_user_mappings (
-          workspaceId TEXT NOT NULL,
-          slackUserId TEXT NOT NULL,
-          userName TEXT NOT NULL,
-          channelName TEXT NOT NULL CHECK (channelName = 'default'),
-          generation INTEGER NOT NULL,
-          deliveryStartMessageId INTEGER,
-          dmChannelId TEXT,
-          welcomeStatus INTEGER NOT NULL,
-          welcomeAttemptCount INTEGER NOT NULL,
-          welcomeNextAttemptAt INTEGER,
-          welcomeSentAt INTEGER,
-          welcomeLastError TEXT,
-          createdAt INTEGER NOT NULL,
-          updatedAt INTEGER NOT NULL,
-          PRIMARY KEY (workspaceId, slackUserId),
-          UNIQUE (userName, channelName),
-          FOREIGN KEY (workspaceId, slackUserId) REFERENCES slack_users(workspaceId, slackUserId),
-          FOREIGN KEY (userName) REFERENCES users(name) ON DELETE CASCADE
-        ) STRICT
-      `);
+    await this.db.setup(1, 'slack_user_mappings', (db, version) => {
+      if (version < 1) {
+        db.exec(`
+          CREATE TABLE slack_user_mappings (
+            workspaceId TEXT NOT NULL,
+            slackUserId TEXT NOT NULL,
+            userName TEXT NOT NULL,
+            channelName TEXT NOT NULL CHECK (channelName = 'default'),
+            generation INTEGER NOT NULL,
+            deliveryStartMessageId INTEGER,
+            dmChannelId TEXT,
+            welcomeStatus INTEGER NOT NULL,
+            welcomeAttemptCount INTEGER NOT NULL,
+            welcomeNextAttemptAt INTEGER,
+            welcomeSentAt INTEGER,
+            welcomeLastError TEXT,
+            createdAt INTEGER NOT NULL,
+            updatedAt INTEGER NOT NULL,
+            PRIMARY KEY (workspaceId, slackUserId),
+            UNIQUE (userName, channelName),
+            FOREIGN KEY (workspaceId, slackUserId) REFERENCES slack_users(workspaceId, slackUserId),
+            FOREIGN KEY (userName) REFERENCES users(name) ON DELETE CASCADE
+          ) STRICT
+        `);
+      }
     });
   }
 

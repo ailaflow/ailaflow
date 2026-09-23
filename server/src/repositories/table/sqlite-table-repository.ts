@@ -1,4 +1,5 @@
-import { SqliteDatabase, SqliteDatabases } from '../../core/sqlite-databases';
+import { SqliteDatabase } from '../../core/sqlite-database';
+import { SqliteDatabases } from '../../core/sqlite-databases';
 import { SqliteTableDataNameProvider } from './sqlite-table-data-name-provider';
 import { TableRepository, TableRepositoryError } from './table-repository';
 import { Table } from './table';
@@ -14,13 +15,15 @@ export class SqliteTableRepository implements TableRepository {
   }
 
   public async setup(_: AbortSignal): Promise<void> {
-    await this.modelDb.write(db => {
-      db.exec(`
-        CREATE TABLE IF NOT EXISTS tables (
-          name TEXT PRIMARY KEY,
-          description TEXT NOT NULL
-        ) STRICT
-      `);
+    await this.modelDb.setup(1, 'tables', (db, version) => {
+      if (version < 1) {
+        db.exec(`
+          CREATE TABLE tables (
+            name TEXT PRIMARY KEY,
+            description TEXT NOT NULL
+          ) STRICT
+        `);
+      }
     });
   }
 

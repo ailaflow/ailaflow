@@ -1,5 +1,6 @@
 import { GetMyNotificationsResponse, MyNotificationDto } from '@ailaflow/shared';
-import { SqliteDatabase, SqliteDatabases } from '../../core/sqlite-databases';
+import { SqliteDatabase } from '../../core/sqlite-database';
+import { SqliteDatabases } from '../../core/sqlite-databases';
 import { MyNotificationListQuerier } from './my-notification-list-querier';
 
 export class SqliteMyNotificationListQuerier implements MyNotificationListQuerier {

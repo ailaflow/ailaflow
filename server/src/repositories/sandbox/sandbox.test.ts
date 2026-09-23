@@ -3,7 +3,8 @@ import { DatabaseSync } from 'node:sqlite';
 import test from 'node:test';
 import { Cipher } from '../../core/cipher/cipher';
 import { SeedCipherKeyStore } from '../../core/cipher/seed-cipher-key-store';
-import { SqliteDatabase, SqliteDatabases } from '../../core/sqlite-databases';
+import { SqliteDatabase } from '../../core/sqlite-database';
+import { SqliteDatabases } from '../../core/sqlite-databases';
 import { Sandbox } from './sandbox';
 import { SqliteSandboxRepository } from './sqlite-sandbox-repository';
 

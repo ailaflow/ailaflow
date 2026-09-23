@@ -1,4 +1,5 @@
-import { SqliteDatabase, SqliteDatabases } from '../../core/sqlite-databases';
+import { SqliteDatabase } from '../../core/sqlite-database';
+import { SqliteDatabases } from '../../core/sqlite-databases';
 import { ExecutionTaskCandidateQuerier } from './execution-task-candidate-querier';
 
 export class SqliteExecutionTaskCandidateQuerier implements ExecutionTaskCandidateQuerier {

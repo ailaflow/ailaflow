@@ -1,6 +1,7 @@
 import { AuthTokenRepository } from './auth-token-repository';
 import { AuthToken } from './auth-token';
-import { SqliteDatabase, SqliteDatabases } from '../../core/sqlite-databases';
+import { SqliteDatabase } from '../../core/sqlite-database';
+import { SqliteDatabases } from '../../core/sqlite-databases';
 import { Transaction } from '../../core/transaction';
 
 export class SqliteAuthTokenRepository implements AuthTokenRepository {
@@ -11,19 +12,21 @@ export class SqliteAuthTokenRepository implements AuthTokenRepository {
   }
 
   public async setup(_: AbortSignal): Promise<void> {
-    await this.db.write(db => {
-      db.exec(`
-        CREATE TABLE IF NOT EXISTS auth_tokens (
-          token TEXT PRIMARY KEY,
-          userName TEXT NOT NULL,
-          isAdmin INTEGER NOT NULL,
-          expiresAt INTEGER NOT NULL,
+    await this.db.setup(1, 'auth_tokens', (db, version) => {
+      if (version < 1) {
+        db.exec(`
+          CREATE TABLE auth_tokens (
+            token TEXT PRIMARY KEY,
+            userName TEXT NOT NULL,
+            isAdmin INTEGER NOT NULL,
+            expiresAt INTEGER NOT NULL,
 
-          FOREIGN KEY (userName)
-            REFERENCES users(name)
-            ON DELETE CASCADE
-        ) STRICT
-      `);
+            FOREIGN KEY (userName)
+              REFERENCES users(name)
+              ON DELETE CASCADE
+          ) STRICT
+        `);
+      }
     });
   }
 

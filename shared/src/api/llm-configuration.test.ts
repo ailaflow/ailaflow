@@ -42,7 +42,10 @@ test('rejects saving providers without models for both creation and updates', ()
       models: []
     });
     assert.equal(result.success, false);
-    assert.deepEqual(result.error?.issues.map(issue => issue.path), [['models']]);
+    assert.deepEqual(
+      result.error?.issues.map(issue => issue.path),
+      [['models']]
+    );
   }
 });
 

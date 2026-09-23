@@ -1,6 +1,7 @@
 import { DatabaseSync } from 'node:sqlite';
 import { ProcessExecutionVariableValues } from '@ailaflow/shared';
-import { SqliteDatabase, SqliteDatabases } from '../../core/sqlite-databases';
+import { SqliteDatabase } from '../../core/sqlite-database';
+import { SqliteDatabases } from '../../core/sqlite-databases';
 import { AssignedTaskRepository } from './assigned-task-repository';
 import { AssignedTask } from './assigned-task';
 import { Transaction } from '../../core/transaction';
@@ -13,28 +14,30 @@ export class SqliteAssignedTaskRepository implements AssignedTaskRepository {
   }
 
   public async setup(_: AbortSignal): Promise<void> {
-    await this.db.write(db => {
-      db.exec(`
-        CREATE TABLE IF NOT EXISTS assigned_tasks (
-          taskId TEXT NOT NULL,
-          userName TEXT NOT NULL,
-          channelName TEXT NOT NULL,
-          completedAt INTEGER,
-          outputValues TEXT,
+    await this.db.setup(1, 'assigned_tasks', (db, version) => {
+      if (version < 1) {
+        db.exec(`
+          CREATE TABLE assigned_tasks (
+            taskId TEXT NOT NULL,
+            userName TEXT NOT NULL,
+            channelName TEXT NOT NULL,
+            completedAt INTEGER,
+            outputValues TEXT,
 
-          PRIMARY KEY (taskId, userName),
+            PRIMARY KEY (taskId, userName),
 
-          FOREIGN KEY (taskId)
-            REFERENCES tasks(id)
-            ON DELETE CASCADE,
+            FOREIGN KEY (taskId)
+              REFERENCES tasks(id)
+              ON DELETE CASCADE,
 
-          CHECK (completedAt IS NULL OR completedAt >= 0)
-        ) STRICT
-      `);
-      db.exec(`
-        CREATE INDEX IF NOT EXISTS assigned_tasks_user_name_idx
-        ON assigned_tasks(userName)
-      `);
+            CHECK (completedAt IS NULL OR completedAt >= 0)
+          ) STRICT
+        `);
+        db.exec(`
+          CREATE INDEX assigned_tasks_user_name_idx
+          ON assigned_tasks(userName)
+        `);
+      }
     });
   }
 

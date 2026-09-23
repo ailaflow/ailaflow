@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
 import test from 'node:test';
-import { SqliteDatabase, SqliteDatabases } from '../../core/sqlite-databases';
+import { SqliteDatabase } from '../../core/sqlite-database';
+import { SqliteDatabases } from '../../core/sqlite-databases';
 import { Notification } from '../../repositories/notification/notification';
 import { SqliteNotificationRepository } from '../../repositories/notification/sqlite-notification-repository';
 import { SqliteMyNotificationListQuerier } from './sqlite-my-notification-list-querier';

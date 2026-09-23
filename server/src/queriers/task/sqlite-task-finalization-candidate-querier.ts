@@ -1,4 +1,5 @@
-import { SqliteDatabase, SqliteDatabases } from '../../core/sqlite-databases';
+import { SqliteDatabase } from '../../core/sqlite-database';
+import { SqliteDatabases } from '../../core/sqlite-databases';
 import { TaskFinalizationCandidate, TaskFinalizationCandidateQuerier } from './task-finalization-candidate-querier';
 
 export class SqliteTaskFinalizationCandidateQuerier implements TaskFinalizationCandidateQuerier {

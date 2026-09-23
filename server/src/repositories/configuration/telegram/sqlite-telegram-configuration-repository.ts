@@ -1,4 +1,5 @@
-import { SqliteDatabase, SqliteDatabases } from '../../../core/sqlite-databases';
+import { SqliteDatabase } from '../../../core/sqlite-database';
+import { SqliteDatabases } from '../../../core/sqlite-databases';
 import { TelegramBotConfiguration } from './telegram-bot-configuration';
 import { TelegramConfigurationRepository, TelegramConfigurationRepositoryError } from './telegram-configuration-repository';
 import { Transaction } from '../../../core/transaction';
@@ -22,29 +23,31 @@ export class SqliteTelegramConfigurationRepository implements TelegramConfigurat
   }
 
   public async setup(_: AbortSignal): Promise<void> {
-    await this.db.write(db => {
-      db.exec(`
-        CREATE TABLE IF NOT EXISTS telegram_bot_configurations (
-          userName TEXT NOT NULL,
-          channelName TEXT NOT NULL,
-          botToken TEXT NOT NULL,
-          botId TEXT,
-          botUserName TEXT,
-          telegramChatId TEXT,
-          linkCode TEXT,
-          lastUpdateId INTEGER,
+    await this.db.setup(1, 'telegram_bot_configurations', (db, version) => {
+      if (version < 1) {
+        db.exec(`
+          CREATE TABLE telegram_bot_configurations (
+            userName TEXT NOT NULL,
+            channelName TEXT NOT NULL,
+            botToken TEXT NOT NULL,
+            botId TEXT,
+            botUserName TEXT,
+            telegramChatId TEXT,
+            linkCode TEXT,
+            lastUpdateId INTEGER,
 
-          PRIMARY KEY (userName, channelName),
-          FOREIGN KEY (userName)
-            REFERENCES users(name)
-            ON DELETE CASCADE
-        ) STRICT
-      `);
-      db.exec(`
-        CREATE UNIQUE INDEX IF NOT EXISTS telegram_bot_configurations_bot_id_idx
-        ON telegram_bot_configurations(botId)
-        WHERE botId IS NOT NULL
-      `);
+            PRIMARY KEY (userName, channelName),
+            FOREIGN KEY (userName)
+              REFERENCES users(name)
+              ON DELETE CASCADE
+          ) STRICT
+        `);
+        db.exec(`
+          CREATE UNIQUE INDEX telegram_bot_configurations_bot_id_idx
+          ON telegram_bot_configurations(botId)
+          WHERE botId IS NOT NULL
+        `);
+      }
     });
   }
 

@@ -1,6 +1,7 @@
 import { SlackWelcomeStatus } from '@ailaflow/shared';
 import type { GetSlackUsersResponse, SlackUserDto } from '@ailaflow/shared';
-import { SqliteDatabase, SqliteDatabases } from '../../core/sqlite-databases';
+import { SqliteDatabase } from '../../core/sqlite-database';
+import { SqliteDatabases } from '../../core/sqlite-databases';
 import { SlackMappingWelcomeStatus } from '../../repositories/configuration/slack/slack-types';
 import { SlackUserListQuerier } from './slack-user-list-querier';
 

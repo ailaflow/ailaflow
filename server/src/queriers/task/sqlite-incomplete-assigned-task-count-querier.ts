@@ -1,4 +1,5 @@
-import { SqliteDatabase, SqliteDatabases } from '../../core/sqlite-databases';
+import { SqliteDatabase } from '../../core/sqlite-database';
+import { SqliteDatabases } from '../../core/sqlite-databases';
 import { IncompleteAssignedTaskCountQuerier } from './incomplete-assigned-task-count-querier';
 
 export class SqliteIncompleteAssignedTaskCountQuerier implements IncompleteAssignedTaskCountQuerier {

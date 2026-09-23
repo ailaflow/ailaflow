@@ -1,6 +1,7 @@
 import { DatabaseSync } from 'node:sqlite';
 import { UserAccessCondition, UserAccessExpression, UserAttributeValueType } from '@ailaflow/shared';
-import { SqliteDatabase, SqliteDatabases } from '../../core/sqlite-databases';
+import { SqliteDatabase } from '../../core/sqlite-database';
+import { SqliteDatabases } from '../../core/sqlite-databases';
 import { UserAccessExpressionUserQuerier } from './user-access-expression-user-querier';
 
 const MATCHING_USER_ACCESS_CONDITION = `

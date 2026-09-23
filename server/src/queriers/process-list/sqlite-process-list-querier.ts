@@ -1,6 +1,7 @@
 import { ProcessListQuerier } from './process-list-querier';
 import { GetProcessesResponse, ProcessDisplay, ProcessExecutionMode, ProcessLiteDto } from '@ailaflow/shared';
-import { SqliteDatabase, SqliteDatabases } from '../../core/sqlite-databases';
+import { SqliteDatabase } from '../../core/sqlite-database';
+import { SqliteDatabases } from '../../core/sqlite-databases';
 
 export class SqliteProcessListQuerier implements ProcessListQuerier {
   private readonly db: SqliteDatabase;

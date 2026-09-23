@@ -1,5 +1,6 @@
 import { GetTasksResponse, TaskLiteDto } from '@ailaflow/shared';
-import { SqliteDatabase, SqliteDatabases } from '../../core/sqlite-databases';
+import { SqliteDatabase } from '../../core/sqlite-database';
+import { SqliteDatabases } from '../../core/sqlite-databases';
 import { TaskListQuerier } from './task-list-querier';
 
 export class SqliteTaskListQuerier implements TaskListQuerier {

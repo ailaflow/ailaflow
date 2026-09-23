@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
 import test from 'node:test';
-import { SqliteDatabase, SqliteDatabases } from '../../core/sqlite-databases';
+import { SqliteDatabase } from '../../core/sqlite-database';
+import { SqliteDatabases } from '../../core/sqlite-databases';
 import { SqliteTableDataRepository } from '../../repositories/table/sqlite-table-data-repository';
 import { SqliteTableRepository } from '../../repositories/table/sqlite-table-repository';
 import { SqliteTableSchemaRepository } from '../../repositories/table/sqlite-table-schema-repository';

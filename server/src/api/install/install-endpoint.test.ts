@@ -10,7 +10,8 @@ import { Request } from 'express';
 import { LicenseType } from '@ailaflow/shared';
 import { LicenseManager } from '../../configuration/license/license-manager';
 import { LicenseValidator } from '../../configuration/license/license-validator';
-import { SqliteDatabase, SqliteDatabases } from '../../core/sqlite-databases';
+import { SqliteDatabase } from '../../core/sqlite-database';
+import { SqliteDatabases } from '../../core/sqlite-databases';
 import { SqliteKvConfigurationRepository } from '../../repositories/configuration/kv/sqlite-kv-configuration-repository';
 import { SqliteSandboxRepository } from '../../repositories/sandbox/sqlite-sandbox-repository';
 import { SqliteUserAttributesRepository } from '../../repositories/user-attributes/sqlite-user-attributes-repository';
@@ -44,8 +45,7 @@ async function fixture(t: TestContext) {
   const validator = new LicenseValidator();
   const validate = t.mock.method(validator, 'validate');
   validate.mock.mockImplementation(async (_signal, request) => ({
-    validationError:
-      request.type !== LicenseType.BUSINESS || request.key === 'accepted-key' ? null : 'Invalid license key',
+    validationError: request.type !== LicenseType.BUSINESS || request.key === 'accepted-key' ? null : 'Invalid license key',
     canUpgrade: false
   }));
   const versionProvider = { get: () => 'test-version' } as VersionProvider;

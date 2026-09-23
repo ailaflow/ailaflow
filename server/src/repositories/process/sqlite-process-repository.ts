@@ -1,7 +1,8 @@
 import { JsonSchema, ProcessDefinition, ProcessDisplay, ProcessExecutionMode } from '@ailaflow/shared';
 import { ProcessRepository, ProcessRepositoryError } from './process-repository';
 import { Process } from './process';
-import { SqliteDatabase, SqliteDatabases } from '../../core/sqlite-databases';
+import { SqliteDatabase } from '../../core/sqlite-database';
+import { SqliteDatabases } from '../../core/sqlite-databases';
 import { ProcessResourceId } from './process-resource-id';
 import { Transaction } from '../../core/transaction';
 
@@ -26,21 +27,23 @@ export class SqliteProcessRepository implements ProcessRepository {
   }
 
   public async setup(_: AbortSignal) {
-    await this.db.write(db => {
-      db.exec(`
-        CREATE TABLE IF NOT EXISTS processes (
-          name TEXT PRIMARY KEY,
-          description TEXT NOT NULL,
-          userAccessExpression TEXT NOT NULL,
-          display INTEGER NOT NULL,
-          executionMode INTEGER NOT NULL DEFAULT 0 CHECK (executionMode IN (0, 1)),
-          nSteps INTEGER NOT NULL,
-          isPausable INTEGER NOT NULL DEFAULT 0 CHECK (isPausable IN (0, 1)),
-          startVariableSchemas TEXT NOT NULL,
-          serializedDefinition TEXT NOT NULL,
-          definitionHash TEXT NOT NULL
-        ) STRICT
-      `);
+    await this.db.setup(1, 'processes', (db, version) => {
+      if (version < 1) {
+        db.exec(`
+          CREATE TABLE processes (
+            name TEXT PRIMARY KEY,
+            description TEXT NOT NULL,
+            userAccessExpression TEXT NOT NULL,
+            display INTEGER NOT NULL,
+            executionMode INTEGER NOT NULL DEFAULT 0,
+            nSteps INTEGER NOT NULL,
+            isPausable INTEGER NOT NULL DEFAULT 0 CHECK (isPausable IN (0, 1)),
+            startVariableSchemas TEXT NOT NULL,
+            serializedDefinition TEXT NOT NULL,
+            definitionHash TEXT NOT NULL
+          ) STRICT
+        `);
+      }
     });
   }
 

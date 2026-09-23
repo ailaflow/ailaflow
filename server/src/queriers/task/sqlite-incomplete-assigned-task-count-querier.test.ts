@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
 import test from 'node:test';
-import { SqliteDatabase, SqliteDatabases } from '../../core/sqlite-databases';
+import { SqliteDatabase } from '../../core/sqlite-database';
+import { SqliteDatabases } from '../../core/sqlite-databases';
 import { SqliteIncompleteAssignedTaskCountQuerier } from './sqlite-incomplete-assigned-task-count-querier';
 
 test('counts incomplete assigned tasks for a task', async () => {

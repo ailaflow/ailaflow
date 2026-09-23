@@ -1,6 +1,7 @@
 import { DatabaseSync } from 'node:sqlite';
 import { UserAttributeValueType } from '@ailaflow/shared';
-import { SqliteDatabase, SqliteDatabases } from '../../core/sqlite-databases';
+import { SqliteDatabase } from '../../core/sqlite-database';
+import { SqliteDatabases } from '../../core/sqlite-databases';
 import { UserAttributesRepository, UserAttributesRepositoryError } from './user-attributes-repository';
 import { UserAttributes } from './user-attributes';
 import { Transaction } from '../../core/transaction';
@@ -13,78 +14,84 @@ export class SqliteUserAttributesRepository implements UserAttributesRepository 
   }
 
   public async setup(_: AbortSignal) {
-    await this.db.write(db => {
-      db.exec(`
-      CREATE TABLE IF NOT EXISTS user_attribute_definitions (
-        attribute_name TEXT PRIMARY KEY,
-        attribute_type INTEGER NOT NULL
-      ) STRICT
-    `);
-      db.exec(`
-      CREATE TABLE IF NOT EXISTS user_attributes (
-        user_name TEXT NOT NULL,
-        attribute_name TEXT NOT NULL,
-        attribute_type INTEGER NOT NULL,
-        value_string TEXT,
-        value_integer INTEGER,
-        value_boolean INTEGER,
+    await this.db.setup(1, 'user_attribute_definitions', (db, version) => {
+      if (version < 1) {
+        db.exec(`
+          CREATE TABLE user_attribute_definitions (
+            attribute_name TEXT PRIMARY KEY,
+            attribute_type INTEGER NOT NULL
+          ) STRICT
+        `);
+      }
+    });
+    await this.db.setup(1, 'user_attributes', (db, version) => {
+      if (version < 1) {
+        db.exec(`
+          CREATE TABLE user_attributes (
+            user_name TEXT NOT NULL,
+            attribute_name TEXT NOT NULL,
+            attribute_type INTEGER NOT NULL,
+            value_string TEXT,
+            value_integer INTEGER,
+            value_boolean INTEGER,
 
-        PRIMARY KEY (user_name, attribute_name),
+            PRIMARY KEY (user_name, attribute_name),
 
-        FOREIGN KEY (user_name)
-          REFERENCES users(name)
-          ON DELETE CASCADE,
+            FOREIGN KEY (user_name)
+              REFERENCES users(name)
+              ON DELETE CASCADE,
 
-        CHECK (
-          (
-            attribute_type = 1
-            AND value_string IS NOT NULL
-            AND value_integer IS NULL
-            AND value_boolean IS NULL
+            CHECK (
+              (
+                attribute_type = 1
+                AND value_string IS NOT NULL
+                AND value_integer IS NULL
+                AND value_boolean IS NULL
+              )
+              OR
+              (
+                attribute_type = 2
+                AND value_string IS NULL
+                AND value_integer IS NOT NULL
+                AND value_boolean IS NULL
+              )
+              OR
+              (
+                attribute_type = 3
+                AND value_string IS NULL
+                AND value_integer IS NULL
+                AND value_boolean IS NOT NULL
+              )
+            )
+          ) STRICT
+        `);
+        db.exec(`
+          CREATE TRIGGER user_attributes_type_matches_definition_insert
+          BEFORE INSERT ON user_attributes
+          WHEN NOT EXISTS (
+            SELECT 1
+            FROM user_attribute_definitions
+            WHERE attribute_name = NEW.attribute_name
+              AND attribute_type = NEW.attribute_type
           )
-          OR
-          (
-            attribute_type = 2
-            AND value_string IS NULL
-            AND value_integer IS NOT NULL
-            AND value_boolean IS NULL
+          BEGIN
+            SELECT RAISE(ABORT, 'User attribute type does not match definition');
+          END
+        `);
+        db.exec(`
+          CREATE TRIGGER user_attributes_type_matches_definition_update
+          BEFORE UPDATE ON user_attributes
+          WHEN NOT EXISTS (
+            SELECT 1
+            FROM user_attribute_definitions
+            WHERE attribute_name = NEW.attribute_name
+              AND attribute_type = NEW.attribute_type
           )
-          OR
-          (
-            attribute_type = 3
-            AND value_string IS NULL
-            AND value_integer IS NULL
-            AND value_boolean IS NOT NULL
-          )
-        )
-      ) STRICT
-    `);
-      db.exec(`
-      CREATE TRIGGER IF NOT EXISTS user_attributes_type_matches_definition_insert
-      BEFORE INSERT ON user_attributes
-      WHEN NOT EXISTS (
-        SELECT 1
-        FROM user_attribute_definitions
-        WHERE attribute_name = NEW.attribute_name
-          AND attribute_type = NEW.attribute_type
-      )
-      BEGIN
-        SELECT RAISE(ABORT, 'User attribute type does not match definition');
-      END
-    `);
-      db.exec(`
-      CREATE TRIGGER IF NOT EXISTS user_attributes_type_matches_definition_update
-      BEFORE UPDATE ON user_attributes
-      WHEN NOT EXISTS (
-        SELECT 1
-        FROM user_attribute_definitions
-        WHERE attribute_name = NEW.attribute_name
-          AND attribute_type = NEW.attribute_type
-      )
-      BEGIN
-        SELECT RAISE(ABORT, 'User attribute type does not match definition');
-      END
-      `);
+          BEGIN
+            SELECT RAISE(ABORT, 'User attribute type does not match definition');
+          END
+        `);
+      }
     });
   }
 

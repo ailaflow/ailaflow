@@ -1,5 +1,6 @@
 import { GetMyProcessesResponse, MyProcessLiteDto, ProcessDisplay, ProcessExecutionMode } from '@ailaflow/shared';
-import { SqliteDatabase, SqliteDatabases } from '../../core/sqlite-databases';
+import { SqliteDatabase } from '../../core/sqlite-database';
+import { SqliteDatabases } from '../../core/sqlite-databases';
 import { SqliteResourceAccessQueryBuilder } from '../../core/sqlite-resource-access-query-builder';
 import { MyProcessListQuerier } from './my-process-list-querier';
 

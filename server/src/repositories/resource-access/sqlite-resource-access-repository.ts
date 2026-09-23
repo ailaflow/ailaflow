@@ -1,5 +1,6 @@
 import { UserAccessCondition, UserAttributeValueType } from '@ailaflow/shared';
-import { SqliteDatabase, SqliteDatabases } from '../../core/sqlite-databases';
+import { SqliteDatabase } from '../../core/sqlite-database';
+import { SqliteDatabases } from '../../core/sqlite-databases';
 import { ResourceAccess, ResourceAccessRepository } from './resource-access-repository';
 import { Transaction } from '../../core/transaction';
 
@@ -11,70 +12,76 @@ export class SqliteResourceAccessRepository implements ResourceAccessRepository 
   }
 
   public async setup(_: AbortSignal): Promise<void> {
-    await this.db.write(db => {
-      db.exec(`
-      CREATE TABLE IF NOT EXISTS resource_access_rule_groups (
-        resource_id TEXT NOT NULL,
-        group_id INTEGER NOT NULL,
-        condition_count INTEGER NOT NULL,
+    await this.db.setup(1, 'resource_access_rule_groups', (db, version) => {
+      if (version < 1) {
+        db.exec(`
+          CREATE TABLE resource_access_rule_groups (
+            resource_id TEXT NOT NULL,
+            group_id INTEGER NOT NULL,
+            condition_count INTEGER NOT NULL,
 
-        PRIMARY KEY (resource_id, group_id),
+            PRIMARY KEY (resource_id, group_id),
 
-        CHECK (condition_count > 0)
-      ) STRICT
-    `);
-      db.exec(`
-      CREATE TABLE IF NOT EXISTS resource_access_rule_conditions (
-        resource_id TEXT NOT NULL,
-        group_id INTEGER NOT NULL,
-        condition_id INTEGER NOT NULL,
-        attribute_name TEXT NOT NULL,
-        operator INTEGER NOT NULL,
-        attribute_type INTEGER NOT NULL,
-        value_string TEXT,
-        value_integer INTEGER,
-        value_boolean INTEGER,
+            CHECK (condition_count > 0)
+          ) STRICT
+        `);
+      }
+    });
+    await this.db.setup(1, 'resource_access_rule_conditions', (db, version) => {
+      if (version < 1) {
+        db.exec(`
+          CREATE TABLE resource_access_rule_conditions (
+            resource_id TEXT NOT NULL,
+            group_id INTEGER NOT NULL,
+            condition_id INTEGER NOT NULL,
+            attribute_name TEXT NOT NULL,
+            operator INTEGER NOT NULL,
+            attribute_type INTEGER NOT NULL,
+            value_string TEXT,
+            value_integer INTEGER,
+            value_boolean INTEGER,
 
-        PRIMARY KEY (resource_id, group_id, condition_id),
+            PRIMARY KEY (resource_id, group_id, condition_id),
 
-        FOREIGN KEY (resource_id, group_id)
-          REFERENCES resource_access_rule_groups(resource_id, group_id)
-          ON DELETE CASCADE,
+            FOREIGN KEY (resource_id, group_id)
+              REFERENCES resource_access_rule_groups(resource_id, group_id)
+              ON DELETE CASCADE,
 
-        CHECK (operator BETWEEN 1 AND 6),
+            CHECK (operator BETWEEN 1 AND 6),
 
-        CHECK (
-          (
-            attribute_type = 1
-            AND value_string IS NOT NULL
-            AND value_integer IS NULL
-            AND value_boolean IS NULL
-          )
-          OR
-          (
-            attribute_type = 2
-            AND value_string IS NULL
-            AND value_integer IS NOT NULL
-            AND value_boolean IS NULL
-          )
-          OR
-          (
-            attribute_type = 3
-            AND value_string IS NULL
-            AND value_integer IS NULL
-            AND value_boolean IS NOT NULL
-          )
-        )
-      ) STRICT
-    `);
-      db.exec(`
-      CREATE INDEX IF NOT EXISTS resource_access_rule_conditions_lookup_idx
-      ON resource_access_rule_conditions(attribute_name, attribute_type, operator)
-    `);
-      db.exec(`
-      CREATE INDEX IF NOT EXISTS resource_access_rule_conditions_value_lookup_idx
-      ON resource_access_rule_conditions(attribute_name, attribute_type, operator, value_string, value_integer, value_boolean)
-      `);
+            CHECK (
+              (
+                attribute_type = 1
+                AND value_string IS NOT NULL
+                AND value_integer IS NULL
+                AND value_boolean IS NULL
+              )
+              OR
+              (
+                attribute_type = 2
+                AND value_string IS NULL
+                AND value_integer IS NOT NULL
+                AND value_boolean IS NULL
+              )
+              OR
+              (
+                attribute_type = 3
+                AND value_string IS NULL
+                AND value_integer IS NULL
+                AND value_boolean IS NOT NULL
+              )
+            )
+          ) STRICT
+        `);
+        db.exec(`
+          CREATE INDEX resource_access_rule_conditions_lookup_idx
+          ON resource_access_rule_conditions(attribute_name, attribute_type, operator)
+        `);
+        db.exec(`
+          CREATE INDEX resource_access_rule_conditions_value_lookup_idx
+          ON resource_access_rule_conditions(attribute_name, attribute_type, operator, value_string, value_integer, value_boolean)
+        `);
+      }
     });
   }
 

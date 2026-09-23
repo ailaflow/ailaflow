@@ -1,6 +1,7 @@
 import { GetTableDataResponse, TableColumnResolver, TableColumnType, TableColumnTypePolicy, TableRow } from '@ailaflow/shared';
 import { SQLInputValue } from 'node:sqlite';
-import { SqliteDatabase, SqliteDatabases } from '../../core/sqlite-databases';
+import { SqliteDatabase } from '../../core/sqlite-database';
+import { SqliteDatabases } from '../../core/sqlite-databases';
 import { SqliteTableDataNameProvider } from '../../repositories/table/sqlite-table-data-name-provider';
 import { TableDataRepositoryError } from '../../repositories/table/table-data-repository';
 import { TableRowSqliteCodec } from '../../repositories/table/table-row-sqlite-codec';

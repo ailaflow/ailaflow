@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
 import test from 'node:test';
-import { SqliteDatabase, SqliteDatabases } from '../core/sqlite-databases';
+import { SqliteDatabase } from '../core/sqlite-database';
+import { SqliteDatabases } from '../core/sqlite-databases';
 import { EventBus } from '../events/event-bus';
 import { SqliteSlackConfigurationRepository } from '../repositories/configuration/slack/sqlite-slack-configuration-repository';
 import { SqliteSlackUserDirectoryRepository } from '../repositories/configuration/slack/sqlite-slack-user-directory-repository';

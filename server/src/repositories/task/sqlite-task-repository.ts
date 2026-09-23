@@ -1,5 +1,6 @@
 import { FormDefinition, JsonSchema, taskFinalizationPolicySchema, taskSubmissionModeSchema } from '@ailaflow/shared';
-import { SqliteDatabase, SqliteDatabases } from '../../core/sqlite-databases';
+import { SqliteDatabase } from '../../core/sqlite-database';
+import { SqliteDatabases } from '../../core/sqlite-databases';
 import { Task } from './task';
 import { TaskRepository } from './task-repository';
 import { Transaction } from '../../core/transaction';
@@ -12,37 +13,39 @@ export class SqliteTaskRepository implements TaskRepository {
   }
 
   public async setup(_: AbortSignal) {
-    await this.db.write(db => {
-      db.exec(`
-        CREATE TABLE IF NOT EXISTS tasks (
-          id TEXT PRIMARY KEY,
-          title TEXT NOT NULL,
-          isTest INTEGER NOT NULL,
-          createdBy TEXT NOT NULL,
-          executionId TEXT NOT NULL,
-          inputVariableNames TEXT,
-          outputVariableSchemas TEXT,
-          form TEXT,
-          submissionMode TEXT NOT NULL,
-          deadline INTEGER,
-          finalizationPolicy TEXT NOT NULL,
-          metadataVariableName TEXT,
-          finalizationRequestCount INTEGER NOT NULL,
-          nextFinalizationAttemptAt INTEGER,
-          createdAt INTEGER NOT NULL,
-          finalizedAt INTEGER,
-          failedAt INTEGER,
+    await this.db.setup(1, 'tasks', (db, version) => {
+      if (version < 1) {
+        db.exec(`
+          CREATE TABLE tasks (
+            id TEXT PRIMARY KEY,
+            title TEXT NOT NULL,
+            isTest INTEGER NOT NULL,
+            createdBy TEXT NOT NULL,
+            executionId TEXT NOT NULL,
+            inputVariableNames TEXT,
+            outputVariableSchemas TEXT,
+            form TEXT,
+            submissionMode TEXT NOT NULL,
+            deadline INTEGER,
+            finalizationPolicy TEXT NOT NULL,
+            metadataVariableName TEXT,
+            finalizationRequestCount INTEGER NOT NULL,
+            nextFinalizationAttemptAt INTEGER,
+            createdAt INTEGER NOT NULL,
+            finalizedAt INTEGER,
+            failedAt INTEGER,
 
-          CHECK (nextFinalizationAttemptAt IS NULL OR nextFinalizationAttemptAt >= 0),
-          CHECK (createdAt >= 0),
-          CHECK (finalizedAt IS NULL OR finalizedAt >= 0),
-          CHECK (failedAt IS NULL OR failedAt >= 0)
-        ) STRICT
-      `);
-      db.exec(`
-        CREATE INDEX IF NOT EXISTS tasks_execution_id_idx
-        ON tasks(executionId)
-      `);
+            CHECK (nextFinalizationAttemptAt IS NULL OR nextFinalizationAttemptAt >= 0),
+            CHECK (createdAt >= 0),
+            CHECK (finalizedAt IS NULL OR finalizedAt >= 0),
+            CHECK (failedAt IS NULL OR failedAt >= 0)
+          ) STRICT
+        `);
+        db.exec(`
+          CREATE INDEX tasks_execution_id_idx
+          ON tasks(executionId)
+        `);
+      }
     });
   }
 

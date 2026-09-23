@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
 import test from 'node:test';
-import { SqliteDatabase, SqliteDatabases } from '../../core/sqlite-databases';
+import { SqliteDatabase } from '../../core/sqlite-database';
+import { SqliteDatabases } from '../../core/sqlite-databases';
 import { ResourceAccess } from '../resource-access/resource-access-repository';
 import { SqliteResourceAccessRepository } from '../resource-access/sqlite-resource-access-repository';
 import { ProcessResourceId } from './process-resource-id';

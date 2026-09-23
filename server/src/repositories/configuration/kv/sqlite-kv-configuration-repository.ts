@@ -1,4 +1,5 @@
-import { SqliteDatabase, SqliteDatabases } from '../../../core/sqlite-databases';
+import { SqliteDatabase } from '../../../core/sqlite-database';
+import { SqliteDatabases } from '../../../core/sqlite-databases';
 import { KvConfiguration, KvConfigurationKey } from './kv-configuration';
 import { KvConfigurationRepository } from './kv-configuration-repository';
 import { Transaction } from '../../../core/transaction';
@@ -11,13 +12,15 @@ export class SqliteKvConfigurationRepository implements KvConfigurationRepositor
   }
 
   public async setup(_: AbortSignal): Promise<void> {
-    await this.db.write(db => {
-      db.exec(`
-        CREATE TABLE IF NOT EXISTS kv_configuration (
-          key TEXT PRIMARY KEY,
-          value TEXT NOT NULL
-        ) STRICT
-      `);
+    await this.db.setup(1, 'kv_configuration', (db, version) => {
+      if (version < 1) {
+        db.exec(`
+          CREATE TABLE kv_configuration (
+            key TEXT PRIMARY KEY,
+            value TEXT NOT NULL
+          ) STRICT
+        `);
+      }
     });
   }
 

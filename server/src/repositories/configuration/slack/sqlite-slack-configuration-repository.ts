@@ -1,4 +1,5 @@
-import { SqliteDatabase, SqliteDatabases } from '../../../core/sqlite-databases';
+import { SqliteDatabase } from '../../../core/sqlite-database';
+import { SqliteDatabases } from '../../../core/sqlite-databases';
 import { Transaction } from '../../../core/transaction';
 import { SlackConfigurationRepository } from './slack-configuration-repository';
 import { SlackConfiguration } from './slack-types';
@@ -11,21 +12,23 @@ export class SqliteSlackConfigurationRepository implements SlackConfigurationRep
   }
 
   public async setup(_: AbortSignal): Promise<void> {
-    await this.db.write(db => {
-      db.exec(`
-        CREATE TABLE IF NOT EXISTS slack_configuration (
-          id INTEGER PRIMARY KEY CHECK (id = 1),
-          appToken TEXT NOT NULL,
-          botToken TEXT NOT NULL,
-          appId TEXT NOT NULL,
-          workspaceId TEXT NOT NULL,
-          workspaceName TEXT NOT NULL,
-          botUserId TEXT NOT NULL,
-          mappingRevision INTEGER NOT NULL,
-          configuredAt INTEGER NOT NULL,
-          updatedAt INTEGER NOT NULL
-        ) STRICT
-      `);
+    await this.db.setup(1, 'slack_configuration', (db, version) => {
+      if (version < 1) {
+        db.exec(`
+          CREATE TABLE slack_configuration (
+            id INTEGER PRIMARY KEY CHECK (id = 1),
+            appToken TEXT NOT NULL,
+            botToken TEXT NOT NULL,
+            appId TEXT NOT NULL,
+            workspaceId TEXT NOT NULL,
+            workspaceName TEXT NOT NULL,
+            botUserId TEXT NOT NULL,
+            mappingRevision INTEGER NOT NULL,
+            configuredAt INTEGER NOT NULL,
+            updatedAt INTEGER NOT NULL
+          ) STRICT
+        `);
+      }
     });
   }
 

@@ -1,4 +1,5 @@
-import { SqliteDatabase, SqliteDatabases } from '../../core/sqlite-databases';
+import { SqliteDatabase } from '../../core/sqlite-database';
+import { SqliteDatabases } from '../../core/sqlite-databases';
 import { Repository } from '../repository';
 import { PersistedExecution } from './persisted-execution';
 import { SerializedWorkflowMachineSnapshot } from 'sequential-workflow-machine';
@@ -20,18 +21,20 @@ export class SqlitePersistedExecutionRepository implements PersistedExecutionRep
   }
 
   public async setup(_: AbortSignal): Promise<void> {
-    await this.db.write(db => {
-      db.exec(`
-        CREATE TABLE IF NOT EXISTS persisted_executions (
-          executionId TEXT PRIMARY KEY,
-          context TEXT NOT NULL,
-          processName TEXT NOT NULL,
-          processHash TEXT NOT NULL,
-          state TEXT NOT NULL,
-          createdAt INTEGER NOT NULL,
-          updatedAt INTEGER NOT NULL
-        ) STRICT
-      `);
+    await this.db.setup(1, 'persisted_executions', (db, version) => {
+      if (version < 1) {
+        db.exec(`
+          CREATE TABLE persisted_executions (
+            executionId TEXT PRIMARY KEY,
+            context TEXT NOT NULL,
+            processName TEXT NOT NULL,
+            processHash TEXT NOT NULL,
+            state TEXT NOT NULL,
+            createdAt INTEGER NOT NULL,
+            updatedAt INTEGER NOT NULL
+          ) STRICT
+        `);
+      }
     });
   }
 

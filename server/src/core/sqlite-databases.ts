@@ -2,8 +2,7 @@ import { DatabaseSync } from 'node:sqlite';
 import { ServerPaths } from './server-paths';
 import { chmodSync, mkdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
-import { AsyncMutex } from './async-mutex';
-import { Transaction } from './transaction';
+import { SqliteDatabase } from './sqlite-database';
 
 export class SqliteDatabases {
   public readonly modelDb: SqliteDatabase;
@@ -45,75 +44,5 @@ export class SqliteDatabases {
 function ensurePermissions(path: string, expectedMode: number): void {
   if ((statSync(path).mode & 0o777) !== expectedMode) {
     chmodSync(path, expectedMode);
-  }
-}
-
-export class SqliteDatabase {
-  private readonly mutex = new AsyncMutex();
-
-  public constructor(private readonly db: DatabaseSync) {}
-
-  public async read<T>(callback: (db: DatabaseSync) => Promise<T> | T): Promise<T> {
-    const release = await this.mutex.acquire();
-    try {
-      return await callback(this.db);
-    } finally {
-      release();
-    }
-  }
-
-  public async write<T>(callback: (db: DatabaseSync) => Promise<T> | T, transaction?: Transaction): Promise<T> {
-    if (transaction) {
-      if (transaction.handler) {
-        if (this.db !== transaction.db) {
-          throw new Error('Transaction is associated with a different database');
-        }
-        return callback(this.db);
-      }
-
-      const release = await this.mutex.acquire();
-      try {
-        this.db.exec('BEGIN IMMEDIATE');
-      } catch (e) {
-        release();
-        throw e;
-      }
-
-      transaction.db = this.db;
-      transaction.handler = {
-        commit: async () => {
-          this.db.exec('COMMIT');
-          release();
-        },
-        rollback: async () => {
-          try {
-            this.db.exec('ROLLBACK');
-          } finally {
-            release();
-          }
-        }
-      };
-
-      return await callback(this.db);
-    }
-
-    const release = await this.mutex.acquire();
-    try {
-      this.db.exec('BEGIN IMMEDIATE');
-    } catch (e) {
-      release();
-      throw e;
-    }
-
-    try {
-      const result = await callback(this.db);
-      this.db.exec('COMMIT');
-      return result;
-    } catch (e) {
-      this.db.exec('ROLLBACK');
-      throw e;
-    } finally {
-      release();
-    }
   }
 }

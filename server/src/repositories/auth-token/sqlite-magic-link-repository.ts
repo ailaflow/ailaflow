@@ -1,4 +1,5 @@
-import { SqliteDatabase, SqliteDatabases } from '../../core/sqlite-databases';
+import { SqliteDatabase } from '../../core/sqlite-database';
+import { SqliteDatabases } from '../../core/sqlite-databases';
 import { MagicLinkRepository } from './magic-link-repository';
 import { MagicLink } from './magic-link';
 
@@ -10,24 +11,26 @@ export class SqliteMagicLinkRepository implements MagicLinkRepository {
   }
 
   public async setup(_: AbortSignal): Promise<void> {
-    await this.db.write(db => {
-      db.exec(`
-        CREATE TABLE IF NOT EXISTS magic_links (
-          tokenHash TEXT PRIMARY KEY,
-          userName TEXT NOT NULL,
-          expiresAt INTEGER NOT NULL,
+    await this.db.setup(1, 'magic_links', (db, version) => {
+      if (version < 1) {
+        db.exec(`
+          CREATE TABLE magic_links (
+            tokenHash TEXT PRIMARY KEY,
+            userName TEXT NOT NULL,
+            expiresAt INTEGER NOT NULL,
 
-          FOREIGN KEY (userName)
-            REFERENCES users(name)
-            ON DELETE CASCADE,
+            FOREIGN KEY (userName)
+              REFERENCES users(name)
+              ON DELETE CASCADE,
 
-          CHECK (expiresAt >= 0)
-        ) STRICT
-      `);
-      db.exec(`
-        CREATE INDEX IF NOT EXISTS magic_links_expires_at_idx
-        ON magic_links(expiresAt)
-      `);
+            CHECK (expiresAt >= 0)
+          ) STRICT
+        `);
+        db.exec(`
+          CREATE INDEX magic_links_expires_at_idx
+          ON magic_links(expiresAt)
+        `);
+      }
     });
   }
 

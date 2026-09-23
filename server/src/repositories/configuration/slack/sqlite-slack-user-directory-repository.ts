@@ -1,4 +1,5 @@
-import { SqliteDatabase, SqliteDatabases } from '../../../core/sqlite-databases';
+import { SqliteDatabase } from '../../../core/sqlite-database';
+import { SqliteDatabases } from '../../../core/sqlite-databases';
 import { SlackDirectoryCounts, SlackUserDirectoryRepository } from './slack-user-directory-repository';
 import { SlackDirectoryUser } from './slack-types';
 
@@ -16,23 +17,25 @@ export class SqliteSlackUserDirectoryRepository implements SlackUserDirectoryRep
   }
 
   public async setup(_: AbortSignal): Promise<void> {
-    await this.db.write(db => {
-      db.exec(`
-        CREATE TABLE IF NOT EXISTS slack_users (
-          workspaceId TEXT NOT NULL,
-          slackUserId TEXT NOT NULL,
-          legacyName TEXT,
-          displayName TEXT,
-          realName TEXT,
-          email TEXT,
-          isDeleted INTEGER NOT NULL,
-          isBot INTEGER NOT NULL,
-          isAppUser INTEGER NOT NULL,
-          lastSeenAt INTEGER NOT NULL,
-          updatedAt INTEGER NOT NULL,
-          PRIMARY KEY (workspaceId, slackUserId)
-        ) STRICT
-      `);
+    await this.db.setup(1, 'slack_users', (db, version) => {
+      if (version < 1) {
+        db.exec(`
+          CREATE TABLE slack_users (
+            workspaceId TEXT NOT NULL,
+            slackUserId TEXT NOT NULL,
+            legacyName TEXT,
+            displayName TEXT,
+            realName TEXT,
+            email TEXT,
+            isDeleted INTEGER NOT NULL,
+            isBot INTEGER NOT NULL,
+            isAppUser INTEGER NOT NULL,
+            lastSeenAt INTEGER NOT NULL,
+            updatedAt INTEGER NOT NULL,
+            PRIMARY KEY (workspaceId, slackUserId)
+          ) STRICT
+        `);
+      }
     });
   }
 

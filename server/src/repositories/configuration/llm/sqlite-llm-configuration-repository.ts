@@ -1,4 +1,5 @@
-import { SqliteDatabase, SqliteDatabases } from '../../../core/sqlite-databases';
+import { SqliteDatabase } from '../../../core/sqlite-database';
+import { SqliteDatabases } from '../../../core/sqlite-databases';
 import { LlmConfiguration } from './llm-configuration';
 import { LlmConfigurationRepository, LlmConfigurationRepositoryError } from './llm-configuration-repository';
 import { LlmModelProviderConfiguration, LlmProviderConfiguration } from './llm-provider-configuration';
@@ -35,30 +36,36 @@ export class SqliteLlmConfigurationRepository implements LlmConfigurationReposit
   }
 
   public async setup(_: AbortSignal): Promise<void> {
-    await this.db.write(db => {
-      db.exec(`
-        CREATE TABLE IF NOT EXISTS llm_providers (
-          id TEXT PRIMARY KEY,
-          name TEXT NOT NULL UNIQUE,
-          type INTEGER NOT NULL,
-          url TEXT,
-          apiKey TEXT,
-          models TEXT NOT NULL
-        ) STRICT
-      `);
-      db.exec(`
-        CREATE TABLE IF NOT EXISTS llm_use_case_configurations (
-          useCase INTEGER PRIMARY KEY,
-          providerId TEXT NOT NULL,
-          modelName TEXT NOT NULL,
-          modelContextWindow INTEGER,
-          effectiveContextWindowPercent INTEGER NOT NULL,
+    await this.db.setup(1, 'llm_providers', (db, version) => {
+      if (version < 1) {
+        db.exec(`
+          CREATE TABLE llm_providers (
+            id TEXT PRIMARY KEY,
+            name TEXT NOT NULL UNIQUE,
+            type INTEGER NOT NULL,
+            url TEXT,
+            apiKey TEXT,
+            models TEXT NOT NULL
+          ) STRICT
+        `);
+      }
+    });
+    await this.db.setup(1, 'llm_use_case_configurations', (db, version) => {
+      if (version < 1) {
+        db.exec(`
+          CREATE TABLE llm_use_case_configurations (
+            useCase INTEGER PRIMARY KEY,
+            providerId TEXT NOT NULL,
+            modelName TEXT NOT NULL,
+            modelContextWindow INTEGER,
+            effectiveContextWindowPercent INTEGER NOT NULL,
 
-          FOREIGN KEY (providerId)
-            REFERENCES llm_providers(id)
-            ON DELETE RESTRICT
-        ) STRICT
-      `);
+            FOREIGN KEY (providerId)
+              REFERENCES llm_providers(id)
+              ON DELETE RESTRICT
+          ) STRICT
+        `);
+      }
     });
   }
 

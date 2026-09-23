@@ -1,4 +1,5 @@
-import { SqliteDatabase, SqliteDatabases } from '../../core/sqlite-databases';
+import { SqliteDatabase } from '../../core/sqlite-database';
+import { SqliteDatabases } from '../../core/sqlite-databases';
 import { SandboxRepository, SandboxRepositoryError } from './sandbox-repository';
 import { Sandbox } from './sandbox';
 import { Transaction } from '../../core/transaction';
@@ -25,18 +26,20 @@ export class SqliteSandboxRepository implements SandboxRepository {
   }
 
   public async setup(_: AbortSignal) {
-    await this.db.write(db => {
-      db.exec(`
-        CREATE TABLE IF NOT EXISTS sandboxes (
-          name TEXT PRIMARY KEY,
-          token TEXT NOT NULL UNIQUE,
-          isEnabled INTEGER NOT NULL,
-          description TEXT NOT NULL,
-          configuration TEXT NOT NULL,
-          secrets TEXT NOT NULL,
-          hash TEXT NOT NULL
-        ) STRICT
-      `);
+    await this.db.setup(1, 'sandboxes', (db, version) => {
+      if (version < 1) {
+        db.exec(`
+          CREATE TABLE sandboxes (
+            name TEXT PRIMARY KEY,
+            token TEXT NOT NULL UNIQUE,
+            isEnabled INTEGER NOT NULL,
+            description TEXT NOT NULL,
+            configuration TEXT NOT NULL,
+            secrets TEXT NOT NULL,
+            hash TEXT NOT NULL
+          ) STRICT
+        `);
+      }
     });
   }
 

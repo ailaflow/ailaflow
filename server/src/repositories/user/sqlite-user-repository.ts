@@ -1,6 +1,7 @@
 import { UserRepository, UserRepositoryError } from './user-repository';
 import { User } from './user';
-import { SqliteDatabase, SqliteDatabases } from '../../core/sqlite-databases';
+import { SqliteDatabase } from '../../core/sqlite-database';
+import { SqliteDatabases } from '../../core/sqlite-databases';
 import { Transaction } from '../../core/transaction';
 
 export class SqliteUserRepository implements UserRepository {
@@ -11,16 +12,18 @@ export class SqliteUserRepository implements UserRepository {
   }
 
   public async setup(_: AbortSignal) {
-    await this.db.write(db => {
-      db.exec(`
-        CREATE TABLE IF NOT EXISTS users (
-          name TEXT PRIMARY KEY,
-          email TEXT UNIQUE,
-          passwordHash TEXT NOT NULL,
-          isActive INTEGER NOT NULL,
-          isAdmin INTEGER NOT NULL
-        ) STRICT
-      `);
+    await this.db.setup(1, 'users', (db, version) => {
+      if (version < 1) {
+        db.exec(`
+          CREATE TABLE users (
+            name TEXT PRIMARY KEY,
+            email TEXT UNIQUE,
+            passwordHash TEXT NOT NULL,
+            isActive INTEGER NOT NULL,
+            isAdmin INTEGER NOT NULL
+          ) STRICT
+        `);
+      }
     });
   }
 

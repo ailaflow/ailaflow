@@ -1,4 +1,5 @@
-import { SqliteDatabase, SqliteDatabases } from '../../core/sqlite-databases';
+import { SqliteDatabase } from '../../core/sqlite-database';
+import { SqliteDatabases } from '../../core/sqlite-databases';
 import { ChatSessionRepository } from './chat-session-repository';
 import { ChatSessionSnapshot } from '@aibindkit/llm';
 import { Transaction } from '../../core/transaction';
@@ -11,13 +12,15 @@ export class SqliteChatSessionRepository implements ChatSessionRepository {
   }
 
   public async setup(_: AbortSignal): Promise<void> {
-    await this.db.write(db => {
-      db.exec(`
-        CREATE TABLE IF NOT EXISTS chat_sessions (
-          sessionId TEXT PRIMARY KEY,
-          serializedSnapshot TEXT NOT NULL
-        ) STRICT
-      `);
+    await this.db.setup(1, 'chat_sessions', (db, version) => {
+      if (version < 1) {
+        db.exec(`
+          CREATE TABLE chat_sessions (
+            sessionId TEXT PRIMARY KEY,
+            serializedSnapshot TEXT NOT NULL
+          ) STRICT
+        `);
+      }
     });
   }
 

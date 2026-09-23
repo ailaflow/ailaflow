@@ -1,5 +1,6 @@
 import { GetTablesResponse, TableLiteDto } from '@ailaflow/shared';
-import { SqliteDatabase, SqliteDatabases } from '../../core/sqlite-databases';
+import { SqliteDatabase } from '../../core/sqlite-database';
+import { SqliteDatabases } from '../../core/sqlite-databases';
 import { TableListQuerier } from './table-list-querier';
 
 export class SqliteTableListQuerier implements TableListQuerier {

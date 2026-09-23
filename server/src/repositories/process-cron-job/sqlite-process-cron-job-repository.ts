@@ -1,5 +1,6 @@
 import { ProcessCronJobRun, ProcessExecutionVariableValues } from '@ailaflow/shared';
-import { SqliteDatabase, SqliteDatabases } from '../../core/sqlite-databases';
+import { SqliteDatabase } from '../../core/sqlite-database';
+import { SqliteDatabases } from '../../core/sqlite-databases';
 import { ProcessCronJob } from './process-cron-job';
 import { ProcessCronJobRepository } from './process-cron-job-repository';
 import { Transaction } from '../../core/transaction';
@@ -24,23 +25,25 @@ export class SqliteProcessCronJobRepository implements ProcessCronJobRepository 
   }
 
   public async setup(_: AbortSignal): Promise<void> {
-    await this.db.write(db => {
-      db.exec(`
-        CREATE TABLE IF NOT EXISTS process_cron_jobs (
-          id TEXT PRIMARY KEY,
-          processName TEXT NOT NULL REFERENCES processes(name) ON DELETE CASCADE,
-          starterUserName TEXT NOT NULL REFERENCES users(name) ON DELETE CASCADE,
-          expression TEXT NOT NULL,
-          timeZone TEXT NOT NULL,
-          inputValues TEXT NOT NULL,
-          isEnabled INTEGER NOT NULL CHECK (isEnabled IN (0, 1)),
-          nextExecutionAt INTEGER NOT NULL,
-          lastRun TEXT
-        ) STRICT;
+    await this.db.setup(1, 'process_cron_jobs', (db, version) => {
+      if (version < 1) {
+        db.exec(`
+          CREATE TABLE process_cron_jobs (
+            id TEXT PRIMARY KEY,
+            processName TEXT NOT NULL REFERENCES processes(name) ON DELETE CASCADE,
+            starterUserName TEXT NOT NULL REFERENCES users(name) ON DELETE CASCADE,
+            expression TEXT NOT NULL,
+            timeZone TEXT NOT NULL,
+            inputValues TEXT NOT NULL,
+            isEnabled INTEGER NOT NULL CHECK (isEnabled IN (0, 1)),
+            nextExecutionAt INTEGER NOT NULL,
+            lastRun TEXT
+          ) STRICT;
 
-        CREATE INDEX IF NOT EXISTS process_cron_jobs_due
-        ON process_cron_jobs (isEnabled, nextExecutionAt);
-      `);
+          CREATE INDEX process_cron_jobs_due
+          ON process_cron_jobs (isEnabled, nextExecutionAt);
+        `);
+      }
     });
   }
 

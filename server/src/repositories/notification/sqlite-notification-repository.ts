@@ -1,4 +1,5 @@
-import { SqliteDatabase, SqliteDatabases } from '../../core/sqlite-databases';
+import { SqliteDatabase } from '../../core/sqlite-database';
+import { SqliteDatabases } from '../../core/sqlite-databases';
 import { Notification } from './notification';
 import { NotificationRepository } from './notification-repository';
 import { Transaction } from '../../core/transaction';
@@ -11,22 +12,24 @@ export class SqliteNotificationRepository implements NotificationRepository {
   }
 
   public async setup(_: AbortSignal): Promise<void> {
-    await this.db.write(db => {
-      db.exec(`
-        CREATE TABLE IF NOT EXISTS notifications (
-          id TEXT PRIMARY KEY,
-          processName TEXT NOT NULL,
-          userName TEXT NOT NULL,
-          message TEXT NOT NULL,
-          createdAt INTEGER NOT NULL,
+    await this.db.setup(1, 'notifications', (db, version) => {
+      if (version < 1) {
+        db.exec(`
+          CREATE TABLE notifications (
+            id TEXT PRIMARY KEY,
+            processName TEXT NOT NULL,
+            userName TEXT NOT NULL,
+            message TEXT NOT NULL,
+            createdAt INTEGER NOT NULL,
 
-          CHECK (createdAt >= 0)
-        ) STRICT
-      `);
-      db.exec(`
-        CREATE INDEX IF NOT EXISTS notifications_user_created_at_idx
-        ON notifications(userName, createdAt DESC, id DESC)
-      `);
+            CHECK (createdAt >= 0)
+          ) STRICT
+        `);
+        db.exec(`
+          CREATE INDEX notifications_user_created_at_idx
+          ON notifications(userName, createdAt DESC, id DESC)
+        `);
+      }
     });
   }
 

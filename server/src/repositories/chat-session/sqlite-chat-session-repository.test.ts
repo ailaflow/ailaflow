@@ -2,7 +2,8 @@ import { ChatMessageType } from '@aibindkit/core';
 import { DatabaseSync } from 'node:sqlite';
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { SqliteDatabase, SqliteDatabases } from '../../core/sqlite-databases';
+import { SqliteDatabase } from '../../core/sqlite-database';
+import { SqliteDatabases } from '../../core/sqlite-databases';
 import { Transaction } from '../../core/transaction';
 import { SqliteChatSessionRepository } from './sqlite-chat-session-repository';
 

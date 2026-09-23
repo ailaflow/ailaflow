@@ -43,16 +43,7 @@ test('configuration exposes only key presence while status includes instance and
   const status = { ...baseStatus, type: LicenseType.HOME, validationError: null, checkedAt: 123, canUpgrade: true };
   assert.deepEqual(getLicenseStatusResponseSchema.parse(status), status);
   assert.equal(getLicenseStatusResponseSchema.safeParse({ ...status, validationError: 'License expired' }).success, true);
-  assert.equal(
-    getLicenseStatusResponseSchema.safeParse({ version: '1.2.3' }).success,
-    false
-  );
-  assert.equal(
-    getLicenseStatusResponseSchema.safeParse({ instanceId: 'instance-id' }).success,
-    false
-  );
-  assert.equal(
-    getLicenseStatusResponseSchema.safeParse({ ...status, canUpgrade: 'yes' }).success,
-    false
-  );
+  assert.equal(getLicenseStatusResponseSchema.safeParse({ version: '1.2.3' }).success, false);
+  assert.equal(getLicenseStatusResponseSchema.safeParse({ instanceId: 'instance-id' }).success, false);
+  assert.equal(getLicenseStatusResponseSchema.safeParse({ ...status, canUpgrade: 'yes' }).success, false);
 });

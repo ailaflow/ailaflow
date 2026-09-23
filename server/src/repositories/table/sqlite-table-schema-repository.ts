@@ -1,6 +1,7 @@
 import { TableColumn, TableColumnNameValidator, TableColumnType, TableSchemaError } from '@ailaflow/shared';
 import { DatabaseSync } from 'node:sqlite';
-import { SqliteDatabase, SqliteDatabases } from '../../core/sqlite-databases';
+import { SqliteDatabase } from '../../core/sqlite-database';
+import { SqliteDatabases } from '../../core/sqlite-databases';
 import { SqliteTableDataNameProvider } from './sqlite-table-data-name-provider';
 import { TableDataRepositoryError } from './table-data-repository';
 import { TableSchemaConcurrencyError, TableSchemaRepository } from './table-schema-repository';

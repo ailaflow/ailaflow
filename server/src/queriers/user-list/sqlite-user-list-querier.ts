@@ -1,5 +1,6 @@
 import { GetUsersResponse } from '@ailaflow/shared';
-import { SqliteDatabase, SqliteDatabases } from '../../core/sqlite-databases';
+import { SqliteDatabase } from '../../core/sqlite-database';
+import { SqliteDatabases } from '../../core/sqlite-databases';
 import { UserListQuerier } from './user-list-querier';
 
 export class SqliteUserListQuerier implements UserListQuerier {
