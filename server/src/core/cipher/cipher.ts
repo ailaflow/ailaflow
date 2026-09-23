@@ -10,10 +10,12 @@ const DATA_ADDITIONAL_DATA = Buffer.from('ailaflow/data-encryption/v1', 'utf8');
 const PASSWORD_FORMAT = 'scrypt-v1';
 const PASSWORD_SALT_LENGTH = 16;
 const PASSWORD_HASH_LENGTH = 32;
-const PASSWORD_SCRYPT_COST = 2 ** 17;
+
+// This profile uses approximately 32 MiB per hash and keeps authentication practical on low-memory hosts such as Raspberry Pi 3.
+const PASSWORD_SCRYPT_COST = 2 ** 15;
 const PASSWORD_SCRYPT_BLOCK_SIZE = 8;
 const PASSWORD_SCRYPT_PARALLELIZATION = 1;
-const PASSWORD_SCRYPT_MAX_MEMORY = 256 * 1024 * 1024;
+const PASSWORD_SCRYPT_MAX_MEMORY = 64 * 1024 * 1024;
 
 export class Cipher {
   public constructor(private readonly keyStore: CipherKeyStore) {}
