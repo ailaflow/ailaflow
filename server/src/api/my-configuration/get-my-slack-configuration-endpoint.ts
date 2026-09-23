@@ -7,7 +7,7 @@ import { getEndpointAbortSignal } from '../framework/endpoint-abort-signal';
 
 export class GetMySlackConfigurationEndpoint implements Endpoint {
   public readonly method = 'get';
-  public readonly path = '/api/my-slack-configuration';
+  public readonly path = '/api/my-configuration/slack';
   public readonly auth = true;
 
   public constructor(private readonly statusProvider: SlackStatusProvider) {}

@@ -17,7 +17,9 @@ export function TelegramConfiguration(props: TelegramConfigurationProps) {
   const apiClient = useApiClient();
   const loader = useLoader(
     signal =>
-      props.userName ? apiClient.user.getTelegramConfiguration(signal, props.userName) : apiClient.telegramConfiguration.get(signal),
+      props.userName
+        ? apiClient.user.getTelegramConfiguration(signal, props.userName)
+        : apiClient.myConfiguration.getTelegramConfiguration(signal),
     [apiClient, props.userName]
   );
 
@@ -65,7 +67,7 @@ function LoadedTelegramConfiguration(props: TelegramConfigurationProps & { initi
       };
       const response = props.userName
         ? await apiClient.user.saveTelegramBot(AbortSignal.timeout(10_000), props.userName, request)
-        : await apiClient.telegramConfiguration.save(AbortSignal.timeout(10_000), request);
+        : await apiClient.myConfiguration.saveTelegramBot(AbortSignal.timeout(10_000), request);
       setBots(current => {
         const next = current.filter(bot => bot.channelName !== draft.channelName);
         next.push(response.bot);
@@ -91,7 +93,7 @@ function LoadedTelegramConfiguration(props: TelegramConfigurationProps & { initi
       const request = { channelName: bot.channelName, reconnect: true };
       const response = props.userName
         ? await apiClient.user.saveTelegramBot(AbortSignal.timeout(10_000), props.userName, request)
-        : await apiClient.telegramConfiguration.save(AbortSignal.timeout(10_000), request);
+        : await apiClient.myConfiguration.saveTelegramBot(AbortSignal.timeout(10_000), request);
       setBots(current => current.map(item => (item.channelName === bot.channelName ? response.bot : item)));
     } catch (error) {
       window.alert(`Failed to reconnect Telegram bot: ${error instanceof Error ? error.message : String(error)}`);
@@ -112,7 +114,7 @@ function LoadedTelegramConfiguration(props: TelegramConfigurationProps & { initi
       if (props.userName) {
         await apiClient.user.deleteTelegramBot(AbortSignal.timeout(10_000), props.userName, bot.channelName);
       } else {
-        await apiClient.telegramConfiguration.delete(AbortSignal.timeout(10_000), bot.channelName);
+        await apiClient.myConfiguration.deleteTelegramBot(AbortSignal.timeout(10_000), bot.channelName);
       }
       setBots(current => current.filter(item => item.channelName !== bot.channelName));
       setDraft(current => (current?.channelName === bot.channelName ? null : current));

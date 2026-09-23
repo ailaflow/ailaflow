@@ -5,6 +5,7 @@ export * from './slack-configuration';
 export * from './install';
 export * from './license-configuration';
 export * from './llm-configuration';
+export * from './my-configuration';
 export * from './my-slack-configuration';
 export * from './my-notification';
 export * from './my-process';

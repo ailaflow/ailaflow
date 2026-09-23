@@ -1,4 +1,4 @@
-export type MyConfigurationTab = 'overview' | 'telegram' | 'slack';
+export type MyConfigurationTab = 'overview' | 'telegram' | 'slack' | 'password';
 
 export interface MyConfigurationViewProps {
   activeTab: MyConfigurationTab;
@@ -9,7 +9,8 @@ export interface MyConfigurationViewProps {
 const tabs: ReadonlyArray<{ id: MyConfigurationTab; label: string }> = [
   { id: 'overview', label: 'Overview' },
   { id: 'telegram', label: 'Telegram' },
-  { id: 'slack', label: 'Slack' }
+  { id: 'slack', label: 'Slack' },
+  { id: 'password', label: 'Password' }
 ];
 
 export function MyConfigurationView(props: MyConfigurationViewProps) {
@@ -17,7 +18,7 @@ export function MyConfigurationView(props: MyConfigurationViewProps) {
     <div className="flex h-full min-h-0 flex-col bg-slate-50">
       <div className="shrink-0 border-b border-slate-200 bg-white px-4 pt-4 sm:px-5">
         <h1 className="text-3xl font-semibold tracking-tight text-slate-900">My configuration</h1>
-        <nav className="mt-4 flex gap-5" aria-label="My configuration sections">
+        <nav className="mt-4 flex gap-5 overflow-x-auto" aria-label="My configuration sections">
           {tabs.map(tab => (
             <button
               key={tab.id}

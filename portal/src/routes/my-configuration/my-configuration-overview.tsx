@@ -11,8 +11,8 @@ export function MyConfigurationOverview() {
   const loader = useLoader(
     async signal => {
       const [telegram, slack] = await Promise.all([
-        apiClient.telegramConfiguration.get(signal),
-        apiClient.mySlackConfiguration.get(signal)
+        apiClient.myConfiguration.getTelegramConfiguration(signal),
+        apiClient.myConfiguration.getSlackConfiguration(signal)
       ]);
       return { telegram, slack };
     },

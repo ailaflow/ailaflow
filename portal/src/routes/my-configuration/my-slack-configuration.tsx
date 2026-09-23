@@ -6,7 +6,7 @@ import { PortalLoadingView } from '../../views/portal/portal-loading-view';
 
 export function MySlackConfiguration() {
   const apiClient = useApiClient();
-  const loader = useLoader(signal => apiClient.mySlackConfiguration.get(signal), [apiClient]);
+  const loader = useLoader(signal => apiClient.myConfiguration.getSlackConfiguration(signal), [apiClient]);
   if (loader.isLoading) {
     return <PortalLoadingView />;
   }

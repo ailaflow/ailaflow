@@ -151,6 +151,7 @@ import { SqliteTelegramConfigurationRepository } from './repositories/configurat
 import { GetMyTelegramConfigurationEndpoint } from './api/my-configuration/get-my-telegram-configuration-endpoint';
 import { SaveMyTelegramBotEndpoint } from './api/my-configuration/save-my-telegram-bot-endpoint';
 import { DeleteMyTelegramBotEndpoint } from './api/my-configuration/delete-my-telegram-bot-endpoint';
+import { ChangeMyPasswordEndpoint } from './api/my-configuration/change-my-password-endpoint';
 import { TelegramBotApiClient } from './telegram/telegram-bot-api-client';
 import { TelegramConfigurationApi } from './api/common/telegram-configuration-api';
 import { TelegramSynchronizationManager } from './telegram/telegram-synchronization-manager';
@@ -219,7 +220,7 @@ import { DeleteSlackConfigurationEndpoint } from './api/slack-configuration/dele
 import { GetSlackUsersEndpoint } from './api/slack-configuration/get-slack-users-endpoint';
 import { RefreshSlackUsersEndpoint } from './api/slack-configuration/refresh-slack-users-endpoint';
 import { SaveSlackMappingsEndpoint } from './api/slack-configuration/save-slack-mappings-endpoint';
-import { GetMySlackConfigurationEndpoint } from './api/my-slack-configuration/get-my-slack-configuration-endpoint';
+import { GetMySlackConfigurationEndpoint } from './api/my-configuration/get-my-slack-configuration-endpoint';
 import { SqliteSlackUserListQuerier } from './queriers/slack-user-list/sqlite-slack-user-list-querier';
 import { VersionProvider } from './core/version-provider';
 import { Logger } from './core/logger';
@@ -559,6 +560,7 @@ export class Server {
       new GetMyTelegramConfigurationEndpoint(telegramConfigurationApi),
       new SaveMyTelegramBotEndpoint(telegramConfigurationApi),
       new DeleteMyTelegramBotEndpoint(telegramConfigurationApi),
+      new ChangeMyPasswordEndpoint(userRepository, cipher),
       new GetSlackConfigurationEndpoint(slackConfigurationManager),
       new SaveSlackConfigurationEndpoint(slackConfigurationManager),
       new DeleteSlackConfigurationEndpoint(slackConfigurationManager),

@@ -10,11 +10,10 @@ import { SandboxApiClient } from './sandbox-api-client';
 import { UserApiClient } from './user-api-client';
 import { TableApiClient } from './table-api-client';
 import { LlmConfigurationApiClient } from './llm-configuration-api-client';
-import { TelegramConfigurationApiClient } from './telegram-configuration-api-client';
 import { TaskApiClient } from './task-api-client';
 import { PublicUrlConfigurationApiClient } from './public-url-configuration-api-client';
 import { SlackConfigurationApiClient } from './slack-configuration-api-client';
-import { MySlackConfigurationApiClient } from './my-slack-configuration-api-client';
+import { MyConfigurationApiClient } from './my-configuration-api-client';
 
 export class ApiClient {
   private readonly client: HttpClient;
@@ -30,11 +29,10 @@ export class ApiClient {
   public readonly myTask: MyTaskApiClient;
   public readonly table: TableApiClient;
   public readonly llmConfiguration: LlmConfigurationApiClient;
-  public readonly telegramConfiguration: TelegramConfigurationApiClient;
   public readonly task: TaskApiClient;
   public readonly publicUrlConfiguration: PublicUrlConfigurationApiClient;
   public readonly slackConfiguration: SlackConfigurationApiClient;
-  public readonly mySlackConfiguration: MySlackConfigurationApiClient;
+  public readonly myConfiguration: MyConfigurationApiClient;
 
   public constructor(authToken: string | null) {
     this.client = new HttpClient(this.createHeaders(authToken));
@@ -50,11 +48,10 @@ export class ApiClient {
     this.myTask = new MyTaskApiClient(this.client);
     this.table = new TableApiClient(this.client);
     this.llmConfiguration = new LlmConfigurationApiClient(this.client);
-    this.telegramConfiguration = new TelegramConfigurationApiClient(this.client);
     this.task = new TaskApiClient(this.client);
     this.publicUrlConfiguration = new PublicUrlConfigurationApiClient(this.client);
     this.slackConfiguration = new SlackConfigurationApiClient(this.client);
-    this.mySlackConfiguration = new MySlackConfigurationApiClient(this.client);
+    this.myConfiguration = new MyConfigurationApiClient(this.client);
   }
 
   public get onUnauthorized() {

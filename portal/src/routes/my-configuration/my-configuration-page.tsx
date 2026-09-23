@@ -6,11 +6,13 @@ import { Portal } from '../common/portal';
 import { TelegramConfiguration } from '../common/telegram-configuration';
 import { MyConfigurationOverview } from './my-configuration-overview';
 import { MySlackConfiguration } from './my-slack-configuration';
+import { ChangeMyPassword } from './change-my-password';
 
 export function MyConfigurationPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const requestedTab = searchParams.get('tab');
-  const activeTab: MyConfigurationTab = requestedTab === 'telegram' || requestedTab === 'slack' ? requestedTab : 'overview';
+  const activeTab: MyConfigurationTab =
+    requestedTab === 'telegram' || requestedTab === 'slack' || requestedTab === 'password' ? requestedTab : 'overview';
 
   useEffect(() => {
     if (requestedTab !== activeTab) {
@@ -25,16 +27,23 @@ export function MyConfigurationPage() {
   return (
     <Portal>
       <MyConfigurationView activeTab={activeTab} onTabChange={selectTab}>
-        {activeTab === 'overview' ? (
-          <MyConfigurationOverview />
-        ) : activeTab === 'telegram' ? (
-          <TelegramConfiguration />
-        ) : (
-          <MySlackConfiguration />
-        )}
+        {renderTab(activeTab)}
       </MyConfigurationView>
     </Portal>
   );
+}
+
+function renderTab(activeTab: MyConfigurationTab): React.ReactNode {
+  switch (activeTab) {
+    case 'overview':
+      return <MyConfigurationOverview />;
+    case 'telegram':
+      return <TelegramConfiguration />;
+    case 'slack':
+      return <MySlackConfiguration />;
+    case 'password':
+      return <ChangeMyPassword />;
+  }
 }
 
 function withTab(current: URLSearchParams, tab: MyConfigurationTab): URLSearchParams {
