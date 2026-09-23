@@ -5,25 +5,21 @@ import { TaskListQuerier } from './task-list-querier';
 export class SqliteTaskListQuerier implements TaskListQuerier {
   private readonly db: SqliteDatabase;
 
-  public constructor(
-    dbs: SqliteDatabases,
-    private readonly now = Date.now
-  ) {
+  public constructor(dbs: SqliteDatabases) {
     this.db = dbs.modelDb;
   }
 
   public async query(_: AbortSignal, onlyOpen: boolean, page: number, pageSize: number): Promise<GetTasksResponse> {
     return this.db.read(db => {
       const taskDetailsCte = this.createTaskDetailsCte();
-      const completedCondition = onlyOpen ? `WHERE completedAt IS NULL` : '';
-      const now = this.now();
+      const openCondition = onlyOpen ? `WHERE finalizedAt IS NULL AND failedAt IS NULL` : '';
       const { totalCount } = db
         .prepare(
           `
         ${taskDetailsCte}
         SELECT COUNT(*) AS totalCount
         FROM task_details
-        ${completedCondition}
+        ${openCondition}
       `
         )
         .get() as { totalCount: number };
@@ -32,9 +28,9 @@ export class SqliteTaskListQuerier implements TaskListQuerier {
         .prepare(
           `
         ${taskDetailsCte}
-        SELECT id, title, createdBy, executionId, isTest, completedAt, deadline, assignedCount, completedCount, createdAt
+        SELECT id, title, createdBy, executionId, isTest, deadline, assignedCount, completedCount, createdAt, finalizedAt, failedAt
         FROM task_details
-        ${completedCondition}
+        ${openCondition}
         ORDER BY createdAt DESC, id DESC
         LIMIT ? OFFSET ?
       `
@@ -42,7 +38,7 @@ export class SqliteTaskListQuerier implements TaskListQuerier {
         .all(pageSize, (page - 1) * pageSize) as unknown as TaskRow[];
 
       return {
-        tasks: rows.map(row => mapTask(row, now)),
+        tasks: rows.map(mapTask),
         totalCount,
         page,
         pageSize
@@ -59,11 +55,12 @@ export class SqliteTaskListQuerier implements TaskListQuerier {
           t.createdBy,
           t.executionId,
           t.isTest,
-          t.finalizedAt AS completedAt,
           t.deadline,
           COUNT(at.taskId) AS assignedCount,
           COUNT(at.completedAt) AS completedCount,
-          t.createdAt
+          t.createdAt,
+          t.finalizedAt,
+          t.failedAt
         FROM tasks t
         LEFT JOIN assigned_tasks at
           ON at.taskId = t.id
@@ -79,24 +76,26 @@ interface TaskRow {
   createdBy: string;
   executionId: string;
   isTest: number;
-  completedAt: number | null;
   deadline: number | null;
   assignedCount: number;
   completedCount: number;
   createdAt: number;
+  finalizedAt: number | null;
+  failedAt: number | null;
 }
 
-function mapTask(row: TaskRow, now: number): TaskLiteDto {
+function mapTask(row: TaskRow): TaskLiteDto {
   return {
     id: row.id,
     title: row.title,
     createdBy: row.createdBy,
     executionId: row.executionId,
     isTest: row.isTest === 1,
-    ...(row.completedAt === null ? {} : { completedAt: row.completedAt }),
-    ...(row.completedAt === null && row.deadline !== null && now > row.deadline ? { isOutdated: true } : {}),
+    deadline: row.deadline,
     assignedCount: row.assignedCount,
     completedCount: row.completedCount,
-    createdAt: row.createdAt
+    createdAt: row.createdAt,
+    finalizedAt: row.finalizedAt,
+    failedAt: row.failedAt
   };
 }

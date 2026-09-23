@@ -39,17 +39,18 @@ export class Notifier {
     channelName: string,
     message: string
   ) {
-    const notifications = new Array<Notification>(userNames.length);
-    for (let i = 0; i < userNames.length; i++) {
-      notifications[i] = Notification.create(processName, userNames[i], message);
+    if (!isTest) {
+      const notifications = new Array<Notification>(userNames.length);
+      for (let i = 0; i < userNames.length; i++) {
+        notifications[i] = Notification.create(processName, userNames[i], message);
+      }
+      await this.notificationRepository.insertMultiple(signal, notifications);
     }
-
-    await this.notificationRepository.insertMultiple(signal, notifications);
 
     const m = this.buildChatMessage(processName, message);
 
-    for (const n of notifications) {
-      const session = await this.userChatSessionProvider.get(signal, isTest, n.userName, channelName);
+    for (const userName of userNames) {
+      const session = await this.userChatSessionProvider.get(signal, isTest, userName, channelName);
       if (session) {
         session.queueUserMessage(m, {
           internal: true
@@ -58,15 +59,24 @@ export class Notifier {
     }
   }
 
-  public async notifyUser(signal: AbortSignal, sessionId: ChatSessionId | null, processName: string, userName: string, message: string) {
+  public async notifyUser(
+    signal: AbortSignal,
+    sessionId: ChatSessionId | null,
+    processName: string,
+    isTest: boolean,
+    userName: string,
+    message: string
+  ) {
     const chatSession = sessionId
       ? await (sessionId.isAdmin()
           ? this.adminChatSessionProvider.tryGet(sessionId.userName)
           : this.userChatSessionProvider.get(signal, sessionId.isTest(), sessionId.userName, sessionId.channelName))
       : null;
-    const notification = Notification.create(processName, userName, message);
 
-    await this.notificationRepository.insertMultiple(signal, [notification]);
+    if (!isTest) {
+      const notification = Notification.create(processName, userName, message);
+      await this.notificationRepository.insertMultiple(signal, [notification]);
+    }
 
     if (chatSession) {
       const m = this.buildChatMessage(processName, message);

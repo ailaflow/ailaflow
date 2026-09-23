@@ -37,6 +37,7 @@ export class ProcessExecutionFinishedEventHandler implements EventHandler<Proces
       signal,
       event.context.chatSessionId ? ChatSessionId.decode(event.context.chatSessionId) : null,
       event.processName,
+      event.context.isTest,
       event.context.startedBy,
       m
     );

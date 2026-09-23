@@ -19,7 +19,7 @@ test('queries newest tasks with pagination and an open filter', async () => {
   const userRepository = new SqliteUserRepository(dbs);
   const taskRepository = new SqliteTaskRepository(dbs);
   const assignedTaskRepository = new SqliteAssignedTaskRepository(dbs);
-  const querier = new SqliteTaskListQuerier(dbs, () => 2500);
+  const querier = new SqliteTaskListQuerier(dbs);
 
   await userRepository.setup(signal);
   await taskRepository.setup(signal);
@@ -30,6 +30,7 @@ test('queries newest tasks with pagination and an open filter', async () => {
   await insertTask(taskRepository, signal, 'open', 1000, null, false, null);
   await insertTask(taskRepository, signal, 'outdated', 2000, 2000, true, null);
   await insertTask(taskRepository, signal, 'completed', 3000, null, false, 3200);
+  await insertTask(taskRepository, signal, 'failed', 2500, null, false, null, 2600);
   await insertTask(taskRepository, signal, 'unassigned', 4000, null, false, null);
 
   await assignedTaskRepository.upsert(signal, new AssignedTask('open', 'alice', 'default', 1100, {}));
@@ -47,9 +48,12 @@ test('queries newest tasks with pagination and an open filter', async () => {
         createdBy: 'unassigned creator',
         executionId: 'unassigned execution',
         isTest: false,
+        deadline: null,
         assignedCount: 0,
         completedCount: 0,
-        createdAt: 4000
+        createdAt: 4000,
+        finalizedAt: null,
+        failedAt: null
       },
       {
         id: 'outdated',
@@ -57,10 +61,12 @@ test('queries newest tasks with pagination and an open filter', async () => {
         createdBy: 'outdated creator',
         executionId: 'outdated execution',
         isTest: true,
-        isOutdated: true,
+        deadline: 2000,
         assignedCount: 1,
         completedCount: 0,
-        createdAt: 2000
+        createdAt: 2000,
+        finalizedAt: null,
+        failedAt: null
       }
     ],
     totalCount: 3,
@@ -76,9 +82,12 @@ test('queries newest tasks with pagination and an open filter', async () => {
         createdBy: 'unassigned creator',
         executionId: 'unassigned execution',
         isTest: false,
+        deadline: null,
         assignedCount: 0,
         completedCount: 0,
-        createdAt: 4000
+        createdAt: 4000,
+        finalizedAt: null,
+        failedAt: null
       },
       {
         id: 'completed',
@@ -86,14 +95,50 @@ test('queries newest tasks with pagination and an open filter', async () => {
         createdBy: 'completed creator',
         executionId: 'completed execution',
         isTest: false,
-        completedAt: 3200,
+        deadline: null,
         assignedCount: 2,
         completedCount: 1,
-        createdAt: 3000
+        createdAt: 3000,
+        finalizedAt: 3200,
+        failedAt: null
       }
     ],
-    totalCount: 4,
+    totalCount: 5,
     page: 1,
+    pageSize: 2
+  });
+
+  assert.deepEqual(await querier.query(signal, false, 2, 2), {
+    tasks: [
+      {
+        id: 'failed',
+        title: 'failed title',
+        createdBy: 'failed creator',
+        executionId: 'failed execution',
+        isTest: false,
+        deadline: null,
+        assignedCount: 0,
+        completedCount: 0,
+        createdAt: 2500,
+        finalizedAt: null,
+        failedAt: 2600
+      },
+      {
+        id: 'outdated',
+        title: 'outdated title',
+        createdBy: 'outdated creator',
+        executionId: 'outdated execution',
+        isTest: true,
+        deadline: 2000,
+        assignedCount: 1,
+        completedCount: 0,
+        createdAt: 2000,
+        finalizedAt: null,
+        failedAt: null
+      }
+    ],
+    totalCount: 5,
+    page: 2,
     pageSize: 2
   });
 
@@ -107,7 +152,8 @@ async function insertTask(
   createdAt: number,
   deadline: number | null,
   isTest: boolean,
-  finalizedAt: number | null
+  finalizedAt: number | null,
+  failedAt: number | null = null
 ): Promise<void> {
   await repository.insert(
     signal,
@@ -128,7 +174,7 @@ async function insertTask(
       null,
       createdAt,
       finalizedAt,
-      null
+      failedAt
     )
   );
 }

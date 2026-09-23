@@ -9,11 +9,12 @@ const taskLiteDtoSchema = z.object({
   createdBy: z.string(),
   executionId: z.string(),
   isTest: z.boolean(),
-  completedAt: z.number().optional(),
-  isOutdated: z.boolean().optional(),
+  deadline: z.number().nullable(),
   assignedCount: z.number().int().nonnegative(),
   completedCount: z.number().int().nonnegative(),
-  createdAt: z.number()
+  createdAt: z.number(),
+  finalizedAt: z.number().nullable(),
+  failedAt: z.number().nullable()
 });
 
 export const getTasksRequestSchema = paginationRequestSchema.extend({

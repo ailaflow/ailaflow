@@ -93,20 +93,30 @@ export function TaskListPage() {
       }
       columns={[
         {
+          id: 'id',
+          title: 'Task ID',
+          width: '18%',
+          getValue: task => <code className="text-xs text-gray-500">{task.id}</code>
+        },
+        {
           id: 'title',
           title: 'Title',
           width: '18%',
-          getValue: task => task.title
+          getValue: task => task.title,
+          disabled: t => (t.isTest ? 'Test' : undefined)
         },
         {
           id: 'status',
           title: 'Status',
           width: '10%',
           getValue: task => {
-            if (task.completedAt !== undefined) {
+            if (task.failedAt !== null) {
+              return 'Failed';
+            }
+            if (task.finalizedAt !== null) {
               return 'Completed';
             }
-            return task.isOutdated ? 'Outdated' : 'Open';
+            return task.deadline !== null && Date.now() > task.deadline ? 'Outdated' : 'Open';
           }
         },
         {
@@ -122,15 +132,9 @@ export function TaskListPage() {
           getValue: task => `@${task.createdBy}`
         },
         {
-          id: 'type',
-          title: 'Type',
-          width: '8%',
-          getValue: task => (task.isTest ? 'Test' : 'Live')
-        },
-        {
           id: 'createdAt',
           title: 'Created',
-          width: '10%',
+          width: '14%',
           getValue: task => new Date(task.createdAt).toLocaleString()
         }
       ]}
