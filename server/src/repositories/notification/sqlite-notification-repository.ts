@@ -7,7 +7,7 @@ export class SqliteNotificationRepository implements NotificationRepository {
   private readonly db: SqliteDatabase;
 
   public constructor(dbs: SqliteDatabases) {
-    this.db = dbs.modelDb;
+    this.db = dbs.dataDb;
   }
 
   public async setup(_: AbortSignal): Promise<void> {
@@ -19,10 +19,6 @@ export class SqliteNotificationRepository implements NotificationRepository {
           userName TEXT NOT NULL,
           message TEXT NOT NULL,
           createdAt INTEGER NOT NULL,
-
-          FOREIGN KEY (userName)
-            REFERENCES users(name)
-            ON DELETE CASCADE,
 
           CHECK (createdAt >= 0)
         ) STRICT

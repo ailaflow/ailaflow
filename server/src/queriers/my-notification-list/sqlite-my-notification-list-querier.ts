@@ -6,7 +6,7 @@ export class SqliteMyNotificationListQuerier implements MyNotificationListQuerie
   private readonly db: SqliteDatabase;
 
   public constructor(dbs: SqliteDatabases) {
-    this.db = dbs.modelDb;
+    this.db = dbs.dataDb;
   }
 
   public async query(_: AbortSignal, userName: string, page: number, pageSize: number): Promise<GetMyNotificationsResponse> {

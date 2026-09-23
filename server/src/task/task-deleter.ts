@@ -20,9 +20,7 @@ export class TaskDeleter {
     try {
       await this.assignedTaskRepository.deleteAll(signal, id, transaction);
       const success = await this.taskRepository.delete(signal, id, transaction);
-
-      await this.persistedExecutionRepository.delete(signal, task.executionId);
-
+      await this.persistedExecutionRepository.delete(signal, task.executionId, transaction);
       await transaction.commit();
       return success;
     } catch (e) {

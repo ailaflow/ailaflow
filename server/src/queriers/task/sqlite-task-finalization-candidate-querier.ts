@@ -5,7 +5,7 @@ export class SqliteTaskFinalizationCandidateQuerier implements TaskFinalizationC
   private readonly db: SqliteDatabase;
 
   public constructor(dbs: SqliteDatabases) {
-    this.db = dbs.modelDb;
+    this.db = dbs.dataDb;
   }
 
   public async query(_: AbortSignal, now: number, limit: number): Promise<TaskFinalizationCandidate[]> {

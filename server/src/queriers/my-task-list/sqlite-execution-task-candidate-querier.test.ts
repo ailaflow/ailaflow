@@ -6,7 +6,7 @@ import { SqliteExecutionTaskCandidateQuerier } from './sqlite-execution-task-can
 
 test('queries a limited number of active task candidates for an execution and user', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
-  const dbs = { modelDb: new SqliteDatabase(db) } as SqliteDatabases;
+  const dbs = { dataDb: new SqliteDatabase(db) } as SqliteDatabases;
   const signal = new AbortController().signal;
   const querier = new SqliteExecutionTaskCandidateQuerier(dbs);
 
@@ -74,7 +74,7 @@ test('queries a limited number of active task candidates for an execution and us
 
 test('queries test task candidates separately', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
-  const dbs = { modelDb: new SqliteDatabase(db) } as SqliteDatabases;
+  const dbs = { dataDb: new SqliteDatabase(db) } as SqliteDatabases;
   const signal = new AbortController().signal;
   const querier = new SqliteExecutionTaskCandidateQuerier(dbs);
 

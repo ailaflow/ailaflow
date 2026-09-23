@@ -6,7 +6,7 @@ import { SqliteTaskFinalizationCandidateQuerier } from './sqlite-task-finalizati
 
 test('queries only task finalization candidates eligible for an attempt', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
-  const dbs = { modelDb: new SqliteDatabase(db) } as SqliteDatabases;
+  const dbs = { dataDb: new SqliteDatabase(db) } as SqliteDatabases;
   const signal = new AbortController().signal;
   const querier = new SqliteTaskFinalizationCandidateQuerier(dbs);
 

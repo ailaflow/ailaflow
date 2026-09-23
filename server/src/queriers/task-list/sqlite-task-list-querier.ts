@@ -6,7 +6,7 @@ export class SqliteTaskListQuerier implements TaskListQuerier {
   private readonly db: SqliteDatabase;
 
   public constructor(dbs: SqliteDatabases) {
-    this.db = dbs.modelDb;
+    this.db = dbs.dataDb;
   }
 
   public async query(_: AbortSignal, onlyOpen: boolean, page: number, pageSize: number): Promise<GetTasksResponse> {

@@ -7,17 +7,15 @@ import { Notifier } from '../notification/notifier';
 import { UserAccessExpressionUserQuerier } from '../queriers/user-access-expression/user-access-expression-user-querier';
 import { SqliteAssignedTaskRepository } from '../repositories/task/sqlite-assigned-task-repository';
 import { SqliteTaskRepository } from '../repositories/task/sqlite-task-repository';
-import { SqliteUserRepository } from '../repositories/user/sqlite-user-repository';
 import { TaskCreator } from './task-creator';
 
 test('rolls back task creation when assignment creation fails', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
   db.exec(`PRAGMA foreign_keys = ON`);
-  const dbs = { modelDb: new SqliteDatabase(db) } as SqliteDatabases;
+  const dbs = { dataDb: new SqliteDatabase(db) } as SqliteDatabases;
   const signal = new AbortController().signal;
   const taskRepository = new SqliteTaskRepository(dbs);
   const assignedTaskRepository = new SqliteAssignedTaskRepository(dbs);
-  const userRepository = new SqliteUserRepository(dbs);
   const userQuerier: UserAccessExpressionUserQuerier = {
     queryUserNames: async () => ['missing-user']
   };
@@ -26,9 +24,15 @@ test('rolls back task creation when assignment creation fails', async () => {
   } as unknown as Notifier;
   const creator = new TaskCreator(taskRepository, assignedTaskRepository, userQuerier, notifier);
 
-  await userRepository.setup(signal);
   await taskRepository.setup(signal);
   await assignedTaskRepository.setup(signal);
+  db.exec(`
+    CREATE TRIGGER fail_assigned_task_insert
+    BEFORE INSERT ON assigned_tasks
+    BEGIN
+      SELECT RAISE(ABORT, 'assignment insert failed');
+    END
+  `);
 
   await assert.rejects(() =>
     creator.create(

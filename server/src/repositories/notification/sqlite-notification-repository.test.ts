@@ -2,23 +2,16 @@ import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
 import test from 'node:test';
 import { SqliteDatabase, SqliteDatabases } from '../../core/sqlite-databases';
-import { SqliteUserRepository } from '../user/sqlite-user-repository';
-import { User } from '../user/user';
 import { Notification } from './notification';
 import { SqliteNotificationRepository } from './sqlite-notification-repository';
 
 test('inserts notifications for users', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
-  db.exec(`PRAGMA foreign_keys = ON`);
-  const dbs = { modelDb: new SqliteDatabase(db) } as SqliteDatabases;
+  const dbs = { dataDb: new SqliteDatabase(db) } as SqliteDatabases;
   const signal = new AbortController().signal;
-  const userRepository = new SqliteUserRepository(dbs);
   const notificationRepository = new SqliteNotificationRepository(dbs);
 
-  await userRepository.setup(signal);
   await notificationRepository.setup(signal);
-  await userRepository.insert(signal, new User('alice', null, 'hash', true, false));
-  await userRepository.insert(signal, new User('bob', null, 'hash', true, false));
 
   await notificationRepository.insertMultiple(signal, [
     new Notification('notification_1', 'process-1', 'alice', 'First', 1000),

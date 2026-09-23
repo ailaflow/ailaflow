@@ -8,7 +8,7 @@ export class SqliteTaskRepository implements TaskRepository {
   private readonly db: SqliteDatabase;
 
   public constructor(dbs: SqliteDatabases) {
-    this.db = dbs.modelDb;
+    this.db = dbs.dataDb;
   }
 
   public async setup(_: AbortSignal) {
@@ -31,7 +31,12 @@ export class SqliteTaskRepository implements TaskRepository {
           nextFinalizationAttemptAt INTEGER,
           createdAt INTEGER NOT NULL,
           finalizedAt INTEGER,
-          failedAt INTEGER
+          failedAt INTEGER,
+
+          CHECK (nextFinalizationAttemptAt IS NULL OR nextFinalizationAttemptAt >= 0),
+          CHECK (createdAt >= 0),
+          CHECK (finalizedAt IS NULL OR finalizedAt >= 0),
+          CHECK (failedAt IS NULL OR failedAt >= 0)
         ) STRICT
       `);
       db.exec(`

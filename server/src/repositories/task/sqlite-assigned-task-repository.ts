@@ -9,7 +9,7 @@ export class SqliteAssignedTaskRepository implements AssignedTaskRepository {
   private readonly db: SqliteDatabase;
 
   public constructor(dbs: SqliteDatabases) {
-    this.db = dbs.modelDb;
+    this.db = dbs.dataDb;
   }
 
   public async setup(_: AbortSignal): Promise<void> {
@@ -26,10 +26,6 @@ export class SqliteAssignedTaskRepository implements AssignedTaskRepository {
 
           FOREIGN KEY (taskId)
             REFERENCES tasks(id)
-            ON DELETE CASCADE,
-
-          FOREIGN KEY (userName)
-            REFERENCES users(name)
             ON DELETE CASCADE,
 
           CHECK (completedAt IS NULL OR completedAt >= 0)

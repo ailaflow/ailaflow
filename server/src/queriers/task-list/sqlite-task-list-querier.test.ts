@@ -7,25 +7,19 @@ import { AssignedTask } from '../../repositories/task/assigned-task';
 import { SqliteAssignedTaskRepository } from '../../repositories/task/sqlite-assigned-task-repository';
 import { SqliteTaskRepository } from '../../repositories/task/sqlite-task-repository';
 import { Task } from '../../repositories/task/task';
-import { SqliteUserRepository } from '../../repositories/user/sqlite-user-repository';
-import { User } from '../../repositories/user/user';
 import { SqliteTaskListQuerier } from './sqlite-task-list-querier';
 
 test('queries newest tasks with pagination and an open filter', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
   db.exec(`PRAGMA foreign_keys = ON`);
-  const dbs = { modelDb: new SqliteDatabase(db) } as SqliteDatabases;
+  const dbs = { dataDb: new SqliteDatabase(db) } as SqliteDatabases;
   const signal = new AbortController().signal;
-  const userRepository = new SqliteUserRepository(dbs);
   const taskRepository = new SqliteTaskRepository(dbs);
   const assignedTaskRepository = new SqliteAssignedTaskRepository(dbs);
   const querier = new SqliteTaskListQuerier(dbs);
 
-  await userRepository.setup(signal);
   await taskRepository.setup(signal);
   await assignedTaskRepository.setup(signal);
-  await userRepository.insert(signal, new User('alice', null, 'hash', true, false));
-  await userRepository.insert(signal, new User('bob', null, 'hash', true, false));
 
   await insertTask(taskRepository, signal, 'open', 1000, null, false, null);
   await insertTask(taskRepository, signal, 'outdated', 2000, 2000, true, null);

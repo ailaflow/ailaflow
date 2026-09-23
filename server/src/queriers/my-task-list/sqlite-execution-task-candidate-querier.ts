@@ -5,7 +5,7 @@ export class SqliteExecutionTaskCandidateQuerier implements ExecutionTaskCandida
   private readonly db: SqliteDatabase;
 
   public constructor(dbs: SqliteDatabases) {
-    this.db = dbs.modelDb;
+    this.db = dbs.dataDb;
   }
 
   public async query(
