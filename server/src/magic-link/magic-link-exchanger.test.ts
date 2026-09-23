@@ -3,6 +3,7 @@ import test from 'node:test';
 import { AuthTokenRepository } from '../repositories/auth-token/auth-token-repository';
 import { AuthToken } from '../repositories/auth-token/auth-token';
 import { MagicLinkRepository } from '../repositories/auth-token/magic-link-repository';
+import { MagicLink } from '../repositories/auth-token/magic-link';
 import { UserRepository } from '../repositories/user/user-repository';
 import { User } from '../repositories/user/user';
 import { MagicLinkExchanger } from './magic-link-exchanger';
@@ -13,8 +14,8 @@ test('consumes a magic link and persists a non-admin auth token', async () => {
   const magicLinks: MagicLinkRepository = {
     setup: async () => {},
     insert: async () => {},
-    consume: async (_, token) => {
-      if (token !== 'valid-token' || consumed) {
+    consume: async (_, tokenHash) => {
+      if (tokenHash !== MagicLink.hashToken('valid-token') || consumed) {
         return null;
       }
       consumed = true;

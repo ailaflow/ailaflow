@@ -1,6 +1,6 @@
 import { DatabaseSync } from 'node:sqlite';
 import { ServerPaths } from './server-paths';
-import { mkdirSync } from 'node:fs';
+import { chmodSync, mkdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { AsyncMutex } from './async-mutex';
 import { Transaction } from './transaction';
@@ -12,7 +12,8 @@ export class SqliteDatabases {
 
   public constructor(serverPaths: ServerPaths) {
     const dataFolderPath = serverPaths.getAppDataFolderPath();
-    mkdirSync(dataFolderPath, { recursive: true });
+    mkdirSync(dataFolderPath, { recursive: true, mode: 0o700 });
+    ensurePermissions(dataFolderPath, 0o700);
 
     try {
       this.modelDb = this.create(join(dataFolderPath, 'model.db'));
@@ -28,6 +29,7 @@ export class SqliteDatabases {
       open: true
     });
     this.dbs.push(db);
+    ensurePermissions(filePath, 0o600);
     db.exec(`PRAGMA foreign_keys = ON`);
     return new SqliteDatabase(db);
   }
@@ -38,6 +40,12 @@ export class SqliteDatabases {
     }
     this.dbs.length = 0;
   };
+}
+
+function ensurePermissions(path: string, expectedMode: number): void {
+  if ((statSync(path).mode & 0o777) !== expectedMode) {
+    chmodSync(path, expectedMode);
+  }
 }
 
 export class SqliteDatabase {

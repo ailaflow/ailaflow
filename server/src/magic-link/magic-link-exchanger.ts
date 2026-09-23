@@ -2,6 +2,7 @@ import { AuthTokenRepository } from '../repositories/auth-token/auth-token-repos
 import { AuthToken } from '../repositories/auth-token/auth-token';
 import { MagicLinkRepository } from '../repositories/auth-token/magic-link-repository';
 import { UserRepository } from '../repositories/user/user-repository';
+import { MagicLink } from '../repositories/auth-token/magic-link';
 
 export class MagicLinkExchanger {
   public constructor(
@@ -11,7 +12,8 @@ export class MagicLinkExchanger {
   ) {}
 
   public async exchange(signal: AbortSignal, token: string): Promise<AuthToken | null> {
-    const userName = await this.magicLinkRepository.consume(signal, token, Date.now());
+    const tokenHash = MagicLink.hashToken(token);
+    const userName = await this.magicLinkRepository.consume(signal, tokenHash, Date.now());
     if (!userName) {
       return null;
     }

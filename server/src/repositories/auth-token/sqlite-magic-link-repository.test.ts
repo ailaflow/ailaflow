@@ -17,11 +17,14 @@ test('consumes a valid magic link only once', async () => {
   await userRepository.setup(signal);
   await repository.setup(signal);
   await userRepository.insert(signal, new User('alice', null, 'hash', true, false));
-  await repository.insert(signal, new MagicLink('secret-token', 'alice', 2_000));
+  await repository.insert(signal, new MagicLink('secret-token', MagicLink.hashToken('secret-token'), 'alice', 2_000));
 
-  assert.equal(await repository.consume(signal, 'wrong-token', 1_000), null);
-  assert.equal(await repository.consume(signal, 'secret-token', 1_000), 'alice');
-  assert.equal(await repository.consume(signal, 'secret-token', 1_000), null);
+  const storedRow = db.prepare(`SELECT tokenHash FROM magic_links`).get() as { tokenHash: string };
+  assert.equal(storedRow.tokenHash, MagicLink.hashToken('secret-token'));
+
+  assert.equal(await repository.consume(signal, MagicLink.hashToken('wrong-token'), 1_000), null);
+  assert.equal(await repository.consume(signal, MagicLink.hashToken('secret-token'), 1_000), 'alice');
+  assert.equal(await repository.consume(signal, MagicLink.hashToken('secret-token'), 1_000), null);
 
   db.close();
 });
@@ -36,12 +39,12 @@ test('rejects and deletes expired magic links', async () => {
   await userRepository.setup(signal);
   await repository.setup(signal);
   await userRepository.insert(signal, new User('alice', null, 'hash', true, false));
-  await repository.insert(signal, new MagicLink('expired-token', 'alice', 1_000));
+  await repository.insert(signal, new MagicLink('expired-token', MagicLink.hashToken('expired-token'), 'alice', 1_000));
 
-  assert.equal(await repository.consume(signal, 'expired-token', 1_000), null);
+  assert.equal(await repository.consume(signal, MagicLink.hashToken('expired-token'), 1_000), null);
   await repository.deleteExpired(signal, 1_000);
 
-  const row = db.prepare(`SELECT token FROM magic_links WHERE token = ?`).get('expired-token');
+  const row = db.prepare(`SELECT tokenHash FROM magic_links`).get();
   assert.equal(row, undefined);
   db.close();
 });
@@ -57,16 +60,14 @@ test('deletes all magic links for a user', async () => {
   await repository.setup(signal);
   await userRepository.insert(signal, new User('alice', null, 'hash', true, false));
   await userRepository.insert(signal, new User('bob', null, 'hash', true, false));
-  await repository.insert(signal, new MagicLink('alice-token-1', 'alice', 2_000));
-  await repository.insert(signal, new MagicLink('alice-token-2', 'alice', 3_000));
-  await repository.insert(signal, new MagicLink('bob-token', 'bob', 2_000));
+  await repository.insert(signal, new MagicLink('alice-token-1', MagicLink.hashToken('alice-token-1'), 'alice', 2_000));
+  await repository.insert(signal, new MagicLink('alice-token-2', MagicLink.hashToken('alice-token-2'), 'alice', 3_000));
+  await repository.insert(signal, new MagicLink('bob-token', MagicLink.hashToken('bob-token'), 'bob', 2_000));
 
   await repository.deleteForUsers(signal, 'alice');
 
-  const rows = db.prepare(`SELECT token FROM magic_links ORDER BY token`).all() as Array<{ token: string }>;
-  assert.deepEqual(
-    rows.map(row => row.token),
-    ['bob-token']
-  );
+  const rows = db.prepare(`SELECT tokenHash FROM magic_links`).all() as unknown as Array<{ tokenHash: string }>;
+  assert.equal(rows.length, 1);
+  assert.equal(rows[0].tokenHash, MagicLink.hashToken('bob-token'));
   db.close();
 });

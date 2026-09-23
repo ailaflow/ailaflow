@@ -5,6 +5,7 @@ import test from 'node:test';
 import { MagicLinkExchanger } from '../../magic-link/magic-link-exchanger';
 import { AuthTokenRepository } from '../../repositories/auth-token/auth-token-repository';
 import { MagicLinkRepository } from '../../repositories/auth-token/magic-link-repository';
+import { MagicLink } from '../../repositories/auth-token/magic-link';
 import { UserRepository } from '../../repositories/user/user-repository';
 import { User } from '../../repositories/user/user';
 import { EndpointError } from '../framework/endpoint-error';
@@ -15,8 +16,8 @@ test('exchanges a valid magic link without requiring authentication', async () =
   const magicLinks: MagicLinkRepository = {
     setup: async () => {},
     insert: async () => {},
-    consume: async (_, token) => {
-      if (token !== 'magic-token' || consumed) {
+    consume: async (_, tokenHash) => {
+      if (tokenHash !== MagicLink.hashToken('magic-token') || consumed) {
         return null;
       }
       consumed = true;

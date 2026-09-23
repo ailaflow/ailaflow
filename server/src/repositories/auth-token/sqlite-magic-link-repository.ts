@@ -13,7 +13,7 @@ export class SqliteMagicLinkRepository implements MagicLinkRepository {
     await this.db.write(db => {
       db.exec(`
         CREATE TABLE IF NOT EXISTS magic_links (
-          token TEXT PRIMARY KEY,
+          tokenHash TEXT PRIMARY KEY,
           userName TEXT NOT NULL,
           expiresAt INTEGER NOT NULL,
 
@@ -35,24 +35,24 @@ export class SqliteMagicLinkRepository implements MagicLinkRepository {
     await this.db.write(db => {
       db.prepare(
         `
-        INSERT INTO magic_links (token, userName, expiresAt)
+        INSERT INTO magic_links (tokenHash, userName, expiresAt)
         VALUES (?, ?, ?)
       `
-      ).run(magicLink.token, magicLink.userName, magicLink.expiresAt);
+      ).run(magicLink.tokenHash, magicLink.userName, magicLink.expiresAt);
     });
   }
 
-  public async consume(_: AbortSignal, token: string, now: number): Promise<string | null> {
+  public async consume(_: AbortSignal, tokenHash: string, now: number): Promise<string | null> {
     return this.db.write(db => {
       const row = db
         .prepare(
           `
           DELETE FROM magic_links
-          WHERE token = ? AND expiresAt > ?
+          WHERE tokenHash = ? AND expiresAt > ?
           RETURNING userName
         `
         )
-        .get(token, now) as { userName: string } | undefined;
+        .get(tokenHash, now) as { userName: string } | undefined;
       return row?.userName ?? null;
     });
   }
