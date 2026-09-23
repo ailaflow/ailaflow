@@ -65,12 +65,7 @@ export function DashboardPage() {
   return (
     <Portal>
       <DashboardView chat={<MyChat sessionKey="user:default" />}>
-        <DashboardPanelView
-          title="My Tasks"
-          variant="dashboard"
-          scrollable
-          action={data.tasks.tasks.length > PANEL_ITEM_LIMIT ? { label: 'View all', href: '/my-tasks' } : undefined}
-        >
+        <DashboardPanelView title="My Tasks" variant="dashboard" scrollable action={{ label: 'View all', href: '/my-tasks' }}>
           <DashboardListView
             items={data.tasks.tasks.slice(0, PANEL_ITEM_LIMIT).map(task => ({
               key: task.id,
@@ -87,7 +82,7 @@ export function DashboardPage() {
           title="My Notifications"
           variant="dashboard"
           scrollable
-          action={data.notifications.notifications.length > PANEL_ITEM_LIMIT ? { label: 'View all', href: '/my-notifications' } : undefined}
+          action={{ label: 'View all', href: '/my-notifications' }}
         >
           <DashboardListView
             items={data.notifications.notifications.slice(0, PANEL_ITEM_LIMIT).map(notification => ({

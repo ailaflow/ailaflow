@@ -31,9 +31,9 @@ export function DashboardListView(props: DashboardListViewProps) {
     <ul className="divide-y divide-slate-100">
       {props.items.map(item => {
         const content = (
-          <div className="flex min-w-0 flex-1 items-center gap-3">
+          <div className="flex min-w-0 flex-1 items-start gap-3">
             <div className="min-w-0 flex-1">
-              <div className="truncate text-sm font-medium text-slate-900">{item.title}</div>
+              <div className="whitespace-pre-wrap break-words text-sm font-medium text-slate-900">{item.title}</div>
             </div>
             {item.createdAt !== undefined ? (
               <time dateTime={new Date(item.createdAt).toISOString()} className="shrink-0 text-xs text-slate-500">
