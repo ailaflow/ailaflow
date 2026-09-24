@@ -617,23 +617,25 @@ export function useProcessEditorAi(state: ProcessEditorState, save: () => Promis
           return toolSuccess('Content was updated');
         },
         async formEditor_getInputJsonExample(arg) {
+          const variableName = ResourceNameNormalizer.removePrefix(arg.variableName, '$');
           const data = FormEditorOverlayUtils.getData(state);
-          const example = data.form.inputExamples.find(i => i.variableName === arg.variableName);
+          const example = data.form.inputExamples.find(i => i.variableName === variableName);
           if (!example) {
             return toolError('Cannot find the input variable attached to this form');
           }
           if (!example.exampleValue) {
-            return toolError(`No example value is set for variable "\$${arg.variableName}"`);
+            return toolError(`No example value is set for variable \$${variableName}`);
           }
           return {
             content: example.exampleValue
           };
         },
         async formEditor_setInputJsonExample(arg) {
+          const variableName = ResourceNameNormalizer.removePrefix(arg.variableName, '$');
           const data = FormEditorOverlayUtils.getData(state);
-          const result = FormEditorOverlayUtils.setInputJsonExample(state, data, arg.variableName, arg.content);
+          const result = FormEditorOverlayUtils.setInputJsonExample(state, data, variableName, arg.content);
           if (result === 'notInputVariable') {
-            return toolError(`Variable "\$${arg.variableName}" is not defined as an input variable for this form`);
+            return toolError(`Variable \$${variableName} is not defined as an input variable for this form`);
           }
           if (result === 'undefinedVariable') {
             return toolError('Cannot find the variable');

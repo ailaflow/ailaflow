@@ -116,19 +116,21 @@ function InputExampleRow(props: InputExampleRowProps) {
   return (
     <div className={`rounded-md border p-3 ${props.error ? 'border-red-300 bg-red-50/30' : 'border-slate-200'}`}>
       <div className="truncate font-mono text-sm font-medium text-slate-800">${props.inputExample.variableName}</div>
-      <label className="mt-3 block">
-        <span className="mb-1 block text-xs text-slate-500">Example JSON value (optional)</span>
-        <textarea
-          rows={3}
-          value={props.inputExample.exampleValue ?? ''}
-          onChange={event => props.onExampleValueChange(event.target.value)}
-          spellCheck={false}
-          placeholder={'{"example": true}'}
-          className={`w-full resize-y rounded-md border bg-white px-3 py-2 font-mono text-sm leading-5 text-slate-800 outline-none transition-colors ${
-            props.error ? 'border-red-300 focus:border-red-400' : 'border-slate-300 focus:border-blue-400'
+      <div className="mt-3">
+        <div className="mb-1 text-xs text-slate-500">Example JSON value (optional)</div>
+        <div
+          className={`flex h-24 min-h-24 resize-y overflow-hidden rounded-md border bg-white transition-colors ${
+            props.error ? 'border-red-300 focus-within:border-red-400' : 'border-slate-300 focus-within:border-blue-400'
           }`}
-        />
-      </label>
+        >
+          <CodeMirror
+            value={props.inputExample.exampleValue ?? ''}
+            language="json"
+            ariaLabel={`Example JSON value for ${props.inputExample.variableName}`}
+            onChange={props.onExampleValueChange}
+          />
+        </div>
+      </div>
       {props.error && <div className="mt-2 text-xs text-red-700">{props.error}</div>}
     </div>
   );

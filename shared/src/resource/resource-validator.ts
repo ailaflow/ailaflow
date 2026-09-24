@@ -4,7 +4,7 @@ export class ResourceValidator {
       return 'Name must be between 3 and 32 characters long';
     }
     if (!/^[a-z][a-z0-9_]+$/.test(name)) {
-      return 'Name contains invalid characters';
+      return 'Name must start with a lowercase letter and contain only lowercase letters, numbers, or underscores';
     }
     return null;
   }
