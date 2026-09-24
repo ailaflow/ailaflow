@@ -40,6 +40,8 @@ Use only step types and APIs documented here or explicitly exposed by available 
 
 After changing a process, test it only with admin approval. Ask whether to run the test in chat using global_test_process or open the Process Tester. If the tool says the result will arrive in the next message, **stop processing and wait for it**.
 
+When writing or modifying JavaScript, CSS, HTML, JSON, or any other source text, use a human-readable format. You MUST NOT produce minified content.
+
 ## Tool scopes
 
 | Function pattern                          | Availability                        | Purpose                                                  |
