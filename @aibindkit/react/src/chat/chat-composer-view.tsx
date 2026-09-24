@@ -74,7 +74,9 @@ export function ChatComposerView(props: ChatComposerViewProps) {
     }
 
     event.preventDefault();
-    props.onSendMessage();
+    if (!props.isWorking) {
+      props.onSendMessage();
+    }
   }
 
   function onStartNewConversationClicked() {
@@ -86,6 +88,7 @@ export function ChatComposerView(props: ChatComposerViewProps) {
 
   return (
     <div className="abk-chat-composer">
+      {props.isWorking && <div role="progressbar" aria-label="Assistant is working" className="abk-chat-working-progress" />}
       <div className="abk-chat-composer-inner">
         <textarea
           ref={inputRef}
@@ -96,14 +99,15 @@ export function ChatComposerView(props: ChatComposerViewProps) {
           placeholder="Type a message..."
           className="abk-chat-input"
         />
-        {props.isWorking && (
+        {props.isWorking ? (
           <button type="button" onClick={props.onStopClicked} className="abk-chat-send" aria-label="Stop" title="Stop">
             <SvgIcon name="stop" />
           </button>
+        ) : (
+          <button type="button" onClick={props.onSendMessage} className="abk-chat-send" aria-label="Send" title="Send">
+            <SvgIcon name="send" />
+          </button>
         )}
-        <button type="button" onClick={props.onSendMessage} className="abk-chat-send" aria-label="Send" title="Send">
-          <SvgIcon name="send" />
-        </button>
         <div ref={menuRef} className="abk-chat-menu">
           <button
             type="button"

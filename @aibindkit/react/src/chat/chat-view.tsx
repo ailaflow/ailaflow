@@ -29,6 +29,8 @@ export interface ChatViewProps {
   messages: ChatMessageUpdate[];
   message: string;
   contextUsage?: ChatContextUsageUpdate;
+  emptyTitle?: string;
+  emptyText?: string;
   connectionError: string | null;
   messageFilter: ChatMessageFilter;
   messageRenderer?: ChatMessageRenderer;
@@ -56,7 +58,7 @@ export function ChatView(props: ChatViewProps) {
         {props.sessionToken === null && !props.connectionError ? (
           <LoadingChatView />
         ) : props.messages.length === 0 ? (
-          <EmptyChatView />
+          <EmptyChatView emptyTitle={props.emptyTitle} emptyText={props.emptyText} />
         ) : (
           props.messages.map(update => (
             <ChatUpdateView
@@ -102,8 +104,13 @@ function ConnectionErrorBar(props: { error: string; onReconnectClicked: () => vo
   );
 }
 
-function EmptyChatView() {
-  return <ChatStatusView title="Start a conversation" text="Type a message below and the assistant will respond here." />;
+function EmptyChatView(props: { emptyTitle?: string; emptyText?: string }) {
+  return (
+    <ChatStatusView
+      title={props.emptyTitle ?? 'Start a conversation'}
+      text={props.emptyText ?? 'Type a message below and the assistant will respond here.'}
+    />
+  );
 }
 
 function LoadingChatView() {

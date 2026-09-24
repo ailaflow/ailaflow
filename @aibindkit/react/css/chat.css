@@ -337,10 +337,52 @@
 }
 
 .abk-chat-composer {
+  position: relative;
+  z-index: 1;
   flex: 0 0 auto;
   padding: 12px;
   border-top: 1px solid #e2e8f0;
   background: #f8fafc;
+}
+
+.abk-chat-working-progress {
+  position: absolute;
+  top: -1px;
+  right: 0;
+  left: 0;
+  height: 2px;
+  overflow: hidden;
+  background: #e2e8f0;
+}
+
+.abk-chat-working-progress::after {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 18%;
+  border-radius: 999px;
+  background: #475569;
+  content: '';
+  animation: abk-chat-working-progress-slide 1.2s ease-in-out infinite alternate;
+  will-change: transform;
+}
+
+@keyframes abk-chat-working-progress-slide {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(455.56%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .abk-chat-working-progress::after {
+    animation: none;
+    transform: translateX(227.78%);
+  }
 }
 
 .abk-chat-composer-inner {

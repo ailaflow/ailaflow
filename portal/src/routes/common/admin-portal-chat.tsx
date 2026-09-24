@@ -22,6 +22,8 @@ export function AdminPortalChat() {
       messageFilter={messageFilter}
       frontendTools={toolDescriptors}
       frontEndToolCallsHandler={frontEndToolCallsHandler}
+      emptyTitle="Hello, I’m your Admin Assistant"
+      emptyText="What would you like to build or change?"
     />
   );
 }

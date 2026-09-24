@@ -20,6 +20,8 @@ export interface ChatProps {
   sessionKey: string;
   assistantName?: string;
   userName?: string;
+  emptyTitle?: string;
+  emptyText?: string;
   messageRenderer?: ChatMessageRenderer;
   messageFilter?: ChatMessageFilter;
   frontEndToolCallsHandler?: FrontEndToolCallsHandler;
@@ -187,7 +189,7 @@ export function Chat(props: ChatProps) {
   }, [request, reconnectKey, props.transport]);
 
   async function onSendMessage() {
-    if (state.sessionToken && message.length > 0) {
+    if (state.sessionToken && !state.isWorking && message.length > 0) {
       const signal = AbortSignal.timeout(3_000);
       await props.transport.sendChatMessage(signal, {
         sessionToken: state.sessionToken,
@@ -230,6 +232,8 @@ export function Chat(props: ChatProps) {
       messages={state.messages}
       message={message}
       contextUsage={state.contextUsage}
+      emptyTitle={props.emptyTitle}
+      emptyText={props.emptyText}
       messageRenderer={props.messageRenderer}
       messageFilter={props.messageFilter ?? defaultMessageFilter}
       onReconnectClicked={onReconnectClicked}

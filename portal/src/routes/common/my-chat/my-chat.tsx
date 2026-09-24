@@ -45,6 +45,8 @@ export function MyChat(props: MyChatProps) {
         userName={`@${props.testUserName ?? session.userName}`}
         transport={apiClient.chat}
         sessionKey={props.sessionKey}
+        emptyTitle="Hello I’m Aila"
+        emptyText="What would you like to do?"
         messageFilter={messageFilter}
         messageRenderer={(id, _, completedMessage, completedMessageIndex, sessionToken) =>
           messageRenderer(
