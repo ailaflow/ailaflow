@@ -1,6 +1,6 @@
 import { ProcessCronJobRunStatus, ProcessExecutionOutcome, ProcessExecutionOutcomeType } from '@ailaflow/shared';
 import { Logger } from '../core/logger';
-import { ProcessCronJobExpressionParser } from '../crons/process-cron-job-expression-parser';
+import { ProcessCronJobExpressionParser } from '../repositories/process-cron-job/process-cron-job-expression-parser';
 import { ProcessCronJob } from '../repositories/process-cron-job/process-cron-job';
 import { ProcessCronJobRepository } from '../repositories/process-cron-job/process-cron-job-repository';
 import { Scheduler } from './scheduler';
