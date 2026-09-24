@@ -42,9 +42,9 @@ After logging in, open **Configuration**. AilaFlow will show you what still need
 
 ## License
 
-AilaFlow is distributed under the [AilaFlow Fair-Code License 1.0](./LICENSE).
+AilaFlow is distributed under the [AilaFlow Fair-Code License 1.0](./LICENSE.md).
 
-Home use is free, including personal, educational, and eligible non-profit use. AilaFlow is also free for professional teams with up to 3 Authorized Users. See the [LICENSE](./LICENSE) for the complete terms.
+Home use is free, including personal, educational, and eligible non-profit use. AilaFlow is also free for professional teams with up to 3 Authorized Users. See the [LICENSE.md](./LICENSE.md) for the complete terms.
 
 ## Contributing
 
