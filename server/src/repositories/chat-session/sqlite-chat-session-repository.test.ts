@@ -9,7 +9,7 @@ import { SqliteChatSessionRepository } from './sqlite-chat-session-repository';
 
 test('upserts and restores chat-session snapshots', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
-  const repository = new SqliteChatSessionRepository({ dataDb: new SqliteDatabase(db) } as SqliteDatabases);
+  const repository = new SqliteChatSessionRepository({ chatDb: new SqliteDatabase(db) } as SqliteDatabases);
   const signal = new AbortController().signal;
   await repository.setup(signal);
 
@@ -51,7 +51,7 @@ test('upserts and restores chat-session snapshots', async () => {
 
 test('serializes data writes behind an externally owned transaction', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
-  const repository = new SqliteChatSessionRepository({ dataDb: new SqliteDatabase(db) } as SqliteDatabases);
+  const repository = new SqliteChatSessionRepository({ chatDb: new SqliteDatabase(db) } as SqliteDatabases);
   const signal = new AbortController().signal;
   await repository.setup(signal);
 

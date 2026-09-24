@@ -3,6 +3,8 @@ import { EventEmitter } from 'node:events';
 import { DatabaseSync } from 'node:sqlite';
 import test from 'node:test';
 import { Request } from 'express';
+import { Cipher } from '../../core/cipher/cipher';
+import { SeedCipherKeyStore } from '../../core/cipher/seed-cipher-key-store';
 import { SqliteDatabase } from '../../core/sqlite-database';
 import { SqliteDatabases } from '../../core/sqlite-databases';
 import { EventBus } from '../../events/event-bus';
@@ -25,7 +27,7 @@ test('self endpoints use the authenticated user and admin endpoints use the rout
   db.exec(`PRAGMA foreign_keys = ON`);
   const dbs = { modelDb: new SqliteDatabase(db) } as SqliteDatabases;
   const userRepository = new SqliteUserRepository(dbs);
-  const repository = new SqliteTelegramConfigurationRepository(dbs);
+  const repository = new SqliteTelegramConfigurationRepository(dbs, new Cipher(new SeedCipherKeyStore('telegram-endpoints-test')));
   const manager = new TelegramConfigurationManager(repository, new FakeTelegramBotApiClient(), new EventBus());
   const signal = new AbortController().signal;
   await userRepository.setup(signal);

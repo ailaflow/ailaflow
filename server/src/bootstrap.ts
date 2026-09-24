@@ -322,8 +322,8 @@ export async function bootstrap(registry: CleanupRegistry, signal: AbortSignal) 
     tableRepository = new SqliteTableRepository(sqliteDatabases);
     tableDataRepository = new SqliteTableDataRepository(sqliteDatabases);
     llmConfigurationRepository = new SqliteLlmConfigurationRepository(sqliteDatabases, cipher);
-    telegramConfigurationRepository = new SqliteTelegramConfigurationRepository(sqliteDatabases);
-    slackConfigurationRepository = new SqliteSlackConfigurationRepository(sqliteDatabases);
+    telegramConfigurationRepository = new SqliteTelegramConfigurationRepository(sqliteDatabases, cipher);
+    slackConfigurationRepository = new SqliteSlackConfigurationRepository(sqliteDatabases, cipher);
     slackUserDirectoryRepository = new SqliteSlackUserDirectoryRepository(sqliteDatabases);
     slackUserMappingRepository = new SqliteSlackUserMappingRepository(sqliteDatabases);
     slackInboundEventRepository = new SqliteSlackInboundEventRepository(sqliteDatabases);

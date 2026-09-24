@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
 import test from 'node:test';
+import { Cipher } from '../core/cipher/cipher';
+import { SeedCipherKeyStore } from '../core/cipher/seed-cipher-key-store';
 import { SqliteDatabase } from '../core/sqlite-database';
 import { SqliteDatabases } from '../core/sqlite-databases';
 import { EventBus } from '../events/event-bus';
@@ -19,7 +21,7 @@ test('manages user Telegram configurations without exposing bot tokens', async (
   db.exec(`PRAGMA foreign_keys = ON`);
   const dbs = { modelDb: new SqliteDatabase(db) } as SqliteDatabases;
   const userRepository = new SqliteUserRepository(dbs);
-  const repository = new SqliteTelegramConfigurationRepository(dbs);
+  const repository = new SqliteTelegramConfigurationRepository(dbs, new Cipher(new SeedCipherKeyStore('telegram-manager-test')));
   const eventBus = new EventBus();
   const eventHandler = new RecordingTelegramConfigurationChangedEventHandler();
   eventBus.registerHandler(eventHandler);
@@ -83,7 +85,7 @@ test('rejects invalid Telegram bot identities and webhook configurations', async
   db.exec(`PRAGMA foreign_keys = ON`);
   const dbs = { modelDb: new SqliteDatabase(db) } as SqliteDatabases;
   const userRepository = new SqliteUserRepository(dbs);
-  const repository = new SqliteTelegramConfigurationRepository(dbs);
+  const repository = new SqliteTelegramConfigurationRepository(dbs, new Cipher(new SeedCipherKeyStore('telegram-manager-invalid-test')));
   const eventBus = new EventBus();
   const signal = new AbortController().signal;
   await userRepository.setup(signal);

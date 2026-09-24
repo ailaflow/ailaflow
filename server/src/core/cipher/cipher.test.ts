@@ -42,6 +42,9 @@ test('encrypts authenticated data with a unique initialization vector', async ()
   assert.notEqual(first, second);
   assert.equal(await cipher.decryptData(first), 'zażółć 🚀');
   assert.equal(await cipher.decryptData(await cipher.encryptData('')), '');
+  assert.equal(await cipher.encryptDataIfPresent(null), null);
+  assert.equal(await cipher.decryptDataIfPresent(null), null);
+  assert.equal(await cipher.decryptDataIfPresent(await cipher.encryptDataIfPresent('')), '');
 
   const lastCharacter = first.endsWith('A') ? 'B' : 'A';
   const tampered = `${first.slice(0, -1)}${lastCharacter}`;

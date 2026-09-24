@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
 import test from 'node:test';
+import { Cipher } from '../../../core/cipher/cipher';
+import { SeedCipherKeyStore } from '../../../core/cipher/seed-cipher-key-store';
 import { SqliteDatabase } from '../../../core/sqlite-database';
 import { SqliteDatabases } from '../../../core/sqlite-databases';
 import { SqliteUserRepository } from '../../user/sqlite-user-repository';
@@ -13,7 +15,7 @@ test('persists Telegram bot configurations per user and channel', async () => {
   db.exec(`PRAGMA foreign_keys = ON`);
   const dbs = { modelDb: new SqliteDatabase(db) } as SqliteDatabases;
   const userRepository = new SqliteUserRepository(dbs);
-  const repository = new SqliteTelegramConfigurationRepository(dbs);
+  const repository = new SqliteTelegramConfigurationRepository(dbs, new Cipher(new SeedCipherKeyStore('telegram-repository-test')));
   const signal = new AbortController().signal;
   await userRepository.setup(signal);
   await repository.setup(signal);
@@ -43,6 +45,12 @@ test('persists Telegram bot configurations per user and channel', async () => {
   assert.equal((await repository.tryGet(signal, 'bob', 'default'))?.botToken, 'bob-token');
   assert.equal((await repository.tryGet(signal, 'alice', 'default'))?.telegramChatId, 'chat-1');
   assert.equal((await repository.getAll(signal)).length, 3);
+  const storedConfiguration = db
+    .prepare(`SELECT botToken, telegramChatId, linkCode FROM telegram_bot_configurations WHERE userName = ? AND channelName = ?`)
+    .get('alice', 'default') as { botToken: string; telegramChatId: string; linkCode: string };
+  assert.notEqual(storedConfiguration.botToken, 'alice-token');
+  assert.equal(storedConfiguration.telegramChatId, 'chat-1');
+  assert.notEqual(storedConfiguration.linkCode, 'link-1');
 
   await repository.connectTelegramChat(signal, 'alice', 'default', 'chat-2');
   await repository.updateLastUpdateId(signal, 'alice', 'default', 42);

@@ -1,13 +1,23 @@
 import { SqliteDatabase } from '../../../core/sqlite-database';
 import { SqliteDatabases } from '../../../core/sqlite-databases';
 import { Transaction } from '../../../core/transaction';
+import { Cipher } from '../../../core/cipher/cipher';
 import { SlackConfigurationRepository } from './slack-configuration-repository';
 import { SlackConfiguration } from './slack-types';
+
+interface SlackConfigurationRow extends Omit<SlackConfiguration, 'appToken' | 'botToken'> {
+  id: number;
+  appToken: string;
+  botToken: string;
+}
 
 export class SqliteSlackConfigurationRepository implements SlackConfigurationRepository {
   private readonly db: SqliteDatabase;
 
-  public constructor(databases: SqliteDatabases) {
+  public constructor(
+    databases: SqliteDatabases,
+    private readonly cipher: Cipher
+  ) {
     this.db = databases.modelDb;
   }
 
@@ -33,17 +43,25 @@ export class SqliteSlackConfigurationRepository implements SlackConfigurationRep
   }
 
   public async tryGet(_: AbortSignal): Promise<SlackConfiguration | null> {
-    return this.db.read(db => {
-      const row = db.prepare(`SELECT * FROM slack_configuration WHERE id = 1`).get() as (SlackConfiguration & { id: number }) | undefined;
-      if (!row) {
-        return null;
-      }
-      const { id: _id, ...configuration } = row;
-      return configuration;
-    });
+    const row = await this.db.read(
+      db => db.prepare(`SELECT * FROM slack_configuration WHERE id = 1`).get() as SlackConfigurationRow | undefined
+    );
+    if (!row) {
+      return null;
+    }
+    const { id: _id, appToken: encryptedAppToken, botToken: encryptedBotToken, ...configuration } = row;
+    const [appToken, botToken] = await Promise.all([
+      this.cipher.decryptData(encryptedAppToken),
+      this.cipher.decryptData(encryptedBotToken)
+    ]);
+    return { ...configuration, appToken, botToken };
   }
 
   public async save(_: AbortSignal, configuration: SlackConfiguration, transaction?: Transaction): Promise<void> {
+    const [encryptedAppToken, encryptedBotToken] = await Promise.all([
+      this.cipher.encryptData(configuration.appToken),
+      this.cipher.encryptData(configuration.botToken)
+    ]);
     await this.db.write(db => {
       db.prepare(
         `
@@ -62,8 +80,8 @@ export class SqliteSlackConfigurationRepository implements SlackConfigurationRep
           updatedAt = excluded.updatedAt
       `
       ).run(
-        configuration.appToken,
-        configuration.botToken,
+        encryptedAppToken,
+        encryptedBotToken,
         configuration.appId,
         configuration.workspaceId,
         configuration.workspaceName,

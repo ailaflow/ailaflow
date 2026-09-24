@@ -67,6 +67,10 @@ export class Cipher {
     ].join('.');
   }
 
+  public encryptDataIfPresent(data: string | null): Promise<string | null> {
+    return data === null ? Promise.resolve(null) : this.encryptData(data);
+  }
+
   public async decryptData(encryptedData: string): Promise<string> {
     const dataEncryptionKey = this.keyStore.getKey(CipherKey.DataEncryption);
 
@@ -88,6 +92,10 @@ export class Cipher {
     } catch (error) {
       throw new Error('Encrypted data is invalid or has been tampered with', { cause: error });
     }
+  }
+
+  public decryptDataIfPresent(encryptedData: string | null): Promise<string | null> {
+    return encryptedData === null ? Promise.resolve(null) : this.decryptData(encryptedData);
   }
 }
 

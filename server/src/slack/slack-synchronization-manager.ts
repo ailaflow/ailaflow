@@ -200,7 +200,6 @@ export class SlackSynchronizationManager implements SlackRuntimeHealthProvider {
       slackChannelId: event.channel as string,
       slackMessageTs: event.ts as string,
       text: typeof event.text === 'string' ? event.text : null,
-      eventPayload: JSON.stringify(socketEvent.body),
       status: SlackInboundEventStatus.PENDING,
       attemptCount: 0,
       nextAttemptAt: null,

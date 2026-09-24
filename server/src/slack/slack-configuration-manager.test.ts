@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
 import test from 'node:test';
+import { Cipher } from '../core/cipher/cipher';
+import { SeedCipherKeyStore } from '../core/cipher/seed-cipher-key-store';
 import { SqliteDatabase } from '../core/sqlite-database';
 import { SqliteDatabases } from '../core/sqlite-databases';
 import { EventBus } from '../events/event-bus';
@@ -17,7 +19,7 @@ test('disconnect removes mappings and configuration but preserves the cached Sla
   database.exec(`PRAGMA foreign_keys = ON`);
   const databases = { modelDb: new SqliteDatabase(database) } as SqliteDatabases;
   const users = new SqliteUserRepository(databases);
-  const configuration = new SqliteSlackConfigurationRepository(databases);
+  const configuration = new SqliteSlackConfigurationRepository(databases, new Cipher(new SeedCipherKeyStore('slack-configuration-test')));
   const directory = new SqliteSlackUserDirectoryRepository(databases);
   const mappings = new SqliteSlackUserMappingRepository(databases);
   const signal = new AbortController().signal;

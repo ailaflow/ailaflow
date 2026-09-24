@@ -7,6 +7,7 @@ import { SqliteDatabase } from './sqlite-database';
 export class SqliteDatabases {
   public readonly modelDb: SqliteDatabase;
   public readonly dataDb: SqliteDatabase;
+  public readonly chatDb: SqliteDatabase;
   private readonly dbs: DatabaseSync[] = [];
 
   public constructor(serverPaths: ServerPaths) {
@@ -17,6 +18,7 @@ export class SqliteDatabases {
     try {
       this.modelDb = this.create(join(dataFolderPath, 'model.db'));
       this.dataDb = this.create(join(dataFolderPath, 'data.db'));
+      this.chatDb = this.create(join(dataFolderPath, 'chat.db'));
     } catch (e) {
       this.dispose();
       throw e;

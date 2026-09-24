@@ -95,8 +95,8 @@ export class SqliteLlmConfigurationRepository implements LlmConfigurationReposit
 
   public async insertProvider(_: AbortSignal, provider: LlmProviderConfiguration, transaction?: Transaction): Promise<void> {
     const [encryptedUrl, encryptedApiKey] = await Promise.all([
-      this.encryptWhenPresent(provider.url),
-      this.encryptWhenPresent(provider.apiKey)
+      this.cipher.encryptDataIfPresent(provider.url),
+      this.cipher.encryptDataIfPresent(provider.apiKey)
     ]);
     try {
       await this.db.write(db => {
@@ -119,8 +119,8 @@ export class SqliteLlmConfigurationRepository implements LlmConfigurationReposit
 
   public async updateProvider(_: AbortSignal, provider: LlmProviderConfiguration, transaction?: Transaction): Promise<void> {
     const [encryptedUrl, encryptedApiKey] = await Promise.all([
-      this.encryptWhenPresent(provider.url),
-      this.encryptWhenPresent(provider.apiKey)
+      this.cipher.encryptDataIfPresent(provider.url),
+      this.cipher.encryptDataIfPresent(provider.apiKey)
     ]);
     try {
       await this.db.write(db => {
@@ -193,16 +193,8 @@ export class SqliteLlmConfigurationRepository implements LlmConfigurationReposit
 
   private async mapProvider(row: ProviderRow): Promise<LlmProviderConfiguration> {
     const type = row.type as LlmProviderType;
-    const [url, apiKey] = await Promise.all([this.decryptWhenPresent(row.url), this.decryptWhenPresent(row.apiKey)]);
+    const [url, apiKey] = await Promise.all([this.cipher.decryptDataIfPresent(row.url), this.cipher.decryptDataIfPresent(row.apiKey)]);
     return new LlmProviderConfiguration(row.id, row.name, type, url, apiKey, JSON.parse(row.models) as LlmModelProviderConfiguration[]);
-  }
-
-  private encryptWhenPresent(value: string | null): Promise<string | null> {
-    return value === null ? Promise.resolve(null) : this.cipher.encryptData(value);
-  }
-
-  private decryptWhenPresent(value: string | null): Promise<string | null> {
-    return value === null ? Promise.resolve(null) : this.cipher.decryptData(value);
   }
 }
 

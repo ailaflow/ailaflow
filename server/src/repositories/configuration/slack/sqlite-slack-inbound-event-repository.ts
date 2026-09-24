@@ -7,7 +7,7 @@ export class SqliteSlackInboundEventRepository implements SlackInboundEventRepos
   private readonly db: SqliteDatabase;
 
   public constructor(databases: SqliteDatabases) {
-    this.db = databases.modelDb;
+    this.db = databases.chatDb;
   }
 
   public async setup(_: AbortSignal): Promise<void> {
@@ -21,7 +21,6 @@ export class SqliteSlackInboundEventRepository implements SlackInboundEventRepos
             slackChannelId TEXT NOT NULL,
             slackMessageTs TEXT NOT NULL,
             text TEXT,
-            eventPayload TEXT NOT NULL,
             status INTEGER NOT NULL,
             attemptCount INTEGER NOT NULL,
             nextAttemptAt INTEGER,
@@ -41,9 +40,9 @@ export class SqliteSlackInboundEventRepository implements SlackInboundEventRepos
           .prepare(
             `
             INSERT OR IGNORE INTO slack_inbound_events (
-              eventId, workspaceId, slackUserId, slackChannelId, slackMessageTs, text, eventPayload,
+              eventId, workspaceId, slackUserId, slackChannelId, slackMessageTs, text,
               status, attemptCount, nextAttemptAt, lastError, receivedAt, processedAt
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
           `
           )
           .run(
@@ -53,7 +52,6 @@ export class SqliteSlackInboundEventRepository implements SlackInboundEventRepos
             event.slackChannelId,
             event.slackMessageTs,
             event.text,
-            event.eventPayload,
             event.status,
             event.attemptCount,
             event.nextAttemptAt,

@@ -3,6 +3,7 @@ import { SqliteDatabases } from '../../../core/sqlite-databases';
 import { TelegramBotConfiguration } from './telegram-bot-configuration';
 import { TelegramConfigurationRepository, TelegramConfigurationRepositoryError } from './telegram-configuration-repository';
 import { Transaction } from '../../../core/transaction';
+import { Cipher } from '../../../core/cipher/cipher';
 
 interface TelegramConfigurationRow {
   userName: string;
@@ -18,7 +19,10 @@ interface TelegramConfigurationRow {
 export class SqliteTelegramConfigurationRepository implements TelegramConfigurationRepository {
   private readonly db: SqliteDatabase;
 
-  public constructor(dbs: SqliteDatabases) {
+  public constructor(
+    dbs: SqliteDatabases,
+    private readonly cipher: Cipher
+  ) {
     this.db = dbs.modelDb;
   }
 
@@ -52,8 +56,8 @@ export class SqliteTelegramConfigurationRepository implements TelegramConfigurat
   }
 
   public async getAll(_: AbortSignal): Promise<TelegramBotConfiguration[]> {
-    return this.db.read(db => {
-      const rows = db
+    const rows = await this.db.read(db => {
+      return db
         .prepare(
           `
           SELECT userName, channelName, botToken, botId, botUserName, telegramChatId, linkCode, lastUpdateId
@@ -62,13 +66,13 @@ export class SqliteTelegramConfigurationRepository implements TelegramConfigurat
         `
         )
         .all() as unknown as TelegramConfigurationRow[];
-      return rows.map(mapConfiguration);
     });
+    return Promise.all(rows.map(row => this.mapConfiguration(row)));
   }
 
   public async getForUser(_: AbortSignal, userName: string): Promise<TelegramBotConfiguration[]> {
-    return this.db.read(db => {
-      const rows = db
+    const rows = await this.db.read(db => {
+      return db
         .prepare(
           `
           SELECT userName, channelName, botToken, botId, botUserName, telegramChatId, linkCode, lastUpdateId
@@ -78,13 +82,13 @@ export class SqliteTelegramConfigurationRepository implements TelegramConfigurat
         `
         )
         .all(userName) as unknown as TelegramConfigurationRow[];
-      return rows.map(mapConfiguration);
     });
+    return Promise.all(rows.map(row => this.mapConfiguration(row)));
   }
 
   public async tryGet(_: AbortSignal, userName: string, channelName: string): Promise<TelegramBotConfiguration | null> {
-    return this.db.read(db => {
-      const row = db
+    const row = await this.db.read(db => {
+      return db
         .prepare(
           `
           SELECT userName, channelName, botToken, botId, botUserName, telegramChatId, linkCode, lastUpdateId
@@ -94,11 +98,15 @@ export class SqliteTelegramConfigurationRepository implements TelegramConfigurat
         `
         )
         .get(userName, channelName) as TelegramConfigurationRow | undefined;
-      return row ? mapConfiguration(row) : null;
     });
+    return row ? this.mapConfiguration(row) : null;
   }
 
   public async upsert(_: AbortSignal, configuration: TelegramBotConfiguration, transaction?: Transaction): Promise<void> {
+    const [encryptedBotToken, encryptedLinkCode] = await Promise.all([
+      this.cipher.encryptData(configuration.botToken),
+      this.cipher.encryptDataIfPresent(configuration.linkCode)
+    ]);
     try {
       await this.db.write(db => {
         db.prepare(
@@ -118,11 +126,11 @@ export class SqliteTelegramConfigurationRepository implements TelegramConfigurat
         ).run(
           configuration.userName,
           configuration.channelName,
-          configuration.botToken,
+          encryptedBotToken,
           configuration.botId,
           configuration.botUserName,
           configuration.telegramChatId,
-          configuration.linkCode,
+          encryptedLinkCode,
           configuration.lastUpdateId
         );
       }, transaction);
@@ -173,19 +181,20 @@ export class SqliteTelegramConfigurationRepository implements TelegramConfigurat
       transaction
     );
   }
-}
 
-function mapConfiguration(row: TelegramConfigurationRow): TelegramBotConfiguration {
-  return new TelegramBotConfiguration(
-    row.userName,
-    row.channelName,
-    row.botToken,
-    row.botId,
-    row.botUserName,
-    row.telegramChatId,
-    row.linkCode,
-    row.lastUpdateId
-  );
+  private async mapConfiguration(row: TelegramConfigurationRow): Promise<TelegramBotConfiguration> {
+    const [botToken, linkCode] = await Promise.all([this.cipher.decryptData(row.botToken), this.cipher.decryptDataIfPresent(row.linkCode)]);
+    return new TelegramBotConfiguration(
+      row.userName,
+      row.channelName,
+      botToken,
+      row.botId,
+      row.botUserName,
+      row.telegramChatId,
+      linkCode,
+      row.lastUpdateId
+    );
+  }
 }
 
 function isDuplicateBotIdError(error: unknown): boolean {

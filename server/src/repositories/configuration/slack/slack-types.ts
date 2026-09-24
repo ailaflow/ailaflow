@@ -60,7 +60,6 @@ export interface SlackInboundEvent {
   slackChannelId: string;
   slackMessageTs: string;
   text: string | null;
-  eventPayload: string;
   status: SlackInboundEventStatus;
   attemptCount: number;
   nextAttemptAt: number | null;

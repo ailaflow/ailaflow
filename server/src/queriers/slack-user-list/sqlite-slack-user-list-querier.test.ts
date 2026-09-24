@@ -2,6 +2,8 @@ import { SlackWelcomeStatus } from '@ailaflow/shared';
 import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
 import test from 'node:test';
+import { Cipher } from '../../core/cipher/cipher';
+import { SeedCipherKeyStore } from '../../core/cipher/seed-cipher-key-store';
 import { SqliteDatabase } from '../../core/sqlite-database';
 import { SqliteDatabases } from '../../core/sqlite-databases';
 import { SqliteSlackConfigurationRepository } from '../../repositories/configuration/slack/sqlite-slack-configuration-repository';
@@ -16,7 +18,7 @@ test('queries Slack user DTOs with mappings, filtering, and literal search', asy
   database.exec(`PRAGMA foreign_keys = ON`);
   const databases = { modelDb: new SqliteDatabase(database) } as SqliteDatabases;
   const users = new SqliteUserRepository(databases);
-  const configuration = new SqliteSlackConfigurationRepository(databases);
+  const configuration = new SqliteSlackConfigurationRepository(databases, new Cipher(new SeedCipherKeyStore('slack-user-list-test')));
   const directory = new SqliteSlackUserDirectoryRepository(databases);
   const mappings = new SqliteSlackUserMappingRepository(databases);
   const querier = new SqliteSlackUserListQuerier(databases);

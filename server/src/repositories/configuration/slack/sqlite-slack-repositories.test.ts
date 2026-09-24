@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
 import test from 'node:test';
+import { Cipher } from '../../../core/cipher/cipher';
+import { SeedCipherKeyStore } from '../../../core/cipher/seed-cipher-key-store';
 import { SqliteDatabase } from '../../../core/sqlite-database';
 import { SqliteDatabases } from '../../../core/sqlite-databases';
 import { SqliteUserRepository } from '../../user/sqlite-user-repository';
@@ -14,10 +16,11 @@ import { SqliteSlackUserMappingRepository } from './sqlite-slack-user-mapping-re
 
 test('persists Slack configuration, directory, atomic mappings, and inbound deduplication', async () => {
   const database = new DatabaseSync(':memory:', { open: true });
+  const chatDatabase = new DatabaseSync(':memory:', { open: true });
   database.exec(`PRAGMA foreign_keys = ON`);
-  const databases = { modelDb: new SqliteDatabase(database) } as SqliteDatabases;
+  const databases = { modelDb: new SqliteDatabase(database), chatDb: new SqliteDatabase(chatDatabase) } as SqliteDatabases;
   const users = new SqliteUserRepository(databases);
-  const configuration = new SqliteSlackConfigurationRepository(databases);
+  const configuration = new SqliteSlackConfigurationRepository(databases, new Cipher(new SeedCipherKeyStore('slack-repositories-test')));
   const directory = new SqliteSlackUserDirectoryRepository(databases);
   const mappings = new SqliteSlackUserMappingRepository(databases);
   const inbox = new SqliteSlackInboundEventRepository(databases);
@@ -82,7 +85,6 @@ test('persists Slack configuration, directory, atomic mappings, and inbound dedu
     slackChannelId: 'D1',
     slackMessageTs: '1.0',
     text: 'Hello',
-    eventPayload: '{}',
     status: SlackInboundEventStatus.PENDING,
     attemptCount: 0,
     nextAttemptAt: null,
@@ -97,9 +99,24 @@ test('persists Slack configuration, directory, atomic mappings, and inbound dedu
   assert.equal((await inbox.getPending(signal, 31, 10)).length, 0);
 
   assert.equal((await configuration.tryGet(signal))?.botToken, 'bot-secret');
+  const storedConfiguration = database.prepare(`SELECT appToken, botToken FROM slack_configuration`).get() as {
+    appToken: string;
+    botToken: string;
+  };
+  assert.notEqual(storedConfiguration.appToken, 'app-secret');
+  assert.notEqual(storedConfiguration.botToken, 'bot-secret');
+  assert.equal((chatDatabase.prepare(`SELECT text FROM slack_inbound_events`).get() as { text: string }).text, 'Hello');
+  assert.equal(
+    chatDatabase
+      .prepare(`PRAGMA table_info(slack_inbound_events)`)
+      .all()
+      .some(column => column.name === 'eventPayload'),
+    false
+  );
   assert.equal(await configuration.delete(signal), true);
   assert.equal(await configuration.tryGet(signal), null);
   assert.equal((await mappings.getAll(signal, 'T1')).length, 2);
+  chatDatabase.close();
   database.close();
 });
 

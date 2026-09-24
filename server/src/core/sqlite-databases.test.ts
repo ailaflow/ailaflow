@@ -19,15 +19,18 @@ test('sqlite databases set up table versions independently', async () => {
   try {
     const modelVersions: number[] = [];
     const dataVersions: number[] = [];
+    const chatVersions: number[] = [];
 
     await databases.modelDb.setup(1, 'users', (_, version) => modelVersions.push(version));
     await databases.modelDb.setup(1, 'users', (_, version) => modelVersions.push(version));
     await databases.dataDb.setup(1, 'users', (_, version) => dataVersions.push(version));
+    await databases.chatDb.setup(1, 'users', (_, version) => chatVersions.push(version));
     await databases.modelDb.setup(2, 'users', (_, version) => modelVersions.push(version));
     await databases.modelDb.setup(1, 'users', (_, version) => modelVersions.push(version));
 
     assert.deepEqual(modelVersions, [0, 1]);
     assert.deepEqual(dataVersions, [0]);
+    assert.deepEqual(chatVersions, [0]);
   } finally {
     databases.dispose();
     rmSync(dataFolderPath, { recursive: true });
