@@ -4,6 +4,7 @@ import { ChatSession, ChatSessionUpdate } from '@aibindkit/llm';
 import test from 'node:test';
 import { UserChatSessionProvider } from '../chat-session/user-chat-session-provider';
 import { KvConfigurationManager } from '../configuration/kv/kv-configuration-manager';
+import { FormLinkMessageGenerator } from '../magic-link/form-link-message-generator';
 import { MagicLinkGenerator } from '../magic-link/magic-link-generator';
 import { createMagicLinkRepositoryMock } from '../repositories/auth-token/magic-link-repository-mock';
 import { KvConfiguration } from '../repositories/configuration/kv/kv-configuration';
@@ -75,7 +76,7 @@ test('replays eligible session messages, resumes chunks, and stores numeric sent
     new FakeTelegramConfigurationRepository(),
     client,
     createSessionProvider(session),
-    createMagicLinkGenerator()
+    createFormLinkMessageGenerator()
   );
 
   await synchronizer.start();
@@ -133,7 +134,7 @@ test('sends links for task and process start form metadata', async () => {
     new FakeTelegramConfigurationRepository(),
     client,
     createSessionProvider(session),
-    createMagicLinkGenerator('https://aila.example')
+    createFormLinkMessageGenerator('https://aila.example')
   );
 
   await synchronizer.start();
@@ -148,6 +149,43 @@ test('sends links for task and process start form metadata', async () => {
     client.sentTexts[1],
     /^─── 💼 Start Form ────\nPlease click here: https:\/\/aila\.example\/magic-link\?t=%2Fmy-processes%2Femployee-onboarding%3Ffs%3D1#token=[\w-]{43}\nValid for 2 hours\.\n──────────────\n$/
   );
+});
+
+test('forwards form-link configuration errors', async () => {
+  const messages: ChatMessage[] = [
+    {
+      id: 1,
+      type: ChatMessageType.TOOL,
+      completedMessages: [
+        {
+          message: { role: 'tool', tool_call_id: 'call-1', content: '{"success":true}' },
+          metadata: { taskForm: { id: 'task-123' }, processStartForm: { name: 'employee-onboarding' } }
+        }
+      ]
+    }
+  ];
+  const session = new FakeChatSession(messages);
+  const client = new FakeTelegramBotApiClient();
+  const synchronizer = new TelegramChannelSynchronizer(
+    TelegramBotConfiguration.create('alice', 'default', 'token', {
+      botId: 'bot',
+      botUserName: 'aila_bot',
+      telegramChatId: '42'
+    }),
+    new FakeTelegramConfigurationRepository(),
+    client,
+    createSessionProvider(session),
+    createFormLinkMessageGenerator()
+  );
+
+  await synchronizer.start();
+  await waitFor(() => client.sentTexts.length === 2);
+  synchronizer.destroy();
+
+  assert.deepEqual(client.sentTexts, [
+    '─── 💼 Task Form ────\nThe public URL is not configured. Please notify your administrator.\n──────────────\n',
+    '─── 💼 Start Form ────\nThe public URL is not configured. Please notify your administrator.\n──────────────\n'
+  ]);
 });
 
 test('delivers failures and interruptions once and reports only successful compaction as completed', async () => {
@@ -198,7 +236,7 @@ test('delivers failures and interruptions once and reports only successful compa
     new FakeTelegramConfigurationRepository(),
     client,
     createSessionProvider(session),
-    createMagicLinkGenerator()
+    createFormLinkMessageGenerator()
   );
 
   await synchronizer.start();
@@ -241,7 +279,7 @@ test('links a private Telegram chat and queues Telegram text with origin metadat
     repository,
     client,
     createSessionProvider(session),
-    createMagicLinkGenerator()
+    createFormLinkMessageGenerator()
   );
 
   await synchronizer.start();
@@ -274,7 +312,7 @@ test('reports an interrupted response after receiving the stop command', async (
     repository,
     client,
     createSessionProvider(session),
-    createMagicLinkGenerator()
+    createFormLinkMessageGenerator()
   );
 
   await synchronizer.start();
@@ -305,7 +343,7 @@ test('reconnects polling after a transient Telegram failure', async () => {
     repository,
     client,
     createSessionProvider(session),
-    createMagicLinkGenerator()
+    createFormLinkMessageGenerator()
   );
 
   await synchronizer.start();
@@ -325,7 +363,7 @@ test('starts once and cannot restart after being destroyed', async () => {
     new FakeTelegramConfigurationRepository(),
     new FakeTelegramBotApiClient(),
     createSessionProvider(new FakeChatSession([])),
-    createMagicLinkGenerator()
+    createFormLinkMessageGenerator()
   );
 
   await synchronizer.start();
@@ -473,12 +511,12 @@ function createSessionProvider(session: FakeChatSession): UserChatSessionProvide
   return { get: async () => session as unknown as ChatSession } as unknown as UserChatSessionProvider;
 }
 
-function createMagicLinkGenerator(publicUrl: string | null = null): MagicLinkGenerator {
+function createFormLinkMessageGenerator(publicUrl: string | null = null): FormLinkMessageGenerator {
   const manager = {
     get: async () => new KvConfiguration(publicUrl)
   } as unknown as KvConfigurationManager;
   const repository = createMagicLinkRepositoryMock();
-  return new MagicLinkGenerator(manager, repository);
+  return new FormLinkMessageGenerator(new MagicLinkGenerator(manager, repository));
 }
 
 async function waitFor(predicate: () => boolean): Promise<void> {

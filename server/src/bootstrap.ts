@@ -176,6 +176,7 @@ import { KvConfigurationRepository } from './repositories/configuration/kv/kv-co
 import { SqliteKvConfigurationRepository } from './repositories/configuration/kv/sqlite-kv-configuration-repository';
 import { PublicUrlTester } from './configuration/public-url/public-url-tester';
 import { MagicLinkGenerator } from './magic-link/magic-link-generator';
+import { FormLinkMessageGenerator } from './magic-link/form-link-message-generator';
 import { MagicLinkExchanger } from './magic-link/magic-link-exchanger';
 import { MagicLinkRepository } from './repositories/auth-token/magic-link-repository';
 import { SqliteMagicLinkRepository } from './repositories/auth-token/sqlite-magic-link-repository';
@@ -404,6 +405,7 @@ export async function bootstrap(registry: CleanupRegistry, signal: AbortSignal) 
   const kvConfigurationManager = new KvConfigurationManager(kvConfigurationRepository);
   const publicUrlTester = new PublicUrlTester();
   const magicLinkGenerator = new MagicLinkGenerator(kvConfigurationManager, magicLinkRepository);
+  const formLinkMessageGenerator = new FormLinkMessageGenerator(magicLinkGenerator);
   const magicLinkExchanger = new MagicLinkExchanger(magicLinkRepository, userRepository, authTokenRepository);
 
   const eventBus = new EventBus();
@@ -416,7 +418,7 @@ export async function bootstrap(registry: CleanupRegistry, signal: AbortSignal) 
     telegramConfigurationRepository,
     telegramClient,
     userChatSessionProvider,
-    magicLinkGenerator
+    formLinkMessageGenerator
   );
   eventBus.registerHandler(new TelegramConfigurationChangedEventHandler(telegramSynchronizationManager));
 
@@ -428,7 +430,8 @@ export async function bootstrap(registry: CleanupRegistry, signal: AbortSignal) 
     slackInboundEventRepository,
     slackClient,
     new OfficialSlackSocketClient(),
-    userChatSessionProvider
+    userChatSessionProvider,
+    formLinkMessageGenerator
   );
   const slackDirectoryRefresher = new SlackUserDirectoryRefresher(
     slackConfigurationRepository,

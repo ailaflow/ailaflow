@@ -4,6 +4,7 @@ import { ChatSession, ChatSessionUpdate } from '@aibindkit/llm';
 import test from 'node:test';
 import { UserChatSessionProvider } from '../chat-session/user-chat-session-provider';
 import { KvConfigurationManager } from '../configuration/kv/kv-configuration-manager';
+import { FormLinkMessageGenerator } from '../magic-link/form-link-message-generator';
 import { MagicLinkGenerator } from '../magic-link/magic-link-generator';
 import { createMagicLinkRepositoryMock } from '../repositories/auth-token/magic-link-repository-mock';
 import { KvConfiguration } from '../repositories/configuration/kv/kv-configuration';
@@ -16,7 +17,7 @@ test('starts, reloads, removes, and stops Telegram channel synchronizers', async
   const repository = new FakeRepository();
   repository.configuration = createConfiguration('token-1');
   const client = new FakeClient();
-  const manager = new TelegramSynchronizationManager(repository, client, createSessionProvider(), createMagicLinkGenerator());
+  const manager = new TelegramSynchronizationManager(repository, client, createSessionProvider(), createFormLinkMessageGenerator());
 
   await manager.start(new AbortController().signal);
   assert.equal(client.pollSignals.length, 1);
@@ -85,12 +86,12 @@ function createSessionProvider(): UserChatSessionProvider {
   return { get: async () => session } as unknown as UserChatSessionProvider;
 }
 
-function createMagicLinkGenerator(): MagicLinkGenerator {
+function createFormLinkMessageGenerator(): FormLinkMessageGenerator {
   const manager = {
     get: async () => new KvConfiguration()
   } as unknown as KvConfigurationManager;
   const repository = createMagicLinkRepositoryMock();
-  return new MagicLinkGenerator(manager, repository);
+  return new FormLinkMessageGenerator(new MagicLinkGenerator(manager, repository));
 }
 
 function createConfiguration(botToken: string): TelegramBotConfiguration {

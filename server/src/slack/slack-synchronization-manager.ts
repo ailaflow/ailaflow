@@ -1,5 +1,6 @@
 import { UserChatSessionProvider } from '../chat-session/user-chat-session-provider';
 import { Logger } from '../core/logger';
+import { FormLinkMessageGenerator } from '../magic-link/form-link-message-generator';
 import { SlackConfigurationRepository } from '../repositories/configuration/slack/slack-configuration-repository';
 import { SlackInboundEventRepository } from '../repositories/configuration/slack/slack-inbound-event-repository';
 import { SlackUserDirectoryRepository } from '../repositories/configuration/slack/slack-user-directory-repository';
@@ -50,7 +51,8 @@ export class SlackSynchronizationManager implements SlackRuntimeHealthProvider {
     inboundEventRepository: SlackInboundEventRepository,
     private readonly client: SlackBotApiClient,
     private readonly socketClient: SlackSocketClient,
-    userChatSessionProvider: UserChatSessionProvider
+    userChatSessionProvider: UserChatSessionProvider,
+    private readonly formLinkMessageGenerator: FormLinkMessageGenerator
   ) {
     this.userChatSessionProvider = userChatSessionProvider;
     this.inboundEventRepository = inboundEventRepository;
@@ -161,7 +163,8 @@ export class SlackSynchronizationManager implements SlackRuntimeHealthProvider {
       mapping,
       this.mappingRepository,
       this.client,
-      this.userChatSessionProvider
+      this.userChatSessionProvider,
+      this.formLinkMessageGenerator
     );
     this.synchronizers.set(createKey(mapping), synchronizer);
     try {

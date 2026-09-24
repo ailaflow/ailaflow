@@ -6,6 +6,7 @@ import { SlackUserDirectoryRepository } from '../repositories/configuration/slac
 import { SlackUserMappingRepository } from '../repositories/configuration/slack/slack-user-mapping-repository';
 import { SlackInboundEvent } from '../repositories/configuration/slack/slack-types';
 import { UserChatSessionProvider } from '../chat-session/user-chat-session-provider';
+import { FormLinkMessageGenerator } from '../magic-link/form-link-message-generator';
 import { SlackBotApiClient } from './slack-bot-api-client';
 import { SlackSocketClient, SlackSocketEvent } from './slack-socket-client';
 import { SlackSynchronizationManager } from './slack-synchronization-manager';
@@ -32,7 +33,8 @@ test('does not start the Slack runtime without configuration', async () => {
     inbox,
     new SlackBotApiClient('https://slack.invalid/api'),
     socket,
-    {} as UserChatSessionProvider
+    {} as UserChatSessionProvider,
+    {} as FormLinkMessageGenerator
   );
 
   manager.start();
@@ -73,7 +75,8 @@ test('persists relevant Socket Mode events before acknowledging and deduplicates
     inbox,
     new SlackBotApiClient('https://slack.invalid/api'),
     socket,
-    {} as UserChatSessionProvider
+    {} as UserChatSessionProvider,
+    {} as FormLinkMessageGenerator
   );
   manager.start();
   await waitFor(() => socket.handler !== null);

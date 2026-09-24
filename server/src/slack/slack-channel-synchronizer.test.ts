@@ -3,6 +3,11 @@ import { ChatMessage, ChatMessageType, SimpleEvent } from '@aibindkit/core';
 import { ChatSession, ChatSessionUpdate } from '@aibindkit/llm';
 import test from 'node:test';
 import { UserChatSessionProvider } from '../chat-session/user-chat-session-provider';
+import { KvConfigurationManager } from '../configuration/kv/kv-configuration-manager';
+import { FormLinkMessageGenerator } from '../magic-link/form-link-message-generator';
+import { MagicLinkGenerator } from '../magic-link/magic-link-generator';
+import { createMagicLinkRepositoryMock } from '../repositories/auth-token/magic-link-repository-mock';
+import { KvConfiguration } from '../repositories/configuration/kv/kv-configuration';
 import { SlackUserMappingRepository } from '../repositories/configuration/slack/slack-user-mapping-repository';
 import { SlackConfiguration, SlackMappingWelcomeStatus, SlackUserMapping } from '../repositories/configuration/slack/slack-types';
 import { SlackBotApiClient, SlackPostedMessage } from './slack-bot-api-client';
@@ -41,7 +46,8 @@ test('delivers a failed message regardless of its type or Slack origin', async (
     createMapping(),
     new FakeSlackUserMappingRepository(),
     client,
-    createSessionProvider(session)
+    createSessionProvider(session),
+    createFormLinkMessageGenerator()
   );
 
   await synchronizer.start();
@@ -53,6 +59,88 @@ test('delivers a failed message regardless of its type or Slack origin', async (
   assert.equal(delivery?.status, SlackMessageStatus.SENT);
   assert.equal(delivery?.attemptCount, 1);
   assert.equal(delivery?.mappingGeneration, 1);
+});
+
+test('sends links for task and process start form metadata', async () => {
+  const messages: ChatMessage[] = [
+    {
+      id: 1,
+      type: ChatMessageType.USER,
+      completedMessages: [
+        {
+          message: { role: 'user', content: 'Internal task notification' },
+          metadata: { internal: true, taskForm: { id: 'task-123' } }
+        }
+      ]
+    },
+    {
+      id: 2,
+      type: ChatMessageType.TOOL,
+      completedMessages: [
+        {
+          message: { role: 'tool', tool_call_id: 'call-1', content: '{"success":true}' },
+          metadata: { processStartForm: { name: 'employee-onboarding' } }
+        }
+      ]
+    }
+  ];
+  const session = new FakeChatSession(messages);
+  const client = new FakeSlackBotApiClient();
+  const synchronizer = new SlackChannelSynchronizer(
+    createConfiguration(),
+    createMapping(),
+    new FakeSlackUserMappingRepository(),
+    client,
+    createSessionProvider(session),
+    createFormLinkMessageGenerator('https://aila.example')
+  );
+
+  await synchronizer.start();
+  await waitFor(() => client.sentTexts.length === 2);
+  synchronizer.destroy();
+
+  assert.match(
+    client.sentTexts[0],
+    /^─── 💼 Task Form ────\nPlease click here: https:\/\/aila\.example\/magic-link\?t=%2Fmy-tasks%2Ftask-123%3Ffs%3D1#token=[\w-]{43}\nValid for 2 hours\.\n──────────────\n$/
+  );
+  assert.match(
+    client.sentTexts[1],
+    /^─── 💼 Start Form ────\nPlease click here: https:\/\/aila\.example\/magic-link\?t=%2Fmy-processes%2Femployee-onboarding%3Ffs%3D1#token=[\w-]{43}\nValid for 2 hours\.\n──────────────\n$/
+  );
+});
+
+test('forwards form-link configuration errors', async () => {
+  const messages: ChatMessage[] = [
+    {
+      id: 1,
+      type: ChatMessageType.TOOL,
+      completedMessages: [
+        {
+          message: { role: 'tool', tool_call_id: 'call-1', content: '{"success":true}' },
+          metadata: { taskForm: { id: 'task-123' }, processStartForm: { name: 'employee-onboarding' } }
+        }
+      ]
+    }
+  ];
+  const session = new FakeChatSession(messages);
+  const client = new FakeSlackBotApiClient();
+  const synchronizer = new SlackChannelSynchronizer(
+    createConfiguration(),
+    createMapping(),
+    new FakeSlackUserMappingRepository(),
+    client,
+    createSessionProvider(session),
+    createFormLinkMessageGenerator()
+  );
+
+  await synchronizer.start();
+  await waitFor(() => client.sentTexts.length === 2);
+  synchronizer.destroy();
+
+  assert.deepEqual(client.sentTexts, [
+    '─── 💼 Task Form ────\nThe public URL is not configured. Please notify your administrator.\n──────────────\n',
+    '─── 💼 Start Form ────\nThe public URL is not configured. Please notify your administrator.\n──────────────\n'
+  ]);
 });
 
 class FakeChatSession {
@@ -159,10 +247,17 @@ function createSessionProvider(session: FakeChatSession): UserChatSessionProvide
   return { get: async () => session as unknown as ChatSession } as unknown as UserChatSessionProvider;
 }
 
+function createFormLinkMessageGenerator(publicUrl: string | null = null): FormLinkMessageGenerator {
+  const manager = {
+    get: async () => new KvConfiguration(publicUrl)
+  } as unknown as KvConfigurationManager;
+  return new FormLinkMessageGenerator(new MagicLinkGenerator(manager, createMagicLinkRepositoryMock()));
+}
+
 async function waitFor(predicate: () => boolean): Promise<void> {
   const startedAt = Date.now();
   while (!predicate()) {
-    if (Date.now() - startedAt > 1_000) {
+    if (Date.now() - startedAt > 2_500) {
       throw new Error('Timed out waiting for condition');
     }
     await new Promise(resolve => setTimeout(resolve, 5));

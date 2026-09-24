@@ -1,6 +1,6 @@
 import { UserChatSessionProvider } from '../chat-session/user-chat-session-provider';
 import { Logger } from '../core/logger';
-import { MagicLinkGenerator } from '../magic-link/magic-link-generator';
+import { FormLinkMessageGenerator } from '../magic-link/form-link-message-generator';
 import { TelegramConfigurationRepository } from '../repositories/configuration/telegram/telegram-configuration-repository';
 import { TelegramChannelSynchronizer } from './telegram-channel-synchronizer';
 import { TelegramBotApiClient } from './telegram-bot-api-client';
@@ -14,7 +14,7 @@ export class TelegramSynchronizationManager {
     private readonly repository: TelegramConfigurationRepository,
     private readonly client: TelegramBotApiClient,
     private readonly userChatSessionProvider: UserChatSessionProvider,
-    private readonly magicLinkGenerator: MagicLinkGenerator
+    private readonly formLinkMessageGenerator: FormLinkMessageGenerator
   ) {}
 
   public async start(signal: AbortSignal): Promise<void> {
@@ -56,7 +56,7 @@ export class TelegramSynchronizationManager {
       this.repository,
       this.client,
       this.userChatSessionProvider,
-      this.magicLinkGenerator
+      this.formLinkMessageGenerator
     );
     this.synchronizers.set(synchronizerKey, synchronizer);
     try {

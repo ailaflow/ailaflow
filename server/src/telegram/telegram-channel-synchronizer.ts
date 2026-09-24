@@ -1,9 +1,8 @@
-import { ChatMessage, ChatMessageMetadata, ChatMessageType } from '@aibindkit/core';
+import { ChatMessage, ChatMessageType } from '@aibindkit/core';
 import { ChatSession, ChatSessionUpdate } from '@aibindkit/llm';
-import { ProcessStartFormMessageMetadata, TaskFormMessageMetadata } from '@ailaflow/shared';
 import { UserChatSessionProvider } from '../chat-session/user-chat-session-provider';
 import { Logger } from '../core/logger';
-import { MagicLinkGenerator } from '../magic-link/magic-link-generator';
+import { FormLinkMessageGenerator } from '../magic-link/form-link-message-generator';
 import { TelegramBotConfiguration } from '../repositories/configuration/telegram/telegram-bot-configuration';
 import { TelegramConfigurationRepository } from '../repositories/configuration/telegram/telegram-configuration-repository';
 import { TelegramBotApiClient, TelegramBotApiError, TelegramUpdate } from './telegram-bot-api-client';
@@ -33,7 +32,7 @@ export class TelegramChannelSynchronizer {
     private readonly repository: TelegramConfigurationRepository,
     private readonly client: TelegramBotApiClient,
     private readonly userChatSessionProvider: UserChatSessionProvider,
-    private readonly magicLinkGenerator: MagicLinkGenerator,
+    private readonly formLinkMessageGenerator: FormLinkMessageGenerator,
     private readonly messageFormatter: TelegramMessageFormatter = new TelegramMessageFormatter()
   ) {
     this.telegramChatId = configuration.telegramChatId;
@@ -264,10 +263,15 @@ export class TelegramChannelSynchronizer {
         if (telegram?.delivery?.status === TelegramMessageStatus.SENT || (telegram?.origin && !isOutcome)) {
           continue;
         }
-        const chunks = [
-          ...this.messageFormatter.format({ ...message, completedMessages: [completedMessage] }),
-          ...(isOutcome ? [] : await this.createFormLinkMessages(completedMessage.metadata))
-        ];
+        const chunks = this.messageFormatter.format({ ...message, completedMessages: [completedMessage] });
+        if (!isOutcome) {
+          await this.formLinkMessageGenerator.tryAppend(
+            chunks,
+            AbortSignal.any([AbortSignal.timeout(10_000), this.destroyAbortController.signal]),
+            this.configuration.userName,
+            completedMessage.metadata
+          );
+        }
         if (chunks.length === 0) {
           continue;
         }
@@ -286,37 +290,6 @@ export class TelegramChannelSynchronizer {
 
   private isMessageOutcome(message: ChatMessage): boolean {
     return message.failReason !== undefined || message.isInterrupted === true;
-  }
-
-  private async createFormLinkMessages(metadata: ChatMessageMetadata | undefined): Promise<string[]> {
-    const messages: string[] = [];
-    const signal = AbortSignal.any([AbortSignal.timeout(10_000), this.destroyAbortController.signal]);
-    const linkLifetimeHours = this.magicLinkGenerator.getValidityHours();
-    const warn = `Valid for ${linkLifetimeHours} hours.`;
-
-    const taskForm = metadata?.['taskForm'] as TaskFormMessageMetadata | undefined;
-    if (typeof taskForm?.id === 'string') {
-      const url = await this.magicLinkGenerator.tryGenerateTaskForm(signal, this.configuration.userName, taskForm.id);
-      if (url) {
-        let m = '─── 💼 Task Form ────\n';
-        m += `Please click here: ${url}\n${warn}\n`;
-        m += '──────────────\n';
-        messages.push(m);
-      }
-    }
-
-    const processStartForm = metadata?.['processStartForm'] as ProcessStartFormMessageMetadata | undefined;
-    if (typeof processStartForm?.name === 'string') {
-      const url = await this.magicLinkGenerator.tryGenerateProcessStartForm(signal, this.configuration.userName, processStartForm.name);
-      if (url) {
-        let m = '─── 💼 Start Form ────\n';
-        m += `Please click here: ${url}\n${warn}\n`;
-        m += '──────────────\n';
-        messages.push(m);
-      }
-    }
-
-    return messages;
   }
 
   private async deliverMessage(

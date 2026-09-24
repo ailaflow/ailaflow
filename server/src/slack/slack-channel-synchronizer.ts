@@ -3,6 +3,7 @@ import { ChatSession } from '@aibindkit/llm';
 import { UserChatSessionProvider } from '../chat-session/user-chat-session-provider';
 import { abortableSleep } from '../core/abortable-sleep';
 import { Logger } from '../core/logger';
+import { FormLinkMessageGenerator } from '../magic-link/form-link-message-generator';
 import { SlackConfiguration } from '../repositories/configuration/slack/slack-types';
 import { SlackUserMappingRepository } from '../repositories/configuration/slack/slack-user-mapping-repository';
 import { SlackUserMapping } from '../repositories/configuration/slack/slack-types';
@@ -28,6 +29,7 @@ export class SlackChannelSynchronizer {
     private readonly mappingRepository: SlackUserMappingRepository,
     private readonly client: SlackBotApiClient,
     private readonly userChatSessionProvider: UserChatSessionProvider,
+    private readonly formLinkMessageGenerator: FormLinkMessageGenerator,
     private readonly formatter: SlackMessageFormatter = new SlackMessageFormatter()
   ) {
     this.deliveryStartMessageId = mapping.deliveryStartMessageId;
@@ -182,9 +184,12 @@ export class SlackChannelSynchronizer {
     }
     for (const message of session.getAll()) {
       const isOutcome = this.isMessageOutcome(message);
+      const hasFormLink =
+        message.completedMessages?.some(completed => this.formLinkMessageGenerator.hasMetadata(completed.metadata)) === true;
       if (
         message.id <= cursor ||
         (!isOutcome &&
+          !hasFormLink &&
           message.type !== ChatMessageType.USER &&
           message.type !== ChatMessageType.ASSISTANT &&
           message.type !== ChatMessageType.COMPACT)
@@ -194,13 +199,23 @@ export class SlackChannelSynchronizer {
       const completedMessageCount = this.getCompletedMessageDeliveryCount(message);
       for (let index = 0; index < completedMessageCount; index++) {
         const completed = message.completedMessages![index];
-        const chunks = this.formatter.format({ ...message, completedMessages: [completed] });
         const slack = tryGetSlackMessageMetadata(completed.metadata);
         if (
-          chunks.length === 0 ||
           (slack?.origin && !isOutcome) ||
           (slack?.delivery?.status === SlackMessageStatus.SENT && slack.delivery.mappingGeneration === this.mapping.generation)
         ) {
+          continue;
+        }
+        const chunks = this.formatter.format({ ...message, completedMessages: [completed] });
+        if (!isOutcome) {
+          await this.formLinkMessageGenerator.tryAppend(
+            chunks,
+            AbortSignal.any([AbortSignal.timeout(10_000), this.abortController.signal]),
+            this.mapping.userName,
+            completed.metadata
+          );
+        }
+        if (chunks.length === 0) {
           continue;
         }
         await this.deliverMessage(session, message.id, index, chunks, slack, currentMapping.dmChannelId);
