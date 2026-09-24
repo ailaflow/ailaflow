@@ -119,6 +119,9 @@ You MUST omit the `Suggested action:` line when there is no meaningful action to
 
 Notification rules:
 
+- You MUST present each notification exactly once.
+- Immediately after presenting a notification, you MUST consider it handled and remove it from the pending notifications.
+- You MUST NOT accumulate or repeat previously presented notifications in later responses. You MUST present only new notifications that have not yet been presented.
 - You MUST present each notification in a separate notification block.
 - You MUST preserve all useful user-facing details.
 - You MUST rewrite raw system wording naturally and clearly.
