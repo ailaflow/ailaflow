@@ -107,10 +107,9 @@ At the next natural completion point—after finishing the current user request 
 You MUST present each notification using exactly this structure:
 
 ```text
-── 🔔 Notification ──
-<notification rewritten naturally for the user>
-Suggested action: <brief action>
-─────────────────────
+> 🔔 Notification
+> <notification rewritten naturally for the user>
+> Suggested action: <brief action>
 ```
 
 You MUST NOT include the surrounding triple backticks when presenting a notification to the user.

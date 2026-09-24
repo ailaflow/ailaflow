@@ -1,0 +1,151 @@
+.abk-md {
+  overflow-wrap: anywhere;
+}
+
+.abk-md > :first-child {
+  margin-top: 0;
+}
+
+.abk-md > :last-child {
+  margin-bottom: 0;
+}
+
+.abk-md p,
+.abk-md ul,
+.abk-md ol,
+.abk-md blockquote,
+.abk-md pre,
+.abk-md table {
+  margin: 8px 0;
+}
+
+.abk-md h1,
+.abk-md h2,
+.abk-md h3 {
+  margin: 12px 0 6px;
+  line-height: 1.3;
+}
+
+.abk-md h1 {
+  font-size: 18px;
+}
+
+.abk-md h2 {
+  font-size: 16px;
+}
+
+.abk-md h3 {
+  font-size: 14px;
+}
+
+.abk-md ul,
+.abk-md ol {
+  padding-left: 24px;
+}
+
+.abk-md ul {
+  list-style: disc;
+}
+
+.abk-md ol {
+  list-style: decimal;
+}
+
+.abk-md li + li {
+  margin-top: 2px;
+}
+
+.abk-md blockquote {
+  padding-left: 10px;
+  border-left: 3px solid #cbd5e1;
+  color: #64748b;
+}
+
+.abk-md a {
+  color: #2563eb;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.abk-md code {
+  padding: 1px 4px;
+  border-radius: 4px;
+  background: #f1f5f9;
+  font:
+    12px/1.5 ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    Monaco,
+    Consolas,
+    monospace;
+}
+
+.abk-md pre {
+  box-sizing: border-box;
+  max-width: 100%;
+  padding: 10px 12px;
+  overflow: auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  background: #f8fafc;
+  white-space: pre;
+}
+
+.abk-md pre code {
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  white-space: inherit;
+}
+
+.abk-md table {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.abk-md th,
+.abk-md td {
+  padding: 6px 8px;
+  border: 1px solid #cbd5e1;
+  text-align: left;
+  vertical-align: top;
+}
+
+.abk-md th {
+  background: #f1f5f9;
+  font-weight: 600;
+}
+
+.abk-md:is(.abk-chat-bubble-user *) a {
+  color: #bfdbfe;
+}
+
+.abk-md:is(.abk-chat-bubble-user *) code,
+.abk-md:is(.abk-chat-bubble-user *) pre {
+  border-color: rgb(255 255 255 / 0.2);
+  background: rgb(255 255 255 / 0.1);
+  color: inherit;
+}
+
+.abk-md:is(.abk-chat-bubble-user *) pre code {
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  white-space: inherit;
+}
+
+.abk-md:is(.abk-chat-bubble-user *) th,
+.abk-md:is(.abk-chat-bubble-user *) td {
+  border-color: rgb(255 255 255 / 0.25);
+}
+
+.abk-md:is(.abk-chat-bubble-user *) th {
+  background: rgb(255 255 255 / 0.1);
+}
+
+.abk-md:is(.abk-chat-reasoning + .abk-md) {
+  margin-top: 4px;
+}

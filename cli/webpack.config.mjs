@@ -23,7 +23,8 @@ const aliases = {
   '@aibindkit/express$': resolve(rootDirectory, '@aibindkit/express/src/index.ts'),
   '@aibindkit/llm$': resolve(rootDirectory, '@aibindkit/llm/src/index.ts'),
   '@aibindkit/react$': resolve(rootDirectory, '@aibindkit/react/src/index.ts'),
-  '@aibindkit/react/css/chat.css$': resolve(rootDirectory, '@aibindkit/react/css/chat.css')
+  '@aibindkit/react/css/chat.css$': resolve(rootDirectory, '@aibindkit/react/css/chat.css'),
+  '@aibindkit/react/css/chat-md.css$': resolve(rootDirectory, '@aibindkit/react/css/chat-md.css')
 };
 
 const sourceRule = {

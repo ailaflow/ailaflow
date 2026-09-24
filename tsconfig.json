@@ -20,7 +20,8 @@
       "@aibindkit/express": ["./@aibindkit/express/src/index.ts"],
       "@aibindkit/llm": ["./@aibindkit/llm/src/index.ts"],
       "@aibindkit/react": ["./@aibindkit/react/src/index.ts"],
-      "@aibindkit/react/css/chat.css": ["./@aibindkit/react/css/chat.css"]
+      "@aibindkit/react/css/chat.css": ["./@aibindkit/react/css/chat.css"],
+      "@aibindkit/react/css/chat-md.css": ["./@aibindkit/react/css/chat-md.css"]
     }
   },
   "include": ["@aibindkit/*/src", "bridge/*/src", "cli/src", "shared/src", "portal/src", "server/src"]

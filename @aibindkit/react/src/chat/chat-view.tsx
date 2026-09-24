@@ -10,6 +10,7 @@ import {
 } from '@aibindkit/core';
 import { Fragment, useLayoutEffect, useRef } from 'react';
 import { ChatComposerView } from './chat-composer-view';
+import { Markdown } from './markdown';
 import { SvgIcon } from './svg-icon';
 
 export type ChatMessageFilter = (type: ChatMessageType, metadata?: ChatMessageMetadata) => boolean;
@@ -262,7 +263,7 @@ function MessageContentView(props: { content: LlmMessageContent | null }) {
   return (
     <>
       {props.content.reasoning && <ReasoningView reasoning={props.content.reasoning} />}
-      {props.content.content && <div className="abk-chat-content">{props.content.content}</div>}
+      {props.content.content && <Markdown>{props.content.content}</Markdown>}
     </>
   );
 }

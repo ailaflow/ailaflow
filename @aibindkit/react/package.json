@@ -14,7 +14,8 @@
       "require": "./lib/cjs/index.cjs",
       "default": "./lib/esm/index.js"
     },
-    "./css/chat.css": "./css/chat.css"
+    "./css/chat.css": "./css/chat.css",
+    "./css/chat-md.css": "./css/chat-md.css"
   },
   "scripts": {
     "prettier": "prettier --check ./src",
@@ -22,6 +23,8 @@
   },
   "dependencies": {
     "@aibindkit/core": "workspace:*",
+    "dompurify": "^3.4.16",
+    "marked": "^18.0.14",
     "react": "^19.3.0",
     "zod": "^4.6.5"
   },
