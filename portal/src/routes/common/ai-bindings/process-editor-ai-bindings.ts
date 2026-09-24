@@ -38,7 +38,7 @@ const processEditorRoute = route('processEditor')
     // workflow
 
     getAvailableNewStepTypes: tool('List step types that can be added to the workflow'),
-    getSelectedStepId: tool('Get the ID of the currently selected workflow step by the user'),
+    getSelectedStep: tool('Get the currently selected workflow step by the user'),
     deleteWorkflowStep: tool('Delete a step from the workflow').input(
       z.object({
         stepId: z.string().describe('The ID of the step to delete')
@@ -432,7 +432,7 @@ const processEditorRoute = route('processEditor')
     )
   })
   .currentPageField('overlay', 'getCurrentOverlay')
-  .currentPageField('selectedStepId', 'getSelectedStepId');
+  .currentPageField('selectedStep', 'getSelectedStep');
 
 export const processEditorAiStoreFactory = routeStoreFactory(processEditorRoute);
 

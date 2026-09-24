@@ -78,8 +78,18 @@ export function useProcessEditorAi(state: ProcessEditorState, save: () => Promis
               defaultName: step.name
             }));
         },
-        async getSelectedStepId() {
-          return state.selectedStepId ? { isSelected: true, stepId: state.selectedStepId } : { isSelected: false };
+        async getSelectedStep() {
+          if (state.selectedStepId) {
+            const step = state.getStep(state.selectedStepId);
+            return {
+              isSelected: true,
+              stepId: step.id,
+              stepName: step.name
+            };
+          }
+          return {
+            isSelected: false
+          };
         },
         async getWorkflow() {
           const definition = ObjectCloner.deepClone(state.definition.value);
