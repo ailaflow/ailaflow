@@ -9,6 +9,7 @@ import { ProcessListView } from '../../views/process-list-view/process-list-view
 import { Portal } from '../common/portal';
 import { MyProcessStartFormPopup } from '../common/popups/my-process-start-form-popup';
 import { MyTaskFormPopup } from '../common/popups/my-task-form-popup';
+import { FormSubmittedAlertPopup } from '../common/popups/form-submitted-alert-popup';
 
 const PAGE_SIZE = 20;
 
@@ -17,6 +18,7 @@ export function MyProcessListPage() {
   const [startedProcessName, setStartedProcessName] = useState<string | null>(null);
   const [openedTaskId, setOpenedTaskId] = useState<string | null>(null);
   const [searchParams, setSearchParams] = useSearchParams();
+  const [formSubmitted, setFormSubmitted] = useState(false);
   const page = Number(searchParams.get('page') ?? 1);
   const { data, isLoading, error } = useLoader(
     signal =>
@@ -42,6 +44,8 @@ export function MyProcessListPage() {
     const candidateTaskId = candidateTaskIds?.[0];
     if (candidateTaskId) {
       setOpenedTaskId(candidateTaskId);
+    } else {
+      setFormSubmitted(true);
     }
   }
 
@@ -85,7 +89,16 @@ export function MyProcessListPage() {
           onClose={() => setStartedProcessName(null)}
         />
       ) : null}
-      {openedTaskId ? <MyTaskFormPopup args={{ taskId: openedTaskId }} onClose={() => setOpenedTaskId(null)} /> : null}
+      {openedTaskId && (
+        <MyTaskFormPopup
+          args={{ taskId: openedTaskId }}
+          onSubmitted={() => setFormSubmitted(true)}
+          onClose={() => {
+            setOpenedTaskId(null);
+          }}
+        />
+      )}
+      {formSubmitted && <FormSubmittedAlertPopup onClose={() => setFormSubmitted(false)} />}
     </Portal>
   );
 }

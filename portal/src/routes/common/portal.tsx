@@ -2,7 +2,7 @@ import { matchPath, useLocation } from 'react-router';
 import { type CommandMenuItem, type LinkMenuItem, type MenuItem, PortalLayout } from '../../views/portal/portal-layout';
 import { useAuthState } from '../../auth/auth-context';
 import { useEffect, useState } from 'react';
-import { LicenseWarningPopup } from './popups/license-warning-popup';
+import { LicenseAlertPopup } from './popups/license-alert-popup';
 
 type LinkMenuItemDefinition = Omit<LinkMenuItem, 'isSelected'> & { activeAliases?: string[] };
 type MenuItemDefinition = LinkMenuItemDefinition | CommandMenuItem;
@@ -100,7 +100,7 @@ export function Portal(props: { children: React.ReactNode }) {
       <PortalLayout userItems={selectedUserItems} adminItems={selectedAdminItems} userName={session.userName} onCommand={onCommand}>
         {props.children}
       </PortalLayout>
-      {licenseValidationError && <LicenseWarningPopup error={licenseValidationError} onClose={() => setLicenseValidationError(null)} />}
+      {licenseValidationError && <LicenseAlertPopup error={licenseValidationError} onClose={() => setLicenseValidationError(null)} />}
     </>
   );
 }
