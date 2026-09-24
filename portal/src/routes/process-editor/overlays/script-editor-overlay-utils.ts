@@ -1,4 +1,4 @@
-import type { FileContent, ScriptDefinition } from '@ailaflow/shared';
+import { ScriptDefinitionValidator, type FileContent, type ScriptDefinition } from '@ailaflow/shared';
 import { ProcessEditorOverlayType, ProcessEditorState } from '../process-editor-context';
 
 export interface ScriptEditorOverlayData {
@@ -38,7 +38,11 @@ export class ScriptEditorOverlayUtils {
     filePath: string,
     content: string,
     mode: 'edit' | 'create'
-  ): 'ok' | 'fileNotFound' | 'fileAlreadyExists' {
+  ): 'ok' | 'pathError' | 'fileNotFound' | 'fileAlreadyExists' {
+    const pathError = ScriptDefinitionValidator.validatePath(filePath);
+    if (pathError) {
+      return 'pathError';
+    }
     let file = data.script.contents.find(file => file.path === filePath);
     if (mode === 'edit') {
       if (!file) {

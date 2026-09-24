@@ -670,6 +670,11 @@ export function useProcessEditorAi(state: ProcessEditorState, save: () => Promis
             case 'create':
             case 'edit': {
               const result = ScriptEditorOverlayUtils.setFileContent(data, arg.filePath, arg.content, arg.action);
+              if (result === 'pathError') {
+                return toolError(
+                  'Invalid file path. Use a relative path like "src/main.js"; names and extensions may contain only ASCII letters, numbers, "_", and "-"'
+                );
+              }
               if (result === 'fileNotFound') {
                 return toolError('File not found');
               }

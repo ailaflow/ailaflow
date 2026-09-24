@@ -19,7 +19,7 @@ export class MagicLinkExchanger {
     }
 
     const user = await this.userRepository.tryGetUser(signal, userName);
-    if (!user) {
+    if (!user || !user.isActive) {
       return null;
     }
 

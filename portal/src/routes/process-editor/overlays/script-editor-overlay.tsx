@@ -2,7 +2,7 @@ import { useProcessEditor } from '../process-editor-context';
 import { ProcessOverlayView } from '../../../views/process-editor/overlays/process-overlay-view';
 import { useEffect } from 'react';
 import { ScriptOverlayView } from '../../../views/process-editor/overlays/script-overlay-view';
-import type { FileContent } from '@ailaflow/shared';
+import { ScriptDefinitionValidator, type FileContent } from '@ailaflow/shared';
 import { FolderTreeItem, FolderTreeView } from '../../../views/process-editor/overlays/folder-tree-view';
 import { FileContentEditorView } from '../../../views/process-editor/overlays/file-content-editor-view';
 import { ScriptEditorOverlayUtils } from './script-editor-overlay-utils';
@@ -35,6 +35,11 @@ export function ScriptEditorOverlay() {
   function addFile() {
     const path = window.prompt('File name');
     if (!path?.trim()) {
+      return;
+    }
+    const pathError = ScriptDefinitionValidator.validatePath(path);
+    if (pathError) {
+      window.alert(pathError);
       return;
     }
     if (ScriptEditorOverlayUtils.getFile(data, path)) {
