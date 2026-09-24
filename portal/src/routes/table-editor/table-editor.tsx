@@ -45,7 +45,6 @@ export function TableEditor(props: { table?: TableDto }) {
           onDescriptionChange={state.setDescription}
         />
       }
-      areDetailsVisible={true}
     >
       {!state.isNew && <TableDataGrid tableName={state.name} />}
     </ResourceEditorView>

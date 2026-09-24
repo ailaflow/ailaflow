@@ -56,7 +56,6 @@ export function SandboxEditor(props: { sandbox?: SandboxDto }) {
           onDescriptionChange={state.setDescription}
         />
       }
-      areDetailsVisible={true}
       viewSwitcherOptions={[
         { label: 'Editor', href: `/admin/sandboxes/${state.name}`, selected: true },
         { label: 'Terminal', href: `/admin/sandboxes/${state.name}/terminal` }

@@ -73,25 +73,22 @@ export function ProcessEditor() {
       onNameChange={name => state.setName(name, false)}
       detailsId="admin-process-editor-details"
       details={
-        isDesigner ? (
-          <ProcessEditorDetailsView
-            id="admin-process-editor-details"
-            description={state.description}
-            descriptionError={state.descriptionError}
-            userAccessExpression={state.userAccessExpression}
-            userAccessExpressionError={state.userAccessExpressionError}
-            display={state.display}
-            executionMode={state.executionMode}
-            onDescriptionChange={description => state.setDescription(description, false)}
-            onUserAccessExpressionChange={userAccessExpression => state.setUserAccessExpression(userAccessExpression, false)}
-            onDisplayChange={state.setDisplay}
-            onExecutionModeChange={state.setExecutionMode}
-          />
-        ) : undefined
+        <ProcessEditorDetailsView
+          id="admin-process-editor-details"
+          description={state.description}
+          descriptionError={state.descriptionError}
+          userAccessExpression={state.userAccessExpression}
+          userAccessExpressionError={state.userAccessExpressionError}
+          display={state.display}
+          executionMode={state.executionMode}
+          onDescriptionChange={description => state.setDescription(description, false)}
+          onUserAccessExpressionChange={userAccessExpression => state.setUserAccessExpression(userAccessExpression, false)}
+          onDisplayChange={state.setDisplay}
+          onExecutionModeChange={state.setExecutionMode}
+        />
       }
-      areDetailsVisible={isDesigner}
       canSave={canSave}
-      onSave={isDesigner ? save : undefined}
+      onSave={save}
       viewSwitcherOptions={[
         { label: 'Editor', href: `/admin/processes/${state.name}`, selected: true },
         {

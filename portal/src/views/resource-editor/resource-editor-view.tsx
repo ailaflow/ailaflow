@@ -10,7 +10,6 @@ export interface ResourceEditorViewProps {
   isNameReadOnly: boolean;
   onNameChange?: (name: string) => void;
   detailsId?: string;
-  areDetailsVisible?: boolean;
   details?: React.ReactNode;
   canSave?: boolean;
   onSave?: () => Promise<void>;
@@ -47,7 +46,7 @@ export function ResourceEditorView(props: ResourceEditorViewProps) {
                 />
               </label>
             </div>
-            {props.areDetailsVisible && isDetailsExpanded && props.details}
+            {props.details && isDetailsExpanded && props.details}
           </div>
 
           <div className="flex shrink-0 items-center gap-2">
