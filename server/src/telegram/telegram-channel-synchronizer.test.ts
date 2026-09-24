@@ -5,7 +5,7 @@ import test from 'node:test';
 import { UserChatSessionProvider } from '../chat-session/user-chat-session-provider';
 import { KvConfigurationManager } from '../configuration/kv/kv-configuration-manager';
 import { MagicLinkGenerator } from '../magic-link/magic-link-generator';
-import { MagicLinkRepository } from '../repositories/auth-token/magic-link-repository';
+import { createMagicLinkRepositoryMock } from '../repositories/auth-token/magic-link-repository-mock';
 import { KvConfiguration } from '../repositories/configuration/kv/kv-configuration';
 import { TelegramBotConfiguration } from '../repositories/configuration/telegram/telegram-bot-configuration';
 import { TelegramConfigurationRepository } from '../repositories/configuration/telegram/telegram-configuration-repository';
@@ -477,13 +477,7 @@ function createMagicLinkGenerator(publicUrl: string | null = null): MagicLinkGen
   const manager = {
     get: async () => new KvConfiguration(publicUrl)
   } as unknown as KvConfigurationManager;
-  const repository: MagicLinkRepository = {
-    setup: async () => {},
-    insert: async () => {},
-    consume: async () => null,
-    deleteExpired: async () => {},
-    deleteForUsers: async () => {}
-  };
+  const repository = createMagicLinkRepositoryMock();
   return new MagicLinkGenerator(manager, repository);
 }
 

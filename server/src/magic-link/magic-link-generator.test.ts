@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { KvConfigurationManager } from '../configuration/kv/kv-configuration-manager';
-import { MagicLinkRepository } from '../repositories/auth-token/magic-link-repository';
+import { createMagicLinkRepositoryMock } from '../repositories/auth-token/magic-link-repository-mock';
 import { MagicLink } from '../repositories/auth-token/magic-link';
 import { KvConfiguration } from '../repositories/configuration/kv/kv-configuration';
 import { MagicLinkGenerator } from './magic-link-generator';
@@ -42,14 +42,11 @@ function createGenerator(publicUrl: string | null, inserted: MagicLink[]): Magic
   const manager = {
     get: async () => new KvConfiguration(publicUrl)
   } as unknown as KvConfigurationManager;
-  const repository: MagicLinkRepository = {
-    setup: async () => {},
-    insert: async (_, magicLink) => {
+  const repository = createMagicLinkRepositoryMock({
+    tryInsert: async (_, magicLink) => {
       inserted.push(magicLink);
-    },
-    consume: async () => null,
-    deleteExpired: async () => {},
-    deleteForUsers: async () => {}
-  };
+      return true;
+    }
+  });
   return new MagicLinkGenerator(manager, repository);
 }

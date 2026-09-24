@@ -4,7 +4,7 @@ import { Request } from 'express';
 import test from 'node:test';
 import { MagicLinkExchanger } from '../../magic-link/magic-link-exchanger';
 import { AuthTokenRepository } from '../../repositories/auth-token/auth-token-repository';
-import { MagicLinkRepository } from '../../repositories/auth-token/magic-link-repository';
+import { createMagicLinkRepositoryMock } from '../../repositories/auth-token/magic-link-repository-mock';
 import { MagicLink } from '../../repositories/auth-token/magic-link';
 import { UserRepository } from '../../repositories/user/user-repository';
 import { User } from '../../repositories/user/user';
@@ -13,19 +13,15 @@ import { ExchangeMagicLinkEndpoint } from './exchange-magic-link-endpoint';
 
 test('exchanges a valid magic link without requiring authentication', async () => {
   let consumed = false;
-  const magicLinks: MagicLinkRepository = {
-    setup: async () => {},
-    insert: async () => {},
+  const magicLinks = createMagicLinkRepositoryMock({
     consume: async (_, tokenHash) => {
       if (tokenHash !== MagicLink.hashToken('magic-token') || consumed) {
         return null;
       }
       consumed = true;
       return 'alice';
-    },
-    deleteExpired: async () => {},
-    deleteForUsers: async () => {}
-  };
+    }
+  });
   const users = {
     tryGetUser: async () => new User('alice', null, 'hash', true, true)
   } as unknown as UserRepository;

@@ -27,7 +27,9 @@ export class MagicLinkGenerator {
     }
 
     const magicLink = MagicLink.create(userName);
-    await this.magicLinkRepository.insert(signal, magicLink);
+    if (!(await this.magicLinkRepository.tryInsert(signal, magicLink))) {
+      return null;
+    }
 
     const url = new URL(`${configuration.publicUrl}/magic-link`);
     url.searchParams.set('t', target);

@@ -34,14 +34,20 @@ export class SqliteMagicLinkRepository implements MagicLinkRepository {
     });
   }
 
-  public async insert(_: AbortSignal, magicLink: MagicLink): Promise<void> {
-    await this.db.write(db => {
-      db.prepare(
-        `
-        INSERT INTO magic_links (tokenHash, userName, expiresAt)
-        VALUES (?, ?, ?)
-      `
-      ).run(magicLink.tokenHash, magicLink.userName, magicLink.expiresAt);
+  public async tryInsert(_: AbortSignal, magicLink: MagicLink): Promise<boolean> {
+    return this.db.write(db => {
+      return (
+        db
+          .prepare(
+            `
+            INSERT INTO magic_links (tokenHash, userName, expiresAt)
+            SELECT ?, name, ?
+            FROM users
+            WHERE name = ? AND isActive = 1
+          `
+          )
+          .run(magicLink.tokenHash, magicLink.expiresAt, magicLink.userName).changes > 0
+      );
     });
   }
 
