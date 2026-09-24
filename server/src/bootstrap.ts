@@ -532,7 +532,6 @@ export async function bootstrap(registry: CleanupRegistry, signal: AbortSignal) 
   const authContextResolver = new ChatAuthContextResolver();
 
   const httpServer = new HttpServer(serverPaths);
-  httpServer.setupPortal();
 
   const sandboxHostDiagnostician = new SandboxHostDiagnostician(serverPaths);
 
@@ -642,6 +641,7 @@ export async function bootstrap(registry: CleanupRegistry, signal: AbortSignal) 
   slackSynchronizationManager.start();
   registry.register(() => slackSynchronizationManager.stop());
 
+  httpServer.setupPortal();
   await httpServer.start();
   registry.register(() => httpServer.close());
 
