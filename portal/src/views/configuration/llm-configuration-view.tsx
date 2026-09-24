@@ -17,6 +17,7 @@ export interface LlmProviderDraft {
 export interface LlmUseCaseDraft {
   useCase: LlmUseCase;
   label: string;
+  description: string;
   providerId: string;
   modelName: string;
   modelContextWindow: string;
@@ -170,6 +171,7 @@ function UseCaseEditor(props: {
   return (
     <div className="rounded-md border border-slate-200 p-4">
       <h3 className="font-medium text-slate-900">{props.useCase.label}</h3>
+      <p className="mt-1 text-xs text-slate-500">{props.useCase.description}</p>
       <div className="mt-3 grid gap-3 sm:grid-cols-2">
         <label className="text-sm font-medium text-slate-700">
           Provider

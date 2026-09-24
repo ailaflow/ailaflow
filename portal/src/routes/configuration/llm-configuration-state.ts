@@ -3,6 +3,7 @@ import {
   LlmProviderConfigurationValidator,
   LlmProviderPolicy,
   LlmProviderType,
+  LlmUseCase,
   LlmUseCaseConfigurationValidator,
   strLlmUseCase
 } from '@ailaflow/shared';
@@ -16,6 +17,12 @@ import type {
 } from '@ailaflow/shared';
 import { useMemo, useState } from 'react';
 import type { LlmProviderDraft, LlmUseCaseDraft } from '../../views/configuration/llm-configuration-view';
+
+const useCaseDescriptions: Record<LlmUseCase, string> = {
+  [LlmUseCase.ADMIN_CHAT]: 'Requires a strong coding and reasoning model that can reliably configure and build processes.',
+  [LlmUseCase.USER_CHAT]: 'Requires a capable general-purpose model that can reliably use available processes and tools.',
+  [LlmUseCase.AGENT_STEP]: 'Requires a strong reasoning model that can reliably use tools and complete given tasks independently.'
+};
 
 export interface LlmConfigurationState {
   providers: LlmProviderDto[];
@@ -49,6 +56,7 @@ export function useLlmConfigurationState(initial: GetLlmConfigurationResponse): 
       return {
         useCase,
         label: strLlmUseCase(useCase),
+        description: useCaseDescriptions[useCase],
         providerId: saved?.providerId ?? '',
         modelName: saved?.modelName ?? '',
         modelContextWindow: saved?.modelContextWindow?.toString() ?? '',
