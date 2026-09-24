@@ -73,7 +73,7 @@ export function MyTasksPage() {
             title: 'Title',
             width: '40%',
             getLeadingVisual: task =>
-              task.deadline === undefined ? null : <SvgIcon name="timer" className="h-5 w-5 shrink-0 text-slate-500" />,
+              !task.deadline || task.completedAt ? null : <SvgIcon name="timer" className="h-5 w-5 shrink-0 text-slate-500" />,
             getValue: task => task.title
           },
           {
