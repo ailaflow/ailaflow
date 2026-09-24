@@ -82,8 +82,13 @@ const frameworkScript = `
 }());
 `;
 
+const previewScript = `
+document.documentElement.style.overflow = 'hidden';
+document.body.style.overflow = 'hidden';
+`;
+
 export class IframeContentBuilder {
-  public static build(form: FormDefinition): string {
+  public static build(form: FormDefinition, isPreview: boolean): string {
     return `
 <!doctype html>
 <html>
@@ -100,7 +105,7 @@ export class IframeContentBuilder {
 
   <body>
     ${form.html}
-    <script>${form.js}<\/script>
+    <script>${isPreview ? previewScript : form.js}<\/script>
   </body>
 </html>
 `;

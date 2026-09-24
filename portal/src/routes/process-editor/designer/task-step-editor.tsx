@@ -13,6 +13,7 @@ import { DropdownPropertyView } from '../../../views/process-editor/designer/dro
 import { VariableNamePropertyView } from '../../../views/process-editor/designer/variable-name-property-view';
 import { DropdownOrVariablePropertyView } from '../../../views/process-editor/designer/dropdown-or-variable-property-view';
 import { EditorHeaderView } from '../../../views/process-editor/designer/editor-header-view';
+import { FormPreview } from '../../common/form-renderer/form-preview';
 
 export function TaskStepEditor(props: StepEditorProps) {
   const { id, name, step, properties, definition, setName, setProperty } = useStepEditor<TaskStep, ProcessDefinition>();
@@ -41,7 +42,9 @@ export function TaskStepEditor(props: StepEditorProps) {
       />
 
       <EditorPropertyView label="Form">
-        <EnabledSubValuePreviewView onEdit={editForm}>Form</EnabledSubValuePreviewView>
+        <EnabledSubValuePreviewView onEdit={editForm}>
+          <FormPreview form={properties.form} />
+        </EnabledSubValuePreviewView>
       </EditorPropertyView>
 
       <DropdownPropertyView<TaskSubmissionMode>

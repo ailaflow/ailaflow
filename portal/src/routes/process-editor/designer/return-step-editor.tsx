@@ -10,6 +10,7 @@ import { ProcessEditorOverlayType } from '../process-editor-context';
 import { DefinitionPath } from '../../../core/definition-path';
 import { createEmptyFormDefinition } from '../designer-configuration';
 import { EditorHeaderView } from '../../../views/process-editor/designer/editor-header-view';
+import { FormPreview } from '../../common/form-renderer/form-preview';
 
 export function ReturnStepEditor(props: StepEditorProps) {
   const { name, step, properties, definition, setName, setProperty } = useStepEditor<ReturnStep, ProcessDefinition>();
@@ -41,7 +42,7 @@ export function ReturnStepEditor(props: StepEditorProps) {
         {!properties.outputForm && <DisabledSubValuePreviewView onEnable={addOutputForm} label="Enable" />}
         {properties.outputForm && (
           <EnabledSubValuePreviewView onEdit={editOutputFrom} onRemove={removeOutputForm}>
-            Form
+            <FormPreview form={properties.outputForm} />
           </EnabledSubValuePreviewView>
         )}
       </EditorPropertyView>

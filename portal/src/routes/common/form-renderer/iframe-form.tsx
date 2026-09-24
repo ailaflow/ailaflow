@@ -8,6 +8,7 @@ import { FormUserStorage } from './form-user-storage';
 export interface IframeFormProps {
   form: FormDefinition;
   adapter: FormAdapter;
+  isPreview?: boolean;
 }
 
 interface RequestMessage {
@@ -23,10 +24,10 @@ interface ResponseMessage {
   error?: string;
 }
 
-export function IframeForm({ form, adapter }: IframeFormProps) {
+export function IframeForm({ form, adapter, isPreview }: IframeFormProps) {
   const [iframe, setIframe] = useState<HTMLIFrameElement | null>(null);
   const userStorage = useMemo(() => new FormUserStorage(), []);
-  const content = useMemo(() => IframeContentBuilder.build(form), [form]);
+  const content = useMemo(() => IframeContentBuilder.build(form, isPreview ?? false), [form, isPreview]);
 
   useEffect(() => {
     if (!iframe) {

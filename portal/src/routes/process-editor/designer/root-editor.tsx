@@ -9,6 +9,7 @@ import { VariableSelectorPropertyView } from '../../../views/process-editor/desi
 import { VariableDefinitionsView } from '../../../views/process-editor/designer/variable-definitions-view';
 import { createEmptyFormDefinition } from '../designer-configuration';
 import { EditorHeaderView } from '../../../views/process-editor/designer/editor-header-view';
+import { FormPreview } from '../../common/form-renderer/form-preview';
 
 export interface RootEditorProps {
   state: ProcessEditorState;
@@ -74,7 +75,7 @@ export function RootEditor(props: RootEditorProps) {
         {!properties.startForm && <DisabledSubValuePreviewView onEnable={addStartForm} label="Enable" />}
         {properties.startForm && (
           <EnabledSubValuePreviewView onEdit={editStartFrom} onRemove={removeStartForm}>
-            Form
+            <FormPreview form={properties.startForm} />
           </EnabledSubValuePreviewView>
         )}
       </EditorPropertyView>
