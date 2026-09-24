@@ -65,7 +65,7 @@ test('rejects an incorrect current password and an invalid new password', async 
 
 function createRequest(userName: string, body: unknown): Request {
   return Object.assign(new EventEmitter(), {
-    authToken: new AuthToken('token', userName, Date.now() + 60_000, false),
+    authToken: new AuthToken('token', AuthToken.hashToken('token'), userName, Date.now() + 60_000, false),
     body
   }) as unknown as Request;
 }

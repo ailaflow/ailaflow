@@ -31,7 +31,8 @@ export class AuthMiddleware {
     let authToken: AuthToken | null;
     try {
       const signal = AbortSignal.timeout(2_000);
-      authToken = await this.authTokenRepository.tryGetByToken(signal, token);
+      const tokenHash = AuthToken.hashToken(token);
+      authToken = await this.authTokenRepository.tryGetByTokenHash(signal, tokenHash);
     } catch (e) {
       res.status(500).json({ error: 'Internal Server Error' });
       this.logger.error(`Failed to retrieve auth token: ${e}`);

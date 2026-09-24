@@ -25,6 +25,6 @@ test('deletes all notifications belonging to the authenticated user', async () =
 
 function createRequest(userName: string): Request {
   return Object.assign(new EventEmitter(), {
-    authToken: new AuthToken('token', userName, Date.now() + 60_000, false)
+    authToken: new AuthToken('token', AuthToken.hashToken('token'), userName, Date.now() + 60_000, false)
   }) as unknown as Request;
 }

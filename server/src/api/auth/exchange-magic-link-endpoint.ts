@@ -22,7 +22,7 @@ export class ExchangeMagicLinkEndpoint implements Endpoint {
 
     return {
       userName: authToken.userName,
-      authToken: authToken.token,
+      authToken: authToken.getToken(),
       isAdmin: authToken.isAdmin
     };
   }

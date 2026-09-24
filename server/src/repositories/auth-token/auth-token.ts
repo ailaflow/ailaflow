@@ -1,16 +1,20 @@
 import { randomBytes } from 'crypto';
 import { promisify } from 'util';
+import { sha256 } from '../../core/cipher/sha256';
 
 const EXPIRATION_TIME = 1000 * 60 * 60 * 24;
 
 const randomBytesAsync = promisify(randomBytes);
 
 export class AuthToken {
+  public static hashToken = sha256;
+
   public static async create(userName: string, isAdmin: boolean): Promise<AuthToken> {
     const buffer = await randomBytesAsync(64);
     const token = buffer.toString('base64');
+    const tokenHash = AuthToken.hashToken(token);
     const expiresAt = Date.now() + EXPIRATION_TIME;
-    return new AuthToken(token, userName, expiresAt, isAdmin);
+    return new AuthToken(token, tokenHash, userName, expiresAt, isAdmin);
   }
 
   public static async refresh(authToken: AuthToken): Promise<AuthToken> {
@@ -18,11 +22,19 @@ export class AuthToken {
   }
 
   public constructor(
-    public readonly token: string,
+    private readonly token: string | null,
+    public readonly tokenHash: string,
     public readonly userName: string,
     public expiresAt: number,
     public readonly isAdmin: boolean
   ) {}
+
+  public getToken(): string {
+    if (!this.token) {
+      throw new Error('Token is not available');
+    }
+    return this.token;
+  }
 
   public isExpired(): boolean {
     return Date.now() > this.expiresAt;

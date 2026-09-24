@@ -17,7 +17,8 @@ export class RefreshAuthTokenEndpoint implements Endpoint {
     const signal = getEndpointAbortSignal(req);
     const request = parseBody(refreshTokenRequestSchema, req.body);
 
-    const authToken = await this.authTokenRepository.tryGetByToken(signal, request.authToken);
+    const tokenHash = AuthToken.hashToken(request.authToken);
+    const authToken = await this.authTokenRepository.tryGetByTokenHash(signal, tokenHash);
     if (!authToken || !authToken.tryScheduleExpiration()) {
       throw new EndpointError('Invalid or expired token', 401);
     }
@@ -27,7 +28,7 @@ export class RefreshAuthTokenEndpoint implements Endpoint {
     await this.authTokenRepository.upsert(signal, authToken);
 
     return {
-      authToken: newAuthToken.token
+      authToken: newAuthToken.getToken()
     };
   }
 }

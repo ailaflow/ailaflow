@@ -87,7 +87,13 @@ test('self endpoints use the authenticated user and admin endpoints use the rout
 
 function createRequest(authenticatedUserName: string, options: { body?: unknown; params?: Record<string, string> } = {}): Request {
   return Object.assign(new EventEmitter(), {
-    authToken: new AuthToken('token', authenticatedUserName, Date.now() + 60_000, authenticatedUserName === 'admin'),
+    authToken: new AuthToken(
+      'token',
+      AuthToken.hashToken('token'),
+      authenticatedUserName,
+      Date.now() + 60_000,
+      authenticatedUserName === 'admin'
+    ),
     body: options.body,
     params: options.params ?? {}
   }) as unknown as Request;

@@ -16,7 +16,7 @@ export class SqliteAuthTokenRepository implements AuthTokenRepository {
       if (version < 1) {
         db.exec(`
           CREATE TABLE auth_tokens (
-            token TEXT PRIMARY KEY,
+            tokenHash TEXT PRIMARY KEY,
             userName TEXT NOT NULL,
             isAdmin INTEGER NOT NULL,
             expiresAt INTEGER NOT NULL,
@@ -33,34 +33,34 @@ export class SqliteAuthTokenRepository implements AuthTokenRepository {
   public async upsert(_: AbortSignal, authToken: AuthToken, transaction?: Transaction): Promise<void> {
     await this.db.write(db => {
       const statement = db.prepare(`
-        INSERT INTO auth_tokens (token, userName, isAdmin, expiresAt)
+        INSERT INTO auth_tokens (tokenHash, userName, isAdmin, expiresAt)
         VALUES (?, ?, ?, ?)
-        ON CONFLICT(token) DO UPDATE SET
+        ON CONFLICT(tokenHash) DO UPDATE SET
           userName = excluded.userName,
           isAdmin = excluded.isAdmin,
           expiresAt = excluded.expiresAt
       `);
-      statement.run(authToken.token, authToken.userName, authToken.isAdmin ? 1 : 0, authToken.expiresAt);
+      statement.run(authToken.tokenHash, authToken.userName, authToken.isAdmin ? 1 : 0, authToken.expiresAt);
     }, transaction);
   }
 
-  public async tryGetByToken(_: AbortSignal, token: string): Promise<AuthToken | null> {
+  public async tryGetByTokenHash(_: AbortSignal, tokenHash: string): Promise<AuthToken | null> {
     return this.db.read(db => {
       const statement = db.prepare(`
-        SELECT token, userName, isAdmin, expiresAt
+        SELECT tokenHash, userName, isAdmin, expiresAt
         FROM auth_tokens
-        WHERE token = ?
+        WHERE tokenHash = ?
         LIMIT 1
       `);
-      const row = statement.get(token) as
+      const row = statement.get(tokenHash) as
         | {
-            token: string;
+            tokenHash: string;
             userName: string;
             isAdmin: number;
             expiresAt: number;
           }
         | undefined;
-      return row ? new AuthToken(row.token, row.userName, row.expiresAt, row.isAdmin === 1) : null;
+      return row ? new AuthToken(null, row.tokenHash, row.userName, row.expiresAt, row.isAdmin === 1) : null;
     });
   }
 

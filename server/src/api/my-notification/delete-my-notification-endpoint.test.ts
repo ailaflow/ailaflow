@@ -41,6 +41,6 @@ function createRepository(deleteNotification: (userName: string, id: string) => 
 function createRequest(id: string, userName: string): Request {
   return Object.assign(new EventEmitter(), {
     params: { id },
-    authToken: new AuthToken('token', userName, Date.now() + 60_000, false)
+    authToken: new AuthToken('token', AuthToken.hashToken('token'), userName, Date.now() + 60_000, false)
   }) as unknown as Request;
 }

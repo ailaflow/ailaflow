@@ -24,7 +24,8 @@ export class MagicLinkExchanger {
     }
 
     // Magic links must never grant admin privileges.
-    const authToken = await AuthToken.create(user.name, false);
+    const isAdmin = false;
+    const authToken = await AuthToken.create(user.name, isAdmin);
     await this.authTokenRepository.upsert(signal, authToken);
     return authToken;
   }

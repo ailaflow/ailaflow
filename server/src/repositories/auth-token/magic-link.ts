@@ -1,11 +1,10 @@
-import { createHash, randomBytes } from 'node:crypto';
+import { randomBytes } from 'node:crypto';
+import { sha256 } from '../../core/cipher/sha256';
 
 export const MAGIC_LINK_VALIDITY_HOURS = 2;
 
 export class MagicLink {
-  public static hashToken(token: string): string {
-    return createHash('sha256').update(token).digest('base64url');
-  }
+  public static hashToken = sha256;
 
   public static create(userName: string): MagicLink {
     const token = randomBytes(32).toString('base64url');
