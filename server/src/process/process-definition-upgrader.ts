@@ -1,4 +1,4 @@
-import { PROCESS_VERSION, ProcessDefinition, TaskStep } from '@ailaflow/shared';
+import { PROCESS_VERSION, ProcessDefinition } from '@ailaflow/shared';
 import { DefinitionWalker } from 'sequential-workflow-model';
 
 export class ProcessDefinitionUpgrader {
@@ -10,20 +10,11 @@ export class ProcessDefinitionUpgrader {
     }
 
     this.walker.forEach(definition, step => {
-      if (step.type === 'task') {
-        this.upgradeTaskStep(step as TaskStep);
-      }
+      // if (step.type === 'return') {
+      //   this.upgradeReturnStep(step as ReturnStep);
+      // }
     });
 
     definition.properties.version = PROCESS_VERSION;
-  }
-
-  private upgradeTaskStep(step: TaskStep) {
-    if (!step.properties.title) {
-      step.properties.title = {
-        type: 'string',
-        value: step.name
-      };
-    }
   }
 }

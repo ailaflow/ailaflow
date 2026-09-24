@@ -1,12 +1,14 @@
 import { SequentialWorkflowDesigner, WrappedDefinition } from 'sequential-workflow-designer-react';
+import { InterruptingTaskStepExtension } from './extensions/interrupting-task-step-extension';
 import { useProcessEditor } from './process-editor-context';
 import { RootEditor } from './designer/root-editor';
 import { StepEditor } from './designer/step-editor';
 import { toolboxConfiguration } from './designer-configuration';
-import { useRef } from 'react';
+import { useMemo, useRef } from 'react';
 
 export function Designer() {
   const state = useProcessEditor();
+  const extensions = useMemo(() => [InterruptingTaskStepExtension.createExtension()], []);
   const isFirstUpdate = useRef(true);
 
   function setDefinition(newDefinition: WrappedDefinition) {
@@ -35,6 +37,7 @@ export function Designer() {
         step: state.stepValidator.validateStep
       }}
       toolboxConfiguration={toolboxConfiguration}
+      extensions={extensions}
     />
   );
 }

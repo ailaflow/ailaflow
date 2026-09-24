@@ -15,9 +15,9 @@ test('inserts notifications for users', async () => {
   await notificationRepository.setup(signal);
 
   await notificationRepository.insertMultiple(signal, [
-    new Notification('notification_1', 'process-1', 'alice', 'First', 1000),
-    new Notification('notification_2', 'process-2', 'bob', 'Second', 2000),
-    new Notification('notification_3', 'process-3', 'alice', 'Third', 3000)
+    new Notification('notification_1', 'alice', 'process-1', 'First', 1000),
+    new Notification('notification_2', 'bob', null, 'Second', 2000),
+    new Notification('notification_3', 'alice', 'process-3', 'Third', 3000)
   ]);
   await notificationRepository.insertMultiple(signal, []);
 
@@ -28,10 +28,10 @@ test('inserts notifications for users', async () => {
   assert.equal(await notificationRepository.deleteAll(signal, 'alice'), 0);
 
   const rows = db
-    .prepare(`SELECT id, processName, userName, message, createdAt FROM notifications ORDER BY id`)
+    .prepare(`SELECT id, userName, processName, message, createdAt FROM notifications ORDER BY id`)
     .all()
     .map(row => ({ ...row }));
-  assert.deepEqual(rows, [{ id: 'notification_2', processName: 'process-2', userName: 'bob', message: 'Second', createdAt: 2000 }]);
+  assert.deepEqual(rows, [{ id: 'notification_2', userName: 'bob', processName: null, message: 'Second', createdAt: 2000 }]);
 
   const indexes = db
     .prepare(

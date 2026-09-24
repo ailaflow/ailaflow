@@ -151,7 +151,7 @@ const notificationStep: Omit<NotificationStep, 'id'> = {
 const returnStep: Omit<ReturnStep, 'id'> = {
   type: 'return',
   name: 'Return',
-  componentType: 'task',
+  componentType: 'interruptingTask',
   properties: {
     outputVariableNames: []
   }

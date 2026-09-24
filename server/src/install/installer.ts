@@ -8,6 +8,8 @@ import { UserAttributes } from '../repositories/user-attributes/user-attributes'
 import { Sandbox } from '../repositories/sandbox/sandbox';
 import { Cipher } from '../core/cipher/cipher';
 import { FileSystemCipherKeyStore } from '../core/cipher/file-system-cipher-key-store';
+import { NotificationRepository } from '../repositories/notification/notification-repository';
+import { Notification } from '../repositories/notification/notification';
 
 export class Installer {
   private isInstalling = false;
@@ -18,6 +20,7 @@ export class Installer {
     private readonly userRepository: UserRepository,
     private readonly userAttributesRepository: UserAttributesRepository,
     private readonly sandboxRepository: SandboxRepository,
+    private readonly notificationRepository: NotificationRepository,
     private readonly licenseManager: LicenseManager
   ) {}
 
@@ -64,6 +67,9 @@ export class Installer {
       await this.userRepository.insert(signal, user);
       await this.userAttributesRepository.replace(signal, attributes);
       await this.sandboxRepository.insert(signal, defaultSandbox);
+
+      const notification = Notification.create(rootUserName, null, 'AilaFlow is successfully installed');
+      await this.notificationRepository.insertMultiple(signal, [notification]);
     } finally {
       this.isInstalling = false;
     }

@@ -99,7 +99,7 @@ export const returnStepPropertiesSchema = z.object({
 
 export const returnStepSchema = baseStepSchema.extend({
   type: z.literal('return'),
-  componentType: z.literal('task'),
+  componentType: z.literal('interruptingTask'),
   properties: returnStepPropertiesSchema
 });
 

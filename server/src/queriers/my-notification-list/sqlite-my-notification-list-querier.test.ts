@@ -16,10 +16,10 @@ test('queries a newest-first page of notifications for the current user', async 
 
   await notificationRepository.setup(signal);
   await notificationRepository.insertMultiple(signal, [
-    new Notification('notification_1', 'process-1', 'alice', 'Oldest', 1000),
-    new Notification('notification_2', 'process-1', 'alice', 'Middle', 2000),
-    new Notification('notification_3', 'process-1', 'alice', 'Newest', 3000),
-    new Notification('notification_4', 'process-2', 'bob', 'Other user', 4000)
+    new Notification('notification_1', 'alice', 'process-1', 'Oldest', 1000),
+    new Notification('notification_2', 'alice', 'process-1', 'Middle', 2000),
+    new Notification('notification_3', 'alice', 'process-1', 'Newest', 3000),
+    new Notification('notification_4', 'bob', 'process-2', 'Other user', 4000)
   ]);
 
   assert.deepEqual(await querier.query(signal, 'alice', 1, 2), {

@@ -16,3 +16,7 @@
 .sqd-editor-react {
   overflow: auto;
 }
+.sqd-root-start-stop-circle,
+.sqd-label-primary > .sqd-label-rect {
+  fill: #574fbf !important;
+}

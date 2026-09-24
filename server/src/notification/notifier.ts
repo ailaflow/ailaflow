@@ -42,7 +42,7 @@ export class Notifier {
     if (!isTest) {
       const notifications = new Array<Notification>(userNames.length);
       for (let i = 0; i < userNames.length; i++) {
-        notifications[i] = Notification.create(processName, userNames[i], message);
+        notifications[i] = Notification.create(userNames[i], processName, message);
       }
       await this.notificationRepository.insertMultiple(signal, notifications);
     }
@@ -74,7 +74,7 @@ export class Notifier {
       : null;
 
     if (!isTest) {
-      const notification = Notification.create(processName, userName, message);
+      const notification = Notification.create(userName, processName, message);
       await this.notificationRepository.insertMultiple(signal, [notification]);
     }
 
