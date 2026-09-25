@@ -18,7 +18,8 @@ export class HttpServer {
       this.app.set('trust proxy', parseBoolOrString(TRUST_PROXY));
     }
     this.app.disable('x-powered-by');
-    this.app.use(express.json());
+    this.app.use(express.json({ limit: '5mb' }));
+    this.app.use(express.urlencoded({ limit: '5mb' }));
   }
 
   public setupPortal(): void {

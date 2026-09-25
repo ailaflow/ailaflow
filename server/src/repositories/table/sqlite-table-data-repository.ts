@@ -55,14 +55,14 @@ export class SqliteTableDataRepository implements TableDataRepository {
     }
   }
 
-  public async delete(_: AbortSignal, tableName: string, _id: string, transaction?: Transaction): Promise<void> {
+  public async delete(_: AbortSignal, tableName: string, _id: string, transaction?: Transaction): Promise<boolean> {
     try {
-      await this.db.write(db => {
+      return await this.db.write(db => {
         const statement = db.prepare(`
           DELETE FROM ${SqliteTableDataNameProvider.getName(tableName)}
           WHERE _id = ?
         `);
-        statement.run(_id);
+        return statement.run(_id).changes > 0;
       }, transaction);
     } catch (e) {
       throw mapSqliteError(e, tableName);

@@ -91,7 +91,7 @@ export async function writeVariable(name: string, value: unknown, rpcConfig?: Rp
  * @returns The stored value or `null` if the table or row is not found.
  * @throws If the RPC call fails.
  */
-export async function tryReadTable<Row extends TableRow = TableRow>(name: string, _id: string, rpcConfig?: RpcConfig): Promise<Row | null> {
+export async function readTableRow<Row extends TableRow = TableRow>(name: string, _id: string, rpcConfig?: RpcConfig): Promise<Row | null> {
   name = normalizeName(name, '#');
   return rpc<Row>('tryReadTable', { name, _id }, rpcConfig);
 }
@@ -131,9 +131,22 @@ export async function readTablePage<Row extends TableRow = TableRow>(
  * @param rpcConfig Optional configuration for the RPC call.
  * @throws If the table name or row schema is invalid, or if the RPC call fails.
  */
-export async function writeTable(name: string, row: TableRowInput, rpcConfig?: RpcConfig): Promise<void> {
+export async function writeTableRow(name: string, row: TableRowInput, rpcConfig?: RpcConfig): Promise<void> {
   name = normalizeName(name, '#');
-  return rpc<void>('writeTable', { name, row }, rpcConfig);
+  return rpc<void>('writeTableRow', { name, row }, rpcConfig);
+}
+
+/**
+ * Deletes a row from a table by its primary key.
+ * @param name The name of the table to delete from.
+ * @param _id The identifier of the row to delete.
+ * @param rpcConfig Optional configuration for the RPC call.
+ * @returns Whether the row existed and was deleted.
+ * @throws If the RPC call fails.
+ */
+export async function deleteTableRow(name: string, _id: string, rpcConfig?: RpcConfig): Promise<boolean> {
+  name = normalizeName(name, '#');
+  return rpc<boolean>('deleteTableRow', { name, _id }, rpcConfig);
 }
 
 /**
@@ -150,8 +163,8 @@ export function log(...texts: unknown[]) {
  * @returns The name of the user who started the process.
  * @throws If the RPC call fails.
  */
-export async function getStartedBy(): Promise<string> {
-  const name = await rpc<string>('getStartedBy', {});
+export async function getStartedBy(rpcConfig?: RpcConfig): Promise<string> {
+  const name = await rpc<string>('getStartedBy', rpcConfig);
   return '@' + name;
 }
 

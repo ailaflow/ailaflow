@@ -53,7 +53,8 @@ test('upserts and deletes data in a table-specific data table', async t => {
     ]
   );
 
-  await repository.delete(signal, 'customers', 'customer_1');
+  assert.equal(await repository.delete(signal, 'customers', 'customer_1'), true);
+  assert.equal(await repository.delete(signal, 'customers', 'customer_1'), false);
   assert.equal(await tryGetTableData(signal, schemaManager, repository, 'customers', 'customer_1'), null);
   assert.deepEqual(toPlainRows(dataDb.prepare(`SELECT _id FROM data_customers`)), [{ _id: 'customer_2' }]);
 

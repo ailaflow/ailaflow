@@ -12,13 +12,13 @@ const requestSchema = z.object({
 });
 
 export class WriteTableRpcHandler implements SandboxRpcHandler {
-  public readonly methodName = 'writeTable';
+  public readonly methodName = 'writeTableRow';
 
   public constructor(private readonly tableManager: TableManager) {}
 
   public async handle(signal: AbortSignal, _sandboxName: string, _executionId: string, data: object): Promise<true> {
     const request = requestSchema.parse(data);
-    await this.tableManager.write(signal, request.name, request.row);
+    await this.tableManager.writeRow(signal, request.name, request.row);
     return true;
   }
 }

@@ -55,7 +55,7 @@ export class TableManager {
     return this.tableDataListQuerier.query(signal, schema, query);
   }
 
-  public async write(signal: AbortSignal, tableName: string, row: Record<string, unknown> & { _id: string }): Promise<void> {
+  public async writeRow(signal: AbortSignal, tableName: string, row: Record<string, unknown> & { _id: string }): Promise<void> {
     const validationError = TableRowValidator.validate(row);
     if (validationError) {
       throw new TableSchemaError(validationError);
@@ -64,6 +64,15 @@ export class TableManager {
     await this.ensureTableExists(signal, tableName);
     const schema = await this.tableSchemaManager.ensureCompatible(signal, tableName, row);
     await this.tableDataRepository.upsert(signal, schema, row);
+  }
+
+  public async deleteRow(signal: AbortSignal, tableName: string, _id: string): Promise<boolean> {
+    const schema = await this.tableSchemaManager.tryGet(signal, tableName);
+    if (!schema) {
+      return false;
+    }
+
+    return this.tableDataRepository.delete(signal, tableName, _id);
   }
 
   private async ensureTableExists(signal: AbortSignal, tableName: string): Promise<void> {

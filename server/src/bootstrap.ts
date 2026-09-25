@@ -117,7 +117,7 @@ import { GetTablesEndpoint } from './api/table/get-tables-endpoint';
 import { GetTableEndpoint } from './api/table/get-table-endpoint';
 import { SaveTableEndpoint } from './api/table/save-table-endpoint';
 import { DeleteTableEndpoint } from './api/table/delete-table-endpoint';
-import { WriteTableRpcHandler } from './process-executor/rpc-handlers/write-table-rpc-handler';
+import { WriteTableRpcHandler } from './process-executor/rpc-handlers/write-table-row-rpc-handler';
 import { TryReadTableRpcHandler } from './process-executor/rpc-handlers/try-read-table-rpc-handler';
 import { SqliteTableDataListQuerier } from './queriers/table-data-list/sqlite-table-data-list-querier';
 import { TableManager } from './table/table-manager';
@@ -233,6 +233,7 @@ import { Notifier } from './notification/notifier';
 import { IsTestRpcHandler } from './process-executor/rpc-handlers/is-test-rpc-handler';
 import { ResolveUserAccessRpcHandler } from './process-executor/rpc-handlers/resolve-user-access-rpc-handler';
 import { LoginThrottler } from './api/auth/login-throttler';
+import { DeleteTableRowRpcHandler } from './process-executor/rpc-handlers/delete-table-row-rpc-handler';
 
 const DB_TYPE = 'sqlite';
 
@@ -386,7 +387,8 @@ export async function bootstrap(registry: CleanupRegistry, signal: AbortSignal) 
     new TryReadTableRpcHandler(tableManager),
     new UserExistsRpcHandler(userRepository),
     new WriteTableRpcHandler(tableManager),
-    new WriteVariableRpcHandler(processExecutionStore)
+    new WriteVariableRpcHandler(processExecutionStore),
+    new DeleteTableRowRpcHandler(tableManager)
   ]);
 
   const sessionManager = new ChatSessionManager();

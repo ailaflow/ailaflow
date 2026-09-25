@@ -11,9 +11,10 @@ import { Table } from '../../repositories/table/table';
 import { SqliteTableDataListQuerier } from '../../queriers/table-data-list/sqlite-table-data-list-querier';
 import { TableManager } from '../../table/table-manager';
 import { TableSchemaManager } from '../../table/table-schema-manager';
+import { DeleteTableRowRpcHandler } from './delete-table-row-rpc-handler';
 import { ReadTablePageRpcHandler } from './read-table-page-rpc-handler';
 import { TryReadTableRpcHandler } from './try-read-table-rpc-handler';
-import { WriteTableRpcHandler } from './write-table-rpc-handler';
+import { WriteTableRpcHandler } from './write-table-row-rpc-handler';
 
 test('writes and reads table data through RPC handlers', async () => {
   const modelDb = new DatabaseSync(':memory:', { open: true });
@@ -24,6 +25,7 @@ test('writes and reads table data through RPC handlers', async () => {
   const tableRepository = new SqliteTableRepository(dbs);
   const tableDataRepository = new SqliteTableDataRepository(dbs);
   const tableManager = new TableManager(tableRepository, tableDataRepository, schemaManager, new SqliteTableDataListQuerier(dbs));
+  const deleteHandler = new DeleteTableRowRpcHandler(tableManager);
   const readHandler = new TryReadTableRpcHandler(tableManager);
   const writeHandler = new WriteTableRpcHandler(tableManager);
   await tableRepository.setup(signal);
@@ -66,6 +68,11 @@ test('writes and reads table data through RPC handlers', async () => {
   assert.ok(updated);
   assert.equal(updated._id, 'customer_1');
   assert.equal(updated.name, 'updated');
+
+  assert.equal(await deleteHandler.handle(signal, 'sandbox', 'execution', { name: 'customers', _id: 'customer_1' }), true);
+  assert.equal(await deleteHandler.handle(signal, 'sandbox', 'execution', { name: 'customers', _id: 'customer_1' }), false);
+  assert.equal(await deleteHandler.handle(signal, 'sandbox', 'execution', { name: 'missing', _id: 'customer_1' }), false);
+  assert.equal(await readHandler.handle(signal, 'sandbox', 'execution', { name: 'customers', _id: 'customer_1' }), null);
 
   modelDb.close();
   dataDb.close();

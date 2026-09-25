@@ -17,5 +17,5 @@ export interface TableDataRepository {
     row: Record<string, unknown> & { _id: string },
     transaction?: Transaction
   ): Promise<void>;
-  delete(signal: AbortSignal, tableName: string, _id: string, transaction?: Transaction): Promise<void>;
+  delete(signal: AbortSignal, tableName: string, _id: string, transaction?: Transaction): Promise<boolean>;
 }

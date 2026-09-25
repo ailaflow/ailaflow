@@ -60,8 +60,8 @@ export function IframeForm({ form, adapter, isPreview }: IframeFormProps) {
     const submitForm = async (payload: Record<string, unknown>) => {
       for (const name of adapter.outputVariableNames) {
         const value = payload[name];
-        if (!value) {
-          throw new Error(`Output variable ${name} is required but not provided.`);
+        if (value === undefined) {
+          throw new Error(`Output variable ${name} is required but not provided`);
         }
         adapter.assertVariableValue(name, value);
       }
