@@ -63,24 +63,41 @@ export function AuthContext(props: AuthContextProps) {
   }, [apiClient]);
 
   useEffect(() => {
-    if (!session) {
-      return;
-    }
-    const iv = setInterval(async () => {
-      try {
-        const signal = AbortSignal.timeout(3_000);
-        const response = await apiClient.auth.refreshToken(signal, {
-          authToken: session.authToken
-        });
-        session.authToken = response.authToken;
-        apiClient.updateAuthToken(response.authToken);
-        saveToStorage(session);
-      } catch (e) {
-        console.error(e);
-      }
-    }, 10_000);
+    const abortController = new AbortController();
+    let to: ReturnType<typeof setTimeout> | null = null;
 
-    return () => clearInterval(iv);
+    async function refresh(s: AuthSession) {
+      to = null;
+      if (abortController.signal.aborted) {
+        return;
+      }
+      try {
+        const signal = AbortSignal.any([AbortSignal.timeout(3_000), abortController.signal]);
+        const response = await apiClient.auth.refreshToken(signal, {
+          authToken: s.authToken
+        });
+        if (!abortController.signal.aborted) {
+          s.authToken = response.authToken;
+          apiClient.updateAuthToken(response.authToken);
+          saveToStorage(session);
+        }
+      } catch (e) {
+        console.error(`Failed to refresh auth token: ${(e as Error)?.message ?? e}`);
+      }
+      if (!abortController.signal.aborted) {
+        to = setTimeout(() => refresh(s), 60_000);
+      }
+    }
+
+    if (session) {
+      refresh(session);
+      return () => {
+        abortController.abort();
+        if (to) {
+          clearTimeout(to);
+        }
+      };
+    }
   }, [session, apiClient]);
 
   function setSession(session: AuthSession | null) {

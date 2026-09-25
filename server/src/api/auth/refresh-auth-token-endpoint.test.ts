@@ -7,6 +7,7 @@ import { AuthToken } from '../../repositories/auth-token/auth-token';
 import { RefreshAuthTokenEndpoint } from './refresh-auth-token-endpoint';
 
 test('schedules the old token for expiration and persists both tokens', async () => {
+  const expirationDelay = 5 * 60 * 1000;
   const authToken = new AuthToken('old-token', AuthToken.hashToken('old-token'), 'alice', Date.now() + 60_000, false);
   const upsertedTokens: AuthToken[] = [];
   const repository = createRepository(authToken, upsertedTokens);
@@ -20,8 +21,8 @@ test('schedules the old token for expiration and persists both tokens', async ()
   assert.equal(upsertedTokens[0].getToken(), response.authToken);
   assert.notEqual(upsertedTokens[0].getToken(), authToken.getToken());
   assert.strictEqual(upsertedTokens[1], authToken);
-  assert.ok(authToken.expiresAt >= beforeRefresh + 10_000);
-  assert.ok(authToken.expiresAt <= afterRefresh + 10_000);
+  assert.ok(authToken.expiresAt >= beforeRefresh + expirationDelay);
+  assert.ok(authToken.expiresAt <= afterRefresh + expirationDelay);
 });
 
 function createRepository(authToken: AuthToken, upsertedTokens: AuthToken[]): AuthTokenRepository {

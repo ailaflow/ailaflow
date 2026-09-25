@@ -46,7 +46,7 @@ export class AuthToken {
     if (isExpired) {
       return false;
     }
-    this.expiresAt = Date.now() + 10 * 1000;
+    this.expiresAt = Date.now() + 5 * 60 * 1000;
     return true;
   }
 
