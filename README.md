@@ -12,6 +12,8 @@ Learn more at [ailaflow.com](https://ailaflow.com).
 
 ## How AilaFlow works
 
+[![AilaFlow - Screenshot](.github/portal-screenshot.png)](.github/portal-screenshot.png)
+
 - **Admins build the workspace.** Administrators use AI to create and manage processes that define how work gets done. Regular users execute the processes available to them.
 
 - **Processes are permission-aware.** Administrators decide which processes are available to specific users or groups, and can keep selected actions human-only-so sensitive decisions, approvals, or operations remain under explicit human control.
