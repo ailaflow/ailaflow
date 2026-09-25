@@ -182,7 +182,7 @@ test('agent evaluates its prompt, runs variable tools, logs summaries, and conti
       id: 'return',
       name: 'Return',
       type: 'return',
-      componentType: 'task',
+      componentType: 'interruptingTask',
       properties: { outputVariableNames: ['answer'] }
     }
   ]);
@@ -235,7 +235,7 @@ for (const allowedVariableNames of [[], ['answer']]) {
         id: 'return',
         name: 'Return',
         type: 'return',
-        componentType: 'task',
+        componentType: 'interruptingTask',
         properties: { outputVariableNames: ['prompt'] }
       }
     ]);

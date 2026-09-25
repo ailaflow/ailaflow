@@ -16,6 +16,7 @@ import { SqliteKvConfigurationRepository } from '../../repositories/configuratio
 import { SqliteSandboxRepository } from '../../repositories/sandbox/sqlite-sandbox-repository';
 import { SqliteUserAttributesRepository } from '../../repositories/user-attributes/sqlite-user-attributes-repository';
 import { SqliteUserRepository } from '../../repositories/user/sqlite-user-repository';
+import { SqliteNotificationRepository } from '../../repositories/notification/sqlite-notification-repository';
 import { InstallEndpoint } from './install-endpoint';
 import { Installer } from '../../install/installer';
 import { CanInstallEndpoint } from './can-install-endpoint';
@@ -32,16 +33,21 @@ async function fixture(t: TestContext) {
   const folderPath = await mkdtemp(join(tmpdir(), 'aila-installer-'));
   t.after(() => rm(folderPath, { recursive: true, force: true }));
   const db = new DatabaseSync(':memory:');
+  const dataDb = new DatabaseSync(':memory:');
   db.exec('PRAGMA foreign_keys = ON');
   t.after(() => db.close());
-  const dbs = { modelDb: new SqliteDatabase(db) } as SqliteDatabases;
+  t.after(() => dataDb.close());
+  const dbs = { modelDb: new SqliteDatabase(db), dataDb: new SqliteDatabase(dataDb) } as SqliteDatabases;
   const cipherKeyStore = new FileSystemCipherKeyStore({ getAppDataFolderPath: () => folderPath });
   const cipher = new Cipher(cipherKeyStore);
   const users = new SqliteUserRepository(dbs);
   const attributes = new SqliteUserAttributesRepository(dbs);
   const sandboxes = new SqliteSandboxRepository(dbs, cipher);
+  const notifications = new SqliteNotificationRepository(dbs);
   const configuration = new SqliteKvConfigurationRepository(dbs);
-  for (const repository of [users, attributes, sandboxes, configuration]) await repository.setup(signal);
+  for (const repository of [users, attributes, sandboxes, notifications, configuration]) {
+    await repository.setup(signal);
+  }
   const validator = new LicenseValidator();
   const validate = t.mock.method(validator, 'validate');
   validate.mock.mockImplementation(async (_signal, request) => ({
@@ -50,10 +56,10 @@ async function fixture(t: TestContext) {
   }));
   const versionProvider = { get: () => 'test-version' } as VersionProvider;
   const manager = new LicenseManager(validator, new KvConfigurationManager(configuration), users, versionProvider);
-  const installer = new Installer(cipherKeyStore, cipher, users, attributes, sandboxes, manager);
+  const installer = new Installer(cipherKeyStore, cipher, users, attributes, sandboxes, notifications, manager);
   const endpoint = new InstallEndpoint(installer);
   const canInstallEndpoint = new CanInstallEndpoint(installer);
-  return { db, users, attributes, sandboxes, configuration, manager, endpoint, canInstallEndpoint, validate };
+  return { db, dataDb, users, attributes, sandboxes, configuration, manager, endpoint, canInstallEndpoint, validate };
 }
 
 function request(license: object | undefined): Request {
@@ -69,6 +75,13 @@ for (const license of [home, starter, business]) {
     assert.ok((await f.users.tryGetUser(signal, 'root'))!.isAdmin);
     assert.ok(Object.keys((await f.attributes.get(signal, 'root')).attributes).length > 0);
     assert.ok(await f.sandboxes.tryGet(signal, 'default'));
+    assert.deepEqual(
+      f.dataDb
+        .prepare('SELECT userName, processName, message FROM notifications')
+        .all()
+        .map(row => ({ ...row })),
+      [{ userName: 'root', processName: null, message: 'AilaFlow is successfully installed' }]
+    );
     assert.equal((await f.configuration.get(signal)).licenseType, license.licenseType);
     assert.equal((await f.configuration.get(signal)).licenseKey, license.licenseKey);
     assert.equal(f.manager.getStatus()!.validationResult.validationError, null);
