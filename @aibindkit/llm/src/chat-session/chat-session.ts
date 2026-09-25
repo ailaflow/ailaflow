@@ -109,7 +109,7 @@ export class ChatSession {
     this.queue.clear();
 
     this.isInterrupted = true;
-    this.interruptAbortController.abort('User interrupted the session');
+    this.interruptAbortController.abort(`The user interrupted session ${this.id}`);
     return true;
   }
 

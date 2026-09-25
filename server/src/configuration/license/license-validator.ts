@@ -16,13 +16,16 @@ export interface LicenseValidationResult {
 
 export class LicenseValidator {
   public async validate(signal: AbortSignal, request: LicenseValidationRequest): Promise<LicenseValidationResult> {
-    signal.throwIfAborted();
-    if (request.type !== LicenseType.BUSINESS) {
-      return { validationError: null, canUpgrade: false };
+    const response = await fetch('https://license.ailaflow.com/validator', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(request),
+      signal,
+      keepalive: false
+    });
+    if (!response.ok) {
+      throw new Error(`License validation request returned HTTP ${response.status}.`);
     }
-    // TODO:
-    return request.key?.includes('valid')
-      ? { validationError: null, canUpgrade: false }
-      : { validationError: 'Invalid license key', canUpgrade: false };
+    return (await response.json()) as LicenseValidationResult;
   }
 }

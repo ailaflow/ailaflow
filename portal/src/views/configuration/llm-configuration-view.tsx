@@ -51,7 +51,7 @@ export interface LlmConfigurationViewProps {
 const providerTypeLabels: Record<LlmProviderType, string> = {
   [LlmProviderType.OPENAI]: 'OpenAI',
   [LlmProviderType.ANTHROPIC]: 'Anthropic',
-  [LlmProviderType.OPENAI_COMPATIBLE]: 'OpenAI compatible',
+  [LlmProviderType.OPENAI_COMPATIBLE]: 'OpenAI-compatible API',
   [LlmProviderType.CODEX_APP_SERVER]: 'Codex app-server'
 };
 

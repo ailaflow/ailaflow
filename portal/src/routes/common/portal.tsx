@@ -62,6 +62,8 @@ function selectMenuItems(items: MenuItemDefinition[], pathname: string): MenuIte
   });
 }
 
+let licenseChecked = false;
+
 export function Portal(props: { children: React.ReactNode }) {
   const { session, setSession, apiClient } = useAuthState();
   if (!session) {
@@ -82,11 +84,16 @@ export function Portal(props: { children: React.ReactNode }) {
         if (response.validationError) {
           setLicenseValidationError(response.validationError);
         }
-      } catch (e) {}
+      } catch (e) {
+        // Ignore
+      }
     }
 
-    void check();
-    return () => abortController.abort();
+    if (!licenseChecked) {
+      licenseChecked = true;
+      void check();
+      return () => abortController.abort();
+    }
   }, [apiClient]);
 
   function onCommand(command: string) {
@@ -95,12 +102,16 @@ export function Portal(props: { children: React.ReactNode }) {
     }
   }
 
+  function closeLicenseAlert() {
+    setLicenseValidationError(null);
+  }
+
   return (
     <>
       <PortalLayout userItems={selectedUserItems} adminItems={selectedAdminItems} userName={session.userName} onCommand={onCommand}>
         {props.children}
       </PortalLayout>
-      {licenseValidationError && <LicenseAlertPopup error={licenseValidationError} onClose={() => setLicenseValidationError(null)} />}
+      {licenseValidationError && <LicenseAlertPopup error={licenseValidationError} onClose={closeLicenseAlert} />}
     </>
   );
 }
