@@ -1,3 +1,5 @@
+![AilaFlow - AI Workflow Automation for Teams](.github/cover.png)
+
 # AilaFlow
 
 **Tell AI to build your workspace, powered by processes with Human-AI interfaces.**
