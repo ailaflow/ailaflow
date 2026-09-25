@@ -38,7 +38,7 @@ export function ConfigurationOverviewPage() {
       id: 'docker',
       label: 'Docker',
       value: loader.data.host.dockerVersion ? 'Running' : 'Not available',
-      detail: loader.data.host.dockerVersion ?? undefined,
+      detail: loader.data.host.dockerError ?? loader.data.host.dockerVersion ?? undefined,
       isHealthy: loader.data.host.dockerVersion !== null,
       remediation: 'Install Docker and make sure Docker daemon is running.'
     },

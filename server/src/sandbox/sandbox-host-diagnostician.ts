@@ -1,10 +1,11 @@
 import { constants } from 'node:fs';
-import fs from 'node:fs/promises';
 import { ServerPaths } from '../core/server-paths';
 import { Docker } from './docker';
+import fs from 'node:fs/promises';
 
 export interface SandboxHostDiagnosticianResult {
   dockerVersion: string | null;
+  dockerError: string | null;
   appFolderPath: string;
   dataFolderPath: string;
   isAppFolderReadable: boolean;
@@ -18,12 +19,19 @@ export class SandboxHostDiagnostician {
     const appFolderPath = this.paths.getRuntimeFolderPath();
     const dataFolderPath = this.paths.getAppDataFolderPath();
 
+    const [d, isAppFolderReadable, isDataFolderWritable] = await Promise.all([
+      this.checkDocker(signal),
+      this.checkPath(appFolderPath, constants.R_OK),
+      this.checkPath(dataFolderPath, constants.W_OK)
+    ]);
+
     return {
-      dockerVersion: await this.checkDocker(signal),
+      dockerVersion: d.version,
+      dockerError: d.error,
       appFolderPath,
       dataFolderPath,
-      isAppFolderReadable: await this.checkPath(appFolderPath, constants.R_OK),
-      isDataFolderWritable: await this.checkPath(dataFolderPath, constants.W_OK)
+      isAppFolderReadable,
+      isDataFolderWritable
     };
   }
 
@@ -31,9 +39,15 @@ export class SandboxHostDiagnostician {
     try {
       const docker = new Docker(this.paths.getRuntimeFolderPath());
       const info = await docker.info(signal);
-      return info.ClientInfo.Version;
-    } catch {
-      return null;
+      return {
+        version: info.ClientInfo.Version,
+        error: null
+      };
+    } catch (e) {
+      return {
+        version: null,
+        error: e instanceof Error ? e.message : String(e)
+      };
     }
   }
 
