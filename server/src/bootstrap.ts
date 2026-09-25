@@ -549,7 +549,15 @@ export async function bootstrap(registry: CleanupRegistry, signal: AbortSignal) 
 
   const versionProvider = new VersionProvider(serverPaths);
   const licenseManager = new LicenseManager(new LicenseValidator(), kvConfigurationManager, userRepository, versionProvider);
-  const installer = new Installer(cipherKeyStore, cipher, userRepository, userAttributesRepository, sandboxRepository, licenseManager);
+  const installer = new Installer(
+    cipherKeyStore,
+    cipher,
+    userRepository,
+    userAttributesRepository,
+    sandboxRepository,
+    notificationRepository,
+    licenseManager
+  );
   const loginThrottler = new LoginThrottler();
 
   const schedulers: Scheduler[] = [
