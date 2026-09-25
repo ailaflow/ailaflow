@@ -17,6 +17,7 @@ import type {
 } from '@ailaflow/shared';
 import { useMemo, useState } from 'react';
 import type { LlmProviderDraft, LlmUseCaseDraft } from '../../views/configuration/llm-configuration-view';
+import { Uid } from 'sequential-workflow-designer';
 
 const useCaseDescriptions: Record<LlmUseCase, string> = {
   [LlmUseCase.ADMIN_CHAT]: 'Requires a strong coding and reasoning model that can reliably configure and build processes.',
@@ -125,7 +126,7 @@ export function useLlmConfigurationState(initial: GetLlmConfigurationResponse): 
     canSaveUseCases,
     startProviderCreation: () =>
       setProviderDraft({
-        id: crypto.randomUUID(),
+        id: Uid.next(),
         insert: true,
         name: '',
         type: LlmProviderType.OPENAI,

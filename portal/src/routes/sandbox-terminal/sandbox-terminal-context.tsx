@@ -2,6 +2,7 @@ import type { ExecuteSandboxCommandUpdate, SandboxDto } from '@ailaflow/shared';
 import { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { useApiClient } from '../../auth/auth-context';
 import type { SandboxTerminalEntry, SandboxTerminalEntryType } from '../../views/sandbox-terminal/sandbox-terminal-view';
+import { Uid } from 'sequential-workflow-designer';
 
 export interface SandboxTerminalCommandResult {
   cwd: string;
@@ -165,7 +166,7 @@ interface CwdCapture {
 }
 
 function createCwdCapture(onCwd: (cwd: string) => void, onStdout: (stdout: string) => void): CwdCapture {
-  const marker = `AILAFLOW_CWD_${crypto.randomUUID()}:`;
+  const marker = `AILAFLOW_CWD_${Uid.next()}:`;
   const prefix = `\0${marker}`;
   const suffix = '\0';
   let buffer = '';
