@@ -1,24 +1,24 @@
-![AilaFlow - AI Workflow Automation for Teams](.github/cover.png)
+[![AilaFlow - AI Workflow Automation for Teams](.github/cover.png)](https://ailaflow.com)
 
 # AilaFlow
 
 **Tell AI to build your workspace, powered by processes with Human-AI interfaces.**
 
-Learn more at [ailaflow.com](https://ailaflow.com).
-
-AilaFlow is a collaborative low-code workspace where people and AI agents design, automate, and execute business processes together. Processes can combine human tasks, AI agents, forms, scripts, shared data, and external systems—giving humans and AI a common way to participate in the same workflow and act on the same process state.
+AilaFlow is a collaborative low-code workspace where people and AI agents design, automate, and execute business processes together. Processes can combine human tasks, AI agents, forms, scripts, shared data, and external systems-giving humans and AI a common way to participate in the same workflow and act on the same process state.
 
 Let AI build your processes, including integrations with external systems using Node.js and NPM packages, with the code running safely in isolated sandboxes. Bring AilaFlow into your existing workflow through Slack and Telegram.
+
+Learn more at [ailaflow.com](https://ailaflow.com).
 
 ## How AilaFlow works
 
 - **Admins build the workspace.** Administrators use AI to create and manage processes that define how work gets done. Regular users execute the processes available to them.
 
-- **Processes are permission-aware.** Administrators decide which processes are available to specific users or groups, and can keep selected actions human-only—so sensitive decisions, approvals, or operations remain under explicit human control.
+- **Processes are permission-aware.** Administrators decide which processes are available to specific users or groups, and can keep selected actions human-only-so sensitive decisions, approvals, or operations remain under explicit human control.
 
 - **Every user works with their own AI.** Each user has a personal AI chat that can understand requests and execute the processes they have access to.
 
-- **Human-AI interfaces use the same processes.** A process can be operated through AI chat or provide its own HTML interface and forms for desktop and mobile—allowing people and AI to act through the same underlying workflow.
+- **Human-AI interfaces use the same processes.** A process can be operated through AI chat or provide its own HTML interface and forms for desktop and mobile-allowing people and AI to act through the same underlying workflow.
 
 - **Process code runs in isolated sandboxes.** Scripts and integrations execute in separate sandboxed environments, allowing processes to use Node.js and NPM packages while keeping execution isolated from the host and other sandboxes.
 
