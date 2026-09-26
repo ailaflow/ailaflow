@@ -8,8 +8,8 @@ const requestSchema = z.object({
   _id: z.string()
 });
 
-export class TryReadTableRpcHandler implements SandboxRpcHandler {
-  public readonly methodName = 'tryReadTable';
+export class ReadTableRowRpcHandler implements SandboxRpcHandler {
+  public readonly methodName = 'readTableRow';
 
   public constructor(private readonly tableManager: TableManager) {}
 

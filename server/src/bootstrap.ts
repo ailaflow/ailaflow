@@ -118,7 +118,7 @@ import { GetTableEndpoint } from './api/table/get-table-endpoint';
 import { SaveTableEndpoint } from './api/table/save-table-endpoint';
 import { DeleteTableEndpoint } from './api/table/delete-table-endpoint';
 import { WriteTableRpcHandler } from './process-executor/rpc-handlers/write-table-row-rpc-handler';
-import { TryReadTableRpcHandler } from './process-executor/rpc-handlers/try-read-table-rpc-handler';
+import { ReadTableRowRpcHandler } from './process-executor/rpc-handlers/read-table-row-rpc-handler';
 import { SqliteTableDataListQuerier } from './queriers/table-data-list/sqlite-table-data-list-querier';
 import { TableManager } from './table/table-manager';
 import { GetTableDataEndpoint } from './api/table/get-table-data-endpoint';
@@ -384,7 +384,7 @@ export async function bootstrap(registry: CleanupRegistry, signal: AbortSignal) 
     new IsTestRpcHandler(processExecutionStore),
     new ReadTablePageRpcHandler(tableManager),
     new ReadVariableRpcHandler(processExecutionStore),
-    new TryReadTableRpcHandler(tableManager),
+    new ReadTableRowRpcHandler(tableManager),
     new UserExistsRpcHandler(userRepository),
     new WriteTableRpcHandler(tableManager),
     new WriteVariableRpcHandler(processExecutionStore),

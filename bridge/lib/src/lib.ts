@@ -93,7 +93,7 @@ export async function writeVariable(name: string, value: unknown, rpcConfig?: Rp
  */
 export async function readTableRow<Row extends TableRow = TableRow>(name: string, _id: string, rpcConfig?: RpcConfig): Promise<Row | null> {
   name = normalizeName(name, '#');
-  return rpc<Row>('tryReadTable', { name, _id }, rpcConfig);
+  return rpc<Row>('readTableRow', { name, _id }, rpcConfig);
 }
 
 /**
