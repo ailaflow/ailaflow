@@ -273,11 +273,19 @@ Forms run in an iframe with an opaque origin. You MUST NOT use `localStorage`, `
 
 Reads a process variable for use in the form.
 
+### Transient parameters
+
+Transient parameters pass data to the next form through `submitForm` or `openStartForm`. They MUST NOT be treated as persisted or automatically forwarded. To preserve them for another jump, the next form MUST pass them again. You MUST use them for short-lived or sensitive values that MUST NOT be stored.
+
+#### `await ailaflow.getTransientParams()`
+
+Returns the transient parameters passed during the previous form jump, or `null` if none were passed.
+
 ### Temporary user storage
 
-This browser-only storage is associated with the current user and is intended for temporary string values shared between forms. Values are not guaranteed to persist between sessions. Keys MUST be strings of 1–32 characters.
+This browser-only storage persists string values between form jumps and page reloads for the current user. You MUST NOT use it for sensitive values. Keys MUST be strings of 1–32 characters.
 
-#### `await ailaflow.tryReadUserStorage('key')`
+#### `await ailaflow.readUserStorage('key')`
 
 Returns the stored string, or `null` if the key is not set.
 
@@ -289,7 +297,7 @@ Stores a string for the current user.
 
 You MUST wrap calls to any of the methods below in `try/catch` blocks and handle failures, including network errors and invalid data.
 
-#### `await ailaflow.submitForm({ variableX: valueX, variableY: valueY })`
+#### `await ailaflow.submitForm({ variableX: valueX, variableY: valueY }, transientParams?)`
 
 Submits the form. Its behavior depends on the form's context:
 
@@ -299,6 +307,10 @@ Submits the form. Its behavior depends on the form's context:
 
 You MUST submit every value required by that context. Values MUST match the corresponding variables' JSON Schemas.
 
-#### `await ailaflow.openStartForm()`
+The optional `transientParams` argument MUST be an object and is available only to the next return step form.
+
+#### `await ailaflow.openStartForm(transientParams?)`
 
 Opens the process start form when called from a return step form. You MUST use it when the user should enter the process's start values through the original start form instead of submitting them directly from the return step form.
+
+The optional `transientParams` argument MUST be an object and is available only to the opened start form.

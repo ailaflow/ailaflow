@@ -1,8 +1,8 @@
-import { FormDefinition } from '@ailaflow/shared';
+import { FormDefinition, ProcessExecutionVariableValues } from '@ailaflow/shared';
 import { useEffect, useMemo, useState } from 'react';
 import { IframeContentBuilder } from './iframe-content-builder';
 import { IframeFormView } from '../../../views/form-renderer/iframe-form-view';
-import { FormAdapter } from './form-adapter';
+import { FormAdapter, FormTransientParams } from './form-adapter';
 import { FormUserStorage } from './form-user-storage';
 
 export interface IframeFormProps {
@@ -58,15 +58,19 @@ export function IframeForm({ form, adapter, isPreview }: IframeFormProps) {
     };
 
     const submitForm = async (payload: Record<string, unknown>) => {
+      const values = assertObject<ProcessExecutionVariableValues>(payload.values);
+      const transientParams = payload.transientParams ? assertObject<FormTransientParams>(payload.transientParams) : undefined;
+
       for (const name of adapter.outputVariableNames) {
-        const value = payload[name];
+        const value = values[name];
         if (value === undefined) {
           throw new Error(`Output variable ${name} is required but not provided`);
         }
         adapter.assertVariableValue(name, value);
       }
+
       const signal = AbortSignal.timeout(5_000);
-      await adapter.submitForm(signal, payload);
+      await adapter.submitForm(signal, values, transientParams);
     };
 
     const readVariable = async (signal: AbortSignal, payload: Record<string, unknown>) => {
@@ -74,8 +78,13 @@ export function IframeForm({ form, adapter, isPreview }: IframeFormProps) {
       return adapter.readVariable(signal, name);
     };
 
-    const openStartForm = async (signal: AbortSignal) => {
-      return adapter.openStartForm(signal);
+    const openStartForm = async (signal: AbortSignal, payload: Record<string, unknown>) => {
+      const transientParams = payload.transientParams ? assertObject<FormTransientParams>(payload.transientParams) : undefined;
+      return adapter.openStartForm(signal, transientParams);
+    };
+
+    const getTransientParams = async () => {
+      return adapter.getTransientParams();
     };
 
     const collectFormError = async (payload: Record<string, unknown>) => {
@@ -96,15 +105,17 @@ export function IframeForm({ form, adapter, isPreview }: IframeFormProps) {
       handle(message, async signal => {
         switch (message.type) {
           case 'openStartForm':
-            return openStartForm(signal);
+            return openStartForm(signal, message.payload);
           case 'submitForm':
             return submitForm(message.payload);
           case 'readVariable':
             return readVariable(signal, message.payload);
-          case 'tryReadUserStorage':
-            return userStorage.tryReadUserStorage(message.payload);
+          case 'readUserStorage':
+            return userStorage.readUserStorage(message.payload);
           case 'writeUserStorage':
             return userStorage.writeUserStorage(message.payload);
+          case 'getTransientParams':
+            return getTransientParams();
           case 'collectFormError':
             return collectFormError(message.payload);
           default:
@@ -118,4 +129,11 @@ export function IframeForm({ form, adapter, isPreview }: IframeFormProps) {
   }, [iframe, adapter]);
 
   return <IframeFormView setIframe={setIframe} content={content} />;
+}
+
+function assertObject<T extends Record<string, unknown>>(v: unknown): T {
+  if (v === null || typeof v !== 'object' || Array.isArray(v)) {
+    throw new Error('Value must be an object');
+  }
+  return v as T;
 }

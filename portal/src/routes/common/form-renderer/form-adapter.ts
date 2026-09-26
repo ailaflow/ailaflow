@@ -5,6 +5,8 @@ export interface FormError {
   stack?: string;
 }
 
+export type FormTransientParams = Record<string, unknown>;
+
 export interface FormAdapter {
   /**
    * If `null` then all variables are allowed to be read.
@@ -18,9 +20,10 @@ export interface FormAdapter {
 
   assertVariableValue(variableName: string, value: unknown): void;
 
-  openStartForm(signal: AbortSignal): Promise<void>;
-  submitForm(signal: AbortSignal, values: ProcessExecutionVariableValues): Promise<void>;
+  openStartForm(signal: AbortSignal, transientParams?: FormTransientParams): Promise<void>;
+  submitForm(signal: AbortSignal, values: ProcessExecutionVariableValues, transientParams?: FormTransientParams): Promise<void>;
   readVariable(signal: AbortSignal, variableName: string): Promise<unknown>;
+  getTransientParams(): FormTransientParams | null;
 
   collectFormError?: (error: FormError) => void;
 }

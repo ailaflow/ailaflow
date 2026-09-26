@@ -12,7 +12,8 @@ export function FormPreview(props: { form: FormDefinition }) {
       assertVariableValue: () => {},
       openStartForm: async () => {},
       submitForm: async () => {},
-      readVariable: async () => null
+      readVariable: async () => null,
+      getTransientParams: () => null
     }),
     []
   );

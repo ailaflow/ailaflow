@@ -50,14 +50,14 @@ const frameworkScript = `
   }
 
   window.ailaflow = {
-    openStartForm: () => {
-      return request('openStartForm', {});
+    openStartForm: (transientParams) => {
+      return request('openStartForm', { transientParams });
     },
-    submitForm: (values) => {
-      return request('submitForm', values);
+    submitForm: (values, transientParams) => {
+      return request('submitForm', { values, transientParams });
     },
-    tryReadUserStorage: (key) => {
-      return request('tryReadUserStorage', { key });
+    readUserStorage: (key) => {
+      return request('readUserStorage', { key });
     },
     writeUserStorage: (key, value) => {
       return request('writeUserStorage', { key, value });
@@ -65,6 +65,9 @@ const frameworkScript = `
     readVariable: (name) => {
       name = normalizeResourceName(name, '$');
       return request('readVariable', { name });
+    },
+    getTransientParams: () => {
+      return request('getTransientParams', {});
     }
   };
 

@@ -67,6 +67,7 @@ function ProcessTesterStartForm(props: {
       async submitForm(_, data: Record<string, unknown>) {
         props.submitForm(data);
       },
+      getTransientParams: () => null,
       collectFormError: props.collectFormError
     }),
     [props.definition, props.submitForm, variableValidator]
@@ -93,6 +94,7 @@ function ProcessTesterOutputForm(props: {
       async submitForm(_, values) {
         props.submitForm(values);
       },
+      getTransientParams: () => null,
       collectFormError: props.collectFormError
     }),
     [props.output, props.openStartForm, props.submitForm]

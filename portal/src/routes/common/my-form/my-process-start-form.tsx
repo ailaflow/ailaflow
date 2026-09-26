@@ -12,7 +12,7 @@ import { useApiClient } from '../../../auth/auth-context';
 import { MyFormContainerView } from '../../../views/common/my-form/my-form-container-view';
 import { MyFormErrorView } from '../../../views/common/my-form/my-form-error-view';
 import { MyFormLoadingView } from '../../../views/common/my-form/my-form-loading-view';
-import { FormAdapter, FormError } from '../form-renderer/form-adapter';
+import { FormAdapter, FormError, FormTransientParams } from '../form-renderer/form-adapter';
 import { FormRenderer } from '../form-renderer/form-renderer';
 import { MyFormOutputView } from '../../../views/common/my-form/my-form-output-view';
 
@@ -27,6 +27,7 @@ enum StateType {
 interface LoadingStartFormState {
   type: StateType.LOADING_START_FORM;
   args: MyProcessStartFormArgs;
+  transientParams?: FormTransientParams;
 }
 
 interface StartFormState {
@@ -34,18 +35,21 @@ interface StartFormState {
   args: MyProcessStartFormArgs;
   startVariableSchemas: JsonSchema | null;
   form: FormDefinition | null;
+  transientParams?: FormTransientParams;
 }
 
 interface ExecutingState {
   type: StateType.EXECUTING;
   args: MyProcessStartFormArgs;
   startValues: ProcessExecutionVariableValues;
+  transientParams?: FormTransientParams;
 }
 
 interface OutputFormState {
   type: StateType.OUTPUT_FORM;
   args: MyProcessStartFormArgs;
   outputValues: ProcessExecutionVariableValues;
+  transientParams?: FormTransientParams;
   form?: FormDefinition;
 }
 
@@ -85,7 +89,8 @@ export function MyProcessStartForm({ args, onEnded }: MyProcessStartFormProps) {
           type: StateType.START_FORM,
           args: s.args,
           startVariableSchemas: f.startVariableSchemas,
-          form: f.form
+          form: f.form,
+          transientParams: s.transientParams
         });
       } catch (e) {
         setState({
@@ -120,7 +125,8 @@ export function MyProcessStartForm({ args, onEnded }: MyProcessStartFormProps) {
                   type: StateType.OUTPUT_FORM,
                   args: s.args,
                   outputValues: update.outcome.output,
-                  form: update.form
+                  form: update.form,
+                  transientParams: s.transientParams
                 });
                 return;
               case ProcessExecutionOutcomeType.FAILED:
@@ -170,25 +176,28 @@ export function MyProcessStartForm({ args, onEnded }: MyProcessStartFormProps) {
         allowedToReadVariableNames: [],
         outputVariableNames: state.startVariableSchemas ? Object.keys(state.startVariableSchemas) : [],
         assertVariableValue() {},
-        async openStartForm() {
+        async openStartForm(_: AbortSignal, transientParams?: FormTransientParams) {
           setState({
             type: StateType.LOADING_START_FORM,
-            args: state.args
+            args: state.args,
+            transientParams
           });
         },
-        async submitForm(_: AbortSignal, startValues: Record<string, unknown>) {
+        async submitForm(_: AbortSignal, startValues: ProcessExecutionVariableValues, transientParams?: FormTransientParams) {
           if (formError) {
             setFormError(null);
           }
           setState({
             type: StateType.EXECUTING,
             startValues,
-            args: state.args
+            args: state.args,
+            transientParams
           });
         },
         readVariable: async () => {
           throw new Error('Reading variables is not allowed');
         },
+        getTransientParams: () => state.transientParams ?? null,
         collectFormError: setFormError
       };
     }
@@ -198,19 +207,21 @@ export function MyProcessStartForm({ args, onEnded }: MyProcessStartFormProps) {
         allowedToReadVariableNames: Object.keys(state.outputValues),
         outputVariableNames: [],
         assertVariableValue() {},
-        async openStartForm() {
+        async openStartForm(_: AbortSignal, transientParams?: FormTransientParams) {
           setState({
             type: StateType.LOADING_START_FORM,
-            args: state.args
+            args: state.args,
+            transientParams
           });
         },
-        async submitForm(_, values) {
+        async submitForm(_, values, transientParams?: FormTransientParams) {
           if (formError) {
             setFormError(null);
           }
           setState({
             type: StateType.EXECUTING,
             startValues: values,
+            transientParams,
             args: {
               processName: state.args.processName,
               testUserName: state.args.testUserName
@@ -218,6 +229,7 @@ export function MyProcessStartForm({ args, onEnded }: MyProcessStartFormProps) {
           });
         },
         readVariable: async (_, name) => state.outputValues[name],
+        getTransientParams: () => state.transientParams ?? null,
         collectFormError: setFormError
       };
     }

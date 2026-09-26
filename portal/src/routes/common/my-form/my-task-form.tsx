@@ -53,6 +53,7 @@ export function MyTaskForm({ args, onSubmitted }: MyTaskFormProps) {
         });
         return response.value;
       },
+      getTransientParams: () => null,
       collectFormError(error: FormError) {
         setFormError(error);
       }

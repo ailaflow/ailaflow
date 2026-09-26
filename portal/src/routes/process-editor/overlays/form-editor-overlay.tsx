@@ -48,7 +48,8 @@ export function FormEditorOverlay() {
           throw new Error(`Not found example value for \$${name} variable, you can add it in the Example Inputs tab`);
         }
         return JSON.parse(example.exampleValue);
-      }
+      },
+      getTransientParams: () => null
     }),
     [state, formState, variableValidator]
   );

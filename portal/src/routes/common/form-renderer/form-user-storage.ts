@@ -1,5 +1,5 @@
 export class FormUserStorage {
-  public tryReadUserStorage(payload: Record<string, unknown>) {
+  public readUserStorage(payload: Record<string, unknown>) {
     // TODO: we should not use localStorage, but move the dictionary to the database.
     const key = this.buildUserStorageKey(payload.key as string);
     return localStorage.getItem(key);
