@@ -78,6 +78,7 @@ function createProcess(hash: string, script: ScriptDefinition): Process {
     hash,
     null,
     1,
+    0,
     false
   );
 }

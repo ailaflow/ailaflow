@@ -114,9 +114,19 @@ export function ProcessListPage() {
           title: 'Attributes',
           width: '10%',
           getValue: process =>
-            [process.isPausable ? 'pausable' : null, process.executionMode === ProcessExecutionMode.START_FORM ? 'only form' : null]
+            [
+              process.isPausable ? 'pausable' : null,
+              process.executionMode === ProcessExecutionMode.START_FORM ? 'only form' : null,
+              process.nReturnSteps > 0 ? 'return' : null
+            ]
               .filter(Boolean)
               .join(', ')
+        },
+        {
+          id: 'size',
+          title: 'Size',
+          width: '4%',
+          getValue: process => `${Math.ceil(process.definitionSize / 1024)} KB`
         }
       ]}
       rows={data.processes}

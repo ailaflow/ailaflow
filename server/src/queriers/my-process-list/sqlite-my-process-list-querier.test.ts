@@ -85,11 +85,14 @@ function insertProcess(
       display,
       executionMode,
       nSteps,
+      nReturnSteps,
+      isPausable,
       startVariableSchemas,
-      serializedDefinition,
+      definition,
+      definitionSize,
       definitionHash
     )
-    VALUES (?, ?, '', ?, ?, 0, '{}', '{}', 'hash')
+    VALUES (?, ?, '', ?, ?, 0, 0, 0, '{}', '{}', 2, 'hash')
   `
   ).run(name, `${name} description`, display, executionMode);
 }

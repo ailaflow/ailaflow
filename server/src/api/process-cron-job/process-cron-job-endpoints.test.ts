@@ -100,6 +100,7 @@ function createProcessManager(): ProcessManager {
     'hash',
     { x: { type: 'integer' } },
     0,
+    0,
     false
   );
   const repository = {

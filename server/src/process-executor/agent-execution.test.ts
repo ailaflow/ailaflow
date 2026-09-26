@@ -70,6 +70,7 @@ function createProcess(name: string, sequence: ProcessDefinition['sequence'] = [
     'hash',
     { prompt: { type: 'string' } },
     sequence.length,
+    sequence.filter(step => step.type === 'return').length,
     isPausable
   );
 }
@@ -102,7 +103,9 @@ function createHarness(
           userAccessExpression: process.userAccessExpression,
           display: process.display,
           executionMode: process.executionMode,
-          isPausable: process.isPausable
+          isPausable: process.isPausable,
+          nReturnSteps: process.nReturnSteps,
+          definitionSize: JSON.stringify(process.definition).length
         }))
       };
     }

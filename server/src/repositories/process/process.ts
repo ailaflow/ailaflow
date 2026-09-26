@@ -18,6 +18,7 @@ function validateProcessDefinition(
   stepValidator: ProcessStepValidator
 ): {
   nSteps: number;
+  nReturnSteps: number;
   isPausable: boolean;
 } {
   if (!rootValidator.validate(definition)) {
@@ -27,6 +28,7 @@ function validateProcessDefinition(
   const walker = new DefinitionWalker();
   let nSteps = 0;
   let isPausable = false;
+  let nReturnSteps = 0;
 
   walker.forEach(definition, (step, _, sequence) => {
     if (!stepValidator.validateStep(step, sequence, definition)) {
@@ -35,11 +37,15 @@ function validateProcessDefinition(
     if (!isPausable) {
       isPausable = step.type === 'task';
     }
+    if (step.type === 'return') {
+      nReturnSteps++;
+    }
     nSteps++;
   });
 
   return {
     nSteps,
+    nReturnSteps,
     isPausable
   };
 }
@@ -83,7 +89,7 @@ export class Process {
     validateDescription(data.description);
     validateUserAccessExpression(data.userAccessExpression);
 
-    const { nSteps, isPausable } = validateProcessDefinition(data.definition, rootValidator, stepValidator);
+    const { nSteps, nReturnSteps, isPausable } = validateProcessDefinition(data.definition, rootValidator, stepValidator);
     const startVariableSchemas = extractStartVariableSchemas(data.definition);
 
     return new Process(
@@ -96,6 +102,7 @@ export class Process {
       data.hash,
       startVariableSchemas,
       nSteps,
+      nReturnSteps,
       isPausable
     );
   }
@@ -112,6 +119,7 @@ export class Process {
     public hash: string,
     public startVariableSchemas: Record<string, JsonSchema> | null,
     public nSteps: number,
+    public nReturnSteps: number,
     public isPausable: boolean
   ) {}
 
@@ -119,7 +127,7 @@ export class Process {
     if (data.name !== this.name) {
       throw new Error('Process name cannot be changed');
     }
-    const { nSteps, isPausable } = validateProcessDefinition(data.definition, rootValidator, stepValidator);
+    const { nSteps, nReturnSteps, isPausable } = validateProcessDefinition(data.definition, rootValidator, stepValidator);
     validateDescription(data.description);
     validateUserAccessExpression(data.userAccessExpression);
 
@@ -132,6 +140,7 @@ export class Process {
     this.hash = data.hash;
     this.startVariableSchemas = extractStartVariableSchemas(data.definition);
     this.nSteps = nSteps;
+    this.nReturnSteps = nReturnSteps;
     this.isPausable = isPausable;
   }
 

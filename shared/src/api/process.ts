@@ -10,7 +10,9 @@ const processLiteDtoSchema = z.object({
   userAccessExpression: z.string(),
   display: z.enum(ProcessDisplay),
   executionMode: z.enum(ProcessExecutionMode),
-  isPausable: z.boolean()
+  isPausable: z.boolean(),
+  nReturnSteps: z.number(),
+  definitionSize: z.number()
 });
 
 export const getProcessesRequestSchema = paginationRequestSchema.extend({

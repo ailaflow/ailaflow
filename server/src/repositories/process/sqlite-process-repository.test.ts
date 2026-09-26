@@ -18,14 +18,25 @@ test('persists and updates process metadata', async () => {
   assert.equal((await processRepository.tryGetByName(signal, process.name))?.isPausable, true);
   assert.equal((await processRepository.tryGetByName(signal, process.name))?.display, ProcessDisplay.LISTED);
   assert.equal((await processRepository.tryGetByName(signal, process.name))?.executionMode, ProcessExecutionMode.AI_TOOL_OR_START_FORM);
+  assert.deepEqual(getStoredDefinitionMetadata(db, process.name), {
+    definitionSize: JSON.stringify(process.definition).length,
+    nReturnSteps: 0
+  });
 
   process.isPausable = false;
   process.display = ProcessDisplay.FEATURED;
   process.executionMode = ProcessExecutionMode.START_FORM;
+  process.definition = createDefinitionWithReturnStep();
+  process.nSteps = 1;
+  process.nReturnSteps = 1;
   await processRepository.update(signal, process);
   assert.equal((await processRepository.tryGetByName(signal, process.name))?.isPausable, false);
   assert.equal((await processRepository.tryGetByName(signal, process.name))?.display, ProcessDisplay.FEATURED);
   assert.equal((await processRepository.tryGetByName(signal, process.name))?.executionMode, ProcessExecutionMode.START_FORM);
+  assert.deepEqual(getStoredDefinitionMetadata(db, process.name), {
+    definitionSize: JSON.stringify(process.definition).length,
+    nReturnSteps: 1
+  });
 
   db.close();
 });
@@ -88,12 +99,16 @@ function insertProcess(db: DatabaseSync, name: string): void {
         description,
         userAccessExpression,
         display,
+        executionMode,
         nSteps,
+        nReturnSteps,
+        isPausable,
         startVariableSchemas,
-        serializedDefinition,
+        definition,
+        definitionSize,
         definitionHash
       )
-      VALUES (?, '', '', 1, 0, '{}', '{"sequence":[],"properties":{"startVariableNames":[],"variables":[]}}', 'hash')
+      VALUES (?, '', '', 1, 0, 0, 0, 0, '{}', '{"sequence":[],"properties":{"startVariableNames":[],"variables":[]}}', 69, 'hash')
     `
   ).run(name);
 }
@@ -108,6 +123,7 @@ function createProcess(name: string, isPausable: boolean): Process {
     createDefinition(),
     'hash',
     null,
+    0,
     0,
     isPausable
   );
@@ -124,6 +140,25 @@ function createDefinition(): ProcessDefinition {
   };
 }
 
+function createDefinitionWithReturnStep(): ProcessDefinition {
+  return {
+    sequence: [
+      {
+        id: 'return',
+        name: 'Żółw',
+        type: 'return',
+        componentType: 'interruptingTask',
+        properties: { outputVariableNames: [] }
+      }
+    ],
+    properties: {
+      startVariableNames: [],
+      variables: [],
+      version: PROCESS_VERSION
+    }
+  };
+}
+
 async function grantAccess(signal: AbortSignal, repository: SqliteResourceAccessRepository, processName: string): Promise<void> {
   await repository.replace(signal, ResourceAccess.createFromAccessExpression(ProcessResourceId.create(processName), ''));
 }
@@ -131,4 +166,15 @@ async function grantAccess(signal: AbortSignal, repository: SqliteResourceAccess
 function countRows(db: DatabaseSync, table: string, resourceId: string): number {
   const statement = db.prepare(`SELECT COUNT(*) AS count FROM ${table} WHERE resource_id = ?`);
   return (statement.get(resourceId) as { count: number }).count;
+}
+
+function getStoredDefinitionMetadata(db: DatabaseSync, name: string): { definitionSize: number; nReturnSteps: number } {
+  const row = db.prepare(`SELECT definitionSize, nReturnSteps FROM processes WHERE name = ?`).get(name) as {
+    definitionSize: number;
+    nReturnSteps: number;
+  };
+  return {
+    definitionSize: row.definitionSize,
+    nReturnSteps: row.nReturnSteps
+  };
 }
