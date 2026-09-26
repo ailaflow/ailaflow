@@ -17,7 +17,7 @@ export class Docker {
     const { stderr, stdout } = await this.execDocker(signal, ['info', '--format', '{{json .}}']);
     const error = stderr.trim();
     if (error) {
-      throw new Error(`Docker info error: ${error}`);
+      throw new Error(error);
     }
     try {
       const info = JSON.parse(stdout) as DockerInfo;

@@ -659,7 +659,7 @@ export async function bootstrap(registry: CleanupRegistry, signal: AbortSignal) 
   registry.register(() => httpServer.close());
 
   return {
-    serverPaths,
+    sandboxHostDiagnostician,
     versionProvider,
     httpServer
   };

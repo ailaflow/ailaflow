@@ -20,7 +20,7 @@ async function main() {
 
   try {
     server = await Server.create(initAbortController.signal);
-    server.printInfo();
+    await server.printInfo(initAbortController.signal);
   } catch (e) {
     if (!initAbortController.signal.aborted) {
       throw e;

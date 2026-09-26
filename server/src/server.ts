@@ -18,20 +18,44 @@ export class Server {
     private readonly container: Awaited<ReturnType<typeof bootstrap>>
   ) {}
 
-  public printInfo() {
-    console.log('\x1b[33m');
-    console.log(' ▄▀▄   ▀  ▀█        ▀█▀▀█ ▀█');
-    console.log('█   █ ▀█   █  ▀▀▀▄   █▄▄   █  ▄▀▀▀▄ █   █');
-    console.log('█▀▀▀█  █   █  ▄▀▀█   █     █  █   █ █ ▄ █');
-    console.log('▀   ▀ ▀▀▀ ▀▀▀  ▀▀ ▀ ▀▀▀   ▀▀▀  ▀▀▀   ▀ ▀ ');
-    console.log('\x1b[0m');
+  private logo(m: string) {
+    console.log(`\x1b[43m\x1b[30m${m}\x1b[0m`);
+  }
 
-    console.log(`Data folder: ${this.container.serverPaths.getAppDataFolderPath()}`);
-    console.log(`Version: ${this.container.versionProvider.get()}`);
-    console.log(`Listening on:`);
-    for (const address of this.container.httpServer.getListeningAddresses()) {
-      console.log(`• ${address}`);
+  private error(m: string) {
+    console.log(`\x1b[41m${m}\x1b[0m`);
+  }
+
+  private kv(k: string, v: string) {
+    console.log(`\x1b[90m${k}: \x1b[37m${v}\x1b[0m`);
+  }
+
+  public async printInfo(signal: AbortSignal) {
+    const result = await this.container.sandboxHostDiagnostician.diagnose(signal);
+
+    this.logo('                                           ');
+    this.logo('  ▄▀▄   ▀  ▀█        ▀█▀▀█ ▀█              ');
+    this.logo(' █   █ ▀█   █  ▀▀▀▄   █▄▄   █  ▄▀▀▀▄ █   █ ');
+    this.logo(' █▀▀▀█  █   █  ▄▀▀█   █     █  █   █ █ ▄ █ ');
+    this.logo(' ▀   ▀ ▀▀▀ ▀▀▀  ▀▀ ▀ ▀▀▀   ▀▀▀  ▀▀▀   ▀ ▀  ');
+    this.logo('                                           ');
+
+    this.kv('Version', this.container.versionProvider.get());
+    this.kv('Data folder', result.dataFolderPath);
+
+    if (!result.isAppFolderReadable) {
+      this.error(`${result.appFolderPath} is not readable`);
     }
+    if (!result.isDataFolderWritable) {
+      this.error(`${result.dataFolderPath} is not writable`);
+    }
+    if (result.dockerError) {
+      this.error(`Docker error: ${result.dockerError}`);
+    }
+    for (const address of this.container.httpServer.getListeningAddresses()) {
+      this.kv('Server', address);
+    }
+    this.kv('Status', 'running');
   }
 
   public async close() {
@@ -41,6 +65,6 @@ export class Server {
     this.isClosed = true;
     const signal = new AbortController().signal;
     await this.registry.run(signal);
-    console.log('Server closed');
+    this.kv('Status', 'closed');
   }
 }
