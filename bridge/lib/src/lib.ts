@@ -150,6 +150,26 @@ export async function deleteTableRow(name: string, _id: string, rpcConfig?: RpcC
 }
 
 /**
+ * Encrypts a secret with the process-secret encryption key for safe persistence.
+ * @param secret The plaintext secret to encrypt.
+ * @returns The encrypted secret.
+ * @throws If the RPC call fails.
+ */
+export function encryptSecret(secret: string, rpcConfig?: RpcConfig): Promise<string> {
+  return rpc<string>('encryptSecret', { secret }, rpcConfig);
+}
+
+/**
+ * Decrypts a secret previously encrypted by {@link encryptSecret}.
+ * @param encryptedSecret The encrypted secret to decrypt.
+ * @returns The plaintext secret.
+ * @throws If the encrypted secret is invalid, was encrypted with a different key, or the RPC call fails.
+ */
+export function decryptSecret(encryptedSecret: string, rpcConfig?: RpcConfig): Promise<string> {
+  return rpc<string>('decryptSecret', { encryptedSecret }, rpcConfig);
+}
+
+/**
  * Logs a message to the process logs.
  * @param texts The texts to log. They will be concatenated with spaces.
  */

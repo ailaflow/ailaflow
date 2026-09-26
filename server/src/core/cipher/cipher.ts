@@ -1,11 +1,11 @@
 import { createCipheriv, createDecipheriv, createHmac, randomBytes, scrypt, timingSafeEqual } from 'node:crypto';
 import { CipherKey, CipherKeyStore } from './cipher-key-store';
 
-const DATA_ALGORITHM = 'aes-256-gcm';
-const DATA_FORMAT_VERSION = 'v1';
-const DATA_INITIALIZATION_VECTOR_LENGTH = 12;
-const DATA_AUTHENTICATION_TAG_LENGTH = 16;
-const DATA_ADDITIONAL_DATA = Buffer.from('ailaflow/data-encryption/v1', 'utf8');
+const SECRET_ALGORITHM = 'aes-256-gcm';
+const SECRET_FORMAT_VERSION = 'v1';
+const SECRET_INITIALIZATION_VECTOR_LENGTH = 12;
+const SECRET_AUTHENTICATION_TAG_LENGTH = 16;
+const INTERNAL_SECRET_ADDITIONAL_DATA = Buffer.from('ailaflow/data-encryption/v1', 'utf8'); // TODO: delete this
 
 const PASSWORD_FORMAT = 'scrypt-v1';
 const PASSWORD_SALT_LENGTH = 16;
@@ -50,42 +50,52 @@ export class Cipher {
     return timingSafeEqual(actualHash, expectedHash);
   }
 
-  public async encryptData(data: string): Promise<string> {
-    const dataEncryptionKey = this.keyStore.getKey(CipherKey.DataEncryption);
-    const initializationVector = randomBytes(DATA_INITIALIZATION_VECTOR_LENGTH);
-    const cipher = createCipheriv(DATA_ALGORITHM, dataEncryptionKey, initializationVector);
-    cipher.setAAD(DATA_ADDITIONAL_DATA);
+  public async encryptSecret(secret: string, key: CipherKey.InternalSecretEncryption | CipherKey.ProcessSecretEncryption): Promise<string> {
+    const encryptionKey = this.keyStore.getKey(key);
+    const initializationVector = randomBytes(SECRET_INITIALIZATION_VECTOR_LENGTH);
+    const cipher = createCipheriv(SECRET_ALGORITHM, encryptionKey, initializationVector);
+    if (key === CipherKey.InternalSecretEncryption) {
+      cipher.setAAD(INTERNAL_SECRET_ADDITIONAL_DATA);
+    }
 
-    const encryptedData = Buffer.concat([cipher.update(data, 'utf8'), cipher.final()]);
+    const encryptedData = Buffer.concat([cipher.update(secret, 'utf8'), cipher.final()]);
     const authenticationTag = cipher.getAuthTag();
 
     return [
-      DATA_FORMAT_VERSION,
+      SECRET_FORMAT_VERSION,
       initializationVector.toString('base64url'),
       authenticationTag.toString('base64url'),
       encryptedData.toString('base64url')
     ].join('.');
   }
 
-  public encryptDataIfPresent(data: string | null): Promise<string | null> {
-    return data === null ? Promise.resolve(null) : this.encryptData(data);
+  public encryptSecretIfPresent(
+    secret: string | null,
+    key: CipherKey.InternalSecretEncryption | CipherKey.ProcessSecretEncryption
+  ): Promise<string | null> {
+    return secret === null ? Promise.resolve(null) : this.encryptSecret(secret, key);
   }
 
-  public async decryptData(encryptedData: string): Promise<string> {
-    const dataEncryptionKey = this.keyStore.getKey(CipherKey.DataEncryption);
+  public async decryptSecret(
+    encryptedSecret: string,
+    key: CipherKey.InternalSecretEncryption | CipherKey.ProcessSecretEncryption
+  ): Promise<string> {
+    const encryptionKey = this.keyStore.getKey(key);
 
     try {
-      const parts = encryptedData.split('.');
-      if (parts.length !== 4 || parts[0] !== DATA_FORMAT_VERSION) {
+      const parts = encryptedSecret.split('.');
+      if (parts.length !== 4 || parts[0] !== SECRET_FORMAT_VERSION) {
         throw new Error('Unsupported encrypted data format');
       }
 
-      const initializationVector = decodeBase64Url(parts[1], DATA_INITIALIZATION_VECTOR_LENGTH);
-      const authenticationTag = decodeBase64Url(parts[2], DATA_AUTHENTICATION_TAG_LENGTH);
+      const initializationVector = decodeBase64Url(parts[1], SECRET_INITIALIZATION_VECTOR_LENGTH);
+      const authenticationTag = decodeBase64Url(parts[2], SECRET_AUTHENTICATION_TAG_LENGTH);
       const ciphertext = Buffer.from(parts[3], 'base64url');
 
-      const decipher = createDecipheriv(DATA_ALGORITHM, dataEncryptionKey, initializationVector);
-      decipher.setAAD(DATA_ADDITIONAL_DATA);
+      const decipher = createDecipheriv(SECRET_ALGORITHM, encryptionKey, initializationVector);
+      if (key === CipherKey.InternalSecretEncryption) {
+        decipher.setAAD(INTERNAL_SECRET_ADDITIONAL_DATA);
+      }
       decipher.setAuthTag(authenticationTag);
 
       return Buffer.concat([decipher.update(ciphertext), decipher.final()]).toString('utf8');
@@ -94,8 +104,11 @@ export class Cipher {
     }
   }
 
-  public decryptDataIfPresent(encryptedData: string | null): Promise<string | null> {
-    return encryptedData === null ? Promise.resolve(null) : this.decryptData(encryptedData);
+  public decryptSecretIfPresent(
+    encryptedSecret: string | null,
+    key: CipherKey.InternalSecretEncryption | CipherKey.ProcessSecretEncryption
+  ): Promise<string | null> {
+    return encryptedSecret === null ? Promise.resolve(null) : this.decryptSecret(encryptedSecret, key);
   }
 }
 

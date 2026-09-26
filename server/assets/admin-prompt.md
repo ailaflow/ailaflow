@@ -217,6 +217,16 @@ Creates the table if needed, then inserts or replaces the row. `_id` is required
 
 Deletes the row with the given `_id`. Returns `true` if the row existed and was deleted, or `false` if the table or row does not exist.
 
+### Secrets
+
+#### `await ailaflow.encryptSecret(secret)`
+
+Encrypts a string for persistent storage in a table. Process scripts MUST encrypt passwords, tokens, and other secrets before storing them in a table. The function returns an encrypted string that only this AilaFlow installation can decrypt.
+
+#### `await ailaflow.decryptSecret(encryptedSecret)`
+
+Decrypts a string produced by `encryptSecret`. Process scripts MUST NOT log, return, or persist the decrypted plaintext. These functions do not protect plaintext that was already persisted in a process variable or task submission.
+
 ### Logging
 
 #### `ailaflow.log('Foo')`

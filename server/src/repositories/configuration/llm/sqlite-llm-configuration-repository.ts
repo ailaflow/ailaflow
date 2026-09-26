@@ -7,6 +7,7 @@ import { LlmProviderType, LlmUseCase } from '@ailaflow/shared';
 import { LlmUseCaseConfiguration } from './llm-use-case-configuration';
 import { Transaction } from '../../../core/transaction';
 import { Cipher } from '../../../core/cipher/cipher';
+import { CipherKey } from '../../../core/cipher/cipher-key-store';
 
 interface ProviderRow {
   id: string;
@@ -95,8 +96,8 @@ export class SqliteLlmConfigurationRepository implements LlmConfigurationReposit
 
   public async insertProvider(_: AbortSignal, provider: LlmProviderConfiguration, transaction?: Transaction): Promise<void> {
     const [encryptedUrl, encryptedApiKey] = await Promise.all([
-      this.cipher.encryptDataIfPresent(provider.url),
-      this.cipher.encryptDataIfPresent(provider.apiKey)
+      this.cipher.encryptSecretIfPresent(provider.url, CipherKey.InternalSecretEncryption),
+      this.cipher.encryptSecretIfPresent(provider.apiKey, CipherKey.InternalSecretEncryption)
     ]);
     try {
       await this.db.write(db => {
@@ -119,8 +120,8 @@ export class SqliteLlmConfigurationRepository implements LlmConfigurationReposit
 
   public async updateProvider(_: AbortSignal, provider: LlmProviderConfiguration, transaction?: Transaction): Promise<void> {
     const [encryptedUrl, encryptedApiKey] = await Promise.all([
-      this.cipher.encryptDataIfPresent(provider.url),
-      this.cipher.encryptDataIfPresent(provider.apiKey)
+      this.cipher.encryptSecretIfPresent(provider.url, CipherKey.InternalSecretEncryption),
+      this.cipher.encryptSecretIfPresent(provider.apiKey, CipherKey.InternalSecretEncryption)
     ]);
     try {
       await this.db.write(db => {
@@ -193,7 +194,10 @@ export class SqliteLlmConfigurationRepository implements LlmConfigurationReposit
 
   private async mapProvider(row: ProviderRow): Promise<LlmProviderConfiguration> {
     const type = row.type as LlmProviderType;
-    const [url, apiKey] = await Promise.all([this.cipher.decryptDataIfPresent(row.url), this.cipher.decryptDataIfPresent(row.apiKey)]);
+    const [url, apiKey] = await Promise.all([
+      this.cipher.decryptSecretIfPresent(row.url, CipherKey.InternalSecretEncryption),
+      this.cipher.decryptSecretIfPresent(row.apiKey, CipherKey.InternalSecretEncryption)
+    ]);
     return new LlmProviderConfiguration(row.id, row.name, type, url, apiKey, JSON.parse(row.models) as LlmModelProviderConfiguration[]);
   }
 }

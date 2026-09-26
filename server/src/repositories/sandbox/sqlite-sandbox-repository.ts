@@ -4,6 +4,7 @@ import { SandboxRepository, SandboxRepositoryError } from './sandbox-repository'
 import { Sandbox } from './sandbox';
 import { Transaction } from '../../core/transaction';
 import { Cipher } from '../../core/cipher/cipher';
+import { CipherKey } from '../../core/cipher/cipher-key-store';
 
 interface SandboxRow {
   name: string;
@@ -44,7 +45,7 @@ export class SqliteSandboxRepository implements SandboxRepository {
   }
 
   public async insert(_: AbortSignal, sandbox: Sandbox, transaction?: Transaction): Promise<void> {
-    const encryptedSecrets = await this.cipher.encryptData(JSON.stringify(sandbox.secrets));
+    const encryptedSecrets = await this.cipher.encryptSecret(JSON.stringify(sandbox.secrets), CipherKey.InternalSecretEncryption);
     try {
       await this.db.write(db => {
         const statement = db.prepare(`
@@ -70,7 +71,7 @@ export class SqliteSandboxRepository implements SandboxRepository {
   }
 
   public async update(_: AbortSignal, sandbox: Sandbox, transaction?: Transaction): Promise<void> {
-    const encryptedSecrets = await this.cipher.encryptData(JSON.stringify(sandbox.secrets));
+    const encryptedSecrets = await this.cipher.encryptSecret(JSON.stringify(sandbox.secrets), CipherKey.InternalSecretEncryption);
     await this.db.write(db => {
       const statement = db.prepare(`
         UPDATE sandboxes
@@ -103,7 +104,7 @@ export class SqliteSandboxRepository implements SandboxRepository {
       return null;
     }
 
-    const secrets = JSON.parse(await this.cipher.decryptData(row.secrets)) as Record<string, string>;
+    const secrets = JSON.parse(await this.cipher.decryptSecret(row.secrets, CipherKey.InternalSecretEncryption)) as Record<string, string>;
     return new Sandbox(row.name, row.token, row.isEnabled === 1, row.description, row.configuration, secrets, row.hash);
   }
 }

@@ -6,13 +6,14 @@ import { CipherKey, CipherKeyStore } from './cipher-key-store';
 import { ServerPaths } from '../server-paths';
 
 const KEY_FILE_NAME = 'cipher-keys.json';
-const KEY_FILE_VERSION = 1;
+const KEY_FILE_VERSION = 2;
 const KEY_LENGTH = 32;
 
 interface StoredCipherKeys {
-  version: 1;
+  version: 2;
   passwordPepper: string;
-  dataEncryptionKey: string;
+  internalSecretEncryptionKey: string;
+  processSecretEncryptionKey: string;
 }
 
 type CipherKeys = Readonly<Record<CipherKey, KeyObject>>;
@@ -96,7 +97,8 @@ export class FileSystemCipherKeyStore implements CipherKeyStore {
 function createRandomKeys(): CipherKeys {
   return {
     [CipherKey.PasswordPepper]: createSecretKey(randomBytes(KEY_LENGTH)),
-    [CipherKey.DataEncryption]: createSecretKey(randomBytes(KEY_LENGTH))
+    [CipherKey.InternalSecretEncryption]: createSecretKey(randomBytes(KEY_LENGTH)),
+    [CipherKey.ProcessSecretEncryption]: createSecretKey(randomBytes(KEY_LENGTH))
   };
 }
 
@@ -104,7 +106,8 @@ function serializeKeys(keys: CipherKeys): string {
   const storedKeys: StoredCipherKeys = {
     version: KEY_FILE_VERSION,
     passwordPepper: keys[CipherKey.PasswordPepper].export().toString('base64url'),
-    dataEncryptionKey: keys[CipherKey.DataEncryption].export().toString('base64url')
+    internalSecretEncryptionKey: keys[CipherKey.InternalSecretEncryption].export().toString('base64url'),
+    processSecretEncryptionKey: keys[CipherKey.ProcessSecretEncryption].export().toString('base64url')
   };
   return `${JSON.stringify(storedKeys, null, 2)}\n`;
 }
@@ -114,10 +117,10 @@ function parseKeys(serializedKeys: string): CipherKeys {
   if (value.version !== KEY_FILE_VERSION) {
     throw new Error('Unsupported cipher key format');
   }
-
   return {
     [CipherKey.PasswordPepper]: createSecretKey(decodeKey(value.passwordPepper)),
-    [CipherKey.DataEncryption]: createSecretKey(decodeKey(value.dataEncryptionKey))
+    [CipherKey.InternalSecretEncryption]: createSecretKey(decodeKey(value.internalSecretEncryptionKey)),
+    [CipherKey.ProcessSecretEncryption]: createSecretKey(decodeKey(value.processSecretEncryptionKey))
   };
 }
 

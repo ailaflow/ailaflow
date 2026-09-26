@@ -2,7 +2,8 @@ import { KeyObject } from 'node:crypto';
 
 export enum CipherKey {
   PasswordPepper = 0,
-  DataEncryption = 1
+  InternalSecretEncryption = 1,
+  ProcessSecretEncryption = 2
 }
 
 export interface CipherKeyStore {

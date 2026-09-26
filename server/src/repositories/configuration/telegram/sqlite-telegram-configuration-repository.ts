@@ -4,6 +4,7 @@ import { TelegramBotConfiguration } from './telegram-bot-configuration';
 import { TelegramConfigurationRepository, TelegramConfigurationRepositoryError } from './telegram-configuration-repository';
 import { Transaction } from '../../../core/transaction';
 import { Cipher } from '../../../core/cipher/cipher';
+import { CipherKey } from '../../../core/cipher/cipher-key-store';
 
 interface TelegramConfigurationRow {
   userName: string;
@@ -104,8 +105,8 @@ export class SqliteTelegramConfigurationRepository implements TelegramConfigurat
 
   public async upsert(_: AbortSignal, configuration: TelegramBotConfiguration, transaction?: Transaction): Promise<void> {
     const [encryptedBotToken, encryptedLinkCode] = await Promise.all([
-      this.cipher.encryptData(configuration.botToken),
-      this.cipher.encryptDataIfPresent(configuration.linkCode)
+      this.cipher.encryptSecret(configuration.botToken, CipherKey.InternalSecretEncryption),
+      this.cipher.encryptSecretIfPresent(configuration.linkCode, CipherKey.InternalSecretEncryption)
     ]);
     try {
       await this.db.write(db => {
@@ -183,7 +184,10 @@ export class SqliteTelegramConfigurationRepository implements TelegramConfigurat
   }
 
   private async mapConfiguration(row: TelegramConfigurationRow): Promise<TelegramBotConfiguration> {
-    const [botToken, linkCode] = await Promise.all([this.cipher.decryptData(row.botToken), this.cipher.decryptDataIfPresent(row.linkCode)]);
+    const [botToken, linkCode] = await Promise.all([
+      this.cipher.decryptSecret(row.botToken, CipherKey.InternalSecretEncryption),
+      this.cipher.decryptSecretIfPresent(row.linkCode, CipherKey.InternalSecretEncryption)
+    ]);
     return new TelegramBotConfiguration(
       row.userName,
       row.channelName,

@@ -234,6 +234,8 @@ import { IsTestRpcHandler } from './process-executor/rpc-handlers/is-test-rpc-ha
 import { ResolveUserAccessRpcHandler } from './process-executor/rpc-handlers/resolve-user-access-rpc-handler';
 import { LoginThrottler } from './api/auth/login-throttler';
 import { DeleteTableRowRpcHandler } from './process-executor/rpc-handlers/delete-table-row-rpc-handler';
+import { EncryptSecretRpcHandler } from './process-executor/rpc-handlers/encrypt-secret-rpc-handler';
+import { DecryptSecretRpcHandler } from './process-executor/rpc-handlers/decrypt-secret-rpc-handler';
 
 const DB_TYPE = 'sqlite';
 
@@ -382,6 +384,8 @@ export async function bootstrap(registry: CleanupRegistry, signal: AbortSignal) 
     new GetStartedByRpcHandler(processExecutionStore),
     new ResolveUserAccessRpcHandler(processExecutionStore, userAccessExpressionUserQuerier),
     new IsTestRpcHandler(processExecutionStore),
+    new EncryptSecretRpcHandler(cipher),
+    new DecryptSecretRpcHandler(cipher),
     new ReadTablePageRpcHandler(tableManager),
     new ReadVariableRpcHandler(processExecutionStore),
     new ReadTableRowRpcHandler(tableManager),

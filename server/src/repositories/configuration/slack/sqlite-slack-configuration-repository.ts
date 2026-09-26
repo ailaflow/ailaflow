@@ -2,6 +2,7 @@ import { SqliteDatabase } from '../../../core/sqlite-database';
 import { SqliteDatabases } from '../../../core/sqlite-databases';
 import { Transaction } from '../../../core/transaction';
 import { Cipher } from '../../../core/cipher/cipher';
+import { CipherKey } from '../../../core/cipher/cipher-key-store';
 import { SlackConfigurationRepository } from './slack-configuration-repository';
 import { SlackConfiguration } from './slack-types';
 
@@ -51,16 +52,16 @@ export class SqliteSlackConfigurationRepository implements SlackConfigurationRep
     }
     const { id: _id, appToken: encryptedAppToken, botToken: encryptedBotToken, ...configuration } = row;
     const [appToken, botToken] = await Promise.all([
-      this.cipher.decryptData(encryptedAppToken),
-      this.cipher.decryptData(encryptedBotToken)
+      this.cipher.decryptSecret(encryptedAppToken, CipherKey.InternalSecretEncryption),
+      this.cipher.decryptSecret(encryptedBotToken, CipherKey.InternalSecretEncryption)
     ]);
     return { ...configuration, appToken, botToken };
   }
 
   public async save(_: AbortSignal, configuration: SlackConfiguration, transaction?: Transaction): Promise<void> {
     const [encryptedAppToken, encryptedBotToken] = await Promise.all([
-      this.cipher.encryptData(configuration.appToken),
-      this.cipher.encryptData(configuration.botToken)
+      this.cipher.encryptSecret(configuration.appToken, CipherKey.InternalSecretEncryption),
+      this.cipher.encryptSecret(configuration.botToken, CipherKey.InternalSecretEncryption)
     ]);
     await this.db.write(db => {
       db.prepare(

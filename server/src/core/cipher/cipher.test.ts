@@ -25,31 +25,55 @@ test('derives deterministic and purpose-specific keys from a seed', async () => 
   const secondStore = new SeedCipherKeyStore('test-1');
 
   assert.deepEqual(firstStore.getKey(CipherKey.PasswordPepper).export(), secondStore.getKey(CipherKey.PasswordPepper).export());
-  assert.deepEqual(firstStore.getKey(CipherKey.DataEncryption).export(), secondStore.getKey(CipherKey.DataEncryption).export());
-  assert.notDeepEqual(firstStore.getKey(CipherKey.PasswordPepper).export(), firstStore.getKey(CipherKey.DataEncryption).export());
+  assert.deepEqual(
+    firstStore.getKey(CipherKey.InternalSecretEncryption).export(),
+    secondStore.getKey(CipherKey.InternalSecretEncryption).export()
+  );
+  assert.deepEqual(
+    firstStore.getKey(CipherKey.ProcessSecretEncryption).export(),
+    secondStore.getKey(CipherKey.ProcessSecretEncryption).export()
+  );
+  assert.notDeepEqual(firstStore.getKey(CipherKey.PasswordPepper).export(), firstStore.getKey(CipherKey.InternalSecretEncryption).export());
+  assert.notDeepEqual(
+    firstStore.getKey(CipherKey.InternalSecretEncryption).export(),
+    firstStore.getKey(CipherKey.ProcessSecretEncryption).export()
+  );
 
-  const encrypted = await new Cipher(firstStore).encryptData('shared value');
-  assert.equal(await new Cipher(secondStore).decryptData(encrypted), 'shared value');
-  await assert.rejects(new Cipher(new SeedCipherKeyStore('test-2')).decryptData(encrypted), /invalid or has been tampered with/);
+  const encrypted = await new Cipher(firstStore).encryptSecret('shared value', CipherKey.ProcessSecretEncryption);
+  assert.equal(await new Cipher(secondStore).decryptSecret(encrypted, CipherKey.ProcessSecretEncryption), 'shared value');
+  await assert.rejects(
+    new Cipher(new SeedCipherKeyStore('test-2')).decryptSecret(encrypted, CipherKey.ProcessSecretEncryption),
+    /invalid or has been tampered with/
+  );
   assert.throws(() => new SeedCipherKeyStore(''), /cannot be empty/);
 });
 
 test('encrypts authenticated data with a unique initialization vector', async () => {
   const cipher = new Cipher(new SeedCipherKeyStore('test-data'));
-  const first = await cipher.encryptData('zażółć 🚀');
-  const second = await cipher.encryptData('zażółć 🚀');
+  const first = await cipher.encryptSecret('zażółć 🚀', CipherKey.ProcessSecretEncryption);
+  const second = await cipher.encryptSecret('zażółć 🚀', CipherKey.ProcessSecretEncryption);
 
   assert.notEqual(first, second);
-  assert.equal(await cipher.decryptData(first), 'zażółć 🚀');
-  assert.equal(await cipher.decryptData(await cipher.encryptData('')), '');
-  assert.equal(await cipher.encryptDataIfPresent(null), null);
-  assert.equal(await cipher.decryptDataIfPresent(null), null);
-  assert.equal(await cipher.decryptDataIfPresent(await cipher.encryptDataIfPresent('')), '');
+  assert.equal(await cipher.decryptSecret(first, CipherKey.ProcessSecretEncryption), 'zażółć 🚀');
+  assert.equal(
+    await cipher.decryptSecret(await cipher.encryptSecret('', CipherKey.ProcessSecretEncryption), CipherKey.ProcessSecretEncryption),
+    ''
+  );
+  assert.equal(await cipher.encryptSecretIfPresent(null, CipherKey.ProcessSecretEncryption), null);
+  assert.equal(await cipher.decryptSecretIfPresent(null, CipherKey.ProcessSecretEncryption), null);
+  assert.equal(
+    await cipher.decryptSecretIfPresent(
+      await cipher.encryptSecretIfPresent('', CipherKey.ProcessSecretEncryption),
+      CipherKey.ProcessSecretEncryption
+    ),
+    ''
+  );
 
   const lastCharacter = first.endsWith('A') ? 'B' : 'A';
   const tampered = `${first.slice(0, -1)}${lastCharacter}`;
-  await assert.rejects(cipher.decryptData(tampered), /invalid or has been tampered with/);
-  await assert.rejects(cipher.decryptData('invalid'), /invalid or has been tampered with/);
+  await assert.rejects(cipher.decryptSecret(tampered, CipherKey.ProcessSecretEncryption), /invalid or has been tampered with/);
+  await assert.rejects(cipher.decryptSecret('invalid', CipherKey.ProcessSecretEncryption), /invalid or has been tampered with/);
+  await assert.rejects(cipher.decryptSecret(first, CipherKey.InternalSecretEncryption), /invalid or has been tampered with/);
 });
 
 test('hashes and verifies passwords with unique salts and an installation pepper', async () => {
@@ -72,7 +96,7 @@ test('installs and reloads filesystem keys without allowing replacement', async 
   const firstStore = new FileSystemCipherKeyStore(paths);
 
   assert.equal(await firstStore.tryLoad(), false);
-  assert.throws(() => firstStore.getKey(CipherKey.DataEncryption), /not initialized/);
+  assert.throws(() => firstStore.getKey(CipherKey.InternalSecretEncryption), /not initialized/);
 
   await firstStore.install();
   const originalKeyFile = await readFile(join(folderPath, 'cipher-keys.json'), 'utf8');
@@ -87,10 +111,10 @@ test('installs and reloads filesystem keys without allowing replacement', async 
     assert.equal((await stat(join(folderPath, 'cipher-keys.json'))).mode & 0o777, 0o600);
   }
 
-  const encrypted = await new Cipher(firstStore).encryptData('persisted value');
+  const encrypted = await new Cipher(firstStore).encryptSecret('persisted value', CipherKey.ProcessSecretEncryption);
   const secondStore = new FileSystemCipherKeyStore(paths);
   assert.equal(await secondStore.tryLoad(), true);
-  assert.equal(await new Cipher(secondStore).decryptData(encrypted), 'persisted value');
+  assert.equal(await new Cipher(secondStore).decryptSecret(encrypted, CipherKey.ProcessSecretEncryption), 'persisted value');
 });
 
 test('rejects malformed filesystem keys', async t => {
