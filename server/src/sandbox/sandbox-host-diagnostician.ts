@@ -4,7 +4,10 @@ import { Docker } from './docker';
 import fs from 'node:fs/promises';
 
 export interface SandboxHostDiagnosticianResult {
-  dockerVersion: string | null;
+  dockerVersion: {
+    client: string;
+    server: string;
+  } | null;
   dockerError: string | null;
   appFolderPath: string;
   dataFolderPath: string;
@@ -26,7 +29,12 @@ export class SandboxHostDiagnostician {
     ]);
 
     return {
-      dockerVersion: d.version,
+      dockerVersion: d.info
+        ? {
+            client: d.info.ClientInfo.Version,
+            server: d.info.ServerVersion
+          }
+        : null,
       dockerError: d.error,
       appFolderPath,
       dataFolderPath,
@@ -40,12 +48,12 @@ export class SandboxHostDiagnostician {
       const docker = new Docker(this.paths.getRuntimeFolderPath());
       const info = await docker.info(signal);
       return {
-        version: info.ClientInfo.Version,
+        info,
         error: null
       };
     } catch (e) {
       return {
-        version: null,
+        info: null,
         error: e instanceof Error ? e.message : String(e)
       };
     }

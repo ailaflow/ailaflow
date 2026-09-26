@@ -35,7 +35,12 @@ export type GetSandboxResponse = z.infer<typeof getSandboxResponseSchema>;
 // diagnoseHost
 
 export const diagnoseHostResponseSchema = z.object({
-  dockerVersion: z.string().nullable(),
+  dockerVersion: z
+    .object({
+      client: z.string(),
+      server: z.string()
+    })
+    .nullable(),
   dockerError: z.string().nullable(),
   appFolderPath: z.string(),
   dataFolderPath: z.string(),

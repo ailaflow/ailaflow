@@ -7,6 +7,7 @@ export interface DockerInfo {
   ClientInfo: {
     Version: string;
   };
+  ServerVersion: string;
 }
 
 export class Docker {
@@ -14,10 +15,19 @@ export class Docker {
 
   public async info(signal: AbortSignal): Promise<DockerInfo> {
     const { stderr, stdout } = await this.execDocker(signal, ['info', '--format', '{{json .}}']);
-    if (stderr.includes('Cannot connect')) {
-      throw new Error('Docker is not running');
+    const error = stderr.trim();
+    if (error) {
+      throw new Error(`Docker info error: ${error}`);
     }
-    return JSON.parse(stdout);
+    try {
+      const info = JSON.parse(stdout) as DockerInfo;
+      if (typeof info?.ClientInfo?.Version === 'string' && typeof info?.ServerVersion === 'string') {
+        return info;
+      }
+    } catch {
+      // Ignore
+    }
+    throw new Error(`Docker info returned invalid response: ${stdout}`);
   }
 
   public async build(signal: AbortSignal, imageTag: string, dockerfilePath: string, envs: Record<string, string>) {
