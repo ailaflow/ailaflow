@@ -237,6 +237,7 @@ import { DeleteTableRowRpcHandler } from './process-executor/rpc-handlers/delete
 import { EncryptSecretRpcHandler } from './process-executor/rpc-handlers/encrypt-secret-rpc-handler';
 import { DecryptSecretRpcHandler } from './process-executor/rpc-handlers/decrypt-secret-rpc-handler';
 import { ExecuteProcessRpcHandler } from './process-executor/rpc-handlers/execute-process-rpc-handler';
+import { ExportProcessEndpoint } from './api/process/export-process-endpoint';
 
 const DB_TYPE = 'sqlite';
 
@@ -617,6 +618,7 @@ export async function bootstrap(registry: CleanupRegistry, signal: AbortSignal) 
     new StartMyProcessEndpoint(userProcessProvider, processExecutor, sessionManager, executionTaskCandidateQuerier),
     new GetProcessesEndpoint(processListQuerier),
     new GetProcessEndpoint(processManager),
+    new ExportProcessEndpoint(processManager),
     new DeleteProcessEndpoint(processManager),
     new SaveProcessEndpoint(processRepository, processManager, resourceAccessRepository, sandboxListQuerier),
     new TestProcessEndpoint(processManager, processExecutor, processExecutionResumeListenerStore),

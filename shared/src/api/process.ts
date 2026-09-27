@@ -1,5 +1,12 @@
 import * as z from 'zod/v4';
-import { processDefinitionSchema, ProcessDisplay, ProcessExecutionMode, ProcessExecutionOutcome, ProcessLog } from '../process';
+import {
+  exportedProcessSchema,
+  processDefinitionSchema,
+  ProcessDisplay,
+  ProcessExecutionMode,
+  ProcessExecutionOutcome,
+  ProcessLog
+} from '../process';
 import { paginationRequestSchema, paginationResponseSchema } from './pagination';
 
 // getProcesses
@@ -74,6 +81,14 @@ export const deleteProcessResponseSchema = z.object({
 });
 
 export type DeleteProcessResponse = z.infer<typeof deleteProcessResponseSchema>;
+
+// exportProcess
+
+export const exportProcessResponseSchema = z.object({
+  exportedProcess: exportedProcessSchema
+});
+
+export type ExportProcessResponse = z.infer<typeof exportProcessResponseSchema>;
 
 // testProcess
 

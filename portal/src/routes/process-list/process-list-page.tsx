@@ -51,6 +51,17 @@ export function ProcessListPage() {
     }
   }
 
+  async function exportProcess(name: string) {
+    const result = await apiClient.process.exportProcess(AbortSignal.timeout(5_000), name);
+
+    const content = JSON.stringify(result.exportedProcess, null, 2);
+    const file = new Blob([content], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(file);
+    a.download = `${name}.json`;
+    a.click();
+  }
+
   useAiStore(
     'processList',
     store =>
@@ -147,6 +158,10 @@ export function ProcessListPage() {
           label: 'Cron',
           getTo: process => `/admin/processes/${encodeURIComponent(process.name)}/cron-jobs`
         },
+        /*{
+          label: 'Export',
+          onClick: process => exportProcess(process.name)
+        },*/
         {
           label: <SvgIcon name="pencil" className="h-4 w-4" />,
           ariaLabel: process => `Edit process ${process.name}`,

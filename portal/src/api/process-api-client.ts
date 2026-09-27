@@ -11,7 +11,8 @@ import type {
   SaveProcessCronJobRequest,
   SaveProcessCronJobResponse,
   TestProcessRequest,
-  TestProcessUpdate
+  TestProcessUpdate,
+  ExportProcessResponse
 } from '@ailaflow/shared';
 
 export class ProcessApiClient {
@@ -38,6 +39,10 @@ export class ProcessApiClient {
 
   public deleteProcess(signal: AbortSignal, name: string): Promise<DeleteProcessResponse> {
     return this.client.json(signal, 'DELETE', `/api/processes/${encodeURIComponent(name)}`);
+  }
+
+  public exportProcess(signal: AbortSignal, name: string): Promise<ExportProcessResponse> {
+    return this.client.json(signal, 'GET', `/api/processes/${name}/export`);
   }
 
   public getProcessCronJobs(signal: AbortSignal, processName: string): Promise<GetProcessCronJobsResponse> {
