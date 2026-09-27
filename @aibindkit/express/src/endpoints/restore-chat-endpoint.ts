@@ -9,6 +9,8 @@ import { ChatSessionInitializerError } from '../chat-session-resolver';
 import { ChatAuthContext, ChatAuthContextResolver } from '../chat-auth-context-resolver';
 
 export class RestoreChatEndpoint implements Endpoint {
+  private readonly locks = new Set<string>();
+
   public readonly method = 'post';
   public readonly path = '/api/chat';
 
@@ -51,7 +53,13 @@ export class RestoreChatEndpoint implements Endpoint {
       throw e;
     }
 
+    if (this.locks.has(session.id)) {
+      res.status(409).json({ error: 'Another chat is already connected to this session' }).end();
+      return;
+    }
+
     const sseResponse = new SseResponse<ChatUpdate>(res);
+    this.locks.add(session.id);
 
     function onMessageCompletedOrFailed(update: ChatSessionUpdate) {
       sseResponse.send({ currentMessage: update.update, isWorking: update.isWorking, contextUsage: update.contextUsage });
@@ -65,12 +73,6 @@ export class RestoreChatEndpoint implements Endpoint {
       sseResponse.end();
     }
 
-    sseResponse.send({
-      sessionToken: session.token,
-      restoredMessages: session.getAll(),
-      contextUsage: session.getContextUsage()
-    });
-
     session.onMessageStarted.subscribe(onMessageCompletedOrFailed);
     session.onMessageCompleted.subscribe(onMessageCompletedOrFailed);
     session.onMessageFailed.subscribe(onMessageCompletedOrFailed);
@@ -82,6 +84,14 @@ export class RestoreChatEndpoint implements Endpoint {
       session.onMessageCompleted.unsubscribe(onMessageCompletedOrFailed);
       session.onMessageFailed.unsubscribe(onMessageCompletedOrFailed);
       session.onReset.unsubscribe(onReset);
+      session.onDestroyed.unsubscribe(onDestroyed);
+      this.locks.delete(session.id);
+    });
+
+    sseResponse.send({
+      sessionToken: session.token,
+      restoredMessages: session.getAll(),
+      contextUsage: session.getContextUsage()
     });
   }
 }
