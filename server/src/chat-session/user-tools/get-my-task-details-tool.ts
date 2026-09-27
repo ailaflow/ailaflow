@@ -1,7 +1,7 @@
 import { ToolContext, ZodTool, ZodToolExecutionResult } from '@aibindkit/llm';
 import { UserTaskDetailsProvider } from '../../task/user-task-details-provider';
 import { ChatSessionId } from '../chat-session-id';
-import z from 'zod/v4';
+import * as z from 'zod/v4';
 
 const inputSchema = z.object({
   taskId: z.string()

@@ -1,5 +1,5 @@
 import { ToolContext, ZodTool, ZodToolExecutionResult } from '@aibindkit/llm';
-import z from 'zod/v4';
+import * as z from 'zod/v4';
 import { MyTaskListQuerier } from '../../queriers/my-task-list/my-task-list-querier';
 import { ChatSessionId } from '../chat-session-id';
 import { TaskSubmissionMode } from '@ailaflow/shared';

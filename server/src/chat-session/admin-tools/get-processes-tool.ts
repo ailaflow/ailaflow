@@ -1,5 +1,5 @@
 import { ToolContext, ZodTool, ZodToolExecutionResult } from '@aibindkit/llm';
-import z from 'zod/v4';
+import * as z from 'zod/v4';
 import { ProcessListQuerier } from '../../queriers/process-list/process-list-querier';
 import { ProcessDisplay, ProcessExecutionMode } from '@ailaflow/shared';
 

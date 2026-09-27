@@ -1,6 +1,6 @@
 import { ToolContext, ZodTool, ZodToolExecutionResult } from '@aibindkit/llm';
 import { ProcessDisplay, ProcessExecutionMode } from '@ailaflow/shared';
-import z from 'zod/v4';
+import * as z from 'zod/v4';
 import { MyProcessListQuerier } from '../../queriers/my-process-list/my-process-list-querier';
 import { ChatSessionId } from '../chat-session-id';
 

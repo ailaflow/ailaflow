@@ -1,5 +1,5 @@
 import { ToolContext, ZodTool, ZodToolExecutionResult } from '@aibindkit/llm';
-import z from 'zod/v4';
+import * as z from 'zod/v4';
 import { ProcessExecutionStore } from '../../process-executor/process-execution-store';
 
 const inputSchema = z.object({ name: z.string() });

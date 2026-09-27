@@ -1,5 +1,5 @@
 import { ToolContext, ZodTool, ZodToolExecutionResult } from '@aibindkit/llm';
-import z from 'zod/v4';
+import * as z from 'zod/v4';
 import { SandboxInstanceManager } from '../../sandbox/sandbox-instance-manager';
 
 const inputSchema = z.object({

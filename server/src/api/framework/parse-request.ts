@@ -1,4 +1,4 @@
-import z from 'zod/v4';
+import * as z from 'zod/v4';
 import { EndpointError } from './endpoint-error';
 
 export function parseBody<T>(zod: z.ZodType<T>, body: unknown): T {

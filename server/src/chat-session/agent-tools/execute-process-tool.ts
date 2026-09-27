@@ -1,7 +1,7 @@
 import { ToolContext, ZodTool, ZodToolExecutionResult } from '@aibindkit/llm';
 import { JsonSchema, ProcessExecutionOutcomeType } from '@ailaflow/shared';
 import { Process } from '../../repositories/process/process';
-import z from 'zod/v4';
+import * as z from 'zod/v4';
 import { ProcessExecutionStore } from '../../process-executor/process-execution-store';
 
 export class ExecuteProcessTool extends ZodTool<Record<string, unknown>> {

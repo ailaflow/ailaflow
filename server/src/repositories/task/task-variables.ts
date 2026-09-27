@@ -1,5 +1,5 @@
 import { JsonSchema, ProcessExecutionVariableValues } from '@ailaflow/shared';
-import z from 'zod/v4';
+import * as z from 'zod/v4';
 
 export class TaskVariables {
   private readonly outputVariableNames: string[];

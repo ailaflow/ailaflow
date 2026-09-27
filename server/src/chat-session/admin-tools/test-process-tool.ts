@@ -1,5 +1,5 @@
 import { ToolContext, ZodTool, ZodToolExecutionResult } from '@aibindkit/llm';
-import z from 'zod/v4';
+import * as z from 'zod/v4';
 import { ProcessExecutionContext } from '../../process-executor/process-execution-context';
 import { ProcessManager } from '../../process/process-manager';
 import { ChatSessionId } from '../chat-session-id';

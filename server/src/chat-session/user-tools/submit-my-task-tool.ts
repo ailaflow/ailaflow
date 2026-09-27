@@ -1,6 +1,6 @@
 import { ToolContext, ZodTool, ZodToolExecutionResult } from '@aibindkit/llm';
 import { ChatSessionId } from '../chat-session-id';
-import z from 'zod/v4';
+import * as z from 'zod/v4';
 import { AssignedTaskCompleter, AssignedTaskCompleterError } from '../../task/assigned-task-completer';
 
 const inputSchema = z.object({

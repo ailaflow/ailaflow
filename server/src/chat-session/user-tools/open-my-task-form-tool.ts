@@ -1,6 +1,6 @@
 import { ToolContext, ZodTool, ZodToolExecutionResult } from '@aibindkit/llm';
 import { TaskFormMessageMetadata } from '@ailaflow/shared';
-import z from 'zod/v4';
+import * as z from 'zod/v4';
 import { UserAssignedTaskProvider } from '../../task/user-assigned-task-provider';
 import { ChatSessionId } from '../chat-session-id';
 

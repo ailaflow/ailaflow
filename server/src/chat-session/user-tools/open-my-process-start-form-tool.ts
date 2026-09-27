@@ -1,5 +1,5 @@
 import { ToolContext, ZodTool, ZodToolExecutionResult } from '@aibindkit/llm';
-import z from 'zod/v4';
+import * as z from 'zod/v4';
 import { ChatSessionId } from '../chat-session-id';
 import { UserProcessProvider } from '../../process/user-process-provider';
 import { ProcessStartFormMessageMetadata, ResourceNameNormalizer } from '@ailaflow/shared';

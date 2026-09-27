@@ -1,6 +1,6 @@
 import { ChatMessageMetadata, ToolCall, ToolDescriptor } from '@aibindkit/core';
 import { Tool, ToolContext, ToolExecutionResult } from './tool';
-import z from 'zod/v4';
+import * as z from 'zod/v4';
 
 export interface ZodToolExecutionResult {
   content: object;
