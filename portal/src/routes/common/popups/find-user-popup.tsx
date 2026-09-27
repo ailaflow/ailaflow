@@ -27,7 +27,7 @@ export function FindUserPopup(props: FindUserPopupProps) {
     setIsLoading(true);
     setError(null);
     setResult(null);
-    const timeout = window.setTimeout(async () => {
+    const timeout = setTimeout(async () => {
       try {
         const response = await props.apiClient.user.getUsers(abortController.signal, {
           page: 1,

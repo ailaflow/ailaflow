@@ -92,8 +92,8 @@ Each workflow step MUST have a name containing 1 to 32 characters.
 ### Script
 
 - **Purpose:** Execute the process's main business logic in a selected sandbox.
-- **Configuration:** Script, sandbox, and selected variables the script may read or modify.
-- **Execution:** Run a finite script using the sandbox's available tools and environment.
+- **Configuration:** Script, sandbox, selected variables the script may read or modify, and processes it may execute.
+- **Execution:** Run a finite script using the sandbox's available tools and environment. The script may execute an allowed process, wait for it to finish, and use its output values. The call fails if the executed process pauses.
 - **Data:** Read or write selected process variables and access persistent tables through the process-script API.
 
 ### Agent
@@ -172,7 +172,7 @@ Process scripts MUST import the API:
 const ailaflow = require('@ailaflow/bridge-lib');
 ```
 
-Component prefixes are optional in this API: `$name` equals `name`, and `#customers` equals `customers`. Async functions accept an optional final RPC configuration, such as `{ timeout: 30_000 }`. RPC failures reject the call.
+Component prefixes are optional in this API: `$name` equals `name`, `#customers` equals `customers`, and `/process_name` equals `process_name`. Async functions accept an optional final RPC configuration, such as `{ timeout: 30_000 }`. RPC failures reject the call.
 
 ### Process variables
 
@@ -183,6 +183,18 @@ Returns the value, or `null` if unset. Fails if the variable does not exist.
 #### `await ailaflow.writeVariable('$name', value)`
 
 Writes a value. Fails if the variable does not exist or the value does not match its JSON Schema.
+
+### Processes
+
+#### `await ailaflow.executeProcess('/process_name', startValues, rpcConfig?)`
+
+Executes a process and waits for it to finish. The process MUST be selected in the script step's allowed processes and be accessible to the user who started the current process. `startValues` MUST contain all and only the process's start variables, with values matching their JSON Schemas. The function returns an object containing the process's output variable values. A pausable process may be started, but the call fails if its execution pauses instead of waiting for it to resume. It also fails if the process cannot be executed, fails, or exceeds the RPC timeout.
+
+Use the optional final RPC configuration when the default 10-second timeout is insufficient:
+
+```js
+const output = await ailaflow.executeProcess('/summarize', { text: 'Summarize this text.' }, { timeout: 30_000 });
+```
 
 ### Tables
 

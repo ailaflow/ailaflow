@@ -296,6 +296,12 @@ export function useProcessEditorAi(state: ProcessEditorState, save: () => Promis
           state.notifyDefinitionChange();
           return toolSuccess('Sandbox name was updated');
         },
+        async scriptStep_setAllowedProcessNames(arg) {
+          const step = state.getStep<ScriptStep>(arg.stepId, 'script');
+          step.properties.script.allowedProcessNames = arg.processNames;
+          state.notifyDefinitionChange();
+          return toolSuccess('Allowed processes were updated');
+        },
 
         async agentStep_setPrompt(arg) {
           const step = state.getStep<AgentStep>(arg.stepId, 'agent');

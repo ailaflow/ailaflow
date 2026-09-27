@@ -8,8 +8,8 @@ import { ToolSetProvider } from './tool-set-provider';
 import { ListVariablesTool } from './agent-tools/list-variables-tool';
 import { ReadVariableTool } from './agent-tools/read-variable-tool';
 import { SetVariableTool } from './agent-tools/set-variable-tool';
-import { RunProcessTool } from './agent-tools/run-process-tool';
-import { RunTerminalCommandTool } from './agent-tools/run-terminal-command-tool';
+import { ExecuteProcessTool } from './agent-tools/execute-process-tool';
+import { ExecuteTerminalCommandTool } from './agent-tools/execute-terminal-command-tool';
 import { Process } from '../repositories/process/process';
 import { ProcessDisplay } from '@ailaflow/shared';
 
@@ -83,7 +83,7 @@ export class AgentToolSetProviderFactory {
         if (process.isPausable) {
           continue;
         }
-        tools.push(new RunProcessTool(executionId, process, this.executionStore));
+        tools.push(new ExecuteProcessTool(executionId, process, this.executionStore));
       }
       if (result.processes.length === 0 || page * result.pageSize >= result.totalCount) {
         break;
@@ -93,6 +93,6 @@ export class AgentToolSetProviderFactory {
   }
 
   private addTerminalTools(sandboxName: string, tools: Tool[]) {
-    tools.push(new RunTerminalCommandTool(sandboxName, this.sandboxInstanceManager));
+    tools.push(new ExecuteTerminalCommandTool(sandboxName, this.sandboxInstanceManager));
   }
 }

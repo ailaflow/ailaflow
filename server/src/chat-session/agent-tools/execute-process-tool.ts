@@ -4,7 +4,7 @@ import { Process } from '../../repositories/process/process';
 import z from 'zod/v4';
 import { ProcessExecutionStore } from '../../process-executor/process-execution-store';
 
-export class RunProcessTool extends ZodTool<Record<string, unknown>> {
+export class ExecuteProcessTool extends ZodTool<Record<string, unknown>> {
   public constructor(
     private readonly executionId: string,
     private readonly process: Process,
@@ -18,8 +18,8 @@ export class RunProcessTool extends ZodTool<Record<string, unknown>> {
     }
 
     super(
-      `run_process_${process.name}`,
-      `Runs process "${process.name}" and waits for completion. ${process.description}\nPausable processes cannot run. Calls in one batch run concurrently; use separate turns for dependent calls.`,
+      `executeProcess_${process.name}`,
+      `Executes /${process.name} process and waits for completion. ${process.description}\nPausable processes cannot run. Calls in one batch run concurrently; use separate turns for dependent calls.`,
       z.object(zod),
       schema
     );

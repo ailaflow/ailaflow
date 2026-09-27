@@ -53,7 +53,7 @@ function LoadedSlackConfigurationPage(props: { initialConfiguration: GetSlackCon
       return;
     }
     const abortController = new AbortController();
-    const timer = window.setTimeout(async () => {
+    const timer = setTimeout(async () => {
       setIsLoadingUsers(true);
       try {
         setUsersResponse(

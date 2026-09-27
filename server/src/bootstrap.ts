@@ -236,6 +236,7 @@ import { LoginThrottler } from './api/auth/login-throttler';
 import { DeleteTableRowRpcHandler } from './process-executor/rpc-handlers/delete-table-row-rpc-handler';
 import { EncryptSecretRpcHandler } from './process-executor/rpc-handlers/encrypt-secret-rpc-handler';
 import { DecryptSecretRpcHandler } from './process-executor/rpc-handlers/decrypt-secret-rpc-handler';
+import { ExecuteProcessRpcHandler } from './process-executor/rpc-handlers/execute-process-rpc-handler';
 
 const DB_TYPE = 'sqlite';
 
@@ -377,6 +378,11 @@ export async function bootstrap(registry: CleanupRegistry, signal: AbortSignal) 
     kvConfigurationRepository.setup(signal)
   ]);
 
+  const processExecutionPersister = new ProcessExecutionPersister(persistedExecutionRepository);
+  const processDefinitionUpgrader = new ProcessDefinitionUpgrader();
+  const processManager = new ProcessManager(processRepository, processDefinitionUpgrader);
+  const userProcessProvider = new UserProcessProvider(myProcessAccessQuerier, processManager);
+
   const tableSchemaManager = new TableSchemaManager(tableSchemaRepository);
   const tableManager = new TableManager(tableRepository, tableDataRepository, tableSchemaManager, tableDataListQuerier);
   const processExecutionStore = new ProcessExecutionStore();
@@ -392,7 +398,8 @@ export async function bootstrap(registry: CleanupRegistry, signal: AbortSignal) 
     new UserExistsRpcHandler(userRepository),
     new WriteTableRpcHandler(tableManager),
     new WriteVariableRpcHandler(processExecutionStore),
-    new DeleteTableRowRpcHandler(tableManager)
+    new DeleteTableRowRpcHandler(tableManager),
+    new ExecuteProcessRpcHandler(processExecutionStore, userProcessProvider)
   ]);
 
   const sessionManager = new ChatSessionManager();
@@ -470,10 +477,6 @@ export async function bootstrap(registry: CleanupRegistry, signal: AbortSignal) 
   eventBus.registerHandler(new SlackConfigurationChangedEventHandler(slackSynchronizationManager));
   eventBus.registerHandler(new SlackMappingsChangedEventHandler(slackSynchronizationManager));
 
-  const processExecutionPersister = new ProcessExecutionPersister(persistedExecutionRepository);
-  const processDefinitionUpgrader = new ProcessDefinitionUpgrader();
-  const processManager = new ProcessManager(processRepository, processDefinitionUpgrader);
-
   const agentToolSetProviderFactory = new AgentToolSetProviderFactory(
     processListQuerier,
     processManager,
@@ -498,7 +501,6 @@ export async function bootstrap(registry: CleanupRegistry, signal: AbortSignal) 
     eventBus
   );
 
-  const userProcessProvider = new UserProcessProvider(myProcessAccessQuerier, processManager);
   const userAssignedTaskProvider = new UserAssignedTaskProvider(taskRepository, assignedTaskRepository);
   const userTaskDetailsProvider = new UserTaskDetailsProvider(userAssignedTaskProvider, persistedExecutionRepository);
   const taskFinalizer = new TaskFinalizer(

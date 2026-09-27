@@ -12,14 +12,14 @@ type Input = z.infer<typeof inputSchema>;
 const TERMINAL_TIMEOUT_MS = 60_000;
 const MAX_OUTPUT_LENGTH = 16_000;
 
-export class RunTerminalCommandTool extends ZodTool<Input> {
+export class ExecuteTerminalCommandTool extends ZodTool<Input> {
   public constructor(
     private readonly sandboxName: string,
     private readonly sandboxInstanceManager: SandboxInstanceManager
   ) {
     super(
-      'runTerminalCommand',
-      'Runs a shell command in the configured sandbox. The optional cwd sets the working directory and defaults to /app. Calls in one batch run concurrently and changes are not rolled back; run dependent commands in separate turns. Commands time out after 60 seconds and output may be truncated.',
+      'executeTerminalCommand',
+      'Executes a shell command in the configured sandbox. The optional cwd sets the working directory and defaults to /app. Calls in one batch run concurrently and changes are not rolled back; run dependent commands in separate turns. Commands time out after 60 seconds and output may be truncated.',
       inputSchema
     );
   }

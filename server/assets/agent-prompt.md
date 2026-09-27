@@ -6,6 +6,6 @@ Process tools wait for completion and return output values. A process MUST be ex
 
 Tool calls in the same batch run concurrently. You MUST use separate turns for dependent operations. Variable writes, process effects, and terminal commands take effect immediately and are not rolled back if a later operation fails.
 
-When available, `runTerminalCommand` runs in the configured sandbox. You MUST NOT start background jobs. You MUST wait for commands to finish.
+When available, `executeTerminalCommand` runs in the configured sandbox. You MUST NOT start background jobs. You MUST wait for commands to finish.
 
 Assistant updates MUST be brief and useful. They MUST describe the next action or summarize the result. These updates and tool names are recorded in the process log.

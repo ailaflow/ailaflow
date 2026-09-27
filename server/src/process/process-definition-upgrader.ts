@@ -1,4 +1,4 @@
-import { PROCESS_VERSION, ProcessDefinition } from '@ailaflow/shared';
+import { PROCESS_VERSION, ProcessDefinition, ScriptStep } from '@ailaflow/shared';
 import { DefinitionWalker } from 'sequential-workflow-model';
 
 export class ProcessDefinitionUpgrader {
@@ -6,13 +6,16 @@ export class ProcessDefinitionUpgrader {
 
   public tryUpgrade(definition: ProcessDefinition) {
     if (definition.properties.version === PROCESS_VERSION) {
-      return;
+      //return;
     }
 
     this.walker.forEach(definition, step => {
-      // if (step.type === 'return') {
-      //   this.upgradeReturnStep(step as ReturnStep);
-      // }
+      if (step.type === 'script') {
+        const s = step as ScriptStep;
+        if (s.properties.script.allowedProcessNames === undefined) {
+          s.properties.script.allowedProcessNames = [];
+        }
+      }
     });
 
     definition.properties.version = PROCESS_VERSION;

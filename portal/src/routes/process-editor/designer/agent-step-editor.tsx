@@ -16,8 +16,10 @@ export function AgentStepEditor(props: StepEditorProps) {
   const [isFindProcessesPopupOpen, setIsFindProcessesPopupOpen] = useState(false);
   const errors = props.state.stepValidator.validate(step, definition);
 
-  function onSelectProcesses(names: string[]) {
-    setProperty('allowedProcessNames', names);
+  function closeFindProcessesPopup(names: string[] | null) {
+    if (names !== null) {
+      setProperty('allowedProcessNames', names);
+    }
     setIsFindProcessesPopupOpen(false);
   }
 
@@ -31,9 +33,8 @@ export function AgentStepEditor(props: StepEditorProps) {
       {isFindProcessesPopupOpen && (
         <FindProcessesPopup
           apiClient={props.state.apiClient}
-          onSelectProcesses={onSelectProcesses}
           processNames={properties.allowedProcessNames}
-          onClose={() => setIsFindProcessesPopupOpen(false)}
+          onClose={closeFindProcessesPopup}
         />
       )}
 

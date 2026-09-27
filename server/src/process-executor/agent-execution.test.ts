@@ -24,7 +24,7 @@ import { AgentSessionRunner } from './services/agent-session-runner';
 import { ProcessExecutionServices } from './services/services';
 import { ProcessExecutor } from './process-executor';
 import { ProcessExecution } from './process-execution';
-import { RunProcessTool } from '../chat-session/agent-tools/run-process-tool';
+import { ExecuteProcessTool } from '../chat-session/agent-tools/execute-process-tool';
 import { ProcessExecutionStore } from './process-execution-store';
 import { ProcessExecutionPersister } from './process-execution-persister';
 import { ProcessExecutionContext } from './process-execution-context';
@@ -154,9 +154,9 @@ function createHarness(
   }
 
   let caller: ProcessExecution | undefined;
-  function runProcessTool(process: Process, input: Record<string, unknown>) {
+  function executeProcessTool(process: Process, input: Record<string, unknown>) {
     caller ??= executor.initialize(context, createProcess('caller'), { prompt: '' });
-    const tool = new RunProcessTool(caller.id, process, store);
+    const tool = new ExecuteProcessTool(caller.id, process, store);
     return tool.execute(
       signal,
       { sessionId: 'test', sessionToken: 'test' },
@@ -164,7 +164,7 @@ function createHarness(
     );
   }
 
-  return { run, runProcessTool, tools, pages, contexts, logs, store, executionIds, executor };
+  return { run, executeProcessTool, tools, pages, contexts, logs, store, executionIds, executor };
 }
 
 function toolCall(name: string, input: object = {}) {
@@ -283,7 +283,7 @@ test('process tool discovery reads every page, filters selected and pausable pro
   assert.deepEqual(harness.pages, [1, 2, 3, 4]);
   assert.deepEqual(
     selected.tools.map(tool => tool.descriptor.function.name),
-    ['run_process_process_104', 'listVariables', 'readVariable', 'setVariable']
+    ['executeProcess_process_104', 'listVariables', 'readVariable', 'setVariable']
   );
   const allAllowed = await harness.tools.create(
     signal,
@@ -295,8 +295,8 @@ test('process tool discovery reads every page, filters selected and pausable pro
     context,
     'parent_execution'
   );
-  assert.equal(allAllowed.tools.filter(tool => tool.descriptor.function.name.startsWith('run_process_')).length, 104);
-  assert.ok(allAllowed.tools.some(tool => tool.descriptor.function.name === 'runTerminalCommand'));
+  assert.equal(allAllowed.tools.filter(tool => tool.descriptor.function.name.startsWith('executeProcess_')).length, 104);
+  assert.ok(allAllowed.tools.some(tool => tool.descriptor.function.name === 'executeTerminalCommand'));
 });
 
 test('child process tools wait for results, bypass user access, and extend ancestry without routing to user chat', async () => {
@@ -309,7 +309,7 @@ test('child process tools wait for results, bypass user access, and extend ances
       turn++;
       if (turn === 1) {
         assert.deepEqual(messages[1].content, [{ type: 'text', text: 'Run child' }]);
-        return toolCall('run_process_child', { prompt: 'child input' });
+        return toolCall('executeProcess_child', { prompt: 'child input' });
       }
       assert.equal(messages.at(-1)?.content, '{"outputValues":{}}');
       return { message: { role: 'assistant', content: 'Child finished' } };
@@ -353,7 +353,7 @@ test('process tools reject the current process and exclude all ancestors from se
   );
   assert.deepEqual(
     tools.tools.map(tool => tool.descriptor.function.name),
-    ['run_process_child', 'listVariables', 'readVariable', 'setVariable']
+    ['executeProcess_child', 'listVariables', 'readVariable', 'setVariable']
   );
 });
 
@@ -361,15 +361,15 @@ test('pausable processes and invalid child inputs are rejected before execution'
   const paused = createProcess('paused', [], true);
   const child = createProcess('child');
   const harness = createHarness({ processes: [paused, child] });
-  await assert.rejects(harness.runProcessTool(paused, { prompt: '' }), /pausable/);
-  assert.match((await harness.runProcessTool(child, { prompt: 123 })).content, /Invalid tool arguments/);
+  await assert.rejects(harness.executeProcessTool(paused, { prompt: '' }), /pausable/);
+  assert.match((await harness.executeProcessTool(child, { prompt: 123 })).content, /Invalid tool arguments/);
   assert.deepEqual(harness.contexts, [context]);
 });
 
 test('process tools cannot create children after their parent execution finishes', async () => {
   const harness = createHarness();
   await harness.run(signal, context, createProcess('parent'), { prompt: '' });
-  const tool = new RunProcessTool(harness.executionIds[0], createProcess('child'), harness.store);
+  const tool = new ExecuteProcessTool(harness.executionIds[0], createProcess('child'), harness.store);
 
   await assert.rejects(
     tool.execute(
@@ -401,7 +401,7 @@ test('terminal commands use the selected sandbox and return output to the agent'
     sandbox,
     complete: async (_, __, messages) => {
       if (commands === 0) {
-        return toolCall('runTerminalCommand', { command: 'echo hello' });
+        return toolCall('executeTerminalCommand', { command: 'echo hello' });
       }
       assert.match(String(messages.at(-1)?.content), /hello/);
       return { message: { role: 'assistant', content: 'Command finished' } };
@@ -441,7 +441,7 @@ test(
         });
       }
     });
-    const pendingResult = harness.runProcessTool(parent, { prompt: '' });
+    const pendingResult = harness.executeProcessTool(parent, { prompt: '' });
     try {
       await requestStarted;
       assert.equal(harness.store.get(harness.executionIds[1]).id, harness.executionIds[1]);
@@ -501,7 +501,7 @@ test('a process changed to pausable after discovery cannot be launched', async (
       turns++;
       if (turns === 1) {
         processes[0].isPausable = true;
-        return toolCall('run_process_child', { prompt: '' });
+        return toolCall('executeProcess_child', { prompt: '' });
       }
       assert.match(String(messages.at(-1)?.content), /pausable/);
       return { message: { role: 'assistant', content: 'Child is unavailable' } };
@@ -544,8 +544,8 @@ test('repeated process tools reuse cached start variable schemas', t => {
   const process = createProcess('child');
   const getZodSchema = t.mock.method(process.variables, 'getZodSchema');
   const store = new ProcessExecutionStore();
-  const first = new RunProcessTool('parent_execution', process, store);
-  const second = new RunProcessTool('parent_execution', process, store);
+  const first = new ExecuteProcessTool('parent_execution', process, store);
+  const second = new ExecuteProcessTool('parent_execution', process, store);
   assert.equal(getZodSchema.mock.callCount(), 2);
   assert.equal(getZodSchema.mock.calls[0].result, getZodSchema.mock.calls[1].result);
   assert.deepEqual(first.descriptor.function.parameters, second.descriptor.function.parameters);

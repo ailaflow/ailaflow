@@ -9,8 +9,7 @@ const PROCESS_SEARCH_DEBOUNCE_MS = 300;
 export interface FindProcessesPopupProps {
   apiClient: ApiClient;
   processNames: string[];
-  onSelectProcesses(processNames: string[]): void;
-  onClose(): void;
+  onClose(processNames: string[] | null): void;
 }
 
 export function FindProcessesPopup(props: FindProcessesPopupProps) {
@@ -26,7 +25,7 @@ export function FindProcessesPopup(props: FindProcessesPopupProps) {
     setIsLoading(true);
     setError(null);
     setResult(null);
-    const timeout = window.setTimeout(async () => {
+    const timeout = setTimeout(async () => {
       try {
         const response = await props.apiClient.process.getProcesses(abortController.signal, {
           page,
@@ -56,7 +55,7 @@ export function FindProcessesPopup(props: FindProcessesPopupProps) {
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
-        props.onClose();
+        props.onClose(null);
       }
     };
     window.addEventListener('keydown', onKeyDown);
@@ -96,7 +95,7 @@ export function FindProcessesPopup(props: FindProcessesPopupProps) {
       }
       multiSelection={{
         items: selectedProcessNames.map(name => ({ id: name, label: `/${name}` })),
-        onConfirm: () => props.onSelectProcesses([...selectedProcessNames])
+        onConfirm: () => props.onClose([...selectedProcessNames])
       }}
       isLoading={isLoading}
       error={error}
@@ -112,7 +111,7 @@ export function FindProcessesPopup(props: FindProcessesPopupProps) {
           : undefined
       }
       onSelectItem={toggleProcess}
-      onClose={props.onClose}
+      onClose={() => props.onClose(null)}
     />
   );
 }

@@ -84,6 +84,23 @@ export async function writeVariable(name: string, value: unknown, rpcConfig?: Rp
 }
 
 /**
+ * Executes an allowed process and waits for it to finish.
+ * @param name The name of the process to execute. The `/` prefix is optional.
+ * @param startValues The values of the process's start variables.
+ * @param rpcConfig Optional configuration for the RPC call, including the execution timeout.
+ * @returns The process's output variable values.
+ * @throws If the process cannot be executed, fails, pauses, exceeds the timeout, or the RPC call fails.
+ */
+export function executeProcess<OutputValues = Record<string, unknown>>(
+  name: string,
+  startValues: Record<string, unknown>,
+  rpcConfig?: RpcConfig
+): Promise<OutputValues> {
+  name = normalizeName(name, '/');
+  return rpc<OutputValues>('executeProcess', { processName: name, startValues }, rpcConfig);
+}
+
+/**
  * Tries to read a value from a table by its primary key.
  * @param name The name of the table to read from.
  * @param _id The identifier of the row to read.

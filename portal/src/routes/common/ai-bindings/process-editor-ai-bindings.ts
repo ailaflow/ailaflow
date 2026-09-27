@@ -144,6 +144,12 @@ const processEditorRoute = route('processEditor')
         sandboxName: z.string().describe('The new sandbox configuration for the script step')
       })
     ),
+    scriptStep_setAllowedProcessNames: tool('Set which processes the script can execute').input(
+      z.object({
+        stepId: z.string().describe('The script step ID'),
+        processNames: z.array(z.string()).describe('Allowed process names; an empty list allows none')
+      })
+    ),
 
     agentStep_setPrompt: tool('Set the agent prompt text').input(
       z.discriminatedUnion('action', [

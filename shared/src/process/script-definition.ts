@@ -11,6 +11,7 @@ export const fileContentSchema = z
 export const scriptDefinitionSchema = z
   .object({
     sandboxName: z.string().min(3).describe('The name of the sandbox environment where the script will be executed.'),
+    allowedProcessNames: z.array(z.string()).describe('An array of process names that are allowed to be executed by the script.'),
     contents: z.array(fileContentSchema).describe('An array of file contents that make up the script.')
   })
   .describe('A script that can be executed in a sandbox environment.');

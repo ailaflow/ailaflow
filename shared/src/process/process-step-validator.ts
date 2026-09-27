@@ -59,6 +59,9 @@ export class ProcessStepValidator {
     if (!this.sandboxNames.includes(step.properties.script.sandboxName)) {
       errors['properties.script.sandboxName'] = 'No sandbox with the specified name exists';
     }
+    if (this.processName && step.properties.script.allowedProcessNames.includes(this.processName)) {
+      errors['properties.script.allowedProcessNames'] = 'The current process cannot be included';
+    }
   }
 
   private validateAgent(step: AgentStep, definition: ProcessDefinition, errors: Record<string, string>) {

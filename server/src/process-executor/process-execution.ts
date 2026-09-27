@@ -3,11 +3,12 @@ import { ProcessLogger } from './services/process-logger';
 import { ProcessExecutionGlobalState } from './process-execution-global-state';
 import { SimpleEvent } from '@aibindkit/core';
 import { ProcessVariableManager } from './services/process-variable-manager';
-import { ProcessExecutionOutcome, ProcessExecutionOutcomeType, ProcessLog } from '@ailaflow/shared';
+import { ProcessExecutionOutcome, ProcessExecutionOutcomeType, ProcessExecutionVariableValues, ProcessLog } from '@ailaflow/shared';
 import { ProcessExecutionPersister } from './process-execution-persister';
 import type { Process } from '../repositories/process/process';
 import { ProcessExecutionContext } from './process-execution-context';
 import { ProcessExecutor } from './process-executor';
+import { DefinitionWalker, Step } from 'sequential-workflow-model';
 
 const WAIT_FOR_SIGNAL_STATE = 'WAIT_FOR_SIGNAL';
 
@@ -120,7 +121,7 @@ export class ProcessExecution {
     return this.process.userAccessExpression;
   }
 
-  public initializeSubExecution(process: Process, input: Record<string, unknown>): ProcessExecution {
+  public initializeSubExecution(process: Process, input: ProcessExecutionVariableValues): ProcessExecution {
     const parentProcessNames = this.context.parentProcessNames
       ? [...this.context.parentProcessNames, this.process.name]
       : [this.process.name];
@@ -134,6 +135,20 @@ export class ProcessExecution {
       process,
       input
     );
+  }
+
+  public getCurrentlyExecutingStep<S extends Step>(): S {
+    const snapshot = this.interpreter.getSnapshot();
+    const currentStepId = snapshot.tryGetCurrentStepId();
+    if (!currentStepId) {
+      throw new Error('No current executing step found');
+    }
+    const walker = new DefinitionWalker();
+    const step = walker.findById(this.process.definition, currentStepId);
+    if (!step) {
+      throw new Error(`Step with ID ${currentStepId} not found`);
+    }
+    return step as S;
   }
 
   // private methods
