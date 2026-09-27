@@ -60,7 +60,7 @@ export function ProcessIcon(props: ProcessIconProps) {
           </linearGradient>
         </defs>
 
-        <rect width="100" height="100" rx="22" fill={`url(#${gradientId})`} />
+        <rect width="100" height="100" fill={`url(#${gradientId})`} />
         <g fill="white" fillOpacity="0.88" shapeRendering="crispEdges">
           {pixels.map(([x, y]) => (
             <rect key={`${x}-${y}`} x={20 + x * 12} y={20 + y * 12} width="12" height="12" />
