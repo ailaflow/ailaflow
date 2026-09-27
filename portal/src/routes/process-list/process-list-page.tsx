@@ -92,7 +92,7 @@ export function ProcessListPage() {
           id: 'name',
           title: 'Name',
           width: '22%',
-          getLeadingVisual: process => <ProcessIcon name={process.name} className="h-8 w-8" />,
+          getLeadingVisual: process => <ProcessIcon name={process.name} icon={process.icon} className="h-8 w-8" />,
           disabled: process => (process.display === ProcessDisplay.HIDDEN ? 'Hidden' : undefined),
           getValue: process => `/${process.name}`
         },

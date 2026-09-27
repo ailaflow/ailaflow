@@ -46,6 +46,7 @@ export function ProcessEditor() {
         userAccessExpression: state.userAccessExpression,
         display: state.display,
         executionMode: state.executionMode,
+        icon: state.icon,
         definition: state.definition.value,
         hash
       });
@@ -63,10 +64,23 @@ export function ProcessEditor() {
   useUnsavedChangesController(state.isDirty);
   useProcessEditorAi(state, save);
 
+  async function uploadIcon(file: File): Promise<void> {
+    try {
+      const icon = await file.text();
+      const document = new DOMParser().parseFromString(icon, 'image/svg+xml');
+      if (document.querySelector('parsererror') || document.documentElement.localName !== 'svg') {
+        throw new Error('The selected file is not a valid SVG');
+      }
+      state.setIcon(icon);
+    } catch (e) {
+      window.alert(`Failed to upload icon: ${e instanceof Error ? e.message : String(e)}`);
+    }
+  }
+
   return (
     <ResourceEditorView
       icon="/"
-      leadingVisual={<ProcessIcon name={state.name} className="h-9 w-9" />}
+      leadingVisual={<ProcessIcon name={state.name} icon={state.icon} className="h-9 w-9" />}
       name={state.name}
       isNameValid={state.nameError === null}
       isNameReadOnly={!isDesigner || !state.isNew}
@@ -81,10 +95,13 @@ export function ProcessEditor() {
           userAccessExpressionError={state.userAccessExpressionError}
           display={state.display}
           executionMode={state.executionMode}
+          hasIcon={state.icon !== null}
           onDescriptionChange={description => state.setDescription(description, false)}
           onUserAccessExpressionChange={userAccessExpression => state.setUserAccessExpression(userAccessExpression, false)}
           onDisplayChange={state.setDisplay}
           onExecutionModeChange={state.setExecutionMode}
+          onIconUpload={uploadIcon}
+          onIconReset={() => state.setIcon(null)}
         />
       }
       canSave={canSave}

@@ -1,6 +1,6 @@
 import { useApiClient } from '../../auth/auth-context';
 import { useLoader } from '@aibindkit/react';
-import { ProcessDisplay } from '@ailaflow/shared';
+import { ProcessDisplay, type MyProcessLiteDto } from '@ailaflow/shared';
 import { useState } from 'react';
 import { useSearchParams } from 'react-router';
 import { PortalErrorView } from '../../views/portal/portal-error-view';
@@ -15,7 +15,7 @@ const PAGE_SIZE = 20;
 
 export function MyProcessListPage() {
   const apiClient = useApiClient();
-  const [startedProcessName, setStartedProcessName] = useState<string | null>(null);
+  const [startedProcess, setStartedProcess] = useState<MyProcessLiteDto | null>(null);
   const [openedTaskId, setOpenedTaskId] = useState<string | null>(null);
   const [searchParams, setSearchParams] = useSearchParams();
   const [formSubmitted, setFormSubmitted] = useState(false);
@@ -39,7 +39,7 @@ export function MyProcessListPage() {
   }
 
   function handleProcessEnded(candidateTaskIds?: string[]): void {
-    setStartedProcessName(null);
+    setStartedProcess(null);
 
     const candidateTaskId = candidateTaskIds?.[0];
     if (candidateTaskId) {
@@ -70,9 +70,10 @@ export function MyProcessListPage() {
         title="My Processes"
         items={data.processes.map(process => ({
           name: process.name,
+          icon: process.icon,
           description: process.description,
           url: `/my-processes/${encodeURIComponent(process.name)}`,
-          onClick: () => setStartedProcessName(process.name)
+          onClick: () => setStartedProcess(process)
         }))}
         emptyMessage="No processes found."
         pagination={{
@@ -82,11 +83,12 @@ export function MyProcessListPage() {
           onPageChange: changePage
         }}
       />
-      {startedProcessName ? (
+      {startedProcess ? (
         <MyProcessStartFormPopup
-          args={{ processName: startedProcessName }}
+          args={{ processName: startedProcess.name }}
+          icon={startedProcess.icon}
           onEnded={handleProcessEnded}
-          onClose={() => setStartedProcessName(null)}
+          onClose={() => setStartedProcess(null)}
         />
       ) : null}
       {openedTaskId && (

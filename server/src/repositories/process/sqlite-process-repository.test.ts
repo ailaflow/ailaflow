@@ -13,11 +13,13 @@ import { ProcessDefinition, ProcessDisplay, ProcessExecutionMode, PROCESS_VERSIO
 test('persists and updates process metadata', async () => {
   const { signal, db, processRepository } = await setup();
   const process = createProcess('alpha', true);
+  process.icon = '<svg viewBox="0 0 10 10"></svg>';
 
   await processRepository.insert(signal, process);
   assert.equal((await processRepository.tryGetByName(signal, process.name))?.isPausable, true);
   assert.equal((await processRepository.tryGetByName(signal, process.name))?.display, ProcessDisplay.LISTED);
   assert.equal((await processRepository.tryGetByName(signal, process.name))?.executionMode, ProcessExecutionMode.AI_TOOL_OR_START_FORM);
+  assert.equal((await processRepository.tryGetByName(signal, process.name))?.icon, process.icon);
   assert.deepEqual(getStoredDefinitionMetadata(db, process.name), {
     definitionSize: JSON.stringify(process.definition).length,
     nReturnSteps: 0
@@ -26,6 +28,7 @@ test('persists and updates process metadata', async () => {
   process.isPausable = false;
   process.display = ProcessDisplay.FEATURED;
   process.executionMode = ProcessExecutionMode.START_FORM;
+  process.icon = null;
   process.definition = createDefinitionWithReturnStep();
   process.nSteps = 1;
   process.nReturnSteps = 1;
@@ -33,6 +36,7 @@ test('persists and updates process metadata', async () => {
   assert.equal((await processRepository.tryGetByName(signal, process.name))?.isPausable, false);
   assert.equal((await processRepository.tryGetByName(signal, process.name))?.display, ProcessDisplay.FEATURED);
   assert.equal((await processRepository.tryGetByName(signal, process.name))?.executionMode, ProcessExecutionMode.START_FORM);
+  assert.equal((await processRepository.tryGetByName(signal, process.name))?.icon, null);
   assert.deepEqual(getStoredDefinitionMetadata(db, process.name), {
     definitionSize: JSON.stringify(process.definition).length,
     nReturnSteps: 1
@@ -120,6 +124,7 @@ function createProcess(name: string, isPausable: boolean): Process {
     '',
     ProcessDisplay.LISTED,
     ProcessExecutionMode.AI_TOOL_OR_START_FORM,
+    null,
     createDefinition(),
     'hash',
     null,

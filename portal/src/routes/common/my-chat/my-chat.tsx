@@ -62,7 +62,7 @@ export function MyChat(props: MyChatProps) {
           )
         }
       />
-      {popup.myProcess ? <MyProcessStartFormPopup args={popup.myProcess} onEnded={closePopup} onClose={closePopup} /> : null}
+      {popup.myProcess ? <MyProcessStartFormPopup args={popup.myProcess} icon={null} onEnded={closePopup} onClose={closePopup} /> : null}
       {popup.myTask ? <MyTaskFormPopup args={popup.myTask} onClose={closePopup} /> : null}
     </>
   );

@@ -15,7 +15,7 @@ test('queries a name-ordered page of processes', async () => {
   const querier = new SqliteProcessListQuerier(dbs);
 
   await processRepository.setup(signal);
-  insertProcess(db, 'charlie', true, ProcessDisplay.HIDDEN, ProcessExecutionMode.START_FORM, 2, 128);
+  insertProcess(db, 'charlie', true, ProcessDisplay.HIDDEN, ProcessExecutionMode.START_FORM, 2, 128, '<svg></svg>');
   insertProcess(db, 'alpha', false, ProcessDisplay.FEATURED);
   insertProcess(db, 'bravo', false, ProcessDisplay.LISTED);
 
@@ -27,6 +27,7 @@ test('queries a name-ordered page of processes', async () => {
         userAccessExpression: '',
         display: ProcessDisplay.HIDDEN,
         executionMode: ProcessExecutionMode.START_FORM,
+        icon: '<svg></svg>',
         isPausable: true,
         nReturnSteps: 2,
         definitionSize: 128
@@ -119,7 +120,8 @@ function insertProcess(
   display: ProcessDisplay,
   executionMode = ProcessExecutionMode.AI_TOOL_OR_START_FORM,
   nReturnSteps = 0,
-  definitionSize = 0
+  definitionSize = 0,
+  icon: string | null = null
 ): void {
   db.prepare(
     `
@@ -129,6 +131,7 @@ function insertProcess(
       userAccessExpression,
       display,
       executionMode,
+      icon,
       nSteps,
       nReturnSteps,
       isPausable,
@@ -137,7 +140,7 @@ function insertProcess(
       definitionSize,
       definitionHash
     )
-    VALUES (?, ?, '', ?, ?, 0, ?, ?, '{}', '{}', ?, 'hash')
+    VALUES (?, ?, '', ?, ?, ?, 0, ?, ?, '{}', '{}', ?, 'hash')
   `
-  ).run(name, `${name} description`, display, executionMode, nReturnSteps, isPausable ? 1 : 0, definitionSize);
+  ).run(name, `${name} description`, display, executionMode, icon, nReturnSteps, isPausable ? 1 : 0, definitionSize);
 }

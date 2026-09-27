@@ -12,6 +12,7 @@ interface ProcessRow {
   userAccessExpression: string;
   display: ProcessDisplay;
   executionMode: ProcessExecutionMode;
+  icon: string | null;
   nSteps: number;
   nReturnSteps: number;
   isPausable: number;
@@ -37,6 +38,7 @@ export class SqliteProcessRepository implements ProcessRepository {
             userAccessExpression TEXT NOT NULL,
             display INTEGER NOT NULL,
             executionMode INTEGER NOT NULL,
+            icon TEXT,
             nSteps INTEGER NOT NULL,
             nReturnSteps INTEGER NOT NULL,
             isPausable INTEGER NOT NULL CHECK (isPausable IN (0, 1)),
@@ -56,10 +58,10 @@ export class SqliteProcessRepository implements ProcessRepository {
       await this.db.write(db => {
         const statement = db.prepare(`
           INSERT INTO processes (
-            name, description, userAccessExpression, display, executionMode, nSteps, nReturnSteps, isPausable,
+            name, description, userAccessExpression, display, executionMode, icon, nSteps, nReturnSteps, isPausable,
             startVariableSchemas, definition, definitionSize, definitionHash
           )
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `);
         statement.run(
           process.name,
@@ -67,6 +69,7 @@ export class SqliteProcessRepository implements ProcessRepository {
           process.userAccessExpression,
           process.display,
           process.executionMode,
+          process.icon,
           process.nSteps,
           process.nReturnSteps,
           process.isPausable ? 1 : 0,
@@ -94,6 +97,7 @@ export class SqliteProcessRepository implements ProcessRepository {
           userAccessExpression = ?,
           display = ?,
           executionMode = ?,
+          icon = ?,
           nSteps = ?,
           nReturnSteps = ?,
           isPausable = ?,
@@ -108,6 +112,7 @@ export class SqliteProcessRepository implements ProcessRepository {
         process.userAccessExpression,
         process.display,
         process.executionMode,
+        process.icon,
         process.nSteps,
         process.nReturnSteps,
         process.isPausable ? 1 : 0,
@@ -138,7 +143,7 @@ export class SqliteProcessRepository implements ProcessRepository {
   public async tryGetByName(_: AbortSignal, name: string): Promise<Process | null> {
     return this.db.read(db => {
       const statement = db.prepare(`
-        SELECT name, description, userAccessExpression, display, executionMode, nSteps, nReturnSteps, isPausable,
+        SELECT name, description, userAccessExpression, display, executionMode, icon, nSteps, nReturnSteps, isPausable,
           startVariableSchemas, definition, definitionHash
         FROM processes
         WHERE name = ?
@@ -153,6 +158,7 @@ export class SqliteProcessRepository implements ProcessRepository {
             row.userAccessExpression,
             row.display,
             row.executionMode,
+            row.icon,
             JSON.parse(row.definition) as ProcessDefinition,
             row.definitionHash,
             JSON.parse(row.startVariableSchemas) as Record<string, JsonSchema>,

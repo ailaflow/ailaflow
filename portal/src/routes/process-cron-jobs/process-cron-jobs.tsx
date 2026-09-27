@@ -6,6 +6,7 @@ import { useUnsavedChangesController } from '../common/admin-portal';
 import { FindUserPopup } from '../common/popups/find-user-popup';
 import { useProcessCronJobsAi } from './process-cron-jobs-ai';
 import { useProcessCronJobs } from './process-cron-jobs-context';
+import { ProcessIcon } from '../../views/common/process-icon';
 
 export function ProcessCronJobs() {
   const apiClient = useApiClient();
@@ -39,6 +40,7 @@ export function ProcessCronJobs() {
     <>
       <ResourceEditorView
         icon="/"
+        leadingVisual={<ProcessIcon name={state.process.name} icon={state.process.icon} className="h-9 w-9" />}
         name={state.process.name}
         isNameReadOnly={true}
         isNameValid={true}

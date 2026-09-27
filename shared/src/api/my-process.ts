@@ -14,7 +14,8 @@ import { paginationRequestSchema, paginationResponseSchema } from './pagination'
 const myProcessLiteDtoSchema = z.object({
   name: z.string(),
   description: z.string(),
-  executionMode: z.enum(ProcessExecutionMode)
+  executionMode: z.enum(ProcessExecutionMode),
+  icon: z.string().nullable()
 });
 
 export const getMyProcessesRequestSchema = paginationRequestSchema.extend({

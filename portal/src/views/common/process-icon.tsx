@@ -2,6 +2,7 @@ import { useId } from 'react';
 
 export interface ProcessIconProps {
   name: string;
+  icon?: string | null;
   className?: string;
 }
 
@@ -24,10 +25,26 @@ const ICON_PALETTES: IconPalette[] = [
 ];
 
 export function ProcessIcon(props: ProcessIconProps) {
+  const id = useId().replaceAll(':', '');
+
+  if (props.icon !== undefined && props.icon !== null) {
+    return (
+      <span
+        aria-hidden="true"
+        className={`block shrink-0 overflow-hidden rounded-[22%] shadow-[0_4px_10px_-5px_rgba(15,23,42,0.5)] ring-1 ring-black/5 ${props.className ?? ''}`}
+      >
+        <img
+          src={`data:image/svg+xml;charset=utf-8,${encodeURIComponent(props.icon)}`}
+          alt=""
+          className="block h-full w-full object-contain"
+        />
+      </span>
+    );
+  }
+
   const hash = hashName(props.name);
   const palette = ICON_PALETTES[hash % ICON_PALETTES.length];
   const pixels = generatePixels(hash);
-  const id = useId().replaceAll(':', '');
   const gradientId = `process-icon-gradient-${id}`;
 
   return (

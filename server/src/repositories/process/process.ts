@@ -98,6 +98,7 @@ export class Process {
       data.userAccessExpression,
       data.display,
       data.executionMode,
+      data.icon,
       data.definition,
       data.hash,
       startVariableSchemas,
@@ -115,6 +116,7 @@ export class Process {
     public userAccessExpression: string,
     public display: ProcessDisplay,
     public executionMode: ProcessExecutionMode,
+    public icon: string | null,
     public definition: ProcessDefinition,
     public hash: string,
     public startVariableSchemas: Record<string, JsonSchema> | null,
@@ -135,6 +137,7 @@ export class Process {
     this.userAccessExpression = data.userAccessExpression;
     this.display = data.display;
     this.executionMode = data.executionMode;
+    this.icon = data.icon;
     this.definition = data.definition;
     this.variablesCache = null;
     this.hash = data.hash;

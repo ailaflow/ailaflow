@@ -56,6 +56,7 @@ function createProcess(name: string, sequence: ProcessDefinition['sequence'] = [
     'admin_only',
     ProcessDisplay.LISTED,
     ProcessExecutionMode.AI_TOOL_OR_START_FORM,
+    null,
     {
       sequence,
       properties: {
@@ -103,6 +104,7 @@ function createHarness(
           userAccessExpression: process.userAccessExpression,
           display: process.display,
           executionMode: process.executionMode,
+          icon: process.icon,
           isPausable: process.isPausable,
           nReturnSteps: process.nReturnSteps,
           definitionSize: JSON.stringify(process.definition).length

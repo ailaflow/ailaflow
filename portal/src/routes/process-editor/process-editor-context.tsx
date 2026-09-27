@@ -50,6 +50,7 @@ export interface ProcessEditorData {
   userAccessExpressionError: string | null;
   display: ProcessDisplay;
   executionMode: ProcessExecutionMode;
+  icon: string | null;
   definition: WrappedDefinition<ProcessDefinition>;
   selectedStepId: string | null;
 }
@@ -63,6 +64,7 @@ export interface ProcessEditorState extends ProcessEditorData {
   setUserAccessExpression(userAccessExpression: string, throwIfInvalid: boolean): void;
   setDisplay(display: ProcessDisplay): void;
   setExecutionMode(executionMode: ProcessExecutionMode): void;
+  setIcon(icon: string | null): void;
   setDefinition(definition: WrappedDefinition, markDirty: boolean): void;
   getStep<S extends Step>(id: string, requiredType?: S['type']): S;
   notifyDefinitionChange(): void;
@@ -96,6 +98,7 @@ function createData(props: Omit<ProcessEditorContextProps, 'children'>): Process
   const userAccessExpression = props.process?.userAccessExpression ?? '';
   const display = props.process?.display ?? ProcessDisplay.FEATURED;
   const executionMode = props.process?.executionMode ?? ProcessExecutionMode.AI_TOOL_OR_START_FORM;
+  const icon = props.process?.icon ?? null;
   const controller = SequentialWorkflowDesignerController.create();
 
   return {
@@ -116,6 +119,7 @@ function createData(props: Omit<ProcessEditorContextProps, 'children'>): Process
     userAccessExpressionError: null,
     display,
     executionMode,
+    icon,
     selectedStepId: null,
     definition,
     isDirty: props.process ? false : true
@@ -154,6 +158,7 @@ export function ProcessEditorContext(props: ProcessEditorContextProps) {
           current.userAccessExpression !== data.userAccessExpression ||
           current.display !== data.display ||
           current.executionMode !== data.executionMode ||
+          current.icon !== data.icon ||
           DesignerUtils.calcDefinitionHash(current.definition.value) !== definitionHash
         ) {
           return {};
@@ -204,6 +209,10 @@ export function ProcessEditorContext(props: ProcessEditorContextProps) {
 
     function setExecutionMode(executionMode: ProcessExecutionMode) {
       update({ executionMode, isDirty: true });
+    }
+
+    function setIcon(icon: string | null) {
+      update({ icon, isDirty: true });
     }
 
     function setDefinition(newDefinition: WrappedDefinition<ProcessDefinition>, markDirty: boolean) {
@@ -297,6 +306,7 @@ export function ProcessEditorContext(props: ProcessEditorContextProps) {
       setUserAccessExpression,
       setDisplay,
       setExecutionMode,
+      setIcon,
       setDefinition,
       notifyDefinitionChange,
       getStep,

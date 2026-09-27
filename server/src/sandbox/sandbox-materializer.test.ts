@@ -74,6 +74,7 @@ function createProcess(hash: string, script: ScriptDefinition): Process {
     '',
     ProcessDisplay.LISTED,
     ProcessExecutionMode.AI_TOOL_OR_START_FORM,
+    null,
     definition,
     hash,
     null,

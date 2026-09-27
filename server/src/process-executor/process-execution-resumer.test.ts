@@ -78,6 +78,7 @@ function createTestProcess(hash: string): Process {
     '',
     ProcessDisplay.LISTED,
     ProcessExecutionMode.AI_TOOL_OR_START_FORM,
+    null,
     {
       sequence: [],
       properties: {

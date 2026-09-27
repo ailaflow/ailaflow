@@ -8,10 +8,13 @@ export interface ProcessEditorDetailsViewProps {
   userAccessExpressionError: string | null;
   display: ProcessDisplay;
   executionMode: ProcessExecutionMode;
+  hasIcon: boolean;
   onDescriptionChange(description: string): void;
   onUserAccessExpressionChange(userAccessExpression: string): void;
   onDisplayChange(display: ProcessDisplay): void;
   onExecutionModeChange(executionMode: ProcessExecutionMode): void;
+  onIconUpload(file: File): void;
+  onIconReset(): void;
 }
 
 export function ProcessEditorDetailsView(props: ProcessEditorDetailsViewProps) {
@@ -93,6 +96,36 @@ export function ProcessEditorDetailsView(props: ProcessEditorDetailsViewProps) {
           <option value={ProcessExecutionMode.START_FORM}>Start form only</option>
         </select>
       </label>
+
+      <div>
+        <span className="mb-1 block text-xs font-medium text-slate-500">Icon</span>
+        <div className="flex h-8 items-center gap-2">
+          <label className="inline-flex h-8 cursor-pointer items-center rounded-md border border-slate-300 bg-white px-2.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50">
+            Upload SVG
+            <input
+              type="file"
+              accept="image/svg+xml,.svg"
+              className="sr-only"
+              onChange={event => {
+                const file = event.target.files?.[0];
+                event.target.value = '';
+                if (file) {
+                  props.onIconUpload(file);
+                }
+              }}
+            />
+          </label>
+          {props.hasIcon && (
+            <button
+              type="button"
+              onClick={props.onIconReset}
+              className="inline-flex h-8 cursor-pointer items-center rounded-md border border-slate-300 bg-white px-2.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
+            >
+              Reset
+            </button>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

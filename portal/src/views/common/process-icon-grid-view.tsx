@@ -4,6 +4,7 @@ const WORD_JOINER = '\u2060';
 
 export interface ProcessIconGridItem {
   name: string;
+  icon: string | null;
   description?: string;
   url: string;
   onClick(): void;
@@ -48,7 +49,7 @@ export function ProcessIconGridView(props: ProcessIconGridViewProps) {
             item.onClick();
           }}
         >
-          <ProcessIcon name={item.name} className={ICON_CLASS_NAMES[variant]} />
+          <ProcessIcon name={item.name} icon={item.icon} className={ICON_CLASS_NAMES[variant]} />
           <span className="mt-2 line-clamp-2 w-full break-words text-sm font-medium leading-5 text-slate-800 group-hover:text-slate-950">
             {formatProcessName(item.name)}
           </span>

@@ -10,6 +10,7 @@ const processLiteDtoSchema = z.object({
   userAccessExpression: z.string(),
   display: z.enum(ProcessDisplay),
   executionMode: z.enum(ProcessExecutionMode),
+  icon: z.string().nullable(),
   isPausable: z.boolean(),
   nReturnSteps: z.number(),
   definitionSize: z.number()
@@ -35,6 +36,7 @@ const processDtoSchema = z.object({
   userAccessExpression: z.string(),
   display: z.enum(ProcessDisplay),
   executionMode: z.enum(ProcessExecutionMode),
+  icon: z.string().nullable(),
   definition: processDefinitionSchema
 });
 
@@ -54,6 +56,7 @@ export const saveProcessRequestSchema = z.object({
   userAccessExpression: z.string(),
   display: z.enum(ProcessDisplay),
   executionMode: z.enum(ProcessExecutionMode),
+  icon: z.string().nullable(),
   definition: processDefinitionSchema,
   hash: z.string()
 });

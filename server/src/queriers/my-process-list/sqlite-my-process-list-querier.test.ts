@@ -36,7 +36,7 @@ test('queries a page containing only processes accessible to the current user', 
 
   insertProcess(db, 'charlie', ProcessDisplay.HIDDEN);
   insertProcess(db, 'alpha', ProcessDisplay.FEATURED);
-  insertProcess(db, 'bravo', ProcessDisplay.LISTED, ProcessExecutionMode.START_FORM);
+  insertProcess(db, 'bravo', ProcessDisplay.LISTED, ProcessExecutionMode.START_FORM, '<svg></svg>');
   await grantAccess(signal, resourceAccessRepository, 'alpha', '');
   await grantAccess(signal, resourceAccessRepository, 'bravo', '');
   await grantAccess(signal, resourceAccessRepository, 'charlie', '');
@@ -46,7 +46,8 @@ test('queries a page containing only processes accessible to the current user', 
       {
         name: 'bravo',
         description: 'bravo description',
-        executionMode: ProcessExecutionMode.START_FORM
+        executionMode: ProcessExecutionMode.START_FORM,
+        icon: '<svg></svg>'
       }
     ],
     totalCount: 2,
@@ -58,7 +59,8 @@ test('queries a page containing only processes accessible to the current user', 
       {
         name: 'alpha',
         description: 'alpha description',
-        executionMode: ProcessExecutionMode.AI_TOOL_OR_START_FORM
+        executionMode: ProcessExecutionMode.AI_TOOL_OR_START_FORM,
+        icon: null
       }
     ],
     totalCount: 1,
@@ -74,7 +76,8 @@ function insertProcess(
   db: DatabaseSync,
   name: string,
   display: ProcessDisplay,
-  executionMode = ProcessExecutionMode.AI_TOOL_OR_START_FORM
+  executionMode = ProcessExecutionMode.AI_TOOL_OR_START_FORM,
+  icon: string | null = null
 ): void {
   db.prepare(
     `
@@ -84,6 +87,7 @@ function insertProcess(
       userAccessExpression,
       display,
       executionMode,
+      icon,
       nSteps,
       nReturnSteps,
       isPausable,
@@ -92,9 +96,9 @@ function insertProcess(
       definitionSize,
       definitionHash
     )
-    VALUES (?, ?, '', ?, ?, 0, 0, 0, '{}', '{}', 2, 'hash')
+    VALUES (?, ?, '', ?, ?, ?, 0, 0, 0, '{}', '{}', 2, 'hash')
   `
-  ).run(name, `${name} description`, display, executionMode);
+  ).run(name, `${name} description`, display, executionMode, icon);
 }
 
 async function grantAccess(
