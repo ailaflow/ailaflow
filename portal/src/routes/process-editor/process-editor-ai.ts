@@ -12,6 +12,7 @@ import {
   ResourceNameNormalizer,
   ReturnStep,
   ScriptStep,
+  TaskCompletionMetadataSchemaValidator,
   TaskStep,
   TaskStepValidator,
   UserAccessExpressionParser,
@@ -431,14 +432,20 @@ export function useProcessEditorAi(state: ProcessEditorState, save: () => Promis
         },
         async taskStep_setMetadataVariableName(arg) {
           const step = state.getStep<TaskStep>(arg.stepId, 'task');
-          const variableName = arg.variableName === '' ? undefined : (arg.variableName ?? undefined);
-          if (variableName !== undefined) {
-            const error = state.variableValidator.validateVariableType(variableName, 'object', state.definition.value);
+          if (arg.variableName === null) {
+            step.properties.metadataVariableName = undefined;
+          } else {
+            const name = ResourceNameNormalizer.removePrefix(arg.variableName, '$');
+            const variable = state.variableValidator.tryGet(name, state.definition.value);
+            if (!variable) {
+              return toolError(`Variable \$${name} does not exist`);
+            }
+            const error = TaskCompletionMetadataSchemaValidator.validate(variable.schema);
             if (error) {
               return toolError(error);
             }
+            step.properties.metadataVariableName = name;
           }
-          step.properties.metadataVariableName = variableName;
           state.notifyDefinitionChange();
           return toolSuccess('Metadata variable name was updated');
         },
