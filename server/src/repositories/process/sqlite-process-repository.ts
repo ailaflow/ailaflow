@@ -16,6 +16,7 @@ interface ProcessRow {
   nSteps: number;
   nReturnSteps: number;
   nTasksSteps: number;
+  sandboxNames: string;
   startVariableSchemas: string;
   definition: string;
   definitionHash: string;
@@ -29,7 +30,7 @@ export class SqliteProcessRepository implements ProcessRepository {
   }
 
   public async setup(_: AbortSignal) {
-    await this.db.setup(1, 'processes', (db, version) => {
+    await this.db.setup(2, 'processes', (db, version) => {
       if (version < 1) {
         db.exec(`
           CREATE TABLE processes (
@@ -42,12 +43,15 @@ export class SqliteProcessRepository implements ProcessRepository {
             nSteps INTEGER NOT NULL,
             nReturnSteps INTEGER NOT NULL,
             nTasksSteps INTEGER NOT NULL,
+            sandboxNames TEXT NOT NULL DEFAULT '[]',
             startVariableSchemas TEXT NOT NULL,
             definition TEXT NOT NULL,
             definitionSize INTEGER NOT NULL,
             definitionHash TEXT NOT NULL
           ) STRICT
         `);
+      } else if (version < 2) {
+        db.exec(`ALTER TABLE processes ADD COLUMN sandboxNames TEXT NOT NULL DEFAULT '[]'`);
       }
     });
   }
@@ -59,9 +63,9 @@ export class SqliteProcessRepository implements ProcessRepository {
         const statement = db.prepare(`
           INSERT INTO processes (
             name, description, userAccessExpression, display, executionMode, icon, nSteps, nReturnSteps, nTasksSteps,
-            startVariableSchemas, definition, definitionSize, definitionHash
+            sandboxNames, startVariableSchemas, definition, definitionSize, definitionHash
           )
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `);
         statement.run(
           process.name,
@@ -73,6 +77,7 @@ export class SqliteProcessRepository implements ProcessRepository {
           process.nSteps,
           process.nReturnSteps,
           process.nTasksSteps,
+          JSON.stringify(process.sandboxNames),
           serializeStartVariableSchemas(process.startVariableSchemas),
           definition,
           definition.length,
@@ -101,6 +106,7 @@ export class SqliteProcessRepository implements ProcessRepository {
           nSteps = ?,
           nReturnSteps = ?,
           nTasksSteps = ?,
+          sandboxNames = ?,
           startVariableSchemas = ?,
           definition = ?,
           definitionSize = ?,
@@ -116,6 +122,7 @@ export class SqliteProcessRepository implements ProcessRepository {
         process.nSteps,
         process.nReturnSteps,
         process.nTasksSteps,
+        JSON.stringify(process.sandboxNames),
         serializeStartVariableSchemas(process.startVariableSchemas),
         definition,
         definition.length,
@@ -144,7 +151,7 @@ export class SqliteProcessRepository implements ProcessRepository {
     return this.db.read(db => {
       const statement = db.prepare(`
         SELECT name, description, userAccessExpression, display, executionMode, icon, nSteps, nReturnSteps, nTasksSteps,
-          startVariableSchemas, definition, definitionHash
+          sandboxNames, startVariableSchemas, definition, definitionHash
         FROM processes
         WHERE name = ?
         LIMIT 1
@@ -164,7 +171,8 @@ export class SqliteProcessRepository implements ProcessRepository {
             JSON.parse(row.startVariableSchemas) as Record<string, JsonSchema>,
             row.nSteps,
             row.nReturnSteps,
-            row.nTasksSteps
+            row.nTasksSteps,
+            JSON.parse(row.sandboxNames) as string[]
           )
         : null;
     });

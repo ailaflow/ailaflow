@@ -23,7 +23,8 @@ export class SqliteProcessListQuerier implements ProcessListQuerier {
         .prepare(`SELECT COUNT(*) AS totalCount FROM processes WHERE display <= ? AND instr(name, ?) > 0`)
         .get(displayAtLeast, searchTerm) as { totalCount: number };
       const statement = db.prepare(`
-      SELECT name, description, userAccessExpression, display, executionMode, icon, nTasksSteps, nReturnSteps, definitionSize
+      SELECT name, description, userAccessExpression, display, executionMode, icon, nTasksSteps, nReturnSteps, sandboxNames,
+        definitionSize
       FROM processes
       WHERE display <= ?
         AND instr(name, ?) > 0
@@ -50,6 +51,7 @@ interface ProcessRow {
   icon: string | null;
   nTasksSteps: number;
   nReturnSteps: number;
+  sandboxNames: string;
   definitionSize: number;
 }
 
@@ -63,6 +65,7 @@ function mapRows(rows: ProcessRow[]): ProcessLiteDto[] {
     icon: row.icon,
     nTasksSteps: row.nTasksSteps,
     nReturnSteps: row.nReturnSteps,
+    sandboxNames: JSON.parse(row.sandboxNames) as string[],
     definitionSize: row.definitionSize
   }));
 }

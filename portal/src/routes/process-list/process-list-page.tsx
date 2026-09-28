@@ -110,7 +110,7 @@ export function ProcessListPage() {
         {
           id: 'description',
           title: 'Description',
-          width: '30%',
+          width: '20%',
           wrap: true,
           getValue: process => process.description
         },
@@ -119,6 +119,12 @@ export function ProcessListPage() {
           title: 'User access',
           width: '16%',
           getValue: process => process.userAccessExpression.trim() || 'all'
+        },
+        {
+          id: 'sandboxes',
+          title: 'Sandboxes',
+          width: '10%',
+          getValue: process => process.sandboxNames.map(name => `+${name}`).join(', ')
         },
         {
           id: 'characteristic',

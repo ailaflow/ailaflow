@@ -20,6 +20,7 @@ const processLiteDtoSchema = z.object({
   icon: z.string().nullable(),
   nTasksSteps: z.number(),
   nReturnSteps: z.number(),
+  sandboxNames: z.array(z.string()),
   definitionSize: z.number()
 });
 

@@ -14,12 +14,14 @@ test('persists and updates process metadata', async () => {
   const { signal, db, processRepository } = await setup();
   const process = createProcess('alpha', 2);
   process.icon = '<svg viewBox="0 0 10 10"></svg>';
+  process.sandboxNames = ['node', 'python'];
 
   await processRepository.insert(signal, process);
   assert.equal((await processRepository.tryGetByName(signal, process.name))?.nTasksSteps, 2);
   assert.equal((await processRepository.tryGetByName(signal, process.name))?.display, ProcessDisplay.LISTED);
   assert.equal((await processRepository.tryGetByName(signal, process.name))?.executionMode, ProcessExecutionMode.AI_TOOL_OR_START_FORM);
   assert.equal((await processRepository.tryGetByName(signal, process.name))?.icon, process.icon);
+  assert.deepEqual((await processRepository.tryGetByName(signal, process.name))?.sandboxNames, ['node', 'python']);
   assert.deepEqual(getStoredDefinitionMetadata(db, process.name), {
     definitionSize: JSON.stringify(process.definition).length,
     nReturnSteps: 0,
@@ -33,17 +35,51 @@ test('persists and updates process metadata', async () => {
   process.definition = createDefinitionWithReturnStep();
   process.nSteps = 1;
   process.nReturnSteps = 1;
+  process.sandboxNames = ['bun'];
   await processRepository.update(signal, process);
   assert.equal((await processRepository.tryGetByName(signal, process.name))?.nTasksSteps, 0);
   assert.equal((await processRepository.tryGetByName(signal, process.name))?.display, ProcessDisplay.FEATURED);
   assert.equal((await processRepository.tryGetByName(signal, process.name))?.executionMode, ProcessExecutionMode.START_FORM);
   assert.equal((await processRepository.tryGetByName(signal, process.name))?.icon, null);
+  assert.deepEqual((await processRepository.tryGetByName(signal, process.name))?.sandboxNames, ['bun']);
   assert.deepEqual(getStoredDefinitionMetadata(db, process.name), {
     definitionSize: JSON.stringify(process.definition).length,
     nReturnSteps: 1,
     nTasksSteps: 0
   });
 
+  db.close();
+});
+
+test('adds empty sandbox names without rewriting existing definitions', async () => {
+  const db = new DatabaseSync(':memory:', { open: true });
+  const sqliteDatabase = new SqliteDatabase(db);
+  db.exec(`
+    CREATE TABLE processes (
+      name TEXT PRIMARY KEY,
+      description TEXT NOT NULL,
+      userAccessExpression TEXT NOT NULL,
+      display INTEGER NOT NULL,
+      executionMode INTEGER NOT NULL,
+      icon TEXT,
+      nSteps INTEGER NOT NULL,
+      nReturnSteps INTEGER NOT NULL,
+      nTasksSteps INTEGER NOT NULL,
+      startVariableSchemas TEXT NOT NULL,
+      definition TEXT NOT NULL,
+      definitionSize INTEGER NOT NULL,
+      definitionHash TEXT NOT NULL
+    ) STRICT
+  `);
+  db.prepare(`INSERT INTO _version (tableName, version) VALUES ('processes', 1)`).run();
+  insertProcess(db, 'alpha');
+  const definitionBeforeSetup = getStoredDefinition(db, 'alpha');
+  const repository = new SqliteProcessRepository({ modelDb: sqliteDatabase } as SqliteDatabases);
+
+  await repository.setup(new AbortController().signal);
+
+  assert.deepEqual((await repository.tryGetByName(new AbortController().signal, 'alpha'))?.sandboxNames, []);
+  assert.equal(getStoredDefinition(db, 'alpha'), definitionBeforeSetup);
   db.close();
 });
 
@@ -132,7 +168,8 @@ function createProcess(name: string, nTasksSteps: number): Process {
     null,
     0,
     0,
-    nTasksSteps
+    nTasksSteps,
+    []
   );
 }
 
@@ -189,4 +226,8 @@ function getStoredDefinitionMetadata(
     nReturnSteps: row.nReturnSteps,
     nTasksSteps: row.nTasksSteps
   };
+}
+
+function getStoredDefinition(db: DatabaseSync, name: string): string {
+  return (db.prepare(`SELECT definition FROM processes WHERE name = ?`).get(name) as { definition: string }).definition;
 }

@@ -9,46 +9,8 @@ import {
   SaveProcessRequest
 } from '@ailaflow/shared';
 import { ProcessVariables } from './process-variables';
-import { DefinitionWalker } from 'sequential-workflow-model';
 import { ProcessRepositoryError } from './process-repository';
-
-function validateProcessDefinition(
-  definition: ProcessDefinition,
-  rootValidator: ProcessRootValidator,
-  stepValidator: ProcessStepValidator
-): {
-  nSteps: number;
-  nReturnSteps: number;
-  nTasksSteps: number;
-} {
-  if (!rootValidator.validate(definition)) {
-    throw new ProcessRepositoryError('Validation failed for root');
-  }
-
-  const walker = new DefinitionWalker();
-  let nSteps = 0;
-  let nTasksSteps = 0;
-  let nReturnSteps = 0;
-
-  walker.forEach(definition, (step, _, sequence) => {
-    if (!stepValidator.validateStep(step, sequence, definition)) {
-      throw new ProcessRepositoryError(`Validation failed for step: ${step.id}`);
-    }
-    if (step.type === 'task') {
-      nTasksSteps++;
-    }
-    if (step.type === 'return') {
-      nReturnSteps++;
-    }
-    nSteps++;
-  });
-
-  return {
-    nSteps,
-    nReturnSteps,
-    nTasksSteps
-  };
-}
+import { ProcessDefinitionWalker } from './process-definition-walker';
 
 function validateName(name: string) {
   const error = ProcessValidator.validateName(name);
@@ -89,7 +51,7 @@ export class Process {
     validateDescription(data.description);
     validateUserAccessExpression(data.userAccessExpression);
 
-    const { nSteps, nReturnSteps, nTasksSteps } = validateProcessDefinition(data.definition, rootValidator, stepValidator);
+    const result = ProcessDefinitionWalker.validateAndScan(data.definition, rootValidator, stepValidator);
     const startVariableSchemas = extractStartVariableSchemas(data.definition);
 
     return new Process(
@@ -102,9 +64,10 @@ export class Process {
       data.definition,
       data.hash,
       startVariableSchemas,
-      nSteps,
-      nReturnSteps,
-      nTasksSteps
+      result.nSteps,
+      result.nReturnSteps,
+      result.nTasksSteps,
+      result.sandboxNames
     );
   }
 
@@ -122,14 +85,15 @@ export class Process {
     public startVariableSchemas: Record<string, JsonSchema> | null,
     public nSteps: number,
     public nReturnSteps: number,
-    public nTasksSteps: number
+    public nTasksSteps: number,
+    public sandboxNames: string[]
   ) {}
 
   public async update(data: SaveProcessRequest, rootValidator: ProcessRootValidator, stepValidator: ProcessStepValidator) {
     if (data.name !== this.name) {
       throw new Error('Process name cannot be changed');
     }
-    const { nSteps, nReturnSteps, nTasksSteps } = validateProcessDefinition(data.definition, rootValidator, stepValidator);
+    const result = ProcessDefinitionWalker.validateAndScan(data.definition, rootValidator, stepValidator);
     validateDescription(data.description);
     validateUserAccessExpression(data.userAccessExpression);
 
@@ -142,9 +106,10 @@ export class Process {
     this.variablesCache = null;
     this.hash = data.hash;
     this.startVariableSchemas = extractStartVariableSchemas(data.definition);
-    this.nSteps = nSteps;
-    this.nReturnSteps = nReturnSteps;
-    this.nTasksSteps = nTasksSteps;
+    this.nSteps = result.nSteps;
+    this.nReturnSteps = result.nReturnSteps;
+    this.nTasksSteps = result.nTasksSteps;
+    this.sandboxNames = result.sandboxNames;
   }
 
   public get variables(): ProcessVariables {

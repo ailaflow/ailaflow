@@ -107,6 +107,7 @@ function createHarness(
           icon: process.icon,
           nTasksSteps: process.nTasksSteps,
           nReturnSteps: process.nReturnSteps,
+          sandboxNames: process.sandboxNames,
           definitionSize: JSON.stringify(process.definition).length
         }))
       };
