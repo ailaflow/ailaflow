@@ -66,15 +66,15 @@ export function ResourceListView<T>(props: ResourceListViewProps<T>) {
   return (
     <div className="flex h-full min-h-0 flex-col bg-slate-50">
       <div className="min-h-0 flex-1 overflow-auto p-4 sm:p-5">
-        <div className="flex flex-col gap-5">
+        <div className="flex min-h-full flex-col gap-5">
           <div className="flex shrink-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <h1 className="text-3xl font-semibold tracking-tight text-slate-900">{props.title}</h1>
 
             {props.headerActions ? <div className="flex items-center gap-3">{props.headerActions}</div> : null}
           </div>
 
-          <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
-            <div className="overflow-x-auto">
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+            <div className="min-h-0 flex-1 overflow-auto">
               <table className="min-w-full table-fixed text-left text-sm">
                 <thead className="border-b border-slate-100 bg-white">
                   <tr>
