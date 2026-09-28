@@ -10,6 +10,7 @@ import { ProcessExecutionPersister } from './process-execution-persister';
 import { ProcessExecutionServices } from './services/services';
 import { ProcessExecutionContext } from './process-execution-context';
 import { randomUUID } from 'crypto';
+import { EventBus } from '../events/event-bus';
 
 export class ProcessExecutor {
   private readonly builder = createWorkflowMachineBuilder(activitySet);
@@ -17,7 +18,8 @@ export class ProcessExecutor {
   public constructor(
     private readonly processExecutionStore: ProcessExecutionStore,
     private readonly processExecutionPersister: ProcessExecutionPersister,
-    private readonly services: ProcessExecutionServices
+    private readonly services: ProcessExecutionServices,
+    private readonly eventBus: EventBus
   ) {}
 
   public initialize(context: ProcessExecutionContext, process: Process, input: ProcessExecutionVariableValues): ProcessExecution {
@@ -32,10 +34,10 @@ export class ProcessExecutor {
       init: () => globalState
     });
 
-    return this.createExecution(stopController, executionId, context, process, interpreter, globalState);
+    return this.createExecution(stopController, executionId, context, false, process, interpreter, globalState);
   }
 
-  public restore(
+  public resume(
     executionId: string,
     context: ProcessExecutionContext,
     process: Process,
@@ -53,13 +55,14 @@ export class ProcessExecutor {
     const machine = this.builder.build(process.definition);
     const interpreter = machine.deserializeSnapshot(restoredSnapshot);
     const globalState = restoredSnapshot.context.globalState;
-    return this.createExecution(stopController, executionId, context, process, interpreter, globalState);
+    return this.createExecution(stopController, executionId, context, true, process, interpreter, globalState);
   }
 
   private createExecution(
     stopController: AbortController,
     executionId: string,
     context: ProcessExecutionContext,
+    isResumed: boolean,
     process: Process,
     interpreter: WorkflowMachineInterpreter<ProcessExecutionGlobalState>,
     globalState: ProcessExecutionGlobalState
@@ -67,11 +70,13 @@ export class ProcessExecutor {
     const execution = new ProcessExecution(
       executionId,
       context,
+      isResumed,
       stopController,
       process,
       interpreter,
       globalState.logger,
       globalState.variables,
+      this.eventBus,
       this.processExecutionPersister,
       this
     );

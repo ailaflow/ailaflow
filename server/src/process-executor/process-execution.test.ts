@@ -13,6 +13,14 @@ import { ProcessExecutionPersister } from './process-execution-persister';
 import { ProcessVariables } from '../repositories/process/process-variables';
 import { ProcessVariableEvaluator } from './services/process-value-evaluator';
 import { Notifier } from '../notification/notifier';
+import { ProcessExecutionTrigger } from './process-execution-context';
+import { EventBus } from '../events/event-bus';
+
+const context = {
+  trigger: ProcessExecutionTrigger.ENDPOINT,
+  startedBy: 'user_1',
+  isTest: false
+};
 
 test('process execution signals the first wait and pauses on a later wait', async () => {
   const activitySet = createActivitySet<ProcessExecutionGlobalState>([
@@ -50,7 +58,7 @@ test('process execution signals the first wait and pauses on a later wait', asyn
       new ProcessExecutionGlobalState(
         stopController.signal,
         'execution_1',
-        { startedBy: 'user_1', isTest: false },
+        context,
         {} as Process,
         $logger,
         $variables,
@@ -66,12 +74,14 @@ test('process execution signals the first wait and pauses on a later wait', asyn
     const timeout = setTimeout(() => reject(new Error('Execution did not pause')), 250);
     const execution = new ProcessExecution(
       'execution_1',
-      { startedBy: 'user_1', isTest: false },
+      context,
+      false,
       stopController,
       {} as Process,
       interpreter,
       $logger,
       $variables,
+      new EventBus(),
       {
         persist: async () => {
           clearTimeout(timeout);
@@ -116,7 +126,7 @@ test('process execution fails when pause persistence fails', async () => {
       new ProcessExecutionGlobalState(
         stopController.signal,
         'execution_1',
-        { startedBy: 'user_1', isTest: false },
+        context,
         {} as Process,
         $logger,
         $variables,
@@ -132,12 +142,14 @@ test('process execution fails when pause persistence fails', async () => {
     const timeout = setTimeout(() => reject(new Error('Execution did not fail')), 250);
     const execution = new ProcessExecution(
       'execution_1',
-      { startedBy: 'user_1', isTest: false },
+      context,
+      false,
       stopController,
       {} as Process,
       interpreter,
       $logger,
       $variables,
+      new EventBus(),
       {
         persist: async () => {
           throw new Error('Storage unavailable');

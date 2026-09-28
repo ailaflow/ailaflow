@@ -13,7 +13,7 @@ import { ProcessExecutor } from '../../process-executor/process-executor';
 import { parseBody } from '../framework/parse-request';
 import { getEndpointAbortSignal } from '../framework/endpoint-abort-signal';
 import { getAuthToken } from '../auth/auth-middleware';
-import { ProcessExecutionContext } from '../../process-executor/process-execution-context';
+import { ProcessExecutionContext, ProcessExecutionTrigger } from '../../process-executor/process-execution-context';
 import { ProcessExecutionResumeListenerStore } from '../../process-executor/process-execution-resume-listener-store';
 import { ProcessExecution } from '../../process-executor/process-execution';
 import { SseResponse } from '../../core/sse-response';
@@ -41,8 +41,9 @@ export class TestProcessEndpoint implements Endpoint {
     }
 
     const context: ProcessExecutionContext = {
-      startedBy: userName,
-      isTest: true
+      trigger: ProcessExecutionTrigger.ENDPOINT,
+      isTest: true,
+      startedBy: userName
     };
     // We need to initialize the workflow machine before sending SSE headers.
     // If the workflow machine fails, the user will receive the expected HTTP 500 response.

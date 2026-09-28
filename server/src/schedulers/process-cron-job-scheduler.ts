@@ -6,7 +6,7 @@ import { ProcessCronJobRepository } from '../repositories/process-cron-job/proce
 import { Scheduler } from './scheduler';
 import { ProcessManager } from '../process/process-manager';
 import { ProcessExecutor } from '../process-executor/process-executor';
-import { ProcessExecutionContext } from '../process-executor/process-execution-context';
+import { ProcessExecutionContext, ProcessExecutionTrigger } from '../process-executor/process-execution-context';
 import { MyProcessAccessQuerier } from '../queriers/my-process/my-process-access-querier';
 
 const INTERVAL_MS = 60_000;
@@ -93,6 +93,7 @@ export class ProcessCronJobScheduler implements Scheduler {
     }
 
     const context: ProcessExecutionContext = {
+      trigger: ProcessExecutionTrigger.SCHEDULED_JOB,
       isTest: false,
       startedBy: job.starterUserName
     };

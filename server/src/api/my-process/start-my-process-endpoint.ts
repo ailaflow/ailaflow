@@ -5,7 +5,6 @@ import { Endpoint } from '../framework/endpoint';
 import { getEndpointAbortSignal } from '../framework/endpoint-abort-signal';
 import { parseBody } from '../framework/parse-request';
 import {
-  FormDefinition,
   ProcessExecutionOutcomeType,
   ReturnStep,
   StartMyProcessRequest,
@@ -14,7 +13,7 @@ import {
 } from '@ailaflow/shared';
 import { EndpointError } from '../framework/endpoint-error';
 import { ChatSessionManager } from '@aibindkit/express';
-import { ProcessExecutionContext } from '../../process-executor/process-execution-context';
+import { ProcessExecutionContext, ProcessExecutionTrigger } from '../../process-executor/process-execution-context';
 import { ChatSession } from '@aibindkit/llm';
 import { ProcessExecutor } from '../../process-executor/process-executor';
 import { SseResponse } from '../../core/sse-response';
@@ -53,8 +52,9 @@ export class StartMyProcessEndpoint implements Endpoint {
     }
 
     const context: ProcessExecutionContext = {
-      startedBy: authToken.userName,
-      isTest: false
+      trigger: ProcessExecutionTrigger.ENDPOINT,
+      isTest: false,
+      startedBy: authToken.userName
     };
 
     let chatSession: ChatSession | undefined;

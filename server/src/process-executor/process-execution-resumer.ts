@@ -4,7 +4,6 @@ import { PersistedExecutionRepository } from '../repositories/persisted-executio
 import { ProcessExecution } from './process-execution';
 import { ProcessExecutor } from './process-executor';
 import { EventBus } from '../events/event-bus';
-import { ProcessExecutionFinishedEvent } from '../events/process-execution/process-execution-finished-event';
 import { ProcessExecutionResumeListenerStore } from './process-execution-resume-listener-store';
 import { Logger } from '../core/logger';
 
@@ -22,8 +21,7 @@ export class ProcessExecutionResumer {
     private readonly processManager: ProcessManager,
     private readonly persistedExecutionRepository: PersistedExecutionRepository,
     private readonly processExecutor: ProcessExecutor,
-    private readonly resumeListenerStore: ProcessExecutionResumeListenerStore,
-    private readonly eventBus: EventBus
+    private readonly resumeListenerStore: ProcessExecutionResumeListenerStore
   ) {}
 
   public async resume(signal: AbortSignal, executionId: string, payload: SignalPayload): Promise<ProcessExecution> {
@@ -43,17 +41,13 @@ export class ProcessExecutionResumer {
       );
     }
 
-    const execution = this.processExecutor.restore(
+    const execution = this.processExecutor.resume(
       persistedExecution.executionId,
       persistedExecution.context,
       process,
       persistedExecution.state
     );
-    execution.onOutcome.subscribe(outcome => {
-      this.eventBus.publish(
-        new ProcessExecutionFinishedEvent(persistedExecution.executionId, execution.context, persistedExecution.processName, outcome)
-      );
-    });
+    execution.enableOutcomePublishing();
 
     await this.persistedExecutionRepository.delete(signal, executionId);
 

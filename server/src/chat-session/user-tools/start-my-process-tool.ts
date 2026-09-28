@@ -2,11 +2,10 @@ import { ToolContext, ZodTool, ZodToolExecutionResult } from '@aibindkit/llm';
 import * as z from 'zod/v4';
 import { ChatSessionId } from '../chat-session-id';
 import { UserProcessProvider } from '../../process/user-process-provider';
-import { ProcessExecutionContext } from '../../process-executor/process-execution-context';
+import { ProcessExecutionContext, ProcessExecutionTrigger } from '../../process-executor/process-execution-context';
 import { ProcessExecutionMode, ProcessExecutionOutcomeType, ResourceNameNormalizer } from '@ailaflow/shared';
 import { ProcessExecutor } from '../../process-executor/process-executor';
 import { EventBus } from '../../events/event-bus';
-import { ProcessExecutionFinishedEvent } from '../../events/process-execution/process-execution-finished-event';
 import { ExecutionTaskCandidateQuerier } from '../../queriers/my-task-list/execution-task-candidate-querier';
 import { Logger } from '../../core/logger';
 
@@ -62,9 +61,10 @@ export class StartMyProcessTool extends ZodTool<Arg> {
     }
 
     const context: ProcessExecutionContext = {
+      trigger: ProcessExecutionTrigger.TOOL,
+      isTest,
       startedBy: userName,
-      chatSessionId: sessionId,
-      isTest
+      chatSessionId: sessionId
     };
 
     const execution = this.processExecutor.initialize(context, process, arg.startVariableValues);
@@ -78,10 +78,7 @@ export class StartMyProcessTool extends ZodTool<Arg> {
         throw new Error('Operation aborted');
       }
 
-      // TODO: this is duplicated
-      execution.onOutcome.subscribe(outcome => {
-        this.eventBus.publish(new ProcessExecutionFinishedEvent(execution.id, context, process.name, outcome));
-      });
+      execution.enableOutcomePublishing();
 
       let m = `Process /${processName} started successfully. Execution ID: "${execution.id}"\n`;
       m += `Process /${processName} is still running, so this tool is returning before it finishes. It will continue running in the background.\n`;

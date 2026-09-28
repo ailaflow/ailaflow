@@ -5,6 +5,7 @@ import { SqliteDatabase } from '../../core/sqlite-database';
 import { SqliteDatabases } from '../../core/sqlite-databases';
 import { PersistedExecution } from './persisted-execution';
 import { SqlitePersistedExecutionRepository } from './persisted-execution-repository';
+import { ProcessExecutionTrigger } from '../../process-executor/process-execution-context';
 
 test('persisted execution repository upserts, gets, and deletes an execution', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
@@ -16,7 +17,12 @@ test('persisted execution repository upserts, gets, and deletes an execution', a
 
   const execution = new PersistedExecution(
     'execution_1',
-    { startedBy: 'user_1', chatSessionId: 'session_1', isTest: true },
+    {
+      trigger: ProcessExecutionTrigger.TOOL,
+      startedBy: 'user_1',
+      chatSessionId: 'session_1',
+      isTest: true
+    },
     'process_1',
     'hash_1',
     {

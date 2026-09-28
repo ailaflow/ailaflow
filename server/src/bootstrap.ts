@@ -67,7 +67,7 @@ import { GetMyProcessesTool } from './chat-session/user-tools/get-my-processes-t
 import { GetMyProcessDetailsTool } from './chat-session/user-tools/get-my-process-details-tool';
 import { StartMyProcessTool } from './chat-session/user-tools/start-my-process-tool';
 import { EventBus } from './events/event-bus';
-import { ProcessExecutionFinishedEventHandler } from './events/process-execution/process-execution-finished-event-handler';
+import { ProcessExecutionOutcomeAvailableEventHandler } from './events/process-execution/process-execution-outcome-available-event-handler';
 import { ChatSessionStorage } from './chat-session/chat-session-storage';
 import { ChatSessionRepository } from './repositories/chat-session/chat-session-repository';
 import { SqliteChatSessionRepository } from './repositories/chat-session/sqlite-chat-session-repository';
@@ -423,7 +423,7 @@ export async function bootstrap(registry: CleanupRegistry, signal: AbortSignal) 
   const magicLinkExchanger = new MagicLinkExchanger(magicLinkRepository, userRepository, authTokenRepository);
 
   const eventBus = new EventBus();
-  eventBus.registerHandler(new ProcessExecutionFinishedEventHandler(notifier));
+  eventBus.registerHandler(new ProcessExecutionOutcomeAvailableEventHandler(notifier));
   eventBus.registerHandler(new LlmConfigurationChangedEventHandler(llmClientProvider, sessionManager));
 
   const telegramClient = new TelegramBotApiClient();
@@ -492,14 +492,13 @@ export async function bootstrap(registry: CleanupRegistry, signal: AbortSignal) 
     agentSessionRunner
   };
 
-  const processExecutor = new ProcessExecutor(processExecutionStore, processExecutionPersister, processExecutionServices);
+  const processExecutor = new ProcessExecutor(processExecutionStore, processExecutionPersister, processExecutionServices, eventBus);
   const processExecutionResumeListenerStore = new ProcessExecutionResumeListenerStore();
   const processExecutionResumer = new ProcessExecutionResumer(
     processManager,
     persistedExecutionRepository,
     processExecutor,
-    processExecutionResumeListenerStore,
-    eventBus
+    processExecutionResumeListenerStore
   );
 
   const userAssignedTaskProvider = new UserAssignedTaskProvider(taskRepository, assignedTaskRepository);

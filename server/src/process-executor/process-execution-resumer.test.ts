@@ -7,19 +7,20 @@ import { PersistedExecutionRepository } from '../repositories/persisted-executio
 import { ProcessExecutionResumer } from './process-execution-resumer';
 import { ProcessExecutor } from './process-executor';
 import { ProcessExecution } from './process-execution';
-import { EventBus } from '../events/event-bus';
 import { ProcessExecutionResumeListenerStore } from './process-execution-resume-listener-store';
 import { ProcessManager } from '../process/process-manager';
 import { ProcessDefinitionUpgrader } from '../process/process-definition-upgrader';
 import { PROCESS_VERSION, ProcessDisplay, ProcessExecutionMode } from '@ailaflow/shared';
+import { ProcessExecutionTrigger } from './process-execution-context';
 
 test('process execution resumer continues when the process hash changed', async () => {
   const signal = new AbortController().signal;
   let deletedExecutionId: string | null = null;
   let runPayload: unknown;
   const execution = {
-    context: { startedBy: 'user_1', isTest: false },
+    context: { trigger: ProcessExecutionTrigger.ENDPOINT, startedBy: 'user_1', isTest: false },
     onOutcome: { subscribe: () => undefined },
+    enableOutcomePublishing: () => undefined,
     run: (payload: unknown) => {
       runPayload = payload;
     }
@@ -44,7 +45,7 @@ test('process execution resumer continues when the process hash changed', async 
       tryGet: async () =>
         new PersistedExecution(
           'execution_1',
-          { startedBy: 'user_1', isTest: false },
+          { trigger: ProcessExecutionTrigger.ENDPOINT, startedBy: 'user_1', isTest: false },
           'process_1',
           'old_hash',
           {
@@ -60,9 +61,8 @@ test('process execution resumer continues when the process hash changed', async 
           2000
         )
     } as PersistedExecutionRepository,
-    { restore: () => execution } as unknown as ProcessExecutor,
-    new ProcessExecutionResumeListenerStore(),
-    new EventBus()
+    { resume: () => execution } as unknown as ProcessExecutor,
+    new ProcessExecutionResumeListenerStore()
   );
 
   const payload = { signal: 'continue' };

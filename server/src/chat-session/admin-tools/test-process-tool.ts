@@ -1,12 +1,11 @@
 import { ToolContext, ZodTool, ZodToolExecutionResult } from '@aibindkit/llm';
 import * as z from 'zod/v4';
-import { ProcessExecutionContext } from '../../process-executor/process-execution-context';
+import { ProcessExecutionContext, ProcessExecutionTrigger } from '../../process-executor/process-execution-context';
 import { ProcessManager } from '../../process/process-manager';
 import { ChatSessionId } from '../chat-session-id';
 import { ProcessExecutor } from '../../process-executor/process-executor';
 import { ProcessExecutionMode, ProcessExecutionOutcomeType, ResourceNameNormalizer } from '@ailaflow/shared';
 import { EventBus } from '../../events/event-bus';
-import { ProcessExecutionFinishedEvent } from '../../events/process-execution/process-execution-finished-event';
 
 const inputSchema = z.object({
   name: z.string(),
@@ -53,9 +52,10 @@ export class TestProcessTool extends ZodTool<Arg> {
     }
 
     const context: ProcessExecutionContext = {
+      trigger: ProcessExecutionTrigger.TOOL,
+      isTest: true,
       startedBy: userName,
-      chatSessionId: sessionId,
-      isTest: true
+      chatSessionId: sessionId
     };
 
     const execution = this.processExecutor.initialize(context, process, arg.startVariableValues);
@@ -68,10 +68,7 @@ export class TestProcessTool extends ZodTool<Arg> {
         throw new Error('Operation aborted');
       }
 
-      // TODO: this is duplicated
-      execution.onOutcome.subscribe(outcome => {
-        this.eventBus.publish(new ProcessExecutionFinishedEvent(execution.id, context, process.name, outcome));
-      });
+      execution.enableOutcomePublishing();
 
       let m = `Test execution of /${processName} started successfully. Execution ID: "${execution.id}"\n`;
       m += `The test execution is still running, so this tool is returning before it finishes. It will continue running in the background.\n`;

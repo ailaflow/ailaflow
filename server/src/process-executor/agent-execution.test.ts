@@ -27,9 +27,14 @@ import { ProcessExecution } from './process-execution';
 import { ExecuteProcessTool } from '../chat-session/agent-tools/execute-process-tool';
 import { ProcessExecutionStore } from './process-execution-store';
 import { ProcessExecutionPersister } from './process-execution-persister';
-import { ProcessExecutionContext } from './process-execution-context';
+import { ProcessExecutionContext, ProcessExecutionTrigger } from './process-execution-context';
+import { EventBus } from '../events/event-bus';
 
-const context: ProcessExecutionContext = { startedBy: 'alice', isTest: true };
+const context: ProcessExecutionContext = {
+  trigger: ProcessExecutionTrigger.TOOL,
+  startedBy: 'alice',
+  isTest: true
+};
 const signal = new AbortController().signal;
 
 function createAgent(properties: Partial<AgentStep['properties']> = {}): AgentStep {
@@ -150,7 +155,8 @@ function createHarness(
       taskCreator: {},
       notifier: {},
       agentSessionRunner: agent
-    } as ProcessExecutionServices
+    } as ProcessExecutionServices,
+    new EventBus()
   );
   function run(signal: AbortSignal, runContext: ProcessExecutionContext, process: Process, input: Record<string, unknown>) {
     const execution = executor.initialize(runContext, process, input);

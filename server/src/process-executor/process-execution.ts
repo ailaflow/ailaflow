@@ -9,6 +9,8 @@ import type { Process } from '../repositories/process/process';
 import { ProcessExecutionContext } from './process-execution-context';
 import { ProcessExecutor } from './process-executor';
 import { DefinitionWalker, Step } from 'sequential-workflow-model';
+import { EventBus } from '../events/event-bus';
+import { ProcessExecutionOutcomeAvailableEvent } from './process-execution-outcome-available-event';
 
 const WAIT_FOR_SIGNAL_STATE = 'WAIT_FOR_SIGNAL';
 
@@ -31,11 +33,13 @@ export class ProcessExecution {
   public constructor(
     public readonly id: string,
     public readonly context: ProcessExecutionContext,
+    public readonly isResumed: boolean,
     private readonly stopController: AbortController,
     private readonly process: Process,
     private readonly interpreter: WorkflowMachineInterpreter<ProcessExecutionGlobalState>,
     private readonly logger: ProcessLogger,
     private readonly variableManager: ProcessVariableManager,
+    private readonly eventBus: EventBus,
     private readonly processExecutionPersister: ProcessExecutionPersister,
     private readonly processExecutor: ProcessExecutor
   ) {}
@@ -107,6 +111,12 @@ export class ProcessExecution {
     return false;
   }
 
+  public enableOutcomePublishing() {
+    this.onOutcome.subscribe(outcome => {
+      this.eventBus.publish(new ProcessExecutionOutcomeAvailableEvent(this.id, this.context, this.isResumed, this.process.name, outcome));
+    });
+  }
+
   // state api
 
   public readVariable(name: string): unknown | null {
@@ -128,6 +138,7 @@ export class ProcessExecution {
 
     return this.processExecutor.initialize(
       {
+        trigger: this.context.trigger,
         startedBy: this.context.startedBy,
         isTest: this.context.isTest,
         parentProcessNames

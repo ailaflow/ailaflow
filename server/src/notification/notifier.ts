@@ -37,7 +37,7 @@ export class Notifier {
       await this.notificationRepository.insertMultiple(signal, notifications);
     }
 
-    const m = this.buildChatMessage(processName, message);
+    const m = this.buildChatMessage(processName, message, null);
 
     for (const userName of userNames) {
       const session = await this.userChatSessionProvider.get(signal, isTest, userName, channelName);
@@ -55,7 +55,8 @@ export class Notifier {
     processName: string,
     isTest: boolean,
     userName: string,
-    message: string
+    message: string,
+    chatDetails: string | null
   ) {
     const chatSession = sessionId
       ? await (sessionId.isAdmin()
@@ -69,17 +70,20 @@ export class Notifier {
     }
 
     if (chatSession) {
-      const m = this.buildChatMessage(processName, message);
+      const m = this.buildChatMessage(processName, message, chatDetails);
       chatSession.queueUserMessage(m, {
         internal: true
       });
     }
   }
 
-  private buildChatMessage(processName: string, message: string): string {
+  private buildChatMessage(processName: string, message: string, chatDetails: string | null): string {
     let m = '>>>>>>>>\n';
     m += `The user has a new notification from /${processName} process:\n`;
     m += `Message: ${message}\n`;
+    if (chatDetails) {
+      m += chatDetails + '\n';
+    }
     m += '<<<<<<<<';
     return m;
   }

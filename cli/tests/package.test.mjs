@@ -37,7 +37,7 @@ test('the packaged CLI serves the API and portal', async () => {
   });
 
   try {
-    await waitForOutput(child, 'Listening on:');
+    await waitForOutput(child, 'Status:');
 
     const health = await fetch(`http://127.0.0.1:${port}/health`);
     assert.equal(health.status, 200);
