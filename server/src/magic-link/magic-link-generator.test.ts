@@ -11,8 +11,8 @@ test('generates and stores magic links with centralized form targets', async () 
   const generator = createGenerator('https://aila.example/proxy/aila', inserted);
   const signal = new AbortController().signal;
 
-  const taskResult = await generator.tryGenerateTaskForm(signal, 'alice', 'task/1');
-  const processResult = await generator.tryGenerateProcessStartForm(signal, 'alice', 'employee onboarding');
+  const taskResult = await generator.tryGenerateTaskForm(signal, 'alice', 'task-1');
+  const processResult = await generator.tryGenerateProcessStartForm(signal, 'alice', 'employee-onboarding');
 
   assert.equal(taskResult.status, MagicLinkStatus.SUCCESS);
   if (taskResult.status !== MagicLinkStatus.SUCCESS) {
@@ -20,7 +20,7 @@ test('generates and stores magic links with centralized form targets', async () 
   }
   const taskUrl = new URL(taskResult.url);
   assert.equal(taskUrl.origin + taskUrl.pathname, 'https://aila.example/proxy/aila/magic-link');
-  assert.equal(taskUrl.searchParams.get('t'), '/my-tasks/task%2F1?fs=1');
+  assert.equal(taskUrl.searchParams.get('t'), '/my-tasks/task-1?fs=1');
   assert.equal(new URLSearchParams(taskUrl.hash.slice(1)).get('token'), inserted[0].token);
   assert.equal(inserted[0].userName, 'alice');
 
@@ -29,7 +29,7 @@ test('generates and stores magic links with centralized form targets', async () 
     assert.fail('Expected a process start form magic link');
   }
   const processUrl = new URL(processResult.url);
-  assert.equal(processUrl.searchParams.get('t'), '/my-processes/employee%20onboarding?fs=1');
+  assert.equal(processUrl.searchParams.get('t'), '/my-processes/employee-onboarding?fs=1');
   assert.equal(new URLSearchParams(processUrl.hash.slice(1)).get('token'), inserted[1].token);
   assert.equal(inserted[1].userName, 'alice');
   assert.equal(generator.getValidityHours(), 2);

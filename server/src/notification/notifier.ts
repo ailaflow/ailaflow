@@ -28,17 +28,7 @@ export class Notifier {
   ) {
     const expression = UserAccessExpressionParser.parse(userExpression);
     const userNames = await this.userAccessExpressionUserQuerier.queryUserNames(signal, expression);
-    return this.notifyUsers(signal, processName, isTest, userNames, channelName, message);
-  }
 
-  public async notifyUsers(
-    signal: AbortSignal,
-    processName: string,
-    isTest: boolean,
-    userNames: string[],
-    channelName: string,
-    message: string
-  ) {
     if (!isTest) {
       const notifications = new Array<Notification>(userNames.length);
       for (let i = 0; i < userNames.length; i++) {

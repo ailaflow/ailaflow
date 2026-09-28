@@ -21,7 +21,7 @@ test('materializes a script only when its definition changes', async () => {
 
     const firstCommit = await materializer.tryBeginMaterializationOfProcess(
       signal,
-      createProcess('process-1', { sandboxName: 'default', contents: files })
+      createProcess('process-1', { sandboxName: 'default', contents: files, allowedProcessNames: [] })
     );
     assert.ok(firstCommit);
     await firstCommit();
@@ -31,7 +31,7 @@ test('materializes a script only when its definition changes', async () => {
 
     const unchangedCommit = await materializer.tryBeginMaterializationOfProcess(
       signal,
-      createProcess('process-2', { sandboxName: 'default', contents: files })
+      createProcess('process-2', { sandboxName: 'default', contents: files, allowedProcessNames: [] })
     );
     assert.ok(unchangedCommit);
     assert.equal(await fs.readFile(materializedFile, 'utf8'), 'local change');
@@ -41,6 +41,7 @@ test('materializes a script only when its definition changes', async () => {
       signal,
       createProcess('process-3', {
         sandboxName: 'default',
+        allowedProcessNames: [],
         contents: files.map(file => (file.path === 'main.js' ? { ...file, content: 'changed' } : file))
       })
     );
@@ -80,6 +81,7 @@ function createProcess(hash: string, script: ScriptDefinition): Process {
     null,
     1,
     0,
-    0
+    0,
+    ['default']
   );
 }

@@ -44,7 +44,7 @@ export function AgentStepEditor(props: StepEditorProps) {
         label="Prompt"
         value={properties.prompt}
         variables={definition.properties.variables}
-        multiline={4}
+        multiline={16}
         onValueChanged={v => setProperty('prompt', v)}
         error={errors['properties.prompt']}
       />

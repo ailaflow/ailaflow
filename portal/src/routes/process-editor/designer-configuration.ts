@@ -91,7 +91,8 @@ function createEmptyScriptDefinition(): ScriptDefinition {
   ];
   return {
     sandboxName: 'default',
-    contents
+    contents,
+    allowedProcessNames: []
   };
 }
 

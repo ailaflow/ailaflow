@@ -72,7 +72,8 @@ function createProcess(name: string, sequence: ProcessDefinition['sequence'] = [
     { prompt: { type: 'string' } },
     sequence.length,
     sequence.filter(step => step.type === 'return').length,
-    nTasksSteps
+    nTasksSteps,
+    []
   );
 }
 
@@ -227,7 +228,7 @@ test('agent evaluates its prompt, runs variable tools, logs summaries, and conti
     interruptedStepId: 'return'
   });
   assert.equal(turn, 5);
-  assert.ok(harness.logs.includes('Agent tool: setVariable'));
+  assert.ok(harness.logs.includes('Agent tool: setVariable {"name":"answer","value":"wrong type"}'));
   assert.ok(harness.logs.includes('Agent: Answer saved'));
   assert.deepEqual(harness.pages, []);
 });

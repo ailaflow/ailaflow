@@ -96,7 +96,7 @@ export class AgentSessionRunner {
 function formatToolCall(call: ToolCall): string {
   let m = `Agent tool: ${call.function.name}`;
   if (call.type === 'function') {
-    m += ` ${trim(JSON.stringify(call.function.arguments), 256)}`;
+    m += ` ${trim(call.function.arguments, 256)}`;
   }
   return m;
 }

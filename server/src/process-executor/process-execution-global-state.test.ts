@@ -118,7 +118,8 @@ function createTestProcess(): Process {
     null,
     0,
     0,
-    0
+    0,
+    []
   );
 }
 
