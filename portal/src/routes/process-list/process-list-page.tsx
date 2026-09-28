@@ -155,26 +155,26 @@ export function ProcessListPage() {
         totalCount: data.totalCount,
         onPageChange: changePage
       }}
+      primaryAction={{
+        icon: <SvgIcon name="pencil" className="h-4 w-4" />,
+        ariaLabel: 'Edit process',
+        getTo: process => `/admin/processes/${process.name}`
+      }}
       actions={[
         {
           label: 'Test',
-          getTo: process => `/admin/processes/${encodeURIComponent(process.name)}/test`
+          getTo: process => `/admin/processes/${process.name}/test`
         },
         {
           label: 'Cron',
-          getTo: process => `/admin/processes/${encodeURIComponent(process.name)}/cron-jobs`
+          getTo: process => `/admin/processes/${process.name}/cron-jobs`
         },
         /*{
           label: 'Export',
           onClick: process => exportProcess(process.name)
         },*/
         {
-          label: <SvgIcon name="pencil" className="h-4 w-4" />,
-          ariaLabel: process => `Edit process ${process.name}`,
-          getTo: process => `/admin/processes/${encodeURIComponent(process.name)}`
-        },
-        {
-          label: <SvgIcon name="x" className="h-4 w-4" />,
+          label: 'Delete',
           ariaLabel: process => `Delete process ${process.name}`,
           danger: true,
           onClick: process => deleteProcess(process.name)

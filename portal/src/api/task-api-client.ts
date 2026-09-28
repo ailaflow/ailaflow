@@ -14,6 +14,6 @@ export class TaskApiClient {
   }
 
   public deleteTask(signal: AbortSignal, id: string): Promise<DeleteTaskResponse> {
-    return this.client.json(signal, 'DELETE', `/api/tasks/${encodeURIComponent(id)}`);
+    return this.client.json(signal, 'DELETE', `/api/tasks/${id}`);
   }
 }

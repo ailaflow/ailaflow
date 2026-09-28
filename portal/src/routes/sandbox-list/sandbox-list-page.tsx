@@ -74,15 +74,15 @@ export function SandboxListPage() {
       rows={data.sandboxes}
       getRowKey={sandbox => sandbox.name}
       emptyMessage="No sandboxes found."
+      primaryAction={{
+        icon: <SvgIcon name="pencil" className="h-4 w-4" />,
+        ariaLabel: 'Edit sandbox',
+        getTo: sandbox => `/admin/sandboxes/${sandbox.name}`
+      }}
       actions={[
         {
           label: 'Terminal',
-          getTo: sandbox => `/admin/sandboxes/${encodeURIComponent(sandbox.name)}/terminal`
-        },
-        {
-          label: <SvgIcon name="pencil" className="h-4 w-4" />,
-          ariaLabel: 'Edit sandbox',
-          getTo: sandbox => `/admin/sandboxes/${encodeURIComponent(sandbox.name)}`
+          getTo: sandbox => `/admin/sandboxes/${sandbox.name}/terminal`
         }
       ]}
     />

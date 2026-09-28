@@ -2,7 +2,6 @@ import { toolError, toolWait, useLoader } from '@aibindkit/react';
 import { useState } from 'react';
 import { useSearchParams } from 'react-router';
 import { useApiClient } from '../../auth/auth-context';
-import { SvgIcon } from '../../views/common/svg-icons';
 import { PortalErrorView } from '../../views/portal/portal-error-view';
 import { PortalLoadingView } from '../../views/portal/portal-loading-view';
 import { ResourceHeaderSwitchView } from '../../views/resource-list/resource-header-switch-view';
@@ -149,7 +148,7 @@ export function TaskListPage() {
       }}
       actions={[
         {
-          label: <SvgIcon name="x" className="h-4 w-4" />,
+          label: 'Delete',
           ariaLabel: task => `Delete task ${task.title}`,
           danger: true,
           onClick: task => deleteTask(task.id, task.title)

@@ -28,11 +28,11 @@ export class MagicLinkGenerator {
   }
 
   public tryGenerateTaskForm(signal: AbortSignal, userName: string, taskId: string): Promise<MagicLinkResult> {
-    return this.tryGenerate(signal, userName, `/my-tasks/${encodeURIComponent(taskId)}?fs=1`);
+    return this.tryGenerate(signal, userName, `/my-tasks/${taskId}?fs=1`);
   }
 
   public tryGenerateProcessStartForm(signal: AbortSignal, userName: string, processName: string): Promise<MagicLinkResult> {
-    return this.tryGenerate(signal, userName, `/my-processes/${encodeURIComponent(processName)}?fs=1`);
+    return this.tryGenerate(signal, userName, `/my-processes/${processName}?fs=1`);
   }
 
   private async tryGenerate(signal: AbortSignal, userName: string, target: string): Promise<MagicLinkResult> {

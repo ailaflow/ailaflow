@@ -20,7 +20,7 @@ export class SandboxApiClient {
   }
 
   public getSandbox(signal: AbortSignal, name: string): Promise<GetSandboxResponse> {
-    return this.client.json(signal, 'GET', `/api/sandboxes/${encodeURIComponent(name)}`);
+    return this.client.json(signal, 'GET', `/api/sandboxes/${name}`);
   }
 
   public diagnoseHost(signal: AbortSignal): Promise<DiagnoseHostResponse> {
@@ -33,6 +33,6 @@ export class SandboxApiClient {
     name: string,
     request: ExecuteSandboxCommandRequest
   ): Promise<void> {
-    return this.client.sse(signal, listener, 'POST', `/api/sandboxes/${encodeURIComponent(name)}/commands`, request);
+    return this.client.sse(signal, listener, 'POST', `/api/sandboxes/${name}/commands`, request);
   }
 }

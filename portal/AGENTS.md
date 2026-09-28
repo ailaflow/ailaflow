@@ -6,3 +6,7 @@ This React project is split into two main parts:
 - `/src/routes` — Routes are the main entry point for each page in the portal. They are responsible for fetching data, handling user interactions, and rendering the appropriate views. Routes can contain business logic, API calls, and state management. Routes should NOT contain any HTML structure or Tailwind classes. They should only render views and pass data to them via props.
 
 This project must work seamlessly across desktop browsers and mobile devices. All views should be fully responsive and use Tailwind CSS responsive utilities to ensure a polished, consistent layout on every screen size.
+
+## Code Style Requirements
+
+- Do not use `encodeURIComponent` for process, sandbox, user, or table names in URLs. These names cannot contain URL-unsafe characters.

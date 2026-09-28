@@ -99,14 +99,11 @@ export function MyNotificationsPage() {
           totalCount: data.totalCount,
           onPageChange: changePage
         }}
-        actions={[
-          {
-            label: <SvgIcon name="x" className="h-4 w-4" />,
-            ariaLabel: notification => `Delete notification ${notification.id}`,
-            danger: true,
-            onClick: notification => deleteNotification(notification.id)
-          }
-        ]}
+        primaryAction={{
+          icon: <SvgIcon name="x" className="h-4 w-4" />,
+          ariaLabel: 'Delete notification',
+          onClick: notification => deleteNotification(notification.id)
+        }}
       />
     </Portal>
   );

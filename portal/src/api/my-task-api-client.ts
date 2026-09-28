@@ -27,7 +27,7 @@ export class MyTaskApiClient {
     if (request.testUserName) {
       query.set('testUserName', request.testUserName);
     }
-    return this.client.json(signal, 'GET', `/api/my-tasks/${encodeURIComponent(id)}/form?${query}`);
+    return this.client.json(signal, 'GET', `/api/my-tasks/${id}/form?${query}`);
   }
 
   public getTaskVariableValue(signal: AbortSignal, request: GetTaskVariableValueRequest): Promise<GetTaskVariableValueResponse> {

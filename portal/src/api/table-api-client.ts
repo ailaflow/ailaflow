@@ -26,7 +26,7 @@ export class TableApiClient {
   }
 
   public getTable(signal: AbortSignal, name: string): Promise<GetTableResponse> {
-    return this.client.json(signal, 'GET', `/api/tables/${encodeURIComponent(name)}`);
+    return this.client.json(signal, 'GET', `/api/tables/${name}`);
   }
 
   public getTableData(signal: AbortSignal, name: string, request: GetTableDataRequest): Promise<GetTableDataResponse> {
@@ -36,10 +36,10 @@ export class TableApiClient {
       orderBy: request.orderBy,
       ascending: String(request.ascending)
     });
-    return this.client.json(signal, 'GET', `/api/tables/${encodeURIComponent(name)}/data?${query}`);
+    return this.client.json(signal, 'GET', `/api/tables/${name}/data?${query}`);
   }
 
   public deleteTable(signal: AbortSignal, name: string): Promise<DeleteTableResponse> {
-    return this.client.json(signal, 'DELETE', `/api/tables/${encodeURIComponent(name)}`);
+    return this.client.json(signal, 'DELETE', `/api/tables/${name}`);
   }
 }

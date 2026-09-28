@@ -98,14 +98,12 @@ export function MyTasksPage() {
         rows={data.tasks}
         getRowKey={task => task.id}
         emptyMessage="No tasks found."
-        actions={[
-          {
-            label: 'Open',
-            ariaLabel: task => `Open task ${task.title}`,
-            isVisible: task => task.completedAt === undefined,
-            getTo: task => `/my-tasks/${encodeURIComponent(task.id)}`
-          }
-        ]}
+        primaryAction={{
+          icon: <SvgIcon name="eyeOpen" className="h-4 w-4" />,
+          ariaLabel: 'Open task',
+          isVisible: task => task.completedAt === undefined,
+          getTo: task => `/my-tasks/${task.id}`
+        }}
         pagination={{
           page: data.page,
           pageSize: data.pageSize,

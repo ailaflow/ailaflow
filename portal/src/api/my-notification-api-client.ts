@@ -18,7 +18,7 @@ export class MyNotificationApiClient {
   }
 
   public deleteMyNotification(signal: AbortSignal, id: string): Promise<DeleteMyNotificationResponse> {
-    return this.client.json(signal, 'DELETE', `/api/my-notifications/${encodeURIComponent(id)}`);
+    return this.client.json(signal, 'DELETE', `/api/my-notifications/${id}`);
   }
 
   public deleteAllMyNotifications(signal: AbortSignal): Promise<DeleteAllMyNotificationsResponse> {

@@ -104,14 +104,14 @@ export function TableListPage() {
         totalCount: data.totalCount,
         onPageChange: changePage
       }}
+      primaryAction={{
+        icon: <SvgIcon name="pencil" className="h-4 w-4" />,
+        ariaLabel: 'Edit table',
+        getTo: table => `/admin/tables/${table.name}`
+      }}
       actions={[
         {
-          label: <SvgIcon name="pencil" className="h-4 w-4" />,
-          ariaLabel: table => `Edit table ${table.name}`,
-          getTo: table => `/admin/tables/${encodeURIComponent(table.name)}`
-        },
-        {
-          label: <SvgIcon name="x" className="h-4 w-4" />,
+          label: 'Delete',
           ariaLabel: table => `Delete table ${table.name}`,
           danger: true,
           onClick: table => deleteTable(table.name)

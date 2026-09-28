@@ -114,7 +114,7 @@ export function DashboardPage() {
               name: process.name,
               icon: process.icon,
               description: process.description,
-              url: `/my-processes/${encodeURIComponent(process.name)}`,
+              url: `/my-processes/${process.name}`,
               onClick: () => setStartedProcess(process)
             }))}
             emptyMessage="No processes are available."

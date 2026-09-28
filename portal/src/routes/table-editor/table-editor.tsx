@@ -16,7 +16,7 @@ export function TableEditor(props: { table?: TableDto }) {
   async function save(): Promise<void> {
     const response = await apiClient.table.saveTable(AbortSignal.timeout(5_000), state.toSaveRequest());
     if (state.isNew) {
-      navigate(`/admin/tables/${encodeURIComponent(response.name)}`);
+      navigate(`/admin/tables/${response.name}`);
     } else {
       state.markSaved();
     }

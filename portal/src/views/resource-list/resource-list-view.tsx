@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { Link } from 'react-router';
 import { PaginationView, type PaginationViewProps } from '../common/pagination-view';
+import { ResourceItemMenuView, type ResourceItemAction } from './resource-item-menu-view';
 
 export interface ResourceListColumn<T> {
   id: string;
@@ -13,14 +14,15 @@ export interface ResourceListColumn<T> {
   getValue(item: T): ReactNode;
 }
 
-export interface ResourceListAction<T> {
-  label: ReactNode | ((item: T) => ReactNode);
-  ariaLabel?: string | ((item: T) => string);
+export interface ResourceListPrimaryAction<T> {
+  icon: ReactNode;
+  ariaLabel: string;
   isVisible?(item: T): boolean;
   getTo?(item: T): string;
   onClick?(item: T): void | Promise<void>;
-  danger?: boolean;
 }
+
+export type ResourceListAction<T> = ResourceItemAction<T>;
 
 export interface ResourceListViewProps<T> {
   title: string;
@@ -29,6 +31,7 @@ export interface ResourceListViewProps<T> {
   rows: T[];
   getRowKey(item: T): string;
   emptyMessage: string;
+  primaryAction?: ResourceListPrimaryAction<T>;
   actions?: ResourceListAction<T>[];
   pagination?: PaginationViewProps;
 }
@@ -57,7 +60,8 @@ function ResourceListCellContent<T>(props: { column: ResourceListColumn<T>; row:
 }
 
 export function ResourceListView<T>(props: ResourceListViewProps<T>) {
-  const nColumns = props.columns.length + (props.actions && props.actions.length > 0 ? 1 : 0);
+  const hasActionColumn = Boolean(props.primaryAction || (props.actions && props.actions.length > 0));
+  const nColumns = props.columns.length + (hasActionColumn ? 1 : 0);
 
   return (
     <div className="flex h-full min-h-0 flex-col bg-slate-50">
@@ -84,9 +88,9 @@ export function ResourceListView<T>(props: ResourceListViewProps<T>) {
                         {column.title}
                       </th>
                     ))}
-                    {props.actions && props.actions.length > 0 ? (
-                      <th scope="col" className="w-[18%] px-3 py-3.5 text-right font-semibold text-slate-600">
-                        Action
+                    {hasActionColumn ? (
+                      <th scope="col" className="w-24 px-3 py-3.5 text-right font-semibold text-slate-600">
+                        Actions
                       </th>
                     ) : null}
                   </tr>
@@ -111,37 +115,17 @@ export function ResourceListView<T>(props: ResourceListViewProps<T>) {
                             <ResourceListCellContent column={column} row={row} />
                           </td>
                         ))}
-                        {props.actions && props.actions.length > 0 ? (
+                        {hasActionColumn ? (
                           <td className="px-3 py-3">
                             <div className="flex flex-nowrap justify-end gap-2">
-                              {props.actions.map((action, i) => {
-                                if (action.isVisible && !action.isVisible(row)) {
-                                  return null;
-                                }
-                                const label = typeof action.label === 'function' ? action.label(row) : action.label;
-                                const ariaLabel = typeof action.ariaLabel === 'function' ? action.ariaLabel(row) : action.ariaLabel;
-                                const className = `inline-flex h-8 shrink-0 cursor-pointer items-center justify-center rounded-md border bg-white px-3 text-sm font-medium transition-colors ${
-                                  action.danger
-                                    ? 'border-red-200 text-red-700 hover:bg-red-50 hover:text-red-800'
-                                    : 'border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-slate-900'
-                                }`;
-
-                                return action.getTo ? (
-                                  <Link key={i} aria-label={ariaLabel} className={className} to={action.getTo(row)}>
-                                    {label}
-                                  </Link>
-                                ) : (
-                                  <button
-                                    key={i}
-                                    type="button"
-                                    aria-label={ariaLabel}
-                                    className={className}
-                                    onClick={() => void action.onClick?.(row)}
-                                  >
-                                    {label}
-                                  </button>
-                                );
-                              })}
+                              <ResourceListPrimaryActionView action={props.primaryAction} row={row} />
+                              {props.actions ? (
+                                <ResourceItemMenuView
+                                  item={row}
+                                  actions={props.actions}
+                                  ariaLabel={`More actions for ${props.getRowKey(row)}`}
+                                />
+                              ) : null}
                             </div>
                           </td>
                         ) : null}
@@ -156,5 +140,29 @@ export function ResourceListView<T>(props: ResourceListViewProps<T>) {
         </div>
       </div>
     </div>
+  );
+}
+
+function ResourceListPrimaryActionView<T>(props: { action?: ResourceListPrimaryAction<T>; row: T }) {
+  const action = props.action;
+  if (!action || (action.isVisible && !action.isVisible(props.row))) {
+    return null;
+  }
+
+  const className =
+    'inline-flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-md border border-slate-200 bg-white text-slate-700 transition-colors hover:bg-slate-50 hover:text-slate-900 focus-visible:outline-2 focus-visible:outline-slate-500';
+
+  if (action.getTo) {
+    return (
+      <Link aria-label={action.ariaLabel} className={className} to={action.getTo(props.row)}>
+        {action.icon}
+      </Link>
+    );
+  }
+
+  return (
+    <button type="button" aria-label={action.ariaLabel} className={className} onClick={() => void action.onClick?.(props.row)}>
+      {action.icon}
+    </button>
   );
 }

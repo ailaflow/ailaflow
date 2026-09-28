@@ -89,15 +89,15 @@ export function UserListPage() {
         totalCount: loader.data.totalCount,
         onPageChange: changePage
       }}
+      primaryAction={{
+        icon: <SvgIcon name="pencil" className="h-4 w-4" />,
+        ariaLabel: 'Edit user',
+        getTo: user => `/admin/users/${user.name}`
+      }}
       actions={[
         {
           label: 'Telegram',
-          getTo: user => `/admin/users/${encodeURIComponent(user.name)}/telegram`
-        },
-        {
-          label: <SvgIcon name="pencil" className="h-4 w-4" />,
-          ariaLabel: user => `Edit user ${user.name}`,
-          getTo: user => `/admin/users/${encodeURIComponent(user.name)}`
+          getTo: user => `/admin/users/${user.name}/telegram`
         }
       ]}
     />

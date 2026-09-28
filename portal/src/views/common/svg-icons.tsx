@@ -93,6 +93,15 @@ const SVG_ICON_DEFINITIONS = {
       }
     ]
   },
+  moreVertical: {
+    viewBox: '0 0 20 20',
+    fill: 'currentColor',
+    paths: [
+      {
+        d: 'M10 3.5A1.5 1.5 0 1 1 10 6.5A1.5 1.5 0 0 1 10 3.5ZM10 8.5A1.5 1.5 0 1 1 10 11.5A1.5 1.5 0 0 1 10 8.5ZM10 13.5A1.5 1.5 0 1 1 10 16.5A1.5 1.5 0 0 1 10 13.5Z'
+      }
+    ]
+  },
   chevronUp: {
     viewBox: '0 0 20 20',
     fill: 'none',

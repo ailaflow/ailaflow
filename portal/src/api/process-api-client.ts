@@ -34,11 +34,11 @@ export class ProcessApiClient {
   }
 
   public getProcess(signal: AbortSignal, name: string): Promise<GetProcessResponse> {
-    return this.client.json(signal, 'GET', `/api/processes/${encodeURIComponent(name)}`);
+    return this.client.json(signal, 'GET', `/api/processes/${name}`);
   }
 
   public deleteProcess(signal: AbortSignal, name: string): Promise<DeleteProcessResponse> {
-    return this.client.json(signal, 'DELETE', `/api/processes/${encodeURIComponent(name)}`);
+    return this.client.json(signal, 'DELETE', `/api/processes/${name}`);
   }
 
   public exportProcess(signal: AbortSignal, name: string): Promise<ExportProcessResponse> {
@@ -46,7 +46,7 @@ export class ProcessApiClient {
   }
 
   public getProcessCronJobs(signal: AbortSignal, processName: string): Promise<GetProcessCronJobsResponse> {
-    return this.client.json(signal, 'GET', `/api/processes/${encodeURIComponent(processName)}/cron-jobs`);
+    return this.client.json(signal, 'GET', `/api/processes/${processName}/cron-jobs`);
   }
 
   public saveProcessCronJob(signal: AbortSignal, request: SaveProcessCronJobRequest): Promise<SaveProcessCronJobResponse> {
@@ -54,10 +54,10 @@ export class ProcessApiClient {
   }
 
   public deleteProcessCronJob(signal: AbortSignal, id: string): Promise<DeleteProcessCronJobResponse> {
-    return this.client.json(signal, 'DELETE', `/api/process-cron-jobs/${encodeURIComponent(id)}`);
+    return this.client.json(signal, 'DELETE', `/api/process-cron-jobs/${id}`);
   }
 
   public testProcess(signal: AbortSignal, listener: HttpClientSseListener<TestProcessUpdate>, name: string, request: TestProcessRequest) {
-    return this.client.sse(signal, listener, 'POST', `/api/processes/${encodeURIComponent(name)}/test`, request);
+    return this.client.sse(signal, listener, 'POST', `/api/processes/${name}/test`, request);
   }
 }

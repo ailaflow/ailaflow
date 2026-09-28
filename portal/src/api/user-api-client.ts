@@ -29,7 +29,7 @@ export class UserApiClient {
   }
 
   public getUser(signal: AbortSignal, name: string): Promise<GetUserResponse> {
-    return this.client.json(signal, 'GET', `/api/users/${encodeURIComponent(name)}`);
+    return this.client.json(signal, 'GET', `/api/users/${name}`);
   }
 
   public saveUser(signal: AbortSignal, request: SaveUserRequest): Promise<SaveUserResponse> {
@@ -37,14 +37,14 @@ export class UserApiClient {
   }
 
   public getTelegramConfiguration(signal: AbortSignal, userName: string): Promise<GetTelegramConfigurationResponse> {
-    return this.client.json(signal, 'GET', `/api/users/${encodeURIComponent(userName)}/telegram`);
+    return this.client.json(signal, 'GET', `/api/users/${userName}/telegram`);
   }
 
   public saveTelegramBot(signal: AbortSignal, userName: string, request: SaveTelegramBotRequest): Promise<SaveTelegramBotResponse> {
-    return this.client.json(signal, 'POST', `/api/users/${encodeURIComponent(userName)}/telegram`, request);
+    return this.client.json(signal, 'POST', `/api/users/${userName}/telegram`, request);
   }
 
   public deleteTelegramBot(signal: AbortSignal, userName: string, channelName: string): Promise<DeleteTelegramBotResponse> {
-    return this.client.json(signal, 'DELETE', `/api/users/${encodeURIComponent(userName)}/telegram/${encodeURIComponent(channelName)}`);
+    return this.client.json(signal, 'DELETE', `/api/users/${userName}/telegram/${encodeURIComponent(channelName)}`);
   }
 }
