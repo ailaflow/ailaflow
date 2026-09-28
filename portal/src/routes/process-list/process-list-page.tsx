@@ -110,26 +110,26 @@ export function ProcessListPage() {
         {
           id: 'description',
           title: 'Description',
-          width: '20%',
+          width: '36%',
           wrap: true,
           getValue: process => process.description
         },
         {
           id: 'userAccessExpression',
           title: 'User access',
-          width: '16%',
+          width: '10%',
           getValue: process => process.userAccessExpression.trim() || 'all'
         },
         {
           id: 'sandboxes',
           title: 'Sandboxes',
-          width: '10%',
+          width: '5%',
           getValue: process => process.sandboxNames.map(name => `+${name}`).join(', ')
         },
         {
           id: 'characteristic',
           title: 'Characteristic',
-          width: '10%',
+          width: '5%',
           getValue: process =>
             [
               process.nTasksSteps > 0 ? 'task' : null,

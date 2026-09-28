@@ -8,6 +8,7 @@ import { ServerPaths } from '../../core/server-paths';
 import { AgentToolSetProviderFactory } from '../../chat-session/agent-tool-set-provider-factory';
 import { ProcessExecutionGlobalState } from '../process-execution-global-state';
 import { Logger } from '../../core/logger';
+import { ToolCall } from '@aibindkit/core';
 
 const AGENT_TIMEOUT_MS = 10 * 60_000;
 
@@ -61,7 +62,7 @@ export class AgentSessionRunner {
               }
               for (const call of message.tool_calls ?? []) {
                 if (call.type === 'function') {
-                  logger.info(`Agent tool: ${call.function.name}`);
+                  logger.info(formatToolCall(call));
                 }
               }
             } else if (message.role === 'tool' && typeof message.content === 'string') {
@@ -90,6 +91,14 @@ export class AgentSessionRunner {
     }
     logger.info(`Agent "${step.name}" finished`);
   }
+}
+
+function formatToolCall(call: ToolCall): string {
+  let m = `Agent tool: ${call.function.name}`;
+  if (call.type === 'function') {
+    m += ` ${trim(JSON.stringify(call.function.arguments), 256)}`;
+  }
+  return m;
 }
 
 function trim(value: string, maxLength: number): string {
