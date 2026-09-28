@@ -9,7 +9,6 @@ export interface ResourceItemAction<T> {
   isVisible?(item: T): boolean;
   getTo?(item: T): string;
   onClick?(item: T): void | Promise<void>;
-  danger?: boolean;
 }
 
 export interface ResourceItemMenuViewProps<T> {
@@ -140,11 +139,8 @@ export function ResourceItemMenuView<T>(props: ResourceItemMenuViewProps<T>) {
       {visibleActions.map((action, index) => {
         const label = typeof action.label === 'function' ? action.label(props.item) : action.label;
         const ariaLabel = typeof action.ariaLabel === 'function' ? action.ariaLabel(props.item) : action.ariaLabel;
-        const className = `flex w-full cursor-pointer items-center rounded px-3 py-2 text-left text-sm outline-none transition-colors ${
-          action.danger
-            ? 'text-red-700 hover:bg-red-50 focus-visible:bg-red-50'
-            : 'text-slate-700 hover:bg-slate-50 focus-visible:bg-slate-100'
-        }`;
+        const className =
+          'flex w-full cursor-pointer items-center rounded px-3 py-2 text-left text-sm text-slate-700 outline-none transition-colors hover:bg-slate-50 focus-visible:bg-slate-100';
 
         if (action.getTo) {
           return (

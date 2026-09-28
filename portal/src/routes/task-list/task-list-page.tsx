@@ -150,7 +150,6 @@ export function TaskListPage() {
         {
           label: 'Delete',
           ariaLabel: task => `Delete task ${task.title}`,
-          danger: true,
           onClick: task => deleteTask(task.id, task.title)
         }
       ]}

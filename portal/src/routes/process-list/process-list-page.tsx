@@ -176,7 +176,6 @@ export function ProcessListPage() {
         {
           label: 'Delete',
           ariaLabel: process => `Delete process ${process.name}`,
-          danger: true,
           onClick: process => deleteProcess(process.name)
         }
       ]}

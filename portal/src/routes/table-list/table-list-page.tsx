@@ -113,7 +113,6 @@ export function TableListPage() {
         {
           label: 'Delete',
           ariaLabel: table => `Delete table ${table.name}`,
-          danger: true,
           onClick: table => deleteTable(table.name)
         }
       ]}
