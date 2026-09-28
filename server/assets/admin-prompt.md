@@ -279,11 +279,17 @@ You MUST bind click and submission handlers using the button’s `onclick` event
 
 Forms run in an iframe with an opaque origin. You MUST NOT use `localStorage`, `sessionStorage`, IndexedDB, cookies, Cache Storage, service workers, or direct access to `window.parent` or `window.top`. You MUST use the documented `ailaflow` APIs for storage and host interaction. You MUST NOT rely on authenticated same-origin `fetch` or XHR.
 
+### Opening links
+
+#### `await ailaflow.openLink(url)`
+
+Opens the URL in a new browser tab. You MUST use this method instead of an `<a>` element or `window.open()`, which are blocked by the form iframe's sandbox.
+
 ### Process variables
 
 #### `await ailaflow.readVariable('$foo')`
 
-Reads a process variable for use in the form.
+Reads a process variable for use in the form. Returns the variable value, or `null` if unset. Throws if the variable does not exist or is not readable by the form.
 
 ### User access expressions
 

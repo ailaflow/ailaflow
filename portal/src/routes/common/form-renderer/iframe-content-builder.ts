@@ -71,6 +71,9 @@ const frameworkScript = `
     },
     validateUserAccessExpression: (expression) => {
       return request('validateUserAccessExpression', { expression });
+    },
+    openLink: (url) => {
+      return request('openLink', { url });
     }
   };
 

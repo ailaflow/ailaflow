@@ -99,6 +99,12 @@ export function IframeForm({ form, adapter, isPreview }: IframeFormProps) {
       return UserAccessExpressionParser.validate(expression);
     };
 
+    const openLink = async (payload: Record<string, unknown>) => {
+      const url = payload.url as string;
+      clickLink(url);
+      return {};
+    };
+
     const onMessage = (event: MessageEvent) => {
       if (event.source !== iframe.contentWindow) {
         return;
@@ -125,6 +131,8 @@ export function IframeForm({ form, adapter, isPreview }: IframeFormProps) {
             return collectFormError(message.payload);
           case 'validateUserAccessExpression':
             return validateUserAccessExpression(message.payload);
+          case 'openLink':
+            return openLink(message.payload);
           default:
             throw new Error('Unknown message type');
         }
@@ -143,4 +151,13 @@ function assertObject<T extends Record<string, unknown>>(v: unknown): T {
     throw new Error('Value must be an object');
   }
   return v as T;
+}
+
+function clickLink(url: string) {
+  const a = document.createElement('a');
+  a.href = url;
+  a.target = '_blank';
+  a.rel = 'noopener noreferrer';
+  a.click();
+  return {};
 }
