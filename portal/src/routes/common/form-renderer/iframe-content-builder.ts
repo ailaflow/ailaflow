@@ -68,6 +68,9 @@ const frameworkScript = `
     },
     getTransientParams: () => {
       return request('getTransientParams', {});
+    },
+    validateUserAccessExpression: (expression) => {
+      return request('validateUserAccessExpression', { expression });
     }
   };
 

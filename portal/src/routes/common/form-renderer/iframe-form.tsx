@@ -1,4 +1,4 @@
-import { FormDefinition, ProcessExecutionVariableValues } from '@ailaflow/shared';
+import { FormDefinition, ProcessExecutionVariableValues, UserAccessExpressionParser } from '@ailaflow/shared';
 import { useEffect, useMemo, useState } from 'react';
 import { IframeContentBuilder } from './iframe-content-builder';
 import { IframeFormView } from '../../../views/form-renderer/iframe-form-view';
@@ -94,6 +94,11 @@ export function IframeForm({ form, adapter, isPreview }: IframeFormProps) {
       return {};
     };
 
+    const validateUserAccessExpression = async (payload: Record<string, unknown>) => {
+      const expression = payload.expression as string;
+      return UserAccessExpressionParser.validate(expression);
+    };
+
     const onMessage = (event: MessageEvent) => {
       if (event.source !== iframe.contentWindow) {
         return;
@@ -118,6 +123,8 @@ export function IframeForm({ form, adapter, isPreview }: IframeFormProps) {
             return getTransientParams();
           case 'collectFormError':
             return collectFormError(message.payload);
+          case 'validateUserAccessExpression':
+            return validateUserAccessExpression(message.payload);
           default:
             throw new Error('Unknown message type');
         }

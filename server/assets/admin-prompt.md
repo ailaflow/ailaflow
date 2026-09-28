@@ -259,9 +259,9 @@ Returns `true` if the user exists and `false` otherwise. The `@` prefix is optio
 
 Returns `true` if the current process is running in test mode and `false` otherwise.
 
-#### `await ailaflow.resolveUserAccess()`
+#### `await ailaflow.resolveProcessUserAccess()`
 
-Resolves the process's user access and returns matching user names, such as `['@robert', '@aila']`. You MAY use this method to determine which users to target in a notification or task step. Before using the list as a user access expression, you MUST convert it, for example with `(await ailaflow.resolveUserAccess()).join(' or ')`.
+Resolves the process's user access and returns matching user names, such as `['@robert', '@aila']`. You MAY use this method to determine which users to target in a notification or task step. Before using the list as a user access expression, you MUST convert it, for example with `(await ailaflow.resolveProcessUserAccess()).join(' or ')`.
 
 ## Forms
 
@@ -284,6 +284,12 @@ Forms run in an iframe with an opaque origin. You MUST NOT use `localStorage`, `
 #### `await ailaflow.readVariable('$foo')`
 
 Reads a process variable for use in the form.
+
+### User access expressions
+
+#### `await ailaflow.validateUserAccessExpression(expression)`
+
+Validates the syntax of a user access expression. Returns `null` when the expression is valid, or a `string` describing the syntax error otherwise. It does not check whether referenced users exist or whether the expression matches any users.
 
 ### Transient parameters
 

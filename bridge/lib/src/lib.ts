@@ -210,8 +210,8 @@ export async function getStartedBy(rpcConfig?: RpcConfig): Promise<string> {
  * @returns The names of users with access to the process, each with the '@' prefix.
  * @throws If the RPC call fails.
  */
-export async function resolveUserAccess(rpcConfig?: RpcConfig): Promise<string[]> {
-  const userNames = await rpc<string[]>('resolveUserAccess', {}, rpcConfig);
+export async function resolveProcessUserAccess(rpcConfig?: RpcConfig): Promise<string[]> {
+  const userNames = await rpc<string[]>('resolveProcessUserAccess', {}, rpcConfig);
   return userNames.map(name => '@' + name);
 }
 
