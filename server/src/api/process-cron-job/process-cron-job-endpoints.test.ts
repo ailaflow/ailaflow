@@ -102,7 +102,7 @@ function createProcessManager(): ProcessManager {
     { x: { type: 'integer' } },
     0,
     0,
-    false
+    0
   );
   const repository = {
     setup: async () => undefined,

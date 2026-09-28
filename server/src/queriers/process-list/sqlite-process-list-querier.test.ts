@@ -15,9 +15,9 @@ test('queries a name-ordered page of processes', async () => {
   const querier = new SqliteProcessListQuerier(dbs);
 
   await processRepository.setup(signal);
-  insertProcess(db, 'charlie', true, ProcessDisplay.HIDDEN, ProcessExecutionMode.START_FORM, 2, 128, '<svg></svg>');
-  insertProcess(db, 'alpha', false, ProcessDisplay.FEATURED);
-  insertProcess(db, 'bravo', false, ProcessDisplay.LISTED);
+  insertProcess(db, 'charlie', 3, ProcessDisplay.HIDDEN, ProcessExecutionMode.START_FORM, 2, 128, '<svg></svg>');
+  insertProcess(db, 'alpha', 0, ProcessDisplay.FEATURED);
+  insertProcess(db, 'bravo', 0, ProcessDisplay.LISTED);
 
   assert.deepEqual(await querier.query(signal, 2, 2, ProcessDisplay.HIDDEN), {
     processes: [
@@ -28,7 +28,7 @@ test('queries a name-ordered page of processes', async () => {
         display: ProcessDisplay.HIDDEN,
         executionMode: ProcessExecutionMode.START_FORM,
         icon: '<svg></svg>',
-        isPausable: true,
+        nTasksSteps: 3,
         nReturnSteps: 2,
         definitionSize: 128
       }
@@ -55,7 +55,7 @@ test('filters process names before counting and paginating, with the same matchi
   try {
     await repository.setup(signal);
     for (const name of ['review-charlie', 'other', 'review-alpha', 'review-bravo', 'Review-uppercase']) {
-      insertProcess(db, name, false, ProcessDisplay.LISTED);
+      insertProcess(db, name, 0, ProcessDisplay.LISTED);
     }
 
     const firstPage = await querier.query(signal, 1, 2, ProcessDisplay.HIDDEN, 'review');
@@ -93,7 +93,7 @@ test('treats SQL wildcards and quotes as literal process search text', async () 
   try {
     await repository.setup(signal);
     for (const name of ['percent%process', 'under_score', "quote'process", 'ordinary']) {
-      insertProcess(db, name, false, ProcessDisplay.LISTED);
+      insertProcess(db, name, 0, ProcessDisplay.LISTED);
     }
     for (const [search, expectedName] of [
       ['%', 'percent%process'],
@@ -116,7 +116,7 @@ test('treats SQL wildcards and quotes as literal process search text', async () 
 function insertProcess(
   db: DatabaseSync,
   name: string,
-  isPausable: boolean,
+  nTasksSteps: number,
   display: ProcessDisplay,
   executionMode = ProcessExecutionMode.AI_TOOL_OR_START_FORM,
   nReturnSteps = 0,
@@ -134,7 +134,7 @@ function insertProcess(
       icon,
       nSteps,
       nReturnSteps,
-      isPausable,
+      nTasksSteps,
       startVariableSchemas,
       definition,
       definitionSize,
@@ -142,5 +142,5 @@ function insertProcess(
     )
     VALUES (?, ?, '', ?, ?, ?, 0, ?, ?, '{}', '{}', ?, 'hash')
   `
-  ).run(name, `${name} description`, display, executionMode, icon, nReturnSteps, isPausable ? 1 : 0, definitionSize);
+  ).run(name, `${name} description`, display, executionMode, icon, nReturnSteps, nTasksSteps, definitionSize);
 }

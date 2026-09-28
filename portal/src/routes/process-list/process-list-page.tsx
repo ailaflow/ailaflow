@@ -121,12 +121,12 @@ export function ProcessListPage() {
           getValue: process => process.userAccessExpression.trim() || 'all'
         },
         {
-          id: 'attributes',
-          title: 'Attributes',
+          id: 'characteristic',
+          title: 'Characteristic',
           width: '10%',
           getValue: process =>
             [
-              process.isPausable ? 'pausable' : null,
+              process.nTasksSteps > 0 ? 'task' : null,
               process.executionMode === ProcessExecutionMode.START_FORM ? 'only form' : null,
               process.nReturnSteps > 0 ? 'return' : null
             ]

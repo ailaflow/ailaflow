@@ -49,7 +49,7 @@ function createAgent(properties: Partial<AgentStep['properties']> = {}): AgentSt
   };
 }
 
-function createProcess(name: string, sequence: ProcessDefinition['sequence'] = [], isPausable = false): Process {
+function createProcess(name: string, sequence: ProcessDefinition['sequence'] = [], nTasksSteps = 0): Process {
   return new Process(
     name,
     `${name} description`,
@@ -72,7 +72,7 @@ function createProcess(name: string, sequence: ProcessDefinition['sequence'] = [
     { prompt: { type: 'string' } },
     sequence.length,
     sequence.filter(step => step.type === 'return').length,
-    isPausable
+    nTasksSteps
   );
 }
 
@@ -105,7 +105,7 @@ function createHarness(
           display: process.display,
           executionMode: process.executionMode,
           icon: process.icon,
-          isPausable: process.isPausable,
+          nTasksSteps: process.nTasksSteps,
           nReturnSteps: process.nReturnSteps,
           definitionSize: JSON.stringify(process.definition).length
         }))
@@ -269,7 +269,7 @@ for (const allowedVariableNames of [[], ['answer']]) {
 }
 
 test('process tool discovery reads every page, filters selected and pausable processes, and gates terminal access', async () => {
-  const processes = Array.from({ length: 105 }, (_, index) => createProcess(`process_${index}`, [], index === 0));
+  const processes = Array.from({ length: 105 }, (_, index) => createProcess(`process_${index}`, [], index === 0 ? 1 : 0));
   const harness = createHarness({ processes });
   const parent = createProcess('parent');
   const selected = await harness.tools.create(
@@ -360,7 +360,7 @@ test('process tools reject the current process and exclude all ancestors from se
 });
 
 test('pausable processes and invalid child inputs are rejected before execution', async () => {
-  const paused = createProcess('paused', [], true);
+  const paused = createProcess('paused', [], 1);
   const child = createProcess('child');
   const harness = createHarness({ processes: [paused, child] });
   await assert.rejects(harness.executeProcessTool(paused, { prompt: '' }), /pausable/);
@@ -502,7 +502,7 @@ test('a process changed to pausable after discovery cannot be launched', async (
     complete: async (_, __, messages) => {
       turns++;
       if (turns === 1) {
-        processes[0].isPausable = true;
+        processes[0].nTasksSteps = 1;
         return toolCall('executeProcess_child', { prompt: '' });
       }
       assert.match(String(messages.at(-1)?.content), /pausable/);

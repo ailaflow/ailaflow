@@ -23,7 +23,7 @@ export class GetProcessesTool extends ZodTool<Arg> {
         processes: response.processes.map(p => ({
           name: p.name,
           description: p.description,
-          isPausable: p.isPausable,
+          nTasksSteps: p.nTasksSteps,
           userAccessExpression: p.userAccessExpression,
           canStartWithAiTool: p.executionMode === ProcessExecutionMode.AI_TOOL_OR_START_FORM
         })),

@@ -90,7 +90,7 @@ function insertProcess(
       icon,
       nSteps,
       nReturnSteps,
-      isPausable,
+      nTasksSteps,
       startVariableSchemas,
       definition,
       definitionSize,

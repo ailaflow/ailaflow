@@ -18,7 +18,7 @@ const processLiteDtoSchema = z.object({
   display: z.enum(ProcessDisplay),
   executionMode: z.enum(ProcessExecutionMode),
   icon: z.string().nullable(),
-  isPausable: z.boolean(),
+  nTasksSteps: z.number(),
   nReturnSteps: z.number(),
   definitionSize: z.number()
 });

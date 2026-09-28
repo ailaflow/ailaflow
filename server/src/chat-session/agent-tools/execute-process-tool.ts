@@ -27,7 +27,7 @@ export class ExecuteProcessTool extends ZodTool<Record<string, unknown>> {
 
   protected async handle(signal: AbortSignal, _: ToolContext, input: Record<string, unknown>): Promise<ZodToolExecutionResult> {
     const execution = this.executionStore.get(this.executionId);
-    if (this.process.isPausable) {
+    if (this.process.nTasksSteps > 0) {
       throw new Error(`Process "${this.process.name}" is pausable and cannot be run by an agent`);
     }
 

@@ -80,6 +80,6 @@ function createProcess(hash: string, script: ScriptDefinition): Process {
     null,
     1,
     0,
-    false
+    0
   );
 }

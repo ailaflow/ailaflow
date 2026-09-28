@@ -80,7 +80,7 @@ export class AgentToolSetProviderFactory {
           throw new Error(`Process "${p.name}" was not found in the database`);
         }
         // TODO: Filter allowed non-pausable processes in the database instead of loading every page.
-        if (process.isPausable) {
+        if (process.nTasksSteps > 0) {
           continue;
         }
         tools.push(new ExecuteProcessTool(executionId, process, this.executionStore));
