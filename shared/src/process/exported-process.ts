@@ -6,7 +6,8 @@ export const exportedProcessSchema = z.object({
   description: z.string(),
   icon: z.string().nullable(),
   definition: processDefinitionSchema,
-  hash: z.string()
+  hash: z.string(),
+  userAccess: z.enum(['all', 'installer']).optional()
 });
 
 export type ExportedProcess = z.infer<typeof exportedProcessSchema>;

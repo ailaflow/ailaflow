@@ -12,6 +12,7 @@ import { ProcessManager } from '../process/process-manager';
 import { ProcessDefinitionUpgrader } from '../process/process-definition-upgrader';
 import { PROCESS_VERSION, ProcessDisplay, ProcessExecutionMode } from '@ailaflow/shared';
 import { ProcessExecutionTrigger } from './process-execution-context';
+import { ResourceAccessRepository } from '../repositories/resource-access/resource-access-repository';
 
 test('process execution resumer continues when the process hash changed', async () => {
   const signal = new AbortController().signal;
@@ -34,6 +35,7 @@ test('process execution resumer continues when the process hash changed', async 
         delete: async () => false,
         tryGetByName: async () => createTestProcess('new_hash')
       } as ProcessRepository,
+      {} as ResourceAccessRepository,
       new ProcessDefinitionUpgrader()
     ),
     {

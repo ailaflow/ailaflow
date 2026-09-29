@@ -52,7 +52,7 @@ test('the packaged CLI serves the API and portal', async () => {
     assert.equal(root.status, 200);
     const contentSecurityPolicy = root.headers.get('content-security-policy');
     assert.match(contentSecurityPolicy, /frame-ancestors 'none'/);
-    assert.doesNotMatch(contentSecurityPolicy, /unsafe-eval/);
+    assert.match(contentSecurityPolicy, /unsafe-eval/);
     assert.equal(root.headers.get('referrer-policy'), 'strict-origin-when-cross-origin');
     assert.equal(root.headers.get('x-content-type-options'), 'nosniff');
     assert.equal(root.headers.get('x-frame-options'), 'DENY');

@@ -238,6 +238,8 @@ import { EncryptSecretRpcHandler } from './process-executor/rpc-handlers/encrypt
 import { DecryptSecretRpcHandler } from './process-executor/rpc-handlers/decrypt-secret-rpc-handler';
 import { ExecuteProcessRpcHandler } from './process-executor/rpc-handlers/execute-process-rpc-handler';
 import { ExportProcessEndpoint } from './api/process/export-process-endpoint';
+import { ProcessDownloader } from './install/process-downloader';
+import { ProcessValidatorsFactory } from './process/process-validators-factory';
 
 const DB_TYPE = 'sqlite';
 
@@ -381,8 +383,9 @@ export async function bootstrap(registry: CleanupRegistry, signal: AbortSignal) 
 
   const processExecutionPersister = new ProcessExecutionPersister(persistedExecutionRepository);
   const processDefinitionUpgrader = new ProcessDefinitionUpgrader();
-  const processManager = new ProcessManager(processRepository, processDefinitionUpgrader);
+  const processManager = new ProcessManager(processRepository, resourceAccessRepository, processDefinitionUpgrader);
   const userProcessProvider = new UserProcessProvider(myProcessAccessQuerier, processManager);
+  const processValidatorsFactory = new ProcessValidatorsFactory(sandboxListQuerier);
 
   const tableSchemaManager = new TableSchemaManager(tableSchemaRepository);
   const tableManager = new TableManager(tableRepository, tableDataRepository, tableSchemaManager, tableDataListQuerier);
@@ -557,6 +560,7 @@ export async function bootstrap(registry: CleanupRegistry, signal: AbortSignal) 
 
   const versionProvider = new VersionProvider(serverPaths);
   const licenseManager = new LicenseManager(new LicenseValidator(), kvConfigurationManager, userRepository, versionProvider);
+  const processDownloader = new ProcessDownloader(versionProvider);
   const installer = new Installer(
     cipherKeyStore,
     cipher,
@@ -564,7 +568,10 @@ export async function bootstrap(registry: CleanupRegistry, signal: AbortSignal) 
     userAttributesRepository,
     sandboxRepository,
     notificationRepository,
-    licenseManager
+    processManager,
+    licenseManager,
+    processValidatorsFactory,
+    processDownloader
   );
   const loginThrottler = new LoginThrottler();
 
@@ -619,7 +626,7 @@ export async function bootstrap(registry: CleanupRegistry, signal: AbortSignal) 
     new GetProcessEndpoint(processManager),
     new ExportProcessEndpoint(processManager),
     new DeleteProcessEndpoint(processManager),
-    new SaveProcessEndpoint(processRepository, processManager, resourceAccessRepository, sandboxListQuerier),
+    new SaveProcessEndpoint(processManager, processValidatorsFactory),
     new TestProcessEndpoint(processManager, processExecutor, processExecutionResumeListenerStore),
     new GetProcessCronJobsEndpoint(processManager, processCronJobRepository),
     new SaveProcessCronJobEndpoint(processManager, processCronJobRepository),

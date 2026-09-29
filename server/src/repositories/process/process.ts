@@ -1,4 +1,5 @@
 import {
+  ExportedProcess,
   JsonSchema,
   ProcessDefinition,
   ProcessDisplay,
@@ -46,13 +47,39 @@ function extractStartVariableSchemas(definition: ProcessDefinition): Record<stri
 }
 
 export class Process {
+  public static import(
+    e: ExportedProcess,
+    userName: string,
+    rootValidator: ProcessRootValidator,
+    stepValidator: ProcessStepValidator
+  ): Process {
+    validateName(e.name);
+    validateDescription(e.description);
+
+    const result = ProcessDefinitionWalker.validateAndScan(e.definition, rootValidator, stepValidator);
+    return new Process(
+      e.name,
+      e.description,
+      e.userAccess === 'all' ? '' : `@${userName}`,
+      e.userAccess === 'all' ? ProcessDisplay.FEATURED : ProcessDisplay.LISTED,
+      ProcessExecutionMode.AI_TOOL_OR_START_FORM,
+      e.icon,
+      e.definition,
+      e.hash,
+      extractStartVariableSchemas(e.definition),
+      result.nSteps,
+      result.nReturnSteps,
+      result.nTasksSteps,
+      result.sandboxNames
+    );
+  }
+
   public static create(data: SaveProcessRequest, rootValidator: ProcessRootValidator, stepValidator: ProcessStepValidator): Process {
     validateName(data.name);
     validateDescription(data.description);
     validateUserAccessExpression(data.userAccessExpression);
 
     const result = ProcessDefinitionWalker.validateAndScan(data.definition, rootValidator, stepValidator);
-    const startVariableSchemas = extractStartVariableSchemas(data.definition);
 
     return new Process(
       data.name,
@@ -63,7 +90,7 @@ export class Process {
       data.icon,
       data.definition,
       data.hash,
-      startVariableSchemas,
+      extractStartVariableSchemas(data.definition),
       result.nSteps,
       result.nReturnSteps,
       result.nTasksSteps,

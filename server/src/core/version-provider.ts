@@ -16,4 +16,28 @@ export class VersionProvider {
     }
     return this.version;
   }
+
+  public meetsMin(minimumVersion: string): boolean {
+    const currentParts = parseVersion(this.get());
+    const minimumParts = parseVersion(minimumVersion);
+    for (let i = 0; i < 3; i++) {
+      const current = currentParts[i];
+      const minimum = minimumParts[i];
+      if (current > minimum) {
+        return true;
+      }
+      if (current < minimum) {
+        return false;
+      }
+    }
+    return true;
+  }
+}
+
+function parseVersion(v: string): number[] {
+  const parts = v.split('.').map(Number);
+  if (parts.length !== 3) {
+    throw new Error(`Invalid version format: ${v}`);
+  }
+  return parts;
 }

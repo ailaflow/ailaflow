@@ -20,6 +20,11 @@ export class HttpClient {
     return (await response.json()) as T;
   }
 
+  public async blob(signal: AbortSignal, method: string, path: string, body?: object, headers?: Record<string, string>): Promise<Blob> {
+    const response = await this.request(signal, method, path, body, headers);
+    return await response.blob();
+  }
+
   public async sse<Update extends object>(
     signal: AbortSignal,
     method: string,
