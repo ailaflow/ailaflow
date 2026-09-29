@@ -1,0 +1,75 @@
+name: Publish CLI
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - cli/package.json
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: publish-cli
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+          package-manager-cache: false
+
+      - name: Check whether version is already published
+        id: npm-version
+        working-directory: cli
+        run: |
+          package_name=$(node --print "require('./package.json').name")
+          package_version=$(node --print "require('./package.json').version")
+
+          if npm view "${package_name}@${package_version}" version >/dev/null 2>&1; then
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+            echo "${package_name}@${package_version} already exists; skipping publish."
+          else
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+            echo "${package_name}@${package_version} is new; publishing it."
+          fi
+
+      - name: Set up pnpm
+        if: steps.npm-version.outputs.publish == 'true'
+        uses: pnpm/action-setup@v6
+        with:
+          version: 9.8.0
+
+      - name: Install dependencies
+        if: steps.npm-version.outputs.publish == 'true'
+        run: pnpm install --frozen-lockfile
+
+      - name: Type-check
+        if: steps.npm-version.outputs.publish == 'true'
+        run: pnpm typecheck
+
+      - name: Build
+        if: steps.npm-version.outputs.publish == 'true'
+        run: pnpm build
+
+      - name: Test
+        if: steps.npm-version.outputs.publish == 'true'
+        run: pnpm test
+
+      - name: Publish
+        if: steps.npm-version.outputs.publish == 'true'
+        working-directory: cli
+        run: npm publish

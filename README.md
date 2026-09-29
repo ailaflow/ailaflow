@@ -44,6 +44,13 @@ and follow the installation steps.
 
 After logging in, open **Configuration**. AilaFlow will show you what still needs to be configured, including AI access and the public URL used to make your workspace accessible externally.
 
+## Chat integrations
+
+Connect your preferred chat platform to AilaFlow, then send requests and run the processes available to you without leaving the conversation. We currently support:
+
+- Telegram
+- Slack
+
 ## License
 
 AilaFlow is distributed under the [AilaFlow Fair-Code License 1.0](./LICENSE.md).
