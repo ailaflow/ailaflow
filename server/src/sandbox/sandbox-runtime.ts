@@ -30,8 +30,7 @@ export class SandboxRuntime {
     const logger = new Logger(SandboxRuntime.name);
 
     const id = `ailaflow_sandbox_${name}`;
-    const buildArgs = {
-      ...secrets,
+    const buildArgs: Record<string, string> = {
       SANDBOX_NAME: name
     };
 
@@ -46,9 +45,11 @@ export class SandboxRuntime {
     await docker.createNetwork(signal, id);
     logger.log(`Created network for sandbox +${name}`);
 
+    const envOptions: ['--env', string][] = Object.entries(secrets).map(([key, value]) => ['--env', `${key}=${value}`]);
     const containerId = await docker.run(signal, id, BRIDGE_PORT, [
       ['--name', id],
       ['--network', id],
+      ...envOptions,
       ['--env', `BRIDGE_TOKEN=${token}`],
       ['-v', `${hostPaths.appFolderAbsolutePath}:/app`],
       ['-v', `${hostPaths.dataFolderAbsolutePath}:/data`]
