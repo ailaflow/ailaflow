@@ -1,8 +1,9 @@
 {
   "name": "@ailaflow/server",
-  "version": "1.0.0",
+  "version": "0.0.0",
   "private": true,
   "type": "commonjs",
+  "license": "SEE LICENSE IN LICENSE.md",
   "scripts": {
     "prettier": "prettier --check ./src",
     "prettier:fix": "prettier --write ./src",

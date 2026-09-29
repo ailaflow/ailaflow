@@ -1,16 +1,18 @@
 {
   "name": "@ailaflow/cli",
   "version": "0.0.1",
+  "description": "AilaFlow is a low-code platform for automating business processes across people, AI agents, and connected systems. Build workflows visually or with AI, coordinate tasks, approvals, and handoffs, and connect your tools with JavaScript.",
   "private": false,
   "type": "module",
-  "license": "UNLICENSED",
+  "license": "SEE LICENSE IN LICENSE.md",
+  "homepage": "https://ailaflow.com",
   "bin": {
     "ailaflow": "./dist/cli.mjs"
   },
   "files": [
     "dist",
     "README.md",
-    "LICENSE"
+    "LICENSE.md"
   ],
   "engines": {
     "node": ">=22"
@@ -21,7 +23,7 @@
   "scripts": {
     "dev": "node scripts/dev.mjs",
     "start": "node ./dist/cli.mjs",
-    "build": "node scripts/build.mjs",
+    "build": "cp ../LICENSE.md ./ && cp ../README.md ./ && node scripts/build.mjs",
     "build:stats": "pnpm build && find dist -type f -exec du -h {} + | sort -h",
     "prepack": "pnpm build",
     "prettier": "prettier --check ./src ./scripts webpack.config.mjs",
@@ -42,5 +44,11 @@
     "typescript": "^6.0.3",
     "webpack": "^5.105.0",
     "webpack-cli": "^7.0.0"
-  }
+  },
+  "keywords": [
+    "workflow",
+    "automation",
+    "agent",
+    "ai"
+  ]
 }

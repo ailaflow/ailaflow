@@ -231,7 +231,7 @@ import { SlackUserListQuerier } from './queriers/slack-user-list/slack-user-list
 import { TableSchemaRepository } from './repositories/table/table-schema-repository';
 import { Notifier } from './notification/notifier';
 import { IsTestRpcHandler } from './process-executor/rpc-handlers/is-test-rpc-handler';
-import { ResolveUserAccessRpcHandler } from './process-executor/rpc-handlers/resolve-user-access-rpc-handler';
+import { ResolveProcessUserAccessRpcHandler } from './process-executor/rpc-handlers/resolve-process-user-access-rpc-handler';
 import { LoginThrottler } from './api/auth/login-throttler';
 import { DeleteTableRowRpcHandler } from './process-executor/rpc-handlers/delete-table-row-rpc-handler';
 import { EncryptSecretRpcHandler } from './process-executor/rpc-handlers/encrypt-secret-rpc-handler';
@@ -389,7 +389,7 @@ export async function bootstrap(registry: CleanupRegistry, signal: AbortSignal) 
   const processExecutionStore = new ProcessExecutionStore();
   const rpcHandler = new SandboxRpcHandlerProvider([
     new GetStartedByRpcHandler(processExecutionStore),
-    new ResolveUserAccessRpcHandler(processExecutionStore, userAccessExpressionUserQuerier),
+    new ResolveProcessUserAccessRpcHandler(processExecutionStore, userAccessExpressionUserQuerier),
     new IsTestRpcHandler(processExecutionStore),
     new EncryptSecretRpcHandler(cipher),
     new DecryptSecretRpcHandler(cipher),

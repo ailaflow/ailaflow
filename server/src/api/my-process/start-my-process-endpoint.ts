@@ -138,7 +138,7 @@ function convertLogToProgressLabel(log: ProcessLog): string | null {
   }
   if (level === ProcessLogLevel.AGENT_TOOL_CALL) {
     if (log[3] === 'executeTerminalCommand') {
-      return 'Executing terminal command';
+      return 'Executing terminal tool';
     }
     if (log[3].startsWith('executeProcess_')) {
       return 'Executing process';

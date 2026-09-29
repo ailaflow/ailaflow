@@ -50,6 +50,12 @@ test('the packaged CLI serves the API and portal', async () => {
 
     const root = await fetch(`http://127.0.0.1:${port}/`);
     assert.equal(root.status, 200);
+    const contentSecurityPolicy = root.headers.get('content-security-policy');
+    assert.match(contentSecurityPolicy, /frame-ancestors 'none'/);
+    assert.doesNotMatch(contentSecurityPolicy, /unsafe-eval/);
+    assert.equal(root.headers.get('referrer-policy'), 'strict-origin-when-cross-origin');
+    assert.equal(root.headers.get('x-content-type-options'), 'nosniff');
+    assert.equal(root.headers.get('x-frame-options'), 'DENY');
     const rootHtml = await root.text();
     assert.match(rootHtml, /<div id=(?:"root"|root)><\/div>/);
 

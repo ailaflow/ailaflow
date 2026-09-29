@@ -1,7 +1,7 @@
 {
   "name": "@ailaflow/workspace",
   "private": true,
-  "license": "./LICENSE",
+  "license": "SEE LICENSE IN LICENSE.md",
   "scripts": {
     "dev": "pnpm --filter @ailaflow/cli dev",
     "start": "pnpm --filter @ailaflow/cli start",

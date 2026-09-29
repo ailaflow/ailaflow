@@ -1,9 +1,9 @@
 {
   "name": "@ailaflow/shared",
   "private": true,
-  "version": "1.0.0",
+  "version": "0.0.0",
   "type": "commonjs",
-  "license": "../LICENSE",
+  "license": "SEE LICENSE IN LICENSE.md",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {

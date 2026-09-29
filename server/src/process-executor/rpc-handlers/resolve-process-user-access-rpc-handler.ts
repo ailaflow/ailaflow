@@ -3,8 +3,8 @@ import { UserAccessExpressionUserQuerier } from '../../queriers/user-access-expr
 import { SandboxRpcHandler } from '../../sandbox/sandbox-rpc-handler';
 import { ProcessExecutionStore } from '../process-execution-store';
 
-export class ResolveUserAccessRpcHandler implements SandboxRpcHandler {
-  public readonly methodName = 'resolveUserAccess';
+export class ResolveProcessUserAccessRpcHandler implements SandboxRpcHandler {
+  public readonly methodName = 'resolveProcessUserAccess';
 
   public constructor(
     private readonly executionStore: ProcessExecutionStore,

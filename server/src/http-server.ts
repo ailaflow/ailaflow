@@ -2,6 +2,7 @@ import express, { Express } from 'express';
 import type { Server as NodeHttpServer } from 'node:http';
 import { networkInterfaces } from 'node:os';
 import { extname, join } from 'node:path';
+import { cspMiddleware } from './api/auth/csp-middleware';
 import { ServerPaths } from './core/server-paths';
 
 const PORT = Number(process.env.PORT) || 2048;
@@ -18,6 +19,7 @@ export class HttpServer {
       this.app.set('trust proxy', parseBoolOrString(TRUST_PROXY));
     }
     this.app.disable('x-powered-by');
+    this.app.use(cspMiddleware());
     this.app.use(express.json({ limit: '5mb' }));
     this.app.use(express.urlencoded({ limit: '5mb' }));
   }
