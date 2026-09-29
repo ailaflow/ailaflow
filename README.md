@@ -2,6 +2,8 @@
 
 # AilaFlow
 
+<img src="https://img.shields.io/github/actions/workflow/status/ailaflow/ailaflow/build.yml?style=flat-square" alt="Build status" /> <a href="https://www.npmjs.com/package/@ailaflow/cli"><img src="https://img.shields.io/npm/v/%40ailaflow%2Fcli?style=flat-square" alt="NPM Version" /></a>
+
 **Tell AI to build your workspace, powered by processes with Human-AI interfaces.**
 
 AilaFlow is a collaborative low-code workspace where people and AI agents design, automate, and execute business processes together. Processes can combine human tasks, AI agents, forms, scripts, shared data, and external systems-giving humans and AI a common way to participate in the same workflow and act on the same process state.
