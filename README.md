@@ -31,7 +31,8 @@ AilaFlow requires Docker to be installed on your system.
 Start AilaFlow with:
 
 ```bash
-npx @ailaflow/cli serve
+npm install -g @ailaflow/cli
+ailaflow serve
 ```
 
 Then open:
