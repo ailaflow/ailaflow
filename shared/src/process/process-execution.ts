@@ -30,8 +30,28 @@ export type ProcessExecutionOutcome =
 
 export enum ProcessLogLevel {
   INFO = 1,
-  WARNING = 2,
-  ERROR = 3
+  ERROR,
+  WARNING,
+
+  MATERIALIZER_STDOUT,
+  MATERIALIZER_STDERR,
+
+  SCRIPT_STDOUT,
+  SCRIPT_STDERR,
+  SCRIPT_FINISHED,
+
+  AGENT_RESPONSE,
+  AGENT_TOOL_CALL,
+  AGENT_TOOL_RESPONSE
 }
 
-export type ProcessLog = [time: number, level: ProcessLogLevel, message: string];
+export type ProcessLog =
+  | [time: number, level: ProcessLogLevel.INFO, message: string]
+  | [time: number, level: ProcessLogLevel.MATERIALIZER_STDOUT, stdout: string]
+  | [time: number, level: ProcessLogLevel.MATERIALIZER_STDERR, stderr: string]
+  | [time: number, level: ProcessLogLevel.SCRIPT_STDOUT, stdout: string]
+  | [time: number, level: ProcessLogLevel.SCRIPT_STDERR, stderr: string]
+  | [time: number, level: ProcessLogLevel.SCRIPT_FINISHED, totalTime: number, code: number]
+  | [time: number, level: ProcessLogLevel.AGENT_RESPONSE, message: string]
+  | [time: number, level: ProcessLogLevel.AGENT_TOOL_CALL, toolCallId: string, functionName: string, arguments: string]
+  | [time: number, level: ProcessLogLevel.AGENT_TOOL_RESPONSE, toolCallId: string, arguments: string];

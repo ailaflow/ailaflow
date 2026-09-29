@@ -3,6 +3,7 @@ import {
   ProcessExecutionVariableValues,
   ProcessLogLevel,
   VariableCachedValidator,
+  type ProcessLog,
   type ProcessDefinition,
   type ProcessDto,
   type ReturnStep,
@@ -85,7 +86,7 @@ export function ProcessTesterContext(props: ProcessTesterContextProps) {
             onClose() {
               update(state => {
                 const time = Date.now();
-                const item = new LogProcessTesterTimelineItem(time, ProcessLogLevel.INFO, 'Connection closed');
+                const item = new LogProcessTesterTimelineItem(time, ProcessLogLevel.INFO, 'Info', 'Connection closed');
                 return { timelineItems: [...state.timelineItems, item], isRunning: false };
               });
             }
@@ -227,8 +228,8 @@ function createProcessTesterTimelineItems(
   }
 
   if (update.log) {
-    const [time, level, message] = update.log;
-    items.push(new LogProcessTesterTimelineItem(time, level, message));
+    const [header, content] = formatLogMessage(update.log);
+    items.push(new LogProcessTesterTimelineItem(update.log[0], update.log[1], header, content));
   }
 
   const outcome = update.outcome;
@@ -240,7 +241,7 @@ function createProcessTesterTimelineItems(
     return items;
   }
   if (outcome.type === ProcessExecutionOutcomeType.PAUSED) {
-    items.push(new LogProcessTesterTimelineItem(receivedAt, ProcessLogLevel.INFO, 'Process paused'));
+    items.push(new LogProcessTesterTimelineItem(receivedAt, ProcessLogLevel.INFO, 'Info', 'Process paused'));
     return items;
   }
 
@@ -261,4 +262,33 @@ function createProcessTesterTimelineItems(
   }
 
   return items;
+}
+
+function formatLogMessage(log: ProcessLog): [string, string] {
+  const level = log[1];
+  if (level === ProcessLogLevel.AGENT_RESPONSE) {
+    return ['Agent', log[2]];
+  }
+  if (level === ProcessLogLevel.AGENT_TOOL_CALL) {
+    return ['Tool call', `${log[3]} ${log[4]}`];
+  }
+  if (level === ProcessLogLevel.AGENT_TOOL_RESPONSE) {
+    return ['Tool response', log[3]];
+  }
+  if (level === ProcessLogLevel.MATERIALIZER_STDOUT) {
+    return ['Materializer stdout', log[2]];
+  }
+  if (level === ProcessLogLevel.MATERIALIZER_STDERR) {
+    return ['Materializer stderr', log[2]];
+  }
+  if (level === ProcessLogLevel.SCRIPT_STDOUT) {
+    return ['Script stdout', log[2]];
+  }
+  if (level === ProcessLogLevel.SCRIPT_STDERR) {
+    return ['Script stderr', log[2]];
+  }
+  if (level === ProcessLogLevel.SCRIPT_FINISHED) {
+    return ['Script finished', `${log[2]}ms with code ${log[3]}`];
+  }
+  return ['Info', log[2]];
 }

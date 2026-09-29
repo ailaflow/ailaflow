@@ -72,6 +72,7 @@ export interface MyProcessStartFormProps {
 export function MyProcessStartForm({ args, onEnded }: MyProcessStartFormProps) {
   const apiClient = useApiClient();
   const [formError, setFormError] = useState<FormError | null>(null);
+  const [progressLabel, setProgressLabel] = useState<string | null>(null);
   const [state, setState] = useState<LoadingStartFormState | StartFormState | ExecutingState | OutputFormState | ErrorState>(() => ({
     type: StateType.LOADING_START_FORM,
     args
@@ -113,6 +114,9 @@ export function MyProcessStartForm({ args, onEnded }: MyProcessStartFormProps) {
       let done = false;
       const listener: HttpClientSseListener<StartMyProcessUpdate> = {
         onMessage(update) {
+          if (update.progressLabel) {
+            setProgressLabel(update.progressLabel);
+          }
           if (update.outcome) {
             done = true;
             switch (update.outcome.type) {
@@ -253,5 +257,5 @@ export function MyProcessStartForm({ args, onEnded }: MyProcessStartFormProps) {
       );
     }
   }
-  return <MyFormLoadingView />;
+  return <MyFormLoadingView progressLabel={progressLabel} />;
 }

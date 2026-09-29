@@ -47,13 +47,14 @@ export class LogProcessTesterTimelineItem implements ProcessTesterTimelineItem {
   public readonly type = ProcessTesterTimelineItemType.LOG;
 
   public get id(): string {
-    return `log-${this.time}-${this.level}-${this.message}`;
+    return `log-${this.time}-${this.level}-${this.header}-${this.content}`;
   }
 
   public constructor(
     public readonly time: number,
     public readonly level: ProcessLogLevel,
-    public readonly message: string
+    public readonly header: string,
+    public readonly content: string
   ) {}
 }
 
@@ -247,18 +248,18 @@ function LogTimelineItem(props: { item: LogProcessTesterTimelineItem }) {
   const isWarning = props.item.level === ProcessLogLevel.WARNING;
   return (
     <article
-      className={`flex w-full min-w-0 items-start gap-3 rounded-lg border px-3.5 py-2.5 shadow-sm ${
+      className={`w-full min-w-0 rounded-lg border px-4 py-3 shadow-sm ${
         isError ? 'border-red-200 bg-red-50' : isWarning ? 'border-amber-200 bg-amber-50' : 'border-slate-200 bg-white'
       }`}
     >
-      <p
-        className={`min-w-0 flex-1 break-words font-mono text-xs leading-5 ${
+      <TimelineItemHeader title={props.item.header} time={props.item.time} tone={isError ? 'error' : isWarning ? 'warning' : 'default'} />
+      <pre
+        className={`mt-2 min-w-0 whitespace-pre-wrap break-words font-mono text-xs leading-5 ${
           isError ? 'text-red-800' : isWarning ? 'text-amber-900' : 'text-slate-700'
         }`}
       >
-        {props.item.message}
-      </p>
-      <TimelineTime time={props.item.time} />
+        {props.item.content}
+      </pre>
     </article>
   );
 }
@@ -309,10 +310,11 @@ function FormTimelineItem(
   );
 }
 
-function TimelineItemHeader(props: { title: string; time: number; tone: 'error' | 'success' }) {
+function TimelineItemHeader(props: { title: string; time: number; tone: 'default' | 'error' | 'success' | 'warning' }) {
+  const titleClassName = props.tone === 'error' ? 'text-red-900' : props.tone === 'warning' ? 'text-amber-900' : 'text-slate-900';
   return (
     <header className="flex flex-wrap items-center justify-between gap-2">
-      <h2 className={`text-sm font-semibold ${props.tone === 'error' ? 'text-red-900' : 'text-slate-900'}`}>{props.title}</h2>
+      <h2 className={`text-sm font-semibold ${titleClassName}`}>{props.title}</h2>
       <TimelineTime time={props.time} />
     </header>
   );

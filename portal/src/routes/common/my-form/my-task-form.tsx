@@ -62,7 +62,7 @@ export function MyTaskForm({ args, onSubmitted }: MyTaskFormProps) {
   );
 
   if (isLoading) {
-    return <MyFormLoadingView />;
+    return <MyFormLoadingView progressLabel={null} />;
   }
   if (error) {
     return <MyFormErrorView error={error} />;

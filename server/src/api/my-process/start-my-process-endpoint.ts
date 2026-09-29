@@ -6,6 +6,8 @@ import { getEndpointAbortSignal } from '../framework/endpoint-abort-signal';
 import { parseBody } from '../framework/parse-request';
 import {
   ProcessExecutionOutcomeType,
+  ProcessLog,
+  ProcessLogLevel,
   ReturnStep,
   StartMyProcessRequest,
   startMyProcessRequestSchema,
@@ -71,7 +73,13 @@ export class StartMyProcessEndpoint implements Endpoint {
     sseResponse.onClose(() => execution.tryStop());
 
     execution.onCurrentStepChanged.subscribe(_ => {
-      sseResponse.send({ stepChanged: true });
+      sseResponse.send({ progressLabel: 'Step started' });
+    });
+    execution.onLog.subscribe(log => {
+      const progressLabel = convertLogToProgressLabel(log);
+      if (progressLabel) {
+        sseResponse.send({ progressLabel });
+      }
     });
     execution.onOutcome.subscribe(async outcome => {
       const update: StartMyProcessUpdate = { outcome };
@@ -121,4 +129,30 @@ export class StartMyProcessEndpoint implements Endpoint {
       }
     }
   }
+}
+
+function convertLogToProgressLabel(log: ProcessLog): string | null {
+  const level = log[1];
+  if (level === ProcessLogLevel.AGENT_RESPONSE) {
+    return 'Agent replied';
+  }
+  if (level === ProcessLogLevel.AGENT_TOOL_CALL) {
+    if (log[3] === 'executeTerminalCommand') {
+      return 'Executing terminal command';
+    }
+    if (log[3].startsWith('executeProcess_')) {
+      return 'Executing process';
+    }
+    return 'Calling tool';
+  }
+  if (level === ProcessLogLevel.AGENT_TOOL_RESPONSE) {
+    return 'Tool responded';
+  }
+  if (level === ProcessLogLevel.SCRIPT_FINISHED) {
+    return 'Script finished';
+  }
+  if (level === ProcessLogLevel.MATERIALIZER_STDOUT) {
+    return 'Materializing process';
+  }
+  return null;
 }

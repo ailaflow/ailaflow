@@ -10,7 +10,9 @@ import {
   ProcessDisplay,
   ProcessExecutionMode,
   ProcessExecutionOutcome,
-  ProcessExecutionOutcomeType
+  ProcessExecutionOutcomeType,
+  ProcessLogLevel,
+  type ProcessLog
 } from '@ailaflow/shared';
 import { LlmClient } from '@aibindkit/llm';
 import { AgentToolSetProviderFactory } from '../chat-session/agent-tool-set-provider-factory';
@@ -92,7 +94,7 @@ function createHarness(
   const pages: number[] = [];
   const contexts: ProcessExecutionContext[] = [];
   const executionIds: string[] = [];
-  const logs: string[] = [];
+  const logs: ProcessLog[] = [];
   const processes = options.processes ?? [];
   const manager = {
     tryGetByName: async (_: AbortSignal, name: string) => processes.find(process => process.name === name) ?? null
@@ -125,7 +127,7 @@ function createHarness(
       contexts.push(childContext);
       const execution = super.initialize(childContext, process, input);
       executionIds.push(execution.id);
-      execution.onLog.subscribe(log => logs.push(log[2]));
+      execution.onLog.subscribe(log => logs.push(log));
       return execution;
     }
   }
@@ -234,8 +236,16 @@ test('agent evaluates its prompt, runs variable tools, logs summaries, and conti
     interruptedStepId: 'return'
   });
   assert.equal(turn, 5);
-  assert.ok(harness.logs.includes('Agent tool: setVariable {"name":"answer","value":"wrong type"}'));
-  assert.ok(harness.logs.includes('Agent: Answer saved'));
+  assert.ok(
+    harness.logs.some(
+      log =>
+        log[1] === ProcessLogLevel.AGENT_TOOL_CALL &&
+        log[2] === 'call' &&
+        log[3] === 'setVariable' &&
+        log[4] === '{"name":"answer","value":"wrong type"}'
+    )
+  );
+  assert.ok(harness.logs.some(log => log[1] === ProcessLogLevel.AGENT_RESPONSE && log[2] === 'Answer saved'));
   assert.deepEqual(harness.pages, []);
 });
 

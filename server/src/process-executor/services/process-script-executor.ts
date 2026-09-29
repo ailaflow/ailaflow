@@ -16,20 +16,29 @@ export class ProcessScriptExecutor {
   public async execute(signal: AbortSignal, stepId: string, script: ScriptDefinition) {
     const instance = await this.sandboxInstanceManager.getOrCreate(signal, script.sandboxName);
 
-    const sseHandler: HttpSseHandler<ExecuteCommandUpdate> = {
+    const sseMaterializeHandler: HttpSseHandler<ExecuteCommandUpdate> = {
       onData: data => {
         if (data.stdout) {
-          this.logger.info(`stdout: ${data.stdout}`);
+          this.logger.materializerStdout(data.stdout);
         } else if (data.stderr) {
-          this.logger.info(`stderr: ${data.stderr}`);
+          this.logger.materializerStderr(data.stderr);
         }
       },
-      onClose() {
-        //
-      }
+      onClose() {}
     };
 
-    await instance.tryMaterializeProcess(signal, this.process, sseHandler);
+    await instance.tryMaterializeProcess(signal, this.process, sseMaterializeHandler);
+
+    const scriptHandler: HttpSseHandler<ExecuteCommandUpdate> = {
+      onData: data => {
+        if (data.stdout) {
+          this.logger.scriptStdout(data.stdout);
+        } else if (data.stderr) {
+          this.logger.scriptStderr(data.stderr);
+        }
+      },
+      onClose() {}
+    };
 
     const result = await instance.executeScript(
       signal,
@@ -38,9 +47,9 @@ export class ProcessScriptExecutor {
         scriptName: 'main.js',
         executionId: this.executionId
       },
-      sseHandler
+      scriptHandler
     );
 
-    this.logger.info(`Script returned: ${JSON.stringify(result)}`);
+    this.logger.scriptFinished(result.totalTime, result.result.code);
   }
 }

@@ -60,7 +60,7 @@ export const startMyProcessRequestSchema = z.object({
 export type StartMyProcessRequest = z.infer<typeof startMyProcessRequestSchema>;
 
 export interface StartMyProcessUpdate {
-  stepChanged?: true;
+  progressLabel?: string;
   outcome?: ProcessExecutionOutcome;
   form?: FormDefinition;
   candidateTaskIds?: string[];
