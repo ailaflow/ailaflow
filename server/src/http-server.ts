@@ -1,7 +1,7 @@
 import express, { Express } from 'express';
 import type { Server as NodeHttpServer } from 'node:http';
 import { networkInterfaces } from 'node:os';
-import { extname, join } from 'node:path';
+import { extname } from 'node:path';
 import { cspMiddleware } from './api/auth/csp-middleware';
 import { ServerPaths } from './core/server-paths';
 
@@ -34,7 +34,7 @@ export class HttpServer {
         next();
         return;
       }
-      response.sendFile(join(portalFolderPath, 'index.html'), error => {
+      response.sendFile('index.html', { root: portalFolderPath }, error => {
         if (error) {
           next(error);
         }
