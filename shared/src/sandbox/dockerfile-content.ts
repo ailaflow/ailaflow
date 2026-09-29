@@ -3,13 +3,15 @@ export class DockerfileContent {
 
 ARG SANDBOX_NAME
 
-RUN npm install -g pnpm@11
+RUN npm install -g pnpm@12
 
 WORKDIR /bridge
 COPY bridge .
 `;
 
-  public static suffix = `ENV SANDBOX_NAME=\${SANDBOX_NAME}
+  public static suffix = `USER node
+
+ENV SANDBOX_NAME=\${SANDBOX_NAME}
 EXPOSE 4096
 CMD ["node", "/bridge/server/index.cjs"]`;
 
