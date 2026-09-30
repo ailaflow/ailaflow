@@ -1,30 +1,11 @@
-import { Server } from './server';
+import { runServer } from './server';
 
-async function main() {
-  const initAbortController = new AbortController();
-  let server: Server | null = null;
-  let isClosing = false;
-
-  const close = async () => {
-    if (isClosing) {
-      return;
-    }
-    isClosing = true;
-    initAbortController.abort();
-    await server?.close();
-  };
-
-  process.once('SIGINT', () => void close());
-  process.once('SIGTERM', () => void close());
-  process.once('disconnect', () => void close());
-
+async function main(): Promise<void> {
   try {
-    server = await Server.create(initAbortController.signal);
-    await server.printInfo(initAbortController.signal);
+    process.exitCode = await runServer();
   } catch (e) {
-    if (!initAbortController.signal.aborted) {
-      throw e;
-    }
+    process.stderr.write(`Cannot start AilaFlow: ${(e as Error)?.message ?? e}\n`);
+    process.exitCode = 1;
   }
 }
 

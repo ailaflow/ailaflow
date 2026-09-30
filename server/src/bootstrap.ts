@@ -670,7 +670,7 @@ export async function bootstrap(registry: CleanupRegistry, signal: AbortSignal) 
 
   httpServer.setupPortal();
   await httpServer.start();
-  registry.register(() => httpServer.close());
+  registry.register(signal => httpServer.close(signal));
 
   return {
     sandboxHostDiagnostician,

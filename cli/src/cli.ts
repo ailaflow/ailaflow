@@ -1,4 +1,3 @@
-import { spawn } from 'node:child_process';
 import { mkdir, readdir, realpath, rm } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { dirname, join, parse, resolve } from 'node:path';
@@ -15,36 +14,13 @@ async function serve(options: ServeOptions): Promise<number> {
   await mkdir(options.dataDirectory, { recursive: true });
 
   const distributionDirectory = dirname(fileURLToPath(import.meta.url));
-  const child = spawn(process.execPath, [join(distributionDirectory, 'server/index.cjs')], {
-    stdio: 'inherit',
-    env: {
-      ...process.env,
-      PORT: String(options.port),
-      AILAFLOW_DATA_DIR: options.dataDirectory,
-      AILAFLOW_PORTAL_DIR: join(distributionDirectory, 'portal'),
-      AILAFLOW_RUNTIME_DIR: join(distributionDirectory, 'runtime')
-    }
-  });
-  let shutdownSignal: NodeJS.Signals | null = null;
+  process.env.PORT = String(options.port);
+  process.env.AILAFLOW_DATA_DIR = options.dataDirectory;
+  process.env.AILAFLOW_PORTAL_DIR = join(distributionDirectory, 'portal');
+  process.env.AILAFLOW_RUNTIME_DIR = join(distributionDirectory, 'runtime');
 
-  const shutdown = (signal: NodeJS.Signals) => {
-    shutdownSignal = signal;
-    if (child.exitCode === null && child.signalCode === null) {
-      child.kill(signal);
-    }
-  };
-  process.once('SIGINT', () => shutdown('SIGINT'));
-  process.once('SIGTERM', () => shutdown('SIGTERM'));
-
-  return new Promise(resolveExit => {
-    child.on('error', error => {
-      process.stderr.write(`Cannot start AilaFlow: ${error.message}\n`);
-      resolveExit(1);
-    });
-    child.on('exit', (code, signal) => {
-      resolveExit(code ?? (shutdownSignal && signal === shutdownSignal ? 0 : 1));
-    });
-  });
+  const { runServer } = await import('../../server/src/server');
+  return runServer();
 }
 
 function resolveDataDirectory(value: string): string {

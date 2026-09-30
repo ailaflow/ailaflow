@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import { execFile, spawn } from 'node:child_process';
-import { mkdir, mkdtemp, readdir, rm, writeFile } from 'node:fs/promises';
+import { randomInt } from 'node:crypto';
+import { access, mkdir, mkdtemp, readdir, rm, writeFile } from 'node:fs/promises';
+import { createConnection, createServer } from 'node:net';
 import { tmpdir } from 'node:os';
 import { resolve } from 'node:path';
 import { promisify } from 'node:util';
@@ -9,6 +11,10 @@ import test from 'node:test';
 const cliDirectory = resolve(import.meta.dirname, '..');
 const cliPath = resolve(cliDirectory, 'dist/cli.mjs');
 const execFileAsync = promisify(execFile);
+
+function getRandomPort() {
+  return randomInt(49_152, 65_536);
+}
 
 async function waitForOutput(child, expectedOutput) {
   let stderr = '';
@@ -28,11 +34,33 @@ async function waitForOutput(child, expectedOutput) {
   });
 }
 
+async function waitForExit(child, timeout = 5_000) {
+  if (child.exitCode !== null || child.signalCode !== null) {
+    return { code: child.exitCode, signal: child.signalCode };
+  }
+  return new Promise((resolveExit, rejectExit) => {
+    const timer = setTimeout(() => rejectExit(new Error('AilaFlow did not exit in time')), timeout);
+    child.once('exit', (code, signal) => {
+      clearTimeout(timer);
+      resolveExit({ code, signal });
+    });
+  });
+}
+
+async function assertPortReleased(port) {
+  const server = createServer();
+  await new Promise((resolveListen, rejectListen) => {
+    server.once('error', rejectListen);
+    server.listen(port, '127.0.0.1', resolveListen);
+  });
+  await new Promise(resolveClose => server.close(resolveClose));
+}
+
 test('the packaged CLI serves the API and portal', async () => {
   const dataDirectory = await mkdtemp(resolve(tmpdir(), 'ailaflow-cli-test-'));
-  const port = 21_481;
+  const port = getRandomPort();
   const child = spawn(process.execPath, [cliPath, 'serve', '--data-dir', dataDirectory, '--port', String(port)], {
-    cwd: cliDirectory,
+    cwd: dataDirectory,
     stdio: ['ignore', 'pipe', 'pipe']
   });
 
@@ -73,11 +101,76 @@ test('the packaged CLI serves the API and portal', async () => {
 
     const missingAsset = await fetch(`http://127.0.0.1:${port}/assets/missing.js`);
     assert.equal(missingAsset.status, 404);
+
+    await access(resolve(cliDirectory, 'dist/runtime/bridge/server/index.cjs'));
+    await access(resolve(cliDirectory, 'dist/runtime/assets/agent-prompt.md'));
   } finally {
     if (child.exitCode === null && child.signalCode === null) {
       child.kill('SIGTERM');
-      await new Promise(resolveExit => child.once('exit', resolveExit));
+      assert.deepEqual(await waitForExit(child), { code: 0, signal: null });
+      await assertPortReleased(port);
     }
+    await rm(dataDirectory, { recursive: true, force: true });
+  }
+});
+
+test('the packaged CLI handles SIGINT and closes active connections', async () => {
+  const dataDirectory = await mkdtemp(resolve(tmpdir(), 'ailaflow-cli-signal-test-'));
+  const port = getRandomPort();
+  const child = spawn(process.execPath, [cliPath, 'serve', '--data-dir', dataDirectory, '--port', String(port)], {
+    cwd: dataDirectory,
+    stdio: ['ignore', 'pipe', 'pipe']
+  });
+  let socket;
+
+  try {
+    await waitForOutput(child, 'Status:');
+    socket = createConnection(port, '127.0.0.1');
+    await new Promise((resolveConnect, rejectConnect) => {
+      socket.once('connect', resolveConnect);
+      socket.once('error', rejectConnect);
+    });
+    socket.write('POST /api/install HTTP/1.1\r\nHost: localhost\r\nContent-Length: 100000\r\n\r\n{');
+
+    child.kill('SIGINT');
+    assert.deepEqual(await waitForExit(child), { code: 0, signal: null });
+    await assertPortReleased(port);
+  } finally {
+    socket?.destroy();
+    if (child.exitCode === null && child.signalCode === null) {
+      child.kill('SIGKILL');
+      await waitForExit(child);
+    }
+    await rm(dataDirectory, { recursive: true, force: true });
+  }
+});
+
+test('the packaged CLI fails clearly when its port is occupied', async () => {
+  const dataDirectory = await mkdtemp(resolve(tmpdir(), 'ailaflow-cli-conflict-test-'));
+  const port = getRandomPort();
+  const blocker = createServer();
+  await new Promise((resolveListen, rejectListen) => {
+    blocker.once('error', rejectListen);
+    blocker.listen(port, '0.0.0.0', resolveListen);
+  });
+  const child = spawn(process.execPath, [cliPath, 'serve', '--data-dir', dataDirectory, '--port', String(port)], {
+    cwd: dataDirectory,
+    stdio: ['ignore', 'pipe', 'pipe']
+  });
+  let stderr = '';
+  child.stderr.on('data', chunk => (stderr += chunk));
+
+  try {
+    const exit = await waitForExit(child, 15_000);
+    assert.equal(exit.code, 1);
+    assert.match(stderr, new RegExp(`Cannot listen on 0\\.0\\.0\\.0:${port}`));
+    assert.match(stderr, /EADDRINUSE|address already in use/);
+  } finally {
+    if (child.exitCode === null && child.signalCode === null) {
+      child.kill('SIGKILL');
+      await waitForExit(child);
+    }
+    await new Promise(resolveClose => blocker.close(resolveClose));
     await rm(dataDirectory, { recursive: true, force: true });
   }
 });

@@ -1,17 +1,54 @@
 import { bootstrap, CleanupRegistry } from './bootstrap';
 
+export const SERVER_SHUTDOWN_TIMEOUT_MS = 10_000;
+
+export async function runServer(): Promise<number> {
+  const startupAbortController = new AbortController();
+  let resolveShutdown!: () => void;
+  let shutdownRequested = false;
+  const shutdownRequestedPromise = new Promise<void>(resolve => {
+    resolveShutdown = resolve;
+  });
+  const requestShutdown = () => {
+    if (shutdownRequested) {
+      return;
+    }
+    shutdownRequested = true;
+    startupAbortController.abort();
+    resolveShutdown();
+  };
+
+  process.once('SIGINT', requestShutdown);
+  process.once('SIGTERM', requestShutdown);
+
+  let server: Server | null = null;
+  try {
+    server = await Server.create(startupAbortController.signal);
+    await server.printInfo(startupAbortController.signal);
+    await shutdownRequestedPromise;
+    return 0;
+  } catch (error) {
+    if (shutdownRequested) {
+      return 0;
+    }
+    throw error;
+  } finally {
+    process.removeListener('SIGINT', requestShutdown);
+    process.removeListener('SIGTERM', requestShutdown);
+    await server?.close(AbortSignal.timeout(SERVER_SHUTDOWN_TIMEOUT_MS));
+  }
+}
+
 export class Server {
   public static async create(signal: AbortSignal): Promise<Server> {
     const registry = new CleanupRegistry();
     try {
       return new Server(registry, await bootstrap(registry, signal));
     } catch (e) {
-      await registry.run(signal);
+      await registry.run(AbortSignal.timeout(SERVER_SHUTDOWN_TIMEOUT_MS));
       throw e;
     }
   }
-
-  private isClosed = false;
 
   public constructor(
     private readonly registry: CleanupRegistry,
@@ -58,12 +95,7 @@ export class Server {
     this.kv('Status', 'running');
   }
 
-  public async close() {
-    if (this.isClosed) {
-      return;
-    }
-    this.isClosed = true;
-    const signal = new AbortController().signal;
+  public async close(signal: AbortSignal): Promise<void> {
     await this.registry.run(signal);
     this.kv('Status', 'closed');
   }
