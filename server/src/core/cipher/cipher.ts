@@ -5,7 +5,6 @@ const SECRET_ALGORITHM = 'aes-256-gcm';
 const SECRET_FORMAT_VERSION = 'v1';
 const SECRET_INITIALIZATION_VECTOR_LENGTH = 12;
 const SECRET_AUTHENTICATION_TAG_LENGTH = 16;
-const INTERNAL_SECRET_ADDITIONAL_DATA = Buffer.from('ailaflow/data-encryption/v1', 'utf8'); // TODO: delete this
 
 const PASSWORD_FORMAT = 'scrypt-v1';
 const PASSWORD_SALT_LENGTH = 16;
@@ -54,10 +53,6 @@ export class Cipher {
     const encryptionKey = this.keyStore.getKey(key);
     const initializationVector = randomBytes(SECRET_INITIALIZATION_VECTOR_LENGTH);
     const cipher = createCipheriv(SECRET_ALGORITHM, encryptionKey, initializationVector);
-    if (key === CipherKey.InternalSecretEncryption) {
-      cipher.setAAD(INTERNAL_SECRET_ADDITIONAL_DATA);
-    }
-
     const encryptedData = Buffer.concat([cipher.update(secret, 'utf8'), cipher.final()]);
     const authenticationTag = cipher.getAuthTag();
 
@@ -93,9 +88,6 @@ export class Cipher {
       const ciphertext = Buffer.from(parts[3], 'base64url');
 
       const decipher = createDecipheriv(SECRET_ALGORITHM, encryptionKey, initializationVector);
-      if (key === CipherKey.InternalSecretEncryption) {
-        decipher.setAAD(INTERNAL_SECRET_ADDITIONAL_DATA);
-      }
       decipher.setAuthTag(authenticationTag);
 
       return Buffer.concat([decipher.update(ciphertext), decipher.final()]).toString('utf8');
