@@ -1,4 +1,4 @@
-import { BrowserRouter, useRoutes } from 'react-router';
+import { BrowserRouter, Outlet, useRoutes } from 'react-router';
 import { LoginPage } from './login/login-page';
 import { AuthGate } from './common/auth-gate';
 import { DashboardPage } from './dashboard/dashboard-page';
@@ -27,6 +27,7 @@ import { TaskListPage } from './task-list/task-list-page';
 import { ProcessCronJobsPage } from './process-cron-jobs/process-cron-jobs-page';
 import { NotFoundPage } from './not-found/not-found-page';
 import { MagicLinkPage } from './magic-link/magic-link';
+import { Portal } from './common/portal';
 
 export const routes = [
   {
@@ -42,36 +43,49 @@ export const routes = [
     element: <MagicLinkPage />
   },
   {
-    path: '/',
-    element: <AuthGate route={<DashboardPage />} />
-  },
-  {
-    path: '/my-chat',
-    element: <AuthGate route={<MyChatPage />} />
-  },
-  {
-    path: '/my-configuration',
-    element: <AuthGate route={<MyConfigurationPage />} />
-  },
-  {
-    path: '/my-tasks',
-    element: <AuthGate route={<MyTasksPage />} />
-  },
-  {
-    path: '/my-tasks/:taskId',
-    element: <AuthGate route={<MyTaskPage />} />
-  },
-  {
-    path: '/my-notifications',
-    element: <AuthGate route={<MyNotificationsPage />} />
-  },
-  {
-    path: '/my-processes',
-    element: <AuthGate route={<MyProcessListPage />} />
-  },
-  {
-    path: '/my-processes/:name',
-    element: <AuthGate route={<MyProcessPage />} />
+    element: (
+      <AuthGate
+        route={
+          <Portal>
+            <Outlet />
+          </Portal>
+        }
+      />
+    ),
+    children: [
+      {
+        path: '/',
+        element: <DashboardPage />
+      },
+      {
+        path: '/my-chat/:channelName',
+        element: <MyChatPage />
+      },
+      {
+        path: '/my-configuration',
+        element: <MyConfigurationPage />
+      },
+      {
+        path: '/my-tasks',
+        element: <MyTasksPage />
+      },
+      {
+        path: '/my-tasks/:taskId',
+        element: <MyTaskPage />
+      },
+      {
+        path: '/my-notifications',
+        element: <MyNotificationsPage />
+      },
+      {
+        path: '/my-processes',
+        element: <MyProcessListPage />
+      },
+      {
+        path: '/my-processes/:name',
+        element: <MyProcessPage />
+      }
+    ]
   },
   {
     element: <AuthGate route={<AdminPortal />} />,

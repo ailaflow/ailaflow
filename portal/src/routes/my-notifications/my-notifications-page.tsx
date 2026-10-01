@@ -7,7 +7,6 @@ import { PortalErrorView } from '../../views/portal/portal-error-view';
 import { PortalLoadingView } from '../../views/portal/portal-loading-view';
 import { ResourceHeaderButtonView } from '../../views/resource-list/resource-header-button-view';
 import { ResourceListView } from '../../views/resource-list/resource-list-view';
-import { Portal } from '../common/portal';
 
 const PAGE_SIZE = 20;
 
@@ -54,58 +53,48 @@ export function MyNotificationsPage() {
   }
 
   if (isLoading) {
-    return (
-      <Portal>
-        <PortalLoadingView />
-      </Portal>
-    );
+    return <PortalLoadingView />;
   }
   if (error) {
-    return (
-      <Portal>
-        <PortalErrorView error={error} />
-      </Portal>
-    );
+    return <PortalErrorView error={error} />;
   }
 
   return (
-    <Portal>
-      <ResourceListView
-        title="My Notifications"
-        headerActions={
-          data.totalCount > 0 ? <ResourceHeaderButtonView onClick={deleteAllNotifications}>Delete all</ResourceHeaderButtonView> : null
+    <ResourceListView
+      title="My Notifications"
+      headerActions={
+        data.totalCount > 0 ? <ResourceHeaderButtonView onClick={deleteAllNotifications}>Delete all</ResourceHeaderButtonView> : null
+      }
+      columns={[
+        {
+          id: 'message',
+          title: 'Message',
+          width: '58%',
+          wrap: true,
+          getValue: notification => notification.message
+        },
+        {
+          id: 'createdAt',
+          title: 'Received',
+          width: '24%',
+          getValue: notification => formatDate(notification.createdAt)
         }
-        columns={[
-          {
-            id: 'message',
-            title: 'Message',
-            width: '58%',
-            wrap: true,
-            getValue: notification => notification.message
-          },
-          {
-            id: 'createdAt',
-            title: 'Received',
-            width: '24%',
-            getValue: notification => formatDate(notification.createdAt)
-          }
-        ]}
-        rows={data.notifications}
-        getRowKey={notification => notification.id}
-        emptyMessage="No notifications found."
-        pagination={{
-          page: data.page,
-          pageSize: data.pageSize,
-          totalCount: data.totalCount,
-          onPageChange: changePage
-        }}
-        primaryAction={{
-          icon: <SvgIcon name="x" className="h-4 w-4" />,
-          ariaLabel: 'Delete notification',
-          onClick: notification => deleteNotification(notification.id)
-        }}
-      />
-    </Portal>
+      ]}
+      rows={data.notifications}
+      getRowKey={notification => notification.id}
+      emptyMessage="No notifications found."
+      pagination={{
+        page: data.page,
+        pageSize: data.pageSize,
+        totalCount: data.totalCount,
+        onPageChange: changePage
+      }}
+      primaryAction={{
+        icon: <SvgIcon name="x" className="h-4 w-4" />,
+        ariaLabel: 'Delete notification',
+        onClick: notification => deleteNotification(notification.id)
+      }}
+    />
   );
 }
 

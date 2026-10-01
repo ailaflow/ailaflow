@@ -8,7 +8,6 @@ type LinkMenuItemDefinition = Omit<LinkMenuItem, 'isSelected'> & { activeAliases
 type MenuItemDefinition = LinkMenuItemDefinition | CommandMenuItem;
 
 const userItems: MenuItemDefinition[] = [
-  { label: 'My chat', action: 'link', href: '/my-chat' },
   { label: 'My configuration', action: 'link', href: '/my-configuration' },
   { label: 'My tasks', action: 'link', href: '/my-tasks' },
   { label: 'My notifications', action: 'link', href: '/my-notifications' },
@@ -72,6 +71,9 @@ export function Portal(props: { children: React.ReactNode }) {
 
   const location = useLocation();
   const [licenseValidationError, setLicenseValidationError] = useState<string | null>(null);
+
+  const [chatItems, setChatItems] = useState<MenuItemDefinition[]>([]);
+  const selectedChatItems = selectMenuItems(chatItems, location.pathname);
   const selectedUserItems = selectMenuItems(userItems, location.pathname);
   const selectedAdminItems = session.isAdmin ? selectMenuItems(adminItems, location.pathname) : null;
 
@@ -96,6 +98,26 @@ export function Portal(props: { children: React.ReactNode }) {
     }
   }, [apiClient]);
 
+  useEffect(() => {
+    const abortController = new AbortController();
+
+    async function fetchChannels() {
+      const response = await apiClient.myConfiguration.getChannels(abortController.signal);
+      setChatItems(
+        response.channels.map(c => ({
+          label: `${uppercaseFirst(c.name)} Chat`,
+          action: 'link',
+          href: `/my-chat/${c.name}`
+        }))
+      );
+    }
+
+    if (session) {
+      void fetchChannels();
+      return () => abortController.abort();
+    }
+  }, [apiClient, session]);
+
   function onCommand(command: string) {
     if (command === 'logout' && window.confirm('Are you sure you want to log out?')) {
       setSession(null);
@@ -108,10 +130,20 @@ export function Portal(props: { children: React.ReactNode }) {
 
   return (
     <>
-      <PortalLayout userItems={selectedUserItems} adminItems={selectedAdminItems} userName={session.userName} onCommand={onCommand}>
+      <PortalLayout
+        chatItems={selectedChatItems}
+        userItems={selectedUserItems}
+        adminItems={selectedAdminItems}
+        userName={session.userName}
+        onCommand={onCommand}
+      >
         {props.children}
       </PortalLayout>
       {licenseValidationError && <LicenseAlertPopup error={licenseValidationError} onClose={closeLicenseAlert} />}
     </>
   );
+}
+
+function uppercaseFirst(str: string): string {
+  return str.charAt(0).toUpperCase() + str.slice(1);
 }

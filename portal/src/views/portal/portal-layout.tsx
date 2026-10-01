@@ -50,6 +50,7 @@ function MenuItemView(props: { item: MenuItem; onCommand(command: string): void;
 export interface PortalLayoutProps {
   children: React.ReactNode;
   userName: string;
+  chatItems: MenuItem[];
   userItems: MenuItem[];
   adminItems: MenuItem[] | null;
   onCommand(command: string): void;
@@ -89,7 +90,13 @@ export function PortalLayout(props: PortalLayoutProps) {
             <div className="mt-4 px-2 text-xs font-semibold tracking-wide text-slate-500">@{props.userName}</div>
 
             <div className="text-sm">
-              <nav className="mt-4 flex flex-col gap-1.5">
+              <nav className="my-4 flex flex-col gap-1.5">
+                {props.chatItems.map(item => (
+                  <MenuItemView key={item.label} item={item} onCommand={props.onCommand} onSelect={closeSidebar} />
+                ))}
+              </nav>
+
+              <nav className="flex flex-col gap-1.5 border-t pt-4 border-slate-200">
                 {props.userItems.map(item => (
                   <MenuItemView key={item.label} item={item} onCommand={props.onCommand} onSelect={closeSidebar} />
                 ))}

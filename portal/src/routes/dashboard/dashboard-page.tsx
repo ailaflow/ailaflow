@@ -12,7 +12,6 @@ import { SvgIcon } from '../../views/common/svg-icons';
 import { MyChat } from '../common/my-chat/my-chat';
 import { MyProcessStartFormPopup } from '../common/popups/my-process-start-form-popup';
 import { MyTaskFormPopup } from '../common/popups/my-task-form-popup';
-import { Portal } from '../common/portal';
 import { FormSubmittedAlertPopup } from '../common/popups/form-submitted-alert-popup';
 
 const PANEL_ITEM_LIMIT = 6;
@@ -53,22 +52,14 @@ export function DashboardPage() {
   }
 
   if (isLoading) {
-    return (
-      <Portal>
-        <PortalLoadingView />
-      </Portal>
-    );
+    return <PortalLoadingView />;
   }
   if (error) {
-    return (
-      <Portal>
-        <PortalErrorView error={error} />
-      </Portal>
-    );
+    return <PortalErrorView error={error} />;
   }
 
   return (
-    <Portal>
+    <>
       <DashboardView chat={<MyChat sessionKey="user:default" />}>
         <DashboardPanelView title="My Tasks" variant="dashboard" scrollable action={{ label: 'View all', href: '/my-tasks' }}>
           <DashboardListView
@@ -142,6 +133,6 @@ export function DashboardPage() {
         />
       )}
       {formSubmitted && <FormSubmittedAlertPopup onClose={() => setFormSubmitted(false)} />}
-    </Portal>
+    </>
   );
 }

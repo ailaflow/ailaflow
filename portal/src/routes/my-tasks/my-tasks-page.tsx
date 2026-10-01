@@ -6,7 +6,6 @@ import { PortalLoadingView } from '../../views/portal/portal-loading-view';
 import { ResourceListView } from '../../views/resource-list/resource-list-view';
 import { ResourceHeaderSwitchView } from '../../views/resource-list/resource-header-switch-view';
 import { SvgIcon } from '../../views/common/svg-icons';
-import { Portal } from '../common/portal';
 
 const PAGE_SIZE = 20;
 
@@ -38,22 +37,14 @@ export function MyTasksPage() {
   }
 
   if (isLoading) {
-    return (
-      <Portal>
-        <PortalLoadingView />
-      </Portal>
-    );
+    return <PortalLoadingView />;
   }
   if (error) {
-    return (
-      <Portal>
-        <PortalErrorView error={error} />
-      </Portal>
-    );
+    return <PortalErrorView error={error} />;
   }
 
   return (
-    <Portal>
+    <>
       <ResourceListView
         title="My Tasks"
         headerActions={
@@ -111,7 +102,7 @@ export function MyTasksPage() {
           onPageChange: changePage
         }}
       />
-    </Portal>
+    </>
   );
 }
 

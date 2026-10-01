@@ -6,7 +6,6 @@ import { useSearchParams } from 'react-router';
 import { PortalErrorView } from '../../views/portal/portal-error-view';
 import { PortalLoadingView } from '../../views/portal/portal-loading-view';
 import { ProcessListView } from '../../views/process-list-view/process-list-view';
-import { Portal } from '../common/portal';
 import { MyProcessStartFormPopup } from '../common/popups/my-process-start-form-popup';
 import { MyTaskFormPopup } from '../common/popups/my-task-form-popup';
 import { FormSubmittedAlertPopup } from '../common/popups/form-submitted-alert-popup';
@@ -50,22 +49,14 @@ export function MyProcessListPage() {
   }
 
   if (isLoading) {
-    return (
-      <Portal>
-        <PortalLoadingView />
-      </Portal>
-    );
+    return <PortalLoadingView />;
   }
   if (error) {
-    return (
-      <Portal>
-        <PortalErrorView error={error} />
-      </Portal>
-    );
+    return <PortalErrorView error={error} />;
   }
 
   return (
-    <Portal>
+    <>
       <ProcessListView
         title="My Processes"
         items={data.processes.map(process => ({
@@ -101,6 +92,6 @@ export function MyProcessListPage() {
         />
       )}
       {formSubmitted && <FormSubmittedAlertPopup onClose={() => setFormSubmitted(false)} />}
-    </Portal>
+    </>
   );
 }

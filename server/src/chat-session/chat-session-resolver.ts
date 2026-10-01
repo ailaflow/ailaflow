@@ -67,9 +67,6 @@ export class ChatSessionResolver implements BaseChatSessionResolver {
   }
 
   private resolveUserChannel(userName: string, isTest: boolean, channelName: string): ResolvedChatSession {
-    if (channelName !== 'default') {
-      throw new Error('Only the default user channel is supported'); // TODO: support user-defined channels
-    }
     return {
       sessionId: ChatSessionId.createUserChannel(userName, isTest, channelName).encode(),
       backendTools: this.userToolSetProvider.tools,

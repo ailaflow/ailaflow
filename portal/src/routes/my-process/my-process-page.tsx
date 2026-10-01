@@ -2,7 +2,6 @@ import { useNavigate, useParams, useSearchParams } from 'react-router';
 import { MyFullscreenView } from '../../views/my-form/my-fullscreen-view';
 import { MyFormView } from '../../views/my-form/my-form-view';
 import { MyProcessStartForm } from '../common/my-form/my-process-start-form';
-import { Portal } from '../common/portal';
 
 export function MyProcessPage() {
   const { name } = useParams();
@@ -26,10 +25,8 @@ export function MyProcessPage() {
     );
   }
   return (
-    <Portal>
-      <MyFormView icon="/" title="Start process" description={name} backLabel="Back to processes" onBack={goToProcesses}>
-        <MyProcessStartForm args={{ processName: name }} onEnded={goToProcesses} />
-      </MyFormView>
-    </Portal>
+    <MyFormView icon="/" title="Start process" description={name} backLabel="Back to processes" onBack={goToProcesses}>
+      <MyProcessStartForm args={{ processName: name }} onEnded={goToProcesses} />
+    </MyFormView>
   );
 }
