@@ -246,6 +246,7 @@ import { ExecuteProcessRpcHandler } from './process-executor/rpc-handlers/execut
 import { ExportProcessEndpoint } from './api/process/export-process-endpoint';
 import { ProcessDownloader } from './install/process-downloader';
 import { ProcessValidatorsFactory } from './process/process-validators-factory';
+import { ImportProcessEndpoint } from './api/process/import-process-endpoint';
 
 const DB_TYPE = 'sqlite';
 
@@ -627,6 +628,7 @@ export async function bootstrap(registry: CleanupRegistry, signal: AbortSignal) 
     new DeleteAllMyNotificationsEndpoint(notificationRepository),
     new DeleteMyNotificationEndpoint(notificationRepository),
     new GetMyProcessesEndpoint(myProcessListQuerier),
+    new ImportProcessEndpoint(processValidatorsFactory, processManager),
     new GetMyTasksEndpoint(myTaskListQuerier),
     new GetTasksEndpoint(taskListQuerier),
     new DeleteTaskEndpoint(taskDeleter),

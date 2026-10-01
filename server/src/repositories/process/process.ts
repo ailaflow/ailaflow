@@ -60,8 +60,8 @@ export class Process {
     return new Process(
       e.name,
       e.description,
-      e.userAccess === 'all' ? '' : `@${userName}`,
-      e.userAccess === 'all' ? ProcessDisplay.FEATURED : ProcessDisplay.LISTED,
+      e.userAccess === 'installer' ? `@${userName}` : '',
+      e.userAccess === 'installer' ? ProcessDisplay.LISTED : ProcessDisplay.FEATURED,
       ProcessExecutionMode.AI_TOOL_OR_START_FORM,
       e.icon,
       e.definition,

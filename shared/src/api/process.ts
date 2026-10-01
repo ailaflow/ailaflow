@@ -83,6 +83,14 @@ export const deleteProcessResponseSchema = z.object({
 
 export type DeleteProcessResponse = z.infer<typeof deleteProcessResponseSchema>;
 
+// importProcess
+
+export const importProcessRequestSchema = z.object({
+  process: exportedProcessSchema
+});
+
+export type ImportProcessRequest = z.infer<typeof importProcessRequestSchema>;
+
 // exportProcess
 
 export const exportProcessResponseSchema = z.object({

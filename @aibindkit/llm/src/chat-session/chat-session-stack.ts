@@ -118,7 +118,8 @@ export class ChatSessionStack {
         if (item.failReason || item.isInterrupted) {
           continue;
         }
-        throw new Error(`Message ${i} is not completed`);
+        this.recentStack.splice(i, 1);
+        throw new Error(`Message ${i} was incomplete and has been removed, please try again`);
       }
       for (const c of item.completedMessages) {
         result.push(c.message);

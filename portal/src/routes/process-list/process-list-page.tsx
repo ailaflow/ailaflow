@@ -1,7 +1,10 @@
 import { useApiClient } from '../../auth/auth-context';
 import { useLoader } from '@aibindkit/react';
 import { ResourceListView } from '../../views/resource-list/resource-list-view';
-import { ResourceHeaderButtonView } from '../../views/resource-list/resource-header-button-view';
+import {
+  ResourceHeaderButtonTheme,
+  ResourceHeaderButtonView
+} from '../../views/resource-list/resource-header-button-view';
 import { SvgIcon } from '../../views/common/svg-icons';
 import { ProcessIcon } from '../../views/common/process-icon';
 import { PortalLoadingView } from '../../views/portal/portal-loading-view';
@@ -10,7 +13,7 @@ import { toolError, toolSuccess, toolWait } from '@aibindkit/react';
 import { useNavigate, useSearchParams } from 'react-router';
 import { useAiStore } from '../common/admin-portal';
 import { useState } from 'react';
-import { ProcessDisplay, ProcessExecutionMode } from '@ailaflow/shared';
+import { ProcessDisplay, ProcessExecutionMode, ProcessLiteDto } from '@ailaflow/shared';
 
 const PAGE_SIZE = 20;
 
@@ -49,6 +52,28 @@ export function ProcessListPage() {
     } catch (e) {
       window.alert(`Failed to delete process "${name}": ${e instanceof Error ? e.message : String(e)}`);
     }
+  }
+
+  async function importProcess() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'application/json';
+    input.onchange = async () => {
+      if (!input.files || input.files.length === 0) {
+        return;
+      }
+      const file = input.files[0];
+      const content = await file.text();
+      try {
+        await apiClient.process.importProcess(AbortSignal.timeout(5_000), {
+          process: JSON.parse(content)
+        });
+        setReloadToken(current => current + 1);
+      } catch (e) {
+        window.alert(`Failed to import process: ${(e as Error).message ?? e}`);
+      }
+    };
+    input.click();
   }
 
   async function exportProcess(name: string) {
@@ -97,7 +122,14 @@ export function ProcessListPage() {
   return (
     <ResourceListView
       title="Processes"
-      headerActions={<ResourceHeaderButtonView onClick={createNew}>Create new</ResourceHeaderButtonView>}
+      headerActions={
+        <>
+          <ResourceHeaderButtonView onClick={createNew}>Create new</ResourceHeaderButtonView>
+          <ResourceHeaderButtonView onClick={importProcess} theme={ResourceHeaderButtonTheme.SECONDARY}>
+            Import
+          </ResourceHeaderButtonView>
+        </>
+      }
       columns={[
         {
           id: 'name',
@@ -163,20 +195,20 @@ export function ProcessListPage() {
       actions={[
         {
           label: 'Test',
-          getTo: process => `/admin/processes/${process.name}/test`
+          getTo: p => `/admin/processes/${p.name}/test`
         },
         {
           label: 'Cron',
-          getTo: process => `/admin/processes/${process.name}/cron-jobs`
+          getTo: p => `/admin/processes/${p.name}/cron-jobs`
         },
-        /*{
-          label: 'Export',
-          onClick: process => exportProcess(process.name)
-        },*/
         {
           label: 'Delete',
-          ariaLabel: process => `Delete process ${process.name}`,
-          onClick: process => deleteProcess(process.name)
+          ariaLabel: p => `Delete process ${p.name}`,
+          onClick: p => deleteProcess(p.name)
+        },
+        {
+          label: 'Export',
+          onClick: p => exportProcess(p.name)
         }
       ]}
     />

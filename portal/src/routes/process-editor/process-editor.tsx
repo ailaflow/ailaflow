@@ -115,7 +115,7 @@ export function ProcessEditor() {
         },
         { label: 'Cron jobs', href: `/admin/processes/${state.name}/cron-jobs` }
       ]}
-      viewSwitcherDisabledReason={state.isNew || !isDesigner || state.isDirty ? 'Please save changes' : undefined}
+      viewSwitcherDisabledReason={state.isNew || state.isDirty ? 'Please save changes' : undefined}
     >
       {isDesigner && <Designer />}
       {state.overlay?.type === ProcessEditorOverlayType.SCHEMA_EDITOR && <SchemaEditorOverlay />}
