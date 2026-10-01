@@ -1,10 +1,8 @@
 import { ExportedProcess, LicenseType } from '@ailaflow/shared';
 import { LicenseManager } from '../configuration/license/license-manager';
 import { SandboxRepository } from '../repositories/sandbox/sandbox-repository';
-import { UserAttributesRepository } from '../repositories/user-attributes/user-attributes-repository';
 import { UserRepository } from '../repositories/user/user-repository';
 import { User } from '../repositories/user/user';
-import { UserAttributes } from '../repositories/user-attributes/user-attributes';
 import { Sandbox } from '../repositories/sandbox/sandbox';
 import { Cipher } from '../core/cipher/cipher';
 import { FileSystemCipherKeyStore } from '../core/cipher/file-system-cipher-key-store';
@@ -15,6 +13,7 @@ import { ProcessValidatorsFactory } from '../process/process-validators-factory'
 import { Process } from '../repositories/process/process';
 import { ProcessManager } from '../process/process-manager';
 import { Logger } from '../core/logger';
+import { UserManager } from '../user/user-manager';
 
 export class Installer {
   private readonly logger = new Logger(Installer.name);
@@ -24,7 +23,7 @@ export class Installer {
     private readonly cipherKeyStore: FileSystemCipherKeyStore,
     private readonly cipher: Cipher,
     private readonly userRepository: UserRepository,
-    private readonly userAttributesRepository: UserAttributesRepository,
+    private readonly userManager: UserManager,
     private readonly sandboxRepository: SandboxRepository,
     private readonly notificationRepository: NotificationRepository,
     private readonly processManager: ProcessManager,
@@ -85,10 +84,7 @@ export class Installer {
 
   private async installRootUser(signal: AbortSignal, rootUserName: string, rootPassword: string) {
     const user = await User.create(rootUserName, null, rootPassword, true, this.cipher);
-    const attributes = UserAttributes.create(user, {});
-
-    await this.userRepository.insert(signal, user);
-    await this.userAttributesRepository.replace(signal, attributes);
+    await this.userManager.create(signal, user);
   }
 
   private async installProcesses(signal: AbortSignal, rootUserName: string) {

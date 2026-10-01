@@ -3,7 +3,7 @@ import { Request } from 'express';
 import { Endpoint } from '../framework/endpoint';
 import { parseBody } from '../framework/parse-request';
 import { UserRepository, UserRepositoryError } from '../../repositories/user/user-repository';
-import { UserAttributesRepository, UserAttributesRepositoryError } from '../../repositories/user-attributes/user-attributes-repository';
+import { UserAttributesRepositoryError } from '../../repositories/user-attributes/user-attributes-repository';
 import { UserAttributes } from '../../repositories/user-attributes/user-attributes';
 import { Cipher } from '../../core/cipher/cipher';
 import { EndpointError } from '../framework/endpoint-error';
@@ -11,6 +11,7 @@ import { User } from '../../repositories/user/user';
 import { getEndpointAbortSignal } from '../framework/endpoint-abort-signal';
 import { AuthTokenRepository } from '../../repositories/auth-token/auth-token-repository';
 import { MagicLinkRepository } from '../../repositories/auth-token/magic-link-repository';
+import { UserManager } from '../../user/user-manager';
 
 export class SaveUserEndpoint implements Endpoint {
   public readonly method = 'post';
@@ -20,10 +21,10 @@ export class SaveUserEndpoint implements Endpoint {
 
   public constructor(
     private readonly userRepository: UserRepository,
-    private readonly userAttributesRepository: UserAttributesRepository,
     private readonly authTokenRepository: AuthTokenRepository,
     private readonly magicLinkRepository: MagicLinkRepository,
-    private readonly cipher: Cipher
+    private readonly cipher: Cipher,
+    private readonly userManager: UserManager
   ) {}
 
   public async handle(req: Request): Promise<SaveUserResponse> {
@@ -82,11 +83,10 @@ export class SaveUserEndpoint implements Endpoint {
 
     try {
       if (request.insert) {
-        await this.userRepository.insert(signal, user);
+        await this.userManager.create(signal, user, attributes);
       } else {
-        await this.userRepository.update(signal, user);
+        await this.userManager.update(signal, user, attributes);
       }
-      await this.userAttributesRepository.replace(signal, attributes);
     } catch (e) {
       if (e instanceof UserRepositoryError || e instanceof UserAttributesRepositoryError) {
         throw new EndpointError(e.message, 400);

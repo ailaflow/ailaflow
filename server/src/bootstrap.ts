@@ -54,6 +54,7 @@ import { SqliteUserListQuerier } from './queriers/user-list/sqlite-user-list-que
 import { GetUsersEndpoint } from './api/user/get-users-endpoint';
 import { GetUserEndpoint } from './api/user/get-user-endpoint';
 import { SaveUserEndpoint } from './api/user/save-user-endpoint';
+import { UserManager } from './user/user-manager';
 import { GetUserTelegramConfigurationEndpoint } from './api/user/get-user-telegram-configuration-endpoint';
 import { SaveUserTelegramBotEndpoint } from './api/user/save-user-telegram-bot-endpoint';
 import { DeleteUserTelegramBotEndpoint } from './api/user/delete-user-telegram-bot-endpoint';
@@ -394,6 +395,7 @@ export async function bootstrap(registry: CleanupRegistry, signal: AbortSignal) 
   const processManager = new ProcessManager(processRepository, resourceAccessRepository, processDefinitionUpgrader);
   const userProcessProvider = new UserProcessProvider(myProcessAccessQuerier, processManager);
   const processValidatorsFactory = new ProcessValidatorsFactory(sandboxListQuerier);
+  const userManager = new UserManager(userRepository, userAttributesRepository, userChannelRepository);
 
   const tableSchemaManager = new TableSchemaManager(tableSchemaRepository);
   const tableManager = new TableManager(tableRepository, tableDataRepository, tableSchemaManager, tableDataListQuerier);
@@ -573,7 +575,7 @@ export async function bootstrap(registry: CleanupRegistry, signal: AbortSignal) 
     cipherKeyStore,
     cipher,
     userRepository,
-    userAttributesRepository,
+    userManager,
     sandboxRepository,
     notificationRepository,
     processManager,
@@ -654,7 +656,7 @@ export async function bootstrap(registry: CleanupRegistry, signal: AbortSignal) 
     new ExecuteSandboxCommandEndpoint(sandboxInstanceManager),
     new GetUsersEndpoint(userListQuerier),
     new GetUserEndpoint(userRepository, userAttributesRepository),
-    new SaveUserEndpoint(userRepository, userAttributesRepository, authTokenRepository, magicLinkRepository, cipher),
+    new SaveUserEndpoint(userRepository, authTokenRepository, magicLinkRepository, cipher, userManager),
     new GetUserTelegramConfigurationEndpoint(userRepository, telegramConfigurationManager),
     new SaveUserTelegramBotEndpoint(userRepository, telegramConfigurationManager),
     new DeleteUserTelegramBotEndpoint(userRepository, telegramConfigurationManager)
