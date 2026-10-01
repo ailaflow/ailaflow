@@ -1,6 +1,6 @@
 {
   "name": "@ailaflow/cli",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "description": "AilaFlow is a low-code platform for automating business processes across people, AI agents, and connected systems. Build workflows visually or with AI, coordinate tasks, approvals, and handoffs, and connect your tools with JavaScript.",
   "private": false,
   "type": "module",
