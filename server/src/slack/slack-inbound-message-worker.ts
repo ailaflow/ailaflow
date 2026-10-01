@@ -1,3 +1,4 @@
+import { DEFAULT_CHANNEL_NAME } from '@ailaflow/shared';
 import { UserChatSessionProvider } from '../chat-session/user-chat-session-provider';
 import { Logger } from '../core/logger';
 import { SlackConfigurationRepository } from '../repositories/configuration/slack/slack-configuration-repository';
@@ -121,12 +122,7 @@ export class SlackInboundMessageWorker {
       await this.client.postMessage(this.abortController.signal, configuration.botToken, event.slackChannelId, SLACK_TEXT_ONLY_MESSAGE);
       return;
     }
-    const session = await this.userChatSessionProvider.get(
-      this.abortController.signal,
-      false,
-      mapping.userName,
-      this.userChatSessionProvider.getDefaultChannelName()
-    );
+    const session = await this.userChatSessionProvider.get(this.abortController.signal, false, mapping.userName, DEFAULT_CHANNEL_NAME);
     session.queueUserMessage(text, {
       slack: {
         origin: {

@@ -1,4 +1,4 @@
-import { NotificationStep } from '@ailaflow/shared';
+import { DEFAULT_CHANNEL_NAME, NotificationStep } from '@ailaflow/shared';
 import { createAtomActivity } from 'sequential-workflow-machine';
 import { ProcessExecutionGlobalState } from '../process-execution-global-state';
 
@@ -10,7 +10,13 @@ export const notificationStepActivity = createAtomActivity<NotificationStep, Pro
 
     const signal = AbortSignal.any([stopSignal, AbortSignal.timeout(5_000)]);
 
-    const channelName = notifier.getDefaultUserChannelName();
-    await notifier.notifyUsersMatchingAccessExpression(signal, process.name, context.isTest, expression, channelName, notification);
+    await notifier.notifyUsersMatchingAccessExpression(
+      signal,
+      process.name,
+      context.isTest,
+      expression,
+      DEFAULT_CHANNEL_NAME,
+      notification
+    );
   }
 });

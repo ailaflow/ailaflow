@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
 import test from 'node:test';
-import { TaskFinalizationPolicy, TaskSubmissionMode } from '@ailaflow/shared';
+import { DEFAULT_CHANNEL_NAME, TaskFinalizationPolicy, TaskSubmissionMode } from '@ailaflow/shared';
 import { SqliteDatabase } from '../../core/sqlite-database';
 import { SqliteDatabases } from '../../core/sqlite-databases';
 import { AssignedTask } from '../../repositories/task/assigned-task';
@@ -28,11 +28,11 @@ test('queries newest tasks with pagination and an open filter', async () => {
   await insertTask(taskRepository, signal, 'failed', 2500, null, false, null, 2600);
   await insertTask(taskRepository, signal, 'unassigned', 4000, null, false, null);
 
-  await assignedTaskRepository.upsert(signal, new AssignedTask('open', 'alice', 'default', 1100, {}));
-  await assignedTaskRepository.upsert(signal, AssignedTask.create('outdated', 'alice', 'default'));
+  await assignedTaskRepository.upsert(signal, new AssignedTask('open', 'alice', DEFAULT_CHANNEL_NAME, 1100, {}));
+  await assignedTaskRepository.upsert(signal, AssignedTask.create('outdated', 'alice', DEFAULT_CHANNEL_NAME));
   await assignedTaskRepository.upsertMultiple(signal, [
-    new AssignedTask('completed', 'alice', 'default', 3100, {}),
-    AssignedTask.create('completed', 'bob', 'default')
+    new AssignedTask('completed', 'alice', DEFAULT_CHANNEL_NAME, 3100, {}),
+    AssignedTask.create('completed', 'bob', DEFAULT_CHANNEL_NAME)
   ]);
 
   assert.deepEqual(await querier.query(signal, true, 1, 2), {

@@ -1,5 +1,5 @@
 import { useLoader } from '@aibindkit/react';
-import { ProcessDisplay, type MyProcessLiteDto } from '@ailaflow/shared';
+import { DEFAULT_CHANNEL_NAME, ProcessDisplay, type MyProcessLiteDto } from '@ailaflow/shared';
 import { useState } from 'react';
 import { useApiClient } from '../../auth/auth-context';
 import { DashboardListView } from '../../views/dashboard/dashboard-list-view';
@@ -60,7 +60,7 @@ export function DashboardPage() {
 
   return (
     <>
-      <DashboardView chat={<MyChat sessionKey="user:default" />}>
+      <DashboardView chat={<MyChat sessionKey={`user:${DEFAULT_CHANNEL_NAME}`} />}>
         <DashboardPanelView title="My Tasks" variant="dashboard" scrollable action={{ label: 'View all', href: '/my-tasks' }}>
           <DashboardListView
             items={data.tasks.tasks.slice(0, PANEL_ITEM_LIMIT).map(task => ({

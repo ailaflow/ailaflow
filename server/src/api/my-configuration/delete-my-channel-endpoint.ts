@@ -1,3 +1,4 @@
+import { DEFAULT_CHANNEL_NAME } from '@ailaflow/shared';
 import type { DeleteMyChannelResponse } from '@ailaflow/shared';
 import { Request } from 'express';
 import { UserChannelRepository } from '../../repositories/user-channel/user-channel-repository';
@@ -21,7 +22,7 @@ export class DeleteMyChannelEndpoint implements Endpoint {
     if (!channel) {
       throw new EndpointError('Channel not found', 404);
     }
-    if (channel.isDefault) {
+    if (channel.name === DEFAULT_CHANNEL_NAME) {
       throw new EndpointError('The default channel cannot be deleted', 400);
     }
 

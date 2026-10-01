@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
 import test from 'node:test';
+import { DEFAULT_CHANNEL_NAME } from '@ailaflow/shared';
 import { Cipher } from '../core/cipher/cipher';
 import { SeedCipherKeyStore } from '../core/cipher/seed-cipher-key-store';
 import { SqliteDatabase } from '../core/sqlite-database';
@@ -32,7 +33,7 @@ test('manages user Telegram configurations without exposing bot tokens', async (
   await userRepository.insert(signal, new User('alice', null, 'hash', true, false));
   await userRepository.insert(signal, new User('bob', null, 'hash', true, false));
 
-  const saved = await manager.save(signal, 'alice', { channelName: 'default', botToken: 'top-secret' });
+  const saved = await manager.save(signal, 'alice', { channelName: DEFAULT_CHANNEL_NAME, botToken: 'top-secret' });
   assert.equal(saved.bot.botUserName, 'aila_test_bot');
   assert.equal(saved.bot.isConnected, false);
   assert.ok(saved.bot.linkCode);
@@ -44,10 +45,10 @@ test('manages user Telegram configurations without exposing bot tokens', async (
   assert.equal('botToken' in configuration.bots[0], false);
   assert.deepEqual(await manager.get(signal, 'bob'), { bots: [] });
 
-  await manager.save(signal, 'alice', { channelName: 'default' });
-  assert.equal((await repository.tryGet(signal, 'alice', 'default'))?.botToken, 'top-secret');
+  await manager.save(signal, 'alice', { channelName: DEFAULT_CHANNEL_NAME });
+  assert.equal((await repository.tryGet(signal, 'alice', DEFAULT_CHANNEL_NAME))?.botToken, 'top-secret');
 
-  const existing = await repository.tryGet(signal, 'alice', 'default');
+  const existing = await repository.tryGet(signal, 'alice', DEFAULT_CHANNEL_NAME);
   assert.ok(existing);
   await repository.upsert(
     signal,
@@ -58,25 +59,25 @@ test('manages user Telegram configurations without exposing bot tokens', async (
       lastUpdateId: 42
     })
   );
-  assert.equal((await manager.save(signal, 'alice', { channelName: 'default' })).bot.isConnected, true);
-  const reconnected = await manager.save(signal, 'alice', { channelName: 'default', reconnect: true });
+  assert.equal((await manager.save(signal, 'alice', { channelName: DEFAULT_CHANNEL_NAME })).bot.isConnected, true);
+  const reconnected = await manager.save(signal, 'alice', { channelName: DEFAULT_CHANNEL_NAME, reconnect: true });
   assert.equal(reconnected.bot.isConnected, false);
   assert.ok(reconnected.bot.linkCode);
 
   await assert.rejects(
-    () => manager.save(signal, 'bob', { channelName: 'default' }),
+    () => manager.save(signal, 'bob', { channelName: DEFAULT_CHANNEL_NAME }),
     error =>
       error instanceof TelegramConfigurationError &&
       error.reason === TelegramConfigurationErrorReason.INVALID_CONFIGURATION &&
       error.message === 'Bot token is required'
   );
   await assert.rejects(
-    () => manager.delete(signal, 'bob', 'default'),
+    () => manager.delete(signal, 'bob', DEFAULT_CHANNEL_NAME),
     error => error instanceof TelegramConfigurationError && error.reason === TelegramConfigurationErrorReason.CONFIGURATION_NOT_FOUND
   );
-  assert.deepEqual(await manager.delete(signal, 'alice', 'default'), { channelName: 'default' });
+  assert.deepEqual(await manager.delete(signal, 'alice', DEFAULT_CHANNEL_NAME), { channelName: DEFAULT_CHANNEL_NAME });
 
-  assert.ok(eventHandler.events.some(event => event.userName === 'alice' && event.channelName === 'default'));
+  assert.ok(eventHandler.events.some(event => event.userName === 'alice' && event.channelName === DEFAULT_CHANNEL_NAME));
   db.close();
 });
 
@@ -97,7 +98,7 @@ test('rejects invalid Telegram bot identities and webhook configurations', async
     eventBus
   );
   await assert.rejects(
-    () => invalidTokenManager.save(signal, 'alice', { channelName: 'default', botToken: 'bad-token' }),
+    () => invalidTokenManager.save(signal, 'alice', { channelName: DEFAULT_CHANNEL_NAME, botToken: 'bad-token' }),
     error =>
       error instanceof TelegramConfigurationError &&
       error.reason === TelegramConfigurationErrorReason.CREDENTIALS_REJECTED &&
@@ -106,7 +107,7 @@ test('rejects invalid Telegram bot identities and webhook configurations', async
 
   const webhookManager = new TelegramConfigurationManager(repository, new FakeTelegramBotApiClient(null, 'https://example.test'), eventBus);
   await assert.rejects(
-    () => webhookManager.save(signal, 'alice', { channelName: 'default', botToken: 'token' }),
+    () => webhookManager.save(signal, 'alice', { channelName: DEFAULT_CHANNEL_NAME, botToken: 'token' }),
     error =>
       error instanceof TelegramConfigurationError &&
       error.reason === TelegramConfigurationErrorReason.INVALID_CONFIGURATION &&

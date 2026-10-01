@@ -1,8 +1,10 @@
+import { DEFAULT_CHANNEL_NAME } from '@ailaflow/shared';
+
 export type ChatSessionType = 'admin' | 'user' | 'test';
 
 export class ChatSessionId {
   public static createAdmin(userName: string): ChatSessionId {
-    return new ChatSessionId('admin', userName, 'default');
+    return new ChatSessionId('admin', userName, DEFAULT_CHANNEL_NAME);
   }
 
   public static createUserChannel(userName: string, isTest: boolean, channelName: string): ChatSessionId {

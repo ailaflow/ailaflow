@@ -12,7 +12,6 @@ export class UserChannelRepositoryError extends Error {
 export interface UserChannelRepository extends Repository {
   upsert(signal: AbortSignal, channel: UserChannel, transaction?: Transaction): Promise<void>;
   delete(signal: AbortSignal, userName: string, channelName: string, transaction?: Transaction): Promise<void>;
-  get(signal: AbortSignal, userName: string): Promise<UserChannel | null>;
   tryGet(signal: AbortSignal, userName: string, channelName: string): Promise<UserChannel | null>;
   getAll(signal: AbortSignal, userName: string): Promise<UserChannel[]>;
 }

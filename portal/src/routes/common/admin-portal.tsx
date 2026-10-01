@@ -2,7 +2,6 @@ import { Location, Outlet, matchRoutes, useLocation, useNavigate } from 'react-r
 import { AdminChatView } from '../../views/admin/admin-chat-view';
 import { AdminPortalChat } from './admin-portal-chat';
 import { RouterAdapter, aiEnvironment } from '@aibindkit/react';
-import { Portal } from './portal';
 import { sandboxListAiStoreFactory } from './ai-bindings/sandbox-list-ai-bindings';
 import { sandboxEditorAiStoreFactory } from './ai-bindings/sandbox-editor-ai-bindings';
 import { processEditorAiStoreFactory } from './ai-bindings/process-editor-ai-bindings';
@@ -76,11 +75,9 @@ export function AdminPortal() {
 
   return (
     <env.Provider routerAdapter={routerAdapter}>
-      <Portal>
-        <AdminChatView chat={<AdminPortalChat />}>
-          <Outlet />
-        </AdminChatView>
-      </Portal>
+      <AdminChatView chat={<AdminPortalChat />}>
+        <Outlet />
+      </AdminChatView>
     </env.Provider>
   );
 }

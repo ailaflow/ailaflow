@@ -20,9 +20,7 @@ test('rolls back task creation when assignment creation fails', async () => {
   const userQuerier: UserAccessExpressionUserQuerier = {
     queryUserNames: async () => ['missing-user']
   };
-  const notifier = {
-    getDefaultUserChannelName: () => 'default'
-  } as unknown as Notifier;
+  const notifier = {} as unknown as Notifier;
   const creator = new TaskCreator(taskRepository, assignedTaskRepository, userQuerier, notifier);
 
   await taskRepository.setup(signal);

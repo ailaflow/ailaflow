@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { EventEmitter } from 'node:events';
 import { DatabaseSync } from 'node:sqlite';
 import test from 'node:test';
+import { DEFAULT_CHANNEL_NAME } from '@ailaflow/shared';
 import { Request } from 'express';
 import { Cipher } from '../../core/cipher/cipher';
 import { SeedCipherKeyStore } from '../../core/cipher/seed-cipher-key-store';
@@ -37,19 +38,19 @@ test('self endpoints use the authenticated user and admin endpoints use the rout
 
   const saveMy = new SaveMyTelegramBotEndpoint(manager);
   assert.equal(saveMy.path, '/api/my-configuration/telegram');
-  await saveMy.handle(createRequest('alice', { body: { channelName: 'default', botToken: 'alice-token' } }));
-  assert.equal((await repository.tryGet(signal, 'alice', 'default'))?.botToken, 'alice-token');
+  await saveMy.handle(createRequest('alice', { body: { channelName: DEFAULT_CHANNEL_NAME, botToken: 'alice-token' } }));
+  assert.equal((await repository.tryGet(signal, 'alice', DEFAULT_CHANNEL_NAME))?.botToken, 'alice-token');
 
   const saveUser = new SaveUserTelegramBotEndpoint(userRepository, manager);
   assert.equal(saveUser.path, '/api/users/:userName/telegram');
   await saveUser.handle(
     createRequest('admin', {
       params: { userName: 'alice' },
-      body: { channelName: 'default', botToken: 'admin-set-token' }
+      body: { channelName: DEFAULT_CHANNEL_NAME, botToken: 'admin-set-token' }
     })
   );
-  assert.equal((await repository.tryGet(signal, 'alice', 'default'))?.botToken, 'admin-set-token');
-  assert.equal(await repository.tryGet(signal, 'admin', 'default'), null);
+  assert.equal((await repository.tryGet(signal, 'alice', DEFAULT_CHANNEL_NAME))?.botToken, 'admin-set-token');
+  assert.equal(await repository.tryGet(signal, 'admin', DEFAULT_CHANNEL_NAME), null);
 
   const getMy = new GetMyTelegramConfigurationEndpoint(manager);
   assert.equal(getMy.path, '/api/my-configuration/telegram');
@@ -66,22 +67,22 @@ test('self endpoints use the authenticated user and admin endpoints use the rout
   );
 
   await assert.rejects(
-    () => saveMy.handle(createRequest('admin', { body: { channelName: 'default' } })),
+    () => saveMy.handle(createRequest('admin', { body: { channelName: DEFAULT_CHANNEL_NAME } })),
     error => error instanceof EndpointError && error.status === 400 && error.message === 'Bot token is required'
   );
 
   const deleteUser = new DeleteUserTelegramBotEndpoint(userRepository, manager);
   assert.equal(deleteUser.path, '/api/users/:userName/telegram/:channelName');
   assert.equal(deleteUser.admin, true);
-  assert.deepEqual(await deleteUser.handle(createRequest('admin', { params: { userName: 'alice', channelName: 'default' } })), {
-    channelName: 'default'
+  assert.deepEqual(await deleteUser.handle(createRequest('admin', { params: { userName: 'alice', channelName: DEFAULT_CHANNEL_NAME } })), {
+    channelName: DEFAULT_CHANNEL_NAME
   });
   assert.equal((await getUser.handle(createRequest('admin', { params: { userName: 'alice' } }))).bots.length, 0);
 
   const deleteMy = new DeleteMyTelegramBotEndpoint(manager);
   assert.equal(deleteMy.path, '/api/my-configuration/telegram/:channelName');
   await assert.rejects(
-    () => deleteMy.handle(createRequest('alice', { params: { channelName: 'default' } })),
+    () => deleteMy.handle(createRequest('alice', { params: { channelName: DEFAULT_CHANNEL_NAME } })),
     error => error instanceof EndpointError && error.status === 404
   );
   db.close();

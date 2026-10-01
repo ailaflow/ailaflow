@@ -28,20 +28,13 @@ export class SaveMyChannelEndpoint implements Endpoint {
         if (existingChannel) {
           throw new EndpointError(`Channel "${request.name}" already exists`, 400);
         }
-        if (!request.isDefault && !(await this.repository.get(signal, userName))) {
-          throw new EndpointError('The first channel must be the default', 400);
-        }
-        channel = UserChannel.create(userName, request.name, request.prompt, request.isDefault);
+        channel = UserChannel.create(userName, request.name, request.prompt);
       } else {
         if (!existingChannel) {
           throw new EndpointError(`Channel "${request.name}" not found`, 404);
         }
-        if (existingChannel.isDefault && !request.isDefault) {
-          throw new EndpointError('The default channel cannot be unset', 400);
-        }
         channel = existingChannel;
         channel.setPrompt(request.prompt);
-        channel.setIsDefault(request.isDefault);
       }
       await this.repository.upsert(signal, channel);
     } catch (error) {

@@ -14,10 +14,6 @@ export class Notifier {
     private readonly notificationRepository: NotificationRepository
   ) {}
 
-  public getDefaultUserChannelName(): string {
-    return this.userChatSessionProvider.getDefaultChannelName();
-  }
-
   public async notifyUsersMatchingAccessExpression(
     signal: AbortSignal,
     processName: string,

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
 import test from 'node:test';
-import { TaskFinalizationPolicy, TaskSubmissionMode } from '@ailaflow/shared';
+import { DEFAULT_CHANNEL_NAME, TaskFinalizationPolicy, TaskSubmissionMode } from '@ailaflow/shared';
 import { SqliteDatabase } from '../../core/sqlite-database';
 import { SqliteDatabases } from '../../core/sqlite-databases';
 import { AssignedTask } from '../../repositories/task/assigned-task';
@@ -178,13 +178,13 @@ test('queries tasks assigned to the current user', async () => {
   );
 
   await assignedTaskRepository.upsertMultiple(signal, [
-    AssignedTask.create('task_1', 'alice', 'default'),
-    AssignedTask.create('task_2', 'alice', 'default'),
-    AssignedTask.create('task_3', 'alice', 'default'),
-    AssignedTask.create('task_4', 'bob', 'default'),
-    new AssignedTask('task_5', 'alice', 'default', 4700, null),
-    AssignedTask.create('task_6', 'alice', 'default'),
-    AssignedTask.create('task_7', 'alice', 'default')
+    AssignedTask.create('task_1', 'alice', DEFAULT_CHANNEL_NAME),
+    AssignedTask.create('task_2', 'alice', DEFAULT_CHANNEL_NAME),
+    AssignedTask.create('task_3', 'alice', DEFAULT_CHANNEL_NAME),
+    AssignedTask.create('task_4', 'bob', DEFAULT_CHANNEL_NAME),
+    new AssignedTask('task_5', 'alice', DEFAULT_CHANNEL_NAME, 4700, null),
+    AssignedTask.create('task_6', 'alice', DEFAULT_CHANNEL_NAME),
+    AssignedTask.create('task_7', 'alice', DEFAULT_CHANNEL_NAME)
   ]);
 
   assert.deepEqual(await querier.query(signal, false, 'alice', false, 1, 2), {

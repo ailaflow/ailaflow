@@ -1,3 +1,5 @@
+import { DEFAULT_CHANNEL_NAME } from '@ailaflow/shared';
+
 export interface SlackConfiguration {
   appToken: string;
   botToken: string;
@@ -34,7 +36,7 @@ export interface SlackUserMapping {
   workspaceId: string;
   slackUserId: string;
   userName: string;
-  channelName: 'default';
+  channelName: typeof DEFAULT_CHANNEL_NAME;
   generation: number;
   deliveryStartMessageId: number | null;
   dmChannelId: string | null;

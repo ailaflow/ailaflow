@@ -1,4 +1,5 @@
 import { ToolContext } from '@aibindkit/llm';
+import { DEFAULT_CHANNEL_NAME } from '@ailaflow/shared';
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { AssignedTaskCompleter, AssignedTaskCompleterError } from '../../task/assigned-task-completer';
@@ -49,7 +50,7 @@ test('submits a task that supports the AI tool', async () => {
 
 function createContext(): ToolContext {
   return {
-    sessionId: ChatSessionId.createUserChannel('alice', false, 'default').encode(),
+    sessionId: ChatSessionId.createUserChannel('alice', false, DEFAULT_CHANNEL_NAME).encode(),
     sessionToken: ''
   };
 }

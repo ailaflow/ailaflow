@@ -4,7 +4,7 @@ import test from 'node:test';
 import { ProcessManager } from '../../process/process-manager';
 import { Process } from '../../repositories/process/process';
 import { GetProcessDetailsTool } from './get-process-details-tool';
-import { ProcessExecutionMode } from '@ailaflow/shared';
+import { DEFAULT_CHANNEL_NAME, ProcessExecutionMode } from '@ailaflow/shared';
 
 test('returns process details', async () => {
   const processManager = {
@@ -49,7 +49,7 @@ test('returns an error when the process does not exist', async () => {
 
 function createContext(): ToolContext {
   return {
-    sessionId: 'admin:admin:default',
+    sessionId: `admin:admin:${DEFAULT_CHANNEL_NAME}`,
     sessionToken: ''
   };
 }

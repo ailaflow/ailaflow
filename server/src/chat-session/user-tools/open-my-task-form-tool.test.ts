@@ -1,4 +1,5 @@
 import { ToolContext } from '@aibindkit/llm';
+import { DEFAULT_CHANNEL_NAME } from '@ailaflow/shared';
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { Task } from '../../repositories/task/task';
@@ -62,7 +63,7 @@ test('returns an error when the task is not available to the user', async () => 
 
 function createContext(userName: string, isTest: boolean): ToolContext {
   return {
-    sessionId: ChatSessionId.createUserChannel(userName, isTest, 'default').encode(),
+    sessionId: ChatSessionId.createUserChannel(userName, isTest, DEFAULT_CHANNEL_NAME).encode(),
     sessionToken: ''
   };
 }

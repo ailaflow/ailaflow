@@ -1,3 +1,4 @@
+import { DEFAULT_CHANNEL_NAME } from '@ailaflow/shared';
 import { useState } from 'react';
 import { ProcessTesterChatsView } from '../../views/process-tester/process-tester-chats-view';
 import { FindUserPopup } from '../common/popups/find-user-popup';
@@ -25,7 +26,7 @@ export function ProcessTesterChats() {
         onSelectUser={state.selectUserChat}
         onCloseUser={state.closeUserChat}
       >
-        <MyChat sessionKey={`test:${state.activeChatUserName}:default`} testUserName={state.activeChatUserName} />
+        <MyChat sessionKey={`test:${state.activeChatUserName}:${DEFAULT_CHANNEL_NAME}`} testUserName={state.activeChatUserName} />
       </ProcessTesterChatsView>
       {isFindUserPopupOpen && (
         <FindUserPopup

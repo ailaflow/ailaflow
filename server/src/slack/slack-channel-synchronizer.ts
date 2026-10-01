@@ -1,5 +1,6 @@
 import { ChatMessage, ChatMessageType } from '@aibindkit/core';
 import { ChatSession } from '@aibindkit/llm';
+import { DEFAULT_CHANNEL_NAME } from '@ailaflow/shared';
 import { UserChatSessionProvider } from '../chat-session/user-chat-session-provider';
 import { abortableSleep } from '../core/abortable-sleep';
 import { Logger } from '../core/logger';
@@ -33,7 +34,7 @@ export class SlackChannelSynchronizer {
     private readonly formatter: SlackMessageFormatter = new SlackMessageFormatter()
   ) {
     this.deliveryStartMessageId = mapping.deliveryStartMessageId;
-    this.logger = new Logger(`${SlackChannelSynchronizer.name}:${mapping.userName}:default`);
+    this.logger = new Logger(`${SlackChannelSynchronizer.name}:${mapping.userName}:${DEFAULT_CHANNEL_NAME}`);
   }
 
   public async start(): Promise<void> {
@@ -59,7 +60,7 @@ export class SlackChannelSynchronizer {
       AbortSignal.any([AbortSignal.timeout(10_000), this.abortController.signal]),
       false,
       this.mapping.userName,
-      'default'
+      DEFAULT_CHANNEL_NAME
     );
     this.detachSession();
     this.session = session;

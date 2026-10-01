@@ -4,10 +4,6 @@ import { ChatSession } from '@aibindkit/llm';
 export class UserChatSessionProvider {
   public constructor(private readonly chatSessionManager: ChatSessionManager) {}
 
-  public getDefaultChannelName(): string {
-    return 'default';
-  }
-
   public get(signal: AbortSignal, isTest: boolean, userName: string, channelName: string): Promise<ChatSession> {
     const authContext: ChatAuthContext = {
       userName,

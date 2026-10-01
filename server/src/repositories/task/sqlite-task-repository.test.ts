@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
 import test from 'node:test';
-import { TaskFinalizationPolicy, TaskSubmissionMode } from '@ailaflow/shared';
+import { DEFAULT_CHANNEL_NAME, TaskFinalizationPolicy, TaskSubmissionMode } from '@ailaflow/shared';
 import { SqliteDatabase } from '../../core/sqlite-database';
 import { SqliteDatabases } from '../../core/sqlite-databases';
 import { Task } from './task';
@@ -382,7 +382,7 @@ test('task can be deleted with its assignments', async () => {
       null
     )
   );
-  await assignedTaskRepository.upsert(signal, AssignedTask.create('task_1', 'user_1', 'default'));
+  await assignedTaskRepository.upsert(signal, AssignedTask.create('task_1', 'user_1', DEFAULT_CHANNEL_NAME));
 
   assert.equal(await taskRepository.delete(signal, 'task_1'), true);
   assert.equal(await taskRepository.tryGet(signal, 'task_1'), null);

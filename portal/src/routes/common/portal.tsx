@@ -1,4 +1,4 @@
-import { matchPath, useLocation } from 'react-router';
+import { matchPath, Outlet, useLocation } from 'react-router';
 import { type CommandMenuItem, type LinkMenuItem, type MenuItem, PortalLayout } from '../../views/portal/portal-layout';
 import { useAuthState } from '../../auth/auth-context';
 import { useEffect, useState } from 'react';
@@ -61,9 +61,7 @@ function selectMenuItems(items: MenuItemDefinition[], pathname: string): MenuIte
   });
 }
 
-let licenseChecked = false;
-
-export function Portal(props: { children: React.ReactNode }) {
+export function Portal() {
   const { session, setSession, apiClient } = useAuthState();
   if (!session) {
     throw new Error('No session available');
@@ -81,21 +79,14 @@ export function Portal(props: { children: React.ReactNode }) {
     const abortController = new AbortController();
 
     async function check() {
-      try {
-        const response = await apiClient.licenseConfiguration.getStatus(abortController.signal);
-        if (response.validationError) {
-          setLicenseValidationError(response.validationError);
-        }
-      } catch (e) {
-        // Ignore
+      const response = await apiClient.licenseConfiguration.getStatus(abortController.signal);
+      if (response.validationError) {
+        setLicenseValidationError(response.validationError);
       }
     }
 
-    if (!licenseChecked) {
-      licenseChecked = true;
-      void check();
-      return () => abortController.abort();
-    }
+    void check();
+    return () => abortController.abort();
   }, [apiClient]);
 
   useEffect(() => {
@@ -137,7 +128,7 @@ export function Portal(props: { children: React.ReactNode }) {
         userName={session.userName}
         onCommand={onCommand}
       >
-        {props.children}
+        <Outlet />
       </PortalLayout>
       {licenseValidationError && <LicenseAlertPopup error={licenseValidationError} onClose={closeLicenseAlert} />}
     </>

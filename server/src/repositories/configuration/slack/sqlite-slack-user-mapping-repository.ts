@@ -1,3 +1,4 @@
+import { DEFAULT_CHANNEL_NAME } from '@ailaflow/shared';
 import { SqliteDatabase } from '../../../core/sqlite-database';
 import { SqliteDatabases } from '../../../core/sqlite-databases';
 import { Transaction } from '../../../core/transaction';
@@ -25,7 +26,7 @@ export class SqliteSlackUserMappingRepository implements SlackUserMappingReposit
             workspaceId TEXT NOT NULL,
             slackUserId TEXT NOT NULL,
             userName TEXT NOT NULL,
-            channelName TEXT NOT NULL CHECK (channelName = 'default'),
+            channelName TEXT NOT NULL CHECK (channelName = '${DEFAULT_CHANNEL_NAME}'),
             generation INTEGER NOT NULL,
             deliveryStartMessageId INTEGER,
             dmChannelId TEXT,
@@ -107,7 +108,9 @@ export class SqliteSlackUserMappingRepository implements SlackUserMappingReposit
         if (change.userName === null) {
           continue;
         }
-        const existing = originalMappings.find(mapping => mapping.userName === change.userName && mapping.channelName === 'default');
+        const existing = originalMappings.find(
+          mapping => mapping.userName === change.userName && mapping.channelName === DEFAULT_CHANNEL_NAME
+        );
         if (existing && (existing.workspaceId !== workspaceId || existing.slackUserId !== change.slackUserId)) {
           throw new SlackMappingValidationError('AilaFlow user is already mapped');
         }
@@ -131,9 +134,19 @@ export class SqliteSlackUserMappingRepository implements SlackUserMappingReposit
           INSERT INTO slack_user_mappings (
             workspaceId, slackUserId, userName, channelName, generation, deliveryStartMessageId, dmChannelId,
             welcomeStatus, welcomeAttemptCount, welcomeNextAttemptAt, welcomeSentAt, welcomeLastError, createdAt, updatedAt
-          ) VALUES (?, ?, ?, 'default', ?, NULL, NULL, ?, 0, ?, NULL, NULL, ?, ?)
+          ) VALUES (?, ?, ?, ?, ?, NULL, NULL, ?, 0, ?, NULL, NULL, ?, ?)
         `
-        ).run(workspaceId, change.slackUserId, change.userName, generation, SlackMappingWelcomeStatus.PENDING, now, createdAt, now);
+        ).run(
+          workspaceId,
+          change.slackUserId,
+          change.userName,
+          DEFAULT_CHANNEL_NAME,
+          generation,
+          SlackMappingWelcomeStatus.PENDING,
+          now,
+          createdAt,
+          now
+        );
       }
 
       const mappingRevision = expectedRevision + 1;
@@ -264,5 +277,5 @@ export class SqliteSlackUserMappingRepository implements SlackUserMappingReposit
 }
 
 function mapMapping(row: SlackUserMapping): SlackUserMapping {
-  return { ...row, channelName: 'default' };
+  return { ...row, channelName: DEFAULT_CHANNEL_NAME };
 }

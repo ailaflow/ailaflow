@@ -1,4 +1,5 @@
 import { useLoader } from '@aibindkit/react';
+import { DEFAULT_CHANNEL_NAME } from '@ailaflow/shared';
 import type { GetTelegramConfigurationResponse, TelegramBotConfigurationDto } from '@ailaflow/shared';
 import { useEffect, useRef, useState } from 'react';
 import { useApiClient } from '../../auth/auth-context';
@@ -6,7 +7,7 @@ import { TelegramConfigurationView, type TelegramBotDraft } from '../../views/co
 import { PortalErrorView } from '../../views/portal/portal-error-view';
 import { PortalLoadingView } from '../../views/portal/portal-loading-view';
 
-const availableChannels = ['default'];
+const availableChannels = [DEFAULT_CHANNEL_NAME];
 
 export interface TelegramConfigurationProps {
   userName?: string;

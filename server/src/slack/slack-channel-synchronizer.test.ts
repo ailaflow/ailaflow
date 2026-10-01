@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { ChatMessage, ChatMessageType, SimpleEvent } from '@aibindkit/core';
 import { ChatSession, ChatSessionUpdate } from '@aibindkit/llm';
+import { DEFAULT_CHANNEL_NAME } from '@ailaflow/shared';
 import test from 'node:test';
 import { UserChatSessionProvider } from '../chat-session/user-chat-session-provider';
 import { KvConfigurationManager } from '../configuration/kv/kv-configuration-manager';
@@ -229,7 +230,7 @@ function createMapping(): SlackUserMapping {
     workspaceId: 'workspace-1',
     slackUserId: 'slack-user-1',
     userName: 'alice',
-    channelName: 'default',
+    channelName: DEFAULT_CHANNEL_NAME,
     generation: 1,
     deliveryStartMessageId: 0,
     dmChannelId: 'dm-1',

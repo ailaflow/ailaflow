@@ -1,5 +1,5 @@
 import { ToolContext } from '@aibindkit/llm';
-import { ProcessDisplay, ProcessExecutionMode } from '@ailaflow/shared';
+import { DEFAULT_CHANNEL_NAME, ProcessDisplay, ProcessExecutionMode } from '@ailaflow/shared';
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { MyProcessListQuerier } from '../../queriers/my-process-list/my-process-list-querier';
@@ -42,7 +42,7 @@ test('returns the requested page of supported processes', async () => {
 
 function createContext(userName: string): ToolContext {
   return {
-    sessionId: ChatSessionId.createUserChannel(userName, false, 'default').encode(),
+    sessionId: ChatSessionId.createUserChannel(userName, false, DEFAULT_CHANNEL_NAME).encode(),
     sessionToken: ''
   };
 }

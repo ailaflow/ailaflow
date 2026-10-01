@@ -1,4 +1,4 @@
-import { SlackConnectionStatus } from '@ailaflow/shared';
+import { DEFAULT_CHANNEL_NAME, SlackConnectionStatus } from '@ailaflow/shared';
 import type { MySlackConfigurationResponse } from '@ailaflow/shared';
 import { SlackConfigurationRepository } from '../repositories/configuration/slack/slack-configuration-repository';
 import { SlackUserDirectoryRepository } from '../repositories/configuration/slack/slack-user-directory-repository';
@@ -14,7 +14,7 @@ export class SlackStatusProvider {
   ) {}
 
   public async get(signal: AbortSignal, userName: string): Promise<MySlackConfigurationResponse> {
-    const mapping = await this.mappingRepository.tryGetByAilaUser(signal, userName, 'default');
+    const mapping = await this.mappingRepository.tryGetByAilaUser(signal, userName, DEFAULT_CHANNEL_NAME);
     if (!mapping) {
       return { status: SlackConnectionStatus.NOT_CONNECTED, workspaceName: null, displayName: null, email: null };
     }

@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
 import test from 'node:test';
+import { DEFAULT_CHANNEL_NAME } from '@ailaflow/shared';
 import { Cipher } from '../../../core/cipher/cipher';
 import { SeedCipherKeyStore } from '../../../core/cipher/seed-cipher-key-store';
 import { SqliteDatabase } from '../../../core/sqlite-database';
@@ -55,7 +56,7 @@ test('persists Slack configuration, directory, atomic mappings, and inbound dedu
     { slackUserId: 'U2', userName: 'bob' }
   ]);
   assert.equal(firstRevision, 1);
-  assert.equal((await mappings.tryGetByAilaUser(signal, 'alice', 'default'))?.slackUserId, 'U1');
+  assert.equal((await mappings.tryGetByAilaUser(signal, 'alice', DEFAULT_CHANNEL_NAME))?.slackUserId, 'U1');
   await assert.rejects(
     () => mappings.applyChanges(signal, 'T1', 0, [{ slackUserId: 'U1', userName: null }]),
     SlackMappingRevisionConflictError
@@ -70,7 +71,7 @@ test('persists Slack configuration, directory, atomic mappings, and inbound dedu
       ]),
     SlackMappingValidationError
   );
-  assert.equal((await mappings.tryGetByAilaUser(signal, 'alice', 'default'))?.slackUserId, 'U1');
+  assert.equal((await mappings.tryGetByAilaUser(signal, 'alice', DEFAULT_CHANNEL_NAME))?.slackUserId, 'U1');
   assert.equal((await mappings.tryGetBySlackUser(signal, 'T1', 'U2'))?.generation, 1);
 
   await directory.replaceFromRefresh(signal, 'T1', [directoryUser('U1', 20)], 20);

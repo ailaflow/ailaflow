@@ -6,7 +6,7 @@ export interface MyChannelsViewProps {
   nameErrors: Array<string | null>;
   nameReadOnly: boolean[];
   canSave: boolean[];
-  canReset: boolean[];
+  showRemove: boolean[];
   canRemove: boolean[];
   saving: boolean[];
   errors: Array<string | null>;
@@ -14,8 +14,7 @@ export interface MyChannelsViewProps {
   canAdd: boolean;
   onAdd(): void;
   onChange(index: number, delta: Partial<MyChannelDto>): void;
-  onSetDefault(index: number): void;
-  onReset(index: number): void;
+  onCancel(index: number): void;
   onSave(index: number): void | Promise<void>;
   onRemove(index: number): void | Promise<void>;
 }
@@ -27,9 +26,7 @@ export function MyChannelsView(props: MyChannelsViewProps) {
         <div className="flex flex-col gap-3 border-b border-slate-200 p-4 sm:flex-row sm:items-start sm:justify-between sm:p-5">
           <div>
             <h2 className="text-lg font-semibold text-slate-900">My channels</h2>
-            <p className="mt-1 text-sm leading-6 text-slate-500">
-              Create chat channels with custom instructions and choose the channel used by default.
-            </p>
+            <p className="mt-1 text-sm leading-6 text-slate-500">Create and manage chat channels.</p>
           </div>
           <button
             type="button"
@@ -45,46 +42,20 @@ export function MyChannelsView(props: MyChannelsViewProps) {
         <div className="space-y-4 p-4 sm:p-5">
           {props.channels.map((channel, index) => (
             <article key={index} className="rounded-lg border border-slate-200 bg-slate-50/50 p-4">
-              <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-start">
-                <label className="block text-sm font-medium text-slate-700">
-                  Channel name
-                  <input
-                    type="text"
-                    value={channel.name}
-                    disabled={props.saving[index]}
-                    readOnly={props.nameReadOnly[index]}
-                    aria-invalid={props.nameErrors[index] !== null}
-                    onChange={event => props.onChange(index, { name: event.target.value })}
-                    className={`mt-1.5 h-9 w-full rounded-md border px-3 font-normal text-slate-900 outline-none focus:border-slate-500 disabled:bg-slate-100 read-only:cursor-default read-only:bg-slate-100 ${
-                      props.nameErrors[index] ? 'border-red-300' : 'border-slate-300'
-                    }`}
-                  />
-                  {props.nameErrors[index] ? <span className="mt-1 block font-normal text-red-700">{props.nameErrors[index]}</span> : null}
-                </label>
-
-                <label className="flex cursor-pointer items-center gap-2 text-sm font-medium text-slate-700 md:pt-9">
-                  <input
-                    type="radio"
-                    name="default-channel"
-                    checked={channel.isDefault}
-                    disabled={props.saving[index]}
-                    onChange={() => props.onSetDefault(index)}
-                    className="h-4 w-4 accent-slate-900"
-                  />
-                  Default
-                </label>
-              </div>
-
-              <label className="mt-4 block text-sm font-medium text-slate-700">
-                Custom instructions
-                <textarea
-                  rows={5}
-                  value={channel.prompt}
+              <label className="block text-sm font-medium text-slate-700">
+                Channel name
+                <input
+                  type="text"
+                  value={channel.name}
                   disabled={props.saving[index]}
-                  onChange={event => props.onChange(index, { prompt: event.target.value })}
-                  placeholder="Optional instructions added to this channel's assistant prompt"
-                  className="mt-1.5 w-full resize-y rounded-md border border-slate-300 bg-white px-3 py-2 font-normal leading-6 text-slate-900 outline-none focus:border-slate-500 disabled:bg-slate-100"
+                  readOnly={props.nameReadOnly[index]}
+                  aria-invalid={props.nameErrors[index] !== null}
+                  onChange={event => props.onChange(index, { name: event.target.value })}
+                  className={`mt-1.5 h-9 w-full rounded-md border px-3 font-normal text-slate-900 outline-none focus:border-slate-500 disabled:bg-slate-100 read-only:cursor-default read-only:bg-slate-100 ${
+                    props.nameErrors[index] ? 'border-red-300' : 'border-slate-300'
+                  }`}
                 />
+                {props.nameErrors[index] ? <span className="mt-1 block font-normal text-red-700">{props.nameErrors[index]}</span> : null}
               </label>
 
               {props.errors[index] ? (
@@ -99,22 +70,26 @@ export function MyChannelsView(props: MyChannelsViewProps) {
               ) : null}
 
               <div className="mt-4 flex flex-col-reverse gap-2 border-t border-slate-200 pt-4 sm:flex-row sm:justify-end">
-                <button
-                  type="button"
-                  disabled={!props.canRemove[index]}
-                  onClick={() => void props.onRemove(index)}
-                  className="cursor-pointer h-9 rounded-md border border-red-200 bg-white px-3 text-sm font-medium text-red-700 hover:bg-red-50 disabled:cursor-not-allowed disabled:border-slate-200 disabled:text-slate-300"
-                >
-                  Delete
-                </button>
-                <button
-                  type="button"
-                  disabled={!props.canReset[index] || props.saving[index]}
-                  onClick={() => props.onReset(index)}
-                  className="cursor-pointer h-9 rounded-md border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:text-slate-300"
-                >
-                  {props.nameReadOnly[index] ? 'Reset' : 'Cancel'}
-                </button>
+                {props.showRemove[index] ? (
+                  <button
+                    type="button"
+                    disabled={!props.canRemove[index]}
+                    onClick={() => void props.onRemove(index)}
+                    className="cursor-pointer h-9 rounded-md border border-red-200 bg-white px-3 text-sm font-medium text-red-700 hover:bg-red-50 disabled:cursor-not-allowed disabled:border-slate-200 disabled:text-slate-300"
+                  >
+                    Delete
+                  </button>
+                ) : null}
+                {!props.nameReadOnly[index] ? (
+                  <button
+                    type="button"
+                    disabled={props.saving[index]}
+                    onClick={() => props.onCancel(index)}
+                    className="cursor-pointer h-9 rounded-md border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:text-slate-300"
+                  >
+                    Cancel
+                  </button>
+                ) : null}
                 <button
                   type="button"
                   disabled={!props.canSave[index]}

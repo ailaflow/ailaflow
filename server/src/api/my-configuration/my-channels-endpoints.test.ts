@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { EventEmitter } from 'node:events';
 import { DatabaseSync } from 'node:sqlite';
 import test from 'node:test';
+import { DEFAULT_CHANNEL_NAME } from '@ailaflow/shared';
 import { Request } from 'express';
 import { SqliteDatabase } from '../../core/sqlite-database';
 import { SqliteDatabases } from '../../core/sqlite-databases';
@@ -23,7 +24,7 @@ test('gets, creates and updates channels for the authenticated user', async () =
   assert.equal(getEndpoint.path, '/api/my-configuration/channels');
   assert.equal(saveEndpoint.path, '/api/my-configuration/channels');
   assert.deepEqual(await getEndpoint.handle(createRequest('alice')), {
-    channels: [{ name: 'default', prompt: '', isDefault: true }]
+    channels: [{ name: DEFAULT_CHANNEL_NAME, prompt: '' }]
   });
 
   assert.deepEqual(
@@ -31,7 +32,6 @@ test('gets, creates and updates channels for the authenticated user', async () =
       createRequest('alice', {
         name: 'support',
         prompt: 'Help with support requests.',
-        isDefault: false,
         insert: true
       })
     ),
@@ -41,19 +41,18 @@ test('gets, creates and updates channels for the authenticated user', async () =
     createRequest('alice', {
       name: 'support',
       prompt: 'Updated support instructions.',
-      isDefault: true,
       insert: false
     })
   );
 
   assert.deepEqual(await getEndpoint.handle(createRequest('alice')), {
     channels: [
-      { name: 'support', prompt: 'Updated support instructions.', isDefault: true },
-      { name: 'default', prompt: '', isDefault: false }
+      { name: DEFAULT_CHANNEL_NAME, prompt: '' },
+      { name: 'support', prompt: 'Updated support instructions.' }
     ]
   });
   assert.deepEqual(await getEndpoint.handle(createRequest('bob')), {
-    channels: [{ name: 'default', prompt: '', isDefault: true }]
+    channels: [{ name: DEFAULT_CHANNEL_NAME, prompt: '' }]
   });
 
   db.close();
@@ -63,15 +62,14 @@ test('validates item creation and immutable names', async () => {
   const { db, repository } = await setup();
   const endpoint = new SaveMyChannelEndpoint(repository);
 
-  await assertBadRequest(endpoint.handle(createRequest('alice', { name: 'Invalid', prompt: '', isDefault: false, insert: true })));
-  await assertBadRequest(endpoint.handle(createRequest('alice', { name: 'default', prompt: '', isDefault: false, insert: true })));
-  await assertBadRequest(endpoint.handle(createRequest('alice', { name: 'default', prompt: '', isDefault: false, insert: false })));
+  await assertBadRequest(endpoint.handle(createRequest('alice', { name: 'Invalid', prompt: '', insert: true })));
+  await assertBadRequest(endpoint.handle(createRequest('alice', { name: DEFAULT_CHANNEL_NAME, prompt: '', insert: true })));
   await assert.rejects(
-    endpoint.handle(createRequest('alice', { name: 'renamed', prompt: '', isDefault: true, insert: false })),
+    endpoint.handle(createRequest('alice', { name: 'renamed', prompt: '', insert: false })),
     error => error instanceof EndpointError && error.status === 404 && error.message === 'Channel "renamed" not found'
   );
 
-  assert.deepEqual(await repository.getAll(new AbortController().signal, 'alice'), [new UserChannel('alice', 'default', '', true)]);
+  assert.deepEqual(await repository.getAll(new AbortController().signal, 'alice'), [new UserChannel('alice', DEFAULT_CHANNEL_NAME, '')]);
   db.close();
 });
 
@@ -79,11 +77,12 @@ test('deletes only non-default channels', async () => {
   const { db, repository } = await setup();
   const saveEndpoint = new SaveMyChannelEndpoint(repository);
   const deleteEndpoint = new DeleteMyChannelEndpoint(repository);
-  await saveEndpoint.handle(createRequest('alice', { name: 'support', prompt: '', isDefault: false, insert: true }));
+  await saveEndpoint.handle(createRequest('alice', { name: 'support', prompt: '', insert: true }));
 
   assert.equal(deleteEndpoint.path, '/api/my-configuration/channels/:name');
-  await assertBadRequest(deleteEndpoint.handle(createRequest('alice', undefined, { name: 'default' })));
+  await assertBadRequest(deleteEndpoint.handle(createRequest('alice', undefined, { name: DEFAULT_CHANNEL_NAME })));
   assert.deepEqual(await deleteEndpoint.handle(createRequest('alice', undefined, { name: 'support' })), {});
+  assert.notEqual(await repository.tryGet(new AbortController().signal, 'alice', DEFAULT_CHANNEL_NAME), null);
   assert.equal(await repository.tryGet(new AbortController().signal, 'alice', 'support'), null);
 
   db.close();

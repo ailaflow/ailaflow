@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { ChatSession } from '@aibindkit/llm';
+import { DEFAULT_CHANNEL_NAME } from '@ailaflow/shared';
 import { AdminChatSessionProvider } from '../chat-session/admin-chat-session-provider';
 import { UserChatSessionProvider } from '../chat-session/user-chat-session-provider';
 import { UserAccessExpressionUserQuerier } from '../queriers/user-access-expression/user-access-expression-user-querier';
@@ -14,7 +15,6 @@ test('persists a notification for every matched user', async () => {
     queryUserNames: async () => ['alice', 'bob']
   } as UserAccessExpressionUserQuerier;
   const sessionProvider = {
-    getDefaultChannelName: () => 'default',
     get: async () => ({ queueUserMessage: () => undefined }) as unknown as ChatSession
   } as unknown as UserChatSessionProvider;
   const adminSessionProvider = {
@@ -30,7 +30,14 @@ test('persists a notification for every matched user', async () => {
   } as NotificationRepository;
   const notifier = new Notifier(userQuerier, sessionProvider, adminSessionProvider, notificationRepository);
 
-  await notifier.notifyUsersMatchingAccessExpression(new AbortController().signal, 'test', false, '', 'default', 'Deployment completed');
+  await notifier.notifyUsersMatchingAccessExpression(
+    new AbortController().signal,
+    'test',
+    false,
+    '',
+    DEFAULT_CHANNEL_NAME,
+    'Deployment completed'
+  );
 
   assert.equal(storedNotifications.length, 2);
   assert.deepEqual(

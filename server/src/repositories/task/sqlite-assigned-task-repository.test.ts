@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
 import test from 'node:test';
-import { TaskFinalizationPolicy, TaskSubmissionMode } from '@ailaflow/shared';
+import { DEFAULT_CHANNEL_NAME, TaskFinalizationPolicy, TaskSubmissionMode } from '@ailaflow/shared';
 import { SqliteDatabase } from '../../core/sqlite-database';
 import { SqliteDatabases } from '../../core/sqlite-databases';
 import { Task } from './task';
@@ -61,16 +61,16 @@ test('assigned tasks can be upserted and queried by task and user', async () => 
   await taskRepository.insert(signal, task1);
   await taskRepository.insert(signal, task2);
 
-  await assert.rejects(() => assignedTaskRepository.upsert(signal, AssignedTask.create('missing', 'user_1', 'default')));
-  await assignedTaskRepository.upsert(signal, AssignedTask.create(task1.id, 'user_1', 'default'));
+  await assert.rejects(() => assignedTaskRepository.upsert(signal, AssignedTask.create('missing', 'user_1', DEFAULT_CHANNEL_NAME)));
+  await assignedTaskRepository.upsert(signal, AssignedTask.create(task1.id, 'user_1', DEFAULT_CHANNEL_NAME));
   await assignedTaskRepository.upsertMultiple(signal, [
     AssignedTask.create(task1.id, 'user_2', 'telegram'),
-    new AssignedTask(task2.id, 'user_1', 'default', 2000, { approved: true, comments: ['ready'] })
+    new AssignedTask(task2.id, 'user_1', DEFAULT_CHANNEL_NAME, 2000, { approved: true, comments: ['ready'] })
   ]);
 
   assert.deepEqual(
     await assignedTaskRepository.tryGet(signal, task1.id, 'user_1'),
-    new AssignedTask(task1.id, 'user_1', 'default', null, null)
+    new AssignedTask(task1.id, 'user_1', DEFAULT_CHANNEL_NAME, null, null)
   );
   assert.deepEqual(
     await assignedTaskRepository.tryGet(signal, task1.id, 'user_2'),
@@ -78,12 +78,12 @@ test('assigned tasks can be upserted and queried by task and user', async () => 
   );
   assert.deepEqual(
     await assignedTaskRepository.tryGet(signal, task2.id, 'user_1'),
-    new AssignedTask(task2.id, 'user_1', 'default', 2000, { approved: true, comments: ['ready'] })
+    new AssignedTask(task2.id, 'user_1', DEFAULT_CHANNEL_NAME, 2000, { approved: true, comments: ['ready'] })
   );
   assert.equal(await assignedTaskRepository.tryGet(signal, 'missing', 'user_1'), null);
   assert.deepEqual(await assignedTaskRepository.getAllCompleted(signal, task1.id), []);
   assert.deepEqual(await assignedTaskRepository.getAllCompleted(signal, task2.id), [
-    new AssignedTask(task2.id, 'user_1', 'default', 2000, { approved: true, comments: ['ready'] })
+    new AssignedTask(task2.id, 'user_1', DEFAULT_CHANNEL_NAME, 2000, { approved: true, comments: ['ready'] })
   ]);
 
   await assignedTaskRepository.upsert(signal, new AssignedTask(task1.id, 'user_1', 'admin', 3000, { decision: 'accepted' }));

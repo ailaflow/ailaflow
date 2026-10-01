@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
 import test from 'node:test';
+import { DEFAULT_CHANNEL_NAME } from '@ailaflow/shared';
 import { SqliteDatabase } from '../../core/sqlite-database';
 import { SqliteDatabases } from '../../core/sqlite-databases';
 import { Transaction } from '../../core/transaction';
@@ -19,7 +20,7 @@ test('creates a default channel for users that exist during the version 1 upgrad
   await userRepository.insert(signal, createUser('alice'));
 
   await repository.setup(signal);
-  assert.deepEqual(await repository.getAll(signal, 'alice'), [new UserChannel('alice', 'default', '', true)]);
+  assert.deepEqual(await repository.getAll(signal, 'alice'), [new UserChannel('alice', DEFAULT_CHANNEL_NAME, '')]);
 
   await userRepository.insert(signal, createUser('bob'));
   await repository.setup(signal);
@@ -31,17 +32,16 @@ test('creates a default channel for users that exist during the version 1 upgrad
 test('upserts, lists and deletes channels for one user', async () => {
   const { db, repository, signal } = await setup();
 
-  await repository.upsert(signal, new UserChannel('alice', 'support', 'Support prompt', false));
-  await repository.upsert(signal, new UserChannel('alice', 'sales', 'Sales prompt', true));
-  await repository.upsert(signal, new UserChannel('bob', 'support', 'Bob support prompt', false));
+  await repository.upsert(signal, new UserChannel('alice', 'support', 'Support prompt'));
+  await repository.upsert(signal, new UserChannel('alice', 'sales', 'Sales prompt'));
+  await repository.upsert(signal, new UserChannel('bob', 'support', 'Bob support prompt'));
 
-  assert.deepEqual(await repository.get(signal, 'alice'), new UserChannel('alice', 'sales', 'Sales prompt', true));
-  assert.deepEqual(await repository.tryGet(signal, 'alice', 'support'), new UserChannel('alice', 'support', 'Support prompt', false));
+  assert.deepEqual(await repository.tryGet(signal, 'alice', 'support'), new UserChannel('alice', 'support', 'Support prompt'));
   assert.equal(await repository.tryGet(signal, 'alice', 'missing'), null);
   assert.deepEqual(await repository.getAll(signal, 'alice'), [
-    new UserChannel('alice', 'sales', 'Sales prompt', true),
-    new UserChannel('alice', 'default', '', false),
-    new UserChannel('alice', 'support', 'Support prompt', false)
+    new UserChannel('alice', DEFAULT_CHANNEL_NAME, ''),
+    new UserChannel('alice', 'sales', 'Sales prompt'),
+    new UserChannel('alice', 'support', 'Support prompt')
   ]);
 
   await repository.delete(signal, 'alice', 'support');
@@ -61,11 +61,11 @@ test('rolls back channel changes in an external transaction', async () => {
   const { db, repository, signal } = await setup();
   const transaction = Transaction.begin();
 
-  await repository.delete(signal, 'alice', 'default', transaction);
-  await repository.upsert(signal, new UserChannel('alice', 'support', 'Support prompt', true), transaction);
+  await repository.delete(signal, 'alice', DEFAULT_CHANNEL_NAME, transaction);
+  await repository.upsert(signal, new UserChannel('alice', 'support', 'Support prompt'), transaction);
   await transaction.rollback();
 
-  assert.deepEqual(await repository.getAll(signal, 'alice'), [new UserChannel('alice', 'default', '', true)]);
+  assert.deepEqual(await repository.getAll(signal, 'alice'), [new UserChannel('alice', DEFAULT_CHANNEL_NAME, '')]);
   db.close();
 });
 

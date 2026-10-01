@@ -17,8 +17,7 @@ export class GetMyChannelsEndpoint implements Endpoint {
     return {
       channels: channels.map(channel => ({
         name: channel.name,
-        prompt: channel.prompt,
-        isDefault: channel.isDefault
+        prompt: channel.prompt
       }))
     };
   }

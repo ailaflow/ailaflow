@@ -4,8 +4,7 @@ import * as z from 'zod/v4';
 
 export const myChannelDtoSchema = z.object({
   name: z.string(),
-  prompt: z.string(),
-  isDefault: z.boolean()
+  prompt: z.string()
 });
 export type MyChannelDto = z.infer<typeof myChannelDtoSchema>;
 

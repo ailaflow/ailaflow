@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { ChatMessage, ChatMessageType, SimpleEvent } from '@aibindkit/core';
 import { ChatSession, ChatSessionUpdate } from '@aibindkit/llm';
+import { DEFAULT_CHANNEL_NAME } from '@ailaflow/shared';
 import test from 'node:test';
 import { UserChatSessionProvider } from '../chat-session/user-chat-session-provider';
 import { KvConfigurationManager } from '../configuration/kv/kv-configuration-manager';
@@ -67,7 +68,7 @@ test('replays eligible session messages, resumes chunks, and stores numeric sent
   const session = new FakeChatSession(messages);
   const client = new FakeTelegramBotApiClient();
   const synchronizer = new TelegramChannelSynchronizer(
-    TelegramBotConfiguration.create('alice', 'default', 'token', {
+    TelegramBotConfiguration.create('alice', DEFAULT_CHANNEL_NAME, 'token', {
       botId: 'bot',
       botUserName: 'aila_bot',
       telegramChatId: '42',
@@ -126,7 +127,7 @@ test('sends links for task and process start form metadata', async () => {
   const session = new FakeChatSession(messages);
   const client = new FakeTelegramBotApiClient();
   const synchronizer = new TelegramChannelSynchronizer(
-    TelegramBotConfiguration.create('alice', 'default', 'token', {
+    TelegramBotConfiguration.create('alice', DEFAULT_CHANNEL_NAME, 'token', {
       botId: 'bot',
       botUserName: 'aila_bot',
       telegramChatId: '42'
@@ -167,7 +168,7 @@ test('forwards form-link configuration errors', async () => {
   const session = new FakeChatSession(messages);
   const client = new FakeTelegramBotApiClient();
   const synchronizer = new TelegramChannelSynchronizer(
-    TelegramBotConfiguration.create('alice', 'default', 'token', {
+    TelegramBotConfiguration.create('alice', DEFAULT_CHANNEL_NAME, 'token', {
       botId: 'bot',
       botUserName: 'aila_bot',
       telegramChatId: '42'
@@ -228,7 +229,7 @@ test('delivers failures and interruptions once and reports only successful compa
   const session = new FakeChatSession(messages);
   const client = new FakeTelegramBotApiClient();
   const synchronizer = new TelegramChannelSynchronizer(
-    TelegramBotConfiguration.create('alice', 'default', 'token', {
+    TelegramBotConfiguration.create('alice', DEFAULT_CHANNEL_NAME, 'token', {
       botId: 'bot',
       botUserName: 'aila_bot',
       telegramChatId: '42'
@@ -271,7 +272,7 @@ test('links a private Telegram chat and queues Telegram text with origin metadat
     }
   ]);
   const synchronizer = new TelegramChannelSynchronizer(
-    TelegramBotConfiguration.create('alice', 'default', 'token', {
+    TelegramBotConfiguration.create('alice', DEFAULT_CHANNEL_NAME, 'token', {
       botId: 'bot',
       botUserName: 'aila_bot',
       linkCode: 'link-code'
@@ -304,7 +305,7 @@ test('reports an interrupted response after receiving the stop command', async (
     }
   ]);
   const synchronizer = new TelegramChannelSynchronizer(
-    TelegramBotConfiguration.create('alice', 'default', 'token', {
+    TelegramBotConfiguration.create('alice', DEFAULT_CHANNEL_NAME, 'token', {
       botId: 'bot',
       botUserName: 'aila_bot',
       telegramChatId: '42'
@@ -335,7 +336,7 @@ test('reconnects polling after a transient Telegram failure', async () => {
     1
   );
   const synchronizer = new TelegramChannelSynchronizer(
-    TelegramBotConfiguration.create('alice', 'default', 'token', {
+    TelegramBotConfiguration.create('alice', DEFAULT_CHANNEL_NAME, 'token', {
       botId: 'bot',
       botUserName: 'aila_bot',
       telegramChatId: '42'
@@ -356,7 +357,7 @@ test('reconnects polling after a transient Telegram failure', async () => {
 
 test('starts once and cannot restart after being destroyed', async () => {
   const synchronizer = new TelegramChannelSynchronizer(
-    TelegramBotConfiguration.create('alice', 'default', 'token', {
+    TelegramBotConfiguration.create('alice', DEFAULT_CHANNEL_NAME, 'token', {
       botId: 'bot',
       botUserName: 'aila_bot'
     }),

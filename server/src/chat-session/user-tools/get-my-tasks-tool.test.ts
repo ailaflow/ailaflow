@@ -1,5 +1,5 @@
 import { ToolContext } from '@aibindkit/llm';
-import { TaskSubmissionMode } from '@ailaflow/shared';
+import { DEFAULT_CHANNEL_NAME, TaskSubmissionMode } from '@ailaflow/shared';
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { MyTaskListQuerier } from '../../queriers/my-task-list/my-task-list-querier';
@@ -60,7 +60,7 @@ test('maps task submission modes to AI tool capabilities', async () => {
 
 function createContext(): ToolContext {
   return {
-    sessionId: ChatSessionId.createUserChannel('alice', false, 'default').encode(),
+    sessionId: ChatSessionId.createUserChannel('alice', false, DEFAULT_CHANNEL_NAME).encode(),
     sessionToken: ''
   };
 }

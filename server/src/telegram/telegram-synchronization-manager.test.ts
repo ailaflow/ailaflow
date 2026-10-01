@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { SimpleEvent } from '@aibindkit/core';
 import { ChatSession, ChatSessionUpdate } from '@aibindkit/llm';
+import { DEFAULT_CHANNEL_NAME } from '@ailaflow/shared';
 import test from 'node:test';
 import { UserChatSessionProvider } from '../chat-session/user-chat-session-provider';
 import { KvConfigurationManager } from '../configuration/kv/kv-configuration-manager';
@@ -23,11 +24,11 @@ test('starts, reloads, removes, and stops Telegram channel synchronizers', async
   assert.equal(client.pollSignals.length, 1);
 
   repository.configuration = null;
-  await manager.reload(new AbortController().signal, 'alice', 'default');
+  await manager.reload(new AbortController().signal, 'alice', DEFAULT_CHANNEL_NAME);
   assert.equal(client.pollSignals[0].aborted, true);
 
   repository.configuration = createConfiguration('token-2');
-  await manager.reload(new AbortController().signal, 'alice', 'default');
+  await manager.reload(new AbortController().signal, 'alice', DEFAULT_CHANNEL_NAME);
   assert.equal(client.pollSignals.length, 2);
   manager.stop();
   assert.equal(client.pollSignals[1].aborted, true);
@@ -95,7 +96,7 @@ function createFormLinkMessageGenerator(): FormLinkMessageGenerator {
 }
 
 function createConfiguration(botToken: string): TelegramBotConfiguration {
-  return TelegramBotConfiguration.create('alice', 'default', botToken, {
+  return TelegramBotConfiguration.create('alice', DEFAULT_CHANNEL_NAME, botToken, {
     botId: 'bot',
     botUserName: 'aila_bot',
     linkCode: 'link'

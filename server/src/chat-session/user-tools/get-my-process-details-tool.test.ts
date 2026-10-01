@@ -1,4 +1,5 @@
 import { ToolContext } from '@aibindkit/llm';
+import { DEFAULT_CHANNEL_NAME } from '@ailaflow/shared';
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { UserProcessProvider } from '../../process/user-process-provider';
@@ -48,7 +49,7 @@ test('returns an error when the process is unavailable', async () => {
 
 function createContext(userName: string): ToolContext {
   return {
-    sessionId: ChatSessionId.createUserChannel(userName, false, 'default').encode(),
+    sessionId: ChatSessionId.createUserChannel(userName, false, DEFAULT_CHANNEL_NAME).encode(),
     sessionToken: ''
   };
 }

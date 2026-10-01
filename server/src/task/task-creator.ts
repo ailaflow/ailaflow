@@ -1,4 +1,11 @@
-import { FormDefinition, JsonSchema, TaskFinalizationPolicy, TaskSubmissionMode, UserAccessExpressionParser } from '@ailaflow/shared';
+import {
+  DEFAULT_CHANNEL_NAME,
+  FormDefinition,
+  JsonSchema,
+  TaskFinalizationPolicy,
+  TaskSubmissionMode,
+  UserAccessExpressionParser
+} from '@ailaflow/shared';
 import { AssignedTaskRepository } from '../repositories/task/assigned-task-repository';
 import { TaskRepository } from '../repositories/task/task-repository';
 import { UserAccessExpressionUserQuerier } from '../queriers/user-access-expression/user-access-expression-user-querier';
@@ -48,11 +55,9 @@ export class TaskCreator {
       submissionMode
     );
 
-    const channelName = this.notifier.getDefaultUserChannelName();
-
     const assignedTasks = new Array<AssignedTask>(userNames.length);
     for (let i = 0; i < userNames.length; i++) {
-      assignedTasks[i] = AssignedTask.create(task.id, userNames[i], channelName);
+      assignedTasks[i] = AssignedTask.create(task.id, userNames[i], DEFAULT_CHANNEL_NAME);
     }
 
     const transaction = Transaction.begin();
@@ -69,6 +74,6 @@ export class TaskCreator {
     message += `Title: ${title}\n`;
     message += `ID: ${task.id}\n`;
 
-    await this.notifier.notifyUsersMatchingAccessExpression(signal, processName, isTest, userExpression, channelName, message);
+    await this.notifier.notifyUsersMatchingAccessExpression(signal, processName, isTest, userExpression, DEFAULT_CHANNEL_NAME, message);
   }
 }

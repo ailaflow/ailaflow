@@ -43,15 +43,7 @@ export const routes = [
     element: <MagicLinkPage />
   },
   {
-    element: (
-      <AuthGate
-        route={
-          <Portal>
-            <Outlet />
-          </Portal>
-        }
-      />
-    ),
+    element: <AuthGate route={<Portal />} />,
     children: [
       {
         path: '/',
@@ -84,86 +76,87 @@ export const routes = [
       {
         path: '/my-processes/:name',
         element: <MyProcessPage />
+      },
+      {
+        element: <AdminPortal />,
+        children: [
+          {
+            path: '/admin/processes',
+            element: <ProcessListPage />
+          },
+          {
+            path: '/admin/processes/:processName',
+            element: <ProcessEditorPage />
+          },
+          {
+            path: '/admin/create-process',
+            element: <ProcessEditorPage />
+          },
+          {
+            path: '/admin/processes/:processName/test',
+            element: <ProcessTesterPage />
+          },
+          {
+            path: '/admin/processes/:processName/cron-jobs',
+            element: <ProcessCronJobsPage />
+          },
+          {
+            path: '/admin/tables',
+            element: <TableListPage />
+          },
+          {
+            path: '/admin/tables/:tableName',
+            element: <TableEditorPage />
+          },
+          {
+            path: '/admin/create-table',
+            element: <TableEditorPage />
+          },
+          {
+            path: '/admin/sandboxes',
+            element: <SandboxListPage />
+          },
+          {
+            path: '/admin/create-sandbox',
+            element: <SandboxEditorPage />
+          },
+          {
+            path: '/admin/sandboxes/:name',
+            element: <SandboxEditorPage />
+          },
+          {
+            path: '/admin/sandboxes/:name/terminal',
+            element: <SandboxTerminalPage />
+          },
+          {
+            path: '/admin/users',
+            element: <UserListPage />
+          },
+          {
+            path: '/admin/create-user',
+            element: <UserEditorPage />
+          },
+          {
+            path: '/admin/users/:userName',
+            element: <UserEditorPage />
+          },
+          {
+            path: '/admin/users/:userName/telegram',
+            element: <UserTelegramConfigurationPage />
+          },
+          {
+            path: '/admin/tasks',
+            element: <TaskListPage />
+          },
+          {
+            path: '/admin/configuration',
+            element: <ConfigurationPage />
+          }
+        ]
       }
     ]
   },
-  {
-    element: <AuthGate route={<AdminPortal />} />,
-    children: [
-      {
-        path: '/admin/processes',
-        element: <ProcessListPage />
-      },
-      {
-        path: '/admin/processes/:processName',
-        element: <ProcessEditorPage />
-      },
-      {
-        path: '/admin/create-process',
-        element: <ProcessEditorPage />
-      },
-      {
-        path: '/admin/processes/:processName/test',
-        element: <ProcessTesterPage />
-      },
-      {
-        path: '/admin/processes/:processName/cron-jobs',
-        element: <ProcessCronJobsPage />
-      },
-      {
-        path: '/admin/tables',
-        element: <TableListPage />
-      },
-      {
-        path: '/admin/tables/:tableName',
-        element: <TableEditorPage />
-      },
-      {
-        path: '/admin/create-table',
-        element: <TableEditorPage />
-      },
-      {
-        path: '/admin/sandboxes',
-        element: <SandboxListPage />
-      },
-      {
-        path: '/admin/create-sandbox',
-        element: <SandboxEditorPage />
-      },
-      {
-        path: '/admin/sandboxes/:name',
-        element: <SandboxEditorPage />
-      },
-      {
-        path: '/admin/sandboxes/:name/terminal',
-        element: <SandboxTerminalPage />
-      },
-      {
-        path: '/admin/users',
-        element: <UserListPage />
-      },
-      {
-        path: '/admin/create-user',
-        element: <UserEditorPage />
-      },
-      {
-        path: '/admin/users/:userName',
-        element: <UserEditorPage />
-      },
-      {
-        path: '/admin/users/:userName/telegram',
-        element: <UserTelegramConfigurationPage />
-      },
-      {
-        path: '/admin/tasks',
-        element: <TaskListPage />
-      },
-      {
-        path: '/admin/configuration',
-        element: <ConfigurationPage />
-      }
-    ]
-  },
+
   {
     path: '*',
     element: <NotFoundPage />
