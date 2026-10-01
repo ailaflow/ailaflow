@@ -14,6 +14,8 @@ import { LoginEndpoint } from './api/auth/login-endpoint';
 import { Router } from './api/router';
 import { UserRepository } from './repositories/user/user-repository';
 import { SqliteUserRepository } from './repositories/user/sqlite-user-repository';
+import { UserChannelRepository } from './repositories/user-channel/user-channel-repository';
+import { SqliteUserChannelRepository } from './repositories/user-channel/sqlite-user-channel-repository';
 import { UserAttributesRepository } from './repositories/user-attributes/user-attributes-repository';
 import { SqliteUserAttributesRepository } from './repositories/user-attributes/sqlite-user-attributes-repository';
 import { SqliteAuthTokenRepository } from './repositories/auth-token/sqlite-auth-token-repository';
@@ -152,6 +154,9 @@ import { GetMyTelegramConfigurationEndpoint } from './api/my-configuration/get-m
 import { SaveMyTelegramBotEndpoint } from './api/my-configuration/save-my-telegram-bot-endpoint';
 import { DeleteMyTelegramBotEndpoint } from './api/my-configuration/delete-my-telegram-bot-endpoint';
 import { ChangeMyPasswordEndpoint } from './api/my-configuration/change-my-password-endpoint';
+import { GetMyChannelsEndpoint } from './api/my-configuration/get-my-channels-endpoint';
+import { SaveMyChannelEndpoint } from './api/my-configuration/save-my-channel-endpoint';
+import { DeleteMyChannelEndpoint } from './api/my-configuration/delete-my-channel-endpoint';
 import { TelegramBotApiClient } from './telegram/telegram-bot-api-client';
 import { TelegramConfigurationManager } from './telegram/telegram-configuration-manager';
 import { TelegramSynchronizationManager } from './telegram/telegram-synchronization-manager';
@@ -271,6 +276,7 @@ export async function bootstrap(registry: CleanupRegistry, signal: AbortSignal) 
   const cipher = new Cipher(cipherKeyStore);
 
   let userRepository: UserRepository;
+  let userChannelRepository: UserChannelRepository;
   let userAttributesRepository: UserAttributesRepository;
   let resourceAccessRepository: ResourceAccessRepository;
   let authTokenRepository: AuthTokenRepository;
@@ -315,6 +321,7 @@ export async function bootstrap(registry: CleanupRegistry, signal: AbortSignal) 
     registry.register(() => sqliteDatabases.dispose());
 
     userRepository = new SqliteUserRepository(sqliteDatabases);
+    userChannelRepository = new SqliteUserChannelRepository(sqliteDatabases);
     userAttributesRepository = new SqliteUserAttributesRepository(sqliteDatabases);
     resourceAccessRepository = new SqliteResourceAccessRepository(sqliteDatabases);
     authTokenRepository = new SqliteAuthTokenRepository(sqliteDatabases);
@@ -359,6 +366,7 @@ export async function bootstrap(registry: CleanupRegistry, signal: AbortSignal) 
 
   await Promise.all([
     userRepository.setup(signal),
+    userChannelRepository.setup(signal),
     userAttributesRepository.setup(signal),
     resourceAccessRepository.setup(signal),
     authTokenRepository.setup(signal),
@@ -603,6 +611,9 @@ export async function bootstrap(registry: CleanupRegistry, signal: AbortSignal) 
     new SaveMyTelegramBotEndpoint(telegramConfigurationManager),
     new DeleteMyTelegramBotEndpoint(telegramConfigurationManager),
     new ChangeMyPasswordEndpoint(userRepository, cipher),
+    new GetMyChannelsEndpoint(userChannelRepository),
+    new SaveMyChannelEndpoint(userChannelRepository),
+    new DeleteMyChannelEndpoint(userChannelRepository),
     new GetSlackConfigurationEndpoint(slackConfigurationManager),
     new SaveSlackConfigurationEndpoint(slackConfigurationManager),
     new DeleteSlackConfigurationEndpoint(slackConfigurationManager),

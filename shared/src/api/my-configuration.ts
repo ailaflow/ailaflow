@@ -1,5 +1,35 @@
 import * as z from 'zod/v4';
 
+// common
+
+export const myChannelDtoSchema = z.object({
+  name: z.string(),
+  prompt: z.string(),
+  isDefault: z.boolean()
+});
+export type MyChannelDto = z.infer<typeof myChannelDtoSchema>;
+
+// getMyChannels
+
+export const getMyChannelsResponseSchema = z.object({
+  channels: z.array(myChannelDtoSchema)
+});
+export type GetMyChannelsResponse = z.infer<typeof getMyChannelsResponseSchema>;
+
+// saveMyChannel
+
+export const saveMyChannelRequestSchema = myChannelDtoSchema.extend({
+  insert: z.boolean()
+});
+export const saveMyChannelResponseSchema = z.object({});
+export type SaveMyChannelRequest = z.infer<typeof saveMyChannelRequestSchema>;
+export type SaveMyChannelResponse = z.infer<typeof saveMyChannelResponseSchema>;
+
+// deleteMyChannel
+
+export const deleteMyChannelResponseSchema = z.object({});
+export type DeleteMyChannelResponse = z.infer<typeof deleteMyChannelResponseSchema>;
+
 // changeMyPassword
 
 export const changeMyPasswordRequestSchema = z.object({

@@ -7,12 +7,15 @@ import { TelegramConfiguration } from '../common/telegram-configuration';
 import { MyConfigurationOverview } from './my-configuration-overview';
 import { MySlackConfiguration } from './my-slack-configuration';
 import { ChangeMyPassword } from './change-my-password';
+import { MyChannels } from './my-channels';
 
 export function MyConfigurationPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const requestedTab = searchParams.get('tab');
   const activeTab: MyConfigurationTab =
-    requestedTab === 'telegram' || requestedTab === 'slack' || requestedTab === 'password' ? requestedTab : 'overview';
+    requestedTab === 'channels' || requestedTab === 'telegram' || requestedTab === 'slack' || requestedTab === 'password'
+      ? requestedTab
+      : 'overview';
 
   useEffect(() => {
     if (requestedTab !== activeTab) {
@@ -37,6 +40,8 @@ function renderTab(activeTab: MyConfigurationTab): React.ReactNode {
   switch (activeTab) {
     case 'overview':
       return <MyConfigurationOverview />;
+    case 'channels':
+      return <MyChannels />;
     case 'telegram':
       return <TelegramConfiguration />;
     case 'slack':

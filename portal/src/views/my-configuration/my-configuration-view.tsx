@@ -1,4 +1,4 @@
-export type MyConfigurationTab = 'overview' | 'telegram' | 'slack' | 'password';
+export type MyConfigurationTab = 'overview' | 'channels' | 'telegram' | 'slack' | 'password';
 
 export interface MyConfigurationViewProps {
   activeTab: MyConfigurationTab;
@@ -8,6 +8,7 @@ export interface MyConfigurationViewProps {
 
 const tabs: ReadonlyArray<{ id: MyConfigurationTab; label: string }> = [
   { id: 'overview', label: 'Overview' },
+  { id: 'channels', label: 'Channels' },
   { id: 'telegram', label: 'Telegram' },
   { id: 'slack', label: 'Slack' },
   { id: 'password', label: 'Password' }
