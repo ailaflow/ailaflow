@@ -70,7 +70,8 @@ export class Process {
       result.nSteps,
       result.nReturnSteps,
       result.nTasksSteps,
-      result.sandboxNames
+      result.sandboxNames,
+      Date.now()
     );
   }
 
@@ -94,7 +95,8 @@ export class Process {
       result.nSteps,
       result.nReturnSteps,
       result.nTasksSteps,
-      result.sandboxNames
+      result.sandboxNames,
+      Date.now()
     );
   }
 
@@ -113,7 +115,8 @@ export class Process {
     public nSteps: number,
     public nReturnSteps: number,
     public nTasksSteps: number,
-    public sandboxNames: string[]
+    public sandboxNames: string[],
+    public updatedAt: number
   ) {}
 
   public async update(data: SaveProcessRequest, rootValidator: ProcessRootValidator, stepValidator: ProcessStepValidator) {
@@ -137,6 +140,7 @@ export class Process {
     this.nReturnSteps = result.nReturnSteps;
     this.nTasksSteps = result.nTasksSteps;
     this.sandboxNames = result.sandboxNames;
+    this.updatedAt = Date.now();
   }
 
   public get variables(): ProcessVariables {

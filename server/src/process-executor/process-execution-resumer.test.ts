@@ -94,6 +94,7 @@ function createTestProcess(hash: string): Process {
     0,
     0,
     0,
-    []
+    [],
+    0
   );
 }

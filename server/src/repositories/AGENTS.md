@@ -8,8 +8,11 @@ public async setup(_: AbortSignal): Promise<void> {
     if (dbVersion < 1) {
       db.exec(`CREATE TABLE example (...) STRICT`);
     }
+    if (version < 2) {
+      db.exec(`ALTER TABLE ...`);
+    }
   });
 }
 ```
 
-The arguments are the current code version, the table name, and a callback receiving the database and the table's current version. If the table has no recorded version, `dbVersion` is `0`. Increment the code version for each schema change and guard migrations with `dbVersion < X`. Do not detect schema state through queries or `IF NOT EXISTS` clauses.
+The arguments are the current code version, the table name, and a callback receiving the database and the table's current version. If the table has no recorded version, `dbVersion` is `0`. Increment the code version for each schema change and guard migrations with `dbVersion < X`. Do not detect schema state through queries or `IF NOT EXISTS` clauses. Do not change SQLs of older versions.

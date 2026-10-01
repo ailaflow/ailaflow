@@ -28,7 +28,7 @@ export class SqliteProcessListQuerier implements ProcessListQuerier {
       FROM processes
       WHERE display <= ?
         AND instr(name, ?) > 0
-      ORDER BY name
+      ORDER BY updatedAt DESC
       LIMIT ? OFFSET ?
     `);
 

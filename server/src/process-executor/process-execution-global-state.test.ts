@@ -120,7 +120,8 @@ function createTestProcess(): Process {
     0,
     0,
     0,
-    []
+    [],
+    0
   );
 }
 

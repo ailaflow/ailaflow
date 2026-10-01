@@ -15,6 +15,7 @@ test('persists and updates process metadata', async () => {
   const process = createProcess('alpha', 2);
   process.icon = '<svg viewBox="0 0 10 10"></svg>';
   process.sandboxNames = ['node', 'python'];
+  process.updatedAt = 1000;
 
   await processRepository.insert(signal, process);
   assert.equal((await processRepository.tryGetByName(signal, process.name))?.nTasksSteps, 2);
@@ -22,6 +23,7 @@ test('persists and updates process metadata', async () => {
   assert.equal((await processRepository.tryGetByName(signal, process.name))?.executionMode, ProcessExecutionMode.AI_TOOL_OR_START_FORM);
   assert.equal((await processRepository.tryGetByName(signal, process.name))?.icon, process.icon);
   assert.deepEqual((await processRepository.tryGetByName(signal, process.name))?.sandboxNames, ['node', 'python']);
+  assert.equal((await processRepository.tryGetByName(signal, process.name))?.updatedAt, 1000);
   assert.deepEqual(getStoredDefinitionMetadata(db, process.name), {
     definitionSize: JSON.stringify(process.definition).length,
     nReturnSteps: 0,
@@ -36,12 +38,14 @@ test('persists and updates process metadata', async () => {
   process.nSteps = 1;
   process.nReturnSteps = 1;
   process.sandboxNames = ['bun'];
+  process.updatedAt = 2000;
   await processRepository.update(signal, process);
   assert.equal((await processRepository.tryGetByName(signal, process.name))?.nTasksSteps, 0);
   assert.equal((await processRepository.tryGetByName(signal, process.name))?.display, ProcessDisplay.FEATURED);
   assert.equal((await processRepository.tryGetByName(signal, process.name))?.executionMode, ProcessExecutionMode.START_FORM);
   assert.equal((await processRepository.tryGetByName(signal, process.name))?.icon, null);
   assert.deepEqual((await processRepository.tryGetByName(signal, process.name))?.sandboxNames, ['bun']);
+  assert.equal((await processRepository.tryGetByName(signal, process.name))?.updatedAt, 2000);
   assert.deepEqual(getStoredDefinitionMetadata(db, process.name), {
     definitionSize: JSON.stringify(process.definition).length,
     nReturnSteps: 1,
@@ -79,6 +83,7 @@ test('adds empty sandbox names without rewriting existing definitions', async ()
   await repository.setup(new AbortController().signal);
 
   assert.deepEqual((await repository.tryGetByName(new AbortController().signal, 'alpha'))?.sandboxNames, []);
+  assert.equal((await repository.tryGetByName(new AbortController().signal, 'alpha'))?.updatedAt, 0);
   assert.equal(getStoredDefinition(db, 'alpha'), definitionBeforeSetup);
   db.close();
 });
@@ -169,7 +174,8 @@ function createProcess(name: string, nTasksSteps: number): Process {
     0,
     0,
     nTasksSteps,
-    []
+    [],
+    0
   );
 }
 

@@ -20,6 +20,7 @@ interface ProcessRow {
   startVariableSchemas: string;
   definition: string;
   definitionHash: string;
+  updatedAt: number;
 }
 
 export class SqliteProcessRepository implements ProcessRepository {
@@ -30,7 +31,7 @@ export class SqliteProcessRepository implements ProcessRepository {
   }
 
   public async setup(_: AbortSignal) {
-    await this.db.setup(2, 'processes', (db, version) => {
+    await this.db.setup(3, 'processes', (db, version) => {
       if (version < 1) {
         db.exec(`
           CREATE TABLE processes (
@@ -43,15 +44,18 @@ export class SqliteProcessRepository implements ProcessRepository {
             nSteps INTEGER NOT NULL,
             nReturnSteps INTEGER NOT NULL,
             nTasksSteps INTEGER NOT NULL,
-            sandboxNames TEXT NOT NULL DEFAULT '[]',
             startVariableSchemas TEXT NOT NULL,
             definition TEXT NOT NULL,
             definitionSize INTEGER NOT NULL,
             definitionHash TEXT NOT NULL
           ) STRICT
         `);
-      } else if (version < 2) {
+      }
+      if (version < 2) {
         db.exec(`ALTER TABLE processes ADD COLUMN sandboxNames TEXT NOT NULL DEFAULT '[]'`);
+      }
+      if (version < 3) {
+        db.exec(`ALTER TABLE processes ADD COLUMN updatedAt INTEGER NOT NULL DEFAULT 0`);
       }
     });
   }
@@ -63,9 +67,9 @@ export class SqliteProcessRepository implements ProcessRepository {
         const statement = db.prepare(`
           INSERT INTO processes (
             name, description, userAccessExpression, display, executionMode, icon, nSteps, nReturnSteps, nTasksSteps,
-            sandboxNames, startVariableSchemas, definition, definitionSize, definitionHash
+            sandboxNames, startVariableSchemas, definition, definitionSize, definitionHash, updatedAt
           )
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `);
         statement.run(
           process.name,
@@ -81,7 +85,8 @@ export class SqliteProcessRepository implements ProcessRepository {
           serializeStartVariableSchemas(process.startVariableSchemas),
           definition,
           definition.length,
-          process.hash
+          process.hash,
+          process.updatedAt
         );
       }, transaction);
     } catch (e) {
@@ -110,7 +115,8 @@ export class SqliteProcessRepository implements ProcessRepository {
           startVariableSchemas = ?,
           definition = ?,
           definitionSize = ?,
-          definitionHash = ?
+          definitionHash = ?,
+          updatedAt = ?
         WHERE name = ?
       `);
       statement.run(
@@ -127,6 +133,7 @@ export class SqliteProcessRepository implements ProcessRepository {
         definition,
         definition.length,
         process.hash,
+        process.updatedAt,
         process.name
       );
     }, transaction);
@@ -151,7 +158,7 @@ export class SqliteProcessRepository implements ProcessRepository {
     return this.db.read(db => {
       const statement = db.prepare(`
         SELECT name, description, userAccessExpression, display, executionMode, icon, nSteps, nReturnSteps, nTasksSteps,
-          sandboxNames, startVariableSchemas, definition, definitionHash
+          sandboxNames, startVariableSchemas, definition, definitionHash, updatedAt
         FROM processes
         WHERE name = ?
         LIMIT 1
@@ -172,7 +179,8 @@ export class SqliteProcessRepository implements ProcessRepository {
             row.nSteps,
             row.nReturnSteps,
             row.nTasksSteps,
-            JSON.parse(row.sandboxNames) as string[]
+            JSON.parse(row.sandboxNames) as string[],
+            row.updatedAt
           )
         : null;
     });

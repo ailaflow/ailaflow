@@ -80,7 +80,8 @@ function createProcess(name: string, sequence: ProcessDefinition['sequence'] = [
     sequence.length,
     sequence.filter(step => step.type === 'return').length,
     nTasksSteps,
-    []
+    [],
+    0
   );
 }
 

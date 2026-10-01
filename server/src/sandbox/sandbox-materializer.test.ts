@@ -82,6 +82,7 @@ function createProcess(hash: string, script: ScriptDefinition): Process {
     1,
     0,
     0,
-    ['default']
+    ['default'],
+    0
   );
 }
