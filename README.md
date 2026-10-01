@@ -10,7 +10,11 @@ AilaFlow is a collaborative low-code workspace where people and AI agents design
 
 Let AI build your processes, including integrations with external systems using Node.js and NPM packages, with the code running safely in isolated sandboxes. Bring AilaFlow into your existing workflow through Slack and Telegram.
 
-Learn more at [ailaflow.com](https://ailaflow.com).
+Learn more:
+
+- [Get started](https://ailaflow.com/docs/)
+- [See Use Cases](https://ailaflow.com/marketplace/)
+- [Build your first process](https://ailaflow.com/docs/build-your-first-process/)
 
 ## How AilaFlow works
 
