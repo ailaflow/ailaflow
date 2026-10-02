@@ -1,4 +1,4 @@
-[![AilaFlow - AI Workflow Automation for Teams](.github/cover.png)](https://ailaflow.com)
+[![AilaFlow - AI workspace for teams](.github/cover.png)](https://ailaflow.com)
 
 # AilaFlow
 
