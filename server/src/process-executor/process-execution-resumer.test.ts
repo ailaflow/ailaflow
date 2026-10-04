@@ -26,6 +26,32 @@ test('process execution resumer continues when the process hash changed', async 
       runPayload = payload;
     }
   } as unknown as ProcessExecution;
+  const persistedExecutionRepository: PersistedExecutionRepository = {
+    setup: async () => undefined,
+    upsert: async () => undefined,
+    delete: async (_abortSignal, executionId) => {
+      deletedExecutionId = executionId;
+    },
+    tryGet: async () =>
+      new PersistedExecution(
+        'execution_1',
+        { trigger: ProcessExecutionTrigger.ENDPOINT, startedBy: 'user_1', isTest: false },
+        'process_1',
+        'old_hash',
+        {
+          value: { MAIN: { STEP_task_1: 'WAIT_FOR_SIGNAL' } },
+          context: {
+            globalState: {
+              variableValues: {}
+            },
+            activityStates: {}
+          }
+        } as never,
+        1000,
+        2000
+      ),
+    countProcessHashes: async () => 0
+  };
   const resumer = new ProcessExecutionResumer(
     new ProcessManager(
       {
@@ -36,33 +62,10 @@ test('process execution resumer continues when the process hash changed', async 
         tryGetByName: async () => createTestProcess('new_hash')
       } as ProcessRepository,
       {} as ResourceAccessRepository,
+      persistedExecutionRepository,
       new ProcessDefinitionUpgrader()
     ),
-    {
-      setup: async () => undefined,
-      upsert: async () => undefined,
-      delete: async (_abortSignal, executionId) => {
-        deletedExecutionId = executionId;
-      },
-      tryGet: async () =>
-        new PersistedExecution(
-          'execution_1',
-          { trigger: ProcessExecutionTrigger.ENDPOINT, startedBy: 'user_1', isTest: false },
-          'process_1',
-          'old_hash',
-          {
-            value: { MAIN: { STEP_task_1: 'WAIT_FOR_SIGNAL' } },
-            context: {
-              globalState: {
-                variableValues: {}
-              },
-              activityStates: {}
-            }
-          } as never,
-          1000,
-          2000
-        )
-    } as PersistedExecutionRepository,
+    persistedExecutionRepository,
     { resume: () => execution } as unknown as ProcessExecutor,
     new ProcessExecutionResumeListenerStore()
   );

@@ -32,7 +32,8 @@ test('returns not found when deleting a missing task', async () => {
     setup: async () => undefined,
     upsert: async () => undefined,
     tryGet: async () => null,
-    delete: async () => undefined
+    delete: async () => undefined,
+    countProcessHashes: async () => 0
   };
   const endpoint = new DeleteTaskEndpoint(new TaskDeleter(taskRepository, assignedTaskRepository, persistedExecutionRepository));
 

@@ -74,10 +74,7 @@ import { ProcessExecutionOutcomeAvailableEventHandler } from './events/process-e
 import { ChatSessionStorage } from './chat-session/chat-session-storage';
 import { ChatSessionRepository } from './repositories/chat-session/chat-session-repository';
 import { SqliteChatSessionRepository } from './repositories/chat-session/sqlite-chat-session-repository';
-import {
-  PersistedExecutionRepository,
-  SqlitePersistedExecutionRepository
-} from './repositories/persisted-execution/persisted-execution-repository';
+import { PersistedExecutionRepository } from './repositories/persisted-execution/persisted-execution-repository';
 import { OpenMyProcessStartFormTool } from './chat-session/user-tools/open-my-process-start-form-tool';
 import { OpenMyTaskFormTool } from './chat-session/user-tools/open-my-task-form-tool';
 import { GetMyProcessStartFormEndpoint } from './api/my-process/get-my-process-start-form-endpoint';
@@ -247,6 +244,7 @@ import { ExportProcessEndpoint } from './api/process/export-process-endpoint';
 import { ProcessDownloader } from './install/process-downloader';
 import { ProcessValidatorsFactory } from './process/process-validators-factory';
 import { ImportProcessEndpoint } from './api/process/import-process-endpoint';
+import { SqlitePersistedExecutionRepository } from './repositories/persisted-execution/sqlite-persisted-execution-repository';
 
 const DB_TYPE = 'sqlite';
 
@@ -393,7 +391,12 @@ export async function bootstrap(registry: CleanupRegistry, signal: AbortSignal) 
 
   const processExecutionPersister = new ProcessExecutionPersister(persistedExecutionRepository);
   const processDefinitionUpgrader = new ProcessDefinitionUpgrader();
-  const processManager = new ProcessManager(processRepository, resourceAccessRepository, processDefinitionUpgrader);
+  const processManager = new ProcessManager(
+    processRepository,
+    resourceAccessRepository,
+    persistedExecutionRepository,
+    processDefinitionUpgrader
+  );
   const userProcessProvider = new UserProcessProvider(myProcessAccessQuerier, processManager);
   const processValidatorsFactory = new ProcessValidatorsFactory(sandboxListQuerier);
   const userManager = new UserManager(userRepository, userAttributesRepository, userChannelRepository);

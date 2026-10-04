@@ -100,6 +100,7 @@ function createPersistedExecutionRepository(
     setup: async () => undefined,
     upsert: async () => undefined,
     tryGet: async () => null,
-    delete: async (_, executionId, transaction) => deleteExecution(executionId, transaction)
+    delete: async (_, executionId, transaction) => deleteExecution(executionId, transaction),
+    countProcessHashes: async () => 0
   };
 }

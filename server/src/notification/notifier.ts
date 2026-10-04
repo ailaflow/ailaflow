@@ -5,8 +5,13 @@ import { Notification } from '../repositories/notification/notification';
 import { NotificationRepository } from '../repositories/notification/notification-repository';
 import { ChatSessionId } from '../chat-session/chat-session-id';
 import { AdminChatSessionProvider } from '../chat-session/admin-chat-session-provider';
+import { ChatSession } from '@aibindkit/llm';
+import { ChatSessionInitializerError } from '@aibindkit/express';
+import { Logger } from '../core/logger';
 
 export class Notifier {
+  private readonly logger = new Logger(Notifier.name);
+
   public constructor(
     private readonly userAccessExpressionUserQuerier: UserAccessExpressionUserQuerier,
     private readonly userChatSessionProvider: UserChatSessionProvider,
@@ -36,11 +41,17 @@ export class Notifier {
     const m = this.buildChatMessage(processName, message, null);
 
     for (const userName of userNames) {
-      const session = await this.userChatSessionProvider.get(signal, isTest, userName, channelName);
-      if (session) {
+      let session: ChatSession | null = null;
+      try {
+        session = await this.userChatSessionProvider.get(signal, isTest, userName, channelName);
         session.queueUserMessage(m, {
           internal: true
         });
+      } catch (e) {
+        if (!ChatSessionInitializerError.is(e)) {
+          throw e;
+        }
+        this.logger.warn(`Failed to initialize chat session for @${userName} user: ${e}`);
       }
     }
   }
@@ -54,20 +65,29 @@ export class Notifier {
     message: string,
     chatDetails: string | null
   ) {
-    const chatSession = sessionId
-      ? await (sessionId.isAdmin()
-          ? this.adminChatSessionProvider.tryGet(sessionId.userName)
-          : this.userChatSessionProvider.get(signal, sessionId.isTest(), sessionId.userName, sessionId.channelName))
-      : null;
+    let session: ChatSession | null | undefined;
+
+    try {
+      session = sessionId
+        ? await (sessionId.isAdmin()
+            ? this.adminChatSessionProvider.tryGet(sessionId.userName)
+            : this.userChatSessionProvider.get(signal, sessionId.isTest(), sessionId.userName, sessionId.channelName))
+        : null;
+    } catch (e) {
+      if (!ChatSessionInitializerError.is(e)) {
+        throw e;
+      }
+      this.logger.warn(`Failed to initialize chat session for @${userName} user: ${e}`);
+    }
 
     if (!isTest) {
       const notification = Notification.create(userName, processName, message);
       await this.notificationRepository.insertMultiple(signal, [notification]);
     }
 
-    if (chatSession) {
+    if (session) {
       const m = this.buildChatMessage(processName, message, chatDetails);
-      chatSession.queueUserMessage(m, {
+      session.queueUserMessage(m, {
         internal: true
       });
     }

@@ -7,6 +7,7 @@ import { ChatSession } from '@aibindkit/llm';
 import { TaskRepository } from '../repositories/task/task-repository';
 import { TaskFinalizationWorker } from './task-finalization-worker';
 import { Transaction } from '../core/transaction';
+import { ChatSessionInitializerError } from '@aibindkit/express';
 
 export class AssignedTaskCompleterError extends Error {
   public constructor(message: string) {
@@ -45,9 +46,14 @@ export class AssignedTaskCompleter {
       throw new AssignedTaskCompleterError('This task cannot be submitted using an AI tool. Use its task form instead.');
     }
 
-    const chatSession = await this.userChatSessionProvider.get(signal, isTest, userName, assignedTask.channelName);
-    if (!chatSession) {
-      throw new Error('Chat session not found');
+    let session: ChatSession | null = null;
+    try {
+      session = await this.userChatSessionProvider.get(signal, isTest, userName, assignedTask.channelName);
+    } catch (e) {
+      if (!ChatSessionInitializerError.is(e)) {
+        throw e;
+      }
+      this.logger.warn(`Failed to initialize chat session for @${userName} user: ${e}`);
     }
 
     const completeError = assignedTask.tryComplete(outputValues, task);
@@ -65,7 +71,9 @@ export class AssignedTaskCompleter {
       throw e;
     }
 
-    void this.updateChatSessionOnBackground(chatSession, assignedTask.taskId);
+    if (session) {
+      void this.updateChatSessionOnBackground(session, assignedTask.taskId);
+    }
 
     this.finalizationWorker.trigger();
   }

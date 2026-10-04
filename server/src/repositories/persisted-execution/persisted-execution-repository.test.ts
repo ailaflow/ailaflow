@@ -4,7 +4,7 @@ import test from 'node:test';
 import { SqliteDatabase } from '../../core/sqlite-database';
 import { SqliteDatabases } from '../../core/sqlite-databases';
 import { PersistedExecution } from './persisted-execution';
-import { SqlitePersistedExecutionRepository } from './persisted-execution-repository';
+import { SqlitePersistedExecutionRepository } from './sqlite-persisted-execution-repository';
 import { ProcessExecutionTrigger } from '../../process-executor/process-execution-context';
 
 test('persisted execution repository upserts, gets, and deletes an execution', async () => {

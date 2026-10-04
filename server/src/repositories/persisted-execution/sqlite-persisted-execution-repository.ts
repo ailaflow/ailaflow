@@ -1,0 +1,114 @@
+import { SerializedWorkflowMachineSnapshot } from 'sequential-workflow-machine';
+import { SqliteDatabase } from '../../core/sqlite-database';
+import { SqliteDatabases } from '../../core/sqlite-databases';
+import { Transaction } from '../../core/transaction';
+import { ProcessExecutionContext } from '../../process-executor/process-execution-context';
+import { PersistedExecution } from './persisted-execution';
+import { PersistedExecutionRepository } from './persisted-execution-repository';
+import { SerializedProcessExecutionGlobalState } from '../../process-executor/process-execution-global-state';
+
+export class SqlitePersistedExecutionRepository implements PersistedExecutionRepository {
+  private readonly db: SqliteDatabase;
+
+  public constructor(dbs: SqliteDatabases) {
+    this.db = dbs.dataDb;
+  }
+
+  public async setup(_: AbortSignal): Promise<void> {
+    await this.db.setup(1, 'persisted_executions', (db, version) => {
+      if (version < 1) {
+        db.exec(`
+          CREATE TABLE persisted_executions (
+            executionId TEXT PRIMARY KEY,
+            context TEXT NOT NULL,
+            processName TEXT NOT NULL,
+            processHash TEXT NOT NULL,
+            state TEXT NOT NULL,
+            createdAt INTEGER NOT NULL,
+            updatedAt INTEGER NOT NULL
+          ) STRICT
+        `);
+      }
+    });
+  }
+
+  public async upsert(_: AbortSignal, execution: PersistedExecution, transaction?: Transaction): Promise<void> {
+    await this.db.write(db => {
+      const statement = db.prepare(`
+        INSERT INTO persisted_executions (executionId, context, processName, processHash, state, createdAt, updatedAt)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT(executionId) DO UPDATE SET
+          context = excluded.context,
+          processName = excluded.processName,
+          processHash = excluded.processHash,
+          state = excluded.state,
+          updatedAt = excluded.updatedAt
+      `);
+      statement.run(
+        execution.executionId,
+        JSON.stringify(execution.context),
+        execution.processName,
+        execution.processHash,
+        JSON.stringify(execution.state),
+        execution.createdAt,
+        execution.updatedAt
+      );
+    }, transaction);
+  }
+
+  public async tryGet(_: AbortSignal, executionId: string): Promise<PersistedExecution | null> {
+    return this.db.read(db => {
+      const statement = db.prepare(`
+        SELECT executionId, context, processName, processHash, state, createdAt, updatedAt
+        FROM persisted_executions
+        WHERE executionId = ?
+        LIMIT 1
+      `);
+      const row = statement.get(executionId) as
+        | {
+            executionId: string;
+            context: string;
+            processName: string;
+            processHash: string;
+            state: string;
+            createdAt: number;
+            updatedAt: number;
+          }
+        | undefined;
+
+      return row
+        ? new PersistedExecution(
+            row.executionId,
+            JSON.parse(row.context) as ProcessExecutionContext,
+            row.processName,
+            row.processHash,
+            JSON.parse(row.state) as SerializedWorkflowMachineSnapshot<SerializedProcessExecutionGlobalState>,
+            row.createdAt,
+            row.updatedAt
+          )
+        : null;
+    });
+  }
+
+  public async delete(_: AbortSignal, executionId: string, transaction?: Transaction): Promise<void> {
+    await this.db.write(db => {
+      const statement = db.prepare(`
+        DELETE FROM persisted_executions
+        WHERE executionId = ?
+      `);
+      statement.run(executionId);
+    }, transaction);
+  }
+
+  public async countProcessHashes(_: AbortSignal, processName: string, processHash: string): Promise<number> {
+    return await this.db.read(db => {
+      const statement = db.prepare(`
+        SELECT COUNT(*) as count
+        FROM persisted_executions
+        WHERE processName = ? AND processHash = ?
+      `);
+      const row = statement.get(processName, processHash) as { count: number } | undefined;
+      return row ? row.count : 0;
+    });
+  }
+}

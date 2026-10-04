@@ -1,4 +1,6 @@
+import { Logger } from '../core/logger';
 import { Transaction } from '../core/transaction';
+import { PersistedExecutionRepository } from '../repositories/persisted-execution/persisted-execution-repository';
 import { Process } from '../repositories/process/process';
 import { ProcessRepository } from '../repositories/process/process-repository';
 import { ProcessResourceId } from '../repositories/process/process-resource-id';
@@ -6,11 +8,13 @@ import { ResourceAccess, ResourceAccessRepository } from '../repositories/resour
 import { ProcessDefinitionUpgrader } from './process-definition-upgrader';
 
 export class ProcessManager {
+  private readonly logger = new Logger(ProcessManager.name);
   private readonly cache: Map<string, Process> = new Map();
 
   public constructor(
     private readonly processRepository: ProcessRepository,
     private readonly resourceAccessRepository: ResourceAccessRepository,
+    private readonly persistedExecutionRepository: PersistedExecutionRepository,
     private readonly upgrader: ProcessDefinitionUpgrader
   ) {}
 
@@ -43,7 +47,12 @@ export class ProcessManager {
     }
   }
 
-  public async update(signal: AbortSignal, process: Process) {
+  public async update(signal: AbortSignal, process: Process, oldHahs: string) {
+    const count = await this.persistedExecutionRepository.countProcessHashes(signal, process.name, oldHahs);
+    if (count > 0) {
+      this.logger.warn(`There are ${count} persisted executions for /${process.name} process with old hash ${process.hash}`);
+    }
+
     const resourceId = ProcessResourceId.create(process.name);
     const resourceAccess = ResourceAccess.createFromAccessExpression(resourceId, process.userAccessExpression);
 
@@ -52,6 +61,8 @@ export class ProcessManager {
       await this.processRepository.update(signal, process, transaction);
       await this.resourceAccessRepository.replace(signal, resourceAccess, transaction);
       await transaction.commit();
+
+      this.cache.delete(process.name);
     } catch (e) {
       await transaction.rollback();
       throw e;

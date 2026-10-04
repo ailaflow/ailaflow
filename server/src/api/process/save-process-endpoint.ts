@@ -38,8 +38,9 @@ export class SaveProcessEndpoint implements Endpoint {
         if (!process) {
           throw new EndpointError('Process not found', 404);
         }
+        const oldHash = process.hash;
         await process.update(request, rootValidator, stepValidator);
-        await this.processManager.update(signal, process);
+        await this.processManager.update(signal, process, oldHash);
       }
     } catch (e) {
       if (e instanceof ProcessRepositoryError) {
