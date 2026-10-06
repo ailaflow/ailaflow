@@ -19,7 +19,7 @@ export function ProcessExecutionTraceEventsView(props: ProcessExecutionTraceEven
 
   return (
     <div className="flex h-full min-h-0 flex-col bg-slate-50">
-      <header className="mx-auto w-full max-w-5xl flex-none px-4 pt-4 sm:px-6 sm:pt-5">
+      <header className="mx-auto w-full max-w-5xl flex-none px-4 pt-4 sm:px-6 sm:pt-5 pb-2">
         <Link to="/admin/process-execution-traces" className="text-sm text-slate-600 underline">
           Back to execution traces
         </Link>

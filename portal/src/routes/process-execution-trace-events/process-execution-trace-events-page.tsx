@@ -1,5 +1,5 @@
 import { useLoader } from '@aibindkit/react';
-import { ProcessExecutionTraceEventType, ProcessLogLevel, type ProcessExecutionTraceEventDto } from '@ailaflow/shared';
+import { ProcessDto, ProcessLogLevel, type ProcessExecutionTraceEventDto } from '@ailaflow/shared';
 import { useParams } from 'react-router';
 import { useApiClient } from '../../auth/auth-context';
 import {
@@ -10,6 +10,8 @@ import {
 import { PortalErrorView } from '../../views/portal/portal-error-view';
 import { PortalLoadingView } from '../../views/portal/portal-loading-view';
 import { ProcessExecutionTraceEventsView } from '../../views/process-execution-trace-events/process-execution-trace-events-view';
+import { DefinitionWalker } from 'sequential-workflow-model';
+import { useMemo } from 'react';
 
 export function ProcessExecutionTraceEventsPage() {
   const { executionId } = useParams();
@@ -18,13 +20,21 @@ export function ProcessExecutionTraceEventsPage() {
   }
   const apiClient = useApiClient();
   const { data, isLoading, error } = useLoader(
-    signal =>
-      Promise.all([
+    async signal => {
+      const [trace, events] = await Promise.all([
         apiClient.processExecution.getTrace(signal, executionId),
         apiClient.processExecution.getTraceEvents(signal, executionId)
-      ]),
+      ]);
+      const process = await apiClient.process.getProcess(signal, trace.trace.processName);
+      return {
+        trace: trace.trace,
+        events: events.events,
+        process: process.process
+      };
+    },
     [apiClient, executionId]
   );
+  const walker = useMemo(() => new DefinitionWalker(), []);
 
   if (isLoading) {
     return <PortalLoadingView />;
@@ -33,13 +43,13 @@ export function ProcessExecutionTraceEventsPage() {
     return <PortalErrorView error={error} />;
   }
 
-  const [traceResponse, eventsResponse] = data;
-  return <ProcessExecutionTraceEventsView trace={traceResponse.trace} items={eventsResponse.events.map(toTimelineItem)} />;
+  return <ProcessExecutionTraceEventsView trace={data.trace} items={data.events.map(e => toTimelineItem(e, data.process, walker))} />;
 }
 
-function toTimelineItem(event: ProcessExecutionTraceEventDto): ProcessExecutionTimelineItem {
+function toTimelineItem(event: ProcessExecutionTraceEventDto, process: ProcessDto, walker: DefinitionWalker): ProcessExecutionTimelineItem {
   if (event.stepChange) {
-    return new CurrentStepProcessExecutionTimelineItem(event.createdAt, event.stepChange.stepId, event.stepChange.stepId);
+    const step = walker.findById(process.definition, event.stepChange.stepId);
+    return new CurrentStepProcessExecutionTimelineItem(event.createdAt, event.stepChange.stepId, step?.name ?? event.stepChange.stepId);
   }
   if (event.log) {
     return new LogProcessExecutionTimelineItem(event.log);
