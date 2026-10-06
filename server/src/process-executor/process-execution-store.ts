@@ -3,8 +3,13 @@ import { ProcessExecution } from './process-execution';
 export class ProcessExecutionStore {
   private readonly executions = new Map<string, ProcessExecution>();
 
-  public set(executionId: string, execution: ProcessExecution) {
-    this.executions.set(executionId, execution);
+  public bind(execution: ProcessExecution) {
+    const cleanup = () => {
+      this.executions.delete(execution.id);
+    };
+
+    this.executions.set(execution.id, execution);
+    execution.onOutcome.once(cleanup);
   }
 
   public get(executionId: string): ProcessExecution {
@@ -13,9 +18,5 @@ export class ProcessExecutionStore {
       throw new Error(`Cannot find the execution: ${executionId}`);
     }
     return execution;
-  }
-
-  public delete(executionId: string) {
-    this.executions.delete(executionId);
   }
 }

@@ -10,8 +10,13 @@ import { ProcessExecution } from './process-execution';
 import { ProcessExecutionResumeListenerStore } from './process-execution-resume-listener-store';
 import { ProcessManager } from '../process/process-manager';
 import { ProcessDefinitionUpgrader } from '../process/process-definition-upgrader';
-import { PROCESS_VERSION, ProcessDisplay, ProcessExecutionMode } from '@ailaflow/shared';
-import { ProcessExecutionTrigger } from './process-execution-context';
+import {
+  PROCESS_VERSION,
+  ProcessDisplay,
+  ProcessExecutionMode,
+  ProcessExecutionTraceRetention,
+  ProcessExecutionTrigger
+} from '@ailaflow/shared';
 import { ResourceAccessRepository } from '../repositories/resource-access/resource-access-repository';
 
 test('process execution resumer continues when the process hash changed', async () => {
@@ -83,6 +88,7 @@ function createTestProcess(hash: string): Process {
     '',
     ProcessDisplay.LISTED,
     ProcessExecutionMode.AI_TOOL_OR_START_FORM,
+    ProcessExecutionTraceRetention.DISABLED,
     null,
     {
       sequence: [],

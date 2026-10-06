@@ -1,10 +1,7 @@
 import { useApiClient } from '../../auth/auth-context';
 import { useLoader } from '@aibindkit/react';
 import { ResourceListView } from '../../views/resource-list/resource-list-view';
-import {
-  ResourceHeaderButtonTheme,
-  ResourceHeaderButtonView
-} from '../../views/resource-list/resource-header-button-view';
+import { ResourceHeaderButtonTheme, ResourceHeaderButtonView } from '../../views/resource-list/resource-header-button-view';
 import { SvgIcon } from '../../views/common/svg-icons';
 import { ProcessIcon } from '../../views/common/process-icon';
 import { PortalLoadingView } from '../../views/portal/portal-loading-view';
@@ -13,7 +10,7 @@ import { toolError, toolSuccess, toolWait } from '@aibindkit/react';
 import { useNavigate, useSearchParams } from 'react-router';
 import { useAiStore } from '../common/admin-portal';
 import { useState } from 'react';
-import { ProcessDisplay, ProcessExecutionMode, ProcessLiteDto } from '@ailaflow/shared';
+import { ProcessDisplay, ProcessExecutionMode, ProcessExecutionTraceRetention, ProcessLiteDto } from '@ailaflow/shared';
 
 const PAGE_SIZE = 20;
 
@@ -205,6 +202,11 @@ export function ProcessListPage() {
           label: 'Delete',
           ariaLabel: p => `Delete process ${p.name}`,
           onClick: p => deleteProcess(p.name)
+        },
+        {
+          label: 'Traces',
+          isVisible: p => p.traceRetention !== ProcessExecutionTraceRetention.DISABLED,
+          getTo: p => `/admin/process-execution-traces/?process=${p.name}`
         },
         {
           label: 'Export',

@@ -245,6 +245,15 @@ import { ProcessDownloader } from './install/process-downloader';
 import { ProcessValidatorsFactory } from './process/process-validators-factory';
 import { ImportProcessEndpoint } from './api/process/import-process-endpoint';
 import { SqlitePersistedExecutionRepository } from './repositories/persisted-execution/sqlite-persisted-execution-repository';
+import { ProcessExecutionTraceRepository } from './repositories/process-execution-trace/process-execution-trace-repository';
+import { SqliteProcessExecutionTraceRepository } from './repositories/process-execution-trace/sqlite-process-execution-trace-repository';
+import { ProcessExecutionTraceEventRepository } from './repositories/process-execution-trace/process-execution-trace-event-repository';
+import { SqliteProcessExecutionTraceEventRepository } from './repositories/process-execution-trace/sqlite-process-execution-trace-event-repository';
+import { ProcessExecutionTracer } from './process-executor/process-execution-tracer';
+import { GetProcessExecutionTracesEndpoint } from './api/process-execution/get-process-execution-traces-endpoint';
+import { GetProcessExecutionTraceEndpoint } from './api/process-execution/get-process-execution-trace-endpoint';
+import { GetProcessExecutionTraceEventsEndpoint } from './api/process-execution/get-process-execution-trace-events-endpoint';
+import { ProcessExecutionTraceJobScheduler } from './schedulers/process-execution-trace-job-scheduler';
 
 const DB_TYPE = 'sqlite';
 
@@ -286,6 +295,8 @@ export async function bootstrap(registry: CleanupRegistry, signal: AbortSignal) 
   let sandboxRepository: SandboxRepository;
   let chatSessionRepository: ChatSessionRepository;
   let persistedExecutionRepository: PersistedExecutionRepository;
+  let processExecutionTraceRepository: ProcessExecutionTraceRepository;
+  let processExecutionTraceEventRepository: ProcessExecutionTraceEventRepository;
   let taskRepository: TaskRepository;
   let assignedTaskRepository: AssignedTaskRepository;
   let notificationRepository: NotificationRepository;
@@ -331,6 +342,8 @@ export async function bootstrap(registry: CleanupRegistry, signal: AbortSignal) 
     sandboxRepository = new SqliteSandboxRepository(sqliteDatabases, cipher);
     chatSessionRepository = new SqliteChatSessionRepository(sqliteDatabases);
     persistedExecutionRepository = new SqlitePersistedExecutionRepository(sqliteDatabases);
+    processExecutionTraceRepository = new SqliteProcessExecutionTraceRepository(sqliteDatabases);
+    processExecutionTraceEventRepository = new SqliteProcessExecutionTraceEventRepository(sqliteDatabases);
     taskRepository = new SqliteTaskRepository(sqliteDatabases);
     assignedTaskRepository = new SqliteAssignedTaskRepository(sqliteDatabases);
     notificationRepository = new SqliteNotificationRepository(sqliteDatabases);
@@ -376,6 +389,8 @@ export async function bootstrap(registry: CleanupRegistry, signal: AbortSignal) 
     sandboxRepository.setup(signal),
     chatSessionRepository.setup(signal),
     persistedExecutionRepository.setup(signal),
+    processExecutionTraceRepository.setup(signal),
+    processExecutionTraceEventRepository.setup(signal),
     taskRepository.setup(signal),
     assignedTaskRepository.setup(signal),
     notificationRepository.setup(signal),
@@ -509,7 +524,14 @@ export async function bootstrap(registry: CleanupRegistry, signal: AbortSignal) 
     agentSessionRunner
   };
 
-  const processExecutor = new ProcessExecutor(processExecutionStore, processExecutionPersister, processExecutionServices, eventBus);
+  const processExecutionTracer = new ProcessExecutionTracer(processExecutionTraceRepository, processExecutionTraceEventRepository);
+  const processExecutor = new ProcessExecutor(
+    processExecutionStore,
+    processExecutionPersister,
+    processExecutionTracer,
+    processExecutionServices,
+    eventBus
+  );
   const processExecutionResumeListenerStore = new ProcessExecutionResumeListenerStore();
   const processExecutionResumer = new ProcessExecutionResumer(
     processManager,
@@ -552,7 +574,7 @@ export async function bootstrap(registry: CleanupRegistry, signal: AbortSignal) 
     new GetProcessesTool(processListQuerier),
     new GetProcessDetailsTool(processManager),
     new GetTablesTool(tableListQuerier),
-    new TestProcessTool(processManager, processExecutor, eventBus)
+    new TestProcessTool(processManager, processExecutor)
   ]);
 
   const authMiddleware = new AuthMiddleware(authTokenRepository);
@@ -592,7 +614,8 @@ export async function bootstrap(registry: CleanupRegistry, signal: AbortSignal) 
   const schedulers: Scheduler[] = [
     new LicenseCheckScheduler(licenseManager),
     new AuthCleanupScheduler(authTokenRepository, magicLinkRepository),
-    new ProcessCronJobScheduler(processCronJobRepository, processManager, processExecutor, myProcessAccessQuerier)
+    new ProcessCronJobScheduler(processCronJobRepository, processManager, processExecutor, myProcessAccessQuerier),
+    new ProcessExecutionTraceJobScheduler(processExecutionTraceRepository)
   ];
 
   const endpoints = [
@@ -642,6 +665,9 @@ export async function bootstrap(registry: CleanupRegistry, signal: AbortSignal) 
     new StartMyProcessEndpoint(userProcessProvider, processExecutor, sessionManager, executionTaskCandidateQuerier),
     new GetProcessesEndpoint(processListQuerier),
     new GetProcessEndpoint(processManager),
+    new GetProcessExecutionTracesEndpoint(processExecutionTraceRepository),
+    new GetProcessExecutionTraceEndpoint(processExecutionTraceRepository),
+    new GetProcessExecutionTraceEventsEndpoint(processExecutionTraceEventRepository),
     new ExportProcessEndpoint(processManager),
     new DeleteProcessEndpoint(processManager),
     new SaveProcessEndpoint(processManager, processValidatorsFactory),

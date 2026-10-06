@@ -3,7 +3,6 @@ import {
   ProcessExecutionVariableValues,
   ProcessLogLevel,
   VariableCachedValidator,
-  type ProcessLog,
   type ProcessDefinition,
   type ProcessDto,
   type ReturnStep,
@@ -14,22 +13,22 @@ import { DefinitionWalker } from 'sequential-workflow-model';
 import { useApiClient, useSession } from '../../auth/auth-context';
 import { ProcessTesterPreferencesStorage } from './process-tester-preferences-storage';
 import {
-  CurrentStepProcessTesterTimelineItem,
-  ErrorProcessTesterTimelineItem,
-  FormErrorProcessTesterTimelineItem,
-  FormProcessTesterTimelineItem,
-  LogProcessTesterTimelineItem,
-  OutputProcessTesterTimelineItem,
-  ProcessTesterTimelineFormStatus,
-  ProcessTesterTimelineFormType,
-  type ProcessTesterTimelineItem
-} from '../../views/process-tester/process-tester-timeline-view';
+  CurrentStepProcessExecutionTimelineItem,
+  ErrorProcessExecutionTimelineItem,
+  FormErrorProcessExecutionTimelineItem,
+  FormProcessExecutionTimelineItem,
+  LogProcessExecutionTimelineItem,
+  OutputProcessExecutionTimelineItem,
+  ProcessExecutionTimelineFormStatus,
+  ProcessExecutionTimelineFormType,
+  type ProcessExecutionTimelineItem
+} from '../../views/common/process-execution-timeline-view';
 import { FormError } from '../common/form-renderer/form-adapter';
 
 export interface ProcessTesterData {
   process: ProcessDto;
   values: ProcessExecutionVariableValues | null;
-  timelineItems: ProcessTesterTimelineItem[];
+  timelineItems: ProcessExecutionTimelineItem[];
   isRunning: boolean;
   currentUserName: string;
   chatUserNames: string[];
@@ -85,8 +84,7 @@ export function ProcessTesterContext(props: ProcessTesterContextProps) {
             },
             onClose() {
               update(state => {
-                const time = Date.now();
-                const item = new LogProcessTesterTimelineItem(time, ProcessLogLevel.INFO, 'Info', 'Connection closed');
+                const item = new LogProcessExecutionTimelineItem([Date.now(), ProcessLogLevel.INFO, 'Connection closed']);
                 return { timelineItems: [...state.timelineItems, item], isRunning: false };
               });
             }
@@ -97,7 +95,7 @@ export function ProcessTesterContext(props: ProcessTesterContextProps) {
       } catch (e) {
         if (!signal.aborted) {
           update(state => {
-            const item = new ErrorProcessTesterTimelineItem(Date.now(), 'Connection error', String(e));
+            const item = new ErrorProcessExecutionTimelineItem(Date.now(), 'Connection error', String(e));
             return { timelineItems: [...state.timelineItems, item], isRunning: false };
           });
         }
@@ -124,21 +122,21 @@ export function ProcessTesterContext(props: ProcessTesterContextProps) {
       update({
         values,
         isRunning: true,
-        timelineItems: [createStartTimelineItem(ProcessTesterTimelineFormStatus.COMPLETED)]
+        timelineItems: [createStartTimelineItem(ProcessExecutionTimelineFormStatus.COMPLETED)]
       });
     }
 
     function openStartForm() {
       update({
         values: null,
-        timelineItems: [createStartTimelineItem(ProcessTesterTimelineFormStatus.ACTIVE)],
+        timelineItems: [createStartTimelineItem(ProcessExecutionTimelineFormStatus.ACTIVE)],
         isRunning: false
       });
     }
 
     function collectFormError(error: FormError) {
       update(state => {
-        const item = new FormErrorProcessTesterTimelineItem(Date.now(), error.message, error.stack);
+        const item = new FormErrorProcessExecutionTimelineItem(Date.now(), error.message, error.stack);
         return { timelineItems: [...state.timelineItems, item] };
       });
     }
@@ -201,7 +199,7 @@ function createData(process: ProcessDto, currentUserName: string, preferencesSto
   return {
     process,
     values: null,
-    timelineItems: [createStartTimelineItem(ProcessTesterTimelineFormStatus.ACTIVE)],
+    timelineItems: [createStartTimelineItem(ProcessExecutionTimelineFormStatus.ACTIVE)],
     isRunning: false,
     currentUserName,
     chatUserNames,
@@ -209,27 +207,26 @@ function createData(process: ProcessDto, currentUserName: string, preferencesSto
   };
 }
 
-function createStartTimelineItem(status: ProcessTesterTimelineFormStatus) {
-  return new FormProcessTesterTimelineItem(Date.now(), ProcessTesterTimelineFormType.START, status);
+function createStartTimelineItem(status: ProcessExecutionTimelineFormStatus) {
+  return new FormProcessExecutionTimelineItem(Date.now(), ProcessExecutionTimelineFormType.START, status);
 }
 
 function createProcessTesterTimelineItems(
   update: TestProcessUpdate,
   definition: ProcessDefinition,
   receivedAt: number
-): ProcessTesterTimelineItem[] {
-  const items: ProcessTesterTimelineItem[] = [];
+): ProcessExecutionTimelineItem[] {
+  const items: ProcessExecutionTimelineItem[] = [];
 
   if (update.currentStepId) {
     const step = new DefinitionWalker().findById(definition, update.currentStepId);
     if (step) {
-      items.push(new CurrentStepProcessTesterTimelineItem(receivedAt, step.id, step.name));
+      items.push(new CurrentStepProcessExecutionTimelineItem(receivedAt, step.id, step.name));
     }
   }
 
   if (update.log) {
-    const [header, content] = formatLogMessage(update.log);
-    items.push(new LogProcessTesterTimelineItem(update.log[0], update.log[1], header, content));
+    items.push(new LogProcessExecutionTimelineItem(update.log));
   }
 
   const outcome = update.outcome;
@@ -237,11 +234,11 @@ function createProcessTesterTimelineItems(
     return items;
   }
   if (outcome.type === ProcessExecutionOutcomeType.FAILED) {
-    items.push(new ErrorProcessTesterTimelineItem(receivedAt, 'Process failed', outcome.error));
+    items.push(new ErrorProcessExecutionTimelineItem(receivedAt, 'Process failed', outcome.error));
     return items;
   }
   if (outcome.type === ProcessExecutionOutcomeType.PAUSED) {
-    items.push(new LogProcessTesterTimelineItem(receivedAt, ProcessLogLevel.INFO, 'Info', 'Process paused'));
+    items.push(new LogProcessExecutionTimelineItem([receivedAt, ProcessLogLevel.INFO, 'Process paused']));
     return items;
   }
 
@@ -249,46 +246,17 @@ function createProcessTesterTimelineItems(
   const returnStep = step?.type === 'return' ? (step as ReturnStep) : null;
   if (returnStep?.properties.outputForm) {
     items.push(
-      new FormProcessTesterTimelineItem(
+      new FormProcessExecutionTimelineItem(
         receivedAt,
-        ProcessTesterTimelineFormType.OUTPUT,
-        ProcessTesterTimelineFormStatus.COMPLETED,
+        ProcessExecutionTimelineFormType.OUTPUT,
+        ProcessExecutionTimelineFormStatus.COMPLETED,
         returnStep.properties.outputForm,
         outcome.output
       )
     );
   } else {
-    items.push(new OutputProcessTesterTimelineItem(receivedAt, outcome.output));
+    items.push(new OutputProcessExecutionTimelineItem(receivedAt, outcome.output));
   }
 
   return items;
-}
-
-function formatLogMessage(log: ProcessLog): [string, string] {
-  const level = log[1];
-  if (level === ProcessLogLevel.AGENT_RESPONSE) {
-    return ['Agent', log[2]];
-  }
-  if (level === ProcessLogLevel.AGENT_TOOL_CALL) {
-    return ['Tool call', `${log[3]} ${log[4]}`];
-  }
-  if (level === ProcessLogLevel.AGENT_TOOL_RESPONSE) {
-    return ['Tool response', log[3]];
-  }
-  if (level === ProcessLogLevel.MATERIALIZER_STDOUT) {
-    return ['Materializer stdout', log[2]];
-  }
-  if (level === ProcessLogLevel.MATERIALIZER_STDERR) {
-    return ['Materializer stderr', log[2]];
-  }
-  if (level === ProcessLogLevel.SCRIPT_STDOUT) {
-    return ['Script stdout', log[2]];
-  }
-  if (level === ProcessLogLevel.SCRIPT_STDERR) {
-    return ['Script stderr', log[2]];
-  }
-  if (level === ProcessLogLevel.SCRIPT_FINISHED) {
-    return ['Script finished', `${log[2]}ms with code ${log[3]}`];
-  }
-  return ['Info', log[2]];
 }

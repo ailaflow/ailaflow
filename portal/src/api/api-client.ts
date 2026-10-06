@@ -14,6 +14,7 @@ import { TaskApiClient } from './task-api-client';
 import { PublicUrlConfigurationApiClient } from './public-url-configuration-api-client';
 import { SlackConfigurationApiClient } from './slack-configuration-api-client';
 import { MyConfigurationApiClient } from './my-configuration-api-client';
+import { ProcessExecutionApiClient } from './process-execution-api-client';
 
 export class ApiClient {
   private readonly client: HttpClient;
@@ -22,6 +23,7 @@ export class ApiClient {
   public readonly auth: AuthApiClient;
   public readonly chat: SseTransport;
   public readonly process: ProcessApiClient;
+  public readonly processExecution: ProcessExecutionApiClient;
   public readonly sandbox: SandboxApiClient;
   public readonly user: UserApiClient;
   public readonly myProcess: MyProcessApiClient;
@@ -41,6 +43,7 @@ export class ApiClient {
     this.auth = new AuthApiClient(this.client);
     this.chat = new SseTransport(this.client);
     this.process = new ProcessApiClient(this.client);
+    this.processExecution = new ProcessExecutionApiClient(this.client);
     this.sandbox = new SandboxApiClient(this.client);
     this.user = new UserApiClient(this.client);
     this.myProcess = new MyProcessApiClient(this.client);

@@ -1,5 +1,11 @@
 import { ProcessListQuerier } from './process-list-querier';
-import { GetProcessesResponse, ProcessDisplay, ProcessExecutionMode, ProcessLiteDto } from '@ailaflow/shared';
+import {
+  GetProcessesResponse,
+  ProcessDisplay,
+  ProcessExecutionMode,
+  ProcessExecutionTraceRetention,
+  ProcessLiteDto
+} from '@ailaflow/shared';
 import { SqliteDatabase } from '../../core/sqlite-database';
 import { SqliteDatabases } from '../../core/sqlite-databases';
 
@@ -23,8 +29,8 @@ export class SqliteProcessListQuerier implements ProcessListQuerier {
         .prepare(`SELECT COUNT(*) AS totalCount FROM processes WHERE display <= ? AND instr(name, ?) > 0`)
         .get(displayAtLeast, searchTerm) as { totalCount: number };
       const statement = db.prepare(`
-      SELECT name, description, userAccessExpression, display, executionMode, icon, nTasksSteps, nReturnSteps, sandboxNames,
-        definitionSize
+      SELECT name, description, userAccessExpression, display, executionMode, traceRetention, icon, nTasksSteps, nReturnSteps,
+        sandboxNames, definitionSize
       FROM processes
       WHERE display <= ?
         AND instr(name, ?) > 0
@@ -48,6 +54,7 @@ interface ProcessRow {
   userAccessExpression: string;
   display: ProcessDisplay;
   executionMode: ProcessExecutionMode;
+  traceRetention: ProcessExecutionTraceRetention;
   icon: string | null;
   nTasksSteps: number;
   nReturnSteps: number;
@@ -62,6 +69,7 @@ function mapRows(rows: ProcessRow[]): ProcessLiteDto[] {
     userAccessExpression: row.userAccessExpression,
     display: row.display,
     executionMode: row.executionMode,
+    traceRetention: row.traceRetention,
     icon: row.icon,
     nTasksSteps: row.nTasksSteps,
     nReturnSteps: row.nReturnSteps,

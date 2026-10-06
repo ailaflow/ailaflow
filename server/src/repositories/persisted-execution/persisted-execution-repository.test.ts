@@ -5,7 +5,7 @@ import { SqliteDatabase } from '../../core/sqlite-database';
 import { SqliteDatabases } from '../../core/sqlite-databases';
 import { PersistedExecution } from './persisted-execution';
 import { SqlitePersistedExecutionRepository } from './sqlite-persisted-execution-repository';
-import { ProcessExecutionTrigger } from '../../process-executor/process-execution-context';
+import { ProcessExecutionTrigger } from '@ailaflow/shared';
 
 test('persisted execution repository upserts, gets, and deletes an execution', async () => {
   const db = new DatabaseSync(':memory:', { open: true });

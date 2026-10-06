@@ -1,4 +1,4 @@
-import { ProcessDisplay, ProcessExecutionMode } from '@ailaflow/shared';
+import { ProcessDisplay, ProcessExecutionMode, ProcessExecutionTraceRetention } from '@ailaflow/shared';
 
 export interface ProcessEditorDetailsViewProps {
   id: string;
@@ -8,11 +8,13 @@ export interface ProcessEditorDetailsViewProps {
   userAccessExpressionError: string | null;
   display: ProcessDisplay;
   executionMode: ProcessExecutionMode;
+  traceRetention: ProcessExecutionTraceRetention;
   hasIcon: boolean;
   onDescriptionChange(description: string): void;
   onUserAccessExpressionChange(userAccessExpression: string): void;
   onDisplayChange(display: ProcessDisplay): void;
   onExecutionModeChange(executionMode: ProcessExecutionMode): void;
+  onTraceRetentionChange(traceRetention: ProcessExecutionTraceRetention): void;
   onIconUpload(file: File): void;
   onIconReset(): void;
 }
@@ -94,6 +96,19 @@ export function ProcessEditorDetailsView(props: ProcessEditorDetailsViewProps) {
         >
           <option value={ProcessExecutionMode.AI_TOOL_OR_START_FORM}>AI using tools and start form</option>
           <option value={ProcessExecutionMode.START_FORM}>Start form only</option>
+        </select>
+      </label>
+
+      <label className="block">
+        <span className="mb-1 block text-xs font-medium text-slate-500">Trace retention</span>
+        <select
+          value={props.traceRetention}
+          onChange={e => props.onTraceRetentionChange(Number(e.target.value) as ProcessExecutionTraceRetention)}
+          className="h-8 w-full rounded-md border border-slate-300 bg-white px-2 text-sm text-slate-600 outline-none transition-colors focus:border-slate-500"
+        >
+          <option value={ProcessExecutionTraceRetention.DISABLED}>Disabled</option>
+          <option value={ProcessExecutionTraceRetention.ONE_DAY}>1 day</option>
+          <option value={ProcessExecutionTraceRetention.ONE_WEEK}>1 week</option>
         </select>
       </label>
 

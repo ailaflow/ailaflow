@@ -1,4 +1,4 @@
-import { JsonSchema, ProcessDefinition, ProcessDisplay, ProcessExecutionMode } from '@ailaflow/shared';
+import { JsonSchema, ProcessDefinition, ProcessDisplay, ProcessExecutionMode, ProcessExecutionTraceRetention } from '@ailaflow/shared';
 import { ProcessRepository, ProcessRepositoryError } from './process-repository';
 import { Process } from './process';
 import { SqliteDatabase } from '../../core/sqlite-database';
@@ -12,6 +12,7 @@ interface ProcessRow {
   userAccessExpression: string;
   display: ProcessDisplay;
   executionMode: ProcessExecutionMode;
+  traceRetention: ProcessExecutionTraceRetention;
   icon: string | null;
   nSteps: number;
   nReturnSteps: number;
@@ -31,7 +32,7 @@ export class SqliteProcessRepository implements ProcessRepository {
   }
 
   public async setup(_: AbortSignal) {
-    await this.db.setup(3, 'processes', (db, version) => {
+    await this.db.setup(4, 'processes', (db, version) => {
       if (version < 1) {
         db.exec(`
           CREATE TABLE processes (
@@ -57,6 +58,9 @@ export class SqliteProcessRepository implements ProcessRepository {
       if (version < 3) {
         db.exec(`ALTER TABLE processes ADD COLUMN updatedAt INTEGER NOT NULL DEFAULT 0`);
       }
+      if (version < 4) {
+        db.exec(`ALTER TABLE processes ADD COLUMN traceRetention INTEGER NOT NULL DEFAULT 0`);
+      }
     });
   }
 
@@ -66,10 +70,10 @@ export class SqliteProcessRepository implements ProcessRepository {
       await this.db.write(db => {
         const statement = db.prepare(`
           INSERT INTO processes (
-            name, description, userAccessExpression, display, executionMode, icon, nSteps, nReturnSteps, nTasksSteps,
+            name, description, userAccessExpression, display, executionMode, traceRetention, icon, nSteps, nReturnSteps, nTasksSteps,
             sandboxNames, startVariableSchemas, definition, definitionSize, definitionHash, updatedAt
           )
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `);
         statement.run(
           process.name,
@@ -77,6 +81,7 @@ export class SqliteProcessRepository implements ProcessRepository {
           process.userAccessExpression,
           process.display,
           process.executionMode,
+          process.traceRetention,
           process.icon,
           process.nSteps,
           process.nReturnSteps,
@@ -107,6 +112,7 @@ export class SqliteProcessRepository implements ProcessRepository {
           userAccessExpression = ?,
           display = ?,
           executionMode = ?,
+          traceRetention = ?,
           icon = ?,
           nSteps = ?,
           nReturnSteps = ?,
@@ -124,6 +130,7 @@ export class SqliteProcessRepository implements ProcessRepository {
         process.userAccessExpression,
         process.display,
         process.executionMode,
+        process.traceRetention,
         process.icon,
         process.nSteps,
         process.nReturnSteps,
@@ -157,7 +164,7 @@ export class SqliteProcessRepository implements ProcessRepository {
   public async tryGetByName(_: AbortSignal, name: string): Promise<Process | null> {
     return this.db.read(db => {
       const statement = db.prepare(`
-        SELECT name, description, userAccessExpression, display, executionMode, icon, nSteps, nReturnSteps, nTasksSteps,
+        SELECT name, description, userAccessExpression, display, executionMode, traceRetention, icon, nSteps, nReturnSteps, nTasksSteps,
           sandboxNames, startVariableSchemas, definition, definitionHash, updatedAt
         FROM processes
         WHERE name = ?
@@ -172,6 +179,7 @@ export class SqliteProcessRepository implements ProcessRepository {
             row.userAccessExpression,
             row.display,
             row.executionMode,
+            row.traceRetention,
             row.icon,
             JSON.parse(row.definition) as ProcessDefinition,
             row.definitionHash,

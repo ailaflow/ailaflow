@@ -4,6 +4,7 @@ import {
   ProcessDefinition,
   ProcessDisplay,
   ProcessExecutionMode,
+  ProcessExecutionTraceRetention,
   ProcessRootValidator,
   ProcessStepValidator,
   ProcessValidator,
@@ -63,6 +64,7 @@ export class Process {
       e.userAccess === 'installer' ? `@${userName}` : '',
       e.userAccess === 'installer' ? ProcessDisplay.LISTED : ProcessDisplay.FEATURED,
       ProcessExecutionMode.AI_TOOL_OR_START_FORM,
+      ProcessExecutionTraceRetention.DISABLED,
       e.icon,
       e.definition,
       e.hash,
@@ -88,6 +90,7 @@ export class Process {
       data.userAccessExpression,
       data.display,
       data.executionMode,
+      data.traceRetention,
       data.icon,
       data.definition,
       data.hash,
@@ -108,6 +111,7 @@ export class Process {
     public userAccessExpression: string,
     public display: ProcessDisplay,
     public executionMode: ProcessExecutionMode,
+    public traceRetention: ProcessExecutionTraceRetention,
     public icon: string | null,
     public definition: ProcessDefinition,
     public hash: string,
@@ -131,6 +135,7 @@ export class Process {
     this.userAccessExpression = data.userAccessExpression;
     this.display = data.display;
     this.executionMode = data.executionMode;
+    this.traceRetention = data.traceRetention;
     this.icon = data.icon;
     this.definition = data.definition;
     this.variablesCache = null;

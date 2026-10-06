@@ -23,6 +23,11 @@ const adminItems: MenuItemDefinition[] = [
     activeAliases: ['/admin/create-process']
   },
   {
+    label: 'Traces',
+    action: 'link',
+    href: '/admin/process-execution-traces'
+  },
+  {
     label: 'Tables',
     action: 'link',
     href: '/admin/tables',

@@ -5,6 +5,12 @@ export enum ProcessExecutionMode {
   START_FORM = 1
 }
 
+export enum ProcessExecutionTrigger {
+  ENDPOINT = 1,
+  TOOL = 2,
+  SCHEDULED_JOB = 3
+}
+
 export enum ProcessExecutionOutcomeType {
   FAILED = 1,
   FINISHED = 2,
@@ -55,3 +61,22 @@ export type ProcessLog =
   | [time: number, level: ProcessLogLevel.AGENT_RESPONSE, message: string]
   | [time: number, level: ProcessLogLevel.AGENT_TOOL_CALL, toolCallId: string, functionName: string, arguments: string]
   | [time: number, level: ProcessLogLevel.AGENT_TOOL_RESPONSE, toolCallId: string, arguments: string];
+
+export enum ProcessExecutionTraceStatus {
+  RUNNING = 1,
+  COMPLETED = 2,
+  FAILED = 3,
+  PAUSED = 4
+}
+
+export enum ProcessExecutionTraceEventType {
+  STEP_CHANGE = 1,
+  LOG = 2,
+  PAUSE = 3
+}
+
+export enum ProcessExecutionTraceRetention {
+  DISABLED = 0,
+  ONE_DAY = 1,
+  ONE_WEEK = 2
+}

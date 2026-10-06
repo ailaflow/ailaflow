@@ -1,4 +1,4 @@
-import { ProcessCronJobRunStatus, ProcessExecutionOutcome, ProcessExecutionOutcomeType } from '@ailaflow/shared';
+import { ProcessCronJobRunStatus, ProcessExecutionOutcome, ProcessExecutionOutcomeType, ProcessExecutionTrigger } from '@ailaflow/shared';
 import { Logger } from '../core/logger';
 import { ProcessCronJobExpressionParser } from '../repositories/process-cron-job/process-cron-job-expression-parser';
 import { ProcessCronJob } from '../repositories/process-cron-job/process-cron-job';
@@ -6,7 +6,7 @@ import { ProcessCronJobRepository } from '../repositories/process-cron-job/proce
 import { Scheduler } from './scheduler';
 import { ProcessManager } from '../process/process-manager';
 import { ProcessExecutor } from '../process-executor/process-executor';
-import { ProcessExecutionContext, ProcessExecutionTrigger } from '../process-executor/process-execution-context';
+import { ProcessExecutionContext } from '../process-executor/process-execution-context';
 import { MyProcessAccessQuerier } from '../queriers/my-process/my-process-access-querier';
 
 const INTERVAL_MS = 60_000;

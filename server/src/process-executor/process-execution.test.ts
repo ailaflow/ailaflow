@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { ProcessExecutionOutcomeType, ProcessExecutionVariableValues } from '@ailaflow/shared';
+import { ProcessExecutionOutcomeType, ProcessExecutionTrigger, ProcessExecutionVariableValues } from '@ailaflow/shared';
 import { createActivitySet, createSignalActivity, createWorkflowMachineBuilder } from 'sequential-workflow-machine';
 import { Definition, Step } from 'sequential-workflow-model';
 import { ProcessExecution } from './process-execution';
@@ -13,7 +13,6 @@ import { ProcessExecutionPersister } from './process-execution-persister';
 import { ProcessVariables } from '../repositories/process/process-variables';
 import { ProcessVariableEvaluator } from './services/process-value-evaluator';
 import { Notifier } from '../notification/notifier';
-import { ProcessExecutionTrigger } from './process-execution-context';
 import { EventBus } from '../events/event-bus';
 
 const context = {

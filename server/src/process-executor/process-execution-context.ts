@@ -1,8 +1,4 @@
-export enum ProcessExecutionTrigger {
-  ENDPOINT,
-  TOOL,
-  SCHEDULED_JOB
-}
+import { ProcessExecutionTrigger } from '@ailaflow/shared';
 
 export interface ProcessExecutionContext {
   trigger: ProcessExecutionTrigger;

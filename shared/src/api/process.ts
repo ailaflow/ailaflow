@@ -4,6 +4,7 @@ import {
   processDefinitionSchema,
   ProcessDisplay,
   ProcessExecutionMode,
+  ProcessExecutionTraceRetention,
   ProcessExecutionOutcome,
   ProcessLog
 } from '../process';
@@ -17,6 +18,7 @@ const processLiteDtoSchema = z.object({
   userAccessExpression: z.string(),
   display: z.enum(ProcessDisplay),
   executionMode: z.enum(ProcessExecutionMode),
+  traceRetention: z.enum(ProcessExecutionTraceRetention),
   icon: z.string().nullable(),
   nTasksSteps: z.number(),
   nReturnSteps: z.number(),
@@ -44,6 +46,7 @@ const processDtoSchema = z.object({
   userAccessExpression: z.string(),
   display: z.enum(ProcessDisplay),
   executionMode: z.enum(ProcessExecutionMode),
+  traceRetention: z.enum(ProcessExecutionTraceRetention),
   icon: z.string().nullable(),
   definition: processDefinitionSchema
 });
@@ -64,6 +67,7 @@ export const saveProcessRequestSchema = z.object({
   userAccessExpression: z.string(),
   display: z.enum(ProcessDisplay),
   executionMode: z.enum(ProcessExecutionMode),
+  traceRetention: z.enum(ProcessExecutionTraceRetention),
   icon: z.string().nullable(),
   definition: processDefinitionSchema,
   hash: z.string()

@@ -28,6 +28,8 @@ import { ProcessCronJobsPage } from './process-cron-jobs/process-cron-jobs-page'
 import { NotFoundPage } from './not-found/not-found-page';
 import { MagicLinkPage } from './magic-link/magic-link';
 import { Portal } from './common/portal';
+import { ProcessExecutionTracesPage } from './process-execution-traces/process-execution-traces-page';
+import { ProcessExecutionTraceEventsPage } from './process-execution-trace-events/process-execution-trace-events-page';
 
 export const routes = [
   {
@@ -83,6 +85,14 @@ export const routes = [
           {
             path: '/admin/processes',
             element: <ProcessListPage />
+          },
+          {
+            path: '/admin/process-execution-traces',
+            element: <ProcessExecutionTracesPage />
+          },
+          {
+            path: '/admin/process-execution-traces/:executionId',
+            element: <ProcessExecutionTraceEventsPage />
           },
           {
             path: '/admin/processes/:processName',

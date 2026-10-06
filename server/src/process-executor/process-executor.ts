@@ -3,7 +3,7 @@ import { Process } from '../repositories/process/process';
 import { ProcessExecution } from './process-execution';
 import { activitySet } from './activities/activity-set';
 import { ProcessExecutionStore } from './process-execution-store';
-import { ProcessExecutionVariableValues } from '@ailaflow/shared';
+import { ProcessExecutionTraceRetention, ProcessExecutionVariableValues } from '@ailaflow/shared';
 import { ProcessExecutionSnapshotTransformer } from './process-execution-snapshot-transformer';
 import { ProcessExecutionGlobalState, SerializedProcessExecutionGlobalState } from './process-execution-global-state';
 import { ProcessExecutionPersister } from './process-execution-persister';
@@ -11,6 +11,7 @@ import { ProcessExecutionServices } from './services/services';
 import { ProcessExecutionContext } from './process-execution-context';
 import { randomUUID } from 'crypto';
 import { EventBus } from '../events/event-bus';
+import { ProcessExecutionTracer } from './process-execution-tracer';
 
 export class ProcessExecutor {
   private readonly builder = createWorkflowMachineBuilder(activitySet);
@@ -18,6 +19,7 @@ export class ProcessExecutor {
   public constructor(
     private readonly processExecutionStore: ProcessExecutionStore,
     private readonly processExecutionPersister: ProcessExecutionPersister,
+    private readonly processExecutionTracer: ProcessExecutionTracer,
     private readonly services: ProcessExecutionServices,
     private readonly eventBus: EventBus
   ) {}
@@ -80,10 +82,13 @@ export class ProcessExecutor {
       this.processExecutionPersister,
       this
     );
-    this.processExecutionStore.set(executionId, execution);
 
-    const cleanup = () => this.processExecutionStore.delete(executionId);
-    execution.onOutcome.subscribe(cleanup);
+    this.processExecutionStore.bind(execution);
+
+    if (!context.isTest && process.traceRetention !== ProcessExecutionTraceRetention.DISABLED) {
+      this.processExecutionTracer.bind(process, execution);
+    }
+
     return execution;
   }
 }

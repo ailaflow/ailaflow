@@ -46,6 +46,7 @@ export function ProcessEditor() {
         userAccessExpression: state.userAccessExpression,
         display: state.display,
         executionMode: state.executionMode,
+        traceRetention: state.traceRetention,
         icon: state.icon,
         definition: state.definition.value,
         hash
@@ -95,11 +96,13 @@ export function ProcessEditor() {
           userAccessExpressionError={state.userAccessExpressionError}
           display={state.display}
           executionMode={state.executionMode}
+          traceRetention={state.traceRetention}
           hasIcon={state.icon !== null}
           onDescriptionChange={description => state.setDescription(description, false)}
           onUserAccessExpressionChange={userAccessExpression => state.setUserAccessExpression(userAccessExpression, false)}
           onDisplayChange={state.setDisplay}
           onExecutionModeChange={state.setExecutionMode}
+          onTraceRetentionChange={state.setTraceRetention}
           onIconUpload={uploadIcon}
           onIconReset={() => state.setIcon(null)}
         />

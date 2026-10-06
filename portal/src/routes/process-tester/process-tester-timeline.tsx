@@ -1,7 +1,7 @@
 import type { FormDefinition, ProcessDefinition, ProcessExecutionVariableValues } from '@ailaflow/shared';
 import { VariableCachedValidator } from '@ailaflow/shared';
 import { useEffect, useMemo, useRef } from 'react';
-import { ProcessTesterTimelineView } from '../../views/process-tester/process-tester-timeline-view';
+import { ProcessExecutionTimelineView } from '../../views/common/process-execution-timeline-view';
 import { FormAdapter, FormError } from '../common/form-renderer/form-adapter';
 import { FormRenderer } from '../common/form-renderer/form-renderer';
 import { useProcessTester } from './process-tester-context';
@@ -21,7 +21,7 @@ export function ProcessTesterTimeline() {
   }, [state.timelineItems.length]);
 
   return (
-    <ProcessTesterTimelineView
+    <ProcessExecutionTimelineView
       items={state.timelineItems}
       scrollContainerRef={scrollContainerRef}
       startForm={

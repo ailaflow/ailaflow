@@ -1,11 +1,10 @@
 import { ToolContext, ZodTool, ZodToolExecutionResult } from '@aibindkit/llm';
 import * as z from 'zod/v4';
-import { ProcessExecutionContext, ProcessExecutionTrigger } from '../../process-executor/process-execution-context';
+import { ProcessExecutionContext } from '../../process-executor/process-execution-context';
 import { ProcessManager } from '../../process/process-manager';
 import { ChatSessionId } from '../chat-session-id';
 import { ProcessExecutor } from '../../process-executor/process-executor';
-import { ProcessExecutionMode, ProcessExecutionOutcomeType, ResourceNameNormalizer } from '@ailaflow/shared';
-import { EventBus } from '../../events/event-bus';
+import { ProcessExecutionMode, ProcessExecutionOutcomeType, ProcessExecutionTrigger, ResourceNameNormalizer } from '@ailaflow/shared';
 
 const inputSchema = z.object({
   name: z.string(),
@@ -17,8 +16,7 @@ type Arg = z.infer<typeof inputSchema>;
 export class TestProcessTool extends ZodTool<Arg> {
   public constructor(
     private readonly processManager: ProcessManager,
-    private readonly processExecutor: ProcessExecutor,
-    private readonly eventBus: EventBus
+    private readonly processExecutor: ProcessExecutor
   ) {
     super('global_test_process', 'Tests a process', inputSchema);
   }

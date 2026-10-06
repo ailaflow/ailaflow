@@ -3,6 +3,7 @@ import {
   ProcessDefinition,
   ProcessDisplay,
   ProcessExecutionMode,
+  ProcessExecutionTraceRetention,
   ProcessDto,
   ProcessStepValidator,
   ProcessRootValidator,
@@ -50,6 +51,7 @@ export interface ProcessEditorData {
   userAccessExpressionError: string | null;
   display: ProcessDisplay;
   executionMode: ProcessExecutionMode;
+  traceRetention: ProcessExecutionTraceRetention;
   icon: string | null;
   definition: WrappedDefinition<ProcessDefinition>;
   selectedStepId: string | null;
@@ -64,6 +66,7 @@ export interface ProcessEditorState extends ProcessEditorData {
   setUserAccessExpression(userAccessExpression: string, throwIfInvalid: boolean): void;
   setDisplay(display: ProcessDisplay): void;
   setExecutionMode(executionMode: ProcessExecutionMode): void;
+  setTraceRetention(traceRetention: ProcessExecutionTraceRetention): void;
   setIcon(icon: string | null): void;
   setDefinition(definition: WrappedDefinition, markDirty: boolean): void;
   getStep<S extends Step>(id: string, requiredType?: S['type']): S;
@@ -98,6 +101,7 @@ function createData(props: Omit<ProcessEditorContextProps, 'children'>): Process
   const userAccessExpression = props.process?.userAccessExpression ?? '';
   const display = props.process?.display ?? ProcessDisplay.FEATURED;
   const executionMode = props.process?.executionMode ?? ProcessExecutionMode.AI_TOOL_OR_START_FORM;
+  const traceRetention = props.process?.traceRetention ?? ProcessExecutionTraceRetention.DISABLED;
   const icon = props.process?.icon ?? null;
   const controller = SequentialWorkflowDesignerController.create();
 
@@ -119,6 +123,7 @@ function createData(props: Omit<ProcessEditorContextProps, 'children'>): Process
     userAccessExpressionError: null,
     display,
     executionMode,
+    traceRetention,
     icon,
     selectedStepId: null,
     definition,
@@ -158,6 +163,7 @@ export function ProcessEditorContext(props: ProcessEditorContextProps) {
           current.userAccessExpression !== data.userAccessExpression ||
           current.display !== data.display ||
           current.executionMode !== data.executionMode ||
+          current.traceRetention !== data.traceRetention ||
           current.icon !== data.icon ||
           DesignerUtils.calcDefinitionHash(current.definition.value) !== definitionHash
         ) {
@@ -209,6 +215,10 @@ export function ProcessEditorContext(props: ProcessEditorContextProps) {
 
     function setExecutionMode(executionMode: ProcessExecutionMode) {
       update({ executionMode, isDirty: true });
+    }
+
+    function setTraceRetention(traceRetention: ProcessExecutionTraceRetention) {
+      update({ traceRetention, isDirty: true });
     }
 
     function setIcon(icon: string | null) {
@@ -306,6 +316,7 @@ export function ProcessEditorContext(props: ProcessEditorContextProps) {
       setUserAccessExpression,
       setDisplay,
       setExecutionMode,
+      setTraceRetention,
       setIcon,
       setDefinition,
       notifyDefinitionChange,

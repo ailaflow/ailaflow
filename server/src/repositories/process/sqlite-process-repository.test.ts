@@ -8,19 +8,21 @@ import { SqliteResourceAccessRepository } from '../resource-access/sqlite-resour
 import { ProcessResourceId } from './process-resource-id';
 import { SqliteProcessRepository } from './sqlite-process-repository';
 import { Process } from './process';
-import { ProcessDefinition, ProcessDisplay, ProcessExecutionMode, PROCESS_VERSION } from '@ailaflow/shared';
+import { ProcessDefinition, ProcessDisplay, ProcessExecutionMode, ProcessExecutionTraceRetention, PROCESS_VERSION } from '@ailaflow/shared';
 
 test('persists and updates process metadata', async () => {
   const { signal, db, processRepository } = await setup();
   const process = createProcess('alpha', 2);
   process.icon = '<svg viewBox="0 0 10 10"></svg>';
   process.sandboxNames = ['node', 'python'];
+  process.traceRetention = ProcessExecutionTraceRetention.ONE_DAY;
   process.updatedAt = 1000;
 
   await processRepository.insert(signal, process);
   assert.equal((await processRepository.tryGetByName(signal, process.name))?.nTasksSteps, 2);
   assert.equal((await processRepository.tryGetByName(signal, process.name))?.display, ProcessDisplay.LISTED);
   assert.equal((await processRepository.tryGetByName(signal, process.name))?.executionMode, ProcessExecutionMode.AI_TOOL_OR_START_FORM);
+  assert.equal((await processRepository.tryGetByName(signal, process.name))?.traceRetention, ProcessExecutionTraceRetention.ONE_DAY);
   assert.equal((await processRepository.tryGetByName(signal, process.name))?.icon, process.icon);
   assert.deepEqual((await processRepository.tryGetByName(signal, process.name))?.sandboxNames, ['node', 'python']);
   assert.equal((await processRepository.tryGetByName(signal, process.name))?.updatedAt, 1000);
@@ -33,6 +35,7 @@ test('persists and updates process metadata', async () => {
   process.nTasksSteps = 0;
   process.display = ProcessDisplay.FEATURED;
   process.executionMode = ProcessExecutionMode.START_FORM;
+  process.traceRetention = ProcessExecutionTraceRetention.ONE_WEEK;
   process.icon = null;
   process.definition = createDefinitionWithReturnStep();
   process.nSteps = 1;
@@ -43,6 +46,7 @@ test('persists and updates process metadata', async () => {
   assert.equal((await processRepository.tryGetByName(signal, process.name))?.nTasksSteps, 0);
   assert.equal((await processRepository.tryGetByName(signal, process.name))?.display, ProcessDisplay.FEATURED);
   assert.equal((await processRepository.tryGetByName(signal, process.name))?.executionMode, ProcessExecutionMode.START_FORM);
+  assert.equal((await processRepository.tryGetByName(signal, process.name))?.traceRetention, ProcessExecutionTraceRetention.ONE_WEEK);
   assert.equal((await processRepository.tryGetByName(signal, process.name))?.icon, null);
   assert.deepEqual((await processRepository.tryGetByName(signal, process.name))?.sandboxNames, ['bun']);
   assert.equal((await processRepository.tryGetByName(signal, process.name))?.updatedAt, 2000);
@@ -84,6 +88,10 @@ test('adds empty sandbox names without rewriting existing definitions', async ()
 
   assert.deepEqual((await repository.tryGetByName(new AbortController().signal, 'alpha'))?.sandboxNames, []);
   assert.equal((await repository.tryGetByName(new AbortController().signal, 'alpha'))?.updatedAt, 0);
+  assert.equal(
+    (await repository.tryGetByName(new AbortController().signal, 'alpha'))?.traceRetention,
+    ProcessExecutionTraceRetention.DISABLED
+  );
   assert.equal(getStoredDefinition(db, 'alpha'), definitionBeforeSetup);
   db.close();
 });
@@ -167,6 +175,7 @@ function createProcess(name: string, nTasksSteps: number): Process {
     '',
     ProcessDisplay.LISTED,
     ProcessExecutionMode.AI_TOOL_OR_START_FORM,
+    ProcessExecutionTraceRetention.DISABLED,
     null,
     createDefinition(),
     'hash',

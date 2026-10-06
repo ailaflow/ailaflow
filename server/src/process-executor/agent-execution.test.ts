@@ -12,7 +12,9 @@ import {
   ProcessExecutionOutcome,
   ProcessExecutionOutcomeType,
   ProcessLogLevel,
-  type ProcessLog
+  type ProcessLog,
+  ProcessExecutionTrigger,
+  ProcessExecutionTraceRetention
 } from '@ailaflow/shared';
 import { LlmClient } from '@aibindkit/llm';
 import { AgentToolSetProviderFactory } from '../chat-session/agent-tool-set-provider-factory';
@@ -29,8 +31,9 @@ import { ProcessExecution } from './process-execution';
 import { ExecuteProcessTool } from '../chat-session/agent-tools/execute-process-tool';
 import { ProcessExecutionStore } from './process-execution-store';
 import { ProcessExecutionPersister } from './process-execution-persister';
-import { ProcessExecutionContext, ProcessExecutionTrigger } from './process-execution-context';
+import { ProcessExecutionContext } from './process-execution-context';
 import { EventBus } from '../events/event-bus';
+import { ProcessExecutionTracer } from './process-execution-tracer';
 
 const context: ProcessExecutionContext = {
   trigger: ProcessExecutionTrigger.TOOL,
@@ -63,6 +66,7 @@ function createProcess(name: string, sequence: ProcessDefinition['sequence'] = [
     'admin_only',
     ProcessDisplay.LISTED,
     ProcessExecutionMode.AI_TOOL_OR_START_FORM,
+    ProcessExecutionTraceRetention.DISABLED,
     null,
     {
       sequence,
@@ -113,6 +117,7 @@ function createHarness(
           userAccessExpression: process.userAccessExpression,
           display: process.display,
           executionMode: process.executionMode,
+          traceRetention: process.traceRetention,
           icon: process.icon,
           nTasksSteps: process.nTasksSteps,
           nReturnSteps: process.nReturnSteps,
@@ -153,6 +158,7 @@ function createHarness(
         assert.fail('Agent execution must not pause');
       }
     } as unknown as ProcessExecutionPersister,
+    {} as ProcessExecutionTracer,
     {
       sandboxInstanceManager: sandbox,
       taskCreator: {},

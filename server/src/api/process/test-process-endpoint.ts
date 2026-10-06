@@ -1,6 +1,7 @@
 import {
   ProcessExecutionOutcome,
   ProcessExecutionOutcomeType,
+  ProcessExecutionTrigger,
   ProcessLog,
   testProcessRequestSchema,
   TestProcessUpdate
@@ -13,7 +14,7 @@ import { ProcessExecutor } from '../../process-executor/process-executor';
 import { parseBody } from '../framework/parse-request';
 import { getEndpointAbortSignal } from '../framework/endpoint-abort-signal';
 import { getAuthToken } from '../auth/auth-middleware';
-import { ProcessExecutionContext, ProcessExecutionTrigger } from '../../process-executor/process-execution-context';
+import { ProcessExecutionContext } from '../../process-executor/process-execution-context';
 import { ProcessExecutionResumeListenerStore } from '../../process-executor/process-execution-resume-listener-store';
 import { ProcessExecution } from '../../process-executor/process-execution';
 import { SseResponse } from '../../core/sse-response';
