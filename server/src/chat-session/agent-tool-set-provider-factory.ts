@@ -12,6 +12,7 @@ import { ExecuteProcessTool } from './agent-tools/execute-process-tool';
 import { ExecuteTerminalCommandTool } from './agent-tools/execute-terminal-command-tool';
 import { Process } from '../repositories/process/process';
 import { ProcessDisplay } from '@ailaflow/shared';
+import { SleepTool } from './agent-tools/sleep-tool';
 
 const PAGE_SIZE = 30;
 
@@ -46,6 +47,7 @@ export class AgentToolSetProviderFactory {
     tools.push(new ListVariablesTool(process.definition.properties.variables));
     tools.push(new ReadVariableTool(executionId, allowedVariableNames, this.executionStore));
     tools.push(new SetVariableTool(executionId, allowedVariableNames, this.executionStore));
+    tools.push(new SleepTool());
   }
 
   private async addProcessTools(
