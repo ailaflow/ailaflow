@@ -218,7 +218,7 @@ test('agent evaluates its prompt, runs variable tools, logs summaries, and conti
         assert.deepEqual(messages[1].content, [{ type: 'text', text: 'Set the answer' }]);
         assert.deepEqual(
           descriptors?.map(tool => tool.function.name),
-          ['listVariables', 'readVariable', 'setVariable']
+          ['listVariables', 'readVariable', 'setVariable', 'sleep']
         );
         return toolCall('listVariables');
       }
@@ -311,7 +311,7 @@ test('process tool discovery reads every page, filters selected and pausable pro
   assert.deepEqual(harness.pages, [1, 2, 3, 4]);
   assert.deepEqual(
     selected.tools.map(tool => tool.descriptor.function.name),
-    ['executeProcess_process_104', 'listVariables', 'readVariable', 'setVariable']
+    ['executeProcess_process_104', 'listVariables', 'readVariable', 'setVariable', 'sleep']
   );
   const allAllowed = await harness.tools.create(
     signal,
@@ -381,7 +381,7 @@ test('process tools reject the current process and exclude all ancestors from se
   );
   assert.deepEqual(
     tools.tools.map(tool => tool.descriptor.function.name),
-    ['executeProcess_child', 'listVariables', 'readVariable', 'setVariable']
+    ['executeProcess_child', 'listVariables', 'readVariable', 'setVariable', 'sleep']
   );
 });
 
