@@ -150,7 +150,7 @@ test('reports API error messages', async () => {
     const client = new OpenaiLlmClient({ url: 'https://gateway.example/v1', apiKey: 'secret' }, console);
     await assert.rejects(
       client.getModels(AbortSignal.timeout(1_000)),
-      error => error instanceof Error && error.name === 'LlmClientError' && error.message === 'Invalid API key'
+      error => error instanceof Error && error.name === 'LlmClientError' && error.message === 'LLM API error: Invalid API key'
     );
     assert.equal(requestCount, 1);
   } finally {
@@ -169,7 +169,7 @@ test('limits retries for server errors', async () => {
     const client = new OpenaiLlmClient({ url: 'https://gateway.example/v1', apiKey: 'secret' }, console);
     await assert.rejects(
       client.getModels(AbortSignal.timeout(1_000)),
-      error => error instanceof Error && error.message === 'Temporarily unavailable'
+      error => error instanceof Error && error.message === 'LLM API error: Temporarily unavailable'
     );
     assert.equal(requestCount, 3);
   } finally {
