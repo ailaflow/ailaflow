@@ -10,6 +10,7 @@ const processExecutionTrace = z.object({
   trigger: z.enum(ProcessExecutionTrigger),
   status: z.enum(ProcessExecutionTraceStatus),
   startedBy: z.string(),
+  error: z.string().nullable(),
   updatedAt: z.number(),
   completedAt: z.number().nullable()
 });

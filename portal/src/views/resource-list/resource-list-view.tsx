@@ -3,12 +3,15 @@ import { Link } from 'react-router';
 import { PaginationView, type PaginationViewProps } from '../common/pagination-view';
 import { ResourceItemMenuView, type ResourceItemAction } from './resource-item-menu-view';
 
+export type ResourceListBadge = 'success' | 'warn' | 'danger' | 'gray';
+
 export interface ResourceListColumn<T> {
   id: string;
   title: string;
   width?: string;
   align?: 'left' | 'right';
   wrap?: boolean;
+  badge?(item: T): ResourceListBadge | undefined;
   disabled?(item: T): string | undefined;
   getLeadingVisual?(item: T): ReactNode;
   getValue(item: T): ReactNode;
@@ -46,17 +49,30 @@ function ResourceListCellContent<T>(props: { column: ResourceListColumn<T>; row:
   ) : (
     value
   );
+  const badge = props.column.badge?.(props.row);
+  const decoratedContent = badge ? <ResourceListBadgeView badge={badge}>{content}</ResourceListBadgeView> : content;
 
   if (props.column.getLeadingVisual) {
     return (
       <div className={`flex min-w-0 items-center gap-2 ${props.column.align === 'right' ? 'justify-end' : ''}`}>
         {props.column.getLeadingVisual(props.row)}
-        <span className={props.column.wrap ? 'whitespace-pre-wrap break-words' : 'min-w-0 truncate'}>{content}</span>
+        <span className={props.column.wrap ? 'whitespace-pre-wrap break-words' : 'min-w-0 truncate'}>{decoratedContent}</span>
       </div>
     );
   }
 
-  return content;
+  return decoratedContent;
+}
+
+function ResourceListBadgeView(props: { badge: ResourceListBadge; children: ReactNode }) {
+  const className = {
+    success: 'bg-emerald-50 text-emerald-800',
+    warn: 'bg-amber-50 text-amber-800',
+    danger: 'bg-red-50 text-red-800',
+    gray: 'bg-slate-100 text-slate-700'
+  }[props.badge];
+
+  return <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${className}`}>{props.children}</span>;
 }
 
 export function ResourceListView<T>(props: ResourceListViewProps<T>) {

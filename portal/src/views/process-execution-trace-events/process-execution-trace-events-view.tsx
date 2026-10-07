@@ -33,6 +33,14 @@ export function ProcessExecutionTraceEventsView(props: ProcessExecutionTraceEven
           <TraceDetail label="Updated" value={formatDate(props.trace.updatedAt)} />
           <TraceDetail label="Completed" value={props.trace.completedAt === null ? '—' : formatDate(props.trace.completedAt)} />
         </dl>
+        {props.trace.error !== null ? (
+          <div role="alert" className="mt-3 rounded-lg border border-red-200 bg-red-50 p-4 shadow-sm">
+            <h2 className="text-xs font-medium uppercase tracking-wide text-red-700">Error</h2>
+            <pre className="mt-2 overflow-x-auto whitespace-pre-wrap break-words font-mono text-xs leading-5 text-red-800">
+              {props.trace.error}
+            </pre>
+          </div>
+        ) : null}
       </header>
 
       <div className="min-h-0 flex-1">

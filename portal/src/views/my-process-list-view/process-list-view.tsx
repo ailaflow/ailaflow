@@ -1,14 +1,14 @@
 import { PaginationView, type PaginationViewProps } from '../common/pagination-view';
 import { ProcessIconGridView, type ProcessIconGridItem } from '../common/process-icon-grid-view';
 
-export interface ProcessListViewProps {
+export interface MyProcessListViewProps {
   title: string;
   items: ProcessIconGridItem[];
   emptyMessage: string;
   pagination: PaginationViewProps;
 }
 
-export function ProcessListView(props: ProcessListViewProps) {
+export function MyProcessListView(props: MyProcessListViewProps) {
   return (
     <div className="flex h-full min-h-0 flex-col bg-slate-50">
       <div className="min-h-0 flex-1 overflow-auto p-4 sm:p-5">

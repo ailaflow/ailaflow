@@ -31,10 +31,10 @@ export class ProcessExecutionTraceObserver {
   private onOutcome = (outcome: ProcessExecutionOutcome) => {
     switch (outcome.type) {
       case ProcessExecutionOutcomeType.FINISHED:
-        this.trace.complete(ProcessExecutionTraceStatus.COMPLETED, this.trace.retention);
+        this.trace.complete(ProcessExecutionTraceStatus.COMPLETED, null, this.trace.retention);
         break;
       case ProcessExecutionOutcomeType.FAILED:
-        this.trace.complete(ProcessExecutionTraceStatus.FAILED, this.trace.retention);
+        this.trace.complete(ProcessExecutionTraceStatus.FAILED, outcome.error, this.trace.retention);
         break;
       case ProcessExecutionOutcomeType.PAUSED:
         this.trace.changeStatus(ProcessExecutionTraceStatus.PAUSED);

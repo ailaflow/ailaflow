@@ -5,7 +5,7 @@ import { PortalErrorView } from '../../views/portal/portal-error-view';
 import { PortalLoadingView } from '../../views/portal/portal-loading-view';
 import { ResourceListView } from '../../views/resource-list/resource-list-view';
 import { SvgIcon } from '../../views/common/svg-icons';
-import { strProcessExecutionTraceStatus, strProcessExecutionTrigger } from '@ailaflow/shared';
+import { ProcessExecutionTraceStatus, strProcessExecutionTraceStatus, strProcessExecutionTrigger } from '@ailaflow/shared';
 
 const PAGE_SIZE = 20;
 
@@ -39,6 +39,23 @@ export function ProcessExecutionTracesPage() {
       title={processName ? `Traces for /${processName}` : 'Traces'}
       columns={[
         {
+          id: 'status',
+          title: 'Status',
+          width: '10%',
+          badge: trace => {
+            switch (trace.status) {
+              case ProcessExecutionTraceStatus.COMPLETED:
+                return 'success';
+              case ProcessExecutionTraceStatus.FAILED:
+                return 'danger';
+              case ProcessExecutionTraceStatus.RUNNING:
+              case ProcessExecutionTraceStatus.PAUSED:
+                return 'gray';
+            }
+          },
+          getValue: trace => strProcessExecutionTraceStatus(trace.status)
+        },
+        {
           id: 'name',
           title: 'Process',
           width: '16%',
@@ -49,12 +66,6 @@ export function ProcessExecutionTracesPage() {
           title: 'Execution ID',
           width: '24%',
           getValue: trace => trace.executionId.substring(0, 8)
-        },
-        {
-          id: 'status',
-          title: 'Status',
-          width: '10%',
-          getValue: trace => strProcessExecutionTraceStatus(trace.status)
         },
         {
           id: 'trigger',

@@ -23,6 +23,7 @@ export class ProcessExecutionTrace {
       context.startedBy,
       Date.now(),
       null,
+      null,
       null
     );
   }
@@ -35,6 +36,7 @@ export class ProcessExecutionTrace {
     public readonly retention: ProcessExecutionTraceRetention,
     public readonly startedBy: string,
     public readonly updatedAt: number,
+    public error: string | null,
     public completedAt: number | null,
     public expiresAt: number | null
   ) {}
@@ -46,10 +48,12 @@ export class ProcessExecutionTrace {
 
   public complete(
     status: ProcessExecutionTraceStatus.COMPLETED | ProcessExecutionTraceStatus.FAILED,
+    error: string | null,
     retention: ProcessExecutionTraceRetention
   ) {
     this.requireNotCompleted();
     this.status = status;
+    this.error = error;
     this.completedAt = Date.now();
     this.expiresAt = resolveExpiresAt(retention);
   }
@@ -61,6 +65,7 @@ export class ProcessExecutionTrace {
       trigger: this.trigger,
       status: this.status,
       startedBy: this.startedBy,
+      error: this.error,
       updatedAt: this.updatedAt,
       completedAt: this.completedAt
     };

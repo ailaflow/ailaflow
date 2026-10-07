@@ -12,6 +12,7 @@ interface ProcessExecutionTraceRow {
   retention: ProcessExecutionTraceRetention;
   startedBy: string;
   updatedAt: number;
+  error: string | null;
   completedAt: number | null;
   expiresAt: number | null;
 }
@@ -24,7 +25,7 @@ export class SqliteProcessExecutionTraceRepository implements ProcessExecutionTr
   }
 
   public async setup(_: AbortSignal): Promise<void> {
-    await this.db.setup(1, 'process_execution_traces', (db, version) => {
+    await this.db.setup(2, 'process_execution_traces', (db, version) => {
       if (version < 1) {
         db.exec(`
           CREATE TABLE process_execution_traces (
@@ -50,6 +51,9 @@ export class SqliteProcessExecutionTraceRepository implements ProcessExecutionTr
           ON process_execution_traces (processName, updatedAt DESC, executionId DESC);
         `);
       }
+      if (version < 2) {
+        db.exec(`ALTER TABLE process_execution_traces ADD COLUMN error TEXT`);
+      }
     });
   }
 
@@ -58,7 +62,7 @@ export class SqliteProcessExecutionTraceRepository implements ProcessExecutionTr
       const row = db
         .prepare(
           `
-            SELECT executionId, trigger, status, processName, retention, startedBy, updatedAt, completedAt, expiresAt
+            SELECT executionId, trigger, status, processName, retention, startedBy, updatedAt, error, completedAt, expiresAt
             FROM process_execution_traces
             WHERE executionId = ?
             LIMIT 1
@@ -75,11 +79,12 @@ export class SqliteProcessExecutionTraceRepository implements ProcessExecutionTr
       db.prepare(
         `
           INSERT INTO process_execution_traces (
-            executionId, trigger, status, processName, retention, startedBy, updatedAt, completedAt, expiresAt
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            executionId, trigger, status, processName, retention, startedBy, updatedAt, error, completedAt, expiresAt
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
           ON CONFLICT(executionId) DO UPDATE SET
             status = excluded.status,
             updatedAt = excluded.updatedAt,
+            error = excluded.error,
             completedAt = excluded.completedAt,
             expiresAt = excluded.expiresAt
         `
@@ -91,6 +96,7 @@ export class SqliteProcessExecutionTraceRepository implements ProcessExecutionTr
         trace.retention,
         trace.startedBy,
         trace.updatedAt,
+        trace.error,
         trace.completedAt,
         trace.expiresAt
       );
@@ -114,7 +120,7 @@ export class SqliteProcessExecutionTraceRepository implements ProcessExecutionTr
 
   public async getPage(_: AbortSignal, offset: number, limit: number, processName?: string): Promise<ProcessExecutionTrace[]> {
     return this.db.read(db => {
-      const columns = `executionId, trigger, status, processName, retention, startedBy, updatedAt, completedAt, expiresAt`;
+      const columns = `executionId, trigger, status, processName, retention, startedBy, updatedAt, error, completedAt, expiresAt`;
       const rows =
         processName === undefined
           ? db
@@ -163,6 +169,7 @@ function deserialize(row: ProcessExecutionTraceRow): ProcessExecutionTrace {
     row.retention,
     row.startedBy,
     row.updatedAt,
+    row.error,
     row.completedAt,
     row.expiresAt
   );
