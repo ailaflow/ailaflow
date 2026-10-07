@@ -28,7 +28,6 @@ export function ProcessTester(props: ProcessTesterProps) {
         { label: 'Test', href: `/admin/processes/${props.process.name}/test`, selected: true },
         { label: 'Cron jobs', href: `/admin/processes/${props.process.name}/cron-jobs` }
       ]}
-      viewSwitcherDisabledReason={state.isRunning ? 'Test in progress.' : undefined}
     >
       <ProcessTesterView>
         <ProcessTesterTimeline />

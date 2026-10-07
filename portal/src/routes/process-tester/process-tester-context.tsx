@@ -79,7 +79,7 @@ export function ProcessTesterContext(props: ProcessTesterContextProps) {
             onMessage(testUpdate) {
               update(state => {
                 const timelineItems = createProcessTesterTimelineItems(testUpdate, state.process.definition, Date.now());
-                return { timelineItems: [...state.timelineItems, ...timelineItems] };
+                return { timelineItems: [...state.timelineItems, ...timelineItems], isRunning: false };
               });
             },
             onClose() {
