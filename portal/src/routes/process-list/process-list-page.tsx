@@ -163,7 +163,8 @@ export function ProcessListPage() {
             [
               process.nTasksSteps > 0 ? 'task' : null,
               process.executionMode === ProcessExecutionMode.START_FORM ? 'only form' : null,
-              process.nReturnSteps > 0 ? 'return' : null
+              process.nReturnSteps > 0 ? 'return' : null,
+              process.hasEnabledCronJobs ? 'cron' : null
             ]
               .filter(Boolean)
               .join(', ')

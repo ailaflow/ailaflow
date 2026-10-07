@@ -29,12 +29,18 @@ export class SqliteProcessListQuerier implements ProcessListQuerier {
         .prepare(`SELECT COUNT(*) AS totalCount FROM processes WHERE display <= ? AND instr(name, ?) > 0`)
         .get(displayAtLeast, searchTerm) as { totalCount: number };
       const statement = db.prepare(`
-      SELECT name, description, userAccessExpression, display, executionMode, traceRetention, icon, nTasksSteps, nReturnSteps,
-        sandboxNames, definitionSize
-      FROM processes
-      WHERE display <= ?
-        AND instr(name, ?) > 0
-      ORDER BY updatedAt DESC
+      SELECT p.name, p.description, p.userAccessExpression, p.display, p.executionMode, p.traceRetention, p.icon, p.nTasksSteps,
+        p.nReturnSteps, p.sandboxNames, p.definitionSize,
+        EXISTS (
+          SELECT 1
+          FROM process_cron_jobs pcj
+          WHERE pcj.processName = p.name
+            AND pcj.isEnabled = 1
+        ) AS hasEnabledCronJobs
+      FROM processes p
+      WHERE p.display <= ?
+        AND instr(p.name, ?) > 0
+      ORDER BY p.updatedAt DESC
       LIMIT ? OFFSET ?
     `);
 
@@ -60,6 +66,7 @@ interface ProcessRow {
   nReturnSteps: number;
   sandboxNames: string;
   definitionSize: number;
+  hasEnabledCronJobs: number;
 }
 
 function mapRows(rows: ProcessRow[]): ProcessLiteDto[] {
@@ -74,6 +81,7 @@ function mapRows(rows: ProcessRow[]): ProcessLiteDto[] {
     nTasksSteps: row.nTasksSteps,
     nReturnSteps: row.nReturnSteps,
     sandboxNames: JSON.parse(row.sandboxNames) as string[],
-    definitionSize: row.definitionSize
+    definitionSize: row.definitionSize,
+    hasEnabledCronJobs: Boolean(row.hasEnabledCronJobs)
   }));
 }

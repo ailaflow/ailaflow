@@ -23,7 +23,8 @@ const processLiteDtoSchema = z.object({
   nTasksSteps: z.number(),
   nReturnSteps: z.number(),
   sandboxNames: z.array(z.string()),
-  definitionSize: z.number()
+  definitionSize: z.number(),
+  hasEnabledCronJobs: z.boolean()
 });
 
 export const getProcessesRequestSchema = paginationRequestSchema.extend({

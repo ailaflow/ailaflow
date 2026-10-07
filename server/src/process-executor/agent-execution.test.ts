@@ -122,7 +122,8 @@ function createHarness(
           nTasksSteps: process.nTasksSteps,
           nReturnSteps: process.nReturnSteps,
           sandboxNames: process.sandboxNames,
-          definitionSize: JSON.stringify(process.definition).length
+          definitionSize: JSON.stringify(process.definition).length,
+          hasEnabledCronJobs: false
         }))
       };
     }

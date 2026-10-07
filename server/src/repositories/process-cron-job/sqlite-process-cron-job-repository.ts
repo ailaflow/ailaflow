@@ -25,7 +25,7 @@ export class SqliteProcessCronJobRepository implements ProcessCronJobRepository 
   }
 
   public async setup(_: AbortSignal): Promise<void> {
-    await this.db.setup(1, 'process_cron_jobs', (db, version) => {
+    await this.db.setup(2, 'process_cron_jobs', (db, version) => {
       if (version < 1) {
         db.exec(`
           CREATE TABLE process_cron_jobs (
@@ -42,6 +42,12 @@ export class SqliteProcessCronJobRepository implements ProcessCronJobRepository 
 
           CREATE INDEX process_cron_jobs_due
           ON process_cron_jobs (isEnabled, nextExecutionAt);
+        `);
+      }
+      if (version < 2) {
+        db.exec(`
+          CREATE INDEX process_cron_jobs_process_enabled
+          ON process_cron_jobs (processName, isEnabled);
         `);
       }
     });
