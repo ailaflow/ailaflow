@@ -64,12 +64,12 @@ export class OpenaiLlmClient implements LlmClient {
     });
     const data = await readResponse<OpenaiChatCompletionResponse>(response);
     if (!response.ok) {
-      throw new LlmClientError(data.error?.message ?? `AI API returned status ${response.status}`);
+      throw new LlmClientError(data.error?.message ?? `LLM API returned status ${response.status}`);
     }
 
     const choice = data.choices?.[0];
     if (!choice?.message) {
-      throw new LlmClientError('No choices returned from AI API');
+      throw new LlmClientError('No choices returned from LLM API');
     }
     if (this.config.debugUsage) {
       this.logger.log(`Usage: ${JSON.stringify(data.usage)}`);
@@ -87,14 +87,17 @@ export class OpenaiLlmClient implements LlmClient {
     });
     const data = await readResponse<OpenaiModelsResponse>(response);
     if (!response.ok) {
-      throw new LlmClientError(data.error?.message ?? `AI API returned status ${response.status}`);
+      if (data.error?.message) {
+        throw new LlmClientError(`LLM API error: ${data.error.message}`);
+      }
+      throw new LlmClientError(`LLM API returned status ${response.status}`);
     }
     if (!Array.isArray(data.data)) {
-      throw new LlmClientError('AI API response does not contain a model list');
+      throw new LlmClientError('LLM API response does not contain a model list');
     }
     return data.data.map(model => {
       if (typeof model.id !== 'string') {
-        throw new LlmClientError('AI API returned a model without an ID');
+        throw new LlmClientError('LLM API returned a model without an ID');
       }
       return { name: model.id, contextWindow: tryReadContextWindow(model) };
     });
@@ -114,7 +117,7 @@ async function readResponse<T>(response: Response): Promise<T> {
   try {
     return (await response.json()) as T;
   } catch {
-    throw new LlmClientError(`AI API returned an invalid response with status ${response.status}`);
+    throw new LlmClientError(`LLM API returned an invalid response with status ${response.status}`);
   }
 }
 
