@@ -44,7 +44,7 @@ test('returns whether each process has enabled cron jobs', async () => {
 });
 
 function createCronJob(id: string, processName: string, isEnabled: boolean): ProcessCronJob {
-  return new ProcessCronJob(id, processName, 'alice', '*/15 * * * *', 'UTC', {}, isEnabled, 1_000, null);
+  return new ProcessCronJob(id, processName, 'alice', '*/15 * * * *', 'UTC', {}, isEnabled, 60, 1_000, null);
 }
 
 function insertProcess(db: DatabaseSync, name: string): void {

@@ -32,6 +32,7 @@ export const processCronJobDtoSchema = z.object({
   timeZone: z.string(),
   inputValues: z.record(z.string(), z.unknown()),
   isEnabled: z.boolean(),
+  maxExecutionTime: z.number().int(),
   nextExecutionAt: z.number(),
   lastRun: processCronJobRunSchema.nullable()
 });
@@ -56,7 +57,8 @@ export const saveProcessCronJobRequestSchema = z.object({
   expression: z.string(),
   timeZone: z.string(),
   inputValues: z.record(z.string(), z.unknown()),
-  isEnabled: z.boolean()
+  isEnabled: z.boolean(),
+  maxExecutionTime: z.number().int().min(1).max(86_400)
 });
 
 export const saveProcessCronJobResponseSchema = z.object({

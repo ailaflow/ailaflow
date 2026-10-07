@@ -13,6 +13,7 @@ interface ProcessCronJobRow {
   timeZone: string;
   inputValues: string;
   isEnabled: number;
+  maxExecutionTime: number;
   nextExecutionAt: number;
   lastRun: string | null;
 }
@@ -25,7 +26,7 @@ export class SqliteProcessCronJobRepository implements ProcessCronJobRepository 
   }
 
   public async setup(_: AbortSignal): Promise<void> {
-    await this.db.setup(2, 'process_cron_jobs', (db, version) => {
+    await this.db.setup(3, 'process_cron_jobs', (db, version) => {
       if (version < 1) {
         db.exec(`
           CREATE TABLE process_cron_jobs (
@@ -50,6 +51,9 @@ export class SqliteProcessCronJobRepository implements ProcessCronJobRepository 
           ON process_cron_jobs (processName, isEnabled);
         `);
       }
+      if (version < 3) {
+        db.exec(`ALTER TABLE process_cron_jobs ADD COLUMN maxExecutionTime INTEGER NOT NULL DEFAULT 60`);
+      }
     });
   }
 
@@ -58,8 +62,8 @@ export class SqliteProcessCronJobRepository implements ProcessCronJobRepository 
       db.prepare(
         `
           INSERT INTO process_cron_jobs (
-            id, processName, starterUserName, expression, timeZone, inputValues, isEnabled, nextExecutionAt, lastRun
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            id, processName, starterUserName, expression, timeZone, inputValues, isEnabled, maxExecutionTime, nextExecutionAt, lastRun
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `
       ).run(...serialize(job));
     }, transaction);
@@ -70,7 +74,7 @@ export class SqliteProcessCronJobRepository implements ProcessCronJobRepository 
       db.prepare(
         `
           UPDATE process_cron_jobs
-          SET starterUserName = ?, expression = ?, timeZone = ?, inputValues = ?, isEnabled = ?, nextExecutionAt = ?
+          SET starterUserName = ?, expression = ?, timeZone = ?, inputValues = ?, isEnabled = ?, maxExecutionTime = ?, nextExecutionAt = ?
           WHERE id = ?
         `
       ).run(
@@ -79,6 +83,7 @@ export class SqliteProcessCronJobRepository implements ProcessCronJobRepository 
         job.timeZone,
         JSON.stringify(job.inputValues),
         job.isEnabled ? 1 : 0,
+        job.maxExecutionTime,
         job.nextExecutionAt,
         job.id
       );
@@ -101,7 +106,7 @@ export class SqliteProcessCronJobRepository implements ProcessCronJobRepository 
       const row = db
         .prepare(
           `
-          SELECT id, processName, starterUserName, expression, timeZone, inputValues, isEnabled, nextExecutionAt, lastRun
+          SELECT id, processName, starterUserName, expression, timeZone, inputValues, isEnabled, maxExecutionTime, nextExecutionAt, lastRun
           FROM process_cron_jobs
           WHERE id = ?
           LIMIT 1
@@ -117,7 +122,7 @@ export class SqliteProcessCronJobRepository implements ProcessCronJobRepository 
       const rows = db
         .prepare(
           `
-          SELECT id, processName, starterUserName, expression, timeZone, inputValues, isEnabled, nextExecutionAt, lastRun
+          SELECT id, processName, starterUserName, expression, timeZone, inputValues, isEnabled, maxExecutionTime, nextExecutionAt, lastRun
           FROM process_cron_jobs
           WHERE processName = ?
           ORDER BY expression, id
@@ -133,7 +138,7 @@ export class SqliteProcessCronJobRepository implements ProcessCronJobRepository 
       const rows = db
         .prepare(
           `
-          SELECT id, processName, starterUserName, expression, timeZone, inputValues, isEnabled, nextExecutionAt, lastRun
+          SELECT id, processName, starterUserName, expression, timeZone, inputValues, isEnabled, maxExecutionTime, nextExecutionAt, lastRun
           FROM process_cron_jobs
           WHERE isEnabled = 1 AND nextExecutionAt <= ?
           ORDER BY nextExecutionAt, id
@@ -168,7 +173,7 @@ export class SqliteProcessCronJobRepository implements ProcessCronJobRepository 
   }
 }
 
-function serialize(job: ProcessCronJob): [string, string, string, string, string, string, number, number, string | null] {
+function serialize(job: ProcessCronJob): [string, string, string, string, string, string, number, number, number, string | null] {
   return [
     job.id,
     job.processName,
@@ -177,6 +182,7 @@ function serialize(job: ProcessCronJob): [string, string, string, string, string
     job.timeZone,
     JSON.stringify(job.inputValues),
     job.isEnabled ? 1 : 0,
+    job.maxExecutionTime,
     job.nextExecutionAt,
     job.lastRun === null ? null : JSON.stringify(job.lastRun)
   ];
@@ -191,6 +197,7 @@ function deserialize(row: ProcessCronJobRow): ProcessCronJob {
     row.timeZone,
     JSON.parse(row.inputValues) as ProcessExecutionVariableValues,
     row.isEnabled === 1,
+    row.maxExecutionTime,
     row.nextExecutionAt,
     row.lastRun === null ? null : (JSON.parse(row.lastRun) as ProcessCronJobRun)
   );

@@ -1,4 +1,4 @@
-import { ProcessCronJobExpressionValidator } from '@ailaflow/shared';
+import { ProcessCronJobValidator } from '@ailaflow/shared';
 import { Cron } from 'croner';
 
 export class ProcessCronJobExpressionParser {
@@ -20,7 +20,7 @@ export class ProcessCronJobExpressionParser {
   }
 
   private static create(expression: string, timeZone: string): Cron {
-    const validationError = ProcessCronJobExpressionValidator.validate(expression, timeZone);
+    const validationError = ProcessCronJobValidator.validateExpression(expression, timeZone);
     if (validationError) {
       throw new Error(validationError);
     }

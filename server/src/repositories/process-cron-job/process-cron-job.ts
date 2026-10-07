@@ -1,4 +1,4 @@
-import { ProcessCronJobRun, ProcessExecutionVariableValues } from '@ailaflow/shared';
+import { ProcessCronJobRun, ProcessCronJobValidator, ProcessExecutionVariableValues } from '@ailaflow/shared';
 import { randomUUID } from 'crypto';
 import { ProcessCronJobExpressionParser } from './process-cron-job-expression-parser';
 import { ProcessCronJobRepositoryError } from './process-cron-job-repository';
@@ -10,9 +10,10 @@ export class ProcessCronJob {
     expression: string,
     timeZone: string,
     inputValues: ProcessExecutionVariableValues,
-    isEnabled: boolean
+    isEnabled: boolean,
+    maxExecutionTime: number
   ): ProcessCronJob {
-    validate(expression, timeZone);
+    validate(expression, timeZone, maxExecutionTime);
     return new ProcessCronJob(
       randomUUID(),
       processName,
@@ -21,6 +22,7 @@ export class ProcessCronJob {
       timeZone,
       inputValues,
       isEnabled,
+      maxExecutionTime,
       calculateNextExecutionAt(expression, timeZone),
       null
     );
@@ -34,6 +36,7 @@ export class ProcessCronJob {
     public timeZone: string,
     public inputValues: ProcessExecutionVariableValues,
     public isEnabled: boolean,
+    public maxExecutionTime: number,
     public nextExecutionAt: number,
     public lastRun: ProcessCronJobRun | null
   ) {}
@@ -43,22 +46,28 @@ export class ProcessCronJob {
     expression: string,
     timeZone: string,
     inputValues: ProcessExecutionVariableValues,
-    isEnabled: boolean
+    isEnabled: boolean,
+    maxExecutionTime: number
   ): void {
-    validate(expression, timeZone);
+    validate(expression, timeZone, maxExecutionTime);
     this.starterUserName = starterUserName;
     this.expression = expression;
     this.timeZone = timeZone;
     this.inputValues = inputValues;
     this.isEnabled = isEnabled;
+    this.maxExecutionTime = maxExecutionTime;
     this.nextExecutionAt = calculateNextExecutionAt(expression, timeZone);
   }
 }
 
-function validate(expression: string, timeZone: string): void {
+function validate(expression: string, timeZone: string, maxExecutionTime: number): void {
   const error = ProcessCronJobExpressionParser.validate(expression, timeZone);
   if (error) {
     throw new ProcessCronJobRepositoryError(error);
+  }
+  const timeError = ProcessCronJobValidator.validateMaxExecutionTime(maxExecutionTime);
+  if (timeError) {
+    throw new ProcessCronJobRepositoryError(timeError);
   }
 }
 

@@ -55,6 +55,7 @@ export function ProcessCronJobs() {
           jobs={state.jobs}
           draft={state.draft}
           expressionError={state.expressionError}
+          maxExecutionTimeError={state.maxExecutionTimeError}
           inputValuesError={state.inputValuesError}
           canSave={state.canSave}
           onCreate={state.createJob}

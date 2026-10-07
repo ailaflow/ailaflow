@@ -46,7 +46,7 @@ export class ProcessCronJobScheduler implements Scheduler {
       const jobs = await this.repository.getDue(getSignal, now, BATCH_SIZE);
 
       for (const job of jobs) {
-        const jobSignal = AbortSignal.timeout(60_000);
+        const jobSignal = AbortSignal.timeout(job.maxExecutionTime * 1_000);
         await this.handleJob(jobSignal, job, now);
       }
     } catch (e) {

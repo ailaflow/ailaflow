@@ -5,6 +5,7 @@ export interface ProcessCronJobDraftViewModel {
   starterUserName: string;
   expression: string;
   timeZone: string;
+  maxExecutionTime: number;
   inputValuesText: string;
   isEnabled: boolean;
 }
@@ -13,6 +14,7 @@ export interface ProcessCronJobsViewProps {
   jobs: ProcessCronJobDto[];
   draft: ProcessCronJobDraftViewModel | null;
   expressionError: string | null;
+  maxExecutionTimeError: string | null;
   inputValuesError: string | null;
   canSave: boolean;
   onCreate(): void;
@@ -66,7 +68,7 @@ function CronJobEditor(props: ProcessCronJobsViewProps & { draft: ProcessCronJob
       <div className="flex items-center justify-between gap-3">
         <h2 className="text-lg font-semibold text-slate-900">{props.draft.id ? 'Edit cron job' : 'New cron job'}</h2>
       </div>
-      <div className="mt-4 grid gap-4 md:grid-cols-3">
+      <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <div>
           <span className="mb-1.5 block text-sm font-medium text-slate-700">Starter user</span>
           <div className="flex gap-2">
@@ -113,6 +115,14 @@ function CronJobEditor(props: ProcessCronJobsViewProps & { draft: ProcessCronJob
           value={props.draft.timeZone}
           placeholder="Europe/Warsaw"
           onChange={timeZone => props.onDraftChange({ timeZone })}
+        />
+        <NumberField
+          label="Max execution time (seconds)"
+          value={props.draft.maxExecutionTime}
+          min={1}
+          max={86_400}
+          error={props.maxExecutionTimeError}
+          onChange={maxExecutionTime => props.onDraftChange({ maxExecutionTime })}
         />
       </div>
       <label className="mt-4 block">
@@ -178,6 +188,34 @@ function TextField(props: { label: string; value: string; placeholder: string; e
   );
 }
 
+function NumberField(props: {
+  label: string;
+  value: number;
+  min: number;
+  max: number;
+  error?: string | null;
+  onChange(value: number): void;
+}) {
+  return (
+    <label className="block">
+      <span className="mb-1.5 block text-sm font-medium text-slate-700">{props.label}</span>
+      <input
+        type="number"
+        value={Number.isNaN(props.value) ? '' : props.value}
+        min={props.min}
+        max={props.max}
+        step={1}
+        onChange={event => props.onChange(event.currentTarget.valueAsNumber)}
+        aria-invalid={Boolean(props.error)}
+        className={`h-9 w-full rounded-md border bg-white px-3 font-mono text-sm text-slate-900 outline-none ${
+          props.error ? 'border-red-300 focus:border-red-500' : 'border-slate-200 focus:border-slate-400'
+        }`}
+      />
+      {props.error ? <span className="mt-1 block text-xs text-red-700">{props.error}</span> : null}
+    </label>
+  );
+}
+
 function CronJobItem(props: { job: ProcessCronJobDto; onEdit(job: ProcessCronJobDto): void; onDelete(job: ProcessCronJobDto): void }) {
   const job = props.job;
   return (
@@ -200,6 +238,10 @@ function CronJobItem(props: { job: ProcessCronJobDto; onEdit(job: ProcessCronJob
         <div>
           <dt className="text-xs font-medium uppercase tracking-wide text-slate-400">Starter user</dt>
           <dd className="mt-1 truncate text-slate-700">@{job.starterUserName}</dd>
+        </div>
+        <div>
+          <dt className="text-xs font-medium uppercase tracking-wide text-slate-400">Max execution time</dt>
+          <dd className="mt-1 text-slate-700">{job.maxExecutionTime} seconds</dd>
         </div>
         <div>
           <dt className="text-xs font-medium uppercase tracking-wide text-slate-400">Last run</dt>

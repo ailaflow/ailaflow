@@ -77,6 +77,13 @@ export function useProcessCronJobsAi(state: ProcessCronJobsState) {
           state.updateDraft({ timeZone: arg.timeZone });
           return toolSuccess('Cron job time zone was updated');
         },
+        async cronJobEditor_setMaxExecutionTime(arg) {
+          if (!state.draft) {
+            return toolError('The cron job editor overlay is not open');
+          }
+          state.updateDraft({ maxExecutionTime: arg.maxExecutionTime });
+          return toolSuccess('Cron job maximum execution time was updated');
+        },
         async cronJobEditor_setInputValues(arg) {
           if (!state.draft) {
             return toolError('The cron job editor overlay is not open');
@@ -96,7 +103,7 @@ export function useProcessCronJobsAi(state: ProcessCronJobsState) {
             return toolError('The cron job editor overlay is not open');
           }
           if (!state.canSave) {
-            return toolError(state.expressionError ?? state.inputValuesError ?? 'Cron job cannot be saved');
+            return toolError(state.expressionError ?? state.maxExecutionTimeError ?? state.inputValuesError ?? 'Cron job cannot be saved');
           }
           try {
             await state.save();

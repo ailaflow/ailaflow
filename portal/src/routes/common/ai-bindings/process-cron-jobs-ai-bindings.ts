@@ -35,6 +35,11 @@ const processCronJobsRoute = route('processCronJobs')
         timeZone: z.string().describe('IANA time zone')
       })
     ),
+    cronJobEditor_setMaxExecutionTime: tool('Set the maximum execution time in the currently edited cron job').input(
+      z.object({
+        maxExecutionTime: z.number().int().min(1).max(86_400).describe('Maximum execution time in seconds')
+      })
+    ),
     cronJobEditor_setInputValues: tool('Set the input values in the currently edited cron job').input(
       z.object({
         inputValues: z.record(z.string(), z.unknown()).describe('Process input variable values')

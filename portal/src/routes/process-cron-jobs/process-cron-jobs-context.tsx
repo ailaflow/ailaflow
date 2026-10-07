@@ -1,6 +1,6 @@
 import {
   ProcessCronJobDto,
-  ProcessCronJobExpressionValidator,
+  ProcessCronJobValidator,
   ProcessDto,
   ProcessExecutionVariableValues,
   VariableCachedValidator
@@ -14,6 +14,7 @@ export interface ProcessCronJobsState {
   jobs: ProcessCronJobDto[];
   draft: ProcessCronJobDraftViewModel | null;
   expressionError: string | null;
+  maxExecutionTimeError: string | null;
   inputValuesError: string | null;
   canSave: boolean;
   createJob(): void;
@@ -47,11 +48,17 @@ export function ProcessCronJobsContext(props: ProcessCronJobsContextProps) {
   const [jobs, setJobs] = useState(props.initialJobs);
   const [draft, setDraft] = useState<ProcessCronJobDraftViewModel | null>(null);
   const isSaving = useRef(false);
-  const expressionError = draft ? ProcessCronJobExpressionValidator.validate(draft.expression, draft.timeZone) : null;
+  const expressionError = draft ? ProcessCronJobValidator.validateExpression(draft.expression, draft.timeZone) : null;
+  const maxExecutionTimeError = draft ? ProcessCronJobValidator.validateMaxExecutionTime(draft.maxExecutionTime) : null;
   const inputValidation = draft
     ? validateInputValues(draft.inputValuesText, props.process, variableValidator)
     : { inputValues: null, error: null };
-  const canSave = draft !== null && draft.starterUserName.length > 0 && expressionError === null && inputValidation.error === null;
+  const canSave =
+    draft !== null &&
+    draft.starterUserName.length > 0 &&
+    expressionError === null &&
+    maxExecutionTimeError === null &&
+    inputValidation.error === null;
 
   function createJob(): void {
     setDraft({
@@ -59,6 +66,7 @@ export function ProcessCronJobsContext(props: ProcessCronJobsContextProps) {
       starterUserName: session?.userName ?? '',
       expression: '0 9 * * *',
       timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
+      maxExecutionTime: 60,
       inputValuesText: '{}',
       isEnabled: true
     });
@@ -70,6 +78,7 @@ export function ProcessCronJobsContext(props: ProcessCronJobsContextProps) {
       starterUserName: job.starterUserName,
       expression: job.expression,
       timeZone: job.timeZone,
+      maxExecutionTime: job.maxExecutionTime,
       inputValuesText: JSON.stringify(job.inputValues, null, 2),
       isEnabled: job.isEnabled
     });
@@ -97,7 +106,8 @@ export function ProcessCronJobsContext(props: ProcessCronJobsContextProps) {
         expression: draft.expression,
         timeZone: draft.timeZone,
         inputValues: inputValidation.inputValues,
-        isEnabled: draft.isEnabled
+        isEnabled: draft.isEnabled,
+        maxExecutionTime: draft.maxExecutionTime
       });
       await refreshJobs();
       setDraft(current => (current === draft ? null : current));
@@ -125,6 +135,7 @@ export function ProcessCronJobsContext(props: ProcessCronJobsContextProps) {
     jobs,
     draft,
     expressionError,
+    maxExecutionTimeError,
     inputValuesError: inputValidation.error,
     canSave,
     createJob,

@@ -6,7 +6,7 @@ export * from './form-definition';
 export * from './process-validator';
 export * from './process-definition';
 export * from './process-display';
-export * from './process-cron-job-expression-validator';
+export * from './process-cron-job-validator';
 export * from './process-execution';
 export * from './process-root-validator';
 export * from './process-root-variable-validator';

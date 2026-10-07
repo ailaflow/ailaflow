@@ -40,7 +40,8 @@ export class SaveProcessCronJobEndpoint implements Endpoint {
           request.expression,
           request.timeZone,
           request.inputValues,
-          request.isEnabled
+          request.isEnabled,
+          request.maxExecutionTime
         );
         await this.repository.insert(signal, job);
       } else {
@@ -55,7 +56,14 @@ export class SaveProcessCronJobEndpoint implements Endpoint {
         if (job.processName !== request.processName) {
           throw new EndpointError('A process cron job cannot be moved to another process', 400);
         }
-        job.update(request.starterUserName, request.expression, request.timeZone, request.inputValues, request.isEnabled);
+        job.update(
+          request.starterUserName,
+          request.expression,
+          request.timeZone,
+          request.inputValues,
+          request.isEnabled,
+          request.maxExecutionTime
+        );
         await this.repository.updateConfiguration(signal, job);
       }
       return { id: job.id };

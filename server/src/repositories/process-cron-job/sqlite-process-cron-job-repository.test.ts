@@ -29,6 +29,7 @@ test('persists, updates, lists and deletes process cron jobs', async () => {
   job.expression = '0 * * * *';
   job.inputValues = { x: 2 };
   job.isEnabled = false;
+  job.maxExecutionTime = 120;
   job.nextExecutionAt = 2_000;
   await repository.updateConfiguration(signal, job);
   assert.deepEqual(await repository.tryGet(signal, job.id), job);
@@ -57,7 +58,7 @@ test('finds due jobs and advances them only once', async () => {
   const { signal, db, repository } = await setup();
   await repository.insert(signal, createJob('due', 'alpha', 1_000));
   await repository.insert(signal, createJob('future', 'alpha', 2_000));
-  await repository.insert(signal, new ProcessCronJob('disabled', 'alpha', 'alice', '* * * * *', 'UTC', {}, false, 1_000, null));
+  await repository.insert(signal, new ProcessCronJob('disabled', 'alpha', 'alice', '* * * * *', 'UTC', {}, false, 60, 1_000, null));
 
   assert.deepEqual(
     (await repository.getDue(signal, 1_500, 10)).map(job => job.id),
@@ -87,6 +88,47 @@ test('requires the starter user to reference an existing user', async () => {
   db.close();
 });
 
+test('adds a default max execution time to existing cron jobs', async () => {
+  const db = new DatabaseSync(':memory:', { open: true });
+  db.exec(`PRAGMA foreign_keys = ON`);
+  const dbs = { modelDb: new SqliteDatabase(db) } as SqliteDatabases;
+  const signal = new AbortController().signal;
+  const processRepository = new SqliteProcessRepository(dbs);
+  const userRepository = new SqliteUserRepository(dbs);
+  await userRepository.setup(signal);
+  await processRepository.setup(signal);
+  await userRepository.insert(signal, new User('alice', null, 'hash', true, false));
+  insertProcess(db, 'alpha');
+  await dbs.modelDb.setup(2, 'process_cron_jobs', database => {
+    database.exec(`
+      CREATE TABLE process_cron_jobs (
+        id TEXT PRIMARY KEY,
+        processName TEXT NOT NULL REFERENCES processes(name) ON DELETE CASCADE,
+        starterUserName TEXT NOT NULL REFERENCES users(name) ON DELETE CASCADE,
+        expression TEXT NOT NULL,
+        timeZone TEXT NOT NULL,
+        inputValues TEXT NOT NULL,
+        isEnabled INTEGER NOT NULL CHECK (isEnabled IN (0, 1)),
+        nextExecutionAt INTEGER NOT NULL,
+        lastRun TEXT
+      ) STRICT
+    `);
+  });
+  db.prepare(
+    `
+      INSERT INTO process_cron_jobs (
+        id, processName, starterUserName, expression, timeZone, inputValues, isEnabled, nextExecutionAt, lastRun
+      ) VALUES ('existing', 'alpha', 'alice', '0 9 * * *', 'UTC', '{}', 1, 1000, NULL)
+    `
+  ).run();
+
+  const repository = new SqliteProcessCronJobRepository(dbs);
+  await repository.setup(signal);
+
+  assert.equal((await repository.tryGet(signal, 'existing'))?.maxExecutionTime, 60);
+  db.close();
+});
+
 async function setup() {
   const db = new DatabaseSync(':memory:', { open: true });
   db.exec(`PRAGMA foreign_keys = ON`);
@@ -105,7 +147,7 @@ async function setup() {
 }
 
 function createJob(id: string, processName: string, nextExecutionAt: number): ProcessCronJob {
-  return new ProcessCronJob(id, processName, 'alice', '*/15 * * * *', 'UTC', { x: 1 }, true, nextExecutionAt, null);
+  return new ProcessCronJob(id, processName, 'alice', '*/15 * * * *', 'UTC', { x: 1 }, true, 60, nextExecutionAt, null);
 }
 
 function insertProcess(db: DatabaseSync, name: string): void {
