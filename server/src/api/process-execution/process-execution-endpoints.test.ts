@@ -104,6 +104,7 @@ function createTrace(): ProcessExecutionTrace {
     ProcessExecutionTraceRetention.ONE_WEEK,
     'user_1',
     1_000,
+    null,
     2_000,
     3_000
   );
