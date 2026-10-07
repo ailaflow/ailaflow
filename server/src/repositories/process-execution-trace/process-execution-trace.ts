@@ -73,12 +73,16 @@ export class ProcessExecutionTrace {
   }
 }
 
+const RETENTION_HOURS: Record<ProcessExecutionTraceRetention, number | null> = {
+  [ProcessExecutionTraceRetention.DISABLED]: null,
+  [ProcessExecutionTraceRetention.ONE_DAY]: 24,
+  [ProcessExecutionTraceRetention.ONE_WEEK]: 24 * 7,
+  [ProcessExecutionTraceRetention.TWO_HOURS]: 2,
+  [ProcessExecutionTraceRetention.SIX_HOURS]: 6,
+  [ProcessExecutionTraceRetention.TWELVE_HOURS]: 12
+};
+
 function resolveExpiresAt(retention: ProcessExecutionTraceRetention): number | null {
-  if (retention === ProcessExecutionTraceRetention.ONE_DAY) {
-    return Date.now() + 86400000;
-  }
-  if (retention === ProcessExecutionTraceRetention.ONE_WEEK) {
-    return Date.now() + 604800000;
-  }
-  return null;
+  const hours = RETENTION_HOURS[retention];
+  return hours === null ? null : Date.now() + hours * 60 * 60 * 1000;
 }

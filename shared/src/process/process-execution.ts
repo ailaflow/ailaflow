@@ -78,5 +78,8 @@ export enum ProcessExecutionTraceEventType {
 export enum ProcessExecutionTraceRetention {
   DISABLED = 0,
   ONE_DAY = 1,
-  ONE_WEEK = 2
+  ONE_WEEK = 2,
+  TWO_HOURS = 3,
+  SIX_HOURS = 4,
+  TWELVE_HOURS = 5
 }

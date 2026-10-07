@@ -107,6 +107,9 @@ export function ProcessEditorDetailsView(props: ProcessEditorDetailsViewProps) {
           className="h-8 w-full rounded-md border border-slate-300 bg-white px-2 text-sm text-slate-600 outline-none transition-colors focus:border-slate-500"
         >
           <option value={ProcessExecutionTraceRetention.DISABLED}>Disabled</option>
+          <option value={ProcessExecutionTraceRetention.TWO_HOURS}>2 hours</option>
+          <option value={ProcessExecutionTraceRetention.SIX_HOURS}>6 hours</option>
+          <option value={ProcessExecutionTraceRetention.TWELVE_HOURS}>12 hours</option>
           <option value={ProcessExecutionTraceRetention.ONE_DAY}>1 day</option>
           <option value={ProcessExecutionTraceRetention.ONE_WEEK}>1 week</option>
         </select>
