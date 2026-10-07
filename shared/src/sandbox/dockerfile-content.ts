@@ -13,7 +13,7 @@ COPY bridge .
 
   public static suffix = `USER node
 
-RUN mkdir -p /home/node/.npm-global
+RUN mkdir -p /home/node/.npm-global/lib
 
 ENV NPM_CONFIG_PREFIX=/home/node/.npm-global
 ENV PATH=\${NPM_CONFIG_PREFIX}/bin:\${PATH}
