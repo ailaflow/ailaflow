@@ -34,10 +34,6 @@ export class Sandbox {
       throw new SandboxRepositoryError('Sandbox name cannot be changed');
     }
 
-    const nameError = SandboxValidator.validateName(data.name);
-    if (nameError) {
-      throw new SandboxRepositoryError(nameError);
-    }
     const descriptionError = SandboxValidator.validateDescription(data.description);
     if (descriptionError) {
       throw new SandboxRepositoryError(descriptionError);

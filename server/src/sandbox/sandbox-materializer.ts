@@ -24,7 +24,8 @@ export class SandboxMaterializer {
 
   public async tryMaterializeSandbox(signal: AbortSignal, sandbox: Sandbox): Promise<boolean> {
     const versionPath = join(this.paths.appFolderAbsolutePath, 'version');
-    if ((await tryRead(versionPath)) === sandbox.hash) {
+    const version = fnv1a([sandbox.hash, DockerfileContent.templateHash]);
+    if ((await tryRead(versionPath)) === version) {
       return false;
     }
 
@@ -32,7 +33,7 @@ export class SandboxMaterializer {
     await fs.mkdir(this.paths.appFolderAbsolutePath, { recursive: true });
     await fs.mkdir(this.paths.dataFolderAbsolutePath, { recursive: true });
     await fs.writeFile(this.paths.dockerfileAbsolutePath, dockerfileContent);
-    await fs.writeFile(versionPath, sandbox.hash);
+    await fs.writeFile(versionPath, version);
 
     signal.throwIfAborted();
     this.logger.log(`Materialized sandbox +${sandbox.name}`);

@@ -1,3 +1,5 @@
+import { fnv1a } from '@aibindkit/core';
+
 export class DockerfileContent {
   public static prefix = `FROM node:24-alpine
 
@@ -17,6 +19,8 @@ USER node
 ENV SANDBOX_NAME=\${SANDBOX_NAME}
 EXPOSE 4096
 CMD ["node", "/bridge/server/index.cjs"]`;
+
+  public static templateHash = fnv1a([this.prefix, this.suffix]);
 
   public static build(configuration: string): string {
     return `${this.prefix}\n${configuration}\n${this.suffix}`;
