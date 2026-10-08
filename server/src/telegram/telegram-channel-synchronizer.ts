@@ -265,12 +265,12 @@ export class TelegramChannelSynchronizer {
         }
         const chunks = this.messageFormatter.format({ ...message, completedMessages: [completedMessage] });
         if (!isOutcome) {
-          await this.formLinkMessageGenerator.tryAppend(
-            chunks,
+          const formLinks = await this.formLinkMessageGenerator.generate(
             AbortSignal.any([AbortSignal.timeout(10_000), this.destroyAbortController.signal]),
             this.configuration.userName,
             completedMessage.metadata
           );
+          chunks.push(...formLinks.map(formLink => this.messageFormatter.formatFormLink(formLink)));
         }
         if (chunks.length === 0) {
           continue;

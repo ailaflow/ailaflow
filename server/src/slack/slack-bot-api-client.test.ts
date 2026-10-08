@@ -37,7 +37,7 @@ test('uses authorization headers and parses Slack API operations', async t => {
     (await client.listUsers(signal, 'bot-secret')).map(user => user.id),
     ['U1', 'U2']
   );
-  assert.deepEqual(await client.postMessage(signal, 'bot-secret', 'D1', 'Hello'), { channel: 'D1', ts: '1.2' });
+  assert.deepEqual(await client.postMessage(signal, 'bot-secret', 'D1', { text: 'Hello' }), { channel: 'D1', ts: '1.2' });
   assert.equal(calls[0].authorization, 'Bearer bot-secret');
   assert.equal(calls[1].authorization, 'Bearer app-secret');
   assert.deepEqual(calls[4].body, { channel: 'D1', text: 'Hello', mrkdwn: false, unfurl_links: false, unfurl_media: false });
@@ -55,7 +55,7 @@ test('turns ok false and rate limiting responses into sanitized typed errors', a
   });
 
   await assert.rejects(
-    () => new SlackBotApiClient().postMessage(new AbortController().signal, 'xoxb-do-not-leak', 'D1', 'Hello'),
+    () => new SlackBotApiClient().postMessage(new AbortController().signal, 'xoxb-do-not-leak', 'D1', { text: 'Hello' }),
     error => {
       assert.equal(error instanceof SlackBotApiError, true);
       assert.equal((error as SlackBotApiError).retryAfterSeconds, 7);

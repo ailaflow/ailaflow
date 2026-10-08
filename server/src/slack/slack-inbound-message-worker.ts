@@ -109,7 +109,9 @@ export class SlackInboundMessageWorker {
     }
     const mapping = await this.mappingRepository.tryGetBySlackUser(this.abortController.signal, event.workspaceId, event.slackUserId);
     if (!mapping) {
-      await this.client.postMessage(this.abortController.signal, configuration.botToken, event.slackChannelId, SLACK_NOT_CONNECTED_MESSAGE);
+      await this.client.postMessage(this.abortController.signal, configuration.botToken, event.slackChannelId, {
+        text: SLACK_NOT_CONNECTED_MESSAGE
+      });
       return;
     }
     const slackUser = await this.directoryRepository.tryGet(this.abortController.signal, event.workspaceId, event.slackUserId);
@@ -119,7 +121,9 @@ export class SlackInboundMessageWorker {
     await this.mappingRepository.updateDmChannelId(this.abortController.signal, event.workspaceId, event.slackUserId, event.slackChannelId);
     const text = event.text?.trim();
     if (!text) {
-      await this.client.postMessage(this.abortController.signal, configuration.botToken, event.slackChannelId, SLACK_TEXT_ONLY_MESSAGE);
+      await this.client.postMessage(this.abortController.signal, configuration.botToken, event.slackChannelId, {
+        text: SLACK_TEXT_ONLY_MESSAGE
+      });
       return;
     }
     const session = await this.userChatSessionProvider.get(this.abortController.signal, false, mapping.userName, DEFAULT_CHANNEL_NAME);

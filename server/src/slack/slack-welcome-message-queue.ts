@@ -84,7 +84,9 @@ export class SlackWelcomeMessageQueue {
 
   private async deliver(botToken: string, mapping: SlackUserMapping): Promise<void> {
     try {
-      const sent = await this.client.postMessage(this.abortController.signal, botToken, mapping.slackUserId, SLACK_WELCOME_MESSAGE);
+      const sent = await this.client.postMessage(this.abortController.signal, botToken, mapping.slackUserId, {
+        text: SLACK_WELCOME_MESSAGE
+      });
       await this.mappingRepository.markWelcomeSent(this.abortController.signal, mapping, sent.channel, Date.now());
     } catch (error) {
       const message = formatSlackError(error);

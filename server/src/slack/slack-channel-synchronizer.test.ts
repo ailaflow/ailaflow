@@ -14,6 +14,7 @@ import { SlackConfiguration, SlackMappingWelcomeStatus, SlackUserMapping } from 
 import { SlackBotApiClient, SlackPostedMessage } from './slack-bot-api-client';
 import { SlackChannelSynchronizer } from './slack-channel-synchronizer';
 import { SlackMessageStatus, tryGetSlackMessageMetadata } from './slack-message-metadata';
+import type { SlackMessagePayload } from './slack-message-payload';
 
 test('delivers a failed message regardless of its type or Slack origin', async () => {
   const messages: ChatMessage[] = [
@@ -55,7 +56,8 @@ test('delivers a failed message regardless of its type or Slack origin', async (
   await waitFor(() => client.sentTexts.length === 1);
   synchronizer.destroy();
 
-  assert.deepEqual(client.sentTexts, ['Failed: Tool call validation failed']);
+  assert.deepEqual(client.sentTexts, ['⚠️ Request failed\n\nTool call validation failed']);
+  assert.deepEqual(client.sentMessages[0].blocks, [{ type: 'markdown', text: '⚠️ **Request failed**\n\nTool call validation failed' }]);
   const delivery = tryGetSlackMessageMetadata(messages[0].completedMessages![0].metadata)?.delivery;
   assert.equal(delivery?.status, SlackMessageStatus.SENT);
   assert.equal(delivery?.attemptCount, 1);
@@ -102,11 +104,15 @@ test('sends links for task and process start form metadata', async () => {
 
   assert.match(
     client.sentTexts[0],
-    /^─── 💼 Task Form ────\nPlease click here: https:\/\/aila\.example\/magic-link\?t=%2Fmy-tasks%2Ftask-123%3Ffs%3D1#token=[\w-]{43}\nValid for 2 hours\.\n──────────────\n$/
+    /^💼 Task Form\nOpen task form: https:\/\/aila\.example\/magic-link\?.+\n\nThis secure link expires in 2 hours\.$/
+  );
+  assert.match(
+    client.sentMessages[0].blocks?.[0]?.type === 'markdown' ? client.sentMessages[0].blocks[0].text : '',
+    /^### 💼 Task Form\n\[Open task form\]\(https:\/\/aila\.example\/magic-link\?.+\)\n\n_This secure link expires in 2 hours\._$/
   );
   assert.match(
     client.sentTexts[1],
-    /^─── 💼 Start Form ────\nPlease click here: https:\/\/aila\.example\/magic-link\?t=%2Fmy-processes%2Femployee-onboarding%3Ffs%3D1#token=[\w-]{43}\nValid for 2 hours\.\n──────────────\n$/
+    /^💼 Start Form\nOpen start form: https:\/\/aila\.example\/magic-link\?.+\n\nThis secure link expires in 2 hours\.$/
   );
 });
 
@@ -139,8 +145,8 @@ test('forwards form-link configuration errors', async () => {
   synchronizer.destroy();
 
   assert.deepEqual(client.sentTexts, [
-    '─── 💼 Task Form ────\nThe public URL is not configured. Please notify your administrator.\n──────────────\n',
-    '─── 💼 Start Form ────\nThe public URL is not configured. Please notify your administrator.\n──────────────\n'
+    '⚠️ Task Form\nThe public URL is not configured. Please notify your administrator.',
+    '⚠️ Start Form\nThe public URL is not configured. Please notify your administrator.'
   ]);
 });
 
@@ -172,11 +178,15 @@ class FakeChatSession {
 }
 
 class FakeSlackBotApiClient extends SlackBotApiClient {
-  public readonly sentTexts: string[] = [];
+  public readonly sentMessages: SlackMessagePayload[] = [];
 
-  public async postMessage(_: AbortSignal, __: string, channel: string, text: string): Promise<SlackPostedMessage> {
-    this.sentTexts.push(text);
-    return { channel, ts: String(this.sentTexts.length) };
+  public get sentTexts(): string[] {
+    return this.sentMessages.map(message => message.text);
+  }
+
+  public async postMessage(_: AbortSignal, __: string, channel: string, message: SlackMessagePayload): Promise<SlackPostedMessage> {
+    this.sentMessages.push(message);
+    return { channel, ts: String(this.sentMessages.length) };
   }
 }
 

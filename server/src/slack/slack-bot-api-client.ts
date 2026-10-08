@@ -1,3 +1,5 @@
+import type { SlackMessagePayload } from './slack-message-payload';
+
 export interface SlackAuthIdentity {
   appId: string | null;
   workspaceId: string;
@@ -79,10 +81,16 @@ export class SlackBotApiClient {
     return users;
   }
 
-  public async postMessage(signal: AbortSignal, botToken: string, channel: string, text: string): Promise<SlackPostedMessage> {
+  public async postMessage(
+    signal: AbortSignal,
+    botToken: string,
+    channel: string,
+    message: SlackMessagePayload
+  ): Promise<SlackPostedMessage> {
     const payload = await this.call(signal, botToken, 'chat.postMessage', {
       channel,
-      text,
+      text: message.text,
+      blocks: message.blocks,
       mrkdwn: false,
       unfurl_links: false,
       unfurl_media: false

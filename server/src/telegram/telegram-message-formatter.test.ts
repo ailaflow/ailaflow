@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { ChatMessageType } from '@aibindkit/core';
 import test from 'node:test';
+import { MagicLinkStatus } from '../magic-link/magic-link-generator';
 import { TelegramMessageFormatter } from './telegram-message-formatter';
 
 test('formats user and assistant messages for Telegram', () => {
@@ -31,6 +32,27 @@ test('formats user and assistant messages for Telegram', () => {
       ]
     }),
     ['First\nSecond']
+  );
+});
+
+test('formats generic form links for Telegram', () => {
+  const formatter = new TelegramMessageFormatter();
+
+  assert.equal(
+    formatter.formatFormLink({
+      title: 'Task Form',
+      result: { status: MagicLinkStatus.SUCCESS, url: 'https://aila.example/task' },
+      validityHours: 2
+    }),
+    '─── 💼 Task Form ────\nPlease click here: https://aila.example/task\nValid for 2 hours.\n──────────────\n'
+  );
+  assert.equal(
+    formatter.formatFormLink({
+      title: 'Start Form',
+      result: { status: MagicLinkStatus.NOT_CONFIGURED },
+      validityHours: 2
+    }),
+    '─── 💼 Start Form ────\nThe public URL is not configured. Please notify your administrator.\n──────────────\n'
   );
 });
 

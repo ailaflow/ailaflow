@@ -11,7 +11,15 @@ test('formats eligible messages as Slack-safe plain text', () => {
       type: ChatMessageType.USER,
       completedMessages: [{ message: { role: 'user', content: 'Hello from the portal' } }]
     }),
-    ['You in AilaFlow: Hello from the portal']
+    [
+      {
+        text: 'Hello from the portal',
+        blocks: [
+          { type: 'context', elements: [{ type: 'plain_text', text: '🌐 Sent from AilaFlow', emoji: true }] },
+          { type: 'markdown', text: 'Hello from the portal' }
+        ]
+      }
+    ]
   );
   assert.deepEqual(
     formatter.format({
@@ -19,19 +27,38 @@ test('formats eligible messages as Slack-safe plain text', () => {
       type: ChatMessageType.ASSISTANT,
       completedMessages: [{ message: { role: 'assistant', content: 'Hello from Aila' } }]
     }),
-    ['Hello from Aila']
+    [{ text: 'Hello from Aila', blocks: [{ type: 'markdown', text: 'Hello from Aila' }] }]
   );
 });
 
-test('splits without separating Unicode surrogate pairs', () => {
+test('splits semantically without separating Unicode surrogate pairs', () => {
   const chunks = new SlackMessageFormatter().format({
     id: 1,
     type: ChatMessageType.ASSISTANT,
-    completedMessages: [{ message: { role: 'assistant', content: `${'a'.repeat(3_999)}😀b` } }]
+    completedMessages: [{ message: { role: 'assistant', content: `${'a'.repeat(11_899)}😀 b` } }]
   });
-  assert.equal(Array.from(chunks[0]).length, 4_000);
-  assert.equal(chunks[0].endsWith('😀'), true);
-  assert.equal(chunks[1], 'b');
+  const firstMarkdown = chunks[0].blocks?.[0];
+  const secondMarkdown = chunks[1].blocks?.[0];
+  assert.equal(firstMarkdown?.type, 'markdown');
+  assert.equal(secondMarkdown?.type, 'markdown');
+  assert.equal(Array.from(firstMarkdown?.type === 'markdown' ? firstMarkdown.text : '').length, 11_900);
+  assert.equal(firstMarkdown?.type === 'markdown' && firstMarkdown.text.endsWith('😀'), true);
+  assert.equal(secondMarkdown?.type === 'markdown' ? secondMarkdown.text : null, ' b');
+});
+
+test('closes and reopens fenced code blocks across payloads', () => {
+  const chunks = new SlackMessageFormatter().format({
+    id: 1,
+    type: ChatMessageType.ASSISTANT,
+    completedMessages: [{ message: { role: 'assistant', content: `\`\`\`typescript\n${'const value = 1;\n'.repeat(900)}\`\`\`` } }]
+  });
+
+  assert.equal(chunks.length > 1, true);
+  const first = chunks[0].blocks?.[0];
+  const second = chunks[1].blocks?.[0];
+  assert.equal(first?.type === 'markdown' && first.text.endsWith('\n```'), true);
+  assert.equal(second?.type === 'markdown' && second.text.startsWith('```typescript\n'), true);
+  assert.equal(second?.type === 'markdown' && second.text.endsWith('```'), true);
 });
 
 test('formats failures and interruptions before considering the message type or content', () => {
@@ -44,7 +71,12 @@ test('formats failures and interruptions before considering the message type or 
       failReason: 'Tool call validation failed',
       completedMessages: [{ message: { role: 'tool', tool_call_id: 'call-1', content: 'Ignored' } }]
     }),
-    ['Failed: Tool call validation failed']
+    [
+      {
+        text: '⚠️ Request failed\n\nTool call validation failed',
+        blocks: [{ type: 'markdown', text: '⚠️ **Request failed**\n\nTool call validation failed' }]
+      }
+    ]
   );
   assert.deepEqual(
     formatter.format({
@@ -53,7 +85,12 @@ test('formats failures and interruptions before considering the message type or 
       isInterrupted: true,
       completedMessages: [{ message: { role: 'user', content: 'Ignored' } }]
     }),
-    ['Interrupted.']
+    [
+      {
+        text: '⏹️ Request interrupted.',
+        blocks: [{ type: 'context', elements: [{ type: 'plain_text', text: '⏹️ Request interrupted.', emoji: true }] }]
+      }
+    ]
   );
   assert.deepEqual(
     formatter.format({
@@ -61,7 +98,12 @@ test('formats failures and interruptions before considering the message type or 
       type: ChatMessageType.SYSTEM,
       failReason: ''
     }),
-    ['Failed: Unknown error']
+    [
+      {
+        text: '⚠️ Request failed\n\nUnknown error',
+        blocks: [{ type: 'markdown', text: '⚠️ **Request failed**\n\nUnknown error' }]
+      }
+    ]
   );
 });
 
@@ -74,7 +116,17 @@ test('reports successful compaction only when it did not fail or get interrupted
       type: ChatMessageType.COMPACT,
       completedMessages: [{ message: { role: 'user', content: 'Compacted state' } }]
     }),
-    ['Context compacted.']
+    [
+      {
+        text: '🧹 Conversation context compacted.',
+        blocks: [
+          {
+            type: 'context',
+            elements: [{ type: 'plain_text', text: '🧹 Conversation context compacted.', emoji: true }]
+          }
+        ]
+      }
+    ]
   );
   assert.deepEqual(
     formatter.format({
@@ -83,7 +135,12 @@ test('reports successful compaction only when it did not fail or get interrupted
       failReason: 'Compaction failed',
       completedMessages: [{ message: { role: 'user', content: 'Ignored' } }]
     }),
-    ['Failed: Compaction failed']
+    [
+      {
+        text: '⚠️ Request failed\n\nCompaction failed',
+        blocks: [{ type: 'markdown', text: '⚠️ **Request failed**\n\nCompaction failed' }]
+      }
+    ]
   );
   assert.deepEqual(
     formatter.format({
@@ -92,7 +149,12 @@ test('reports successful compaction only when it did not fail or get interrupted
       isInterrupted: true,
       completedMessages: [{ message: { role: 'user', content: 'Ignored' } }]
     }),
-    ['Interrupted.']
+    [
+      {
+        text: '⏹️ Request interrupted.',
+        blocks: [{ type: 'context', elements: [{ type: 'plain_text', text: '⏹️ Request interrupted.', emoji: true }] }]
+      }
+    ]
   );
 });
 

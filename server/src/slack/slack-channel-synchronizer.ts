@@ -12,6 +12,7 @@ import { SlackBotApiClient, SlackBotApiError } from './slack-bot-api-client';
 import { SlackMessageFormatter } from './slack-message-formatter';
 import { SlackMessageDelivery, SlackMessageMetadata, SlackMessageStatus, tryGetSlackMessageMetadata } from './slack-message-metadata';
 import { formatSlackError } from './slack-error';
+import type { SlackMessagePayload } from './slack-message-payload';
 
 const MESSAGE_PACING_MS = 1_000;
 
@@ -207,19 +208,19 @@ export class SlackChannelSynchronizer {
         ) {
           continue;
         }
-        const chunks = this.formatter.format({ ...message, completedMessages: [completed] });
+        const payloads = this.formatter.format({ ...message, completedMessages: [completed] });
         if (!isOutcome) {
-          await this.formLinkMessageGenerator.tryAppend(
-            chunks,
+          const formLinks = await this.formLinkMessageGenerator.generate(
             AbortSignal.any([AbortSignal.timeout(10_000), this.abortController.signal]),
             this.mapping.userName,
             completed.metadata
           );
+          payloads.push(...formLinks.map(formLink => this.formatter.formatFormLink(formLink)));
         }
-        if (chunks.length === 0) {
+        if (payloads.length === 0) {
           continue;
         }
-        await this.deliverMessage(session, message.id, index, chunks, slack, currentMapping.dmChannelId);
+        await this.deliverMessage(session, message.id, index, payloads, slack, currentMapping.dmChannelId);
       }
     }
   }
@@ -240,7 +241,7 @@ export class SlackChannelSynchronizer {
     session: ChatSession,
     messageId: number,
     completedMessageIndex: number,
-    chunks: string[],
+    payloads: SlackMessagePayload[],
     slack: SlackMessageMetadata | null,
     channelId: string
   ): Promise<void> {
@@ -265,13 +266,13 @@ export class SlackChannelSynchronizer {
     };
     await this.setMetadata(session, messageId, completedMessageIndex, { ...slack, delivery });
     try {
-      for (let index = delivery.nextChunkIndex; index < chunks.length; index++) {
+      for (let index = delivery.nextChunkIndex; index < payloads.length; index++) {
         await this.pacePostMessage();
         const sent = await this.client.postMessage(
           AbortSignal.any([AbortSignal.timeout(10_000), this.abortController.signal]),
           this.configuration.botToken,
           channelId,
-          chunks[index]
+          payloads[index]
         );
         this.lastPostAt = Date.now();
         delivery = {
