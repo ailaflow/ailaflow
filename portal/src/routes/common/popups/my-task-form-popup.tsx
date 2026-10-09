@@ -14,7 +14,7 @@ export function MyTaskFormPopup(props: MyTaskFormPopupProps) {
   }
 
   return (
-    <GenericPopupView title="Task" closeLabel="Close task form" onClose={props.onClose}>
+    <GenericPopupView size="large" title="Task" closeLabel="Close task form" onClose={props.onClose}>
       <MyTaskForm args={props.args} onSubmitted={taskSubmitted} />
     </GenericPopupView>
   );

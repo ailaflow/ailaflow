@@ -12,6 +12,7 @@ export interface MyProcessStartFormPopupProps {
 export function MyProcessStartFormPopup(props: MyProcessStartFormPopupProps) {
   return (
     <GenericPopupView
+      size="large"
       title={`/${props.args.processName}`}
       titleIcon={<ProcessIcon name={props.args.processName} icon={props.icon} className="h-8 w-8" />}
       closeLabel="Close process form"
