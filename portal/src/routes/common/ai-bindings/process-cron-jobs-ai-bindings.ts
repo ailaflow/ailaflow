@@ -40,9 +40,9 @@ const processCronJobsRoute = route('processCronJobs')
         maxExecutionTime: z.number().int().min(1).max(86_400).describe('Maximum execution time in seconds')
       })
     ),
-    cronJobEditor_setInputValues: tool('Set the input values in the currently edited cron job').input(
+    cronJobEditor_setStartValues: tool('Set the start values in the currently edited cron job').input(
       z.object({
-        inputValues: z.record(z.string(), z.unknown()).describe('Process input variable values')
+        startValues: z.record(z.string(), z.unknown()).describe('Process start variable values')
       })
     ),
     cronJobEditor_setIsEnabled: tool('Set whether the currently edited cron job is enabled').input(

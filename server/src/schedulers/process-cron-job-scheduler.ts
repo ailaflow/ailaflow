@@ -98,7 +98,7 @@ export class ProcessCronJobScheduler implements Scheduler {
       startedBy: job.starterUserName
     };
 
-    const execution = this.processExecutor.initialize(context, process, job.inputValues);
+    const execution = this.processExecutor.initialize(context, process, job.startValues);
     return new Promise<{
       outcome: ProcessExecutionOutcome;
       id: string;

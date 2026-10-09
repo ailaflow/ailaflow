@@ -15,7 +15,7 @@ export interface ProcessCronJobsState {
   draft: ProcessCronJobDraftViewModel | null;
   expressionError: string | null;
   maxExecutionTimeError: string | null;
-  inputValuesError: string | null;
+  startValuesError: string | null;
   canSave: boolean;
   createJob(): void;
   editJob(job: ProcessCronJobDto): void;
@@ -50,15 +50,15 @@ export function ProcessCronJobsContext(props: ProcessCronJobsContextProps) {
   const isSaving = useRef(false);
   const expressionError = draft ? ProcessCronJobValidator.validateExpression(draft.expression, draft.timeZone) : null;
   const maxExecutionTimeError = draft ? ProcessCronJobValidator.validateMaxExecutionTime(draft.maxExecutionTime) : null;
-  const inputValidation = draft
-    ? validateInputValues(draft.inputValuesText, props.process, variableValidator)
+  const startValuesValidation = draft
+    ? validateStartValues(draft.startValuesText, props.process, variableValidator)
     : { inputValues: null, error: null };
   const canSave =
     draft !== null &&
     draft.starterUserName.length > 0 &&
     expressionError === null &&
     maxExecutionTimeError === null &&
-    inputValidation.error === null;
+    startValuesValidation.error === null;
 
   function createJob(): void {
     setDraft({
@@ -67,7 +67,7 @@ export function ProcessCronJobsContext(props: ProcessCronJobsContextProps) {
       expression: '0 9 * * *',
       timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
       maxExecutionTime: 60,
-      inputValuesText: '{}',
+      startValuesText: '{}',
       isEnabled: true
     });
   }
@@ -79,7 +79,7 @@ export function ProcessCronJobsContext(props: ProcessCronJobsContextProps) {
       expression: job.expression,
       timeZone: job.timeZone,
       maxExecutionTime: job.maxExecutionTime,
-      inputValuesText: JSON.stringify(job.inputValues, null, 2),
+      startValuesText: JSON.stringify(job.startValues, null, 2),
       isEnabled: job.isEnabled
     });
   }
@@ -93,7 +93,7 @@ export function ProcessCronJobsContext(props: ProcessCronJobsContextProps) {
     if (isSaving.current) {
       return;
     }
-    if (!draft || !canSave || !inputValidation.inputValues) {
+    if (!draft || !canSave || !startValuesValidation.inputValues) {
       throw new Error('Cannot save cron job due to validation errors or no open draft');
     }
     isSaving.current = true;
@@ -105,7 +105,7 @@ export function ProcessCronJobsContext(props: ProcessCronJobsContextProps) {
         starterUserName: draft.starterUserName,
         expression: draft.expression,
         timeZone: draft.timeZone,
-        inputValues: inputValidation.inputValues,
+        startValues: startValuesValidation.inputValues,
         isEnabled: draft.isEnabled,
         maxExecutionTime: draft.maxExecutionTime
       });
@@ -136,7 +136,7 @@ export function ProcessCronJobsContext(props: ProcessCronJobsContextProps) {
     draft,
     expressionError,
     maxExecutionTimeError,
-    inputValuesError: inputValidation.error,
+    startValuesError: startValuesValidation.error,
     canSave,
     createJob,
     editJob,
@@ -155,7 +155,7 @@ interface InputValuesValidationResult {
   error: string | null;
 }
 
-function validateInputValues(input: string, process: ProcessDto, variableValidator: VariableCachedValidator): InputValuesValidationResult {
+function validateStartValues(input: string, process: ProcessDto, variableValidator: VariableCachedValidator): InputValuesValidationResult {
   let value: unknown;
   try {
     value = JSON.parse(input);

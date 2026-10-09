@@ -26,7 +26,7 @@ export class SaveProcessCronJobEndpoint implements Endpoint {
     if (!process) {
       throw new EndpointError('Process not found', 404);
     }
-    const inputError = process.variables.validateStartValues(request.inputValues);
+    const inputError = process.variables.validateStartValues(request.startValues);
     if (inputError) {
       throw new EndpointError(inputError, 400);
     }
@@ -39,7 +39,7 @@ export class SaveProcessCronJobEndpoint implements Endpoint {
           request.starterUserName,
           request.expression,
           request.timeZone,
-          request.inputValues,
+          request.startValues,
           request.isEnabled,
           request.maxExecutionTime
         );
@@ -60,7 +60,7 @@ export class SaveProcessCronJobEndpoint implements Endpoint {
           request.starterUserName,
           request.expression,
           request.timeZone,
-          request.inputValues,
+          request.startValues,
           request.isEnabled,
           request.maxExecutionTime
         );

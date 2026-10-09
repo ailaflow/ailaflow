@@ -59,7 +59,7 @@ export function useProcessCronJobsAi(state: ProcessCronJobsState) {
           return {
             cronJob: state.draft,
             expressionError: state.expressionError,
-            inputValuesError: state.inputValuesError,
+            inputValuesError: state.startValuesError,
             canSave: state.canSave
           };
         },
@@ -84,12 +84,12 @@ export function useProcessCronJobsAi(state: ProcessCronJobsState) {
           state.updateDraft({ maxExecutionTime: arg.maxExecutionTime });
           return toolSuccess('Cron job maximum execution time was updated');
         },
-        async cronJobEditor_setInputValues(arg) {
+        async cronJobEditor_setStartValues(arg) {
           if (!state.draft) {
             return toolError('The cron job editor overlay is not open');
           }
-          state.updateDraft({ inputValuesText: JSON.stringify(arg.inputValues, null, 2) });
-          return toolSuccess('Cron job input values were updated');
+          state.updateDraft({ startValuesText: JSON.stringify(arg.startValues, null, 2) });
+          return toolSuccess('Cron job start values were updated');
         },
         async cronJobEditor_setIsEnabled(arg) {
           if (!state.draft) {
@@ -103,7 +103,7 @@ export function useProcessCronJobsAi(state: ProcessCronJobsState) {
             return toolError('The cron job editor overlay is not open');
           }
           if (!state.canSave) {
-            return toolError(state.expressionError ?? state.maxExecutionTimeError ?? state.inputValuesError ?? 'Cron job cannot be saved');
+            return toolError(state.expressionError ?? state.maxExecutionTimeError ?? state.startValuesError ?? 'Cron job cannot be saved');
           }
           try {
             await state.save();

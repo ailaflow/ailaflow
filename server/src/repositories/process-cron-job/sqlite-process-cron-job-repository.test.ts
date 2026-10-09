@@ -27,7 +27,7 @@ test('persists, updates, lists and deletes process cron jobs', async () => {
   assert.deepEqual(await repository.getByProcessName(signal, 'alpha'), [job]);
 
   job.expression = '0 * * * *';
-  job.inputValues = { x: 2 };
+  job.startValues = { x: 2 };
   job.isEnabled = false;
   job.maxExecutionTime = 120;
   job.nextExecutionAt = 2_000;

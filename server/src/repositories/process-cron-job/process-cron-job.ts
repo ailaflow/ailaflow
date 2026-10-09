@@ -9,7 +9,7 @@ export class ProcessCronJob {
     starterUserName: string,
     expression: string,
     timeZone: string,
-    inputValues: ProcessExecutionVariableValues,
+    startValues: ProcessExecutionVariableValues,
     isEnabled: boolean,
     maxExecutionTime: number
   ): ProcessCronJob {
@@ -20,7 +20,7 @@ export class ProcessCronJob {
       starterUserName,
       expression,
       timeZone,
-      inputValues,
+      startValues,
       isEnabled,
       maxExecutionTime,
       calculateNextExecutionAt(expression, timeZone),
@@ -34,7 +34,7 @@ export class ProcessCronJob {
     public starterUserName: string,
     public expression: string,
     public timeZone: string,
-    public inputValues: ProcessExecutionVariableValues,
+    public startValues: ProcessExecutionVariableValues,
     public isEnabled: boolean,
     public maxExecutionTime: number,
     public nextExecutionAt: number,
@@ -45,7 +45,7 @@ export class ProcessCronJob {
     starterUserName: string,
     expression: string,
     timeZone: string,
-    inputValues: ProcessExecutionVariableValues,
+    startValues: ProcessExecutionVariableValues,
     isEnabled: boolean,
     maxExecutionTime: number
   ): void {
@@ -53,7 +53,7 @@ export class ProcessCronJob {
     this.starterUserName = starterUserName;
     this.expression = expression;
     this.timeZone = timeZone;
-    this.inputValues = inputValues;
+    this.startValues = startValues;
     this.isEnabled = isEnabled;
     this.maxExecutionTime = maxExecutionTime;
     this.nextExecutionAt = calculateNextExecutionAt(expression, timeZone);
