@@ -36,7 +36,8 @@ test('persists a notification for every matched user', async () => {
     false,
     '',
     DEFAULT_CHANNEL_NAME,
-    'Deployment completed'
+    'Deployment completed',
+    null
   );
 
   assert.equal(storedNotifications.length, 2);
