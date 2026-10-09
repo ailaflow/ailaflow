@@ -9,8 +9,8 @@ import { SqliteTableSchemaRepository } from '../../repositories/table/sqlite-tab
 import { TableDataRepositoryError } from '../../repositories/table/table-data-repository';
 import { Table } from '../../repositories/table/table';
 import { TableSchemaManager } from '../../table/table-schema-manager';
-import { TableDataPageQuery } from './table-data-list-querier';
-import { SqliteTableDataListQuerier } from './sqlite-table-data-list-querier';
+import { TableDataPageQuery } from './table-data-page-querier';
+import { SqliteTableDataPageQuerier } from './sqlite-table-data-page-querier';
 
 test('queries a primary-key-ordered page of table data', async t => {
   const modelDb = new DatabaseSync(':memory:', { open: true });
@@ -22,7 +22,7 @@ test('queries a primary-key-ordered page of table data', async t => {
   const timestamps = [3000, 1000, 2000];
   t.mock.method(Date, 'now', () => timestamps.shift() ?? 0);
   const tableDataRepository = new SqliteTableDataRepository(dbs);
-  const querier = new SqliteTableDataListQuerier(dbs);
+  const querier = new SqliteTableDataPageQuerier(dbs);
 
   await tableRepository.setup(signal);
   await tableRepository.insert(signal, new Table('customers', 'Customer records'));

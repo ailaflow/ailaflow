@@ -33,22 +33,34 @@ export const getTableResponseSchema = z.object({
 export type TableDto = z.infer<typeof tableDtoSchema>;
 export type GetTableResponse = z.infer<typeof getTableResponseSchema>;
 
-// getTableData
+// getTableDataPage
 
-export const getTableDataRequestSchema = paginationRequestSchema.extend({
+export const getTableDataPageRequestSchema = paginationRequestSchema.extend({
   orderBy: z.string().default('_id'),
   ascending: z.union([z.boolean(), z.enum(['true', 'false']).transform(value => value === 'true')]).default(true)
 });
 
-export const getTableDataResponseSchema = z.object({
+export const getTableDataPageResponseSchema = z.object({
   rows: z.array(tableRowSchema),
   page: z.number().int().positive(),
   pageSize: z.number().int().positive(),
   hasMore: z.boolean()
 });
 
-export type GetTableDataRequest = z.infer<typeof getTableDataRequestSchema>;
-export type GetTableDataResponse = z.infer<typeof getTableDataResponseSchema>;
+export type GetTableDataPageRequest = z.infer<typeof getTableDataPageRequestSchema>;
+export type GetTableDataPageResponse = z.infer<typeof getTableDataPageResponseSchema>;
+
+// saveTableDataRow
+
+export const saveTableDataRowRequestSchema = z.object({
+  row: tableRowSchema
+});
+
+export const saveTableDataRowResponseSchema = z.object({
+  success: z.boolean()
+});
+
+export type SaveTableDataRowRequest = z.infer<typeof saveTableDataRowRequestSchema>;
 
 // saveTable
 

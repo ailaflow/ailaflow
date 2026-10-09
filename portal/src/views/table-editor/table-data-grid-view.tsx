@@ -1,3 +1,5 @@
+import { SvgIcon } from '../common/svg-icons';
+
 export interface TableDataGridColumn {
   id: string;
   label: string;
@@ -12,11 +14,14 @@ export interface TableDataGridRow {
 export interface TableDataGridViewProps {
   columns: TableDataGridColumn[];
   rows: TableDataGridRow[];
+  deletingRowId: string | null;
   pagination: {
     page: number;
     hasMore: boolean;
     onPageChange(page: number): void;
   };
+  onEdit(id: string): void;
+  onDelete(id: string): void;
 }
 
 export function TableDataGridView(props: TableDataGridViewProps) {
@@ -28,7 +33,7 @@ export function TableDataGridView(props: TableDataGridViewProps) {
         <table className="w-max min-w-full border-separate border-spacing-0 text-left text-sm">
           <thead className="sticky top-0 z-20 bg-slate-100 text-xs font-semibold uppercase tracking-wide text-slate-600">
             <tr>
-              <GridHeader className="sticky left-0 z-30 min-w-52 bg-slate-100">_id (STRING)</GridHeader>
+              <GridHeader className="sticky left-0 z-30 min-w-72 bg-slate-100">_id (STRING)</GridHeader>
               {props.columns.map(column => (
                 <GridHeader key={column.id} className="min-w-48">
                   {column.label}
@@ -49,8 +54,24 @@ export function TableDataGridView(props: TableDataGridViewProps) {
             ) : (
               props.rows.map(row => (
                 <tr key={row._id} className="group">
-                  <GridCell className="sticky left-0 z-10 max-w-72 bg-white font-semibold text-slate-900 group-hover:bg-blue-50">
-                    {row._id}
+                  <GridCell className="sticky left-0 z-10 min-w-72 max-w-96 bg-white font-semibold text-slate-900 group-hover:bg-blue-50">
+                    <div className="flex min-w-0 items-center gap-3">
+                      <span title={row._id} className="min-w-0 flex-1 truncate">
+                        {row._id}
+                      </span>
+                      <span className="flex shrink-0 items-center gap-2 font-sans">
+                        <RowActionButton ariaLabel={`Edit row ${row._id}`} onClick={() => props.onEdit(row._id)}>
+                          <SvgIcon name="pencil" className="h-3.5 w-3.5" />
+                        </RowActionButton>
+                        <RowActionButton
+                          ariaLabel={props.deletingRowId === row._id ? `Deleting row ${row._id}` : `Delete row ${row._id}`}
+                          disabled={props.deletingRowId !== null}
+                          onClick={() => props.onDelete(row._id)}
+                        >
+                          <SvgIcon name="x" className="h-3.5 w-3.5" />
+                        </RowActionButton>
+                      </span>
+                    </div>
                   </GridCell>
                   {props.columns.map(column => (
                     <GridCell key={column.id}>{row.values[column.id]}</GridCell>
@@ -77,6 +98,21 @@ export function TableDataGridView(props: TableDataGridViewProps) {
         </div>
       </div>
     </div>
+  );
+}
+
+function RowActionButton(props: { ariaLabel: string; children: React.ReactNode; disabled?: boolean; onClick(): void }) {
+  return (
+    <button
+      type="button"
+      aria-label={props.ariaLabel}
+      title={props.ariaLabel}
+      disabled={props.disabled}
+      onClick={props.onClick}
+      className="inline-flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-md border border-slate-200 bg-white text-slate-700 transition-colors hover:bg-slate-50 hover:text-slate-900 focus-visible:outline-2 focus-visible:outline-slate-500 disabled:cursor-not-allowed disabled:opacity-50"
+    >
+      {props.children}
+    </button>
   );
 }
 

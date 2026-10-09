@@ -8,7 +8,7 @@ import { SqliteTableRepository } from '../../repositories/table/sqlite-table-rep
 import { SqliteTableSchemaRepository } from '../../repositories/table/sqlite-table-schema-repository';
 import { TableDataRepository } from '../../repositories/table/table-data-repository';
 import { Table } from '../../repositories/table/table';
-import { SqliteTableDataListQuerier } from '../../queriers/table-data-list/sqlite-table-data-list-querier';
+import { SqliteTableDataPageQuerier } from '../../queriers/table-data-page/sqlite-table-data-page-querier';
 import { TableManager } from '../../table/table-manager';
 import { TableSchemaManager } from '../../table/table-schema-manager';
 import { DeleteTableRowRpcHandler } from './delete-table-row-rpc-handler';
@@ -24,7 +24,7 @@ test('writes and reads table data through RPC handlers', async () => {
   const schemaManager = new TableSchemaManager(new SqliteTableSchemaRepository(dbs));
   const tableRepository = new SqliteTableRepository(dbs);
   const tableDataRepository = new SqliteTableDataRepository(dbs);
-  const tableManager = new TableManager(tableRepository, tableDataRepository, schemaManager, new SqliteTableDataListQuerier(dbs));
+  const tableManager = new TableManager(tableRepository, tableDataRepository, schemaManager, new SqliteTableDataPageQuerier(dbs));
   const deleteHandler = new DeleteTableRowRpcHandler(tableManager);
   const readHandler = new ReadTableRowRpcHandler(tableManager);
   const writeHandler = new WriteTableRpcHandler(tableManager);
@@ -88,7 +88,7 @@ test('reads paginated table values through an RPC handler', async t => {
   const timestamps = [3000, 1000, 2000];
   t.mock.method(Date, 'now', () => timestamps.shift() ?? 0);
   const tableDataRepository = new SqliteTableDataRepository(dbs);
-  const tableManager = new TableManager(tableRepository, tableDataRepository, schemaManager, new SqliteTableDataListQuerier(dbs));
+  const tableManager = new TableManager(tableRepository, tableDataRepository, schemaManager, new SqliteTableDataPageQuerier(dbs));
   const handler = new ReadTablePageRpcHandler(tableManager);
   await tableRepository.setup(signal);
   await tableRepository.insert(signal, new Table('customers', 'Customer records'));
@@ -224,7 +224,7 @@ test('hides table existence from scripts and validates RPC requests', async () =
   const schemaManager = new TableSchemaManager(new SqliteTableSchemaRepository(dbs));
   const tableRepository = new SqliteTableRepository(dbs);
   const tableDataRepository = new SqliteTableDataRepository(dbs);
-  const tableManager = new TableManager(tableRepository, tableDataRepository, schemaManager, new SqliteTableDataListQuerier(dbs));
+  const tableManager = new TableManager(tableRepository, tableDataRepository, schemaManager, new SqliteTableDataPageQuerier(dbs));
   const readHandler = new ReadTableRowRpcHandler(tableManager);
   const writeHandler = new WriteTableRpcHandler(tableManager);
   const pageHandler = new ReadTablePageRpcHandler(tableManager);

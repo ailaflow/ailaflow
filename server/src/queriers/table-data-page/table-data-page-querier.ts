@@ -1,4 +1,4 @@
-import { GetTableDataResponse } from '@ailaflow/shared';
+import { GetTableDataPageResponse } from '@ailaflow/shared';
 import { TableSchema } from '../../repositories/table/table-schema';
 
 export type TableDataWhereValue = string | number | boolean;
@@ -22,10 +22,6 @@ export interface TableDataPageQuery {
   where?: TableDataWhere;
 }
 
-export interface TableDataListQuery extends TableDataPageQuery {
-  tableName: string;
-}
-
-export interface TableDataListQuerier {
-  query(signal: AbortSignal, schema: TableSchema, query: TableDataPageQuery): Promise<GetTableDataResponse>;
+export interface TableDataPageQuerier {
+  query(signal: AbortSignal, schema: TableSchema, query: TableDataPageQuery): Promise<GetTableDataPageResponse>;
 }

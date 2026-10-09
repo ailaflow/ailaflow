@@ -1,4 +1,4 @@
-import { MyFormPopupView } from '../../../views/common/popups/my-form-popup-view';
+import { GenericPopupView } from '../../../views/common/popups/generic-popup-view';
 import { MyTaskForm, MyTaskFormArgs } from '../my-form/my-task-form';
 
 export interface MyTaskFormPopupProps {
@@ -14,8 +14,8 @@ export function MyTaskFormPopup(props: MyTaskFormPopupProps) {
   }
 
   return (
-    <MyFormPopupView title="Task" closeLabel="Close task form" onClose={props.onClose}>
+    <GenericPopupView title="Task" closeLabel="Close task form" onClose={props.onClose}>
       <MyTaskForm args={props.args} onSubmitted={taskSubmitted} />
-    </MyFormPopupView>
+    </GenericPopupView>
   );
 }

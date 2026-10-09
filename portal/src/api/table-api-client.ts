@@ -2,10 +2,11 @@ import { HttpClient } from '@aibindkit/react';
 import type {
   DeleteTableResponse,
   GetTableResponse,
-  GetTableDataRequest,
-  GetTableDataResponse,
+  GetTableDataPageRequest,
+  GetTableDataPageResponse,
   GetTablesRequest,
   GetTablesResponse,
+  SaveTableDataRowRequest,
   SaveTableRequest,
   SaveTableResponse
 } from '@ailaflow/shared';
@@ -29,7 +30,7 @@ export class TableApiClient {
     return this.client.json(signal, 'GET', `/api/tables/${name}`);
   }
 
-  public getTableData(signal: AbortSignal, name: string, request: GetTableDataRequest): Promise<GetTableDataResponse> {
+  public getTableDataPage(signal: AbortSignal, name: string, request: GetTableDataPageRequest): Promise<GetTableDataPageResponse> {
     const query = new URLSearchParams({
       page: String(request.page),
       pageSize: String(request.pageSize),
@@ -37,6 +38,14 @@ export class TableApiClient {
       ascending: String(request.ascending)
     });
     return this.client.json(signal, 'GET', `/api/tables/${name}/data?${query}`);
+  }
+
+  public saveTableDataRow(signal: AbortSignal, name: string, request: SaveTableDataRowRequest): Promise<void> {
+    return this.client.json(signal, 'POST', `/api/tables/${name}/data-row`, request);
+  }
+
+  public deleteTableDataRow(signal: AbortSignal, name: string, id: string): Promise<void> {
+    return this.client.json(signal, 'DELETE', `/api/tables/${name}/data-row/${encodeURIComponent(id)}`);
   }
 
   public deleteTable(signal: AbortSignal, name: string): Promise<DeleteTableResponse> {

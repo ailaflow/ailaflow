@@ -1,5 +1,5 @@
-import { GetTableDataResponse, TableRow, TableRowValidator, TableSchemaError } from '@ailaflow/shared';
-import { TableDataListQuerier, TableDataListQuery } from '../queriers/table-data-list/table-data-list-querier';
+import { GetTableDataPageResponse, TableRow, TableRowValidator, TableSchemaError } from '@ailaflow/shared';
+import { TableDataPageQuerier, TableDataPageQuery } from '../queriers/table-data-page/table-data-page-querier';
 import { TableDataRepository } from '../repositories/table/table-data-repository';
 import { TableRepository } from '../repositories/table/table-repository';
 import { Table } from '../repositories/table/table';
@@ -10,7 +10,7 @@ export class TableManager {
     private readonly tableRepository: TableRepository,
     private readonly tableDataRepository: TableDataRepository,
     private readonly tableSchemaManager: TableSchemaManager,
-    private readonly tableDataListQuerier: TableDataListQuerier
+    private readonly tableDataListQuerier: TableDataPageQuerier
   ) {}
 
   public async tryRead(signal: AbortSignal, tableName: string, _id: string): Promise<TableRow | null> {
@@ -42,8 +42,8 @@ export class TableManager {
     return deleted;
   }
 
-  public async readPage(signal: AbortSignal, query: TableDataListQuery): Promise<GetTableDataResponse> {
-    const schema = await this.tableSchemaManager.tryGet(signal, query.tableName);
+  public async readPage(signal: AbortSignal, tableName: string, query: TableDataPageQuery): Promise<GetTableDataPageResponse> {
+    const schema = await this.tableSchemaManager.tryGet(signal, tableName);
     if (!schema) {
       return {
         rows: [],

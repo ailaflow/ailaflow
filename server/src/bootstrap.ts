@@ -119,9 +119,9 @@ import { SaveTableEndpoint } from './api/table/save-table-endpoint';
 import { DeleteTableEndpoint } from './api/table/delete-table-endpoint';
 import { WriteTableRpcHandler } from './process-executor/rpc-handlers/write-table-row-rpc-handler';
 import { ReadTableRowRpcHandler } from './process-executor/rpc-handlers/read-table-row-rpc-handler';
-import { SqliteTableDataListQuerier } from './queriers/table-data-list/sqlite-table-data-list-querier';
+import { SqliteTableDataPageQuerier } from './queriers/table-data-page/sqlite-table-data-page-querier';
 import { TableManager } from './table/table-manager';
-import { GetTableDataEndpoint } from './api/table/get-table-data-endpoint';
+import { GetTableDataPageEndpoint } from './api/table/get-table-data-page-endpoint';
 import { ReadTablePageRpcHandler } from './process-executor/rpc-handlers/read-table-page-rpc-handler';
 import { AgentSessionRunner } from './process-executor/services/agent-session-runner';
 import { AgentToolSetProviderFactory } from './chat-session/agent-tool-set-provider-factory';
@@ -229,7 +229,7 @@ import { GetMySlackConfigurationEndpoint } from './api/my-configuration/get-my-s
 import { SqliteSlackUserListQuerier } from './queriers/slack-user-list/sqlite-slack-user-list-querier';
 import { VersionProvider } from './core/version-provider';
 import { Logger } from './core/logger';
-import { TableDataListQuerier } from './queriers/table-data-list/table-data-list-querier';
+import { TableDataPageQuerier } from './queriers/table-data-page/table-data-page-querier';
 import { SlackUserListQuerier } from './queriers/slack-user-list/slack-user-list-querier';
 import { TableSchemaRepository } from './repositories/table/table-schema-repository';
 import { Notifier } from './notification/notifier';
@@ -254,6 +254,8 @@ import { GetProcessExecutionTracesEndpoint } from './api/process-execution/get-p
 import { GetProcessExecutionTraceEndpoint } from './api/process-execution/get-process-execution-trace-endpoint';
 import { GetProcessExecutionTraceEventsEndpoint } from './api/process-execution/get-process-execution-trace-events-endpoint';
 import { ProcessExecutionTraceJobScheduler } from './schedulers/process-execution-trace-job-scheduler';
+import { DeleteTableDataRowEndpoint } from './api/table/delete-table-data-row-endpoint';
+import { SaveTableDataRowEndpoint } from './api/table/save-table-data-row-endpoint';
 
 const DB_TYPE = 'sqlite';
 
@@ -320,7 +322,7 @@ export async function bootstrap(registry: CleanupRegistry, signal: AbortSignal) 
   let myTaskListQuerier: MyTaskListQuerier;
   let myNotificationListQuerier: MyNotificationListQuerier;
   let tableListQuerier: TableListQuerier;
-  let tableDataListQuerier: TableDataListQuerier;
+  let tableDataListQuerier: TableDataPageQuerier;
   let incompleteAssignedTaskCountQuerier: IncompleteAssignedTaskCountQuerier;
   let taskFinalizationCandidateQuerier: TaskFinalizationCandidateQuerier;
   let executionTaskCandidateQuerier: ExecutionTaskCandidateQuerier;
@@ -367,7 +369,7 @@ export async function bootstrap(registry: CleanupRegistry, signal: AbortSignal) 
     myTaskListQuerier = new SqliteMyTaskListQuerier(sqliteDatabases);
     myNotificationListQuerier = new SqliteMyNotificationListQuerier(sqliteDatabases);
     tableListQuerier = new SqliteTableListQuerier(sqliteDatabases);
-    tableDataListQuerier = new SqliteTableDataListQuerier(sqliteDatabases);
+    tableDataListQuerier = new SqliteTableDataPageQuerier(sqliteDatabases);
     incompleteAssignedTaskCountQuerier = new SqliteIncompleteAssignedTaskCountQuerier(sqliteDatabases);
     taskFinalizationCandidateQuerier = new SqliteTaskFinalizationCandidateQuerier(sqliteDatabases);
     executionTaskCandidateQuerier = new SqliteExecutionTaskCandidateQuerier(sqliteDatabases);
@@ -677,9 +679,11 @@ export async function bootstrap(registry: CleanupRegistry, signal: AbortSignal) 
     new DeleteProcessCronJobEndpoint(processCronJobRepository),
     new GetTablesEndpoint(tableListQuerier),
     new GetTableEndpoint(tableManager),
-    new GetTableDataEndpoint(tableManager),
+    new GetTableDataPageEndpoint(tableManager),
     new SaveTableEndpoint(tableManager),
     new DeleteTableEndpoint(tableManager),
+    new DeleteTableDataRowEndpoint(tableManager),
+    new SaveTableDataRowEndpoint(tableManager),
     new GetSandboxesEndpoint(sandboxListQuerier),
     new DiagnoseHostEndpoint(sandboxHostDiagnostician),
     new GetSandboxEndpoint(sandboxRepository),

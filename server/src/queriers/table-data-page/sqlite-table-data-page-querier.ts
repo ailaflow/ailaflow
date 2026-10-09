@@ -1,4 +1,4 @@
-import { GetTableDataResponse, TableColumnResolver, TableColumnType, TableColumnTypePolicy, TableRow } from '@ailaflow/shared';
+import { GetTableDataPageResponse, TableColumnResolver, TableColumnType, TableColumnTypePolicy, TableRow } from '@ailaflow/shared';
 import { SQLInputValue } from 'node:sqlite';
 import { SqliteDatabase } from '../../core/sqlite-database';
 import { SqliteDatabases } from '../../core/sqlite-databases';
@@ -7,21 +7,21 @@ import { TableDataRepositoryError } from '../../repositories/table/table-data-re
 import { TableRowSqliteCodec } from '../../repositories/table/table-row-sqlite-codec';
 import { TableSchema } from '../../repositories/table/table-schema';
 import {
-  TableDataListQuerier,
+  TableDataPageQuerier,
   TableDataPageQuery,
   TableDataWhere,
   TableDataWhereCondition,
   TableDataWhereValue
-} from './table-data-list-querier';
+} from './table-data-page-querier';
 
-export class SqliteTableDataListQuerier implements TableDataListQuerier {
+export class SqliteTableDataPageQuerier implements TableDataPageQuerier {
   private readonly db: SqliteDatabase;
 
   public constructor(dbs: SqliteDatabases) {
     this.db = dbs.dataDb;
   }
 
-  public async query(_: AbortSignal, schema: TableSchema, query: TableDataPageQuery): Promise<GetTableDataResponse> {
+  public async query(_: AbortSignal, schema: TableSchema, query: TableDataPageQuery): Promise<GetTableDataPageResponse> {
     const { page, pageSize, orderBy: orderByColumn, ascending, where = {} } = query;
     const tableName = schema.tableName;
     const dataTableName = SqliteTableDataNameProvider.getName(tableName);
@@ -160,7 +160,7 @@ function validateValueType(schema: TableSchema, columnName: string, expectedType
   }
 }
 
-function createEmptyResponse(page: number, pageSize: number): GetTableDataResponse {
+function createEmptyResponse(page: number, pageSize: number): GetTableDataPageResponse {
   return {
     rows: [],
     page,

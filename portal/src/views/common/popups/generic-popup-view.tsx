@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import { useEffect, useId } from 'react';
 import { SvgIcon } from '../svg-icons';
 
-export interface MyFormPopupViewProps {
+export interface GenericPopupViewProps {
   title: string;
   titleIcon?: ReactNode;
   description?: string;
@@ -11,7 +11,7 @@ export interface MyFormPopupViewProps {
   onClose(): void;
 }
 
-export function MyFormPopupView(props: MyFormPopupViewProps) {
+export function GenericPopupView(props: GenericPopupViewProps) {
   const titleId = useId();
 
   useEffect(() => {

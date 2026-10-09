@@ -1,9 +1,9 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { getTableDataRequestSchema, getTableDataResponseSchema } from './table';
+import { getTableDataPageRequestSchema, getTableDataPageResponseSchema } from './table';
 
 test('parses table page ordering options', () => {
-  assert.deepEqual(getTableDataRequestSchema.parse({ page: '2', pageSize: '10', orderBy: 'score', ascending: 'false' }), {
+  assert.deepEqual(getTableDataPageRequestSchema.parse({ page: '2', pageSize: '10', orderBy: 'score', ascending: 'false' }), {
     page: 2,
     pageSize: 10,
     orderBy: 'score',
@@ -13,7 +13,7 @@ test('parses table page ordering options', () => {
 
 test('validates flattened table rows', () => {
   assert.deepEqual(
-    getTableDataResponseSchema.parse({
+    getTableDataPageResponseSchema.parse({
       rows: [{ _id: 'customer_1', _updatedAt: 1000, name: 'Alice' }],
       page: 1,
       pageSize: 100,
@@ -22,7 +22,7 @@ test('validates flattened table rows', () => {
     [{ _id: 'customer_1', _updatedAt: 1000, name: 'Alice' }]
   );
   assert.throws(() =>
-    getTableDataResponseSchema.parse({
+    getTableDataPageResponseSchema.parse({
       data: [{ pk: 'customer_1', row: { name: 'Alice' }, updatedAt: 1000 }],
       page: 1,
       pageSize: 100,
