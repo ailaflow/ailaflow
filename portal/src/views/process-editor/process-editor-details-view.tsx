@@ -1,4 +1,5 @@
 import { ProcessDisplay, ProcessExecutionMode, ProcessExecutionTraceRetention } from '@ailaflow/shared';
+import { SvgIcon } from '../common/svg-icons';
 
 export interface ProcessEditorDetailsViewProps {
   id: string;
@@ -12,6 +13,7 @@ export interface ProcessEditorDetailsViewProps {
   hasIcon: boolean;
   onDescriptionChange(description: string): void;
   onUserAccessExpressionChange(userAccessExpression: string): void;
+  onResolveUserAccessExpression(): void;
   onDisplayChange(display: ProcessDisplay): void;
   onExecutionModeChange(executionMode: ProcessExecutionMode): void;
   onTraceRetentionChange(traceRetention: ProcessExecutionTraceRetention): void;
@@ -21,6 +23,7 @@ export interface ProcessEditorDetailsViewProps {
 
 export function ProcessEditorDetailsView(props: ProcessEditorDetailsViewProps) {
   const descriptionErrorId = `${props.id}-description-error`;
+  const userAccessExpressionId = `${props.id}-user-access-expression`;
   const userAccessExpressionErrorId = `${props.id}-user-access-expression-error`;
   const descriptionLabelClassName = `flex h-8 w-full overflow-hidden rounded-md border bg-transparent transition-colors focus-within:bg-white ${
     props.descriptionError ? 'border-red-300 bg-red-50/30 focus-within:border-red-400' : 'border-slate-300 focus-within:border-slate-500'
@@ -54,9 +57,12 @@ export function ProcessEditorDetailsView(props: ProcessEditorDetailsViewProps) {
       </div>
 
       <div>
-        <label className="mb-1 block text-xs font-medium text-slate-500">User access</label>
-        <label className={userAccessExpressionLabelClassName}>
+        <label htmlFor={userAccessExpressionId} className="mb-1 block text-xs font-medium text-slate-500">
+          User access
+        </label>
+        <div className={userAccessExpressionLabelClassName}>
           <input
+            id={userAccessExpressionId}
             type="text"
             value={props.userAccessExpression}
             onChange={e => props.onUserAccessExpressionChange(e.target.value)}
@@ -66,7 +72,17 @@ export function ProcessEditorDetailsView(props: ProcessEditorDetailsViewProps) {
             placeholder='User access, e.g. @alice or @{.department = "sales"}'
             title='User access expression, e.g. @alice or @{.department = "sales"}'
           />
-        </label>
+          <button
+            type="button"
+            disabled={props.userAccessExpressionError !== null}
+            onClick={props.onResolveUserAccessExpression}
+            aria-label="Show resolved users"
+            title="Show resolved users"
+            className="inline-flex h-full w-9 shrink-0 cursor-pointer items-center justify-center border-l border-slate-200 bg-white text-slate-500 transition-colors hover:bg-slate-50 hover:text-slate-800 disabled:cursor-not-allowed disabled:text-slate-300"
+          >
+            <SvgIcon name="eyeOpen" className="h-4 w-4" />
+          </button>
+        </div>
         {props.userAccessExpressionError && (
           <div id={userAccessExpressionErrorId} className="px-1 pt-1 text-xs text-red-700">
             {props.userAccessExpressionError}

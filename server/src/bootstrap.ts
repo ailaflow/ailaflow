@@ -256,6 +256,7 @@ import { GetProcessExecutionTraceEventsEndpoint } from './api/process-execution/
 import { ProcessExecutionTraceJobScheduler } from './schedulers/process-execution-trace-job-scheduler';
 import { DeleteTableDataRowEndpoint } from './api/table/delete-table-data-row-endpoint';
 import { SaveTableDataRowEndpoint } from './api/table/save-table-data-row-endpoint';
+import { ResolveUserAccessExpressionEndpoint } from './api/user/resolve-user-access-expression-endpoint';
 
 const DB_TYPE = 'sqlite';
 
@@ -692,6 +693,7 @@ export async function bootstrap(registry: CleanupRegistry, signal: AbortSignal) 
     new GetUsersEndpoint(userListQuerier),
     new GetUserEndpoint(userRepository, userAttributesRepository),
     new SaveUserEndpoint(userRepository, authTokenRepository, magicLinkRepository, cipher, userManager),
+    new ResolveUserAccessExpressionEndpoint(userAccessExpressionUserQuerier),
     new GetUserTelegramConfigurationEndpoint(userRepository, telegramConfigurationManager),
     new SaveUserTelegramBotEndpoint(userRepository, telegramConfigurationManager),
     new DeleteUserTelegramBotEndpoint(userRepository, telegramConfigurationManager)

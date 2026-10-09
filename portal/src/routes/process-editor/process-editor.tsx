@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { ProcessEditorOverlayType, useProcessEditor } from './process-editor-context';
 import { SchemaEditorOverlay } from './overlays/schema-editor-overlay';
 import { Designer } from './designer';
@@ -12,12 +12,14 @@ import { DesignerUtils } from './designer-utils';
 import { useProcessEditorAi } from './process-editor-ai';
 import { ProcessIcon } from '../../views/common/process-icon';
 import { ProcessEditorDetailsView } from '../../views/process-editor/process-editor-details-view';
+import { ResolveUserAccessExpressionPopup } from '../common/popups/resolve-user-access-expression-popup';
 
 export function ProcessEditor() {
   const state = useProcessEditor();
   const apiClient = useApiClient();
   const navigate = useNavigate();
   const isSaving = useRef(false);
+  const [isResolveUserAccessExpressionPopupOpen, setIsResolveUserAccessExpressionPopupOpen] = useState(false);
 
   const isDesigner = !state.overlay;
   const canSave = Boolean(state.isValid && state.isDirty);
@@ -79,51 +81,61 @@ export function ProcessEditor() {
   }
 
   return (
-    <ResourceEditorView
-      icon="/"
-      leadingVisual={<ProcessIcon name={state.name} icon={state.icon} className="h-9 w-9" />}
-      name={state.name}
-      isNameValid={state.nameError === null}
-      isNameReadOnly={!isDesigner || !state.isNew}
-      onNameChange={name => state.setName(name, false)}
-      detailsId="admin-process-editor-details"
-      details={
-        <ProcessEditorDetailsView
-          id="admin-process-editor-details"
-          description={state.description}
-          descriptionError={state.descriptionError}
-          userAccessExpression={state.userAccessExpression}
-          userAccessExpressionError={state.userAccessExpressionError}
-          display={state.display}
-          executionMode={state.executionMode}
-          traceRetention={state.traceRetention}
-          hasIcon={state.icon !== null}
-          onDescriptionChange={description => state.setDescription(description, false)}
-          onUserAccessExpressionChange={userAccessExpression => state.setUserAccessExpression(userAccessExpression, false)}
-          onDisplayChange={state.setDisplay}
-          onExecutionModeChange={state.setExecutionMode}
-          onTraceRetentionChange={state.setTraceRetention}
-          onIconUpload={uploadIcon}
-          onIconReset={() => state.setIcon(null)}
+    <>
+      <ResourceEditorView
+        icon="/"
+        leadingVisual={<ProcessIcon name={state.name} icon={state.icon} className="h-9 w-9" />}
+        name={state.name}
+        isNameValid={state.nameError === null}
+        isNameReadOnly={!isDesigner || !state.isNew}
+        onNameChange={name => state.setName(name, false)}
+        detailsId="admin-process-editor-details"
+        details={
+          <ProcessEditorDetailsView
+            id="admin-process-editor-details"
+            description={state.description}
+            descriptionError={state.descriptionError}
+            userAccessExpression={state.userAccessExpression}
+            userAccessExpressionError={state.userAccessExpressionError}
+            display={state.display}
+            executionMode={state.executionMode}
+            traceRetention={state.traceRetention}
+            hasIcon={state.icon !== null}
+            onDescriptionChange={description => state.setDescription(description, false)}
+            onUserAccessExpressionChange={userAccessExpression => state.setUserAccessExpression(userAccessExpression, false)}
+            onResolveUserAccessExpression={() => setIsResolveUserAccessExpressionPopupOpen(true)}
+            onDisplayChange={state.setDisplay}
+            onExecutionModeChange={state.setExecutionMode}
+            onTraceRetentionChange={state.setTraceRetention}
+            onIconUpload={uploadIcon}
+            onIconReset={() => state.setIcon(null)}
+          />
+        }
+        canSave={canSave}
+        onSave={save}
+        viewSwitcherOptions={[
+          { label: 'Editor', href: `/admin/processes/${state.name}`, selected: true },
+          {
+            label: 'Test',
+            href: `/admin/processes/${state.name}/test`,
+            disabledReason: !state.isValid ? 'Fix validation errors before testing.' : undefined
+          },
+          { label: 'Cron jobs', href: `/admin/processes/${state.name}/cron-jobs` }
+        ]}
+        viewSwitcherDisabledReason={state.isNew || state.isDirty ? 'Please save changes' : undefined}
+      >
+        {isDesigner && <Designer />}
+        {state.overlay?.type === ProcessEditorOverlayType.SCHEMA_EDITOR && <SchemaEditorOverlay />}
+        {state.overlay?.type === ProcessEditorOverlayType.FORM_EDITOR && <FormEditorOverlay />}
+        {state.overlay?.type === ProcessEditorOverlayType.SCRIPT_EDITOR && <ScriptEditorOverlay />}
+      </ResourceEditorView>
+      {isResolveUserAccessExpressionPopupOpen && (
+        <ResolveUserAccessExpressionPopup
+          apiClient={apiClient}
+          expression={state.userAccessExpression}
+          onClose={() => setIsResolveUserAccessExpressionPopupOpen(false)}
         />
-      }
-      canSave={canSave}
-      onSave={save}
-      viewSwitcherOptions={[
-        { label: 'Editor', href: `/admin/processes/${state.name}`, selected: true },
-        {
-          label: 'Test',
-          href: `/admin/processes/${state.name}/test`,
-          disabledReason: !state.isValid ? 'Fix validation errors before testing.' : undefined
-        },
-        { label: 'Cron jobs', href: `/admin/processes/${state.name}/cron-jobs` }
-      ]}
-      viewSwitcherDisabledReason={state.isNew || state.isDirty ? 'Please save changes' : undefined}
-    >
-      {isDesigner && <Designer />}
-      {state.overlay?.type === ProcessEditorOverlayType.SCHEMA_EDITOR && <SchemaEditorOverlay />}
-      {state.overlay?.type === ProcessEditorOverlayType.FORM_EDITOR && <FormEditorOverlay />}
-      {state.overlay?.type === ProcessEditorOverlayType.SCRIPT_EDITOR && <ScriptEditorOverlay />}
-    </ResourceEditorView>
+      )}
+    </>
   );
 }

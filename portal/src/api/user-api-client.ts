@@ -5,6 +5,8 @@ import type {
   GetUserResponse,
   GetUsersRequest,
   GetUsersResponse,
+  ResolveUserAccessExpressionRequest,
+  ResolveUserAccessExpressionResponse,
   SaveTelegramBotRequest,
   SaveTelegramBotResponse,
   SaveUserRequest,
@@ -34,6 +36,13 @@ export class UserApiClient {
 
   public saveUser(signal: AbortSignal, request: SaveUserRequest): Promise<SaveUserResponse> {
     return this.client.json(signal, 'POST', '/api/user', request);
+  }
+
+  public resolveUserAccessExpression(
+    signal: AbortSignal,
+    request: ResolveUserAccessExpressionRequest
+  ): Promise<ResolveUserAccessExpressionResponse> {
+    return this.client.json(signal, 'POST', '/api/user-access-expression', request);
   }
 
   public getTelegramConfiguration(signal: AbortSignal, userName: string): Promise<GetTelegramConfigurationResponse> {

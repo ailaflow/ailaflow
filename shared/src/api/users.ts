@@ -56,3 +56,15 @@ const saveUserResponseSchema = z.object({
 
 export type SaveUserRequest = z.infer<typeof saveUserRequestSchema>;
 export type SaveUserResponse = z.infer<typeof saveUserResponseSchema>;
+
+// resolveUserAccessExpression
+
+export const resolveUserAccessExpressionRequestSchema = z.object({
+  expression: z.string()
+});
+export const resolveUserAccessExpressionResponseSchema = z.object({
+  userNames: z.array(z.string())
+});
+
+export type ResolveUserAccessExpressionRequest = z.infer<typeof resolveUserAccessExpressionRequestSchema>;
+export type ResolveUserAccessExpressionResponse = z.infer<typeof resolveUserAccessExpressionResponseSchema>;
