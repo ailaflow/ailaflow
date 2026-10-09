@@ -71,9 +71,19 @@ export class TaskCreator {
     }
 
     let message = 'The user has a new task assigned!\n';
-    message += `Title: ${title}\n`;
-    message += `ID: ${task.id}\n`;
+    message += `Title: ${title}`;
 
-    await this.notifier.notifyUsersMatchingAccessExpression(signal, processName, isTest, userExpression, DEFAULT_CHANNEL_NAME, message);
+    let chatDetails = `Task ID: ${task.id}\n`;
+    chatDetails += `Submission mode: ${task.submissionMode}`;
+
+    await this.notifier.notifyUsersMatchingAccessExpression(
+      signal,
+      processName,
+      isTest,
+      userExpression,
+      DEFAULT_CHANNEL_NAME,
+      message,
+      chatDetails
+    );
   }
 }

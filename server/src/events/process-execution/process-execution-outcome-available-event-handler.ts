@@ -20,10 +20,10 @@ export class ProcessExecutionOutcomeAvailableEventHandler implements EventHandle
       const keys = Object.keys(event.outcome.output);
       if (keys.length > 0) {
         cd = 'Output:\n```json\n';
-        cd += JSON.stringify(event.outcome.output, null, 2) + '\n';
-        cd += '```\n';
+        cd += JSON.stringify(event.outcome.output) + '\n';
+        cd += '```';
       } else {
-        cd = 'No output was produced.\n';
+        cd = 'No output was produced.';
       }
     } else if (event.outcome.type === ProcessExecutionOutcomeType.PAUSED) {
       n += 'was paused';
@@ -35,7 +35,7 @@ export class ProcessExecutionOutcomeAvailableEventHandler implements EventHandle
       if (event.outcome.stepId) {
         n += ` at step "${event.outcome.stepId}"`;
       }
-      n += `: ${event.outcome.error}\n`;
+      n += `: ${event.outcome.error}`;
     }
 
     // TODO: we should save the outcome to the event that the user could see the output values including on form.

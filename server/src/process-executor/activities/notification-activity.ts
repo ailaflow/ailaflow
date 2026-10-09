@@ -16,7 +16,8 @@ export const notificationStepActivity = createAtomActivity<NotificationStep, Pro
       context.isTest,
       expression,
       DEFAULT_CHANNEL_NAME,
-      notification
+      notification,
+      null
     );
   }
 });

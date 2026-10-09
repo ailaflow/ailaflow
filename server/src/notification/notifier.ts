@@ -25,7 +25,8 @@ export class Notifier {
     isTest: boolean,
     userExpression: string,
     channelName: string,
-    message: string
+    message: string,
+    chatDetails: string | null
   ) {
     const expression = UserAccessExpressionParser.parse(userExpression);
     const userNames = await this.userAccessExpressionUserQuerier.queryUserNames(signal, expression);
@@ -38,7 +39,7 @@ export class Notifier {
       await this.notificationRepository.insertMultiple(signal, notifications);
     }
 
-    const m = this.buildChatMessage(processName, message, null);
+    const m = this.buildChatMessage(processName, message, chatDetails);
 
     for (const userName of userNames) {
       let session: ChatSession | null = null;
