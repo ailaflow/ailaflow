@@ -176,7 +176,11 @@
 }
 
 .abk-chat-bubble-assistant {
+  padding-right: 0;
+  padding-left: 0;
+  border: 0;
   background: #fff;
+  box-shadow: none;
 }
 
 .abk-chat-bubble-system,
@@ -317,10 +321,9 @@
     monospace;
 }
 
-.abk-chat-tool-calls {
+.abk-chat-tool-calls-separated {
   margin-top: 12px;
   padding-top: 12px;
-  border-top: 1px solid #f1f5f9;
 }
 
 .abk-chat-tool-call + .abk-chat-tool-call {

@@ -108,14 +108,14 @@
 
 .abk-md th,
 .abk-md td {
-  padding: 6px 8px;
+  padding: 8px 10px;
   border: 1px solid #cbd5e1;
   text-align: left;
   vertical-align: top;
 }
 
 .abk-md th {
-  background: #f1f5f9;
+  background: #f8fafc;
   font-weight: 600;
 }
 

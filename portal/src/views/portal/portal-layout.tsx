@@ -91,7 +91,7 @@ export function PortalLayout(props: PortalLayoutProps) {
           <div className="flex h-full flex-col">
             <div className="border-b border-slate-200 pb-3">
               <Link to="/" onClick={closeSidebar} className="block transition-opacity hover:opacity-80">
-                <AilaFlowLogo className="mx-auto h-12 w-12 object-contain" />
+                <AilaFlowLogo className="mx-auto h-14 w-14 object-contain" />
               </Link>
             </div>
 
