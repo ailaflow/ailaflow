@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { Link } from 'react-router';
 import { AilaFlowLogo } from '../common/aila-flow-logo';
+import { SvgIcon, type SvgIconName } from '../common/svg-icons';
 
 export type LinkMenuItem = {
   label: string;
+  icon: SvgIconName;
   action: 'link';
   href: string;
   isSelected: boolean;
@@ -11,6 +13,7 @@ export type LinkMenuItem = {
 
 export type CommandMenuItem = {
   label: string;
+  icon: SvgIconName;
   action: 'command';
   command: string;
 };
@@ -23,7 +26,12 @@ function MenuItemView(props: { item: MenuItem; onCommand(command: string): void;
   const itemClassName = `flex w-full cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors ${
     isSelected ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-700 hover:bg-slate-100'
   }`;
-  const content = <span className="truncate">{item.label}</span>;
+  const content = (
+    <>
+      <SvgIcon name={item.icon} className="h-4 w-4 shrink-0" />
+      <span className="truncate">{item.label}</span>
+    </>
+  );
 
   if (item.action === 'link') {
     return (
@@ -76,14 +84,14 @@ export function PortalLayout(props: PortalLayoutProps) {
         )}
 
         <aside
-          className={`fixed inset-y-0 left-0 z-40 w-42.5 shrink-0 border-r border-slate-200 bg-white px-2 py-5 transition-transform duration-200 md:static md:z-auto md:w-37.5 ${
+          className={`fixed inset-y-0 left-0 z-40 w-42.5 shrink-0 border-r border-slate-200 bg-white px-2 py-3 transition-transform duration-200 md:static md:z-auto md:w-37.5 ${
             isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
           }`}
         >
           <div className="flex h-full flex-col">
-            <div className="border-b border-slate-200 pt-1 pb-5">
+            <div className="border-b border-slate-200 pb-3">
               <Link to="/" onClick={closeSidebar} className="block transition-opacity hover:opacity-80">
-                <AilaFlowLogo className="mx-auto h-18 w-18 object-contain" />
+                <AilaFlowLogo className="mx-auto h-12 w-12 object-contain" />
               </Link>
             </div>
 

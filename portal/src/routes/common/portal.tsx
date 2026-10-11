@@ -8,46 +8,53 @@ type LinkMenuItemDefinition = Omit<LinkMenuItem, 'isSelected'> & { activeAliases
 type MenuItemDefinition = LinkMenuItemDefinition | CommandMenuItem;
 
 const userItems: MenuItemDefinition[] = [
-  { label: 'My configuration', action: 'link', href: '/my-configuration' },
-  { label: 'My tasks', action: 'link', href: '/my-tasks' },
-  { label: 'My notifications', action: 'link', href: '/my-notifications' },
-  { label: 'My processes', action: 'link', href: '/my-processes' },
-  { label: 'Log out', action: 'command', command: 'logout' }
+  { label: 'Dashboard', icon: 'dashboard', action: 'link', href: '/' },
+  { label: 'My processes', icon: 'processes', action: 'link', href: '/my-processes' },
+  { label: 'My tasks', icon: 'timer', action: 'link', href: '/my-tasks' },
+  { label: 'My notifications', icon: 'notification', action: 'link', href: '/my-notifications' },
+  { label: 'My configuration', icon: 'configuration', action: 'link', href: '/my-configuration' },
+  { label: 'Log out', icon: 'logout', action: 'command', command: 'logout' }
 ];
 
 const adminItems: MenuItemDefinition[] = [
   {
     label: 'Processes',
+    icon: 'processes',
     action: 'link',
     href: '/admin/processes',
     activeAliases: ['/admin/create-process']
   },
   {
     label: 'Traces',
+    icon: 'traces',
     action: 'link',
     href: '/admin/process-execution-traces'
   },
   {
     label: 'Tables',
+    icon: 'table',
     action: 'link',
     href: '/admin/tables',
     activeAliases: ['/admin/create-table']
   },
   {
     label: 'Users',
+    icon: 'user',
     action: 'link',
     href: '/admin/users',
     activeAliases: ['/admin/create-user']
   },
-  { label: 'Tasks', action: 'link', href: '/admin/tasks' },
+  { label: 'Tasks', icon: 'timer', action: 'link', href: '/admin/tasks' },
   {
     label: 'Sandboxes',
+    icon: 'sandbox',
     action: 'link',
     href: '/admin/sandboxes',
     activeAliases: ['/admin/create-sandbox']
   },
   {
     label: 'Configuration',
+    icon: 'configuration',
     action: 'link',
     href: '/admin/configuration'
   }
@@ -102,6 +109,7 @@ export function Portal() {
       setChatItems(
         response.channels.map(c => ({
           label: `${uppercaseFirst(c.name)} Chat`,
+          icon: 'chat',
           action: 'link',
           href: `/my-chat/${c.name}`
         }))
