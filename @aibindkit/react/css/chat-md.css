@@ -109,7 +109,7 @@
 .abk-md th,
 .abk-md td {
   padding: 8px 10px;
-  border: 1px solid #cbd5e1;
+  border: 1px solid #e3e7f0;
   text-align: left;
   vertical-align: top;
 }
@@ -146,6 +146,6 @@
   background: rgb(255 255 255 / 0.1);
 }
 
-.abk-md:is(.abk-chat-reasoning + .abk-md) {
+.abk-md:is(.abk-chat-details + .abk-md) {
   margin-top: 4px;
 }

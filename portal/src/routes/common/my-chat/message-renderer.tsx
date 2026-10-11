@@ -3,6 +3,7 @@ import { FormMessageView } from '../../../views/my-chat/form-message-view';
 import { MyProcessStartForm, type MyProcessStartFormArgs } from '../my-form/my-process-start-form';
 import { MyTaskForm, type MyTaskFormArgs } from '../my-form/my-task-form';
 import { ProcessStartFormMessageMetadata, TaskFormMessageMetadata } from '@ailaflow/shared';
+import { FormPreviewView } from '../../../views/form-renderer/form-preview-view';
 
 export interface MyChatMessageActions {
   openProcessStartForm(args: MyProcessStartFormArgs): void;
@@ -39,7 +40,9 @@ export function messageRenderer(
         lockedClickLabel={`Open start form for process ${startForm.name}`}
         onLockedClick={() => actions.openProcessStartForm(args)}
       >
-        <MyProcessStartForm args={args} />
+        <FormPreviewView width={800} height={600} previewWidth={250}>
+          <MyProcessStartForm args={args} />
+        </FormPreviewView>
       </FormMessageView>
     );
   }
@@ -53,7 +56,9 @@ export function messageRenderer(
     const args: MyTaskFormArgs = { taskId: taskForm.id, testUserName };
     return (
       <FormMessageView title="Form" lockedClickLabel="Open task form" onLockedClick={() => actions.openTaskForm(args)}>
-        <MyTaskForm args={args} />
+        <FormPreviewView width={800} height={600} previewWidth={250}>
+          <MyTaskForm args={args} />
+        </FormPreviewView>
       </FormMessageView>
     );
   }

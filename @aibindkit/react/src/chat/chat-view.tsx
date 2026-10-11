@@ -8,7 +8,7 @@ import {
   type LlmMessageContent,
   type ToolCall
 } from '@aibindkit/core';
-import { Fragment, useLayoutEffect, useRef } from 'react';
+import { useLayoutEffect, useRef, type ReactNode } from 'react';
 import { ChatComposerView } from './chat-composer-view';
 import { Markdown } from './markdown';
 import { SvgIcon } from './svg-icon';
@@ -61,18 +61,14 @@ export function ChatView(props: ChatViewProps) {
         ) : props.messages.length === 0 ? (
           <EmptyChatView emptyTitle={props.emptyTitle} emptyText={props.emptyText} />
         ) : (
-          props.messages.map((update, index) => (
-            <ChatUpdateView
-              key={update.id}
-              assistantName={props.assistantName}
-              showAssistantName={isAssistantGroupStart(props.messages, index)}
-              userName={props.userName}
-              update={update}
-              sessionToken={props.sessionToken}
-              messageRenderer={props.messageRenderer}
-              messageFilter={props.messageFilter}
-            />
-          ))
+          <ChatMessagesView
+            assistantName={props.assistantName}
+            userName={props.userName}
+            messages={props.messages}
+            sessionToken={props.sessionToken}
+            messageRenderer={props.messageRenderer}
+            messageFilter={props.messageFilter}
+          />
         )}
       </ul>
 
@@ -128,160 +124,183 @@ function ChatStatusView(props: { title: string; text: string }) {
   );
 }
 
-function ChatUpdateView(props: {
-  update: ChatMessageUpdate;
+function ChatMessagesView(props: {
+  messages: ChatMessageUpdate[];
   sessionToken: string | null;
   assistantName: string;
-  showAssistantName: boolean;
   userName: string;
   messageRenderer?: ChatMessageRenderer;
   messageFilter: ChatMessageFilter;
 }) {
-  if (props.update.failReason) {
-    return <li className="abk-chat-failure">Failed: {props.update.failReason}</li>;
-  }
-  if (props.update.isInterrupted) {
-    return <li className="abk-chat-failure">Interrupted</li>;
-  }
-  if (props.update.type === ChatMessageType.COMPACT) {
-    return (
-      <li role="status" data-id={props.update.id} className="abk-chat-notification">
-        Context compacted
-      </li>
-    );
-  }
-  if (props.update.type && props.update.completedMessages) {
-    const type = props.update.type;
-    let isAssistantNamePending = props.showAssistantName;
+  const items: ReactNode[] = [];
+  let isAiHeaderPending = true;
 
-    return (
-      <li data-id={props.update.id} className="abk-chat-update">
-        {props.update.completedMessages.map((message, index) => {
-          const isMessageVisible = props.messageFilter(type, message.metadata);
-          const customNode = props.sessionToken && props.messageRenderer?.(props.update.id, type, message, index, props.sessionToken);
-          const showAssistantName = isMessageVisible && message.message.role === 'assistant' && isAssistantNamePending;
+  for (const update of props.messages) {
+    const isAiUpdate = update.type === ChatMessageType.ASSISTANT || update.type === ChatMessageType.TOOL;
+    if (!isAiUpdate) {
+      isAiHeaderPending = true;
+    }
 
-          if (showAssistantName) {
-            isAssistantNamePending = false;
-          }
+    if (update.failReason || update.isInterrupted) {
+      items.push(
+        <li key={`${update.id}:failure`} className="abk-chat-failure">
+          {update.failReason ? `Failed: ${update.failReason}` : 'Interrupted'}
+        </li>
+      );
+      isAiHeaderPending = true;
+      continue;
+    }
+    if (update.type === ChatMessageType.COMPACT) {
+      items.push(
+        <li key={`${update.id}:compact`} role="status" data-id={update.id} className="abk-chat-notification">
+          Context compacted
+        </li>
+      );
+      continue;
+    }
+    if (!update.type || !update.completedMessages) {
+      continue;
+    }
 
-          if (customNode && isMessageVisible) {
-            return (
-              <Fragment key={index}>
-                <ChatMessageView
-                  message={message}
-                  userName={props.userName}
-                  assistantName={showAssistantName ? props.assistantName : undefined}
-                />
-                {customNode}
-              </Fragment>
-            );
-          }
-          if (customNode) {
-            return <Fragment key={index}>{customNode}</Fragment>;
-          }
-          if (isMessageVisible) {
-            return (
-              <ChatMessageView
-                key={index}
-                message={message}
-                userName={props.userName}
-                assistantName={showAssistantName ? props.assistantName : undefined}
-              />
-            );
-          }
-          return null;
-        })}
-      </li>
-    );
-  }
-  return null;
-}
+    for (const [messageIndex, message] of update.completedMessages.entries()) {
+      const key = `${update.id}:${messageIndex}`;
+      const messageItems = props.messageFilter(update.type, message.metadata) ? renderMessageItems(message, key, props.userName) : [];
+      const customNode = props.sessionToken && props.messageRenderer?.(update.id, update.type, message, messageIndex, props.sessionToken);
 
-function ChatMessageView(props: { message: CompletedChatMessage; userName: string; assistantName?: string }) {
-  if (props.message.message.role === 'user') {
-    return <UserMessageView message={props.message} userName={props.userName} />;
+      if (isAiUpdate && isAiHeaderPending && (messageItems.length > 0 || customNode)) {
+        items.push(<AiHeaderView key={`${key}:ai-header`} assistantName={props.assistantName} />);
+        isAiHeaderPending = false;
+      }
+
+      items.push(...messageItems);
+      if (customNode) {
+        items.push(<CustomMessageView key={`${key}:custom`}>{customNode}</CustomMessageView>);
+      }
+    }
   }
-  if (props.message.message.role === 'assistant') {
-    return <AssistantMessageView message={props.message} assistantName={props.assistantName} />;
-  }
-  if (props.message.message.role === 'tool') {
-    return <ToolMessageView message={props.message} />;
-  }
-  return <SystemMessageView message={props.message} />;
+
+  return items;
 }
 
 function UserMessageView(props: { message: CompletedChatMessage; userName: string }) {
   return (
-    <div className="abk-chat-row abk-chat-row-user">
+    <li className="abk-chat-item abk-chat-row abk-chat-row-user">
       <article className="abk-chat-bubble abk-chat-bubble-user">
         <div className="abk-chat-label">{props.userName}</div>
         <MessageContentView content={LlmMessageContentExtractor.tryExtract(props.message.message)} />
       </article>
-    </div>
+    </li>
   );
 }
 
-function AssistantMessageView(props: { message: CompletedChatMessage; assistantName?: string }) {
-  const toolCalls = getToolCalls(props.message);
-  const content = LlmMessageContentExtractor.tryExtract(props.message.message);
+function AiHeaderView(props: { assistantName: string }) {
+  return <li className="abk-chat-item abk-chat-ai-header">{props.assistantName}</li>;
+}
 
+function AiReasoningView(props: { reasoning: string }) {
   return (
-    <div className="abk-chat-row abk-chat-row-assistant">
-      <article className="abk-chat-bubble abk-chat-bubble-assistant">
-        {props.assistantName && <div className="abk-chat-label">{props.assistantName}</div>}
-        <MessageContentView content={content} />
-        {toolCalls && <ToolCallsView toolCalls={toolCalls} separated={content !== null} />}
-      </article>
-    </div>
+    <li className="abk-chat-item abk-chat-ai-item">
+      <ReasoningView reasoning={props.reasoning} />
+    </li>
   );
 }
 
-function isAssistantGroupStart(messages: ChatMessageUpdate[], index: number): boolean {
-  if (messages[index].type !== ChatMessageType.ASSISTANT) {
-    return false;
-  }
+function AiResponseView(props: { children: string }) {
+  return (
+    <li className="abk-chat-item abk-chat-ai-item">
+      <article className="abk-chat-ai-response">
+        <Markdown>{props.children}</Markdown>
+      </article>
+    </li>
+  );
+}
 
-  const previousType = messages[index - 1]?.type;
-  return previousType !== ChatMessageType.ASSISTANT && previousType !== ChatMessageType.TOOL;
+function AiToolCallView(props: { toolCall: ToolCall }) {
+  return (
+    <li className="abk-chat-item abk-chat-ai-item">
+      <ExpanderView
+        label={
+          <>
+            Tool:{' '}
+            <span className="abk-chat-summary-strong" title={props.toolCall.function.name}>
+              {props.toolCall.function.name}
+            </span>
+          </>
+        }
+      >
+        <pre className="abk-chat-details-content abk-chat-pre">{formatToolArguments(props.toolCall.function.arguments)}</pre>
+      </ExpanderView>
+    </li>
+  );
 }
 
 function SystemMessageView(props: { message: CompletedChatMessage }) {
   return (
-    <div className="abk-chat-row abk-chat-row-system">
+    <li className="abk-chat-item abk-chat-row abk-chat-row-system">
       <article className="abk-chat-bubble abk-chat-bubble-system">
         <div className="abk-chat-label">{props.message.message.role}</div>
         <MessageContentView content={LlmMessageContentExtractor.tryExtract(props.message.message)} />
       </article>
-    </div>
+    </li>
   );
 }
 
-function ToolMessageView(props: { message: CompletedChatMessage }) {
+function AiToolResponseView(props: { message: CompletedChatMessage }) {
   const content = LlmMessageContentExtractor.tryExtract(props.message.message)?.content ?? null;
   const parsedContent = parseMaybeJson(content);
   const label = getToolResponseLabel(parsedContent);
   const isError = hasRootError(parsedContent);
 
   return (
-    <div className="abk-chat-row abk-chat-row-tool">
-      <details className={`abk-chat-details${isError ? ' abk-chat-details-error' : ''}`}>
-        <summary className="abk-chat-summary">
-          <SvgIcon name="detailsClosed" className="abk-chat-toggle abk-chat-toggle-closed" />
-          <SvgIcon name="detailsOpen" className="abk-chat-toggle abk-chat-toggle-open" />
-          <span className="abk-chat-summary-text">
+    <li className="abk-chat-item abk-chat-ai-item">
+      <ExpanderView
+        isError={isError}
+        label={
+          <>
             Tool response
             {label && (
               <>
                 : <span className="abk-chat-summary-strong">{label}</span>
               </>
             )}
-          </span>
-        </summary>
-        <pre className="abk-chat-pre">{formatMaybeJson(content, parsedContent)}</pre>
-      </details>
-    </div>
+          </>
+        }
+      >
+        <pre className="abk-chat-details-content abk-chat-pre">{formatMaybeJson(content, parsedContent)}</pre>
+      </ExpanderView>
+    </li>
   );
+}
+
+function CustomMessageView(props: { children: ReactNode }) {
+  return <li className="abk-chat-item">{props.children}</li>;
+}
+
+function renderMessageItems(message: CompletedChatMessage, key: string, userName: string): ReactNode[] {
+  if (message.message.role === 'user') {
+    return [<UserMessageView key={`${key}:user`} message={message} userName={userName} />];
+  }
+  if (message.message.role === 'tool') {
+    return [<AiToolResponseView key={`${key}:tool-response`} message={message} />];
+  }
+  if (message.message.role !== 'assistant') {
+    return [<SystemMessageView key={`${key}:system`} message={message} />];
+  }
+
+  const items: ReactNode[] = [];
+  const content = LlmMessageContentExtractor.tryExtract(message.message);
+  if (content?.reasoning) {
+    items.push(<AiReasoningView key={`${key}:reasoning`} reasoning={content.reasoning} />);
+  }
+  if (content?.content) {
+    items.push(<AiResponseView key={`${key}:response`}>{content.content}</AiResponseView>);
+  }
+  for (const toolCall of message.message.tool_calls ?? []) {
+    if (toolCall.type === 'function') {
+      items.push(<AiToolCallView key={`${key}:tool-call:${toolCall.id}`} toolCall={toolCall} />);
+    }
+  }
+  return items;
 }
 
 function MessageContentView(props: { content: LlmMessageContent | null }) {
@@ -299,44 +318,23 @@ function MessageContentView(props: { content: LlmMessageContent | null }) {
 
 function ReasoningView(props: { reasoning: string }) {
   return (
-    <details className="abk-chat-reasoning">
-      <summary className="abk-chat-reasoning-summary">
+    <ExpanderView label="Reasoning">
+      <div className="abk-chat-details-content abk-chat-reasoning-content">{props.reasoning}</div>
+    </ExpanderView>
+  );
+}
+
+function ExpanderView(props: { label: ReactNode; children: ReactNode; isError?: boolean }) {
+  return (
+    <details className={`abk-chat-details${props.isError ? ' abk-chat-details-error' : ''}`}>
+      <summary className="abk-chat-summary">
         <SvgIcon name="detailsClosed" className="abk-chat-toggle abk-chat-toggle-closed" />
         <SvgIcon name="detailsOpen" className="abk-chat-toggle abk-chat-toggle-open" />
-        <span>Reasoning</span>
+        <span className="abk-chat-summary-text">{props.label}</span>
       </summary>
-      <div className="abk-chat-reasoning-content">{props.reasoning}</div>
+      {props.children}
     </details>
   );
-}
-
-function ToolCallsView(props: { toolCalls: ToolCall[]; separated: boolean }) {
-  return (
-    <div className={`abk-chat-tool-calls${props.separated ? ' abk-chat-tool-calls-separated' : ''}`}>
-      {props.toolCalls.map(call => (
-        <details key={call.id} className="abk-chat-details abk-chat-tool-call">
-          <summary className="abk-chat-summary">
-            <SvgIcon name="detailsClosed" className="abk-chat-toggle abk-chat-toggle-closed" />
-            <SvgIcon name="detailsOpen" className="abk-chat-toggle abk-chat-toggle-open" />
-            <span className="abk-chat-summary-text">
-              Tool:{' '}
-              <span className="abk-chat-summary-strong" title={call.function.name}>
-                {call.function.name}
-              </span>
-            </span>
-          </summary>
-          <pre className="abk-chat-pre">{formatToolArguments(call.function.arguments)}</pre>
-        </details>
-      ))}
-    </div>
-  );
-}
-
-function getToolCalls(message: CompletedChatMessage) {
-  if (message.message.role === 'assistant' && message.message.tool_calls) {
-    return message.message.tool_calls.filter(c => c.type === 'function');
-  }
-  return null;
 }
 
 function formatToolArguments(argumentsJson: string) {
