@@ -8,6 +8,7 @@ import { AdminChatSessionProvider } from '../chat-session/admin-chat-session-pro
 import { ChatSession } from '@aibindkit/llm';
 import { ChatSessionInitializerError } from '@aibindkit/express';
 import { Logger } from '../core/logger';
+import { ChatMessageMetadata } from '@aibindkit/core';
 
 export class Notifier {
   private readonly logger = new Logger(Notifier.name);
@@ -64,7 +65,8 @@ export class Notifier {
     isTest: boolean,
     userName: string,
     message: string,
-    chatDetails: string | null
+    chatDetails: string | null,
+    metadata?: ChatMessageMetadata
   ) {
     let session: ChatSession | null | undefined;
 
@@ -86,11 +88,16 @@ export class Notifier {
       await this.notificationRepository.insertMultiple(signal, [notification]);
     }
 
+    const finalMetadata: ChatMessageMetadata = {
+      internal: true
+    };
+    if (metadata) {
+      Object.assign(finalMetadata, metadata);
+    }
+
     if (session) {
       const m = this.buildChatMessage(processName, message, chatDetails);
-      session.queueUserMessage(m, {
-        internal: true
-      });
+      session.queueUserMessage(m, finalMetadata);
     }
   }
 

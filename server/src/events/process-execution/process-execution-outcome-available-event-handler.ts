@@ -1,19 +1,25 @@
 import { EventHandler } from '../event-handler';
 import { ProcessExecutionOutcomeAvailableEvent } from '../../process-executor/process-execution-outcome-available-event';
 import { ChatSessionId } from '../../chat-session/chat-session-id';
-import { ProcessExecutionOutcomeType } from '@ailaflow/shared';
+import { ProcessExecutionOutcomeType, ProcessReturnFormMessageMetadata } from '@ailaflow/shared';
 import { Notifier } from '../../notification/notifier';
+import { ChatMessageMetadata } from '@aibindkit/core';
+import { ProcessManager } from '../../process/process-manager';
 
 export class ProcessExecutionOutcomeAvailableEventHandler implements EventHandler<ProcessExecutionOutcomeAvailableEvent> {
   public readonly name = ProcessExecutionOutcomeAvailableEvent.name;
 
-  public constructor(private readonly notifier: Notifier) {}
+  public constructor(
+    private readonly notifier: Notifier,
+    private readonly processManager: ProcessManager
+  ) {}
 
   public async handle(event: ProcessExecutionOutcomeAvailableEvent) {
     const signal = AbortSignal.timeout(5_000);
 
     let n = `Execution "${event.executionId}" for process /${event.processName} `;
     let cd: string | null = null;
+    let metadata: ChatMessageMetadata | undefined = undefined;
 
     if (event.outcome.type === ProcessExecutionOutcomeType.FINISHED) {
       n += 'finished successfully';
@@ -24,6 +30,20 @@ export class ProcessExecutionOutcomeAvailableEventHandler implements EventHandle
         cd += '```';
       } else {
         cd = 'No output was produced.';
+      }
+
+      if (event.outcome.interruptedStepId) {
+        const process = await this.processManager.tryGetByName(signal, event.processName);
+        if (process) {
+          const hasForm = Boolean(process.forms.findOutputFormByReturnStepId(event.outcome.interruptedStepId));
+          metadata = {
+            processReturnForm: {
+              name: event.processName,
+              stepId: event.outcome.interruptedStepId,
+              hasForm
+            } satisfies ProcessReturnFormMessageMetadata
+          };
+        }
       }
     } else if (event.outcome.type === ProcessExecutionOutcomeType.PAUSED) {
       n += 'was paused';
@@ -46,7 +66,8 @@ export class ProcessExecutionOutcomeAvailableEventHandler implements EventHandle
       event.context.isTest,
       event.context.startedBy,
       n,
-      cd
+      cd,
+      metadata
     );
   }
 }

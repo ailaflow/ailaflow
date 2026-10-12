@@ -10,7 +10,7 @@ import { PortalLoadingView } from '../../views/portal/portal-loading-view';
 import { ProcessIconGridView } from '../../views/common/process-icon-grid-view';
 import { SvgIcon } from '../../views/common/svg-icons';
 import { MyChat } from '../common/my-chat/my-chat';
-import { MyProcessStartFormPopup } from '../common/popups/my-process-start-form-popup';
+import { MyProcessFormPopup } from '../common/popups/my-process-form-popup';
 import { MyTaskFormPopup } from '../common/popups/my-task-form-popup';
 import { FormSubmittedAlertPopup } from '../common/popups/form-submitted-alert-popup';
 
@@ -61,13 +61,7 @@ export function DashboardPage() {
   return (
     <>
       <DashboardView chat={<MyChat sessionKey={`user:${DEFAULT_CHANNEL_NAME}`} />}>
-        <DashboardPanelView
-          title="My Tasks"
-          icon="timer"
-          variant="dashboard"
-          scrollable
-          action={{ label: 'View all', href: '/my-tasks' }}
-        >
+        <DashboardPanelView title="My Tasks" icon="timer" variant="dashboard" scrollable action={{ label: 'View all', href: '/my-tasks' }}>
           <DashboardListView
             items={data.tasks.tasks.slice(0, PANEL_ITEM_LIMIT).map(task => ({
               key: task.id,
@@ -121,7 +115,7 @@ export function DashboardPage() {
         </DashboardPanelView>
       </DashboardView>
       {startedProcess && (
-        <MyProcessStartFormPopup
+        <MyProcessFormPopup
           args={{ processName: startedProcess.name }}
           icon={startedProcess.icon}
           onEnded={handleProcessEnded}

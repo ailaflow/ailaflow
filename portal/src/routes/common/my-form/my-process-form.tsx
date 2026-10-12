@@ -24,15 +24,25 @@ enum StateType {
   ERROR
 }
 
+export interface MyProcessFormArgs {
+  processName: string;
+  testUserName?: string;
+  chatSession?: StartMyProcessRequest['chatSession'];
+  output?: {
+    values: ProcessExecutionVariableValues;
+    form: FormDefinition;
+  };
+}
+
 interface LoadingStartFormState {
   type: StateType.LOADING_START_FORM;
-  args: MyProcessStartFormArgs;
+  args: MyProcessFormArgs;
   transientParams?: FormTransientParams;
 }
 
 interface StartFormState {
   type: StateType.START_FORM;
-  args: MyProcessStartFormArgs;
+  args: MyProcessFormArgs;
   startVariableSchemas: JsonSchema | null;
   form: FormDefinition | null;
   transientParams?: FormTransientParams;
@@ -40,14 +50,14 @@ interface StartFormState {
 
 interface ExecutingState {
   type: StateType.EXECUTING;
-  args: MyProcessStartFormArgs;
+  args: MyProcessFormArgs;
   startValues: ProcessExecutionVariableValues;
   transientParams?: FormTransientParams;
 }
 
 interface OutputFormState {
   type: StateType.OUTPUT_FORM;
-  args: MyProcessStartFormArgs;
+  args: MyProcessFormArgs;
   outputValues: ProcessExecutionVariableValues;
   transientParams?: FormTransientParams;
   form?: FormDefinition;
@@ -58,34 +68,36 @@ interface ErrorState {
   error: Error;
 }
 
-export interface MyProcessStartFormArgs {
-  processName: string;
-  testUserName?: string;
-  chatSession?: StartMyProcessRequest['chatSession'];
-}
-
-export interface MyProcessStartFormProps {
-  args: MyProcessStartFormArgs;
+export interface MyProcessFormProps {
+  args: MyProcessFormArgs;
   onEnded?: (candidateTaskIds?: string[]) => void;
 }
 
-export function MyProcessStartForm({ args, onEnded }: MyProcessStartFormProps) {
+export function MyProcessForm({ args, onEnded }: MyProcessFormProps) {
   const apiClient = useApiClient();
   const [formError, setFormError] = useState<FormError | null>(null);
   const [progressLabel, setProgressLabel] = useState<string | null>(null);
-  const [state, setState] = useState<LoadingStartFormState | StartFormState | ExecutingState | OutputFormState | ErrorState>(() => ({
-    type: StateType.LOADING_START_FORM,
-    args
-  }));
+  const [state, setState] = useState<LoadingStartFormState | StartFormState | ExecutingState | OutputFormState | ErrorState>(() => {
+    if (args.output) {
+      return {
+        type: StateType.OUTPUT_FORM,
+        args,
+        outputValues: args.output.values,
+        form: args.output.form
+      };
+    }
+    return {
+      type: StateType.LOADING_START_FORM,
+      args
+    };
+  });
 
   useEffect(() => {
     const abortController = new AbortController();
 
     async function load(s: LoadingStartFormState) {
       try {
-        const f = await apiClient.myProcess.getMyProcessStartForm(abortController.signal, s.args.processName, {
-          testUserName: s.args.testUserName
-        });
+        const f = await apiClient.myProcess.getMyProcessStartForm(abortController.signal, s.args.processName);
         setState({
           type: StateType.START_FORM,
           args: s.args,

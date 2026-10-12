@@ -13,6 +13,7 @@ import {
 import { ProcessVariables } from './process-variables';
 import { ProcessRepositoryError } from './process-repository';
 import { ProcessDefinitionWalker } from './process-definition-walker';
+import { ProcessForms } from './process-forms';
 
 function validateName(name: string) {
   const error = ProcessValidator.validateName(name);
@@ -104,6 +105,7 @@ export class Process {
   }
 
   private variablesCache: ProcessVariables | null = null;
+  private formsCache: ProcessForms | null = null;
 
   public constructor(
     public readonly name: string,
@@ -153,5 +155,9 @@ export class Process {
       this.variablesCache ??
       (this.variablesCache = new ProcessVariables(this.definition.properties.startVariableNames, this.definition.properties.variables))
     );
+  }
+
+  public get forms(): ProcessForms {
+    return this.formsCache ?? (this.formsCache = new ProcessForms(this));
   }
 }

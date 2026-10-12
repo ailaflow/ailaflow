@@ -257,6 +257,7 @@ import { ProcessExecutionTraceJobScheduler } from './schedulers/process-executio
 import { DeleteTableDataRowEndpoint } from './api/table/delete-table-data-row-endpoint';
 import { SaveTableDataRowEndpoint } from './api/table/save-table-data-row-endpoint';
 import { ResolveUserAccessExpressionEndpoint } from './api/user/resolve-user-access-expression-endpoint';
+import { GetMyProcessReturnFormEndpoint } from './api/my-process/get-my-process-return-form-endpoint';
 
 const DB_TYPE = 'sqlite';
 
@@ -458,7 +459,7 @@ export async function bootstrap(registry: CleanupRegistry, signal: AbortSignal) 
   const magicLinkExchanger = new MagicLinkExchanger(magicLinkRepository, userRepository, authTokenRepository);
 
   const eventBus = new EventBus();
-  eventBus.registerHandler(new ProcessExecutionOutcomeAvailableEventHandler(notifier));
+  eventBus.registerHandler(new ProcessExecutionOutcomeAvailableEventHandler(notifier, processManager));
   eventBus.registerHandler(new LlmConfigurationChangedEventHandler(llmClientProvider, sessionManager));
 
   const telegramClient = new TelegramBotApiClient();
@@ -566,7 +567,7 @@ export async function bootstrap(registry: CleanupRegistry, signal: AbortSignal) 
     new GetMyProcessDetailsTool(userProcessProvider),
     new GetMyTasksTool(myTaskListQuerier),
     new GetMyTaskDetailsTool(userTaskDetailsProvider),
-    new StartMyProcessTool(userProcessProvider, processExecutor, executionTaskCandidateQuerier, eventBus),
+    new StartMyProcessTool(userProcessProvider, processExecutor, executionTaskCandidateQuerier),
     new OpenMyProcessStartFormTool(userProcessProvider),
     new OpenMyTaskFormTool(userAssignedTaskProvider),
     new SubmitMyTaskTool(assignedTaskCompleter)
@@ -665,6 +666,7 @@ export async function bootstrap(registry: CleanupRegistry, signal: AbortSignal) 
     new GetTaskVariableValueEndpoint(userTaskDetailsProvider),
     new SubmitMyTaskEndpoint(assignedTaskCompleter),
     new GetMyProcessStartFormEndpoint(userProcessProvider),
+    new GetMyProcessReturnFormEndpoint(userProcessProvider),
     new StartMyProcessEndpoint(userProcessProvider, processExecutor, sessionManager, executionTaskCandidateQuerier),
     new GetProcessesEndpoint(processListQuerier),
     new GetProcessEndpoint(processManager),

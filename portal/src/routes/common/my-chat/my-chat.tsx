@@ -3,14 +3,14 @@ import { ChatMessageMetadata } from '@aibindkit/core';
 import { Chat } from '@aibindkit/react';
 import { useState } from 'react';
 import { useApiClient, useSession } from '../../../auth/auth-context';
-import type { MyProcessStartFormArgs } from '../my-form/my-process-start-form';
+import type { MyProcessFormArgs } from '../my-form/my-process-form';
 import type { MyTaskFormArgs } from '../my-form/my-task-form';
-import { MyProcessStartFormPopup } from '../popups/my-process-start-form-popup';
+import { MyProcessFormPopup } from '../popups/my-process-form-popup';
 import { MyTaskFormPopup } from '../popups/my-task-form-popup';
 import { messageRenderer } from './message-renderer';
 
 interface MyChatPopupState {
-  myProcess?: MyProcessStartFormArgs;
+  myProcess?: MyProcessFormArgs;
   myTask?: MyTaskFormArgs;
 }
 
@@ -51,7 +51,7 @@ export function MyChat(props: MyChatProps) {
         messageRenderer={(id, _, completedMessage, completedMessageIndex, sessionToken) =>
           messageRenderer(
             {
-              openProcessStartForm: myProcess => setPopup({ myProcess }),
+              openProcessForm: myProcess => setPopup({ myProcess }),
               openTaskForm: myTask => setPopup({ myTask })
             },
             id,
@@ -62,7 +62,7 @@ export function MyChat(props: MyChatProps) {
           )
         }
       />
-      {popup.myProcess ? <MyProcessStartFormPopup args={popup.myProcess} icon={null} onEnded={closePopup} onClose={closePopup} /> : null}
+      {popup.myProcess ? <MyProcessFormPopup args={popup.myProcess} icon={null} onEnded={closePopup} onClose={closePopup} /> : null}
       {popup.myTask ? <MyTaskFormPopup args={popup.myTask} onClose={closePopup} /> : null}
     </>
   );

@@ -1,11 +1,11 @@
 import { useNavigate, useParams, useSearchParams } from 'react-router';
 import { MyFullscreenView } from '../../views/my-form/my-fullscreen-view';
 import { MyFormView } from '../../views/my-form/my-form-view';
-import { MyProcessStartForm } from '../common/my-form/my-process-start-form';
+import { MyProcessForm } from '../common/my-form/my-process-form';
 
 export function MyProcessPage() {
-  const { name } = useParams();
-  if (!name) {
+  const { name: processName } = useParams();
+  if (!processName) {
     throw new Error('Process name is required');
   }
 
@@ -20,13 +20,13 @@ export function MyProcessPage() {
   if (fullscreen) {
     return (
       <MyFullscreenView>
-        <MyProcessStartForm args={{ processName: name }} onEnded={goToProcesses} />
+        <MyProcessForm args={{ processName }} onEnded={goToProcesses} />
       </MyFullscreenView>
     );
   }
   return (
-    <MyFormView icon="/" title="Start process" description={name} backLabel="Back to processes" onBack={goToProcesses}>
-      <MyProcessStartForm args={{ processName: name }} onEnded={goToProcesses} />
+    <MyFormView icon="/" title="Start process" description={processName} backLabel="Back to processes" onBack={goToProcesses}>
+      <MyProcessForm args={{ processName }} onEnded={goToProcesses} />
     </MyFormView>
   );
 }

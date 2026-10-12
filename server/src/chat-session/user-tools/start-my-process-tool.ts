@@ -3,9 +3,14 @@ import * as z from 'zod/v4';
 import { ChatSessionId } from '../chat-session-id';
 import { UserProcessProvider } from '../../process/user-process-provider';
 import { ProcessExecutionContext } from '../../process-executor/process-execution-context';
-import { ProcessExecutionMode, ProcessExecutionOutcomeType, ProcessExecutionTrigger, ResourceNameNormalizer } from '@ailaflow/shared';
+import {
+  ProcessExecutionMode,
+  ProcessExecutionOutcomeType,
+  ProcessExecutionTrigger,
+  ProcessReturnFormMessageMetadata,
+  ResourceNameNormalizer
+} from '@ailaflow/shared';
 import { ProcessExecutor } from '../../process-executor/process-executor';
-import { EventBus } from '../../events/event-bus';
 import { ExecutionTaskCandidateQuerier } from '../../queriers/my-task-list/execution-task-candidate-querier';
 import { Logger } from '../../core/logger';
 
@@ -22,8 +27,7 @@ export class StartMyProcessTool extends ZodTool<Arg> {
   public constructor(
     private readonly userProcessProvider: UserProcessProvider,
     private readonly processExecutor: ProcessExecutor,
-    private readonly taskCandidateQuerier: ExecutionTaskCandidateQuerier,
-    private readonly eventBus: EventBus
+    private readonly taskCandidateQuerier: ExecutionTaskCandidateQuerier
   ) {
     super('start_my_process', 'Starts a new process', inputSchema);
   }
@@ -92,11 +96,22 @@ export class StartMyProcessTool extends ZodTool<Arg> {
     }
 
     if (outcome.type === ProcessExecutionOutcomeType.FINISHED) {
-      return {
+      const result: ZodToolExecutionResult = {
         content: {
           outputValues: outcome.output
         }
       };
+      if (outcome.interruptedStepId) {
+        const hasForm = Boolean(process.forms.findOutputFormByReturnStepId(outcome.interruptedStepId));
+        result.metadata = {
+          processReturnForm: {
+            name: processName,
+            stepId: outcome.interruptedStepId,
+            hasForm
+          } satisfies ProcessReturnFormMessageMetadata
+        };
+      }
+      return result;
     }
     if (outcome.type === ProcessExecutionOutcomeType.PAUSED) {
       return {

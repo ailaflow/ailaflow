@@ -2,7 +2,7 @@ import { HttpClient, HttpClientSseListener } from '@aibindkit/react';
 import type {
   GetMyProcessesRequest,
   GetMyProcessesResponse,
-  GetMyProcessStartFormRequest,
+  GetMyProcessReturnFormResponse,
   GetMyProcessStartFormResponse,
   StartMyProcessRequest,
   StartMyProcessUpdate
@@ -20,16 +20,16 @@ export class MyProcessApiClient {
     return this.client.json(signal, 'GET', `/api/my-processes?${query}`);
   }
 
-  public getMyProcessStartForm(
+  public getMyProcessStartForm(signal: AbortSignal, name: string): Promise<GetMyProcessStartFormResponse> {
+    return this.client.json(signal, 'GET', `/api/my-processes/${name}/start-form`);
+  }
+
+  public getMyProcessReturnForm(
     signal: AbortSignal,
     name: string,
-    request: GetMyProcessStartFormRequest
-  ): Promise<GetMyProcessStartFormResponse> {
-    const query = new URLSearchParams();
-    if (request.testUserName) {
-      query.set('testUserName', request.testUserName);
-    }
-    return this.client.json(signal, 'GET', `/api/my-processes/${name}/start-form?${query}`);
+    stepId: string
+  ): Promise<GetMyProcessReturnFormResponse> {
+    return this.client.json(signal, 'GET', `/api/my-processes/${name}/return-form/${stepId}`);
   }
 
   public startMyProcess(

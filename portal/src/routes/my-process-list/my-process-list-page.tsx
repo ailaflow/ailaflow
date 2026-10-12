@@ -6,7 +6,7 @@ import { useSearchParams } from 'react-router';
 import { PortalErrorView } from '../../views/portal/portal-error-view';
 import { PortalLoadingView } from '../../views/portal/portal-loading-view';
 import { MyProcessListView } from '../../views/my-process-list-view/process-list-view';
-import { MyProcessStartFormPopup } from '../common/popups/my-process-start-form-popup';
+import { MyProcessFormPopup } from '../common/popups/my-process-form-popup';
 import { MyTaskFormPopup } from '../common/popups/my-task-form-popup';
 import { FormSubmittedAlertPopup } from '../common/popups/form-submitted-alert-popup';
 
@@ -75,7 +75,7 @@ export function MyProcessListPage() {
         }}
       />
       {startedProcess ? (
-        <MyProcessStartFormPopup
+        <MyProcessFormPopup
           args={{ processName: startedProcess.name }}
           icon={startedProcess.icon}
           onEnded={handleProcessEnded}
