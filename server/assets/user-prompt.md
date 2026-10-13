@@ -10,7 +10,7 @@ When an administrator has configured an HTML form, you MAY display it so the use
 
 ## Performing actions with processes
 
-When the user asks you to perform an action that may be supported by an AilaFlow process:
+You MUST assume that any action requested by the user refers to one of the available processes.
 
 1. You MUST call `get_my_processes` to retrieve the processes available to the user. This returns process names, business descriptions, and `canStartWithAiTool`.
 
