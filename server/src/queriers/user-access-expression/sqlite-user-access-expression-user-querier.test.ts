@@ -34,6 +34,17 @@ test('queries user names matching a user access expression', async () => {
     active: true,
     age: 17
   });
+  await insertUser(
+    signal,
+    userRepository,
+    userAttributesRepository,
+    'dave',
+    {
+      active: true,
+      age: 30
+    },
+    false
+  );
 
   assert.deepEqual(await querier.queryUserNames(signal, UserAccessExpressionParser.parse('@alice or @{.active = true and .age >= 18}')), [
     'alice',
@@ -50,9 +61,10 @@ async function insertUser(
   userRepository: SqliteUserRepository,
   userAttributesRepository: SqliteUserAttributesRepository,
   name: string,
-  attributes: Record<string, string | number | boolean>
+  attributes: Record<string, string | number | boolean>,
+  isActive = true
 ): Promise<void> {
-  const user = new User(name, null, 'hash', true, false);
+  const user = new User(name, null, 'hash', isActive, false);
   await userRepository.insert(signal, user);
   await userAttributesRepository.replace(signal, UserAttributes.create(user, attributes));
 }

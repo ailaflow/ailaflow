@@ -3,6 +3,7 @@ import {
   FormDefinition,
   JsonSchema,
   TaskFinalizationPolicy,
+  TaskFormMessageMetadata,
   TaskSubmissionMode,
   UserAccessExpressionParser
 } from '@ailaflow/shared';
@@ -13,6 +14,7 @@ import { AssignedTask } from '../repositories/task/assigned-task';
 import { Task } from '../repositories/task/task';
 import { Transaction } from '../core/transaction';
 import { Notifier } from '../notification/notifier';
+import { ChatMessageMetadata } from '@aibindkit/core';
 
 export class TaskCreator {
   public constructor(
@@ -73,8 +75,15 @@ export class TaskCreator {
     let message = 'The user has a new task assigned!\n';
     message += `Title: ${title}`;
 
-    let chatDetails = `Task ID: ${task.id}\n`;
-    chatDetails += `Submission mode: ${task.submissionMode}`;
+    let postscript = `Task ID: ${task.id}\n`;
+    postscript += `Submission mode: ${task.submissionMode}`;
+
+    const metadata: ChatMessageMetadata = {
+      taskId: task.id,
+      taskForm: {
+        title: task.title
+      } satisfies TaskFormMessageMetadata
+    };
 
     await this.notifier.notifyUsersMatchingAccessExpression(
       signal,
@@ -83,7 +92,8 @@ export class TaskCreator {
       userExpression,
       DEFAULT_CHANNEL_NAME,
       message,
-      chatDetails
+      postscript,
+      metadata
     );
   }
 }

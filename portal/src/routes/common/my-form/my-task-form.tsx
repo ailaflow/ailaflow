@@ -21,7 +21,7 @@ export function MyTaskForm({ args, onSubmitted }: MyTaskFormProps) {
   const apiClient = useApiClient();
   const { data, error, isLoading } = useLoader(
     signal => apiClient.myTask.getMyTaskForm(signal, args.taskId, { testUserName: args.testUserName }),
-    [apiClient, args]
+    [apiClient, args.taskId, args.testUserName]
   );
   const [formError, setFormError] = useState<FormError | null>(null);
 

@@ -53,15 +53,17 @@ export function messageRenderer(
     );
   }
 
+  const taskId = completedMessage.metadata?.['taskId'] as string | undefined;
   const taskForm = completedMessage.metadata?.['taskForm'] as TaskFormMessageMetadata | undefined;
-  if (taskForm) {
+  if (taskId && taskForm) {
+    const title = `Task: ${taskForm.title}`;
     if (finished) {
-      return <FormMessageView title="Form">Finished</FormMessageView>;
+      return <FormMessageView title={title}>Finished</FormMessageView>;
     }
 
-    const args: MyTaskFormArgs = { taskId: taskForm.id, testUserName };
+    const args: MyTaskFormArgs = { taskId, testUserName };
     return (
-      <FormMessageView title="Form" lockedClickLabel="Open task form" onLockedClick={() => actions.openTaskForm(args)}>
+      <FormMessageView title={title} lockedClickLabel="Open task form" onLockedClick={() => actions.openTaskForm(args)}>
         <FormPreviewView>
           <MyTaskForm args={args} />
         </FormPreviewView>

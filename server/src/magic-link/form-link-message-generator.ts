@@ -13,9 +13,9 @@ export class FormLinkMessageGenerator {
 
   public async generate(signal: AbortSignal, userName: string, metadata: ChatMessageMetadata | undefined): Promise<FormLinkMessage[]> {
     const messages: FormLinkMessage[] = [];
-    const taskForm = metadata?.['taskForm'] as TaskFormMessageMetadata | undefined;
-    if (typeof taskForm?.id === 'string') {
-      const result = await this.magicLinkGenerator.tryGenerateTaskForm(signal, userName, taskForm.id);
+    const taskId = metadata?.['taskId'] as string | undefined;
+    if (typeof taskId === 'string') {
+      const result = await this.magicLinkGenerator.tryGenerateTaskForm(signal, userName, taskId);
       messages.push({ title: 'Task Form', result, validityHours: this.magicLinkGenerator.getValidityHours() });
     }
 
@@ -28,8 +28,8 @@ export class FormLinkMessageGenerator {
   }
 
   public hasMetadata(metadata: ChatMessageMetadata | undefined): boolean {
-    const taskForm = metadata?.['taskForm'] as TaskFormMessageMetadata | undefined;
+    const taskId = metadata?.['taskId'] as string | undefined;
     const processStartForm = metadata?.['processStartForm'] as ProcessStartFormMessageMetadata | undefined;
-    return typeof taskForm?.id === 'string' || typeof processStartForm?.name === 'string';
+    return typeof taskId === 'string' || typeof processStartForm?.name === 'string';
   }
 }

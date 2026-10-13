@@ -27,7 +27,8 @@ export class Notifier {
     userExpression: string,
     channelName: string,
     message: string,
-    chatDetails: string | null
+    postscript: string | null,
+    metadata?: ChatMessageMetadata
   ) {
     const expression = UserAccessExpressionParser.parse(userExpression);
     const userNames = await this.userAccessExpressionUserQuerier.queryUserNames(signal, expression);
@@ -40,15 +41,20 @@ export class Notifier {
       await this.notificationRepository.insertMultiple(signal, notifications);
     }
 
-    const m = this.buildChatMessage(processName, message, chatDetails);
+    const finalMetadata: ChatMessageMetadata = {
+      internal: true
+    };
+    if (metadata) {
+      Object.assign(finalMetadata, metadata);
+    }
+
+    const m = this.buildChatMessage(processName, message, postscript);
 
     for (const userName of userNames) {
       let session: ChatSession | null = null;
       try {
         session = await this.userChatSessionProvider.get(signal, isTest, userName, channelName);
-        session.queueUserMessage(m, {
-          internal: true
-        });
+        session.queueUserMessage(m, finalMetadata);
       } catch (e) {
         if (!ChatSessionInitializerError.is(e)) {
           throw e;
@@ -65,7 +71,7 @@ export class Notifier {
     isTest: boolean,
     userName: string,
     message: string,
-    chatDetails: string | null,
+    postscript: string | null,
     metadata?: ChatMessageMetadata
   ) {
     let session: ChatSession | null | undefined;
@@ -96,17 +102,17 @@ export class Notifier {
     }
 
     if (session) {
-      const m = this.buildChatMessage(processName, message, chatDetails);
+      const m = this.buildChatMessage(processName, message, postscript);
       session.queueUserMessage(m, finalMetadata);
     }
   }
 
-  private buildChatMessage(processName: string, message: string, chatDetails: string | null): string {
+  private buildChatMessage(processName: string, message: string, postscript: string | null): string {
     let m = '>>>>>>>>\n';
     m += `The user has a new notification from /${processName} process:\n`;
     m += `Message: ${message}\n`;
-    if (chatDetails) {
-      m += chatDetails + '\n';
+    if (postscript) {
+      m += postscript + '\n';
     }
     m += '<<<<<<<<';
     return m;

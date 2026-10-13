@@ -37,8 +37,9 @@ export class OpenMyTaskFormTool extends ZodTool<Arg> {
         success: 'The task form is displayed after this message. This form is visible only by the user.'
       },
       metadata: {
+        taskId: task.id,
         taskForm: {
-          id: task.id
+          title: task.title
         } satisfies TaskFormMessageMetadata
       }
     };

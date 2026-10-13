@@ -17,19 +17,19 @@ export class ProcessExecutionOutcomeAvailableEventHandler implements EventHandle
   public async handle(event: ProcessExecutionOutcomeAvailableEvent) {
     const signal = AbortSignal.timeout(5_000);
 
-    let n = `Execution "${event.executionId}" for process /${event.processName} `;
-    let cd: string | null = null;
+    let message = `Execution "${event.executionId}" for process /${event.processName} `;
+    let postscript: string | null = null;
     let metadata: ChatMessageMetadata | undefined = undefined;
 
     if (event.outcome.type === ProcessExecutionOutcomeType.FINISHED) {
-      n += 'finished successfully';
+      message += 'finished successfully';
       const keys = Object.keys(event.outcome.output);
       if (keys.length > 0) {
-        cd = 'Output:\n```json\n';
-        cd += JSON.stringify(event.outcome.output) + '\n';
-        cd += '```';
+        postscript = 'Output:\n```json\n';
+        postscript += JSON.stringify(event.outcome.output) + '\n';
+        postscript += '```';
       } else {
-        cd = 'No output was produced.';
+        postscript = 'No output was produced.';
       }
 
       if (event.outcome.interruptedStepId) {
@@ -46,27 +46,26 @@ export class ProcessExecutionOutcomeAvailableEventHandler implements EventHandle
         }
       }
     } else if (event.outcome.type === ProcessExecutionOutcomeType.PAUSED) {
-      n += 'was paused';
+      message += 'was paused';
       if (event.outcome.stepId) {
-        n += ` at step "${event.outcome.stepId}"`;
+        message += ` at step "${event.outcome.stepId}"`;
       }
     } else if (event.outcome.type === ProcessExecutionOutcomeType.FAILED) {
-      n += 'failed';
+      message += 'failed';
       if (event.outcome.stepId) {
-        n += ` at step "${event.outcome.stepId}"`;
+        message += ` at step "${event.outcome.stepId}"`;
       }
-      n += `: ${event.outcome.error}`;
+      message += `: ${event.outcome.error}`;
     }
 
-    // TODO: we should save the outcome to the event that the user could see the output values including on form.
     await this.notifier.notifyUser(
       signal,
       event.context.chatSessionId ? ChatSessionId.decode(event.context.chatSessionId) : null,
       event.processName,
       event.context.isTest,
       event.context.startedBy,
-      n,
-      cd,
+      message,
+      postscript,
       metadata
     );
   }

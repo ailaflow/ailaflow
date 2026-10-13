@@ -71,6 +71,9 @@ export class SqliteUserAccessExpressionUserQuerier implements UserAccessExpressi
         JOIN user_attributes ua
           ON ua.attribute_name = c.attribute_name
          AND ua.attribute_type = c.attribute_type
+        JOIN users u
+          ON u.name = ua.user_name
+         AND u.isActive = 1
         WHERE
 ${MATCHING_USER_ACCESS_CONDITION}
         GROUP BY ua.user_name, c.group_id
@@ -92,6 +95,7 @@ ${MATCHING_USER_ACCESS_CONDITION}
     const statement = db.prepare(`
       SELECT name
       FROM users
+      WHERE isActive = 1
       ORDER BY name
     `);
     const rows = statement.all() as { name: string }[];
