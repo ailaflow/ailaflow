@@ -15,7 +15,7 @@ test('opens the form for a task assigned to the user', async () => {
       assert.equal(taskId, 'task_1');
       return {
         assignedTask: {},
-        task: { id: 'task_1' } as Task
+        task: { id: 'task_1', title: 'Review application' } as Task
       };
     }
   } as UserAssignedTaskProvider;
@@ -34,8 +34,9 @@ test('opens the form for a task assigned to the user', async () => {
     success: 'The task form is displayed after this message. This form is visible only by the user.'
   });
   assert.deepEqual(result.metadata, {
+    taskId: 'task_1',
     taskForm: {
-      id: 'task_1'
+      title: 'Review application'
     }
   });
 });

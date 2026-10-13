@@ -109,7 +109,7 @@ test('sends links for task and process start form metadata', async () => {
       completedMessages: [
         {
           message: { role: 'user', content: 'Internal task notification' },
-          metadata: { internal: true, taskForm: { id: 'task-123' } }
+          metadata: { internal: true, taskId: 'task-123', taskForm: { title: 'Review application' } }
         }
       ]
     },
@@ -160,7 +160,11 @@ test('forwards form-link configuration errors', async () => {
       completedMessages: [
         {
           message: { role: 'tool', tool_call_id: 'call-1', content: '{"success":true}' },
-          metadata: { taskForm: { id: 'task-123' }, processStartForm: { name: 'employee-onboarding' } }
+          metadata: {
+            taskId: 'task-123',
+            taskForm: { title: 'Review application' },
+            processStartForm: { name: 'employee-onboarding' }
+          }
         }
       ]
     }
