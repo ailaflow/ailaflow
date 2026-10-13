@@ -146,6 +146,7 @@ function cliConfig(mode) {
   };
   config.experiments = { outputModule: true };
   config.externalsPresets = { node: true };
+  config.ignoreWarnings = nodeBundleWarnings;
   config.plugins = [
     new webpack.BannerPlugin({
       banner: '#!/usr/bin/env node',
