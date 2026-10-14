@@ -1,9 +1,10 @@
-import { HttpClient } from '@aibindkit/react';
+import { HttpClient, HttpClientSseListener } from '@aibindkit/react';
 import type {
   DeleteAllMyNotificationsResponse,
   DeleteMyNotificationResponse,
   GetMyNotificationsRequest,
-  GetMyNotificationsResponse
+  GetMyNotificationsResponse,
+  ListenMyNotificationsUpdate
 } from '@ailaflow/shared';
 
 export class MyNotificationApiClient {
@@ -23,5 +24,9 @@ export class MyNotificationApiClient {
 
   public deleteAllMyNotifications(signal: AbortSignal): Promise<DeleteAllMyNotificationsResponse> {
     return this.client.json(signal, 'DELETE', '/api/my-notifications');
+  }
+
+  public listenMyNotifications(signal: AbortSignal, listener: HttpClientSseListener<ListenMyNotificationsUpdate>): Promise<void> {
+    return this.client.sse(signal, listener, 'GET', '/api/my-notifications/listen');
   }
 }

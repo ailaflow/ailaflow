@@ -105,6 +105,7 @@ import { SqliteMyNotificationListQuerier } from './queriers/my-notification-list
 import { GetMyNotificationsEndpoint } from './api/my-notification/get-my-notifications-endpoint';
 import { DeleteMyNotificationEndpoint } from './api/my-notification/delete-my-notification-endpoint';
 import { DeleteAllMyNotificationsEndpoint } from './api/my-notification/delete-all-my-notifications-endpoint';
+import { ListenMyNotificationEndpoint } from './api/my-notification/listen-my-notification-endpoint';
 import { TableRepository } from './repositories/table/table-repository';
 import { SqliteTableRepository } from './repositories/table/sqlite-table-repository';
 import { TableDataRepository } from './repositories/table/table-data-repository';
@@ -258,6 +259,7 @@ import { DeleteTableDataRowEndpoint } from './api/table/delete-table-data-row-en
 import { SaveTableDataRowEndpoint } from './api/table/save-table-data-row-endpoint';
 import { ResolveUserAccessExpressionEndpoint } from './api/user/resolve-user-access-expression-endpoint';
 import { GetMyProcessReturnFormEndpoint } from './api/my-process/get-my-process-return-form-endpoint';
+import { NotificationListenerStore } from './notification/notification-listener-store';
 
 const DB_TYPE = 'sqlite';
 
@@ -447,7 +449,14 @@ export async function bootstrap(registry: CleanupRegistry, signal: AbortSignal) 
   const sandboxInstanceManager = new SandboxInstanceManager(serverPaths, sandboxRepository, rpcHandler);
   registry.register(s => sandboxInstanceManager.stopAll(s));
 
-  const notifier = new Notifier(userAccessExpressionUserQuerier, userChatSessionProvider, adminChatSessionProvider, notificationRepository);
+  const notificationListenerStore = new NotificationListenerStore();
+  const notifier = new Notifier(
+    userAccessExpressionUserQuerier,
+    userChatSessionProvider,
+    adminChatSessionProvider,
+    notificationRepository,
+    notificationListenerStore
+  );
   const taskCreator = new TaskCreator(taskRepository, assignedTaskRepository, userAccessExpressionUserQuerier, notifier);
 
   const llmClientFactory = new LlmClientFactory();
@@ -655,6 +664,7 @@ export async function bootstrap(registry: CleanupRegistry, signal: AbortSignal) 
     new SaveSlackMappingsEndpoint(slackMappingManager),
     new GetMySlackConfigurationEndpoint(slackStatusProvider),
     new GetMyNotificationsEndpoint(myNotificationListQuerier),
+    new ListenMyNotificationEndpoint(notificationListenerStore),
     new DeleteAllMyNotificationsEndpoint(notificationRepository),
     new DeleteMyNotificationEndpoint(notificationRepository),
     new GetMyProcessesEndpoint(myProcessListQuerier),

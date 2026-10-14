@@ -7,6 +7,7 @@ import { UserChatSessionProvider } from '../chat-session/user-chat-session-provi
 import { UserAccessExpressionUserQuerier } from '../queriers/user-access-expression/user-access-expression-user-querier';
 import { Notification } from '../repositories/notification/notification';
 import { NotificationRepository } from '../repositories/notification/notification-repository';
+import { NotificationListenerStore } from './notification-listener-store';
 import { Notifier } from './notifier';
 
 test('persists a notification for every matched user', async () => {
@@ -28,7 +29,13 @@ test('persists a notification for every matched user', async () => {
     delete: async () => false,
     deleteAll: async () => 0
   } as NotificationRepository;
-  const notifier = new Notifier(userQuerier, sessionProvider, adminSessionProvider, notificationRepository);
+  const notifier = new Notifier(
+    userQuerier,
+    sessionProvider,
+    adminSessionProvider,
+    notificationRepository,
+    new NotificationListenerStore()
+  );
 
   await notifier.notifyUsersMatchingAccessExpression(
     new AbortController().signal,

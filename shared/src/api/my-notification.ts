@@ -34,3 +34,9 @@ export const deleteAllMyNotificationsResponseSchema = z.object({
 });
 
 export type DeleteAllMyNotificationsResponse = z.infer<typeof deleteAllMyNotificationsResponseSchema>;
+
+// listenMyNotifications
+
+export interface ListenMyNotificationsUpdate {
+  notification: MyNotificationDto;
+}

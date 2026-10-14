@@ -9,6 +9,7 @@ import { ChatSession } from '@aibindkit/llm';
 import { ChatSessionInitializerError } from '@aibindkit/express';
 import { Logger } from '../core/logger';
 import { ChatMessageMetadata } from '@aibindkit/core';
+import { NotificationListenerStore } from './notification-listener-store';
 
 export class Notifier {
   private readonly logger = new Logger(Notifier.name);
@@ -17,7 +18,8 @@ export class Notifier {
     private readonly userAccessExpressionUserQuerier: UserAccessExpressionUserQuerier,
     private readonly userChatSessionProvider: UserChatSessionProvider,
     private readonly adminChatSessionProvider: AdminChatSessionProvider,
-    private readonly notificationRepository: NotificationRepository
+    private readonly notificationRepository: NotificationRepository,
+    private readonly notificationListenerStore: NotificationListenerStore
   ) {}
 
   public async notifyUsersMatchingAccessExpression(
@@ -39,6 +41,9 @@ export class Notifier {
         notifications[i] = Notification.create(userNames[i], processName, message);
       }
       await this.notificationRepository.insertMultiple(signal, notifications);
+      for (const notification of notifications) {
+        this.notificationListenerStore.notify(notification.userName, notification);
+      }
     }
 
     const finalMetadata: ChatMessageMetadata = {
@@ -92,6 +97,7 @@ export class Notifier {
     if (!isTest) {
       const notification = Notification.create(userName, processName, message);
       await this.notificationRepository.insertMultiple(signal, [notification]);
+      this.notificationListenerStore.notify(userName, notification);
     }
 
     const finalMetadata: ChatMessageMetadata = {

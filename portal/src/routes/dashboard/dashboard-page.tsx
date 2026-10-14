@@ -1,7 +1,7 @@
 import { useLoader } from '@aibindkit/react';
-import { DEFAULT_CHANNEL_NAME, ProcessDisplay, type MyProcessLiteDto } from '@ailaflow/shared';
-import { useState } from 'react';
-import { useApiClient } from '../../auth/auth-context';
+import { DEFAULT_CHANNEL_NAME, MyNotificationDto, ProcessDisplay, type MyProcessLiteDto } from '@ailaflow/shared';
+import { useEffect, useState } from 'react';
+import { useAuthState } from '../../auth/auth-context';
 import { DashboardListView } from '../../views/dashboard/dashboard-list-view';
 import { DashboardPanelView } from '../../views/dashboard/dashboard-panel-view';
 import { DashboardView } from '../../views/dashboard/dashboard-view';
@@ -18,7 +18,7 @@ const PANEL_ITEM_LIMIT = 6;
 const PANEL_PAGE_SIZE = PANEL_ITEM_LIMIT + 1;
 
 export function DashboardPage() {
-  const apiClient = useApiClient();
+  const { apiClient, session } = useAuthState();
   const [startedProcess, setStartedProcess] = useState<MyProcessLiteDto | null>(null);
   const [openedTaskId, setOpenedTaskId] = useState<string | null>(null);
   const [formSubmitted, setFormSubmitted] = useState(false);
@@ -39,6 +39,35 @@ export function DashboardPage() {
     },
     [apiClient, reloadToken]
   );
+  const [notifications, setNotifications] = useState<MyNotificationDto[]>([]);
+
+  useEffect(() => setNotifications(data?.notifications?.notifications ?? []), [data]);
+
+  useEffect(() => {
+    if (!session) {
+      return;
+    }
+
+    const abortController = new AbortController();
+
+    async function listen() {
+      try {
+        await apiClient.myNotification.listenMyNotifications(abortController.signal, {
+          onMessage(update) {
+            setNotifications(c => [update.notification, ...c]);
+          },
+          onClose() {}
+        });
+      } catch (e) {
+        if (!abortController.signal.aborted) {
+          console.error(`Failed to listen for notifications: ${(e as Error)?.message ?? e}`);
+        }
+      }
+    }
+
+    void listen();
+    return () => abortController.abort();
+  }, [apiClient, session]);
 
   function handleProcessEnded(candidateTaskIds?: string[]): void {
     setStartedProcess(null);
@@ -86,7 +115,7 @@ export function DashboardPage() {
           action={{ label: 'View all', href: '/my-notifications' }}
         >
           <DashboardListView
-            items={data.notifications.notifications.slice(0, PANEL_ITEM_LIMIT).map(notification => ({
+            items={notifications.slice(0, PANEL_ITEM_LIMIT).map(notification => ({
               key: notification.id,
               title: notification.message,
               createdAt: notification.createdAt
@@ -129,9 +158,7 @@ export function DashboardPage() {
             setReloadToken(current => current + 1);
             setFormSubmitted(true);
           }}
-          onClose={() => {
-            setOpenedTaskId(null);
-          }}
+          onClose={() => setOpenedTaskId(null)}
         />
       )}
       {formSubmitted && <FormSubmittedAlertPopup onClose={() => setFormSubmitted(false)} />}
