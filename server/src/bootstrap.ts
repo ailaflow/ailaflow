@@ -93,6 +93,7 @@ import { GetMyTasksEndpoint } from './api/my-task/get-my-tasks-endpoint';
 import { GetMyTaskFormEndpoint } from './api/my-task/get-my-task-form-endpoint';
 import { GetTaskVariableValueEndpoint } from './api/my-task/get-task-variable-value-endpoint';
 import { SubmitMyTaskEndpoint } from './api/my-task/submit-my-task-endpoint';
+import { ListenMyTaskEndpoint } from './api/my-task/listen-my-task-endpoint';
 import { ProcessExecutionPersister } from './process-executor/process-execution-persister';
 import { UserChatSessionProvider } from './chat-session/user-chat-session-provider';
 import { AdminChatSessionProvider } from './chat-session/admin-chat-session-provider';
@@ -260,6 +261,7 @@ import { SaveTableDataRowEndpoint } from './api/table/save-table-data-row-endpoi
 import { ResolveUserAccessExpressionEndpoint } from './api/user/resolve-user-access-expression-endpoint';
 import { GetMyProcessReturnFormEndpoint } from './api/my-process/get-my-process-return-form-endpoint';
 import { NotificationListenerStore } from './notification/notification-listener-store';
+import { TaskListenerStore } from './task/task-listener-store';
 
 const DB_TYPE = 'sqlite';
 
@@ -457,7 +459,8 @@ export async function bootstrap(registry: CleanupRegistry, signal: AbortSignal) 
     notificationRepository,
     notificationListenerStore
   );
-  const taskCreator = new TaskCreator(taskRepository, assignedTaskRepository, userAccessExpressionUserQuerier, notifier);
+  const taskListenerStore = new TaskListenerStore();
+  const taskCreator = new TaskCreator(taskRepository, assignedTaskRepository, userAccessExpressionUserQuerier, notifier, taskListenerStore);
 
   const llmClientFactory = new LlmClientFactory();
   const llmClientProvider = new LlmClientProvider(llmConfigurationRepository, llmClientFactory);
@@ -670,6 +673,7 @@ export async function bootstrap(registry: CleanupRegistry, signal: AbortSignal) 
     new GetMyProcessesEndpoint(myProcessListQuerier),
     new ImportProcessEndpoint(processValidatorsFactory, processManager),
     new GetMyTasksEndpoint(myTaskListQuerier),
+    new ListenMyTaskEndpoint(taskListenerStore),
     new GetTasksEndpoint(taskListQuerier),
     new DeleteTaskEndpoint(taskDeleter),
     new GetMyTaskFormEndpoint(userAssignedTaskProvider),

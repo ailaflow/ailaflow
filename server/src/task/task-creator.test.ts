@@ -8,7 +8,40 @@ import { Notifier } from '../notification/notifier';
 import { UserAccessExpressionUserQuerier } from '../queriers/user-access-expression/user-access-expression-user-querier';
 import { SqliteAssignedTaskRepository } from '../repositories/task/sqlite-assigned-task-repository';
 import { SqliteTaskRepository } from '../repositories/task/sqlite-task-repository';
+import { AssignedTaskRepository } from '../repositories/task/assigned-task-repository';
+import { TaskRepository } from '../repositories/task/task-repository';
+import { Task } from '../repositories/task/task';
 import { TaskCreator } from './task-creator';
+import { TaskListenerStore } from './task-listener-store';
+
+test('publishes newly assigned non-test tasks to each user', async () => {
+  const userQuerier = {
+    queryUserNames: async () => ['alice', 'bob']
+  } as UserAccessExpressionUserQuerier;
+  const taskRepository = {
+    insert: async () => undefined
+  } as unknown as TaskRepository;
+  const assignedTaskRepository = {
+    upsertMultiple: async () => undefined
+  } as unknown as AssignedTaskRepository;
+  const notifier = {
+    notifyUsersMatchingAccessExpression: async () => undefined
+  } as unknown as Notifier;
+  const listenerStore = new TaskListenerStore();
+  const aliceTasks: Task[] = [];
+  const bobTasks: Task[] = [];
+  listenerStore.set('alice', task => aliceTasks.push(task));
+  listenerStore.set('bob', task => bobTasks.push(task));
+  const creator = new TaskCreator(taskRepository, assignedTaskRepository, userQuerier, notifier, listenerStore);
+
+  await createTask(creator, false);
+  await createTask(creator, true);
+
+  assert.equal(aliceTasks.length, 1);
+  assert.equal(bobTasks.length, 1);
+  assert.equal(aliceTasks[0], bobTasks[0]);
+  assert.equal(aliceTasks[0].title, 'Task');
+});
 
 test('rolls back task creation when assignment creation fails', async () => {
   const db = new DatabaseSync(':memory:', { open: true });
@@ -21,7 +54,7 @@ test('rolls back task creation when assignment creation fails', async () => {
     queryUserNames: async () => ['missing-user']
   };
   const notifier = {} as unknown as Notifier;
-  const creator = new TaskCreator(taskRepository, assignedTaskRepository, userQuerier, notifier);
+  const creator = new TaskCreator(taskRepository, assignedTaskRepository, userQuerier, notifier, new TaskListenerStore());
 
   await taskRepository.setup(signal);
   await assignedTaskRepository.setup(signal);
@@ -57,3 +90,22 @@ test('rolls back task creation when assignment creation fails', async () => {
 
   db.close();
 });
+
+function createTask(creator: TaskCreator, isTest: boolean): Promise<void> {
+  return creator.create(
+    new AbortController().signal,
+    isTest,
+    'creator',
+    'execution',
+    'process',
+    'Task',
+    '@alice',
+    null,
+    TaskFinalizationPolicy.ALL_ASSIGNEES,
+    null,
+    [],
+    null,
+    { css: '', html: '', js: '', inputExamples: [] },
+    TaskSubmissionMode.AI_TOOL_OR_TASK_FORM
+  );
+}

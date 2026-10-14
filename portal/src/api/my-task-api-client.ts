@@ -1,4 +1,4 @@
-import { HttpClient } from '@aibindkit/react';
+import { HttpClient, HttpClientSseListener } from '@aibindkit/react';
 import type {
   GetMyTaskFormRequest,
   GetMyTaskFormResponse,
@@ -6,6 +6,7 @@ import type {
   GetMyTasksResponse,
   GetTaskVariableValueRequest,
   GetTaskVariableValueResponse,
+  ListenMyTasksUpdate,
   SubmitMyTaskRequest,
   SubmitMyTaskResponse
 } from '@ailaflow/shared';
@@ -36,5 +37,9 @@ export class MyTaskApiClient {
 
   public submitMyTask(signal: AbortSignal, request: SubmitMyTaskRequest): Promise<SubmitMyTaskResponse> {
     return this.client.json(signal, 'POST', '/api/my-tasks/submit', request);
+  }
+
+  public listenMyTasks(signal: AbortSignal, listener: HttpClientSseListener<ListenMyTasksUpdate>): Promise<void> {
+    return this.client.sse(signal, listener, 'GET', '/api/my-tasks/listen');
   }
 }

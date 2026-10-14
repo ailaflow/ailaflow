@@ -1,5 +1,5 @@
 import { useLoader } from '@aibindkit/react';
-import { DEFAULT_CHANNEL_NAME, MyNotificationDto, ProcessDisplay, type MyProcessLiteDto } from '@ailaflow/shared';
+import { DEFAULT_CHANNEL_NAME, MyNotificationDto, MyTaskLiteDto, ProcessDisplay, type MyProcessLiteDto } from '@ailaflow/shared';
 import { useEffect, useState } from 'react';
 import { useAuthState } from '../../auth/auth-context';
 import { DashboardListView } from '../../views/dashboard/dashboard-list-view';
@@ -40,8 +40,10 @@ export function DashboardPage() {
     [apiClient, reloadToken]
   );
   const [notifications, setNotifications] = useState<MyNotificationDto[]>([]);
+  const [tasks, setTasks] = useState<MyTaskLiteDto[]>([]);
 
   useEffect(() => setNotifications(data?.notifications?.notifications ?? []), [data]);
+  useEffect(() => setTasks(data?.tasks?.tasks ?? []), [data]);
 
   useEffect(() => {
     if (!session) {
@@ -61,6 +63,32 @@ export function DashboardPage() {
       } catch (e) {
         if (!abortController.signal.aborted) {
           console.error(`Failed to listen for notifications: ${(e as Error)?.message ?? e}`);
+        }
+      }
+    }
+
+    void listen();
+    return () => abortController.abort();
+  }, [apiClient, session]);
+
+  useEffect(() => {
+    if (!session) {
+      return;
+    }
+
+    const abortController = new AbortController();
+
+    async function listen() {
+      try {
+        await apiClient.myTask.listenMyTasks(abortController.signal, {
+          onMessage(update) {
+            setTasks(current => [update.task, ...current]);
+          },
+          onClose() {}
+        });
+      } catch (e) {
+        if (!abortController.signal.aborted) {
+          console.error(`Failed to listen for tasks: ${(e as Error)?.message ?? e}`);
         }
       }
     }
@@ -92,7 +120,7 @@ export function DashboardPage() {
       <DashboardView chat={<MyChat sessionKey={`user:${DEFAULT_CHANNEL_NAME}`} />}>
         <DashboardPanelView title="My Tasks" icon="timer" variant="dashboard" scrollable action={{ label: 'View all', href: '/my-tasks' }}>
           <DashboardListView
-            items={data.tasks.tasks.slice(0, PANEL_ITEM_LIMIT).map(task => ({
+            items={tasks.slice(0, PANEL_ITEM_LIMIT).map(task => ({
               key: task.id,
               title: task.title,
               deadline: task.deadline,

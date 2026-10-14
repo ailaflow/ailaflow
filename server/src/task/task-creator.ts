@@ -15,13 +15,15 @@ import { Task } from '../repositories/task/task';
 import { Transaction } from '../core/transaction';
 import { Notifier } from '../notification/notifier';
 import { ChatMessageMetadata } from '@aibindkit/core';
+import { TaskListenerStore } from './task-listener-store';
 
 export class TaskCreator {
   public constructor(
     private readonly taskRepository: TaskRepository,
     private readonly assignedTaskRepository: AssignedTaskRepository,
     private readonly userAccessExpressionUserQuerier: UserAccessExpressionUserQuerier,
-    private readonly notifier: Notifier
+    private readonly notifier: Notifier,
+    private readonly taskListenerStore: TaskListenerStore
   ) {}
 
   public async create(
@@ -70,6 +72,12 @@ export class TaskCreator {
     } catch (e) {
       await transaction.rollback();
       throw e;
+    }
+
+    if (!isTest) {
+      for (const assignedTask of assignedTasks) {
+        this.taskListenerStore.notify(assignedTask.userName, task);
+      }
     }
 
     let message = 'The user has a new task assigned!\n';

@@ -69,3 +69,9 @@ export const getTaskVariableValueResponseSchema = z.object({
 
 export type GetTaskVariableValueRequest = z.infer<typeof getTaskVariableValueRequestSchema>;
 export type GetTaskVariableValueResponse = z.infer<typeof getTaskVariableValueResponseSchema>;
+
+// listenMyTasks
+
+export interface ListenMyTasksUpdate {
+  task: MyTaskLiteDto;
+}
