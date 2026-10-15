@@ -1,4 +1,4 @@
-import type { ExecuteSandboxCommandUpdate, SandboxDto } from '@ailaflow/shared';
+import type { ExecuteSandboxCommandUpdate, SandboxDto, SandboxTerminalAccess } from '@ailaflow/shared';
 import { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { useApiClient } from '../../auth/auth-context';
 import type { SandboxTerminalEntry, SandboxTerminalEntryType } from '../../views/sandbox-terminal/sandbox-terminal-view';
@@ -21,6 +21,7 @@ export interface SandboxTerminalState {
   isExecuting: boolean;
   setCommand(command: string): void;
   executeCommand(command?: string): Promise<SandboxTerminalCommandResult>;
+  assertTerminalAccess(requiredAccess: SandboxTerminalAccess): void;
 }
 
 const sandboxTerminalContext = createContext<SandboxTerminalState | null>(null);
@@ -146,6 +147,12 @@ export function SandboxTerminalContext(props: { sandbox: SandboxDto; children: R
     return { cwd: resultCwd, stdout, stderr, error: executionError, code, signal };
   }
 
+  function assertTerminalAccess(requiredAccess: SandboxTerminalAccess): void {
+    if (props.sandbox.terminalAccess !== requiredAccess) {
+      throw new Error('Access denied: insufficient terminal access');
+    }
+  }
+
   const state: SandboxTerminalState = {
     sandbox: props.sandbox,
     entries,
@@ -153,7 +160,8 @@ export function SandboxTerminalContext(props: { sandbox: SandboxDto; children: R
     cwd,
     isExecuting,
     setCommand,
-    executeCommand
+    executeCommand,
+    assertTerminalAccess
   };
 
   return <sandboxTerminalContext.Provider value={state}>{props.children}</sandboxTerminalContext.Provider>;

@@ -202,6 +202,7 @@ import { GetProcessesTool } from './chat-session/admin-tools/get-processes-tool'
 import { GetProcessDetailsTool } from './chat-session/admin-tools/get-process-details-tool';
 import { GetTablesTool } from './chat-session/admin-tools/get-tables-tool';
 import { TestProcessTool } from './chat-session/admin-tools/test-process-tool';
+import { ExecuteSandboxCommandTool } from './chat-session/admin-tools/execute-sandbox-command-tool';
 import { Installer } from './install/installer';
 import { UserExistsRpcHandler } from './process-executor/rpc-handlers/user-exists-rpc-handler';
 import { SlackConfigurationRepository } from './repositories/configuration/slack/slack-configuration-repository';
@@ -590,7 +591,8 @@ export async function bootstrap(registry: CleanupRegistry, signal: AbortSignal) 
     new GetProcessesTool(processListQuerier),
     new GetProcessDetailsTool(processManager),
     new GetTablesTool(tableListQuerier),
-    new TestProcessTool(processManager, processExecutor)
+    new TestProcessTool(processManager, processExecutor),
+    new ExecuteSandboxCommandTool(sandboxInstanceManager)
   ]);
 
   const authMiddleware = new AuthMiddleware(authTokenRepository);

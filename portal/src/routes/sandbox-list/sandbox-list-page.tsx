@@ -33,7 +33,8 @@ export function SandboxListPage() {
           data.sandboxes.map(sandbox => ({
             name: sandbox.name,
             description: sandbox.description,
-            isEnabled: sandbox.isEnabled
+            isEnabled: sandbox.isEnabled,
+            terminalAccess: sandbox.terminalAccess
           })),
         createNew: async () => {
           await createNew();

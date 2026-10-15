@@ -11,9 +11,11 @@ export interface SandboxSecret {
 
 export interface SandboxEditorViewProps {
   isEnabled: boolean;
+  isAdminAssistantTerminalAllowed: boolean;
   configuration: string;
   secrets: SandboxSecret[];
   onIsEnabledChange(isEnabled: boolean): void;
+  onIsAdminAssistantTerminalAllowedChange(isAllowed: boolean): void;
   onConfigurationChange(configuration: string): void;
   onSecretAdd(): void;
   onSecretRemove(id: number): void;
@@ -66,6 +68,15 @@ export function SandboxEditorView(props: SandboxEditorViewProps) {
         <div>
           <span className="mb-1.5 block text-sm font-medium text-slate-700">Is sandbox enabled</span>
           <SwitchView label="Is sandbox enabled" value={props.isEnabled} onChange={props.onIsEnabledChange} />
+        </div>
+
+        <div>
+          <span className="mb-1.5 block text-sm font-medium text-slate-700">Allow admin assistant terminal access</span>
+          <SwitchView
+            label="Allow admin assistant terminal access"
+            value={props.isAdminAssistantTerminalAllowed}
+            onChange={props.onIsAdminAssistantTerminalAllowedChange}
+          />
         </div>
 
         <div>

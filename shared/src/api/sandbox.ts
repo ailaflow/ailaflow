@@ -1,10 +1,12 @@
 import * as z from 'zod/v4';
+import { SandboxTerminalAccess } from '../sandbox';
 
 // getSandboxes
 
 const sandboxLiteDtoSchema = z.object({
   name: z.string(),
   isEnabled: z.boolean(),
+  terminalAccess: z.enum(SandboxTerminalAccess),
   description: z.string()
 });
 
@@ -20,6 +22,7 @@ export type GetSandboxesResponse = z.infer<typeof getSandboxesResponseSchema>;
 const sandboxDtoSchema = z.object({
   name: z.string(),
   isEnabled: z.boolean(),
+  terminalAccess: z.enum(SandboxTerminalAccess),
   description: z.string(),
   configuration: z.string(),
   secrets: z.record(z.string(), z.string())
@@ -56,6 +59,7 @@ export const saveSandboxRequestSchema = z.object({
   insert: z.boolean(),
   name: z.string(),
   isEnabled: z.boolean(),
+  terminalAccess: z.enum(SandboxTerminalAccess),
   description: z.string(),
   configuration: z.string(),
   secrets: z.record(z.string(), z.string())

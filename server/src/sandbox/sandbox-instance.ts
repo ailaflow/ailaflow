@@ -8,6 +8,7 @@ import { SandboxHostPaths } from './sandbox-host-paths';
 import { SandboxMaterializer } from './sandbox-materializer';
 import { SandboxRpcHandlerProvider } from './sandbox-rpc-handler-provider';
 import { CommandResult, SandboxRuntime } from './sandbox-runtime';
+import { SandboxTerminalAccess } from '@ailaflow/shared';
 
 export class SandboxInstance {
   public static async create(
@@ -27,17 +28,22 @@ export class SandboxInstance {
 
     const dependenciesInstaller = new SandboxDependenciesInstaller(runtime, hostPaths);
     const scriptExecutor = new SandboxScriptExecutor(runtime);
-    return new SandboxInstance(materializer, runtime, dependenciesInstaller, scriptExecutor);
+    return new SandboxInstance(sandbox, materializer, runtime, dependenciesInstaller, scriptExecutor);
   }
 
   public readonly onClose = this.runtime.onClose;
 
   private constructor(
+    private readonly sandbox: Sandbox,
     private readonly materializer: SandboxMaterializer,
     private readonly runtime: SandboxRuntime,
     private readonly dependenciesInstaller: SandboxDependenciesInstaller,
     private readonly scriptExecutor: SandboxScriptExecutor
   ) {}
+
+  public allowsTerminalAccess(access: SandboxTerminalAccess): boolean {
+    return this.sandbox.terminalAccess === access;
+  }
 
   public async tryMaterializeProcess(signal: AbortSignal, process: Process, handler?: HttpSseHandler<ExecuteCommandUpdate>) {
     const commit = await this.materializer.tryBeginMaterializationOfProcess(signal, process);

@@ -26,6 +26,7 @@ export class GetSandboxEndpoint implements Endpoint {
       sandbox: {
         name: sandbox.name,
         isEnabled: sandbox.isEnabled,
+        terminalAccess: sandbox.terminalAccess,
         description: sandbox.description,
         configuration: sandbox.configuration,
         secrets: sandbox.secrets

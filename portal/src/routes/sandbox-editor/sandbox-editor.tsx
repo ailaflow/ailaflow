@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import { SandboxDto } from '@ailaflow/shared';
+import { SandboxDto, SandboxTerminalAccess } from '@ailaflow/shared';
 import { useNavigate } from 'react-router';
 import { useApiClient } from '../../auth/auth-context';
 import { ResourceEditorView } from '../../views/resource-editor/resource-editor-view';
@@ -64,9 +64,13 @@ export function SandboxEditor(props: { sandbox?: SandboxDto }) {
     >
       <SandboxEditorView
         isEnabled={state.isEnabled}
+        isAdminAssistantTerminalAllowed={state.terminalAccess === SandboxTerminalAccess.PORTAL_AND_ADMIN_ASSISTANT}
         configuration={state.configuration}
         secrets={state.secrets}
         onIsEnabledChange={state.setIsEnabled}
+        onIsAdminAssistantTerminalAllowedChange={isAllowed =>
+          state.setTerminalAccess(isAllowed ? SandboxTerminalAccess.PORTAL_AND_ADMIN_ASSISTANT : SandboxTerminalAccess.PORTAL_ONLY)
+        }
         onConfigurationChange={state.setConfiguration}
         onSecretAdd={state.addSecret}
         onSecretRemove={state.removeSecret}

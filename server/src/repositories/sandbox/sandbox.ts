@@ -1,4 +1,4 @@
-import { SandboxValidator, SaveSandboxRequest } from '@ailaflow/shared';
+import { SandboxTerminalAccess, SandboxValidator, SaveSandboxRequest } from '@ailaflow/shared';
 import { SandboxRepositoryError } from './sandbox-repository';
 import { fnv1a } from '@aibindkit/core';
 import { randomUUID } from 'node:crypto';
@@ -16,13 +16,14 @@ export class Sandbox {
 
     const hash = calculateHash(data);
     const token = randomUUID();
-    return new Sandbox(data.name, token, data.isEnabled, data.description, data.configuration, data.secrets, hash);
+    return new Sandbox(data.name, token, data.isEnabled, data.terminalAccess, data.description, data.configuration, data.secrets, hash);
   }
 
   public constructor(
     public readonly name: string,
     public readonly token: string,
     public isEnabled: boolean,
+    public terminalAccess: SandboxTerminalAccess,
     public description: string,
     public configuration: string,
     public secrets: Record<string, string>,
@@ -40,6 +41,7 @@ export class Sandbox {
     }
 
     this.isEnabled = data.isEnabled;
+    this.terminalAccess = data.terminalAccess;
     this.description = data.description;
     this.configuration = data.configuration;
     this.secrets = data.secrets;

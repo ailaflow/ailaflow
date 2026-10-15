@@ -5,11 +5,13 @@ import { Sandbox } from './sandbox';
 import { Transaction } from '../../core/transaction';
 import { Cipher } from '../../core/cipher/cipher';
 import { CipherKey } from '../../core/cipher/cipher-key-store';
+import { SandboxTerminalAccess } from '@ailaflow/shared';
 
 interface SandboxRow {
   name: string;
   token: string;
   isEnabled: number;
+  terminalAccess: SandboxTerminalAccess;
   description: string;
   configuration: string;
   secrets: string;
@@ -27,7 +29,7 @@ export class SqliteSandboxRepository implements SandboxRepository {
   }
 
   public async setup(_: AbortSignal) {
-    await this.db.setup(1, 'sandboxes', (db, version) => {
+    await this.db.setup(2, 'sandboxes', (db, version) => {
       if (version < 1) {
         db.exec(`
           CREATE TABLE sandboxes (
@@ -41,6 +43,11 @@ export class SqliteSandboxRepository implements SandboxRepository {
           ) STRICT
         `);
       }
+      if (version < 2) {
+        db.exec(
+          `ALTER TABLE sandboxes ADD COLUMN terminalAccess INTEGER NOT NULL DEFAULT ${SandboxTerminalAccess.PORTAL_AND_ADMIN_ASSISTANT}`
+        );
+      }
     });
   }
 
@@ -49,13 +56,14 @@ export class SqliteSandboxRepository implements SandboxRepository {
     try {
       await this.db.write(db => {
         const statement = db.prepare(`
-          INSERT INTO sandboxes (name, token, isEnabled, description, configuration, secrets, hash)
-          VALUES (?, ?, ?, ?, ?, ?, ?)
+          INSERT INTO sandboxes (name, token, isEnabled, terminalAccess, description, configuration, secrets, hash)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         `);
         statement.run(
           sandbox.name,
           sandbox.token,
           sandbox.isEnabled ? 1 : 0,
+          sandbox.terminalAccess,
           sandbox.description,
           sandbox.configuration,
           encryptedSecrets,
@@ -77,20 +85,29 @@ export class SqliteSandboxRepository implements SandboxRepository {
         UPDATE sandboxes
         SET
           isEnabled = ?,
+          terminalAccess = ?,
           description = ?,
           configuration = ?,
           secrets = ?,
           hash = ?
         WHERE name = ?
       `);
-      statement.run(sandbox.isEnabled ? 1 : 0, sandbox.description, sandbox.configuration, encryptedSecrets, sandbox.hash, sandbox.name);
+      statement.run(
+        sandbox.isEnabled ? 1 : 0,
+        sandbox.terminalAccess,
+        sandbox.description,
+        sandbox.configuration,
+        encryptedSecrets,
+        sandbox.hash,
+        sandbox.name
+      );
     }, transaction);
   }
 
   public async tryGet(_: AbortSignal, name: string): Promise<Sandbox | null> {
     const row = await this.db.read(db => {
       const statement = db.prepare(`
-        SELECT name, token, isEnabled, description, configuration, secrets, hash
+        SELECT name, token, isEnabled, terminalAccess, description, configuration, secrets, hash
         FROM sandboxes
         WHERE name = ?
         LIMIT 1
@@ -105,7 +122,7 @@ export class SqliteSandboxRepository implements SandboxRepository {
     }
 
     const secrets = JSON.parse(await this.cipher.decryptSecret(row.secrets, CipherKey.InternalSecretEncryption)) as Record<string, string>;
-    return new Sandbox(row.name, row.token, row.isEnabled === 1, row.description, row.configuration, secrets, row.hash);
+    return new Sandbox(row.name, row.token, row.isEnabled === 1, row.terminalAccess, row.description, row.configuration, secrets, row.hash);
   }
 }
 

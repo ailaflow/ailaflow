@@ -1,4 +1,4 @@
-import { SandboxLiteDto } from '@ailaflow/shared';
+import { SandboxLiteDto, SandboxTerminalAccess } from '@ailaflow/shared';
 import { SqliteDatabase } from '../../core/sqlite-database';
 import { SqliteDatabases } from '../../core/sqlite-databases';
 import { SandboxListQuerier } from './sandbox-list-querier';
@@ -13,17 +13,19 @@ export class SqliteSandboxListQuerier implements SandboxListQuerier {
   public async query(_: AbortSignal): Promise<SandboxLiteDto[]> {
     return this.db.read(db => {
       const statement = db.prepare(`
-        SELECT name, isEnabled, description
+        SELECT name, isEnabled, terminalAccess, description
         FROM sandboxes
       `);
       const rows = statement.all() as {
         name: string;
         isEnabled: number;
+        terminalAccess: SandboxTerminalAccess;
         description: string;
       }[];
       return rows.map(row => ({
         name: row.name,
         isEnabled: row.isEnabled === 1,
+        terminalAccess: row.terminalAccess,
         description: row.description
       }));
     });

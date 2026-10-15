@@ -1,4 +1,4 @@
-import { ExportedProcess, LicenseType } from '@ailaflow/shared';
+import { ExportedProcess, LicenseType, SandboxTerminalAccess } from '@ailaflow/shared';
 import { LicenseManager } from '../configuration/license/license-manager';
 import { SandboxRepository } from '../repositories/sandbox/sandbox-repository';
 import { UserRepository } from '../repositories/user/user-repository';
@@ -77,6 +77,7 @@ export class Installer {
       description: 'Default sandbox',
       configuration: '',
       isEnabled: true,
+      terminalAccess: SandboxTerminalAccess.PORTAL_AND_ADMIN_ASSISTANT,
       secrets: {}
     });
     return this.sandboxRepository.insert(signal, defaultSandbox);

@@ -1,4 +1,4 @@
-import { SandboxDto, SandboxValidator, SaveSandboxRequest } from '@ailaflow/shared';
+import { SandboxDto, SandboxTerminalAccess, SandboxValidator, SaveSandboxRequest } from '@ailaflow/shared';
 import { useMemo, useRef, useState } from 'react';
 import { SandboxSecret } from '../../views/sandbox-editor/sandbox-editor-view';
 
@@ -7,6 +7,7 @@ export interface SandboxEditorData {
   name: string;
   description: string;
   isEnabled: boolean;
+  terminalAccess: SandboxTerminalAccess;
   configuration: string;
   isDirty: boolean;
   isNew: boolean;
@@ -19,6 +20,7 @@ export interface SandboxEditorState extends SandboxEditorData {
   setName(name: string): void;
   setDescription(description: string): void;
   setIsEnabled(isEnabled: boolean): void;
+  setTerminalAccess(terminalAccess: SandboxTerminalAccess): void;
   setConfiguration(configuration: string): void;
   addSecret(): void;
   removeSecret(id: number): void;
@@ -52,6 +54,7 @@ export function useSandboxEditorState(sandbox?: SandboxDto): SandboxEditorState 
     setName: name => update({ name }),
     setDescription: description => update({ description }),
     setIsEnabled: isEnabled => update({ isEnabled }),
+    setTerminalAccess: terminalAccess => update({ terminalAccess }),
     setConfiguration: configuration => update({ configuration }),
     addSecret: () =>
       update(data => ({
@@ -89,6 +92,7 @@ export function useSandboxEditorState(sandbox?: SandboxDto): SandboxEditorState 
       name: data.name,
       description: data.description,
       isEnabled: data.isEnabled,
+      terminalAccess: data.terminalAccess,
       configuration: data.configuration,
       secrets: secretsToRecord(data.secrets)
     })
@@ -105,6 +109,7 @@ function createData(sandbox: SandboxDto | undefined, lastSecretId: { current: nu
     name: sandbox?.name ?? '',
     description: sandbox?.description ?? '',
     isEnabled: sandbox?.isEnabled ?? true,
+    terminalAccess: sandbox?.terminalAccess ?? SandboxTerminalAccess.PORTAL_AND_ADMIN_ASSISTANT,
     configuration: sandbox?.configuration ?? '',
     isDirty: !sandbox,
     isNew: !sandbox
