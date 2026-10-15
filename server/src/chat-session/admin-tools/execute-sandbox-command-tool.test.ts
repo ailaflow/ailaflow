@@ -60,7 +60,7 @@ test('rejects a command when the sandbox does not allow admin assistant terminal
   });
 
   assert.deepEqual(result.content, {
-    error: 'Sandbox +restricted does not allow terminal access for the admin assistant.'
+    error: 'Sandbox +restricted does not allow terminal access for the admin assistant'
   });
   assert.equal(commandWasExecuted, false);
 });
