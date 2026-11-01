@@ -60,9 +60,7 @@ Connect your preferred chat platform to AilaFlow, then send requests and run the
 
 ## License
 
-AilaFlow is distributed under the [AilaFlow Fair-Code License 1.0](./LICENSE.md).
-
-Home use is free, including personal, educational, and eligible non-profit use. AilaFlow is also free for professional teams with up to 3 Authorized Users. See the [LICENSE.md](./LICENSE.md) for the complete terms.
+This project is released under the MIT license.
 
 ## Contributing
 
