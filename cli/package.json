@@ -1,10 +1,10 @@
 {
   "name": "@ailaflow/cli",
-  "version": "0.0.25",
+  "version": "0.0.26",
   "description": "AilaFlow is a low-code platform for automating business processes across people, AI agents, and connected systems. Build workflows visually or with AI, coordinate tasks, approvals, and handoffs, and connect your tools with JavaScript.",
   "private": false,
   "type": "module",
-  "license": "SEE LICENSE IN LICENSE.md",
+  "license": "MIT",
   "homepage": "https://ailaflow.com",
   "repository": {
     "type": "git",

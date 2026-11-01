@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "type": "commonjs",
-  "license": "SEE LICENSE IN LICENSE.md",
+  "license": "MIT",
   "scripts": {
     "prettier": "prettier --check ./src",
     "prettier:fix": "prettier --write ./src",

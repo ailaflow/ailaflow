@@ -12,7 +12,7 @@ export class SqliteKvConfigurationRepository implements KvConfigurationRepositor
   }
 
   public async setup(_: AbortSignal): Promise<void> {
-    await this.db.setup(1, 'kv_configuration', (db, version) => {
+    await this.db.setup(2, 'kv_configuration', (db, version) => {
       if (version < 1) {
         db.exec(`
           CREATE TABLE kv_configuration (
@@ -20,6 +20,9 @@ export class SqliteKvConfigurationRepository implements KvConfigurationRepositor
             value TEXT NOT NULL
           ) STRICT
         `);
+      }
+      if (version < 2) {
+        db.exec("DELETE FROM kv_configuration WHERE key IN ('instanceId', 'licenseType', 'licenseKey')");
       }
     });
   }
@@ -30,12 +33,7 @@ export class SqliteKvConfigurationRepository implements KvConfigurationRepositor
       const values = Object.fromEntries(rows.map(row => [row.key, JSON.parse(row.value)])) as Partial<
         Pick<KvConfiguration, KvConfigurationKey>
       >;
-      return new KvConfiguration(
-        values.publicUrl ?? null,
-        values.instanceId ?? null,
-        values.licenseType ?? null,
-        values.licenseKey ?? null
-      );
+      return new KvConfiguration(values.publicUrl ?? null);
     });
   }
 

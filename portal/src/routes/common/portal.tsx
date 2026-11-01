@@ -2,7 +2,6 @@ import { matchPath, Outlet, useLocation } from 'react-router';
 import { type CommandMenuItem, type LinkMenuItem, type MenuItem, PortalLayout } from '../../views/portal/portal-layout';
 import { useAuthState } from '../../auth/auth-context';
 import { useEffect, useState } from 'react';
-import { LicenseAlertPopup } from './popups/license-alert-popup';
 
 type LinkMenuItemDefinition = Omit<LinkMenuItem, 'isSelected'> & { activeAliases?: string[] };
 type MenuItemDefinition = LinkMenuItemDefinition | CommandMenuItem;
@@ -80,26 +79,10 @@ export function Portal() {
   }
 
   const location = useLocation();
-  const [licenseValidationError, setLicenseValidationError] = useState<string | null>(null);
-
   const [chatItems, setChatItems] = useState<MenuItemDefinition[]>([]);
   const selectedChatItems = selectMenuItems(chatItems, location.pathname);
   const selectedUserItems = selectMenuItems(userItems, location.pathname);
   const selectedAdminItems = session.isAdmin ? selectMenuItems(adminItems, location.pathname) : null;
-
-  useEffect(() => {
-    const abortController = new AbortController();
-
-    async function check() {
-      const response = await apiClient.licenseConfiguration.getStatus(abortController.signal);
-      if (response.validationError) {
-        setLicenseValidationError(response.validationError);
-      }
-    }
-
-    void check();
-    return () => abortController.abort();
-  }, [apiClient]);
 
   useEffect(() => {
     const abortController = new AbortController();
@@ -128,23 +111,16 @@ export function Portal() {
     }
   }
 
-  function closeLicenseAlert() {
-    setLicenseValidationError(null);
-  }
-
   return (
-    <>
-      <PortalLayout
-        chatItems={selectedChatItems}
-        userItems={selectedUserItems}
-        adminItems={selectedAdminItems}
-        userName={session.userName}
-        onCommand={onCommand}
-      >
-        <Outlet />
-      </PortalLayout>
-      {licenseValidationError && <LicenseAlertPopup error={licenseValidationError} onClose={closeLicenseAlert} />}
-    </>
+    <PortalLayout
+      chatItems={selectedChatItems}
+      userItems={selectedUserItems}
+      adminItems={selectedAdminItems}
+      userName={session.userName}
+      onCommand={onCommand}
+    >
+      <Outlet />
+    </PortalLayout>
   );
 }
 

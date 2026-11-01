@@ -1,7 +1,6 @@
 import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
 import test, { TestContext } from 'node:test';
-import { LicenseType } from '@ailaflow/shared';
 import { SqliteDatabase } from '../../core/sqlite-database';
 import { SqliteDatabases } from '../../core/sqlite-databases';
 import { SqliteKvConfigurationRepository } from '../../repositories/configuration/kv/sqlite-kv-configuration-repository';
@@ -32,19 +31,6 @@ test('caches reads, returns independent drafts, and invalidates only after a suc
   assert.equal((await manager.get(signal)).publicUrl, 'https://ailaflow.example.com');
   assert.equal(get.mock.callCount(), 2);
   assert.deepEqual((await manager.get(signal)).getChangedKeys(), []);
-});
-
-test('merges independent drafts without overwriting unrelated fields', async t => {
-  const { manager } = await fixture(t);
-  const url = await manager.get(signal);
-  const license = await manager.get(signal);
-  url.setPublicUrl('https://ailaflow.example.com');
-  license.setLicenseType(LicenseType.HOME, null);
-  const updatingUrl = manager.update(signal, url);
-  await Promise.all([updatingUrl, manager.update(signal, license)]);
-  const result = await manager.get(signal);
-  assert.equal(result.publicUrl, 'https://ailaflow.example.com');
-  assert.equal(result.licenseType, LicenseType.HOME);
 });
 
 test('failed writes preserve cached values and later updates can retry', async t => {

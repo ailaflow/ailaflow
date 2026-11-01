@@ -1,5 +1,4 @@
-import { ExportedProcess, LicenseType, SandboxTerminalAccess } from '@ailaflow/shared';
-import { LicenseManager } from '../configuration/license/license-manager';
+import { ExportedProcess, SandboxTerminalAccess } from '@ailaflow/shared';
 import { SandboxRepository } from '../repositories/sandbox/sandbox-repository';
 import { UserRepository } from '../repositories/user/user-repository';
 import { User } from '../repositories/user/user';
@@ -27,7 +26,6 @@ export class Installer {
     private readonly sandboxRepository: SandboxRepository,
     private readonly notificationRepository: NotificationRepository,
     private readonly processManager: ProcessManager,
-    private readonly licenseManager: LicenseManager,
     private readonly processValidatorsFactory: ProcessValidatorsFactory,
     private readonly processDownloader: ProcessDownloader
   ) {}
@@ -37,13 +35,7 @@ export class Installer {
     return userCount === 0;
   }
 
-  public async install(
-    signal: AbortSignal,
-    rootUserName: string,
-    rootPassword: string,
-    licenseType: LicenseType,
-    licenseKey: string | null
-  ): Promise<string | null> {
+  public async install(signal: AbortSignal, rootUserName: string, rootPassword: string): Promise<string | null> {
     if (this.isInstalling) {
       return 'Installation is already in progress';
     }
@@ -52,11 +44,6 @@ export class Installer {
     try {
       if ((await this.canInstall(signal)) === false) {
         return 'Installation is not allowed because the system is already initialized';
-      }
-
-      const licenseValidationError = await this.licenseManager.tryValidateAndSet(signal, licenseType, licenseKey);
-      if (licenseValidationError !== null) {
-        return `License validation failed: ${licenseValidationError}`;
       }
 
       await this.cipherKeyStore.install();

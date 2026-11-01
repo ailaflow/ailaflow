@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { SubmitEvent } from 'react';
 import { useNavigate } from 'react-router';
-import { LicenseType, UserValidator } from '@ailaflow/shared';
+import { UserValidator } from '@ailaflow/shared';
 import type { InstallResponse } from '@ailaflow/shared';
 import { useApiClient } from '../../auth/auth-context';
 import { CenteredFormLayout } from '../../views/centered-form/centered-form-layout';
@@ -12,9 +12,7 @@ export function InstallPage() {
   const navigate = useNavigate();
   const [userName, setUserName] = useState('');
   const [password, setPassword] = useState('');
-  const [licenseType, setLicenseType] = useState(LicenseType.HOME);
-  const [licenseKey, setLicenseKey] = useState('');
-  const [isPolicyAccepted, setIsPolicyAccepted] = useState(false);
+  const [isPrivacyPolicyAccepted, setIsPrivacyPolicyAccepted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const userNameError = UserValidator.validateName(userName);
   const passwordError = UserValidator.validatePassword(password);
@@ -22,8 +20,7 @@ export function InstallPage() {
     !isSubmitting &&
     userNameError === null &&
     passwordError === null &&
-    isPolicyAccepted &&
-    (licenseType !== LicenseType.BUSINESS || Boolean(licenseKey.trim()));
+    isPrivacyPolicyAccepted;
   const [error, setError] = useState<string | null>(null);
 
   const onSubmit = async (e: SubmitEvent) => {
@@ -39,9 +36,7 @@ export function InstallPage() {
       const signal = AbortSignal.timeout(10000);
       response = await apiClient.install.install(signal, {
         rootUserName: userName,
-        rootPassword: password,
-        licenseType,
-        licenseKey: licenseType === LicenseType.BUSINESS ? licenseKey.trim() : null
+        rootPassword: password
       });
     } catch (e) {
       setError((e as Error).message ?? String(e));
@@ -65,26 +60,13 @@ export function InstallPage() {
         userNameError={userNameError}
         password={password}
         passwordError={passwordError}
-        isPolicyAccepted={isPolicyAccepted}
+        isPrivacyPolicyAccepted={isPrivacyPolicyAccepted}
         error={error}
-        licenseType={licenseType}
-        licenseKey={licenseKey}
         disabled={isSubmitting}
         canSubmit={canSubmit}
-        onLicenseTypeChange={type => {
-          setLicenseType(type);
-          setError(null);
-          if (type !== LicenseType.BUSINESS) {
-            setLicenseKey('');
-          }
-        }}
-        onLicenseKeyChange={key => {
-          setLicenseKey(key);
-          setError(null);
-        }}
         onUserNameChange={setUserName}
         onPasswordChange={setPassword}
-        onPolicyAcceptedChange={setIsPolicyAccepted}
+        onPrivacyPolicyAcceptedChange={setIsPrivacyPolicyAccepted}
         onSubmit={onSubmit}
       />
     </CenteredFormLayout>

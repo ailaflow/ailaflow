@@ -2,7 +2,7 @@
   "name": "@ailaflow/bridge-server",
   "private": true,
   "version": "1.0.0",
-  "license": "../../LICENSE",
+  "license": "MIT",
   "type": "commonjs",
   "scripts": {
     "prettier": "prettier --check ./src",

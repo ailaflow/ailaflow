@@ -1,4 +1,3 @@
-import { LicenseConfigurationPage } from './license-configuration-page';
 import { useEffect } from 'react';
 import { useSearchParams } from 'react-router';
 import { ConfigurationView } from '../../views/configuration/configuration-view';
@@ -12,7 +11,7 @@ export function ConfigurationPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const requestedTab = searchParams.get('tab');
   const activeTab: ConfigurationTab =
-    requestedTab === 'llm' || requestedTab === 'public-url' || requestedTab === 'license' || requestedTab === 'slack'
+    requestedTab === 'llm' || requestedTab === 'public-url' || requestedTab === 'slack'
       ? requestedTab
       : 'overview';
 
@@ -34,10 +33,8 @@ export function ConfigurationPage() {
         <LlmConfigurationPage />
       ) : activeTab === 'public-url' ? (
         <PublicUrlConfigurationPage />
-      ) : activeTab === 'slack' ? (
-        <SlackConfigurationPage />
       ) : (
-        <LicenseConfigurationPage />
+        <SlackConfigurationPage />
       )}
     </ConfigurationView>
   );

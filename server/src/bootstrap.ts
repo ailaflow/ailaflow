@@ -1,10 +1,4 @@
 import { KvConfigurationManager } from './configuration/kv/kv-configuration-manager';
-import { LicenseManager } from './configuration/license/license-manager';
-import { LicenseValidator } from './configuration/license/license-validator';
-import { LicenseCheckScheduler } from './schedulers/license-check-scheduler';
-import { LicenseEndpoint } from './api/license-configuration/license-status-endpoint';
-import { GetLicenseConfigurationEndpoint } from './api/license-configuration/get-license-configuration-endpoint';
-import { SaveLicenseConfigurationEndpoint } from './api/license-configuration/save-license-configuration-endpoint';
 import { ServerPaths } from './core/server-paths';
 import { Cipher } from './core/cipher/cipher';
 import { FileSystemCipherKeyStore } from './core/cipher/file-system-cipher-key-store';
@@ -613,7 +607,6 @@ export async function bootstrap(registry: CleanupRegistry, signal: AbortSignal) 
   });
 
   const versionProvider = new VersionProvider(serverPaths);
-  const licenseManager = new LicenseManager(new LicenseValidator(), kvConfigurationManager, userRepository, versionProvider);
   const processDownloader = new ProcessDownloader(versionProvider);
   const installer = new Installer(
     cipherKeyStore,
@@ -623,14 +616,12 @@ export async function bootstrap(registry: CleanupRegistry, signal: AbortSignal) 
     sandboxRepository,
     notificationRepository,
     processManager,
-    licenseManager,
     processValidatorsFactory,
     processDownloader
   );
   const loginThrottler = new LoginThrottler();
 
   const schedulers: Scheduler[] = [
-    new LicenseCheckScheduler(licenseManager),
     new AuthCleanupScheduler(authTokenRepository, magicLinkRepository),
     new ProcessCronJobScheduler(processCronJobRepository, processManager, processExecutor, myProcessAccessQuerier),
     new ProcessExecutionTraceJobScheduler(processExecutionTraceRepository)
@@ -638,9 +629,6 @@ export async function bootstrap(registry: CleanupRegistry, signal: AbortSignal) 
 
   const endpoints = [
     new HealthEndpoint(),
-    new LicenseEndpoint(licenseManager, versionProvider),
-    new GetLicenseConfigurationEndpoint(kvConfigurationManager),
-    new SaveLicenseConfigurationEndpoint(licenseManager),
     new CanInstallEndpoint(installer),
     new InstallEndpoint(installer),
     new LoginEndpoint(userRepository, authTokenRepository, loginThrottler, cipher),

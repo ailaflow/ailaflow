@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "license": "SEE LICENSE IN LICENSE.md",
+  "license": "MIT",
   "scripts": {},
   "dependencies": {
     "@aibindkit/core": "workspace:*",

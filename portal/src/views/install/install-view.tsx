@@ -1,18 +1,17 @@
-import { LicenseSelectorView } from '../common/license-selector-view';
-import type { LicenseSelectorViewProps } from '../common/license-selector-view';
 import type { SubmitEvent } from 'react';
 
-export interface InstallViewProps extends LicenseSelectorViewProps {
+export interface InstallViewProps {
   canSubmit: boolean;
+  disabled: boolean;
   userName: string;
   userNameError: string | null;
   password: string;
   passwordError: string | null;
-  isPolicyAccepted: boolean;
+  isPrivacyPolicyAccepted: boolean;
   error: string | null;
   onUserNameChange: (userName: string) => void;
   onPasswordChange: (password: string) => void;
-  onPolicyAcceptedChange: (isAccepted: boolean) => void;
+  onPrivacyPolicyAcceptedChange: (isAccepted: boolean) => void;
   onSubmit: (e: SubmitEvent) => void;
 }
 
@@ -21,7 +20,7 @@ export function InstallView(props: InstallViewProps) {
     <div className="w-full max-w-2xl rounded-xl border border-slate-200 bg-white p-5">
       <div className="mb-4 text-center">
         <h1 className="text-2xl font-semibold tracking-tight">Install</h1>
-        <p className="mt-1 text-xs text-slate-500">Create the admin account and choose a license to finish setup.</p>
+        <p className="mt-1 text-xs text-slate-500">Create the admin account to finish setup.</p>
       </div>
 
       <form onSubmit={props.onSubmit} className="space-y-3">
@@ -59,28 +58,17 @@ export function InstallView(props: InstallViewProps) {
           {props.passwordError ? <span className="block text-xs text-red-700">{props.passwordError}</span> : null}
         </label>
 
-        <LicenseSelectorView {...props} />
-
         <div className="flex items-start gap-2 text-xs text-slate-700">
           <input
-            id="install-policy-acceptance"
+            id="install-privacy-policy-acceptance"
             type="checkbox"
-            checked={props.isPolicyAccepted}
+            checked={props.isPrivacyPolicyAccepted}
             disabled={props.disabled}
-            onChange={e => props.onPolicyAcceptedChange(e.target.checked)}
+            onChange={e => props.onPrivacyPolicyAcceptedChange(e.target.checked)}
             className="mt-0.5 size-4 shrink-0 rounded border-slate-300"
           />
-          <label htmlFor="install-policy-acceptance">
+          <label htmlFor="install-privacy-policy-acceptance">
             I accept the{' '}
-            <a
-              href="https://ailaflow.com/license/"
-              target="_blank"
-              rel="noreferrer"
-              className="font-medium text-blue-700 underline decoration-blue-300 underline-offset-2 transition-colors hover:text-blue-900"
-            >
-              license
-            </a>{' '}
-            and{' '}
             <a
               href="https://ailaflow.com/privacy-policy/"
               target="_blank"
@@ -104,7 +92,7 @@ export function InstallView(props: InstallViewProps) {
           disabled={!props.canSubmit}
           className="cursor-pointer h-9 w-full rounded-md border border-slate-900 bg-slate-900 px-3 text-sm font-medium text-white transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:border-slate-300 disabled:bg-slate-300"
         >
-          {props.disabled ? 'Validating and installing…' : 'Install'}
+          {props.disabled ? 'Installing…' : 'Install'}
         </button>
       </form>
     </div>

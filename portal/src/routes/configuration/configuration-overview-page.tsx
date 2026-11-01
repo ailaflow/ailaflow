@@ -1,5 +1,5 @@
 import { useLoader } from '@aibindkit/react';
-import { LicenseType, LlmProviderPolicy, LlmUseCase } from '@ailaflow/shared';
+import { LlmProviderPolicy, LlmUseCase } from '@ailaflow/shared';
 import type { GetLlmConfigurationResponse } from '@ailaflow/shared';
 import { useApiClient } from '../../auth/auth-context';
 import { ConfigurationOverviewView } from '../../views/configuration/configuration-overview-view';
@@ -11,13 +11,12 @@ export function ConfigurationOverviewPage() {
   const apiClient = useApiClient();
   const loader = useLoader(
     async signal => {
-      const [host, llm, publicUrlTest, license] = await Promise.all([
+      const [host, llm, publicUrlTest] = await Promise.all([
         apiClient.sandbox.diagnoseHost(signal),
         apiClient.llmConfiguration.get(signal),
-        apiClient.publicUrlConfiguration.test(signal, {}),
-        apiClient.licenseConfiguration.getStatus(signal)
+        apiClient.publicUrlConfiguration.test(signal, {})
       ]);
-      return { host, llm, publicUrlTest, license };
+      return { host, llm, publicUrlTest };
     },
     [apiClient]
   );
@@ -32,7 +31,6 @@ export function ConfigurationOverviewPage() {
   const adminChatConfigured = isLlmUseCaseConfigured(loader.data.llm, LlmUseCase.ADMIN_CHAT);
   const userChatConfigured = isLlmUseCaseConfigured(loader.data.llm, LlmUseCase.USER_CHAT);
   const agentStepConfigured = isLlmUseCaseConfigured(loader.data.llm, LlmUseCase.AGENT_STEP);
-  const licenseStatus = loader.data.license;
   const statuses: ConfigurationStatus[] = [
     {
       id: 'docker',
@@ -95,34 +93,6 @@ export function ConfigurationOverviewPage() {
         ? (loader.data.publicUrlTest.error ?? 'Make sure the configured URL is externally accessible.')
         : 'Configure the externally accessible URL for this AilaFlow server.',
       action: { label: 'Configure Public URL', href: '/admin/configuration?tab=public-url' }
-    },
-    {
-      id: 'license',
-      label: 'License',
-      value:
-        licenseStatus.type !== undefined
-          ? `${getLicenseTypeLabel(licenseStatus.type)} · ${licenseStatus.validationError === null ? 'Valid' : 'Invalid'}`
-          : 'Not available',
-      detail: licenseStatus.checkedAt !== undefined ? `Last checked: ${new Date(licenseStatus.checkedAt).toLocaleString()}` : undefined,
-      isHealthy: licenseStatus.validationError === null,
-      remediation:
-        licenseStatus.type !== undefined
-          ? (licenseStatus.validationError ?? 'Review your license configuration and validate your license key.')
-          : 'License status data is not available yet.',
-      action: { label: 'Configure license', href: '/admin/configuration?tab=license' }
-    },
-    {
-      id: 'version',
-      label: 'Application Version',
-      value: licenseStatus.version,
-      detail:
-        licenseStatus.canUpgrade === undefined
-          ? 'Upgrade availability has not been checked yet.'
-          : licenseStatus.canUpgrade
-            ? 'An upgrade is available.'
-            : 'No upgrade is available.',
-      isHealthy: licenseStatus.canUpgrade !== true,
-      remediation: 'Upgrade AilaFlow to the latest available version.'
     }
   ];
 
@@ -140,20 +110,6 @@ function publicUrlStatusValue(publicUrl: string | null, isAvailable: boolean): s
     return 'Not configured';
   }
   return `${isAvailable ? 'Available' : 'Unavailable'} · ${publicUrl}`;
-}
-
-function getLicenseTypeLabel(type: LicenseType): string {
-  switch (type) {
-    case LicenseType.HOME: {
-      return 'Home';
-    }
-    case LicenseType.STARTER: {
-      return 'Starter';
-    }
-    case LicenseType.BUSINESS: {
-      return 'Business';
-    }
-  }
 }
 
 function isLlmUseCaseConfigured(configuration: GetLlmConfigurationResponse, useCase: LlmUseCase): boolean {

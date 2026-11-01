@@ -1,6 +1,6 @@
-import { LicenseType, PublicUrlValidator } from '@ailaflow/shared';
+import { PublicUrlValidator } from '@ailaflow/shared';
 
-export type KvConfigurationKey = 'publicUrl' | 'instanceId' | 'licenseType' | 'licenseKey';
+export type KvConfigurationKey = 'publicUrl';
 
 export class KvConfigurationError extends Error {
   public constructor(message: string) {
@@ -12,12 +12,7 @@ export class KvConfigurationError extends Error {
 export class KvConfiguration {
   private readonly changed: KvConfigurationKey[] = [];
 
-  public constructor(
-    public publicUrl: string | null = null,
-    public instanceId: string | null = null,
-    public licenseType: LicenseType | null = null,
-    public licenseKey: string | null = null
-  ) {}
+  public constructor(public publicUrl: string | null = null) {}
 
   public setPublicUrl(publicUrl: string | null) {
     const error = PublicUrlValidator.validate(publicUrl);
@@ -28,23 +23,12 @@ export class KvConfiguration {
     this.changed.push('publicUrl');
   }
 
-  public setInstanceId(instanceId: string | null) {
-    this.instanceId = instanceId;
-    this.changed.push('instanceId');
-  }
-
-  public setLicenseType(type: LicenseType, key: string | null) {
-    this.licenseType = type;
-    this.licenseKey = key;
-    this.changed.push('licenseType', 'licenseKey');
-  }
-
   public getChangedKeys(): KvConfigurationKey[] {
     return [...this.changed];
   }
 
   public clone(): KvConfiguration {
-    const clone = new KvConfiguration(this.publicUrl, this.instanceId, this.licenseType, this.licenseKey);
+    const clone = new KvConfiguration(this.publicUrl);
     clone.changed.push(...this.changed);
     return clone;
   }

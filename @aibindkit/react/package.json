@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "license": "../../LICENSE",
+  "license": "MIT",
   "main": "./lib/cjs/index.cjs",
   "module": "./lib/esm/index.js",
   "types": "./lib/index.d.ts",

@@ -3,7 +3,6 @@ export * from './health';
 export * from './sandbox';
 export * from './slack-configuration';
 export * from './install';
-export * from './license-configuration';
 export * from './llm-configuration';
 export * from './my-configuration';
 export * from './my-slack-configuration';

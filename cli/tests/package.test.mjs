@@ -70,12 +70,6 @@ test('the packaged CLI serves the API and portal', async () => {
     const health = await fetch(`http://127.0.0.1:${port}/health`);
     assert.equal(health.status, 200);
 
-    const license = await fetch(`http://127.0.0.1:${port}/license-status`);
-    assert.equal(license.status, 401);
-
-    const licenseConfiguration = await fetch(`http://127.0.0.1:${port}/api/license-configuration`);
-    assert.equal(licenseConfiguration.status, 401);
-
     const root = await fetch(`http://127.0.0.1:${port}/`);
     assert.equal(root.status, 200);
     const contentSecurityPolicy = root.headers.get('content-security-policy');
